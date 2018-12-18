@@ -14,12 +14,12 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -39,7 +39,7 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
     private Owner owner;
     private Environment environment;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = ownerCurator.create(new Owner("test-owner", "Test Owner"));
         environment = envCurator.create(new Environment("env1", "Env 1", owner));

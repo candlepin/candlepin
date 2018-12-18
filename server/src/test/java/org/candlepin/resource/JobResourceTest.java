@@ -15,7 +15,6 @@
 package org.candlepin.resource;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;

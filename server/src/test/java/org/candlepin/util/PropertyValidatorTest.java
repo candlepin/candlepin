@@ -14,16 +14,14 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.util.PropertyValidator.Validator;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -39,13 +37,12 @@ import javax.inject.Provider;
 /**
  * Test suite for the PropertyValidator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class PropertyValidatorTest {
 
     private I18n i18n;
     private Provider<I18n> i18nProvider = () -> i18n;
 
-    @Before
+    @BeforeEach
     public void init() {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
     }
@@ -94,8 +91,8 @@ public class PropertyValidatorTest {
         }
     }
 
-    @Test
-    @Parameters({
+    @ParameterizedTest
+    @CsvSource({
         "5, key, value, true",
         "3, key, value, false",
         "5, longkey, value, false",
@@ -117,14 +114,15 @@ public class PropertyValidatorTest {
         assertEquals(shouldValidate, result);
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testLengthValidatorConfigurationFailure() {
-        Validator validator = this.getValidator(PropertyValidator.LengthValidator.class,
-            this.i18nProvider, "test", -1);
+        assertThrows(RuntimeException.class, () ->
+            this.getValidator(PropertyValidator.LengthValidator.class, this.i18nProvider, "test", -1)
+        );
     }
 
-    @Test
-    @Parameters({
+    @ParameterizedTest
+    @CsvSource({
         "key, 50, true",
         "key, -50, true",
         "key, 2147483647, true",
@@ -150,8 +148,8 @@ public class PropertyValidatorTest {
         assertEquals(shouldValidate, result);
     }
 
-    @Test
-    @Parameters({
+    @ParameterizedTest
+    @CsvSource({
         "key, 50, true",
         "key, -50, false",
         "key, 2147483647, true",
@@ -177,8 +175,8 @@ public class PropertyValidatorTest {
         assertEquals(shouldValidate, result);
     }
 
-    @Test
-    @Parameters({
+    @ParameterizedTest
+    @CsvSource({
         "key, 50, true",
         "key, -50, true",
         "key, 9223372036854775807, true",
@@ -204,8 +202,8 @@ public class PropertyValidatorTest {
         assertEquals(shouldValidate, result);
     }
 
-    @Test
-    @Parameters({
+    @ParameterizedTest
+    @CsvSource({
         "key, 50, true",
         "key, -50, false",
         "key, 9223372036854775807, true",
@@ -231,8 +229,8 @@ public class PropertyValidatorTest {
         assertEquals(shouldValidate, result);
     }
 
-    @Test
-    @Parameters({
+    @ParameterizedTest
+    @CsvSource({
         "key, true, true",
         "key, false, true",
         "key, 1, true",

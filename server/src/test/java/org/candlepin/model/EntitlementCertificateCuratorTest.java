@@ -14,13 +14,12 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.Date;
@@ -39,7 +38,7 @@ public class EntitlementCertificateCuratorTest extends DatabaseTestFixture {
     private Product product;
     private Pool pool;
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.owner = this.createOwner();
         this.consumer = this.createConsumer(this.owner);

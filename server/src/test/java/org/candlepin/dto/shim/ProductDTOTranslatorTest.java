@@ -14,20 +14,16 @@
  */
 package org.candlepin.dto.shim;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.manifest.v1.ContentDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
-
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-
-import org.junit.runner.RunWith;
+import org.candlepin.model.dto.ProductData;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,7 +35,6 @@ import java.util.Map;
 /**
  * Test suite for the ProductDTOTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ProductDTOTranslatorTest extends
     AbstractTranslatorTest<ProductDTO, ProductData, ProductDTOTranslator> {
 

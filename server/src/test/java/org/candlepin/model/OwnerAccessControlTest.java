@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
@@ -23,8 +23,8 @@ import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 
@@ -37,7 +37,7 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
 
     private Owner owner;
 
-    @Before
+    @BeforeEach
     @Override
     public void init() throws Exception {
         super.init();
@@ -59,7 +59,7 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
         assertNotNull(ownerCurator.get(dto.getId()));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void ownerAdminCannotCreateAnOwner() {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
@@ -68,10 +68,10 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
         dto.setKey("Test Owner");
         dto.setDisplayName("Test Owner");
 
-        resource.createOwner(dto);
+        assertThrows(ForbiddenException.class, () -> resource.createOwner(dto));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void consumerCannotCreateAnOwner() {
         Consumer consumer = createConsumer(owner);
         setupPrincipal(new ConsumerPrincipal(consumer, owner));
@@ -81,6 +81,6 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
         dto.setKey("Test Owner");
         dto.setDisplayName("Test Owner");
 
-        resource.createOwner(dto);
+        assertThrows(ForbiddenException.class, () -> resource.createOwner(dto));
     }
 }

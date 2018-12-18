@@ -15,7 +15,6 @@
 package org.candlepin.resource;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
@@ -34,6 +33,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -103,7 +103,8 @@ public class CrlResourceTest {
 
         this.resource.unrevoke(input);
 
-        verify(crlFileUtil).updateCRLFile(any(File.class), anyCollection(), anyCollection());
+        verify(crlFileUtil).updateCRLFile(any(File.class), nullable(Collection.class),
+            anyCollection());
     }
 
     @Test

@@ -20,14 +20,9 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.ConsumerCapability;
 
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
-
 /**
  * Test suite for the CapabilityTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class CapabilityTranslatorTest extends
     AbstractTranslatorTest<ConsumerCapability, CapabilityDTO, CapabilityTranslator> {
 

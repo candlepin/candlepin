@@ -15,7 +15,6 @@
 package org.candlepin.policy;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;

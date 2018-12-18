@@ -14,7 +14,6 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.controller.CandlepinPoolManager;

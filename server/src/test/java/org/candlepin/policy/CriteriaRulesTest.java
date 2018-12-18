@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -25,10 +25,12 @@ import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Collection;
 import java.util.Date;
@@ -41,13 +43,14 @@ import java.util.List;
  * unit tests that by default, will always return success. As such if we see pools getting
  * filtered out below, we know it was because of the hibernate query mechanism.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class CriteriaRulesTest extends DatabaseTestFixture {
 
     private Owner owner;
     private Consumer consumer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = this.createOwner();
     }

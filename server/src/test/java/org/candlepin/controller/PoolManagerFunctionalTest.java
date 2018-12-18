@@ -16,8 +16,7 @@ package org.candlepin.controller;
 
 import static org.apache.commons.collections.CollectionUtils.*;
 import static org.apache.commons.collections.TransformerUtils.*;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
@@ -57,9 +56,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
 import org.apache.commons.collections.Transformer;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -105,7 +103,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private Consumer childVirtSystem;
     private EventSink eventSink;
 
-    @Before
+    @BeforeEach
     @Override
     public void init() throws Exception {
         super.init();
@@ -304,8 +302,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
         Set<Branding> brandingSet = poolManager.fabricateSubscriptionFromPool(masterPool).getBranding();
 
-        Assert.assertNotNull(brandingSet);
-        Assert.assertEquals(2, brandingSet.size());
+        assertNotNull(brandingSet);
+        assertEquals(2, brandingSet.size());
         ArrayList<Branding> list = new ArrayList<>();
         list.addAll(brandingSet);
         list.sort(new Comparator<Branding>() {
@@ -316,12 +314,12 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             }
         });
 
-        Assert.assertEquals("branding1", list.get(0).getName());
-        Assert.assertEquals("product1", list.get(0).getProductId());
-        Assert.assertEquals("type1", list.get(0).getType());
-        Assert.assertEquals("branding2", list.get(1).getName());
-        Assert.assertEquals("product2", list.get(1).getProductId());
-        Assert.assertEquals("type2", list.get(1).getType());
+        assertEquals("branding1", list.get(0).getName());
+        assertEquals("product1", list.get(0).getProductId());
+        assertEquals("type1", list.get(0).getType());
+        assertEquals("branding2", list.get(1).getName());
+        assertEquals("product2", list.get(1).getProductId());
+        assertEquals("type2", list.get(1).getType());
     }
 
     @Test
@@ -935,8 +933,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertTrue(entitlements.isEmpty());
 
         CertificateSerial revoked = certSerialCurator.get(serial.getId());
-        assertTrue("Entitlement cert serial should have been marked as revoked once deleted!",
-            revoked.isRevoked());
+        assertTrue(revoked.isRevoked(), "cert serial should be marked as revoked once deleted!");
     }
 }
 

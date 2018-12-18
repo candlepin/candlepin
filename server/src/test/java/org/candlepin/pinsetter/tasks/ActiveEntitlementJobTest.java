@@ -14,7 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -27,8 +27,8 @@ import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.quartz.JobExecutionException;
 
 import javax.inject.Inject;
@@ -44,7 +44,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
     private Consumer consumer;
     private Product prod;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);

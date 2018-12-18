@@ -14,15 +14,15 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SSLAuth;
 import org.candlepin.auth.Verify;
 import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.model.Consumer;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.test.DatabaseTestFixture;
@@ -40,11 +40,13 @@ import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.MethodInjector;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.metadata.ResourceLocator;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
@@ -65,7 +67,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.UriInfo;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     @Inject private Provider<I18n> i18nProvider;
     @Inject private StoreFactory storeFactory;
@@ -132,7 +135,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         return new AuthInterceptorTestModule();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws NoSuchMethodException, SecurityException {
         // Turn logger to INFO level to disable HttpServletRequest logging.
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -190,7 +193,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         interceptor.filter(mockRequestContext);
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void noAccessToOtherConsumer() throws Exception {
         mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fake/123");
         ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
@@ -213,7 +216,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         Principal p = sslAuth.getPrincipal(mockReq);
         when(mockSecurityContext.getUserPrincipal()).thenReturn(p);
 
-        interceptor.filter(mockRequestContext);
+        assertThrows(ForbiddenException.class, () -> interceptor.filter(mockRequestContext));
     }
 
     /**

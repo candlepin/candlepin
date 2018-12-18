@@ -20,7 +20,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
@@ -52,7 +51,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -200,7 +198,7 @@ public class PoolRulesStackDerivedTest {
         entitlements.put(pool2.getId(), stackedEnts.get(0));
         Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
-        when(poolManagerMock.createPools(Matchers.anyListOf(Pool.class))).then(returnsFirstArg());
+        when(poolManagerMock.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
         PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(poolManagerMock,
             consumer, reqPools, entitlements, attributes, productCurator);
         stackDerivedPool = poolOperationCallback.getPoolCreates().get(0);

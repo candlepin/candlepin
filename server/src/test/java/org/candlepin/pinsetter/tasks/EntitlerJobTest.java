@@ -14,8 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.ForbiddenException;
@@ -34,9 +33,9 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
 
 import org.hibernate.mapping.Map;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -67,7 +66,7 @@ public class EntitlerJobTest extends BaseJobTest {
     private PoolCurator pC;
     private I18n i18n;
 
-    @Before
+    @BeforeEach
     public void init() {
         super.init();
         consumerUuid = "49bd6a8f-e9f8-40cc-b8d7-86cafd687a0e";
@@ -165,7 +164,7 @@ public class EntitlerJobTest extends BaseJobTest {
         out.close();
     }
 
-    @Test(expected = JobExecutionException.class)
+    @Test
     public void handleException() throws JobExecutionException, EntitlementRefusedException {
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity("pool10", 1);
@@ -179,7 +178,7 @@ public class EntitlerJobTest extends BaseJobTest {
 
         EntitlerJob job = new EntitlerJob(e, null, null, null);
         injector.injectMembers(job);
-        job.execute(ctx);
+        assertThrows(JobExecutionException.class, () -> job.execute(ctx));
     }
 
     @Test
@@ -204,7 +203,7 @@ public class EntitlerJobTest extends BaseJobTest {
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(p).iterator());
-        when(pC.listAllByIds(anyListOf(String.class))).thenReturn(cqmock);
+        when(pC.listAllByIds(anySet())).thenReturn(cqmock);
 
         job.execute(ctx);
         ArgumentCaptor<Object> argumentCaptor = ArgumentCaptor.forClass(Object.class);
@@ -217,7 +216,7 @@ public class EntitlerJobTest extends BaseJobTest {
             .getErrors().get(0));
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         new File("obj.ser").delete();
     }

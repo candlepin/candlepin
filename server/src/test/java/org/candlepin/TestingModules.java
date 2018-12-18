@@ -14,7 +14,6 @@
  */
 package org.candlepin;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;

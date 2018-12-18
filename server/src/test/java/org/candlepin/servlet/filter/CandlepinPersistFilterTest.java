@@ -14,7 +14,6 @@
  */
 package org.candlepin.servlet.filter;
 
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import com.google.inject.persist.UnitOfWork;

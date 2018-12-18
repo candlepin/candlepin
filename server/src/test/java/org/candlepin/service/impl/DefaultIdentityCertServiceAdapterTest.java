@@ -14,15 +14,8 @@
  */
 package org.candlepin.service.impl;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -34,26 +27,31 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-
+import java.util.Date;
+import java.util.Set;
 
 /**
  * DefaultIdentityCertServiceAdapterTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class DefaultIdentityCertServiceAdapterTest {
 
     @Mock private PKIUtility pki;
@@ -63,7 +61,7 @@ public class DefaultIdentityCertServiceAdapterTest {
     private DefaultIdentityCertServiceAdapter dicsa;
 
 
-    @Before
+    @BeforeEach
     public void setUp() {
         dicsa = new DefaultIdentityCertServiceAdapter(pki, idcur, kpc, csc,
             new ExpiryDateFunction(1));
@@ -93,7 +91,10 @@ public class DefaultIdentityCertServiceAdapterTest {
                     return cs;
                 }
             });
-
+        when(pki.createX509Certificate(any(String.class), nullable(Set.class), nullable(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            nullable(String.class)))
+            .thenReturn(mock(X509Certificate.class));
         when(pki.getPemEncoded(any(X509Certificate.class))).thenReturn(
             "x509cert".getBytes());
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
@@ -154,7 +155,10 @@ public class DefaultIdentityCertServiceAdapterTest {
                     return cs;
                 }
             });
-
+        when(pki.createX509Certificate(any(String.class), nullable(Set.class), nullable(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            nullable(String.class)))
+            .thenReturn(mock(X509Certificate.class));
         when(pki.getPemEncoded(any(X509Certificate.class))).thenReturn(
             "x509cert".getBytes());
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(
@@ -203,6 +207,10 @@ public class DefaultIdentityCertServiceAdapterTest {
                 }
             });
 
+        when(pki.createX509Certificate(any(String.class), nullable(Set.class), nullable(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            nullable(String.class)))
+            .thenReturn(mock(X509Certificate.class));
         when(pki.getPemEncoded(any(X509Certificate.class))).thenReturn(
             "x509cert".getBytes());
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn(

@@ -14,12 +14,9 @@
  */
 package org.candlepin.model;
 
-import static org.hamcrest.Matchers.hasItem;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -31,8 +28,8 @@ import org.candlepin.util.PropertyValidationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +46,6 @@ import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
 
-
-
 public class ProductCuratorTest extends DatabaseTestFixture {
     private static Logger log = LoggerFactory.getLogger(ProductCuratorTest.class);
 
@@ -63,7 +58,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     private Product derivedProvidedProduct;
     private Pool pool;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES, "product.count, product.multiplier");
         config.setProperty(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES, "product.pos_count");
@@ -125,18 +120,18 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(5, results.size());
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test
     public void nameRequired() {
 
         Product prod = new Product("someproductlabel", null);
-        productCurator.create(prod, true);
+        assertThrows(PersistenceException.class, () -> productCurator.create(prod, true));
 
     }
 
-    @Test(expected = ConstraintViolationException.class)
+    @Test
     public void labelRequired() {
         Product prod = new Product(null, "My Product Name");
-        productCurator.create(prod, true);
+        assertThrows(ConstraintViolationException.class, () -> productCurator.create(prod, true));
     }
 
     @Test
@@ -148,7 +143,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(prod2);
 
         assertEquals(prod.getName(), prod2.getName());
-        assertFalse(prod.getUuid().equals(prod2.getUuid()));
+        assertNotEquals(prod.getUuid(), prod2.getUuid());
     }
 
     @Test
@@ -313,14 +308,14 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         original.setAttribute("product.bool_val_str", "true");
         original.setAttribute("product.bool_val_num", "0");
         productCurator.create(original);
-        assertTrue(original.getUuid() != null);
+        assertNotNull(original.getUuid());
     }
 
     @Test
     public void testProductAttributeValidationSuccessUpdate() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getUuid() != null);
+        assertNotNull(original.getUuid());
         original.setAttribute("product.count", "134");
         original.setAttribute("product.pos_count", "333");
         original.setAttribute("product.long_multiplier", (new Long(Integer.MAX_VALUE * 100)).toString());
@@ -330,11 +325,11 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.merge(original);
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeCreationFailBadInt() {
         Product original = createTestProduct();
         original.setAttribute("product.count", "1.0");
-        productCurator.create(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.create(original));
     }
 
     @Test
@@ -344,102 +339,102 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(original);
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeCreationFailBadPosInt() {
         Product original = createTestProduct();
         original.setAttribute("product.pos_count", "-5");
-        productCurator.create(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.create(original));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeCreationFailBadLong() {
         Product original = createTestProduct();
         original.setAttribute("product.long_multiplier", "ZZ");
-        productCurator.create(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.create(original));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeCreationFailBadPosLong() {
         Product original = createTestProduct();
         original.setAttribute("product.long_pos_count", "-1");
-        productCurator.create(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.create(original));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeCreationFailBadStringBool() {
         Product original = createTestProduct();
         original.setAttribute("product.bool_val_str", "yes");
-        productCurator.create(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.create(original));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeCreationFailNumberBool() {
         Product original = createTestProduct();
         original.setAttribute("product.bool_val_num", "2");
-        productCurator.create(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.create(original));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeUpdateFailInt() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getUuid() != null);
+        assertNotNull(original.getUuid());
         original.setAttribute("product.count", "one");
-        productCurator.merge(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.merge(original));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeUpdateFailPosInt() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getUuid() != null);
+        assertNotNull(original.getUuid());
         original.setAttribute("product.pos_count", "-44");
-        productCurator.merge(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.merge(original));
     }
 
     @Test
     public void testProductAttributeUpdateSuccessZeroInt() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getUuid() != null);
+        assertNotNull(original.getUuid());
         original.setAttribute("product.pos_count", "0");
         productCurator.merge(original);
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeUpdateFailLong() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getUuid() != null);
+        assertNotNull(original.getUuid());
         original.setAttribute("product.long_multiplier", "10^23");
-        productCurator.merge(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.merge(original));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeUpdateFailPosLong() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getUuid() != null);
+        assertNotNull(original.getUuid());
         original.setAttribute("product.long_pos_count", "-23");
-        productCurator.merge(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.merge(original));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeUpdateFailStringBool() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getUuid() != null);
+        assertNotNull(original.getUuid());
         original.setAttribute("product.bool_val_str", "flase");
-        productCurator.merge(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.merge(original));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testProductAttributeUpdateFailNumberBool() {
         Product original = createTestProduct();
         productCurator.create(original);
-        assertTrue(original.getUuid() != null);
+        assertNotNull(original.getUuid());
         original.setAttribute("product.bool_val_num", "6");
-        productCurator.merge(original);
+        assertThrows(PropertyValidationException.class, () -> productCurator.merge(original));
     }
 
     @Test

@@ -14,9 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventFactory;

@@ -15,11 +15,7 @@
 package org.candlepin.resource;
 
 import static org.candlepin.test.TestUtil.*;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event.Target;
@@ -97,15 +93,15 @@ import com.google.inject.util.Providers;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.hibernate.mapping.Collection;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -132,12 +128,9 @@ import javax.ws.rs.core.Response;
 /**
  * ConsumerResourceTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ConsumerResourceTest {
-
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private I18n i18n;
     private Provider<I18n> i18nProvider = () -> i18n;
@@ -178,7 +171,7 @@ public class ConsumerResourceTest {
     private ConsumerResource mockedConsumerResource;
 
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.config = new CandlepinCommonTestConfig();
         this.translator = new StandardTranslator(mockConsumerTypeCurator,
@@ -363,7 +356,7 @@ public class ConsumerResourceTest {
         verifyCertificateSerialNumbers(serials);
     }
 
-    @Test (expected = RuntimeException.class)
+    @Test
     public void testExceptionFromCertGen() throws Exception {
         Consumer consumer = createConsumer(createOwner());
 
@@ -392,7 +385,9 @@ public class ConsumerResourceTest {
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
 
-        consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), "9999", false);
+        assertThrows(RuntimeException.class, () ->
+            consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), "9999", false)
+        );
     }
 
     private void verifyCertificateSerialNumbers(
@@ -470,7 +465,7 @@ public class ConsumerResourceTest {
         assertEquals(origserial, c.getIdCertificate().getSerial().getSerial());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testCreatePersonConsumerWithActivationKey() {
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.PERSON));
 
@@ -484,7 +479,9 @@ public class ConsumerResourceTest {
         when(ak.getId()).thenReturn("testKey");
         when(mockActivationKeyCurator.getByKeyName(eq(owner), eq(owner.getKey()))).thenReturn(ak);
 
-        consumerResource.create(consumerDto, nap, null, owner.getKey(), "testKey", true);
+        assertThrows(BadRequestException.class, () ->
+            consumerResource.create(consumerDto, nap, null, owner.getKey(), "testKey", true)
+        );
     }
 
     @Test
@@ -525,21 +522,23 @@ public class ConsumerResourceTest {
         verify(mockEntitler).bindByProducts(eq(data));
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void unbindByInvalidSerialShouldFail() {
         Consumer consumer = createConsumer(createOwner());
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
         when(consumerCurator.verifyAndLookupConsumer(eq("fake uuid"))).thenReturn(consumer);
         when(mockEntitlementCurator.get(any(Serializable.class))).thenReturn(null);
 
-        consumerResource.unbindBySerial("fake uuid", Long.valueOf(1234L));
+        assertThrows(NotFoundException.class, () ->
+            consumerResource.unbindBySerial("fake uuid", Long.valueOf(1234L))
+        );
     }
 
     /**
      * Basic test. If invalid id is given, should throw
      * {@link NotFoundException}
      */
-    @Test(expected = NotFoundException.class)
+    @Test
     public void unbindByInvalidPoolIdShouldFail() {
         Consumer consumer = createConsumer(createOwner());
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
@@ -547,38 +546,42 @@ public class ConsumerResourceTest {
         when(mockEntitlementCurator.listByConsumerAndPoolId(eq(consumer), any(String.class)))
             .thenReturn(new ArrayList<>());
 
-        consumerResource.unbindByPool("fake-uuid", "Run Forest!");
+        assertThrows(NotFoundException.class, () ->
+            consumerResource.unbindByPool("fake-uuid", "Run Forest!")
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testBindMultipleParams() throws Exception {
         Consumer c = createConsumer(createOwner());
         when(mockConsumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
-        consumerResource.bind(c.getUuid(), "fake pool uuid",
-            new String[]{"12232"}, 1, null, null, false, null, null);
+        assertThrows(BadRequestException.class, () -> consumerResource.bind(c.getUuid(), "fake pool uuid",
+            new String[]{"12232"}, 1, null, null, false, null, null)
+        );
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testBindByPoolBadConsumerUuid() throws Exception {
-        when(mockConsumerCurator.verifyAndLookupConsumerWithEntitlements(any(String.class)))
-            .thenThrow(new NotFoundException(""));
-
         Consumer c = createConsumer(createOwner());
-        when(mockConsumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
-        consumerResource.bind(c.getUuid(), "fake pool uuid", null, null, null,
-            null, false, null, null);
+        when(mockConsumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid())))
+            .thenThrow(new NotFoundException(""));
+        assertThrows(NotFoundException.class, () -> consumerResource.bind(c.getUuid(), "fake pool uuid", null,
+            null, null, null, false, null, null)
+        );
     }
 
     /**
      * Basic test. If invalid id is given, should throw
      * {@link NotFoundException}
      */
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testRegenerateEntitlementCertificatesWithInvalidConsumerId() {
         when(mockConsumerCurator.verifyAndLookupConsumer(any(String.class)))
             .thenThrow(new NotFoundException(""));
 
-        consumerResource.regenerateEntitlementCertificates("xyz", null, true);
+        assertThrows(NotFoundException.class, () ->
+            consumerResource.regenerateEntitlementCertificates("xyz", null, true)
+        );
     }
 
     protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
@@ -590,7 +593,7 @@ public class ConsumerResourceTest {
         return toReturn;
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testNullPerson() {
         Owner owner = this.createOwner();
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.PERSON));
@@ -601,15 +604,13 @@ public class ConsumerResourceTest {
         when(up.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).thenReturn(true);
 
         // usa.findByLogin() will return null by default no need for a when
-        consumerResource.create(consumerDto, up, null, owner.getKey(), null, true);
+        assertThrows(NotFoundException.class, () ->
+            consumerResource.create(consumerDto, up, null, owner.getKey(), null, true)
+        );
     }
 
     @Test
     public void testCreateConsumerShouldFailOnMaxLengthOfName() {
-        thrown.expect(BadRequestException.class);
-        thrown.expectMessage(String.format("Name of the consumer " +
-            "should be shorter than %d characters.", Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1));
-
         Owner owner = this.createOwner();
 
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
@@ -622,7 +623,11 @@ public class ConsumerResourceTest {
 
         when(up.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).thenReturn(true);
 
-        consumerResource.create(consumerDto, up, null, owner.getKey(), null, false);
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+            consumerResource.create(consumerDto, up, null, owner.getKey(), null, false)
+        );
+        assertEquals(String.format("Name of the consumer should be shorter than %d characters.",
+            Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1), ex.getMessage());
     }
 
     @Test
@@ -655,15 +660,17 @@ public class ConsumerResourceTest {
         consumerResource.consumerExists("uuid");
     }
 
-    @Test (expected = NotFoundException.class)
+    @Test
     public void testConsumerExistsNo() {
         when(mockConsumerCurator.doesConsumerExist(any(String.class))).thenReturn(false);
-        consumerResource.consumerExists("uuid");
+        assertThrows(NotFoundException.class, () -> consumerResource.consumerExists("uuid"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testFetchAllConsumers() {
-        consumerResource.list(null, null, null, null, null, null, null);
+        assertThrows(BadRequestException.class, () ->
+            consumerResource.list(null, null, null, null, null, null, null)
+        );
     }
 
     @Test
@@ -674,9 +681,10 @@ public class ConsumerResourceTest {
         when(cqmock.list()).thenReturn(consumers);
         when(cqmock.iterator()).thenReturn(consumers.iterator());
         when(mockConsumerCurator.searchOwnerConsumers(
-            any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
-            any(List.class), any(List.class), any(List.class), any(List.class), any(List.class),
-            any(List.class))).thenReturn(cqmock);
+            nullable(Owner.class), anyString(),
+            (java.util.Collection<ConsumerType>) nullable(Collection.class),
+            nullable(List.class), nullable(List.class), nullable(List.class), any(List.class),
+            any(List.class), any(List.class))).thenReturn(cqmock);
         when(cqmock.transform(any(ElementTransformer.class))).thenReturn(cqmock);
 
         List<ConsumerDTO> result = consumerResource
@@ -702,9 +710,11 @@ public class ConsumerResourceTest {
         assertEquals(consumers, result);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testFetchAllConsumersForEmptyUUIDs() {
-        consumerResource.list(null, null, null, new ArrayList<>(), null, null, null);
+        assertThrows(BadRequestException.class, () ->
+            consumerResource.list(null, null, null, new ArrayList<>(), null, null, null)
+        );
     }
 
     @Test
@@ -715,8 +725,9 @@ public class ConsumerResourceTest {
         when(cqmock.iterator()).thenReturn(consumers.iterator());
 
         when(mockConsumerCurator.searchOwnerConsumers(
-            any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
-            any(List.class), any(List.class), any(List.class),
+            nullable(Owner.class), nullable(String.class),
+            (java.util.Collection<ConsumerType>) nullable(Collection.class),
+            any(List.class), nullable(List.class), nullable(List.class),
             any(List.class), any(List.class), any(List.class))).thenReturn(cqmock);
         when(cqmock.transform(any(ElementTransformer.class))).thenReturn(cqmock);
 
@@ -792,7 +803,7 @@ public class ConsumerResourceTest {
             eq(cdn.getLabel()), eq("prefix"), eq(cdn.getUrl()), any(Map.class));
     }
 
-    @Test(expected = GoneException.class)
+    @Test
     public void deleteConsumerThrowsGoneExceptionIfConsumerDoesNotExistOnInitialLookup() {
         String targetConsumerUuid = "my-test-consumer";
         when(mockConsumerCurator.findByUuid(eq(targetConsumerUuid))).thenReturn(null);
@@ -801,10 +812,10 @@ public class ConsumerResourceTest {
         when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
             .thenReturn(Boolean.TRUE);
 
-        consumerResource.deleteConsumer(targetConsumerUuid, uap);
+        assertThrows(GoneException.class, () -> consumerResource.deleteConsumer(targetConsumerUuid, uap));
     }
 
-    @Test(expected = GoneException.class)
+    @Test
     public void deleteConsuemrThrowsGoneExceptionWhenLockAquisitionFailsDueToConsumerAlreadyDeleted() {
         Consumer consumer = createConsumer();
         when(mockConsumerCurator.findByUuid(eq(consumer.getUuid()))).thenReturn(consumer);
@@ -816,10 +827,10 @@ public class ConsumerResourceTest {
         when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
             .thenReturn(Boolean.TRUE);
 
-        consumerResource.deleteConsumer(consumer.getUuid(), uap);
+        assertThrows(GoneException.class, () -> consumerResource.deleteConsumer(consumer.getUuid(), uap));
     }
 
-    @Test(expected = OptimisticLockException.class)
+    @Test
     public void deleteConsuemrReThrowsOLEWhenLockAquisitionFailsWithoutConsumerHavingBeenDeleted() {
         Consumer consumer = createConsumer();
         when(mockConsumerCurator.findByUuid(eq(consumer.getUuid()))).thenReturn(consumer);
@@ -830,7 +841,9 @@ public class ConsumerResourceTest {
         when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
             .thenReturn(Boolean.TRUE);
 
-        consumerResource.deleteConsumer(consumer.getUuid(), uap);
+        assertThrows(OptimisticLockException.class, () ->
+            consumerResource.deleteConsumer(consumer.getUuid(), uap)
+        );
     }
 
 }

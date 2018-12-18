@@ -16,14 +16,10 @@ package org.candlepin.dto.api.v1;
 
 import static org.junit.Assert.*;
 
-import junitparams.JUnitParamsRunner;
-
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportUpstreamConsumer;
-
-import org.junit.runner.RunWith;
 
 import java.util.Date;
 
@@ -32,7 +28,6 @@ import java.util.Date;
 /**
  * Test suite for the ImportRecordTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ImportRecordTranslatorTest extends
     AbstractTranslatorTest<ImportRecord, ImportRecordDTO, ImportRecordTranslator> {
 

@@ -18,15 +18,11 @@ import static org.junit.Assert.*;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.EnvironmentDTO.EnvironmentContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.test.TestUtil;
-import org.candlepin.dto.api.v1.EnvironmentDTO.EnvironmentContentDTO;
-
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,7 +30,6 @@ import java.util.Set;
 /**
  * Test suite for the ProductTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class EnvironmentTranslatorTest extends
     AbstractTranslatorTest<Environment, EnvironmentDTO, EnvironmentTranslator> {
 

@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Type;
@@ -24,8 +23,8 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.auth.Access;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
@@ -38,7 +37,7 @@ public class EventCuratorTest extends DatabaseTestFixture {
 
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = new Owner("testOwner");
         ownerCurator.create(owner);

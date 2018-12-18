@@ -14,31 +14,24 @@
  */
 package org.candlepin.dto.api.v1;
 
-import junitparams.JUnitParamsRunner;
+import static org.candlepin.pinsetter.core.model.JobStatus.*;
+import static org.candlepin.pinsetter.core.model.JobStatus.TargetType.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
 import org.candlepin.auth.Principal;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
-import org.junit.runner.RunWith;
+
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 
-import static org.candlepin.pinsetter.core.model.JobStatus.CORRELATION_ID;
-import static org.candlepin.pinsetter.core.model.JobStatus.OWNER_ID;
-import static org.candlepin.pinsetter.core.model.JobStatus.TARGET_ID;
-import static org.candlepin.pinsetter.core.model.JobStatus.TARGET_TYPE;
-import static org.candlepin.pinsetter.core.model.JobStatus.TargetType.CONSUMER;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 /**
  * Test suite for the JobStatusTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class JobStatusTranslatorTest
     extends AbstractTranslatorTest<JobStatus, JobStatusDTO, JobStatusTranslator> {
 

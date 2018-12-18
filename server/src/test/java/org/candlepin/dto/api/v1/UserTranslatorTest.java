@@ -14,22 +14,17 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.User;
-
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-
-import org.junit.runner.RunWith;
 
 
 
 /**
  * Test suite for the UserTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class UserTranslatorTest extends AbstractTranslatorTest<User, UserDTO, UserTranslator> {
 
     protected UserTranslator translator = new UserTranslator();

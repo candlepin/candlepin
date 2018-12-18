@@ -14,22 +14,17 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.UeberCertificate;
-
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-
-import org.junit.runner.RunWith;
 
 
 
 /**
  * Test suite for the UeberCertificateTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class UeberCertificateTranslatorTest extends
     AbstractTranslatorTest<UeberCertificate, UeberCertificateDTO, UeberCertificateTranslator> {
 

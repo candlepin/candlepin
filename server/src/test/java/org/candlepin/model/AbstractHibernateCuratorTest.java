@@ -14,32 +14,33 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.stream.Stream;
 
 /**
  * AbstractHibernateCuratorTest
  */
-@RunWith(JUnitParamsRunner.class)
+// Allow a non-static MethodSource
+@TestInstance(Lifecycle.PER_CLASS)
 public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     /**
      * Test implementation that provides access to some protected methods
@@ -70,7 +71,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     AbstractHibernateCurator<Owner> testOwnerCurator;
     AbstractHibernateCurator<Content> testContentCurator;
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.testOwnerCurator = new TestHibernateCurator<>(Owner.class);
         this.testContentCurator = new TestHibernateCurator<>(Content.class);
@@ -231,10 +232,10 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         assertEquals("c3", c3.getName());
     }
 
-    protected Object[][] largeValueSetSizes() {
+    protected Stream<Object[]> largeValueSetSizes() {
         int caseBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE);
 
-        return new Object[][] {
+        return Stream.of(
             new Object[] { (int) (caseBlockSize), 0 },
             new Object[] { (int) (caseBlockSize + 1), 0 },
             new Object[] { (int) (caseBlockSize * 1.5), 0 },
@@ -259,12 +260,12 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             new Object[] { (int) (caseBlockSize * 3), 1 },
             new Object[] { (int) (caseBlockSize * 3 + 1), 1 },
             new Object[] { (int) (caseBlockSize * 3.5), 1 },
-            new Object[] { (int) (caseBlockSize * 3.5 + 1), 1 },
-        };
+            new Object[] { (int) (caseBlockSize * 3.5 + 1), 1 }
+        );
     }
 
-    @Test
-    @Parameters(method = "largeValueSetSizes")
+    @ParameterizedTest
+    @MethodSource("largeValueSetSizes")
     public void testBulkSQLUpdateWithLargeValueSets(int count, int skip) {
         Owner owner = this.createOwner();
 
@@ -312,8 +313,8 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         return entries.toArray();
     }
 
-    @Test
-    @Parameters(method = "largeValueSetAndCriteriaSizes")
+    @ParameterizedTest
+    @MethodSource("largeValueSetAndCriteriaSizes")
     public void testBulkSQLUpdateWithLargeValueSetAndCriteriaList(int valueCount, int criteriaListSize) {
         Owner owner = this.createOwner();
 
@@ -604,7 +605,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
                 }
             }
 
-            assertTrue("expected entity was not found in output: " + expected.getId(), found);
+            assertTrue(found, "expected entity was not found in output: " + expected.getId());
         }
     }
 
@@ -785,7 +786,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
                 }
             }
 
-            assertTrue("expected entity was not found in output: " + expected.getId(), found);
+            assertTrue(found, "expected entity was not found in output: " + expected.getId());
         }
     }
 
@@ -922,7 +923,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
                 }
             }
 
-            assertTrue("expected entity was not found in output: " + expected.getId(), found);
+            assertTrue(found, "expected entity was not found in output: " + expected.getId());
         }
     }
 

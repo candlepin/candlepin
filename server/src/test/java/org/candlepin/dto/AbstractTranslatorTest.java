@@ -21,16 +21,12 @@ import org.slf4j.LoggerFactory;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
 
 
 
 /**
  * Base test suite for the EntityTranslator subclasses
  */
-@RunWith(JUnitParamsRunner.class)
 public abstract class AbstractTranslatorTest<S, D, T extends ObjectTranslator<S, D>> {
     protected static Logger log = LoggerFactory.getLogger(AbstractTranslatorTest.class);
 

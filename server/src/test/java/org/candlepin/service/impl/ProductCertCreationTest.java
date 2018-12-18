@@ -14,10 +14,10 @@
  */
 package org.candlepin.service.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.candlepin.model.Product;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Product;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.CertificateInfo;
@@ -27,7 +27,7 @@ import org.candlepin.test.TestUtil;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 
@@ -69,12 +69,12 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
         assertNotNull(cert.getCertificate());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void noHashCreation() {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Product product = TestUtil.createProduct("thin", "Not Much Here");
 
-        createCert(owner, product);
+        assertThrows(IllegalArgumentException.class, () -> createCert(owner, product));
     }
 
     private CertificateInfo createDummyCert() {

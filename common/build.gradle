@@ -41,7 +41,6 @@ dependencies {
 
     testImplementation libraries.core_testing
     testImplementation libraries.liquibase_slf4j
-    testImplementation libraries.jukito
     testImplementation libraries.jmock
 }
 

@@ -14,22 +14,18 @@
  */
 package org.candlepin.dto.api.v1;
 
-import junitparams.JUnitParamsRunner;
+import static org.junit.Assert.*;
+
 import org.candlepin.audit.Event;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.junit.runner.RunWith;
 
 import java.util.Date;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * Test suite for the EventTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class EventTranslatorTest extends AbstractTranslatorTest<Event, EventDTO, EventTranslator> {
 
     protected EventTranslator translator = new EventTranslator();

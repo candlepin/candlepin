@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -35,13 +35,13 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -81,13 +81,13 @@ public class UserResourceTest extends DatabaseTestFixture {
         assertEquals(dto.isSuperAdmin(), existing.isSuperAdmin());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testCreateUserNoUsername() {
         UserDTO dto = new UserDTO()
             .setPassword("banana")
             .setSuperAdmin(true);
 
-        UserDTO output = this.resource.createUser(dto);
+        assertThrows(BadRequestException.class, () -> this.resource.createUser(dto));
     }
 
     @Test
@@ -109,7 +109,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         assertNull(output.getHashedPassword());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testLookupUserDoesntExist() {
         User user = new User();
         user.setUsername("test-user");
@@ -118,10 +118,10 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         this.userCurator.create(user);
 
-        UserDTO output = this.resource.getUserInfo("no such user");
+        assertThrows(NotFoundException.class, () -> this.resource.getUserInfo("no such user"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testLookupUserNullUsername() {
         User user = new User();
         user.setUsername("test-user");
@@ -130,7 +130,7 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         this.userCurator.create(user);
 
-        UserDTO output = this.resource.getUserInfo(null);
+        assertThrows(BadRequestException.class, () -> this.resource.getUserInfo(null));
     }
 
     // test lookup doesn't exist
@@ -251,7 +251,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         assertNull(existing);
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testDeleteUserNotFound() {
         User user = new User();
         user.setUsername("test-user");
@@ -260,7 +260,7 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         this.userCurator.create(user);
 
-        this.resource.deleteUser("no such user");
+        assertThrows(NotFoundException.class, () -> this.resource.deleteUser("no such user"));
     }
 
     @Test
@@ -338,12 +338,12 @@ public class UserResourceTest extends DatabaseTestFixture {
         assertEquals(Util.hash("banana"), user.getPassword());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testUpdateUsersNoLogin() {
         UserDTO dto = new UserDTO()
             .setUsername("henri")
             .setPassword("password");
 
-        this.resource.updateUser("JarJarIsMyCopilot", dto);
+        assertThrows(NotFoundException.class, () -> this.resource.updateUser("JarJarIsMyCopilot", dto));
     }
 }

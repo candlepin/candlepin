@@ -14,16 +14,12 @@
  */
 package org.candlepin.dto.shim;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.model.dto.ContentData;
-
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-
-import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 
@@ -32,7 +28,6 @@ import java.util.Arrays;
 /**
  * Test suite for the UpstreamConsumerTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ContentDataTranslatorTest extends
     AbstractTranslatorTest<ContentData, ContentDTO, ContentDataTranslator> {
 

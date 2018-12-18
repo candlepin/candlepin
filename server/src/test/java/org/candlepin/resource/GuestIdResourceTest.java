@@ -15,9 +15,6 @@
 package org.candlepin.resource;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventFactory;
@@ -54,7 +51,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -98,7 +94,7 @@ public class GuestIdResourceTest {
 
     @Before
     public void setUp() {
-        testMigration = Mockito.spy(new GuestMigration(consumerCurator));
+        testMigration = spy(new GuestMigration(consumerCurator));
         migrationProvider = Providers.of(testMigration);
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
@@ -152,10 +148,10 @@ public class GuestIdResourceTest {
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
 
-        Mockito.verify(consumerResource, Mockito.times(1))
+        verify(consumerResource, times(1))
             .performConsumerUpdates(any(ConsumerDTO.class), eq(consumer), any(GuestMigration.class));
         // consumerResource returned true, so the consumer should be updated
-        Mockito.verify(testMigration, Mockito.times(1)).migrate();
+        verify(testMigration, times(1)).migrate();
     }
 
     @Test
@@ -169,9 +165,9 @@ public class GuestIdResourceTest {
             thenReturn(false);
 
         guestIdResource.updateGuests(consumer.getUuid(), guestIds);
-        Mockito.verify(consumerResource, Mockito.times(1))
+        verify(consumerResource, times(1))
             .performConsumerUpdates(any(ConsumerDTO.class), eq(consumer), any(GuestMigration.class));
-        Mockito.verify(consumerCurator, Mockito.never()).update(eq(consumer));
+        verify(consumerCurator, never()).update(eq(consumer));
     }
 
     @Test
@@ -182,7 +178,7 @@ public class GuestIdResourceTest {
         guestIdResource.updateGuest(consumer.getUuid(), guest.getGuestId(), guest);
         when(guestIdCurator.findByGuestIdAndOrg(anyString(), any(String.class))).thenReturn(guestEnt);
         ArgumentCaptor<GuestId> guestCaptor = ArgumentCaptor.forClass(GuestId.class);
-        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(guestCaptor.capture());
+        verify(guestIdCurator, times(1)).merge(guestCaptor.capture());
         GuestId result = guestCaptor.getValue();
         assertEquals(consumer, result.getConsumer());
     }
@@ -202,11 +198,11 @@ public class GuestIdResourceTest {
         GuestIdDTO guestIdDTO = new GuestIdDTO();
         guestIdResource.updateGuest(consumer.getUuid(), "some_id", guestIdDTO);
         ArgumentCaptor<GuestId> guestCaptor = ArgumentCaptor.forClass(GuestId.class);
-        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(guestCaptor.capture());
+        verify(guestIdCurator, times(1)).merge(guestCaptor.capture());
         GuestId guest = guestCaptor.getValue();
         assertEquals(consumer, guest.getConsumer());
         assertEquals("some_id", guest.getGuestId());
-        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(eq(guest));
+        verify(guestIdCurator, times(1)).merge(eq(guest));
     }
 
     @Test
@@ -218,9 +214,8 @@ public class GuestIdResourceTest {
             consumer.getOwnerId())).thenReturn(null);
         guestIdResource.deleteGuest(consumer.getUuid(),
             guest.getGuestId(), false, null);
-        Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
-        Mockito.verify(consumerResource, Mockito.never())
-            .checkForMigration(eq(consumer), any(Consumer.class));
+        verify(guestIdCurator, times(1)).delete(eq(guest));
+        verify(consumerResource, never()).checkForMigration(eq(consumer), any(Consumer.class));
     }
 
     @Test
@@ -239,13 +234,13 @@ public class GuestIdResourceTest {
             guest.getGuestId(), guest);
 
         ArgumentCaptor<GuestId> captor = ArgumentCaptor.forClass(GuestId.class);
-        Mockito.verify(guestIdCurator, Mockito.times(1)).merge(captor.capture());
+        verify(guestIdCurator, times(1)).merge(captor.capture());
 
         GuestId guestId = captor.getValue();
         assertEquals("guest-id", guestId.getGuestId());
 
         // We now check for migration when the system checks in, not during guest ID updates.
-        Mockito.verify(consumerResource, Mockito.times(0))
+        verify(consumerResource, times(0))
             .checkForMigration(any(Consumer.class), any(Consumer.class));
     }
 
@@ -260,11 +255,11 @@ public class GuestIdResourceTest {
             consumer.getOwnerId())).thenReturn(guestConsumer);
         guestIdResource.deleteGuest(consumer.getUuid(),
             guest.getGuestId(), true, null);
-        Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
-        Mockito.verify(consumerResource, Mockito.never())
+        verify(guestIdCurator, times(1)).delete(eq(guest));
+        verify(consumerResource, never())
             .checkForMigration(eq(consumer), eq(guestConsumer));
-        Mockito.verify(consumerResource, Mockito.times(1))
-            .deleteConsumer(eq(guestConsumer.getUuid()), any(Principal.class));
+        verify(consumerResource, times(1))
+            .deleteConsumer(eq(guestConsumer.getUuid()), nullable(Principal.class));
     }
 
     /*
@@ -280,8 +275,8 @@ public class GuestIdResourceTest {
 
         guestIdResource.deleteGuest(consumer.getUuid(), guest.getGuestId(), true, null);
 
-        Mockito.verify(guestIdCurator, Mockito.times(1)).delete(eq(guest));
-        Mockito.verify(consumerResource, Mockito.never())
+        verify(guestIdCurator, times(1)).delete(eq(guest));
+        verify(consumerResource, never())
             .checkForMigration(eq(consumer), any(Consumer.class));
     }
 

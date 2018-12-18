@@ -15,7 +15,6 @@
 package org.candlepin.dto.api.v1;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.dto.AbstractTranslatorTest;
@@ -24,15 +23,10 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
-
 
 /**
  * Test suite for the HypervisorConsumerTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class HypervisorConsumerTranslatorTest extends
     AbstractTranslatorTest<Consumer, HypervisorConsumerDTO, HypervisorConsumerTranslator> {
 

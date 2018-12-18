@@ -14,8 +14,9 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -39,84 +40,65 @@ import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import javax.persistence.LockTimeoutException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceException;
-import javax.persistence.PessimisticLockException;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import javax.persistence.LockTimeoutException;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
+import javax.persistence.PessimisticLockException;
 
 
 /**
  * UndoImportsJobTest
  */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class UndoImportsJobTest extends DatabaseTestFixture {
+    @Inject protected I18n i18n;
+    @Inject protected CandlepinPoolManager poolManagerBase;
+    @Inject protected ImportRecordCurator importRecordCurator;
+    @Inject protected ExporterMetadataCurator exportCuratorBase;
+    @Inject protected UeberCertificateGenerator ueberCertGenerator;
 
-    @Inject
-    protected I18n i18n;
+    @Mock protected CandlepinPoolManager poolManager;
+    @Mock protected OwnerCurator ownerCurator;
+    @Mock protected SubscriptionServiceAdapter subAdapter;
+    @Mock protected Refresher refresher;
+    @Mock protected ExporterMetadataCurator exportCurator;
+    @Mock protected JobExecutionContext jobContext;
 
-    @Inject
-    protected CandlepinPoolManager poolManagerBase;
-    @Inject
-    protected ImportRecordCurator importRecordCurator;
-    @Inject
-    protected ExporterMetadataCurator exportCuratorBase;
-    @Inject
-    protected UeberCertificateGenerator ueberCertGenerator;
-
-    protected CandlepinPoolManager poolManager;
-    protected OwnerCurator ownerCurator;
-    protected SubscriptionServiceAdapter subAdapter;
-    protected Refresher refresher;
-    protected ExporterMetadataCurator exportCurator;
-
-    protected JobExecutionContext jobContext;
     protected JobDataMap jobDataMap;
 
     protected UndoImportsJob undoImportsJob;
 
-
-    @Before
+    @BeforeEach
     public void setUp() {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
 
         // Reset mocks/spys/objects
-        this.poolManager = mock(CandlepinPoolManager.class);
-        this.ownerCurator = mock(OwnerCurator.class);
-        this.subAdapter = mock(SubscriptionServiceAdapter.class);
-        this.refresher = mock(Refresher.class);
-        this.exportCurator = mock(ExporterMetadataCurator.class);
-
-        this.jobContext = mock(JobExecutionContext.class);
         this.jobDataMap = new JobDataMap();
 
         // Setup common behavior
@@ -134,7 +116,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUndoImport() throws JobExecutionException, IOException, ImporterException {
+    public void testUndoImport() throws JobExecutionException {
         // We need proper curators for this test
         this.poolManager = this.poolManagerBase;
         this.ownerCurator = super.ownerCurator;
@@ -263,120 +245,86 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void handleException() throws JobExecutionException {
+    public void handleException() {
         // the real thing we want to handle
-        doThrow(new NullPointerException()).when(this.ownerCurator).lockAndLoadById(anyString());
+        when(ownerCurator.lockAndLoadById(any())).thenThrow(new NullPointerException());
 
-        try {
-            this.undoImportsJob.execute(this.jobContext);
-            fail("Expected exception not thrown");
-        }
-        catch (JobExecutionException ex) {
-            assertFalse(ex.refireImmediately());
-        }
+        JobExecutionException ex = assertThrows(JobExecutionException.class,
+            () -> undoImportsJob.execute(jobContext));
+        assertFalse(ex.refireImmediately());
     }
 
     // If we encounter a runtime job exception, wrapping a SQLException, we should see
     // a refire job exception thrown:
     @Test
-    public void refireOnWrappedSQLException() throws JobExecutionException {
+    public void refireOnWrappedSQLException() {
         RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
-        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
 
-        try {
-            this.undoImportsJob.execute(this.jobContext);
-            fail("Expected exception not thrown");
-        }
-        catch (JobExecutionException ex) {
-            assertTrue(ex.refireImmediately());
-        }
+        JobExecutionException ex = assertThrows(JobExecutionException.class,
+            () -> undoImportsJob.execute(jobContext));
+        assertTrue(ex.refireImmediately());
     }
 
     // If we encounter a runtime job exception, wrapping a SQLException, we should see
     // a refire job exception thrown:
     @Test
-    public void refireOnMultiLayerWrappedSQLException() throws JobExecutionException {
+    public void refireOnMultiLayerWrappedSQLException() {
         RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
         RuntimeException e2 = new RuntimeException("trouble!", e);
-        doThrow(e2).when(this.ownerCurator).lockAndLoadById(anyString());
-
-        try {
-            this.undoImportsJob.execute(this.jobContext);
-            fail("Expected exception not thrown");
-        }
-        catch (JobExecutionException ex) {
-            assertTrue(ex.refireImmediately());
-        }
+        when(ownerCurator.lockAndLoadById(any())).thenThrow(e2);
+        JobExecutionException ex = assertThrows(JobExecutionException.class,
+            () -> undoImportsJob.execute(jobContext));
+        assertTrue(ex.refireImmediately());
     }
 
     @Test
-    public void noRefireOnRegularRuntimeException() throws JobExecutionException {
+    public void noRefireOnRegularRuntimeException() {
         RuntimeException e = new RuntimeException("uh oh", new NullPointerException());
-        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
-
-        try {
-            this.undoImportsJob.execute(this.jobContext);
-            fail("Expected exception not thrown");
-        }
-        catch (JobExecutionException ex) {
-            assertFalse(ex.refireImmediately());
-        }
+        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
+        JobExecutionException ex = assertThrows(JobExecutionException.class,
+            () -> undoImportsJob.execute(jobContext));
+        assertFalse(ex.refireImmediately());
     }
 
     @Test
     public void shouldNotRefireOnGenericPersistenceException() {
-        final NullPointerException cause = new NullPointerException();
-        final RuntimeException e = new PersistenceException("uh oh", cause);
-        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+        NullPointerException cause = new NullPointerException();
+        RuntimeException e = new PersistenceException("uh oh", cause);
+        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
 
-        try {
-            this.undoImportsJob.execute(this.jobContext);
-            fail("Expected exception not thrown");
-        }
-        catch (JobExecutionException ex) {
-            assertFalse(ex.refireImmediately());
-        }
+        JobExecutionException ex = assertThrows(JobExecutionException.class,
+            () -> undoImportsJob.execute(jobContext));
+        assertFalse(ex.refireImmediately());
     }
 
     @Test
     public void shouldRefireOnLockTimeoutException() {
-        final LockTimeoutException e = new LockTimeoutException("trouble!");
-        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+        LockTimeoutException e = new LockTimeoutException("trouble!");
+        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
 
-        try {
-            this.undoImportsJob.execute(this.jobContext);
-            fail("Expected exception not thrown");
-        }
-        catch (JobExecutionException ex) {
-            assertTrue(ex.refireImmediately());
-        }
+        JobExecutionException ex = assertThrows(JobExecutionException.class,
+            () -> undoImportsJob.execute(jobContext));
+        assertTrue(ex.refireImmediately());
     }
 
     @Test
     public void shouldRefireOnOptimisticLockException() {
-        final OptimisticLockException e = new OptimisticLockException("trouble!");
-        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+        OptimisticLockException e = new OptimisticLockException("trouble!");
+        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
 
-        try {
-            this.undoImportsJob.execute(this.jobContext);
-            fail("Expected exception not thrown");
-        }
-        catch (JobExecutionException ex) {
-            assertTrue(ex.refireImmediately());
-        }
+        JobExecutionException ex = assertThrows(JobExecutionException.class,
+            () -> undoImportsJob.execute(jobContext));
+        assertTrue(ex.refireImmediately());
     }
 
     @Test
     public void shouldRefireOnPessimisticLockException() {
-        final PessimisticLockException e = new PessimisticLockException("trouble!");
-        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+        PessimisticLockException e = new PessimisticLockException("trouble!");
+        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
 
-        try {
-            this.undoImportsJob.execute(this.jobContext);
-            fail("Expected exception not thrown");
-        }
-        catch (JobExecutionException ex) {
-            assertTrue(ex.refireImmediately());
-        }
+        JobExecutionException ex = assertThrows(JobExecutionException.class,
+            () -> undoImportsJob.execute(jobContext));
+        assertTrue(ex.refireImmediately());
     }
 }

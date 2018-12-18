@@ -14,27 +14,24 @@
  */
 package org.candlepin.model.dto;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.candlepin.model.Content;
 import org.candlepin.util.Util;
 
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
-
-
+import java.util.Iterator;
+import java.util.stream.Stream;
 
 /**
  * Test suite for the ContentData class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ContentDataTest {
 
     // public .* (?:get|is)(.*)\(\) {\npublic .* set\1\(.*\) {
@@ -54,11 +51,8 @@ public class ContentDataTest {
     //     assertEquals(input, output);
     // }
 
-    protected Object[][] getBadStringValues() {
-        return new Object[][] {
-            new Object[] { null },
-            new Object[] { "" },
-        };
+    protected static Stream<Object> getBadStringValues() {
+        return Stream.of(null, "");
     }
 
     @Test
@@ -91,15 +85,14 @@ public class ContentDataTest {
         assertEquals(input, output);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    @Parameters(method = "getBadStringValues")
+    @ParameterizedTest
+    @MethodSource("getBadStringValues")
     public void testGetSetIdBadValues(String input) {
         ContentData dto = new ContentData();
 
         String output = dto.getId();
         assertNull(output);
-
-        dto.setId(input);
+        assertThrows(IllegalArgumentException.class, () -> dto.setId(input));
     }
 
     @Test
@@ -353,8 +346,8 @@ public class ContentDataTest {
         assertEquals(input, output);
     }
 
-    protected Object[][] getValuesForEqualityAndReplication() {
-        return new Object[][] {
+    protected static Stream<Object[]> getValuesForEqualityAndReplication() {
+        return Stream.of(
             new Object[] { "Uuid", "test_value", "alt_value" },
             new Object[] { "Id", "test_value", "alt_value" },
             new Object[] { "Type", "test_value", "alt_value" },
@@ -369,10 +362,10 @@ public class ContentDataTest {
             new Object[] { "ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5", "6") },
             new Object[] { "Arches", "test_value", "alt_value" },
             new Object[] { "Locked", Boolean.TRUE, false }
-        };
+        );
     }
 
-    protected Method[] getAccessorAndMutator(String methodSuffix, Class mutatorInputClass)
+    protected static Method[] getAccessorAndMutator(String methodSuffix, Class mutatorInputClass)
         throws Exception {
 
         Method accessor = null;
@@ -411,8 +404,8 @@ public class ContentDataTest {
         assertTrue(rhs.equals(lhs));
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testEquality(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];
@@ -440,8 +433,8 @@ public class ContentDataTest {
         assertTrue(rhs.equals(rhs));
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testClone(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];
@@ -458,8 +451,8 @@ public class ContentDataTest {
         assertEquals(base.hashCode(), clone.hashCode());
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testPopulateWithDTO(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];
@@ -497,8 +490,8 @@ public class ContentDataTest {
         }
     }
 
-    protected Object[][] getValuesPopulationByEntity() {
-        return new Object[][] {
+    protected static Stream<Object[]> getValuesPopulationByEntity() {
+        return Stream.of(
             new Object[] { "Uuid", "test_value", null },
             new Object[] { "Id", "test_value", null },
             new Object[] { "Type", "test_value", null },
@@ -513,11 +506,11 @@ public class ContentDataTest {
             new Object[] { "ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList() },
             new Object[] { "Arches", "test_value", null },
             new Object[] { "Locked", Boolean.TRUE, false }
-        };
+        );
     }
 
-    @Test
-    @Parameters(method = "getValuesPopulationByEntity")
+    @ParameterizedTest
+    @MethodSource("getValuesPopulationByEntity")
     public void testPopulateWithEntity(String valueName, Object input, Object defaultValue) throws Exception {
         Method accessor = null;
         Method mutator = null;
@@ -565,7 +558,9 @@ public class ContentDataTest {
                     }
                 }
                 else {
-                    for (Object[] values : this.getValuesPopulationByEntity()) {
+                    Iterator<Object[]> i = getValuesPopulationByEntity().iterator();
+                    while (i.hasNext()) {
+                        Object[] values = i.next();
                         if (method.getName().endsWith((String) values[0])) {
                             if (values[2] instanceof Collection) {
                                 assertTrue(output instanceof Collection);

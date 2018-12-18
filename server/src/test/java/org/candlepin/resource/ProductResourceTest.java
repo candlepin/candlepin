@@ -14,10 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
@@ -28,20 +26,20 @@ import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
@@ -92,17 +90,17 @@ public class ProductResourceTest extends DatabaseTestFixture {
         return entity;
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testCreateProductResource() {
         Owner owner = this.createOwner("Example-Corporation");
         ProductDTO dto = this.buildTestProductDTO();
 
         assertNull(this.ownerProductCurator.getProductById(owner.getKey(), dto.getId()));
 
-        productResource.createProduct(dto);
+        assertThrows(BadRequestException.class, () -> productResource.createProduct(dto));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testCreateProductWithContent() {
         Owner owner = this.createOwner("Example-Corporation");
         ProductDTO pdto = this.buildTestProductDTO();
@@ -111,19 +109,10 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         assertNull(this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId()));
 
-        ProductDTO result = productResource.createProduct(pdto);
-        Product entity = this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId());
-        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
-
-        assertNotNull(entity);
-        assertEquals(expected, result);
-
-        assertNotNull(result.getProductContent());
-        assertEquals(1, result.getProductContent().size());
-        assertEquals(cdto, result.getProductContent().iterator().next().getContent());
+        assertThrows(BadRequestException.class, () -> productResource.createProduct(pdto));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testDeleteProductWithSubscriptions() {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
@@ -136,7 +125,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         subs.add(s);
         when(pc.productHasSubscriptions(eq(o), eq(p))).thenReturn(true);
 
-        pr.deleteProduct("10");
+        assertThrows(BadRequestException.class, () -> pr.deleteProduct("10"));
     }
 
     @Test
@@ -231,9 +220,9 @@ public class ProductResourceTest extends DatabaseTestFixture {
         assertEquals(0, ownersReturned.size());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testGetOwnersForProductsInputValidation() {
-        productResource.getProductOwners(new LinkedList<>());
+        assertThrows(BadRequestException.class, () -> productResource.getProductOwners(new LinkedList<>()));
     }
 
     private void verifyRefreshPoolsJobs(JobDetail[] jobs, List<Owner> owners, boolean lazyRegen) {
@@ -353,8 +342,10 @@ public class ProductResourceTest extends DatabaseTestFixture {
     //     assertEquals(0, jobs.size());
     // }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testRefreshPoolsByProductInputValidation() {
-        productResource.refreshPoolsForProduct(new LinkedList<>(), true);
+        assertThrows(BadRequestException.class, () ->
+            productResource.refreshPoolsForProduct(new LinkedList<>(), true)
+        );
     }
 }

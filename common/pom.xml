@@ -16,22 +16,22 @@
   <name>Candlepin Common</name>
   <description>Common code for Candlepin</description>
   <properties>
-    <org.junit.jupiter-junit-jupiter-api.version>5.3.2</org.junit.jupiter-junit-jupiter-api.version>
-    <org.apiguardian-apiguardian-api.version>1.0.0</org.apiguardian-apiguardian-api.version>
-    <org.opentest4j-opentest4j.version>1.1.1</org.opentest4j-opentest4j.version>
-    <org.junit.platform-junit-platform-commons.version>1.3.2</org.junit.platform-junit-platform-commons.version>
-    <org.junit.jupiter-junit-jupiter-engine.version>5.3.2</org.junit.jupiter-junit-jupiter-engine.version>
-    <org.junit.platform-junit-platform-engine.version>1.3.2</org.junit.platform-junit-platform-engine.version>
-    <org.junit.vintage-junit-vintage-engine.version>5.3.2</org.junit.vintage-junit-vintage-engine.version>
-    <junit-junit.version>4.12</junit-junit.version>
-    <org.hamcrest-hamcrest-core.version>1.3</org.hamcrest-hamcrest-core.version>
-    <org.junit-pioneer-junit-pioneer.version>0.3.0</org.junit-pioneer-junit-pioneer.version>
-    <org.mockito-mockito-junit-jupiter.version>2.23.4</org.mockito-mockito-junit-jupiter.version>
     <org.hamcrest-hamcrest-library.version>1.3</org.hamcrest-hamcrest-library.version>
+    <org.hamcrest-hamcrest-core.version>1.3</org.hamcrest-hamcrest-core.version>
+    <org.mockito-mockito-junit-jupiter.version>2.23.4</org.mockito-mockito-junit-jupiter.version>
     <org.mockito-mockito-core.version>2.23.4</org.mockito-mockito-core.version>
     <net.bytebuddy-byte-buddy.version>1.9.3</net.bytebuddy-byte-buddy.version>
     <net.bytebuddy-byte-buddy-agent.version>1.9.3</net.bytebuddy-byte-buddy-agent.version>
     <org.objenesis-objenesis.version>2.6</org.objenesis-objenesis.version>
+    <org.junit.jupiter-junit-jupiter-api.version>5.4.1</org.junit.jupiter-junit-jupiter-api.version>
+    <org.apiguardian-apiguardian-api.version>1.0.0</org.apiguardian-apiguardian-api.version>
+    <org.opentest4j-opentest4j.version>1.1.1</org.opentest4j-opentest4j.version>
+    <org.junit.platform-junit-platform-commons.version>1.4.1</org.junit.platform-junit-platform-commons.version>
+    <org.junit.jupiter-junit-jupiter-engine.version>5.4.1</org.junit.jupiter-junit-jupiter-engine.version>
+    <org.junit.platform-junit-platform-engine.version>1.4.1</org.junit.platform-junit-platform-engine.version>
+    <org.junit.jupiter-junit-jupiter-params.version>5.4.1</org.junit.jupiter-junit-jupiter-params.version>
+    <org.junit.vintage-junit-vintage-engine.version>5.4.1</org.junit.vintage-junit-vintage-engine.version>
+    <junit-junit.version>4.12</junit-junit.version>
     <org.liquibase-liquibase-core.version>3.1.0</org.liquibase-liquibase-core.version>
     <com.mattbertolini-liquibase-slf4j.version>1.2.1</com.mattbertolini-liquibase-slf4j.version>
     <commons-codec-commons-codec.version>1.11</commons-codec-commons-codec.version>
@@ -91,6 +91,90 @@
     <org.jmock-jmock-junit4.version>2.5.1</org.jmock-jmock-junit4.version>
   </properties>
   <dependencies>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-library</artifactId>
+      <version>${org.hamcrest-hamcrest-library.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <version>${org.hamcrest-hamcrest-core.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${org.mockito-mockito-junit-jupiter.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${org.mockito-mockito-core.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy</artifactId>
+      <version>${net.bytebuddy-byte-buddy.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy-agent</artifactId>
+      <version>${net.bytebuddy-byte-buddy-agent.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.objenesis</groupId>
+      <artifactId>objenesis</artifactId>
+      <version>${org.objenesis-objenesis.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
@@ -164,6 +248,18 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${org.junit.jupiter-junit-jupiter-params.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
       <groupId>org.junit.vintage</groupId>
       <artifactId>junit-vintage-engine</artifactId>
       <version>${org.junit.vintage-junit-vintage-engine.version}</version>
@@ -179,102 +275,6 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit-junit.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-core</artifactId>
-      <version>${org.hamcrest-hamcrest-core.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.junit-pioneer</groupId>
-      <artifactId>junit-pioneer</artifactId>
-      <version>${org.junit-pioneer-junit-pioneer.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-junit-jupiter</artifactId>
-      <version>${org.mockito-mockito-junit-jupiter.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-library</artifactId>
-      <version>${org.hamcrest-hamcrest-library.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>${org.mockito-mockito-core.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>net.bytebuddy</groupId>
-      <artifactId>byte-buddy</artifactId>
-      <version>${net.bytebuddy-byte-buddy.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>net.bytebuddy</groupId>
-      <artifactId>byte-buddy-agent</artifactId>
-      <version>${net.bytebuddy-byte-buddy-agent.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.objenesis</groupId>
-      <artifactId>objenesis</artifactId>
-      <version>${org.objenesis-objenesis.version}</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>

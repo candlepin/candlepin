@@ -14,15 +14,11 @@
  */
 package org.candlepin.dto.manifest.v1;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Owner;
-
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-
-import org.junit.runner.RunWith;
 
 import java.util.Date;
 
@@ -31,7 +27,6 @@ import java.util.Date;
 /**
  * Test suite for the OwnerTranslator (import/export manifest) class
  */
-@RunWith(JUnitParamsRunner.class)
 public class OwnerTranslatorTest extends
     AbstractTranslatorTest<Owner, OwnerDTO, OwnerTranslator> {
 

@@ -14,9 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -31,16 +30,18 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Collections;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -51,7 +52,8 @@ import javax.ws.rs.core.UriInfo;
 /**
  * ActivationKeyContentOverrideResourceTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @SuppressWarnings("checkstyle:indentation")
 public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixture {
 
@@ -64,7 +66,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
     private ContentOverrideValidator validator;
     private ActivationKeyContentOverrideResource resource;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.owner = this.createOwner();
         this.key = this.createActivationKey(owner);
@@ -202,7 +204,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
     @Test
     public void testDeleteAllOverridesUsingEmptyList() {
-        List<ActivationKeyContentOverride> overrides = this.createOverrides(this.key, 1, 3);
+        this.createOverrides(this.key, 1, 3);
 
         List<ContentOverrideDTO> actual = this.resource
             .deleteContentOverrides(context, principal, Collections.emptyList())
@@ -224,7 +226,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
     @Test
     public void testAddOverride() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -255,7 +257,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
     @Test
     public void testAddOverrideOverwritesExistingWhenMatched() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -288,7 +290,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
     @Test
     public void testAddOverrideFailsValidationWithNoParent() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -305,9 +307,9 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         this.compareOverrideDTOs(overrides, actual);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithNullLabel() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -317,14 +319,14 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithEmptyLabel() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -334,14 +336,14 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithLongLabel() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -351,14 +353,14 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithNullName() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -368,14 +370,14 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithEmptyName() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -385,14 +387,14 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithLongName() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -402,14 +404,14 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithNullValue() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -419,14 +421,14 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithEmptyValue() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -436,14 +438,14 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithLongValue() {
-        ActivationKeyDTO kdto = this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
+        this.modelTranslator.translate(this.key, ActivationKeyDTO.class);
 
         List<ContentOverrideDTO> overrides = new LinkedList<>();
         ContentOverrideDTO dto = new ContentOverrideDTO()
@@ -453,8 +455,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 }

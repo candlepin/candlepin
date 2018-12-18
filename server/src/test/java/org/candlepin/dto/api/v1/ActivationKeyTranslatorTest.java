@@ -16,7 +16,6 @@ package org.candlepin.dto.api.v1;
 
 import static org.junit.Assert.*;
 
-import junitparams.JUnitParamsRunner;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.ContentOverride;
@@ -26,7 +25,6 @@ import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
-import org.junit.runner.RunWith;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 
@@ -39,7 +37,6 @@ import java.util.Set;
 /**
  * Test suite for the ActivationKeyTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ActivationKeyTranslatorTest extends
     AbstractTranslatorTest<ActivationKey, ActivationKeyDTO, ActivationKeyTranslator> {
 

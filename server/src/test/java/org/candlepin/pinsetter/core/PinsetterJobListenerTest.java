@@ -15,7 +15,6 @@
 package org.candlepin.pinsetter.core;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.quartz.JobKey.*;
 

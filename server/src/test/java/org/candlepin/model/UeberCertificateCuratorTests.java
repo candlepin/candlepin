@@ -14,13 +14,13 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.hibernate.exception.ConstraintViolationException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
@@ -34,7 +34,7 @@ public class UeberCertificateCuratorTests extends DatabaseTestFixture {
 
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void setupTest() {
         owner = this.createOwner("uebertest");
     }
@@ -78,7 +78,7 @@ public class UeberCertificateCuratorTests extends DatabaseTestFixture {
         this.ueberCertificateCurator.deleteForOwner(owner);
         assertNull(this.ueberCertificateCurator.findForOwner(owner));
         CertificateSerial fetchedSerial = certSerialCurator.get(serial.getId());
-        assertTrue("Serial should have been revoked", fetchedSerial.isRevoked());
+        assertTrue(fetchedSerial.isRevoked(), "Serial should have been revoked");
     }
 
     private UeberCertificate createUeberCert(Owner owner) {

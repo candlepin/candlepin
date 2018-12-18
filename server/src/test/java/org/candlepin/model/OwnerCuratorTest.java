@@ -14,16 +14,16 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -49,7 +49,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         assertEquals("testing", this.ownerCurator.get("testing-primary-key").getKey());
     }
 
-    @Test(expected = RollbackException.class)
+    @Test
     public void primaryKeyCollision() {
         Owner owner = new Owner("dude");
         owner = this.ownerCurator.create(owner);
@@ -58,10 +58,10 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         newOwner.setId(owner.getId());
 
         this.ownerCurator.replicate(newOwner);
-        this.commitTransaction();
+        assertThrows(RollbackException.class, () -> this.commitTransaction());
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test
     public void upstreamUuidConstraint() {
         UpstreamConsumer uc = new UpstreamConsumer("sameuuid");
 
@@ -70,8 +70,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner2 = new Owner("owner2");
         owner2.setUpstreamConsumer(uc);
 
-        ownerCurator.create(owner1);
-        ownerCurator.create(owner2);
+        assertThrows(PersistenceException.class, () -> ownerCurator.create(owner1));
     }
 
     private void associateProductToOwner(Owner o, Product p, Product provided) {

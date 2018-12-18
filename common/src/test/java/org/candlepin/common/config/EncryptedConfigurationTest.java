@@ -21,9 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junitpioneer.jupiter.TempDirectory;
-import org.junitpioneer.jupiter.TempDirectory.TempDir;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,7 +32,6 @@ import java.util.Properties;
 
 import javax.crypto.BadPaddingException;
 
-@ExtendWith(TempDirectory.class)
 public class EncryptedConfigurationTest {
     // generated with katello-secure-passphrase and katell-passwd
     // we are going to try to be compatible with this if we can

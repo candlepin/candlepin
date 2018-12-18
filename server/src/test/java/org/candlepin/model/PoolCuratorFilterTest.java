@@ -14,15 +14,15 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.Collection;
 import java.util.List;
@@ -35,7 +35,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
     private Pool searchPool;
     private Pool hidePool;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = createOwner();
         ownerCurator.create(owner);
@@ -109,7 +109,7 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
                     break;
                 }
             }
-            assertTrue("Missing expected pool: " + id, found);
+            assertTrue(found, "Missing expected pool: " + id);
         }
     }
 

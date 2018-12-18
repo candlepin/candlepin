@@ -14,53 +14,46 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
-
-
+import java.util.stream.Stream;
 
 /**
  * Test suite for the ListView class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ListViewTest extends SetViewTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     @Override
     public void init() {
         this.source = new LinkedList();
         this.testobj = new ListView((List) this.source);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testAddFromIndex() {
-        ((ListView) this.testobj).add(0, new Object());
+        assertThrows(UnsupportedOperationException.class,
+            () -> ((ListView) this.testobj).add(0, new Object()));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testAddAllFromIndex() {
         List collection = new LinkedList();
         collection.add(new Object());
         collection.add(new Object());
         collection.add(new Object());
 
-        ((ListView) this.testobj).addAll(0, collection);
+        assertThrows(UnsupportedOperationException.class,
+            () -> ((ListView) this.testobj).addAll(0, collection));
     }
 
     @Test
@@ -98,11 +91,11 @@ public class ListViewTest extends SetViewTest {
         }
     }
 
-    @Test(expected = IndexOutOfBoundsException.class)
-    @Parameters({ "-1", "4" })
+    @ParameterizedTest
+    @ValueSource(strings = { "-1", "4" })
     public void testGetWithBadIndexes(int index) {
         this.source.addAll(Arrays.asList("1", "2", "3"));
-        ((ListView) this.testobj).get(index);
+        assertThrows(IndexOutOfBoundsException.class, () -> ((ListView) this.testobj).get(index));
     }
 
     @Test
@@ -265,28 +258,28 @@ public class ListViewTest extends SetViewTest {
         assertTrue(expected.containsAll(found));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testListIteratorAddition() {
         this.source.addAll(Arrays.asList("1", "2", "3"));
 
         ListIterator iterator = ((ListView) this.testobj).listIterator();
-        iterator.add("A");
+        assertThrows(UnsupportedOperationException.class, () -> iterator.add("A"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testListIteratorReplace() {
         this.source.addAll(Arrays.asList("1", "2", "3"));
 
         ListIterator iterator = ((ListView) this.testobj).listIterator();
         iterator.next();
-        iterator.set("A");
+        assertThrows(UnsupportedOperationException.class, () -> iterator.set("A"));
     }
 
-    @Test(expected = IndexOutOfBoundsException.class)
-    @Parameters({ "-1", "4" })
+    @ParameterizedTest
+    @ValueSource(strings = { "-1", "4" })
     public void testListIteratorWithBadIndexes(int index) {
         this.source.addAll(Arrays.asList("1", "2", "3"));
-        ((ListView) this.testobj).listIterator(index);
+        assertThrows(IndexOutOfBoundsException.class, () -> ((ListView) this.testobj).listIterator(index));
     }
 
     @Test
@@ -337,11 +330,11 @@ public class ListViewTest extends SetViewTest {
         assertEquals("8", ((List) this.source).get(5));
     }
 
-    @Test(expected = IndexOutOfBoundsException.class)
-    @Parameters({ "-1", "4" })
+    @ParameterizedTest
+    @ValueSource(strings = { "-1", "4" })
     public void testRemoveWithBadIndexes(int index) {
         this.source.addAll(Arrays.asList("1", "2", "3"));
-        ((ListView) this.testobj).remove(index);
+        assertThrows(IndexOutOfBoundsException.class, () -> ((ListView) this.testobj).remove(index));
     }
 
     @Test
@@ -387,23 +380,21 @@ public class ListViewTest extends SetViewTest {
         }
     }
 
-    protected Object[] paramsForSubListIndexOutOfBoundsTest() {
-        return new Object[] {
+    protected static Stream<Object[]> paramsForSubListIndexOutOfBoundsTest() {
+        return Stream.of(
             new Object[] { -1, 0, IndexOutOfBoundsException.class },
             new Object[] { 0, -1, IllegalArgumentException.class },
             new Object[] { 2, 1, IllegalArgumentException.class },
             new Object[] { 4, 5, IndexOutOfBoundsException.class },
             new Object[] { 1, 5, IndexOutOfBoundsException.class }
-        };
+        );
     }
 
-    @Test
-    @Parameters(method = "paramsForSubListIndexOutOfBoundsTest")
+    @ParameterizedTest
+    @MethodSource("paramsForSubListIndexOutOfBoundsTest")
     public void testSubListIndexOutOfBounds(int begin, int end, Class<? extends Throwable> expected) {
-        thrown.expect(expected);
-
         this.source.addAll(Arrays.asList("1", "2", "3"));
-        ((ListView) this.testobj).subList(begin, end);
+        assertThrows(expected, () -> ((ListView) this.testobj).subList(begin, end));
     }
 
 }

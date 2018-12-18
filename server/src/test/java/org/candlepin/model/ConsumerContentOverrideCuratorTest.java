@@ -14,16 +14,13 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -42,7 +39,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
     private ConsumerType ct;
     private Consumer consumer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);

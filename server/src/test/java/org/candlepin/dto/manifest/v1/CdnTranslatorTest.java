@@ -14,23 +14,19 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import junitparams.JUnitParamsRunner;
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;
-import org.junit.runner.RunWith;
 
 import java.util.Date;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * Test suite for the CdnTranslator (manifest import/export) class
  */
-@RunWith(JUnitParamsRunner.class)
 public class CdnTranslatorTest extends AbstractTranslatorTest<Cdn, CdnDTO, CdnTranslator> {
 
     protected CdnTranslator translator = new CdnTranslator();

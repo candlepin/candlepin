@@ -30,7 +30,7 @@ import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
-import org.candlepin.junit.CandlepinLiquibaseResource;
+import org.candlepin.junit.LiquibaseExtension;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -88,12 +88,11 @@ import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -118,17 +117,13 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Test fixture for test classes requiring access to the database.
  */
+@ExtendWith(LiquibaseExtension.class)
 public class DatabaseTestFixture {
     protected static Logger log = LoggerFactory.getLogger(DatabaseTestFixture.class);
 
     private static final String DEFAULT_CONTRACT = "SUB349923";
     private static final String DEFAULT_ACCOUNT = "ACC123";
     private static final String DEFAULT_ORDER = "ORD222";
-
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @ClassRule
-    @Rule
-    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
 
     protected Configuration config;
 
@@ -172,7 +167,7 @@ public class DatabaseTestFixture {
     protected I18n i18n;
     protected Provider<I18n> i18nProvider = () -> i18n;
 
-    @BeforeClass
+    @BeforeAll
     public static void initClass() {
         parentInjector = Guice.createInjector(new TestingModules.JpaModule());
         insertValidationEventListeners(parentInjector);
@@ -199,7 +194,8 @@ public class DatabaseTestFixture {
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
-    @Before
+    // Need a before each here and a Liquibase extension...
+    @BeforeEach
     public void init() throws Exception {
         this.init(true);
     }
@@ -236,7 +232,7 @@ public class DatabaseTestFixture {
         }
     }
 
-    @After
+    @AfterEach
     public void shutdown() {
         cpRequestScope.exit();
 
@@ -262,7 +258,7 @@ public class DatabaseTestFixture {
         reset(parentInjector.getInstance(HttpServletResponse.class));
     }
 
-    @AfterClass
+    @AfterAll
     public static void destroy() {
         parentInjector.getInstance(PersistFilter.class).destroy();
 
@@ -413,7 +409,6 @@ public class DatabaseTestFixture {
 
         return content;
     }
-
 
     protected Consumer createConsumer(Owner owner, ConsumerType ctype) {
         if (ctype == null) {

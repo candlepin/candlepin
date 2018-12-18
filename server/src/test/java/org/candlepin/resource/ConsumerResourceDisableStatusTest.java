@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.model.Consumer;
@@ -29,12 +31,11 @@ import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * ConsumerResourceEntitlementRulesTest
@@ -46,24 +47,21 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private ConsumerResource consumerResource;
 
-    private ConsumerType standardSystemType;
     private Consumer consumer;
-    private Product product;
-    private Pool pool;
 
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
+        ConsumerType standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
         owner.setContentAccessMode("org_environment");
         ownerCurator.create(owner);
 
-        product = this.createProduct(owner);
+        Product product = this.createProduct(owner);
 
-        pool = createPool(owner, product, 10L,
-            TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+        Pool pool = createPool(owner, product, 10L, TestDateUtil.date(2010, 1, 1),
+            TestDateUtil.date(2020, 12, 31));
         poolCurator.create(pool);
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);
@@ -113,7 +111,7 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
         SystemPurposeComplianceStatusDTO status =
             consumerResource.getSystemPurposeComplianceStatus(consumer.getUuid(), null);
         assertEquals("disabled", status.getStatus());
-        assertEquals(null, status.getNonCompliantRole());
+        assertNull(status.getNonCompliantRole());
     }
 
     @Test
@@ -138,6 +136,6 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
         ownerCurator.merge(owner);
         status = consumerResource.getSystemPurposeComplianceStatus(consumer.getUuid(), null);
         assertEquals("disabled", status.getStatus());
-        assertEquals(null, status.getNonCompliantRole());
+        assertNull(status.getNonCompliantRole());
     }
 }

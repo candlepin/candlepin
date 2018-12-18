@@ -14,18 +14,17 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -38,20 +37,19 @@ import javax.inject.Provider;
 /**
  * Test suite for the FactValidator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class FactValidatorTest {
 
     private static I18n i18n = I18nFactory.getI18n(FactValidatorTest.class, Locale.US, I18nFactory.FALLBACK);
     private static Provider<I18n> i18nProvider = () -> i18n;
     private Configuration config;
 
-    @Before
+    @BeforeEach
     public void init() {
         this.config = new CandlepinCommonTestConfig();
     }
 
-    @Test(expected = PropertyValidationException.class)
-    @Parameters({"true", "false", "1", "0", "-1", "string value"})
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false", "1", "0", "-1", "string value"})
     public void testLongFactKeyFailure(String value) {
         StringBuilder builder = new StringBuilder(FactValidator.FACT_MAX_LENGTH + 2);
         for (int i = 0; i < FactValidator.FACT_MAX_LENGTH + 1; ++i) {
@@ -59,10 +57,10 @@ public class FactValidatorTest {
         }
 
         FactValidator validator = new FactValidator(this.config, i18nProvider);
-        validator.validate(builder.toString(), value);
+        assertThrows(PropertyValidationException.class, () -> validator.validate(builder.toString(), value));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testLongFactValueFailure() {
         StringBuilder builder = new StringBuilder(FactValidator.FACT_MAX_LENGTH + 2);
         for (int i = 0; i < FactValidator.FACT_MAX_LENGTH + 1; ++i) {
@@ -70,11 +68,11 @@ public class FactValidatorTest {
         }
 
         FactValidator validator = new FactValidator(this.config, i18nProvider);
-        validator.validate("key", builder.toString());
+        assertThrows(PropertyValidationException.class, () -> validator.validate("key", builder.toString()));
     }
 
-    @Test
-    @Parameters({
+    @ParameterizedTest
+    @CsvSource({
         "testfact, testvalue, true",
         "testfact, yes, true",
         "testfact, no, true",
@@ -91,7 +89,6 @@ public class FactValidatorTest {
         "testfact, -9223372036854775808, true",
         "testfact, 3.14, true",
         "testfact, -2.72, true",
-
         "intfact, testvalue, false",
         "intfact, yes, false",
         "intfact, no, false",
@@ -108,7 +105,6 @@ public class FactValidatorTest {
         "intfact, -9223372036854775808, false",
         "intfact, 3.14, false",
         "intfact, -2.72, false",
-
         "nnintfact, testvalue, false",
         "nnintfact, yes, false",
         "nnintfact, no, false",

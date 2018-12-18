@@ -14,9 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -35,8 +33,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.ArrayList;
 
@@ -62,7 +60,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
 
     private Principal principal;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = ownerCurator.create(new Owner(OWNER_NAME));
 
@@ -89,22 +87,28 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         assertTrue(firstCert.getId() != secondCert.getId());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void certificateGenerationRaisesExceptionIfOwnerNotFound() throws Exception {
-        or.createUeberCertificate(principal, "non-existant");
+        assertThrows(NotFoundException.class, () ->
+            or.createUeberCertificate(principal, "non-existant")
+        );
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void certificateRetrievalRaisesExceptionIfOwnerNotFound() throws Exception {
-        or.getUeberCertificate(principal, "non-existant");
+        assertThrows(NotFoundException.class, () ->
+            or.getUeberCertificate(principal, "non-existant")
+        );
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void certificateRetrievalRaisesExceptionIfNoCertificateWasGenerated()
         throws Exception {
         // verify that owner under test doesn't have a certificate
         Owner anotherOwner = ownerCurator.create(new Owner(OWNER_NAME + "1"));
-        or.getUeberCertificate(principal, anotherOwner.getKey());
+        assertThrows(NotFoundException.class, () ->
+            or.getUeberCertificate(principal, anotherOwner.getKey())
+        );
     }
 
     @Test

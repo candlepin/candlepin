@@ -15,7 +15,6 @@
 package org.candlepin.resource.util;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;

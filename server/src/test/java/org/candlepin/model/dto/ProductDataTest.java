@@ -14,23 +14,21 @@
  */
 package org.candlepin.model.dto;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.util.Util;
 
-import static org.junit.Assert.*;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -38,13 +36,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-
+import java.util.stream.Stream;
 
 /**
  * Test suite for the ProductData class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ProductDataTest {
 
     public static final String PRODUCT_JSON_BASE = "{" +
@@ -85,11 +81,8 @@ public class ProductDataTest {
         this.mapper.setFilters(filterProvider);
     }
 
-    protected Object[][] getBadStringValues() {
-        return new Object[][] {
-            new Object[] { null },
-            new Object[] { "" },
-        };
+    protected static Stream<Object> getBadStringValues() {
+        return Stream.of(null, "");
     }
 
     @Test
@@ -122,15 +115,15 @@ public class ProductDataTest {
         assertEquals(input, output);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    @Parameters(method = "getBadStringValues")
+    @ParameterizedTest
+    @MethodSource("getBadStringValues")
     public void testGetSetIdBadValues(String input) {
         ProductData dto = new ProductData();
 
         String output = dto.getId();
         assertNull(output);
 
-        dto.setId(input);
+        assertThrows(IllegalArgumentException.class, () -> dto.setId(input));
     }
 
     @Test
@@ -899,7 +892,7 @@ public class ProductDataTest {
         assertEquals(input, output);
     }
 
-    protected Object[][] getValuesForEqualityAndReplication() {
+    protected static Stream<Object[]> getValuesForEqualityAndReplication() {
         Map<String, String> attributes1 = new HashMap<>();
         attributes1.put("a1", "v1");
         attributes1.put("a2", "v2");
@@ -931,7 +924,7 @@ public class ProductDataTest {
             new ProductContentData(content[5], true)
         );
 
-        return new Object[][] {
+        return Stream.of(
             new Object[] { "Uuid", "test_value", "alt_value" },
             new Object[] { "Id", "test_value", "alt_value" },
             new Object[] { "Name", "test_value", "alt_value" },
@@ -941,7 +934,7 @@ public class ProductDataTest {
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
             // new Object[] { "Href", "test_value", null },
             new Object[] { "Locked", Boolean.TRUE, false }
-        };
+        );
     }
 
     protected Method[] getAccessorAndMutator(String methodSuffix, Class mutatorInputClass)
@@ -987,8 +980,8 @@ public class ProductDataTest {
         assertTrue(rhs.equals(lhs));
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testEquality(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];
@@ -1032,8 +1025,8 @@ public class ProductDataTest {
         assertTrue(rhs.equals(rhs));
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testClone(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];
@@ -1058,8 +1051,8 @@ public class ProductDataTest {
         assertEquals(base.hashCode(), clone.hashCode());
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testPopulateWithDTO(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];
@@ -1092,13 +1085,13 @@ public class ProductDataTest {
         }
     }
 
-    protected Object[][] getValuesPopulationByEntity() {
+    protected static Stream<Object[]> getValuesPopulationByEntity() {
         Map<String, String> attributes = new HashMap<>();
         attributes.put("a1", "v1");
         attributes.put("a2", "v2");
         attributes.put("a3", "v3");
 
-        return new Object[][] {
+        return Stream.of(
             new Object[] { "Uuid", "test_value", null },
             new Object[] { "Id", "test_value", null },
             new Object[] { "Name", "test_value", null },
@@ -1108,11 +1101,11 @@ public class ProductDataTest {
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList() },
             // new Object[] { "Href", "test_value", null },
             new Object[] { "Locked", Boolean.TRUE, false }
-        };
+        );
     }
 
-    @Test
-    @Parameters(method = "getValuesPopulationByEntity")
+    @ParameterizedTest
+    @MethodSource("getValuesPopulationByEntity")
     public void testPopulateWithEntity(String valueName, Object input, Object defaultValue) throws Exception {
         Method accessor = null;
         Method mutator = null;
@@ -1163,18 +1156,18 @@ public class ProductDataTest {
                     }
                 }
                 else {
-                    for (Object[] values : this.getValuesPopulationByEntity()) {
-                        if (method.getName().endsWith((String) values[0])) {
-                            if (values[2] instanceof Collection) {
+                    ProductDataTest.getValuesPopulationByEntity().forEach(value -> {
+                        if (method.getName().endsWith((String) value[0])) {
+                            if (value[2] instanceof Collection) {
                                 assertTrue(output instanceof Collection);
-                                assertTrue(Util.collectionsAreEqual((Collection) values[2],
+                                assertTrue(Util.collectionsAreEqual((Collection) value[2],
                                     (Collection) output));
                             }
                             else {
-                                assertEquals(values[2], output);
+                                assertEquals(value[2], output);
                             }
                         }
-                    }
+                    });
                 }
             }
         }

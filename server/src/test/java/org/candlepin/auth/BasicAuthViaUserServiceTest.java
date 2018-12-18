@@ -15,8 +15,7 @@
 package org.candlepin.auth;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.PermissionFactory;

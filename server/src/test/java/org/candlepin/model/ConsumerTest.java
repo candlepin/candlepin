@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.ConsumerPrincipal;
@@ -26,8 +26,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.Date;
 import java.util.Map;
@@ -50,7 +50,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     private static final String CONSUMER_NAME = "Test Consumer";
     private static final String USER_NAME = "user33908";
 
-    @Before
+    @BeforeEach
     public void setUpTestObjects() {
         owner = this.createOwner("Example Corporation");
         rhel = this.createProduct("rhel", "Red Hat Enterprise Linux", owner);
@@ -65,16 +65,16 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
     }
 
-    @Test(expected = ConstraintViolationException.class)
+    @Test
     public void testConsumerTypeRequired() {
         Consumer newConsumer = new Consumer();
         newConsumer.setName("cname");
         newConsumer.setOwner(owner);
 
-        consumerCurator.create(newConsumer);
+        assertThrows(ConstraintViolationException.class, () -> consumerCurator.create(newConsumer));
     }
 
-    @Test(expected = ConstraintViolationException.class)
+    @Test
     public void testConsumerNameLengthCreate() {
         String name = "";
         for (int x = 0; x < 300; x++) {
@@ -86,10 +86,10 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setOwner(owner);
         newConsumer.setType(consumerType);
 
-        consumerCurator.create(newConsumer);
+        assertThrows(ConstraintViolationException.class, () -> consumerCurator.create(newConsumer));
     }
 
-    @Test(expected = ConstraintViolationException.class)
+    @Test
     public void testConsumerNameLengthUpdate() {
         String name = "";
         for (int x = 0; x < 300; x++) {
@@ -101,7 +101,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setOwner(owner);
         newConsumer.setType(consumerType);
 
-        consumerCurator.update(newConsumer);
+        assertThrows(ConstraintViolationException.class, () -> consumerCurator.update(newConsumer));
     }
 
     @Test
@@ -153,8 +153,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Date lookedUpDate = lookedUp.getUpdated();
         assertEquals("FACT_VALUE", lookedUp.getFact("FACT"));
 
-        assertTrue("Last updated date was not changed.",
-            beforeUpdateDate.before(lookedUpDate));
+        assertTrue(beforeUpdateDate.before(lookedUpDate));
     }
 
     @Test

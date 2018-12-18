@@ -14,13 +14,13 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.persistence.PersistenceException;
 
@@ -33,7 +33,7 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
     private Content c;
     private EnvironmentContent envContent;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = this.createOwner("test-owner", "Test Owner");
 
@@ -66,10 +66,10 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
         assertEquals(0, environmentContentCurator.listAll().list().size());
     }
 
-    @Test(expected = PersistenceException.class)
+    @Test
     public void createDuplicate() {
         envContent = new EnvironmentContent(e, c, true);
-        environmentContentCurator.create(envContent);
+        assertThrows(PersistenceException.class, () -> environmentContentCurator.create(envContent));
     }
 
     @Test

@@ -14,18 +14,14 @@
  */
 package org.candlepin.dto.manifest.v1;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.test.TestUtil;
-
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-
-import org.junit.runner.RunWith;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,7 +33,6 @@ import java.util.Map;
 /**
  * Test suite for the ProductTranslator (manifest import/export) class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ProductTranslatorTest extends
     AbstractTranslatorTest<Product, ProductDTO, ProductTranslator> {
 

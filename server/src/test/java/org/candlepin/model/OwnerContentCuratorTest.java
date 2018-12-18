@@ -14,13 +14,12 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -303,20 +302,22 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testMapContentToOwnerUnmappedOwner() {
         Owner owner = new Owner("unmapped");
         Content content = this.createContent();
-
-        this.ownerContentCurator.mapContentToOwner(content, owner);
+        assertThrows(IllegalStateException.class, () ->
+            this.ownerContentCurator.mapContentToOwner(content, owner)
+        );
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testMapContentToOwnerUnmappedContent() {
         Owner owner = this.createOwner();
         Content content = TestUtil.createContent();
-
-        this.ownerContentCurator.mapContentToOwner(content, owner);
+        assertThrows(IllegalStateException.class, () ->
+            this.ownerContentCurator.mapContentToOwner(content, owner)
+        );
     }
 
     @Test

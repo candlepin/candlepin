@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource.util;
 
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;

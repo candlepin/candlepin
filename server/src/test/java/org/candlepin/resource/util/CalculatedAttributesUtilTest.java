@@ -14,10 +14,10 @@
  */
 package org.candlepin.resource.util;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -26,12 +26,11 @@ import org.candlepin.model.Pool.PoolComplianceType;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.quantity.QuantityRules;
-import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
@@ -63,7 +62,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
     @Mock private QuantityRules quantityRules;
     @Mock private Pool mockPool;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 

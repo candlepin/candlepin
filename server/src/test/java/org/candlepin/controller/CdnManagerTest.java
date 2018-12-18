@@ -14,7 +14,8 @@
  */
 package org.candlepin.controller;
 
-import com.google.inject.Inject;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
@@ -23,11 +24,12 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
-import org.junit.Test;
+
+import com.google.inject.Inject;
+
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
-
-import static org.junit.Assert.*;
 
 
 public class CdnManagerTest extends DatabaseTestFixture {

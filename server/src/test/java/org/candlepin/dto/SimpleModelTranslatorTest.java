@@ -14,21 +14,16 @@
  */
 package org.candlepin.dto;
 
-import org.candlepin.model.ModelEntity;
-
 import static org.junit.Assert.*;
 
-import junitparams.JUnitParamsRunner;
+import org.candlepin.model.ModelEntity;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-
 
 
 /**
  * Test suite for the ProductData class
  */
-@RunWith(JUnitParamsRunner.class)
 public class SimpleModelTranslatorTest {
 
     private static class TestDTOSubclass extends TestDTO {

@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
@@ -25,8 +25,8 @@ import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,7 +49,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
     private Owner owner;
     private ConsumerType ct;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);

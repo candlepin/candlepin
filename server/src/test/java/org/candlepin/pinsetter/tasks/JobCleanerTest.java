@@ -14,7 +14,6 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.model.JobCurator;

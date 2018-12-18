@@ -14,7 +14,7 @@
  */
 package org.candlepin.auth.permissions;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -28,8 +28,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.List;
@@ -46,7 +46,7 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
     private ConsumerType consumerType;
     private static final String CONSUMER_TYPE_NAME = "test-consumer-type";
 
-    @Before
+    @BeforeEach
     public void setUpTestObjects() {
         owner = new Owner("Example Corporation");
 

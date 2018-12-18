@@ -14,27 +14,23 @@
  */
 package org.candlepin.model.dto;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.model.Content;
 import org.candlepin.model.ProductContent;
 import org.candlepin.util.Util;
 
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
-
-
+import java.util.stream.Stream;
 
 /**
  * Test suite for the ProductContentData class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ProductContentDataTest {
 
     @Test
@@ -67,14 +63,14 @@ public class ProductContentDataTest {
         assertEquals(input, output);
     }
 
-    protected Object[][] getValuesForEqualityAndReplication() {
+    protected static Stream<Object[]> getValuesForEqualityAndReplication() {
         ContentData input1 = new ContentData("id1", "name1", "type1", "label1", "vendor1");
         ContentData input2 = new ContentData("id2", "name2", "type2", "label2", "vendor2");
 
-        return new Object[][] {
+        return Stream.of(
             new Object[] { "Content", input1, input2 },
             new Object[] { "Enabled", Boolean.TRUE, Boolean.FALSE }
-        };
+        );
     }
 
     protected Method[] getAccessorAndMutator(String methodSuffix, Class mutatorInputClass)
@@ -116,8 +112,8 @@ public class ProductContentDataTest {
         assertTrue(rhs.equals(lhs));
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testEquality(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];
@@ -145,8 +141,8 @@ public class ProductContentDataTest {
         assertTrue(rhs.equals(rhs));
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testClone(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];
@@ -163,8 +159,8 @@ public class ProductContentDataTest {
         assertEquals(base.hashCode(), clone.hashCode());
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testPopulateWithDTO(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];

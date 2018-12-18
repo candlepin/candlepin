@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 package org.candlepin.resource;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -30,8 +30,8 @@ import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,7 +51,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
     private OwnerContentResource ownerContentResource;
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
         this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
@@ -99,11 +99,13 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         assertEquals(content.getId(), output.getId());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void getContentNotFound() {
         Owner owner = this.createOwner("test_owner");
 
-        ContentDTO output = this.ownerContentResource.getContent(owner.getKey(), "test_content");
+        assertThrows(NotFoundException.class, () ->
+            this.ownerContentResource.getContent(owner.getKey(), "test_content")
+        );
     }
 
     @Test
@@ -155,7 +157,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         assertEquals(cdto.getName(), entity.getName());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void createContentWhenContentAlreadyExistsAndLocked()  {
         // Note:
         // The current behavior of createContent is to update content if content already exists
@@ -173,17 +175,14 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
         assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
-        try {
-            ContentDTO output = this.ownerContentResource.createContent(owner.getKey(), cdto);
-        }
-        catch (ForbiddenException e) {
-            Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
-            assertNotNull(entity);
-            assertEquals(content, entity);
-            assertNotEquals(cdto.getName(), entity.getName());
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerContentResource.createContent(owner.getKey(), cdto)
+        );
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
+        assertNotNull(entity);
+        assertEquals(content, entity);
+        assertNotEquals(cdto.getName(), entity.getName());
 
-            throw e;
-        }
     }
 
     @Test
@@ -206,24 +205,20 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         assertEquals(cdto.getName(), entity.getName());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void updateContentThatDoesntExist()  {
         Owner owner = this.createOwner("test_owner");
         ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
 
         assertNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
-        try {
-            this.ownerContentResource.updateContent(owner.getKey(), cdto.getId(), cdto);
-        }
-        catch (NotFoundException e) {
-            assertNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
-
-            throw e;
-        }
+        assertThrows(NotFoundException.class, () ->
+            this.ownerContentResource.updateContent(owner.getKey(), cdto.getId(), cdto)
+        );
+        assertNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void updateLockedContent()  {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
@@ -233,17 +228,13 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
         assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
 
-        try {
-            this.ownerContentResource.updateContent(owner.getKey(), cdto.getId(), cdto);
-        }
-        catch (ForbiddenException e) {
-            Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
-            assertNotNull(entity);
-            assertEquals(content, entity);
-            assertNotEquals(cdto.getName(), entity.getName());
-
-            throw e;
-        }
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerContentResource.updateContent(owner.getKey(), cdto.getId(), cdto)
+        );
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
+        assertNotNull(entity);
+        assertEquals(content, entity);
+        assertNotEquals(cdto.getName(), entity.getName());
     }
 
     @Test
@@ -265,7 +256,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         assertEquals(0, environment.getEnvironmentContent().size());
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void deleteLockedContent() {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
@@ -277,33 +268,33 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
         assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
-        try {
-            this.ownerContentResource.remove(owner.getKey(), content.getId());
-        }
-        catch (ForbiddenException e) {
-            assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerContentResource.remove(owner.getKey(), content.getId())
+        );
+        assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
-            this.environmentCurator.evict(environment);
-            environment = this.environmentCurator.get(environment.getId());
+        this.environmentCurator.evict(environment);
+        environment = this.environmentCurator.get(environment.getId());
 
-            assertEquals(1, environment.getEnvironmentContent().size());
-
-            throw e;
-        }
+        assertEquals(1, environment.getEnvironmentContent().size());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void deleteContentWithNonExistentContent() {
         Owner owner = this.createOwner("test_owner");
 
-        this.ownerContentResource.remove(owner.getKey(), "test_content");
+        assertThrows(NotFoundException.class, () ->
+            this.ownerContentResource.remove(owner.getKey(), "test_content")
+        );
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testUpdateContentThrowsExceptionWhenOwnerDoesNotExist() {
         ContentDTO cdto = TestUtil.createContentDTO("test_content");
 
-        this.ownerContentResource.updateContent("fake_owner_key", cdto.getId(), cdto);
+        assertThrows(NotFoundException.class, () ->
+            this.ownerContentResource.updateContent("fake_owner_key", cdto.getId(), cdto)
+        );
     }
 
 }

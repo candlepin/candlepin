@@ -14,8 +14,7 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventFactory;
@@ -53,8 +52,8 @@ import org.candlepin.test.TestUtil;
 
 import com.google.inject.Provider;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
@@ -95,7 +94,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
-    @Before
+    @BeforeEach
     public void createEnforcer() throws Exception {
         MockitoAnnotations.initMocks(this);
 
@@ -145,14 +144,18 @@ public class EnforcerTest extends DatabaseTestFixture {
             ((EntitlementRules) enforcer).parseRule("func3:3:attr4"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void shouldFailParsingIfNoOderIsPresent() {
-        ((EntitlementRules) enforcer).parseRule("func3:attr4");
+        assertThrows(IllegalArgumentException.class, () ->
+            ((EntitlementRules) enforcer).parseRule("func3:attr4")
+        );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void shouldFailParsingIfNotAllParametersArePresent() {
-        ((EntitlementRules) enforcer).parseRule("func3:3");
+        assertThrows(IllegalArgumentException.class, () ->
+            ((EntitlementRules) enforcer).parseRule("func3:3")
+        );
     }
 
     @Test
@@ -226,7 +229,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     }
 
     // This exception should mention wrapping a MissingFactException
-    @Test(expected = RuleExecutionException.class)
+    @Test
     public void testRuleFailsWhenConsumerDoesntHaveFact() {
         Product product = TestUtil.createProduct("a-product", "A product for testing");
         product.setAttribute(PRODUCT_CPULIMITED, "2");
@@ -234,12 +237,13 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         Consumer consumer = this.createConsumer(owner);
 
-        ValidationResult result = enforcer.preEntitlement(consumer,
-            entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, expiryDate(2000, 1, 1)), 1);
-
-        assertFalse(result.isSuccessful());
-        assertTrue(result.hasErrors());
-        assertFalse(result.hasWarnings());
+        Product finalProduct = product;
+        Pool entitlementPool = entitlementPoolWithMembersAndExpiration(
+            owner, finalProduct, 1, 2, expiryDate(2000, 1, 1)
+        );
+        assertThrows(RuleExecutionException.class, () ->
+            enforcer.preEntitlement(consumer, entitlementPool, 1)
+        );
     }
 
     private EntitlementRules.Rule rule(String name, int priority, String... attrs) {

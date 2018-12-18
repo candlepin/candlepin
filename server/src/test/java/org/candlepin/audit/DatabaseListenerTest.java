@@ -14,7 +14,6 @@
  */
 package org.candlepin.audit;
 
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.model.EventCurator;
