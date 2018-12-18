@@ -14,27 +14,23 @@
  */
 package org.candlepin.common.jackson;
 
-import static org.mockito.Matchers.anyList;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DynamicPropertyFilterTest {
 
     @Mock
@@ -49,19 +45,16 @@ public class DynamicPropertyFilterTest {
     @Mock
     private JsonStreamContext context;
 
-    @Before
+    @BeforeEach
     public void prepareMocks() {
-        when(jsonGenerator.getOutputContext()).thenReturn(context);
-        when(context.getParent()).thenReturn(context).thenReturn(null);
-        when(context.getCurrentName()).thenReturn("CONTEXT_NAME_1");
-        when(writer.getName()).thenReturn("WRITER_NAME");
+
     }
 
     @Test
     public void emptyFilterData() {
         ResteasyProviderFactory.pushContext(DynamicFilterData.class, null);
         DynamicPropertyFilter propertyFilter = new DynamicPropertyFilter();
-        Assert.assertTrue(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
+        assertTrue(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
         verifyZeroInteractions(jsonGenerator, writer);
     }
 
@@ -73,10 +66,13 @@ public class DynamicPropertyFilterTest {
             .thenReturn(true);
         when(dynamicFilterData.isAttributeExcluded(Arrays.asList("CONTEXT_NAME_1", "WRITER_NAME")))
             .thenReturn(false);
-
+        when(jsonGenerator.getOutputContext()).thenReturn(context);
+        when(context.getParent()).thenReturn(context).thenReturn(null);
+        when(context.getCurrentName()).thenReturn("CONTEXT_NAME_1");
+        when(writer.getName()).thenReturn("WRITER_NAME");
         ResteasyProviderFactory.pushContext(DynamicFilterData.class, dynamicFilterData);
         DynamicPropertyFilter propertyFilter = new DynamicPropertyFilter();
-        Assert.assertTrue(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
+        assertTrue(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
         verify(jsonGenerator).getOutputContext();
         verify(context, times(2)).getParent();
         verify(context).getCurrentName();
@@ -86,10 +82,13 @@ public class DynamicPropertyFilterTest {
     public void nonEmptyIsNotSerializable() {
         when(dynamicFilterData.isAttributeExcluded(Arrays.asList("CONTEXT_NAME_1", "WRITER_NAME")))
             .thenReturn(true);
-
+        when(jsonGenerator.getOutputContext()).thenReturn(context);
+        when(context.getParent()).thenReturn(context).thenReturn(null);
+        when(context.getCurrentName()).thenReturn("CONTEXT_NAME_1");
+        when(writer.getName()).thenReturn("WRITER_NAME");
         ResteasyProviderFactory.pushContext(DynamicFilterData.class, dynamicFilterData);
         DynamicPropertyFilter propertyFilter = new DynamicPropertyFilter();
-        Assert.assertFalse(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
+        assertFalse(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
         verify(jsonGenerator).getOutputContext();
         verify(context, times(2)).getParent();
         verify(context).getCurrentName();

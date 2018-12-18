@@ -14,7 +14,7 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.ExceptionMessage;
@@ -26,8 +26,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.RequestScoped;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
@@ -49,8 +49,7 @@ public class CandlepinExceptionMapperTest {
     private Injector injector;
     private CandlepinExceptionMapper cem;
 
-
-    @Before
+    @BeforeEach
     public void init() {
         MapperTestModule mtm = new MapperTestModule();
         injector = Guice.createInjector(mtm);

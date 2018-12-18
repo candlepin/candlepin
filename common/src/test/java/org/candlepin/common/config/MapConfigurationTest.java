@@ -14,17 +14,16 @@
  */
 package org.candlepin.common.config;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.config.Configuration.TrimMode;
 
 import org.hamcrest.core.IsInstanceOf;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,16 +36,12 @@ import java.util.Set;
 /**
  * MapConfigurationTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MapConfigurationTest {
-
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @Rule
-    public ExpectedException ex = ExpectedException.none();
 
     private MapConfiguration config;
 
-    @Before
+    @BeforeEach
     public void init() {
         config = new MapConfiguration();
     }
@@ -69,14 +64,13 @@ public class MapConfigurationTest {
 
 
     public void testNullInHashMapProhibited() {
-        ex.expect(RuntimeException.class);
-        ex.expectCause(IsInstanceOf.<Throwable>instanceOf(ConfigurationException.class));
-
         HashMap<String, String> m = new HashMap<>();
         m.put(null, "x");
         m.put("hello", "world");
         assertTrue(m.containsKey(null));
-        new MapConfiguration(m);
+
+        Throwable t = assertThrows(RuntimeException.class, () -> new MapConfiguration(m));
+        assertThat(t, IsInstanceOf.instanceOf(ConfigurationException.class));
     }
 
     @Test
@@ -180,9 +174,8 @@ public class MapConfigurationTest {
 
     @Test
     public void testGetMissingBoolean() {
-        ex.expect(NoSuchElementException.class);
-        ex.expectMessage(config.doesNotMapMessage("x"));
-        config.getBoolean("x");
+        Throwable t = assertThrows(NoSuchElementException.class, () -> config.getBoolean("x"));
+        assertEquals(config.doesNotMapMessage("x"), t.getMessage());
     }
 
     @Test
@@ -198,9 +191,8 @@ public class MapConfigurationTest {
 
     @Test
     public void testGetMissingInteger() {
-        ex.expect(NoSuchElementException.class);
-        ex.expectMessage(config.doesNotMapMessage("x"));
-        config.getInt("x");
+        Throwable t = assertThrows(NoSuchElementException.class, () -> config.getInt("x"));
+        assertEquals(config.doesNotMapMessage("x"), t.getMessage());
     }
 
     @Test
@@ -218,9 +210,8 @@ public class MapConfigurationTest {
 
     @Test
     public void testGetMissingLong() {
-        ex.expect(NoSuchElementException.class);
-        ex.expectMessage(config.doesNotMapMessage("x"));
-        config.getLong("x");
+        Throwable t = assertThrows(NoSuchElementException.class, () -> config.getLong("x"));
+        assertEquals(config.doesNotMapMessage("x"), t.getMessage());
     }
 
     @Test
@@ -236,9 +227,8 @@ public class MapConfigurationTest {
 
     @Test
     public void testGetMissingString() {
-        ex.expect(NoSuchElementException.class);
-        ex.expectMessage(config.doesNotMapMessage("x"));
-        config.getString("x");
+        Throwable t = assertThrows(NoSuchElementException.class, () -> config.getString("x"));
+        assertEquals(config.doesNotMapMessage("x"), t.getMessage());
     }
 
     @Test
@@ -272,9 +262,8 @@ public class MapConfigurationTest {
 
     @Test
     public void testGetMissingList() {
-        ex.expect(NoSuchElementException.class);
-        ex.expectMessage(config.doesNotMapMessage("x"));
-        config.getList("x");
+        Throwable t = assertThrows(NoSuchElementException.class, () -> config.getList("x"));
+        assertEquals(config.doesNotMapMessage("x"), t.getMessage());
     }
 
     @Test
@@ -284,9 +273,8 @@ public class MapConfigurationTest {
 
     @Test
     public void testGetMissingProperty() {
-        ex.expect(NoSuchElementException.class);
-        ex.expectMessage(config.doesNotMapMessage("x"));
-        config.getProperty("x");
+        Throwable t = assertThrows(NoSuchElementException.class, () -> config.getProperty("x"));
+        assertEquals(config.doesNotMapMessage("x"), t.getMessage());
     }
 
     @Test

@@ -14,15 +14,15 @@
  */
 package org.candlepin.common.filter;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
@@ -45,6 +45,7 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * LoggingFilterTest
  */
+@ExtendWith(MockitoExtension.class)
 public class LoggingFilterTest {
 
     @Mock private HttpServletRequest request;
@@ -60,10 +61,8 @@ public class LoggingFilterTest {
     @Mock
     private Appender<ILoggingEvent> mockapp;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
-
         filter = new LoggingFilter();
 
         // prepare logger
@@ -106,7 +105,6 @@ public class LoggingFilterTest {
                                            .thenReturn(Boolean.FALSE);
         when(headernames.nextElement()).thenReturn("Accept");
         when(request.getHeaderNames()).thenReturn(headernames);
-        when(request.getHeader("Accept")).thenReturn("NoSubstitutes");
 
         filter.doFilter(request, response, chain);
 
@@ -136,7 +134,6 @@ public class LoggingFilterTest {
             }
         });
 
-        when(request.getRequestURL()).thenReturn(new StringBuffer("/some/url"));
         ArgumentCaptor<LoggingEvent> message = ArgumentCaptor.forClass(LoggingEvent.class);
 
         // DO FILTER!
@@ -144,7 +141,5 @@ public class LoggingFilterTest {
 
         // VERIFY
         verify(mockapp, atLeastOnce()).doAppend(message.capture());
-
     }
-
 }

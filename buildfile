@@ -64,16 +64,28 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
 SUN_JAXB = ['com.sun.xml.bind:jaxb-impl:jar:2.3.0',
         'com.sun.xml.bind:jaxb-core:jar:2.3.0']
 
-CORE_TESTING = [
+JUNIT_5 = [
+  Buildr.transitive('org.junit.jupiter:junit-jupiter-api:jar:5.3.2'),
+  Buildr.transitive('org.junit.jupiter:junit-jupiter-engine:jar:5.3.2'),
+  Buildr.transitive('org.junit.vintage:junit-vintage-engine:jar:5.3.2'),
+  # Provides TempDirectory extension which is integrated into the as of yet unreleased JUnit 5.4.
+  # Remove and migrate once JUnit 5.4 is released
+  'org.junit-pioneer:junit-pioneer:jar:0.3.0',
+  'org.mockito:mockito-junit-jupiter:jar:2.23.4',
+  Buildr.transitive('org.mockito:mockito-core:jar:2.23.4')
+]
+
+JUNIT_4 = [
   'junit:junit:jar:4.12',
-  'org.junit.jupiter:junit-jupiter-api:jar:5.3.2',
-  'org.junit.jupiter:junit-jupiter-engine:jar:5.3.2',
-  'org.junit.vintage:junit-vintage-engine:jar:5.3.2',
+  'pl.pragmatists:JUnitParams:jar:1.0.3',
+  'org.mockito:mockito-all:jar:1.9.5'
+]
+
+CORE_TESTING = [
   'org.hamcrest:hamcrest-library:jar:1.3',
   'org.hamcrest:hamcrest-core:jar:1.3',
-  'org.mockito:mockito-all:jar:1.9.5',
-  'pl.pragmatists:JUnitParams:jar:1.0.3',
 ]
+
 Buildr.settings.build['junit'] = '4.12' # Buildr uses 4.11 by default
 
 LOGBACK = [group('logback-core', 'logback-classic',
@@ -309,6 +321,7 @@ define "candlepin" do
 
     test_classpath = [
       CORE_TESTING,
+      JUNIT_5,
       LIQUIBASE,
       LIQUIBASE_SLF4J,
     ]
@@ -415,6 +428,7 @@ define "candlepin" do
 
     test_classpath = [
       CORE_TESTING,
+      JUNIT_4,
       HSQLDB,
       LIQUIBASE_SLF4J,
     ]

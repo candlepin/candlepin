@@ -14,7 +14,8 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.candlepin.common.test.RegexMatcher.*;
 
@@ -27,7 +28,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.RequestScoped;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.xnap.commons.i18n.I18n;
 
 import javax.servlet.ServletRequest;
@@ -42,7 +43,7 @@ public abstract class TestExceptionMapperBase {
     protected HttpServletRequest req;
     protected RuntimeExceptionMapper rem;
 
-    @Before
+    @BeforeEach
     public void init() {
         MapperTestModule mtm = new MapperTestModule(getMapperClass());
         injector = Guice.createInjector(mtm);

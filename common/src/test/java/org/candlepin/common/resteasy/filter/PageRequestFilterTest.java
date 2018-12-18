@@ -14,8 +14,8 @@
  */
 package org.candlepin.common.resteasy.filter;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.guice.CommonI18nProvider;
@@ -23,13 +23,12 @@ import org.candlepin.common.paging.PageRequest;
 
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
-
-import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -38,6 +37,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 /**
  * PageRequestFilterTest
  */
+@ExtendWith(MockitoExtension.class)
 public class PageRequestFilterTest {
 
     @Inject @Mock
@@ -49,11 +49,8 @@ public class PageRequestFilterTest {
     private MockHttpRequest mockReq;
     @Mock private ContainerRequestContext mockRequestContext;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-
-        when(mockServletReq.getLocale()).thenReturn(Locale.US);
         this.i18nProvider = new CommonI18nProvider(this.mockServletReq);
         interceptor = new PageRequestFilter(this.i18nProvider);
     }
@@ -115,22 +112,22 @@ public class PageRequestFilterTest {
         assertNull(p.getSortBy());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testBadIntegerValue() throws Exception {
         mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?page=foo&per_page=456");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.filter(mockRequestContext);
+        assertThrows(BadRequestException.class, () -> interceptor.filter(mockRequestContext));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testDoesNotAllowPageZero() throws Exception {
         mockReq = MockHttpRequest.create("GET",
             "http://localhost/candlepin/status?page=0&per_page=456");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
-        interceptor.filter(mockRequestContext);
+        assertThrows(BadRequestException.class, () -> interceptor.filter(mockRequestContext));
     }
 
     @Test

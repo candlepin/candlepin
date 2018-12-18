@@ -14,12 +14,12 @@
  */
 package org.candlepin.common.logging;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.config.MapConfiguration;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
