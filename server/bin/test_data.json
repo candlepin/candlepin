@@ -2069,6 +2069,7 @@
                 "99000"
             ],
             "attributes": {
+                "sockets": 128,
                 "management_enabled" : 1,
                 "support_level": "Layered",
                 "support_level_exempt": "true",
