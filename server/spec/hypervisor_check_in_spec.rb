@@ -669,18 +669,19 @@ describe 'Hypervisor Resource', :type => :virt do
     return { host_hyp_id => guest_id_list }
   end
 
-  def get_async_host_guest_mapping(name, hypervisor_id, guest_id_list)
+  def get_async_host_guest_mapping(name, hypervisor_id, guest_id_list, facts=nil)
       guestIds = []
       guest_id_list.each do |guest|
           guestIds << {'guestId' => guest}
       end
+      facts = facts || {"test_fact" => "fact_value"}
       json = {
           "hypervisors" => [
               {
                   "name" => name,
                   "hypervisorId" => {"hypervisorId" => hypervisor_id},
                   "guestIds" => guestIds,
-                  "facts" => {"test_fact" => "fact_value" }
+                  "facts" => facts
               }
           ]
       }
@@ -732,15 +733,15 @@ describe 'Hypervisor Resource', :type => :virt do
     end
   end
 
-  def run_async_update(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil)
-    host_mapping = get_async_host_guest_mapping(host_name, host_hyp_id, guests)
+  def run_async_update(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil, facts=nil)
+    host_mapping = get_async_host_guest_mapping(host_name, host_hyp_id, guests, facts)
     job_detail = JSON.parse(consumer.hypervisor_update(owner['key'], host_mapping, create, reporter_id))
     wait_for_job(job_detail['id'], 60)
     return @cp.get_job(job_detail['id'], true)
   end
 
-  def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil)
-    job_detail = run_async_update(owner, consumer, host_name, host_hyp_id, guests, create, reporter_id)
+  def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil, facts=nil)
+    job_detail = run_async_update(owner, consumer, host_name, host_hyp_id, guests, create, reporter_id, facts)
     job_detail['state'].should == 'FINISHED'
     job_detail['result'].should_not be_nil
     return job_detail
@@ -1082,5 +1083,29 @@ describe 'Hypervisor Resource', :type => :virt do
     test_host = @cp.get_consumer(test_host['uuid'])
     test_host['type']['label'].should == 'hypervisor'
     hypervisor_uuid.should == test_host['uuid']
+  end
+
+  it 'should not fail when facts change but not the guest list' do
+    # test for BZ 1651651
+    # if facts or hypervisor id changes, the migration was attempted
+    # leading to a job killing exception
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    host_hyp_id1 = random_string("test-uuid")
+    guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
+    guests = ['g1', 'g2']
+
+    test_host1 = user.register(host_hyp_id1, :system, nil, {"dmi.system.uuid" => host_hyp_id1, "virt.is_guest"=>"false"}, nil, owner['key'])
+    test_host1 = @cp.update_consumer({:uuid => test_host1.uuid, :guestIds => guest_set})
+
+    host_facts = {
+        "dmi.system.uuid" => host_hyp_id1,
+        "virt.is_guest"=>"false",
+        "fact1"=>"one",
+        "fact2"=>"two",
+        "fact3"=>"three"
+    }
+    job_detail = async_update_hypervisor(owner, user, host_hyp_id1, host_hyp_id1, guests, nil, nil, host_facts)
   end
 end
