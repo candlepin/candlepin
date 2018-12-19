@@ -81,6 +81,7 @@
                 <redelivery-delay-multiplier>2</redelivery-delay-multiplier>
                 <max-delivery-attempts>0</max-delivery-attempts>
             </address-setting>
+
             <address-setting match="event.qpid">
                 <auto-create-queues>true</auto-create-queues>
                 <max-size-bytes>10485760</max-size-bytes>
@@ -96,6 +97,20 @@
                 -->
                 <redelivery-delay>0</redelivery-delay>
                 <max-delivery-attempts>1</max-delivery-attempts>
+            </address-setting>
+
+            <address-setting match="candlepin.jobs">
+                <auto-create-queues>true</auto-create-queues>
+                <max-size-bytes>10485760</max-size-bytes>
+
+                <!-- By default, Artemis will page messages when the queue address is full. -->
+                <page-size-bytes>1048576</page-size-bytes>
+
+                <!-- Redelivery config -->
+                <redelivery-delay>30000</redelivery-delay>
+                <max-redelivery-delay>3600000</max-redelivery-delay>
+                <redelivery-delay-multiplier>2</redelivery-delay-multiplier>
+                <max-delivery-attempts>0</max-delivery-attempts>
             </address-setting>
         </address-settings>
 
