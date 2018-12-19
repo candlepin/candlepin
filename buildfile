@@ -40,7 +40,7 @@ RESTEASY = [group('jaxrs-api',
                   # servlet spec 3.0 which Tomcat 6 does not support
                   :version => '3.0.10.Final'),
             'org.scannotation:scannotation:jar:1.0.3',
-            'org.apache.httpcomponents:httpclient:jar:4.3.2',
+            'org.apache.httpcomponents:httpclient:jar:4.3.6',
             'org.apache.james:apache-mime4j:jar:0.6',
             'javax.mail:mail:jar:1.4.4',
             'javax.ws.rs:javax.ws.rs-api:jar:2.0.1']
