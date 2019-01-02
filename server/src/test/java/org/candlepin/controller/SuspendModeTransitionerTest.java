@@ -194,6 +194,34 @@ public class SuspendModeTransitionerTest {
         assertMode(Mode.SUSPEND, Reason.QPID_FLOW_STOPPED);
     }
 
+    @Test
+    public void transitionFromConnectedToMissingExchange() throws Exception {
+        modeManager.enterMode(Mode.NORMAL, Reason.QPID_UP);
+        transitioner.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_EXCHANGE);
+        assertMode(Mode.SUSPEND, Reason.QPID_MISSING_EXCHANGE);
+    }
+
+    @Test
+    public void transitionFromConnectedToMissingBinding() {
+        modeManager.enterMode(Mode.NORMAL, Reason.QPID_UP);
+        transitioner.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_BINDING);
+        assertMode(Mode.SUSPEND, Reason.QPID_MISSING_BINDING);
+    }
+
+    @Test
+    public void transitionFromAMQDownToMissingBinding() {
+        modeManager.enterMode(Mode.SUSPEND, Reason.ACTIVEMQ_DOWN);
+        transitioner.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_BINDING);
+        assertMode(Mode.SUSPEND, Reason.QPID_MISSING_BINDING, Reason.ACTIVEMQ_DOWN);
+    }
+
+    @Test
+    public void transitionFromAMQDownToMissingExchange() {
+        modeManager.enterMode(Mode.SUSPEND, Reason.ACTIVEMQ_DOWN);
+        transitioner.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_EXCHANGE);
+        assertMode(Mode.SUSPEND, Reason.QPID_MISSING_EXCHANGE, Reason.ACTIVEMQ_DOWN);
+    }
+
     private List<Reason> reasons(Reason ... reasons) {
         return reasons != null ? Arrays.asList(reasons) : new ArrayList<>();
     }
@@ -204,4 +232,5 @@ public class SuspendModeTransitionerTest {
         assertEquals(expectedReasons.length, lastChange.getReasons().size());
         assertTrue(lastChange.getReasons().containsAll(Arrays.asList(expectedReasons)));
     }
+
 }

@@ -87,6 +87,12 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
         else if (QpidStatus.FLOW_STOPPED.equals(newStatus)) {
             reason = Reason.QPID_FLOW_STOPPED;
         }
+        else if (QpidStatus.MISSING_EXCHANGE.equals(newStatus)) {
+            reason = Reason.QPID_MISSING_EXCHANGE;
+        }
+        else if (QpidStatus.MISSING_BINDING.equals(newStatus)) {
+            reason = Reason.QPID_MISSING_BINDING;
+        }
         else {
             String msg = String.format("Could not transition candlepin mode: Unknown Qpid status: %s",
                 newStatus);
@@ -143,6 +149,7 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
      */
     private synchronized void transitionAppropriately(Reason reason) {
         log.debug("Attempting to transition to appropriate Mode");
+
         CandlepinModeChange lastModeChange = modeManager.getLastCandlepinModeChange();
 
         if (lastModeChange.getReasons().contains(reason)) {
@@ -159,6 +166,8 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
                     break;
                 case QPID_FLOW_STOPPED:
                 case QPID_DOWN:
+                case QPID_MISSING_BINDING:
+                case QPID_MISSING_EXCHANGE:
                     resetQpidReasons(lastReasons, reason);
                     break;
                 case ACTIVEMQ_UP:
@@ -185,6 +194,8 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
         else if (lastModeChange.getMode() == Mode.NORMAL) {
             switch (reason) {
                 case QPID_FLOW_STOPPED:
+                case QPID_MISSING_BINDING:
+                case QPID_MISSING_EXCHANGE:
                 case QPID_DOWN:
                 case ACTIVEMQ_DOWN:
                     log.debug("Will need to transition Candlepin into SUSPEND Mode: {}", reason);
@@ -210,7 +221,12 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
     }
 
     private void resetQpidReasons(Set<Reason> reasons, Reason ... keep) {
-        List<Reason> allAMQ = Arrays.asList(Reason.QPID_UP, Reason.QPID_DOWN, Reason.QPID_FLOW_STOPPED);
+        List<Reason> allAMQ = Arrays.asList(
+            Reason.QPID_UP,
+            Reason.QPID_DOWN,
+            Reason.QPID_FLOW_STOPPED,
+            Reason.QPID_MISSING_BINDING,
+            Reason.QPID_MISSING_EXCHANGE);
         resetReasonGroup(reasons, allAMQ, keep);
     }
 

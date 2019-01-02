@@ -31,6 +31,16 @@ public enum QpidStatus {
     FLOW_STOPPED,
 
     /**
+     * Qpid is up but is missing the appropriate exchange.
+     */
+    MISSING_EXCHANGE,
+
+    /**
+     * Qpid is up but the queue's exchange has no bindings.
+     */
+    MISSING_BINDING,
+
+    /**
      * Qpid is down.
      */
     DOWN,
@@ -41,4 +51,5 @@ public enum QpidStatus {
      * context is loaded and all listeners have been registered.
      */
     UNKNOWN
+
 }

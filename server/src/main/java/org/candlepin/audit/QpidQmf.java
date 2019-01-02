@@ -175,7 +175,19 @@ public class QpidQmf {
      */
     public QpidStatus getStatus() {
         try {
-            for (String queue : getExchangeBoundQueueNames("event")) {
+            ExchangeData exchange = getExchageData();
+            if (!exchange.exists()) {
+                log.debug("Qpid has missing exchange.");
+                return QpidStatus.MISSING_EXCHANGE;
+            }
+
+            if (!exchange.hasBinding()) {
+                log.debug("Qpid has missing exchange binding!");
+                return QpidStatus.MISSING_BINDING;
+            }
+
+            Set<String> exchangeBoundQueueNames = getExchangeBoundQueueNames("event");
+            for (String queue : exchangeBoundQueueNames) {
                 Object qinfo = getQueueInfo(queue);
                 boolean flowStopped =  QpidQmf.<Boolean>extractValue(qinfo, "_values", "flowStopped");
 
@@ -192,7 +204,7 @@ public class QpidQmf {
                  */
                 if (flowStopped) {
                     lastFlowStoppedQueue = queue;
-                    log.info("Exchange 'event' is flow stopped because of queue {}", queue);
+                    log.debug("Exchange 'event' is flow stopped because of queue {}", queue);
                     return QpidStatus.FLOW_STOPPED;
                 }
             }
@@ -229,6 +241,21 @@ public class QpidQmf {
             }
         }
         return result;
+    }
+
+    private ExchangeData getExchageData() throws JMSException {
+        List<Map<String, Object>> exchanges = runQuery("_schema_id",
+            Collections.singletonMap("_class_name", "exchange"));
+
+        for (Map<String, Object> exchange : exchanges) {
+            String exchangeName = QpidQmf.<String>extractValue(exchange, "_values", "name");
+            if (exchangeName.equals("event")) {
+                long bindingCount = QpidQmf.<Long>extractValue(exchange, "_values", "bindingCount");
+                log.debug("The 'event' exchange has a binding count of: {}", bindingCount);
+                return new ExchangeData(true, bindingCount);
+            }
+        }
+        return new ExchangeData(false, 0);
     }
 
     /**
@@ -295,10 +322,35 @@ public class QpidQmf {
             log.debug("Found boolean");
             return (T) object;
         }
+
+        if (object instanceof Long) {
+            log.debug("Found Long");
+            return (T) object;
+        }
         else {
             throw new RuntimeException("Expected the value to be byte[] but found: " + object.getClass());
         }
     }
 
+    /**
+     * Represents the qpid exchange state as reported by QMF.
+     */
+    private class ExchangeData {
+        private boolean exists;
+        private long bindingCount;
+
+        public ExchangeData(boolean exists, long bindingCount) {
+            this.exists = exists;
+            this.bindingCount = bindingCount;
+        }
+
+        public boolean hasBinding() {
+            return bindingCount > 0L;
+        }
+
+        public boolean exists() {
+            return exists;
+        }
+    }
 
 }

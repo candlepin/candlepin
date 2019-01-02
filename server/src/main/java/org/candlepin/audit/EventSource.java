@@ -31,12 +31,11 @@ import java.util.List;
  */
 @Singleton
 public class EventSource implements QpidStatusListener, ActiveMQStatusListener {
-    private static  Logger log = LoggerFactory.getLogger(EventSource.class);
+    private static Logger log = LoggerFactory.getLogger(EventSource.class);
 
     private ObjectMapper mapper;
     private EventSourceConnection connection;
     private List<MessageReceiver> messageReceivers = new LinkedList<>();
-
 
     @Inject
     public EventSource(EventSourceConnection connection, ObjectMapper mapper) {
@@ -77,6 +76,8 @@ public class EventSource implements QpidStatusListener, ActiveMQStatusListener {
 
             switch (newStatus) {
                 case FLOW_STOPPED:
+                case MISSING_BINDING:
+                case MISSING_EXCHANGE:
                 case DOWN:
                     receiver.pause();
                     break;

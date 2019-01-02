@@ -155,10 +155,12 @@ public class EventSourceTest {
         EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
 
         eventSource.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.DOWN);
+
         // Start was called only on construction
         verify(session, times(1)).start();
         verify(consumer).close();
         verify(session, never()).stop();
+
     }
 
     @Test
@@ -201,6 +203,48 @@ public class EventSourceTest {
 
         // Start was called only during setup.
         verify(session, times(1)).start();
+        verify(session, never()).stop();
+    }
+
+    @Test
+    public void eventSourceClosesEventReceiverClientConsumerWhenQpidExchangeMissing() throws Exception {
+        ClientSession session = mock(ClientSession.class);
+        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+
+        ClientConsumer consumer = mock(ClientConsumer.class);
+        when(session.createConsumer(any(String.class))).thenReturn(consumer);
+
+        EventListener listener = mock(EventListener.class);
+        when(listener.requiresQpid()).thenReturn(true);
+
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
+
+        eventSource.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_EXCHANGE);
+
+        // Start was called only on construction
+        verify(session, times(1)).start();
+        verify(consumer).close();
+        verify(session, never()).stop();
+    }
+
+    @Test
+    public void eventSourceClosesEventReceiverClientConsumerWhenQpidBindingMissing() throws Exception {
+        ClientSession session = mock(ClientSession.class);
+        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+
+        ClientConsumer consumer = mock(ClientConsumer.class);
+        when(session.createConsumer(any(String.class))).thenReturn(consumer);
+
+        EventListener listener = mock(EventListener.class);
+        when(listener.requiresQpid()).thenReturn(true);
+
+        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
+
+        eventSource.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.MISSING_BINDING);
+
+        // Start was called only on construction
+        verify(session, times(1)).start();
+        verify(consumer).close();
         verify(session, never()).stop();
     }
 
