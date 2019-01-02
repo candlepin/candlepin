@@ -70,6 +70,13 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <!-- Do not filter test resources.  It will corrupt the binary CRL files. -->
+                <filtering>false</filtering>
+            </testResource>
+        </testResources>
         <pluginManagement>
             <!-- If you add plugins here, you still need to add a plugin block
                  to the child pom file (but you can leave out the configuration

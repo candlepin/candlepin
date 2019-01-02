@@ -91,6 +91,7 @@ import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
 
+import org.hamcrest.core.IsCollectionContaining;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1917,7 +1918,7 @@ public class PoolManagerTest {
         verify(entitlementCurator).batchDelete(arg.capture());
 
         List<Entitlement> entsDeleted = arg.getValue();
-        assertThat(entsDeleted, hasItem(derivedEnt));
+        assertThat(entsDeleted, IsCollectionContaining.hasItem(derivedEnt));
         assertEquals(2, derivedPool.getConsumed().intValue());
     }
 
@@ -1991,7 +1992,7 @@ public class PoolManagerTest {
         verify(entitlementCurator).batchDelete(arg.capture());
 
         List<Entitlement> entsDeleted = arg.getValue();
-        assertThat(entsDeleted, hasItems(derivedEnt, derivedEnt2, derivedEnt3));
+        assertThat(entsDeleted, IsCollectionContaining.hasItems(derivedEnt, derivedEnt2, derivedEnt3));
 
         assertEquals(1, derivedPool.getConsumed().intValue());
         assertEquals(1, derivedPool2.getConsumed().intValue());
@@ -2011,7 +2012,7 @@ public class PoolManagerTest {
         manager.createPools(pools);
         List<Pool> saved = poolsArg.getValue();
         assertEquals(saved.size(), pools.size());
-        assertThat(saved, hasItems(pools.toArray(new Pool[0])));
+        assertThat(saved, IsCollectionContaining.hasItems(pools.toArray(new Pool[0])));
     }
 
     @Test
