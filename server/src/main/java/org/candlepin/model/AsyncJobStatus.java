@@ -14,6 +14,9 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.async.JobExecutionContext;
+import org.candlepin.async.JobDataMap;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
@@ -46,7 +49,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = AsyncJobStatus.DB_TABLE)
-public class AsyncJobStatus extends AbstractHibernateObject {
+public class AsyncJobStatus extends AbstractHibernateObject implements JobExecutionContext {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_async_jobs";
@@ -85,8 +88,8 @@ public class AsyncJobStatus extends AbstractHibernateObject {
     @NotNull
     private String id;
 
-    @Column(name = "job_class")
-    private String jobClass;
+    @Column(name = "job_key")
+    private String jobKey;
 
     @NotNull
     private String name;
@@ -181,31 +184,33 @@ public class AsyncJobStatus extends AbstractHibernateObject {
      * @return
      *  the fully-qualified class name of this job, or null if the class has not yet been set
      */
-    public String getJobClass() {
-        return this.jobClass;
+    public String getJobKey() {
+        return this.jobKey;
     }
 
     /**
-     * Sets the job class for this job.
+     * Sets the key for the job class to handle execution of this job. If the key does represent a
+     * valid job class at the time of scheduling or execution, the job will permanently enter the
+     * FAILED state.
      *
-     * @param jobClass
-     *  The class for this job
+     * @param jobKey
+     *  The key representing the job class to handle execution of this job
      *
      * @throws IllegalArgumentException
-     *  if jobClass is null
+     *  if jobKey is null or empty
      *
      * @return
      *  this job status instance
      */
-    public AsyncJobStatus setJobClass(Class/*<? extends AsyncJob>*/ jobClass) {
-        if (jobClass == null) {
-            throw new IllegalArgumentException("job class is null");
+    public AsyncJobStatus setJobKey(String jobKey) {
+        if (jobKey == null || jobKey.isEmpty()) {
+            throw new IllegalArgumentException("jobKey is null or empty");
         }
 
-        this.jobClass = jobClass.getName();
+        this.jobKey = jobKey;
 
         if (this.getName() == null) {
-            this.setName(jobClass.getSimpleName());
+            this.setName(jobKey);
         }
 
         return this;
@@ -494,10 +499,10 @@ public class AsyncJobStatus extends AbstractHibernateObject {
      * @return
      *  the job's runtime data as a map
      */
-    public Map<String, Object> getJobData() {
-        return this.jobData != null ?
+    public JobDataMap getJobData() {
+        return new JobDataMap(this.jobData != null ?
             Collections.unmodifiableMap((Map<String, Object>) this.jobData) :
-            Collections.emptyMap();
+            Collections.emptyMap());
     }
 
     /**
