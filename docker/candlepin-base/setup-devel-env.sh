@@ -75,11 +75,12 @@ curl -O https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installe
 gpg2 --verify rvm-installer.asc && bash rvm-installer stable
 source /etc/profile.d/rvm.sh || true
 
-rvm install 2.0.0
-rvm use --default 2.0.0
+rvm install 2.5.3
+rvm use --default 2.5.3
 set -v
 
 # Install all ruby deps
+gem update --system
 gem install bundler
 bundle install
 
