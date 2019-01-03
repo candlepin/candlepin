@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2018 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,22 +17,16 @@ package org.candlepin.async;
 
 
 /**
- * The AsyncJob
+ * The JobExecutionContext provides context-specific data and arguments to a job at the time of
+ * execution.
  */
-public interface AsyncJob {
+public interface JobExecutionContext {
 
-    /**
-     * Executes this job.
-     *
-     * @param jdata
-     *  The JobExecutionContext which contains arguments and job metadata
-     *
-     * @throws JobExecutionException
-     *  if an exception occurs during job execution
-     *
-     * @return
-     *  The result of the job
-     */
-    Object execute(JobExecutionContext jdata) throws JobExecutionException;
+    // TODO: maybe make a custom subclass of map that provides some auto-casting fetch methods?
+
+    JobDataMap getJobData();
+
+
+    // Add other stuff here
 
 }
