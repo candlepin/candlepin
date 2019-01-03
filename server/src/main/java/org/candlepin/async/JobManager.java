@@ -15,9 +15,11 @@
 package org.candlepin.async;
 
 import org.candlepin.audit.MessageAddress;
+import org.candlepin.auth.Principal;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
@@ -42,10 +44,12 @@ import org.apache.log4j.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.quartz.JobDetail;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
 
 
 /**
@@ -55,9 +59,15 @@ import javax.inject.Singleton;
 public class JobManager {
     private static Logger log = LoggerFactory.getLogger(JobManager.class);
 
-    protected Configuration config;
-    protected AsyncJobStatusCurator jobCurator;
-    protected ObjectMapper objMapper;
+    /** Stores our mapping of job keys to job classes */
+    private static Map<String, Class<? extends AsyncJob>> jobs = new HashMap<>();
+
+
+    private Configuration config;
+    private AsyncJobStatusCurator jobCurator;
+    private ObjectMapper objMapper;
+
+    private PrincipalProvider principalProvider;
 
     private ClientSessionFactory sessionFactory;
     private ClientSession session;
@@ -65,24 +75,98 @@ public class JobManager {
 
 
     /**
-     * Temporary?
+     * Registers the given class for the specified key. If the key was already registered to
+     * another class, the previously registered class will be returned.
+     *
+     * @param jobKey
+     *  The key under which to register the job class
+     *
+     * @param jobClass
+     *  The job class to register
+     *
+     * @throws IllegalArgumentException
+     *  if jobKey is null or empty, or jobClass is null
+     *
+     * @return
+     *  the job class previously registered to the given key, or null if the key was not already
+     *  registered
+     */
+    public static Class<? extends AsyncJob> registerJob(String jobKey, Class<? extends AsyncJob> jobClass) {
+        if (jobKey == null || jobKey.isEmpty()) {
+            throw new IllegalArgumentException("jobKey is null or empty");
+        }
+
+        if (jobClass == null) {
+            throw new IllegalArgumentException("jobClass is null");
+        }
+
+        return jobs.put(jobKey, jobClass);
+    }
+
+    /**
+     * Removes the registration for the specified job key, if present. If the given key is not
+     * registered to any job class, this function returns null.
+     *
+     * @param jobKey
+     *  The job key to unregister
+     *
+     * @throws IllegalArgumentException
+     *  if jobKey is null or empty
+     *
+     * @return
+     *  the job class previously registered to the given key, or null if the key was not already
+     *  registered
+     */
+    public static Class<? extends AsyncJob> unregisterJob(String jobKey) {
+        if (jobKey == null || jobKey.isEmpty()) {
+            throw new IllegalArgumentException("jobKey is null or empty");
+        }
+
+        return jobs.remove(jobKey);
+    }
+
+    /**
+     * Fetches the job class registered to the specified key. If the key is not registered, this
+     * function returns null.
+     *
+     * @param jobKey
+     *  The key for which to fetch the job class
+     *
+     * @throws IllegalArgumentException
+     *  if jobKey is null or empty
+     *
+     * @return
+     *  the job class registered to the given key, or null if the key is not registered
+     */
+    public static Class<? extends AsyncJob> getJobClass(String jobKey) {
+        if (jobKey == null || jobKey.isEmpty()) {
+            throw new IllegalArgumentException("jobKey is null or empty");
+        }
+
+        return jobs.get(jobKey);
+    }
+
+
+    /**
+     * The JobMessage container is used to pass messages to other nodes through the Artemis
+     * subsystem.
      */
     private static class JobMessage {
         private String jobId;
-        private String jobClass;
+        private String jobKey;
 
         @JsonCreator
-        public JobMessage(String jobId, String jobClass) {
+        public JobMessage(String jobId, String jobKey) {
             this.jobId = jobId;
-            this.jobClass = jobClass;
+            this.jobKey = jobKey;
         }
 
         public String getJobId() {
             return this.jobId;
         }
 
-        public String getJobClass() {
-            return this.jobClass;
+        public String getJobKey() {
+            return this.jobKey;
         }
     }
 
@@ -91,10 +175,14 @@ public class JobManager {
      * Creates a new JobManager instance
      */
     @Inject
-    public JobManager(Configuration config, AsyncJobStatusCurator jobCurator, ObjectMapper objMapper) {
+    public JobManager(Configuration config, AsyncJobStatusCurator jobCurator, ObjectMapper objMapper,
+        PrincipalProvider principalProvider) {
+
         this.config = config;
         this.jobCurator = jobCurator;
         this.objMapper = objMapper;
+
+        this.principalProvider = principalProvider;
     }
 
 
@@ -184,7 +272,7 @@ public class JobManager {
 
         ClientSession session = this.getClientSession();
         ClientMessage message = session.createMessage(true);
-        message.putStringProperty("job_class", jobMessage.getJobClass());
+        message.putStringProperty("job_key", jobMessage.getJobKey());
 
         String eventString = this.objMapper.writeValueAsString(message);
         message.getBodyBuffer().writeString(eventString);
@@ -199,8 +287,8 @@ public class JobManager {
      * Builds an AsyncJobStatus instance from the given job details. The job status will not be
      * a managed entity and will need to be manually persisted by the caller.
      *
-     * @param detail
-     *  The job detail to use to build the job status
+     * @param builder
+     *  The JobBuilder to use to build the job status
      *
      * @throws IllegalArgumentException
      *  if detail is null
@@ -208,32 +296,31 @@ public class JobManager {
      * @return
      *  the newly constructed, unmanaged AsyncJobStatus instance
      */
-    private AsyncJobStatus buildJobStatus(JobDetail detail) {
-        if (detail == null) {
-            throw new IllegalArgumentException("job detail is null");
+    private AsyncJobStatus buildJobStatus(JobBuilder builder) {
+        if (builder == null) {
+            throw new IllegalArgumentException("job builder is null");
         }
-
-        // TODO: Rewrite this method to use the upcoming JobBuilder
 
         AsyncJobStatus job = new AsyncJobStatus();
 
-        job.setJobClass(detail.getJobClass());
-        job.setName(detail.getKey().getName());
-        job.setGroup(detail.getKey().getGroup());
+        job.setJobKey(builder.getJobKey());
+        job.setName(builder.getJobName());
+        job.setGroup(builder.getJobGroup());
 
-        // Note: these could be metadata fields
+        // Add environment-specific metadata
         job.setOrigin(Util.getHostname());
         job.setCorrelationId((String) MDC.get(LoggingFilter.CSID));
-        job.setPrincipal("temporarily ignored"); // This is only used in exactly one job
 
-        job.setMaxAttempts(detail.requestsRecovery() ? 3 : 1);
-        job.setJobData(detail.getJobDataMap());
+        Principal principal = this.principalProvider.get();
+        job.setPrincipal(principal != null ? principal.getName() : null);
+
+        // TODO: add manually added metadata
+
+        job.setMaxAttempts(builder.getRetryCount() + 1);
+        job.setJobData(builder.getJobArguments());
 
         return job;
     }
-
-
-
 
     /**
      * Queues a job to be run on any Candlepin node backed by the same database as this node, and
@@ -245,44 +332,26 @@ public class JobManager {
      * in the queue or currently executing, a new job will not be queued and the existing job's
      * job status will be returned instead.
      *
-     * @param
+     * @param builder
+     *  A JobBuilder instance representing the configuration of the job to queue
      *
      * @return
      *  an AsyncJobStatus instance representing the queued job's status, or the status of the
      *  existing job if it already exists
      */
-    public AsyncJobStatus queueJob(JobDetail detail) {
-        if (detail == null) {
-            throw new IllegalArgumentException("job detail is null");
+    public AsyncJobStatus queueJob(JobBuilder builder) {
+        if (builder == null) {
+            throw new IllegalArgumentException("job builder is null");
         }
 
-        // TODO:
-        // This whole input scheme should change. We should not be accepting an already-completed
-        // job status as input, as this suggests the work is already done. We should be using either
-        // the (fully qualified) job class name, or some kind of job builder which configures a
-        // given job exactly as the caller intends.
-        //
-        // Example:
-        //      JobBuilder builder = new JobBuilder()
-        //          .forTask(runnable job class or key here)
-        //          .setTaskArgument("key", "value")
-        //          .setTaskArgument("key2", "value2")
-        //          .addUniqueRestriction("owner", owner_id_here)
-        //          .addUniqueRestriction("product", product_id_here)
-        //          .addTaskMetadata("correlation_id", cid)
-        //          .setRetryCount(3)
-        //
-        //      jobManager.queueJob(builder);
-
-
-        AsyncJobStatus job = this.buildJobStatus(detail);
+        AsyncJobStatus job = this.buildJobStatus(builder);
 
         // TODO:
         // Add job filtering/deduplication by criteria
 
         try {
             // Build the job message
-            JobMessage message = new JobMessage(job.getId(), job.getJobClass());
+            JobMessage message = new JobMessage(job.getId(), job.getJobKey());
 
             // Send the message
             this.sendJobMessage(message);

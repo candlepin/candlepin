@@ -19,7 +19,7 @@
             <column name="updated" type="${timestamp.type}"/>
 
             <column name="name" type="varchar(255)"/>
-            <column name="job_class" type="varchar(255)"/>
+            <column name="job_key" type="varchar(255)"/>
             <column name="job_group" type="varchar(32)"/>
             <column name="origin" type="varchar(255)"/>
             <column name="principal" type="varchar(255)"/>
