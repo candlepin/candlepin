@@ -301,7 +301,7 @@ describe 'Owner Resource' do
   end
 
   it 'should allow unicode owner creation' do
-    create_owner random_string('☠pirate org yarr☠')
+    create_owner random_string('Ακμή корпорация')
   end
 
   it "lets owners show service levels" do
