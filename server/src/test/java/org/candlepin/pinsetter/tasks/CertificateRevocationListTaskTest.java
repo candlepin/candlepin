@@ -63,7 +63,6 @@ public class CertificateRevocationListTaskTest extends BaseJobTest {
     @Test
     public void execute() throws Exception {
         when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn("/tmp/test.crl");
-        when(crlFileUtil.syncCRLWithDB(any(File.class))).thenReturn(true);
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         task.execute(context);

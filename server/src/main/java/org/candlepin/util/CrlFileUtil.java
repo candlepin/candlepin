@@ -14,6 +14,8 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
@@ -50,12 +52,13 @@ import java.security.cert.X509CRL;
 import java.security.cert.X509CRLEntry;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
@@ -81,15 +84,17 @@ public class CrlFileUtil {
     private final CertificateReader certificateReader;
     private final PKIUtility pkiUtility;
     private CertificateSerialCurator certificateSerialCurator;
+    private Configuration config;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
 
     @Inject
     public CrlFileUtil(CertificateReader certificateReader, PKIUtility pkiUtility,
-        CertificateSerialCurator curator) {
+        CertificateSerialCurator curator, Configuration config) {
         this.certificateReader = certificateReader;
         this.pkiUtility = pkiUtility;
         this.certificateSerialCurator = curator;
+        this.config = config;
     }
 
     /**
@@ -311,13 +316,31 @@ public class CrlFileUtil {
         }
     }
 
+    /**
+     * Sync the specified CRL file with the database. The sync will be done in batches of the
+     * specified amount.
+     *
+     * @param crlFile the CRL file to sync with the DB.
+     * @param batchSize the number of DB records to process at a time.
+     * @return the number of records synced.
+     * @throws IOException
+     */
     @Transactional
-    public boolean syncCRLWithDB(File file) throws IOException {
-        List<Long> uncollected = this.certificateSerialCurator.getUncollectedRevokedCertSerials().list();
-        List<BigInteger> revoke = new ArrayList<>(uncollected.size());
+    public int batchSyncCRLWithDB(File crlFile, int batchSize) throws IOException {
+        log.debug("Processing next batch of {} serials.", batchSize);
 
-        List<Long> expired = this.certificateSerialCurator.getExpiredRevokedCertSerials().list();
-        List<BigInteger> unrevoke = new ArrayList<>(expired.size());
+        List<Long> uncollected = this.certificateSerialCurator.getUncollectedRevokedCertSerials()
+            .setMaxResults(batchSize).list();
+        Set<BigInteger> revoke = new HashSet<>(uncollected.size());
+
+        List<Long> expired = this.certificateSerialCurator.getExpiredRevokedCertSerials()
+            .setMaxResults(batchSize).list();
+        Set<BigInteger> unrevoke = new HashSet<>(expired.size());
+
+        // Return false if there was nothing to collect.
+        if (uncollected.isEmpty() && expired.isEmpty()) {
+            return 0;
+        }
 
         // Convert our serials to BigIntegers for the CRL processing; also do some basic filtering since
         // we're iterating anyway
@@ -351,7 +374,7 @@ public class CrlFileUtil {
             log.info("Updating CRL file; adding {} newly revoked serials, removing {} expired serials",
                 revoke.size(), unrevoke.size());
 
-            this.updateCRLFile(file, revoke, unrevoke);
+            this.updateCRLFile(crlFile, revoke, unrevoke);
 
             // Do some cleanup so we don't leave a bunch of cert serials lying around
             if (uncollected.size() > 0) {
@@ -363,7 +386,7 @@ public class CrlFileUtil {
                         collected, uncollected.size());
                 }
                 else {
-                    log.info("Collected {} revoked serials", collected);
+                    log.debug("Collected {} revoked serials", collected);
                 }
             }
 
@@ -379,8 +402,34 @@ public class CrlFileUtil {
                 }
             }
         }
+        return uncollected.size() + expired.size();
+    }
 
-        return true;
+    /**
+     * Sync the specified CRL file with the database. The sync will be done in batches
+     * defined by the candlepin configuration property (default 1,000,000).
+     *
+     * @param file the CRL file to be synced
+     * @throws IOException
+     */
+    public void syncCRLWithDB(File file) throws IOException {
+        // Batch size will be defaulted to 1 million. This will keep the memory and CPU
+        // usage at a reasonable level during the update.
+        int batchSize = config.getInt(ConfigProperties.CRL_SERIAL_BATCH_SIZE);
+
+        // First clean up any serials that are already expired, revoked and not collected
+        // as these serials do not need to be processed and do not ever need to hit the CRL.
+        int deleted = certificateSerialCurator.deleteRevokedExpiredAndNotCollectedSerials();
+        log.debug("Deleted {} cert serials that were expired, revoked and not yet collected.", deleted);
+
+        int totalProcessed = 0;
+        boolean moreToProcess = true;
+        while (moreToProcess) {
+            int processedRecordCount = this.batchSyncCRLWithDB(file, batchSize);
+            moreToProcess = processedRecordCount != 0;
+            totalProcessed += processedRecordCount;
+        }
+        log.info("CRL sync processed a total of {} serials.", totalProcessed);
     }
 
 }

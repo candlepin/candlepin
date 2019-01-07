@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
             this.curator = curator;
             this.created = new ArrayList<>();
 
-            this.expiration = new Date();
+            this.expiration = getDefaultExpiry();
             this.collected = false;
             this.revoked = false;
         }
@@ -92,6 +93,12 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         public Stream<CertificateSerial> fetch(Predicate<CertificateSerial> filter) {
             return this.created.stream().filter(filter);
         }
+
+        private Date getDefaultExpiry() {
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.YEAR, 1);
+            return cal.getTime();
+        }
     }
 
 
@@ -104,6 +111,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    @SuppressWarnings("indentation")
     public void testGetUncollectedRevokedCertSerials() {
         Date now = new Date();
         Date lastWeek = Util.addDaysToDt(-7);
@@ -124,7 +132,8 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         builder.withExpDate(nextWeek).collected(true).revoked(true).build();
 
         List<Long> expected = builder
-            .fetch((serial) -> serial != null && !serial.isCollected() && serial.isRevoked())
+            .fetch((serial) -> serial != null && !serial.isCollected() &&
+                serial.isRevoked() && serial.getExpiration().compareTo(now) >= 0)
             .map((serial) -> serial.getId())
             .collect(Collectors.toList());
 
@@ -325,6 +334,35 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
             certSerialCurator.listBySerialIds(new String[] {serial.getId().toString()});
 
         assertEquals(1, serialQuery.getRowCount());
+    }
+
+    @Test
+    public void deleteAllExpiredCertsThatHaveBeenRevokedButNotYetBeenCollected() throws Exception {
+        CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);
+
+        // Should not get deleted as it has not yet been expired.
+        CertificateSerial serial1 = builder.collected(false).revoked(true).build();
+        // Should not get deleted since it hasn't been revoked.
+        CertificateSerial serial2 = builder.withExpDate("03/10/2010").collected(false).revoked(false).build();
+        // Should get deleted as it is expired, revoked and not collected.
+        CertificateSerial serial3 = builder.withExpDate("03/10/2012").collected(false).revoked(true).build();
+        // Should not get deleted since it has been collected.
+        CertificateSerial serial4 = builder.withExpDate("03/10/2012").collected(true).revoked(true).build();
+
+        List<String> expected = builder
+            .fetch((serial) -> serial != null)
+            .map((serial) -> serial.getId().toString())
+            .collect(Collectors.toList());
+
+        certSerialCurator.deleteRevokedExpiredAndNotCollectedSerials();
+
+        List<CertificateSerial> fetched =
+            certSerialCurator.listBySerialIds(expected.toArray(new String[expected.size()])).list();
+        assertEquals(3, fetched.size());
+        assertTrue(fetched.contains(serial1));
+        assertTrue(fetched.contains(serial2));
+        assertFalse(fetched.contains(serial3));
+        assertTrue(fetched.contains(serial4));
     }
 
 }

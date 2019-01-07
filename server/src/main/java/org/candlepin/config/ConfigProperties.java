@@ -260,6 +260,14 @@ public class ConfigProperties {
     public static final String CRL_NEXT_UPDATE_DELTA = "candlepin.crl.nextupdate.delta_days";
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
 
+    /**
+     * The number of uncollected and expired cert serials will be processed at a time while updating
+     * the CRL file. It is important to note that both uncollected and expired serials will be batched
+     * at the specified amount.
+     *
+     */
+    public static final String CRL_SERIAL_BATCH_SIZE = "candlepin.crl.update_serial_batch_size";
+
     public static final String IDENTITY_CERT_YEAR_ADDENDUM = "candlepin.identityCert.yr.addendum";
     /**
      * Identity certificate expiry threshold in days
@@ -316,6 +324,7 @@ public class ConfigProperties {
             this.put(PRETTY_PRINT, "false");
             this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
             this.put(CRL_NEXT_UPDATE_DELTA, "1");
+            this.put(CRL_SERIAL_BATCH_SIZE, "1000000");
 
             this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
             this.put(CONSUMER_FACTS_MATCHER, ".*");

@@ -42,14 +42,16 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
     }
 
     /**
-     * Fetches a collection of serials from uncollected, revoked certficiate serials. If there are
-     * no such certificate serials, this method returns an empty collection.
+     * Fetches a collection of serials from uncollected, revoked and not expired
+     * certficiate serials. If there are no such certificate serials, this method
+     * returns an empty collection.
      *
      * @return
-     *  a collection of serials from uncollected, revoked certificate serials
+     *  a collection of serials from uncollected, revoked certificate serials that have not expired.
      */
     public CandlepinQuery<Long> getUncollectedRevokedCertSerials() {
         DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
+            .add(Restrictions.gt("expiration", getExpiryRestriction()))
             .add(Restrictions.eq("revoked", true))
             .add(Restrictions.eq("collected", false))
             .setProjection(Projections.id()); // Note: the ID *is* the serial for cert serials
@@ -66,6 +68,10 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
      *  a collection of serials from revoked certficiate serials that expired prior to "today."
      */
     public CandlepinQuery<Long> getExpiredRevokedCertSerials() {
+        return this.getExpiredRevokedCertSerials(getExpiryRestriction());
+    }
+
+    private Date getExpiryRestriction() {
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
         // Set to midnight first
@@ -76,8 +82,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
 
         // Subtract a day to put us in "yesterday" relative to midnight UTC of whatever "today" is
         cal.add(Calendar.DAY_OF_MONTH, -1);
-
-        return this.getExpiredRevokedCertSerials(cal.getTime());
+        return cal.getTime();
     }
 
     /**
@@ -160,6 +165,20 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         }
 
         return deleted;
+    }
+
+    /**
+     * Deletes all cert serials that have expired before they have been collected.
+     *
+     * @return the total number of serials that were deleted.
+     */
+    @Transactional
+    public int deleteRevokedExpiredAndNotCollectedSerials() {
+        String hql = "DELETE FROM CertificateSerial c WHERE c.revoked=true AND " +
+            "c.collected=false AND expiration < :cutoff";
+        Query query = this.getEntityManager().createQuery(hql);
+        query.setParameter("cutoff", getExpiryRestriction());
+        return query.executeUpdate();
     }
 
     @SuppressWarnings("unchecked")

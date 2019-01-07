@@ -18,6 +18,7 @@ import static org.candlepin.test.MatchesPattern.*;
 import static org.junit.Assert.*;
 
 import org.candlepin.TestingModules;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
@@ -61,6 +62,7 @@ public class CrlFileUtilTest {
     @Inject private CertificateReader certificateReader;
     @Inject private PKIUtility pkiUtility;
     @Mock private CertificateSerialCurator certSerialCurator;
+    @Mock private Configuration config;
     private File temp;
     private Set<BigInteger> initialEntry;
 
@@ -73,7 +75,8 @@ public class CrlFileUtilTest {
         );
         injector.injectMembers(this);
 
-        this.cfu = new CrlFileUtil(this.certificateReader, this.pkiUtility, this.certSerialCurator);
+        this.cfu = new CrlFileUtil(this.certificateReader, this.pkiUtility, this.certSerialCurator,
+            this.config);
         this.temp = File.createTempFile("cp_test_crl-", ".pem");
         this.initialEntry = new HashSet<>();
         this.initialEntry.add(BigInteger.ONE);
