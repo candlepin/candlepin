@@ -49,6 +49,7 @@ public class SSLAuth extends ConsumerAuth {
         super(consumerCurator, ownerCurator, deletedConsumerCurator, i18nProvider);
     }
 
+    @Override
     public Principal getPrincipal(HttpRequest httpRequest) {
         X509Certificate[] certs = (X509Certificate[]) httpRequest.getAttribute(CERTIFICATES_ATTR);
 
