@@ -42,7 +42,7 @@ allprojects {
     resteasy 'org.jboss.resteasy:resteasy-atom-provider:3.5.1.Final' exclude module: '*'
     resteasy 'org.jboss.resteasy:resteasy-multipart-provider:3.5.1.Final' exclude module: '*'
     resteasy 'org.scannotation:scannotation:1.0.3' exclude module: '*'
-    resteasy 'org.apache.httpcomponents:httpclient:4.3.2' exclude module: '*'
+    resteasy 'org.apache.httpcomponents:httpclient:4.3.6' exclude module: '*'
     resteasy 'org.apache.james:apache-mime4j:0.6' exclude module: '*'
     resteasy 'javax.mail:mail:1.4.7' exclude module: '*'
     resteasy 'javax.ws.rs:javax.ws.rs-api:2.1' exclude module: '*'
