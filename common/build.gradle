@@ -20,7 +20,7 @@ sourceSets {
 
 // Exclude the generated i18n translation files from checkstyle
 tasks.withType(Checkstyle) {
-    exclude '**/msgfmt/generated_source/**'
+    exclude '**/i18n/Messages*'
 }
 
 
