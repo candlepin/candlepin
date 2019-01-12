@@ -171,7 +171,7 @@ Fedora 28.  Change those values as appropriate.
   ```
 
 ## Miscellaneous
-* `buildr syntastic` creates `.syntastic_class_path` for the Vim Syntastic plugin
+* `buildr syntactic` creates `.syntastic_class_path` for the Vim Syntastic plugin
 * `buildr pom` creates a `pom.xml` file with the project dependencies in it
 * `buildr rpmlint` runs `rpmlint` on all `*.spec` files
 
