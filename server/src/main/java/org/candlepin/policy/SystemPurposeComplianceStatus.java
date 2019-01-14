@@ -29,12 +29,12 @@ import java.util.Set;
  * ComplianceStatus
  *
  * Represents the system purpose compliance status for a given consumer. Carries information
- * about which roles, SLA, usage and add-ons are fully entitled, not entitled, or partially entitled.
+ * about which roles, SLA, usage and add-ons are entitled or not entitled, or if none are specified.
  */
 public class SystemPurposeComplianceStatus {
-    public static final String GREEN = "valid";
-    public static final String YELLOW = "partial";
-    public static final String RED = "invalid";
+    public static final String MATCHED = "matched";
+    public static final String MISMATCHED = "mismatched";
+    public static final String NOT_SPECIFIED = "not specified";
 
     // Date this compliance was set on
     private Date date;
@@ -46,8 +46,6 @@ public class SystemPurposeComplianceStatus {
     private Map<String, Set<Entitlement>> compliantAddOns;
     private Map<String, Set<Entitlement>> compliantSLA;
     private Map<String, Set<Entitlement>> compliantUsage;
-    private Map<String, Set<Entitlement>> nonPreferredSLA;
-    private Map<String, Set<Entitlement>> nonPreferredUsage;
     private Set<String> reasons;
     private I18n i18n;
 
@@ -55,9 +53,7 @@ public class SystemPurposeComplianceStatus {
         this.compliantRole = new HashMap<>();
         this.nonCompliantAddOns = new HashSet<>();
         this.compliantAddOns = new HashMap<>();
-        this.nonPreferredSLA = new HashMap<>();
         this.compliantSLA = new HashMap<>();
-        this.nonPreferredUsage = new HashMap<>();
         this.compliantUsage = new HashMap<>();
         this.reasons = new HashSet<>();
         this.i18n = i18n;
@@ -148,33 +144,6 @@ public class SystemPurposeComplianceStatus {
     }
 
     /**
-     * @return non compliant SLA and the entitlements that do not provide the SLA
-     */
-    public Map<String, Set<Entitlement>> getNonPreferredSLA() {
-        return nonPreferredSLA;
-    }
-
-    /**
-     *
-     * @param expectedSla the sla that is non compliant
-     * @param actualSla the sla that is provided by the pool
-     * @param nonCompliantSLAEntitlement the entitlements that are not sla compliant
-     */
-    public void addNonPreferredSLA(String expectedSla, String actualSla,
-        Entitlement nonCompliantSLAEntitlement) {
-
-        if (!nonPreferredSLA.containsKey(actualSla)) {
-            nonPreferredSLA.put(actualSla, new HashSet<>());
-        }
-
-        nonPreferredSLA.get(actualSla).add(nonCompliantSLAEntitlement);
-
-        this.addReason("expected sla is {0} but pool {1} with product {2} provides SLA: {3}",
-            expectedSla, nonCompliantSLAEntitlement.getPool().getId(),
-            nonCompliantSLAEntitlement.getPool().getProductId(), actualSla);
-    }
-
-    /**
      *
      * @return compliant SLA and the entitlements that provide the SLA
      */
@@ -206,33 +175,6 @@ public class SystemPurposeComplianceStatus {
 
     public String getNonCompliantSLA() {
         return nonCompliantSLA;
-    }
-
-    /**
-     *
-     * @return the non compliant usage and the entitlement that do not provide the usage
-     */
-    public Map<String, Set<Entitlement>> getNonPreferredUsage() {
-        return nonPreferredUsage;
-    }
-
-    /**
-     *
-     * @param expectedUsage the usage that is non compliant
-     * @param actualUsage the usage that is provided by the pool
-     * @param nonCompliantUsageEntitlement the entitlement that is not compliant
-     */
-    public void addNonPreferredUsage(String expectedUsage, String actualUsage,
-        Entitlement nonCompliantUsageEntitlement) {
-
-        if (!nonPreferredUsage.containsKey(actualUsage)) {
-            nonPreferredUsage.put(actualUsage, new HashSet<>());
-        }
-
-        nonPreferredUsage.get(actualUsage).add(nonCompliantUsageEntitlement);
-        this.addReason("expected usage is {0} but pool {1} with product {2} provides Usage: {3}",
-            expectedUsage, nonCompliantUsageEntitlement.getPool().getId(),
-            nonCompliantUsageEntitlement.getPool().getProductId(), actualUsage);
     }
 
     /**
@@ -269,44 +211,37 @@ public class SystemPurposeComplianceStatus {
     }
 
     /*
-     * Valid :
-     * * no system purpose is specified
-     * * SLA is specified, there is a single SLA provided by the consumer's entitlements and its the
-     * one specified by the consumer
-     * * role is specified and at least one entitlement provides the preferred role
-     * * add ons are specified, and all of them are provided by the pools
-     * * usage is specified, there is a single usage provided by the consumer's entitlements and its the
-     * one specified by the consumer
+     * The status is 'Matched' if at least one syspurpose attribute (SLA, role, addons, usage) is specified,
+     * and all of those that are specified are satisfied by the consumer's entitlements.
      *
-     * Partial:
-     * * SLA is specified, entitlements have mixed SLAs, with one of them matches the preference
-     * Add ons are specified, and atleast one of them but not all of them are provided by the pools
-     * usage is specified, entitlements have mixed usages, with one of them matches the preference
+     * The status is 'Mismatched' if at least one syspurpose attribute (SLA, role, addons, usage)
+     * is specified, and from those specified, at least one is not satisfied by the consumer's entitlements.
+     * (This includes the scenario of multiple addons being specified, where only some but not all of them
+     * are satisfied)
      *
-     * Invalid:
-     * * SLA is specified, and entitlements provide a single SLA that does not match preference
-     * * SLA is specified, no entitlements provide that SLA preference
-     * * Role is specified, and not even one entitlement provides the preferred role
-     * * Add ons are specified, and none of the add ons are provided are provided by the pools
-     * * usage is specified, and entitlements provide a single usage that does not match preference
-     * * usage is specified, no entitlements provide the usage preference
-     *
+     * The status is 'Not Specified' when NONE of the attributes were specified by the consumer at all.
      */
     public String getStatus() {
 
         if (isCompliant()) {
-            return GREEN;
+            if (isNotSpecified()) {
+                return NOT_SPECIFIED;
+            }
+            return MATCHED;
         }
 
-        if (StringUtils.isNotEmpty(nonCompliantRole) ||
-            // even if there one add on, should be yellow
-            (!nonCompliantAddOns.isEmpty() && compliantAddOns.isEmpty()) ||
-            StringUtils.isNotEmpty(nonCompliantSLA) ||
-            StringUtils.isNotEmpty(nonCompliantUsage)) {
-            return RED;
-        }
+        return MISMATCHED;
+    }
 
-        return YELLOW;
+    private boolean isNotSpecified() {
+        return StringUtils.isEmpty(nonCompliantRole) &&
+                nonCompliantAddOns.isEmpty() &&
+                StringUtils.isEmpty(nonCompliantSLA) &&
+                StringUtils.isEmpty(nonCompliantUsage) &&
+                compliantRole.isEmpty() &&
+                compliantAddOns.isEmpty() &&
+                compliantSLA.isEmpty() &&
+                compliantUsage.isEmpty();
     }
 
     public Set<String> getReasons() {
