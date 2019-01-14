@@ -86,8 +86,6 @@ public class SystemPurposeComplianceStatusTranslatorTest extends
             source.addCompliantAddOn("a" + i, this.generateEntitlement("addOn", i));
             source.addCompliantUsage("u" + i, this.generateEntitlement("usage", i));
             source.addCompliantSLA("a" + i, this.generateEntitlement("SLA", i));
-            source.addNonPreferredUsage("npu" + i, "anpu" + i, this.generateEntitlement("nonPrefSLA", i));
-            source.addNonPreferredSLA("nps" + i, "anps" + i, this.generateEntitlement("nonPrefUsage", i));
         }
 
         source.setDate(new Date());
@@ -130,16 +128,12 @@ public class SystemPurposeComplianceStatusTranslatorTest extends
                 this.compareEntitlementMaps(source.getCompliantAddOns(), dest.getCompliantAddOns());
                 this.compareEntitlementMaps(source.getCompliantUsage(), dest.getCompliantUsage());
                 this.compareEntitlementMaps(source.getCompliantSLA(), dest.getCompliantSLA());
-                this.compareEntitlementMaps(source.getNonPreferredSLA(), dest.getNonPreferredSLA());
-                this.compareEntitlementMaps(source.getNonPreferredUsage(), dest.getNonPreferredUsage());
             }
             else {
                 assertNull(dest.getCompliantRole());
                 assertNull(dest.getCompliantAddOns());
                 assertNull(dest.getCompliantUsage());
                 assertNull(dest.getCompliantSLA());
-                assertNull(dest.getNonPreferredSLA());
-                assertNull(dest.getNonPreferredUsage());
             }
         }
         else {

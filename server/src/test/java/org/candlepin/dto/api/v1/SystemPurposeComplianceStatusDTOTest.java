@@ -72,8 +72,6 @@ public class SystemPurposeComplianceStatusDTOTest extends AbstractDTOTest<System
         this.values.put("CompliantAddOns", compliantAddOns);
         this.values.put("CompliantUsage", compliantUsage);
         this.values.put("CompliantSLA", compliantSLA);
-        this.values.put("NonPreferredSLA", nonPreferredSLA);
-        this.values.put("NonPreferredUsage", nonPreferredUsage);
         this.values.put("Reasons", reasons);
     }
 
