@@ -50,8 +50,6 @@ public class SystemPurposeComplianceStatusDTO extends CandlepinDTO<SystemPurpose
     protected Map<String, Set<EntitlementDTO>> compliantAddOns;
     protected Map<String, Set<EntitlementDTO>> compliantSLA;
     protected Map<String, Set<EntitlementDTO>> compliantUsage;
-    protected Map<String, Set<EntitlementDTO>> nonPreferredSLA;
-    protected Map<String, Set<EntitlementDTO>> nonPreferredUsage;
 
     protected Set<String> reasons;
 
@@ -233,48 +231,6 @@ public class SystemPurposeComplianceStatusDTO extends CandlepinDTO<SystemPurpose
         return this;
     }
 
-    public Map<String, Set<EntitlementDTO>> getNonPreferredSLA() {
-        return getMapOfSets(nonPreferredSLA);
-    }
-
-    public SystemPurposeComplianceStatusDTO setNonPreferredSLA(
-        Map<String, Set<EntitlementDTO>> nonPreferredSLA) {
-        if (nonPreferredSLA != null) {
-            if (this.nonPreferredSLA == null) {
-                this.nonPreferredSLA = new HashMap<>();
-            }
-
-            this.nonPreferredSLA.clear();
-            this.nonPreferredSLA.putAll(nonPreferredSLA);
-        }
-        else {
-            this.nonPreferredSLA = null;
-        }
-
-        return this;
-    }
-
-    public Map<String, Set<EntitlementDTO>> getNonPreferredUsage() {
-        return getMapOfSets(nonPreferredUsage);
-    }
-
-    public SystemPurposeComplianceStatusDTO setNonPreferredUsage(
-        Map<String, Set<EntitlementDTO>> nonPreferredUsage) {
-        if (nonPreferredUsage != null) {
-            if (this.nonPreferredUsage == null) {
-                this.nonPreferredUsage = new HashMap<>();
-            }
-
-            this.nonPreferredUsage.clear();
-            this.nonPreferredUsage.putAll(nonPreferredUsage);
-        }
-        else {
-            this.nonPreferredUsage = null;
-        }
-
-        return this;
-    }
-
     public Set<String> getReasons() {
         return this.reasons != null ? new SetView(this.reasons) : null;
     }
@@ -323,9 +279,6 @@ public class SystemPurposeComplianceStatusDTO extends CandlepinDTO<SystemPurpose
             equals = equals && this.compareMapContents(this.getCompliantAddOns(), that.getCompliantAddOns());
             equals = equals && this.compareMapContents(this.getCompliantSLA(), that.getCompliantSLA());
             equals = equals && this.compareMapContents(this.getCompliantUsage(), that.getCompliantUsage());
-            equals = equals && this.compareMapContents(this.getNonPreferredSLA(), that.getNonPreferredSLA());
-            equals = equals && this.compareMapContents(this.getNonPreferredUsage(),
-                that.getNonPreferredUsage());
 
             return equals;
         }
@@ -397,8 +350,6 @@ public class SystemPurposeComplianceStatusDTO extends CandlepinDTO<SystemPurpose
         int compliantAddOnsHash = this.buildMapHash(this.getCompliantAddOns());
         int compliantUsageHash = this.buildMapHash(this.getCompliantUsage());
         int compliantSLAHash = this.buildMapHash(this.getCompliantSLA());
-        int nonPreferredSLAHash = this.buildMapHash(this.getNonPreferredSLA());
-        int nonPreferredUsageHash = this.buildMapHash(this.getNonPreferredUsage());
 
         HashCodeBuilder builder = new HashCodeBuilder(7, 17)
             .append(this.getStatus())
@@ -408,8 +359,6 @@ public class SystemPurposeComplianceStatusDTO extends CandlepinDTO<SystemPurpose
             .append(compliantAddOnsHash)
             .append(compliantUsageHash)
             .append(compliantSLAHash)
-            .append(nonPreferredSLAHash)
-            .append(nonPreferredUsageHash)
             .append(this.getNonCompliantRole())
             .append(this.getNonCompliantAddOns())
             .append(this.getNonCompliantUsage())
@@ -473,18 +422,6 @@ public class SystemPurposeComplianceStatusDTO extends CandlepinDTO<SystemPurpose
             copy.setCompliantSLA(compliantSLAMap);
         }
 
-        Map<String, Set<EntitlementDTO>> nonPreferredSLAMap = this.getNonPreferredSLA();
-        copy.setNonPreferredSLA(null);
-        if (nonPreferredSLAMap != null) {
-            copy.setNonPreferredSLA(nonPreferredSLAMap);
-        }
-
-        Map<String, Set<EntitlementDTO>> nonPreferredUsageMap = this.getNonPreferredUsage();
-        copy.setNonPreferredUsage(null);
-        if (nonPreferredUsageMap != null) {
-            copy.setNonPreferredUsage(nonPreferredUsageMap);
-        }
-
         Set<String> nonCompliantAddOns = this.getNonCompliantAddOns();
         copy.setNonCompliantAddOns(null);
         if (nonCompliantAddOns != null) {
@@ -515,8 +452,6 @@ public class SystemPurposeComplianceStatusDTO extends CandlepinDTO<SystemPurpose
             this.setCompliantAddOns(source.getCompliantAddOns());
             this.setCompliantUsage(source.getCompliantUsage());
             this.setCompliantSLA(source.getCompliantSLA());
-            this.setNonPreferredSLA(source.getNonPreferredSLA());
-            this.setNonPreferredUsage(source.getNonPreferredUsage());
             this.setNonCompliantRole(source.getNonCompliantRole());
             this.setNonCompliantAddOns(source.getNonCompliantAddOns());
             this.setNonCompliantUsage(source.getNonCompliantUsage());

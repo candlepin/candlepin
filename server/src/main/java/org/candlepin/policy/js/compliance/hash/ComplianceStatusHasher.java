@@ -48,9 +48,7 @@ public class ComplianceStatusHasher extends Hasher {
         putCollection(status.getCompliantAddOns().keySet(), HashableStringGenerators.STRING);
         putCollection(status.getNonCompliantAddOns(), HashableStringGenerators.STRING);
         putCollection(status.getCompliantSLA().keySet() , HashableStringGenerators.STRING);
-        putCollection(status.getNonPreferredSLA().keySet() , HashableStringGenerators.STRING);
         putCollection(status.getCompliantUsage().keySet() , HashableStringGenerators.STRING);
-        putCollection(status.getNonPreferredUsage().keySet() , HashableStringGenerators.STRING);
         putObject(consumer, HashableStringGenerators.CONSUMER);
     }
 
