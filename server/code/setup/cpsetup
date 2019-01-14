@@ -210,11 +210,11 @@ def main(argv):
                   action="store_true", dest="skipdbcfg", default=False,
                   help="don't configure the /etc/candlepin/candlepin.conf file")
     parser.add_option("-u", "--user",
-                  dest="dbuser", default="candlepin",
-                  help="the database user to use")
+                  dest="dbuser", default=os.getenv('CANDLEPIN_DB_USER', 'candlepin'),
+                  help="Database user. When missing environment variable 'CANDLEPIN_DB_USER' is read. Defaults to 'candlepin'.")
     parser.add_option("-d", "--database",
-                  dest="db", default="candlepin",
-                  help="the database name to use")
+                  dest="db", default=os.getenv('CANDLEPIN_DB_NAME', 'candlepin'),
+                  help="Database name. When missing environment variable 'CANDLEPIN_DB_NAME' is read. Defaults to 'candlepin'.")
     parser.add_option("--dbhost",
                   dest="dbhost",
                   help="the database host to use (optional)")
@@ -231,8 +231,8 @@ def main(argv):
                   dest="keystorepwd", default="password",
                   help="the keystore password to use for the tomcat configuration")
     parser.add_option("-p", "--password",
-                  dest="password", default="candlepin",
-                  help="Database password. Defaults to 'candlepin'")
+                  dest="password", default=os.getenv('CANDLEPIN_DB_PASSWORD', 'candlepin'),
+                  help="Database password. When missing environment variable 'CANDLEPIN_DB_PASSWORD' is read. Defaults to 'candlepin'.")
     parser.add_option("--skip-service", dest="skip_service", action="store_true",
         default=False, help="Skip attempting to stop/restart tomcat service.")
 
