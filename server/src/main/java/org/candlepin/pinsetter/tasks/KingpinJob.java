@@ -14,21 +14,16 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
-
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
-import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Traceable;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
-
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -42,8 +37,12 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import javax.persistence.EntityExistsException;
-import javax.persistence.PersistenceException;
+import javax.persistence.LockTimeoutException;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PessimisticLockException;
+import java.sql.SQLException;
 
+import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
 
 
 /**
@@ -131,23 +130,40 @@ public abstract class KingpinJob implements Job {
          *  from specific JDBC drivers which wrap SQLException. We let the jobs themselves
          *  sort this out and throw a specific exception to indicate a retry is an option.
          */
-        catch (PersistenceException e) {
-            if (!context.getJobDetail().getKey().getName().startsWith("hypervisor")) {
-                refireCheck(context, e);
-            }
-            else {
+        catch (LockTimeoutException | OptimisticLockException | PessimisticLockException e) {
+            dropQueuedEvents();
+            if (isHypervisor(context)) {
                 log.debug("Hypervisor job failure");
                 throw new JobExecutionException(e, false);
             }
-            if (eventSink != null) {
-                eventSink.rollback();
-            }
-        }
-        catch (RetryJobException e) {
             refireCheck(context, e);
-            if (eventSink != null) {
-                eventSink.rollback();
+        }
+        catch (RuntimeException e) {
+            dropQueuedEvents();
+            Throwable cause = e.getCause();
+            while (cause != null) {
+                if (SQLException.class.isAssignableFrom(cause.getClass())) {
+                    log.warn("Caught a runtime exception wrapping an SQLException.");
+                    refireCheck(context, e);
+                }
+                cause = cause.getCause();
             }
+            // Otherwise throw as we would normally for any generic Exception:
+            log.error("Job: {} encountered a problem.", this.getClass().getName(), e);
+            context.setResult(e.toString());
+            throw new JobExecutionException(e.toString(), e, false);
+        }
+        catch (JobExecutionException e) {
+            throw e;
+        }
+        // Catch any other exception that is fired and re-throw as a
+        // JobExecutionException so that the job will be properly
+        // cleaned up on failure.
+        catch (Exception e) {
+            log.error("Job: {} encountered a problem.", this.getClass().getName(), e);
+            dropQueuedEvents();
+            context.setResult(e.toString());
+            throw new JobExecutionException(e.toString(), e, false);
         }
         finally {
             candlepinRequestScope.exit();
@@ -158,6 +174,22 @@ public abstract class KingpinJob implements Job {
                 long executionTime = System.currentTimeMillis() - startTime;
                 log.info("Job completed: time={}", executionTime);
             }
+        }
+    }
+
+    private boolean isHypervisor(JobExecutionContext context) {
+        if (context == null ||
+            context.getJobDetail() == null ||
+            context.getJobDetail().getKey() == null ||
+            context.getJobDetail().getKey().getName() == null) {
+            return false;
+        }
+        return context.getJobDetail().getKey().getName().startsWith("hypervisor");
+    }
+
+    private void dropQueuedEvents() {
+        if (eventSink != null) {
+            eventSink.rollback();
         }
     }
 

@@ -14,19 +14,17 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-
+import com.google.inject.Inject;
+import com.google.inject.persist.UnitOfWork;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
@@ -44,10 +42,6 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -56,13 +50,30 @@ import org.quartz.JobExecutionException;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.sql.SQLException;
+import javax.persistence.LockTimeoutException;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
+import javax.persistence.PessimisticLockException;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 /**
@@ -70,12 +81,17 @@ import java.util.Locale;
  */
 public class UndoImportsJobTest extends DatabaseTestFixture {
 
-    @Inject protected I18n i18n;
+    @Inject
+    protected I18n i18n;
 
-    @Inject protected CandlepinPoolManager poolManagerBase;
-    @Inject protected ImportRecordCurator importRecordCurator;
-    @Inject protected ExporterMetadataCurator exportCuratorBase;
-    @Inject protected UeberCertificateGenerator ueberCertGenerator;
+    @Inject
+    protected CandlepinPoolManager poolManagerBase;
+    @Inject
+    protected ImportRecordCurator importRecordCurator;
+    @Inject
+    protected ExporterMetadataCurator exportCuratorBase;
+    @Inject
+    protected UeberCertificateGenerator ueberCertGenerator;
 
     protected CandlepinPoolManager poolManager;
     protected OwnerCurator ownerCurator;
@@ -87,7 +103,6 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     protected JobDataMap jobDataMap;
 
     protected UndoImportsJob undoImportsJob;
-
 
 
     @Before
@@ -305,6 +320,63 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         }
         catch (JobExecutionException ex) {
             assertFalse(ex.refireImmediately());
+        }
+    }
+
+    @Test
+    public void shouldNotRefireOnGenericPersistenceException() {
+        final NullPointerException cause = new NullPointerException();
+        final RuntimeException e = new PersistenceException("uh oh", cause);
+        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+
+        try {
+            this.undoImportsJob.execute(this.jobContext);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertFalse(ex.refireImmediately());
+        }
+    }
+
+    @Test
+    public void shouldRefireOnLockTimeoutException() {
+        final LockTimeoutException e = new LockTimeoutException("trouble!");
+        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+
+        try {
+            this.undoImportsJob.execute(this.jobContext);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertTrue(ex.refireImmediately());
+        }
+    }
+
+    @Test
+    public void shouldRefireOnOptimisticLockException() {
+        final OptimisticLockException e = new OptimisticLockException("trouble!");
+        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+
+        try {
+            this.undoImportsJob.execute(this.jobContext);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertTrue(ex.refireImmediately());
+        }
+    }
+
+    @Test
+    public void shouldRefireOnPessimisticLockException() {
+        final PessimisticLockException e = new PessimisticLockException("trouble!");
+        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+
+        try {
+            this.undoImportsJob.execute(this.jobContext);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertTrue(ex.refireImmediately());
         }
     }
 }

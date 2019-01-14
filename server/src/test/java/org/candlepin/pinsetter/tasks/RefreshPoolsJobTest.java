@@ -13,10 +13,8 @@
  * in this software or its documentation.
  */
 package org.candlepin.pinsetter.tasks;
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
 
+import com.google.inject.persist.UnitOfWork;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
@@ -24,9 +22,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-
-import com.google.inject.persist.UnitOfWork;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -34,12 +29,28 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import javax.persistence.LockTimeoutException;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
+import javax.persistence.PessimisticLockException;
 import java.sql.SQLException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * RefreshPoolsJobTest
  */
-public class RefreshPoolsJobTest extends BaseJobTest{
+public class RefreshPoolsJobTest extends BaseJobTest {
 
     private CandlepinPoolManager pm;
     private OwnerCurator oc;
@@ -164,6 +175,71 @@ public class RefreshPoolsJobTest extends BaseJobTest{
         }
         catch (JobExecutionException ex) {
             assertFalse(ex.refireImmediately());
+        }
+    }
+
+    @Test
+    public void shouldNotRefireOnGenericPersistenceException() {
+        final NullPointerException cause = new NullPointerException();
+        final PersistenceException e = new PersistenceException("uh oh", cause);
+        doThrow(e).when(refresher).run();
+
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter, ownerAdapter);
+        injector.injectMembers(rpj);
+        try {
+            rpj.execute(ctx);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertFalse(ex.refireImmediately());
+        }
+    }
+
+    @Test
+    public void shouldRefireOnLockTimeoutException() {
+        final LockTimeoutException e = new LockTimeoutException("uh oh");
+        doThrow(e).when(refresher).run();
+
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter, ownerAdapter);
+        injector.injectMembers(rpj);
+        try {
+            rpj.execute(ctx);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertTrue(ex.refireImmediately());
+        }
+    }
+
+    @Test
+    public void shouldRefireOnOptimisticLockException() {
+        final OptimisticLockException e = new OptimisticLockException("uh oh");
+        doThrow(e).when(refresher).run();
+
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter, ownerAdapter);
+        injector.injectMembers(rpj);
+        try {
+            rpj.execute(ctx);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertTrue(ex.refireImmediately());
+        }
+    }
+
+    @Test
+    public void shouldRefireOnPessimisticLockException() {
+        final PessimisticLockException e = new PessimisticLockException("uh oh");
+        doThrow(e).when(refresher).run();
+
+        RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm, subAdapter, ownerAdapter);
+        injector.injectMembers(rpj);
+        try {
+            rpj.execute(ctx);
+            fail("Expected exception not thrown");
+        }
+        catch (JobExecutionException ex) {
+            assertTrue(ex.refireImmediately());
         }
     }
 }
