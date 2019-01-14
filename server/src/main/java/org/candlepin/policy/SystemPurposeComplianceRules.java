@@ -145,9 +145,6 @@ public class SystemPurposeComplianceRules {
                     if (sla.equalsIgnoreCase(preferredSla)) {
                         status.addCompliantSLA(sla, entitlement);
                     }
-                    else {
-                        status.addNonPreferredSLA(preferredSla, sla, entitlement);
-                    }
                 }
 
                 if (StringUtils.isNotEmpty(preferredUsage) &&
@@ -155,9 +152,6 @@ public class SystemPurposeComplianceRules {
                     String usage = product.getAttributeValue(Product.Attributes.USAGE);
                     if (usage.equalsIgnoreCase(preferredUsage)) {
                         status.addCompliantUsage(usage, entitlement);
-                    }
-                    else {
-                        status.addNonPreferredUsage(preferredUsage, usage, entitlement);
                     }
                 }
             }
