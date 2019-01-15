@@ -41,8 +41,9 @@ public abstract class MessageReceiver implements MessageHandler {
 
     protected abstract String getQueueAddress();
 
-    public MessageReceiver(EventListener listener, ActiveMQConnection connection,
-        ObjectMapper mapper) throws ActiveMQException {
+    public MessageReceiver(EventListener listener, ActiveMQConnection connection, ObjectMapper mapper)
+        throws ActiveMQException {
+
         this.connection = connection;
         this.mapper = mapper;
         this.listener = listener;
