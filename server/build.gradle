@@ -1,5 +1,7 @@
 import groovy.text.GStringTemplateEngine
+//import groovy.Rspec
 import org.gradle.api.tasks.options.Option
+import org.apache.tools.ant.filters.ReplaceTokens
 
 apply plugin: 'war'
 apply plugin: Gettext
@@ -21,6 +23,17 @@ test {
     useJUnitPlatform()
     maxHeapSize = '2g'
     jvmArgs '-XX:+HeapDumpOnOutOfMemoryError'
+}
+
+// substitut the version & release in the version.properties used by the status resource at runtime
+processResources {
+    from('src/main/resources') {
+        include 'version.properties'
+        filter(ReplaceTokens, tokens: [
+                version: project.getVersion(),
+                release: project.findProperty('release')
+        ])
+    }
 }
 
 war {
