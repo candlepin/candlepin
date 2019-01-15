@@ -14,30 +14,13 @@
  */
 package org.candlepin.async;
 
-import org.candlepin.audit.MessageAddress;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.filter.LoggingFilter;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
-import org.apache.activemq.artemis.api.core.client.ClientMessage;
-import org.apache.activemq.artemis.api.core.client.ClientProducer;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
-import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
-import org.apache.activemq.artemis.api.core.client.ServerLocator;
-import org.apache.activemq.artemis.core.remoting.impl.invm.InVMConnectorFactory;
 
 import org.apache.log4j.MDC;
 
@@ -63,15 +46,10 @@ public class JobManager {
     private static Map<String, Class<? extends AsyncJob>> jobs = new HashMap<>();
 
 
-    private Configuration config;
     private AsyncJobStatusCurator jobCurator;
-    private ObjectMapper objMapper;
+    private JobMessageDispatcher dispatcher;
 
     private PrincipalProvider principalProvider;
-
-    private ClientSessionFactory sessionFactory;
-    private ClientSession session;
-    private ClientProducer producer;
 
 
     /**
@@ -148,140 +126,18 @@ public class JobManager {
 
 
     /**
-     * The JobMessage container is used to pass messages to other nodes through the Artemis
-     * subsystem.
-     */
-    private static class JobMessage {
-        private String jobId;
-        private String jobKey;
-
-        @JsonCreator
-        public JobMessage(String jobId, String jobKey) {
-            this.jobId = jobId;
-            this.jobKey = jobKey;
-        }
-
-        public String getJobId() {
-            return this.jobId;
-        }
-
-        public String getJobKey() {
-            return this.jobKey;
-        }
-    }
-
-
-    /**
      * Creates a new JobManager instance
      */
     @Inject
-    public JobManager(Configuration config, AsyncJobStatusCurator jobCurator, ObjectMapper objMapper,
+    public JobManager(AsyncJobStatusCurator jobCurator, JobMessageDispatcher dispatcher,
         PrincipalProvider principalProvider) {
 
-        this.config = config;
         this.jobCurator = jobCurator;
-        this.objMapper = objMapper;
+        this.dispatcher = dispatcher;
 
         this.principalProvider = principalProvider;
     }
 
-
-    /**
-     * Fetches the current session factory, initializing a new instance as necessary. This should
-     * almost certainly not be used by any method other than getClientSession.
-     *
-     * @throws ActiveMQException
-     *  if an exception occurs while spinning up the ActiveMQ client session factory
-     *
-     * @return
-     *  the ClientSessionFactory instance for this job manager
-     */
-    private ClientSessionFactory getClientSessionFactory() throws ActiveMQException {
-        if (this.sessionFactory == null || this.sessionFactory.isClosed()) {
-            log.debug("Creating new ActiveMQ client session factory...");
-
-            ServerLocator locator = ActiveMQClient.createServerLocatorWithoutHA(
-                new TransportConfiguration(InVMConnectorFactory.class.getName()));
-
-            // TODO: Maybe make this a bit more defensive and skip setting the property if it's
-            // not present in the configuration rather than crashing out?
-            locator.setMinLargeMessageSize(this.config.getInt(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE));
-
-            try {
-                this.sessionFactory = locator.createSessionFactory();
-                log.debug("Created new ActiveMQ client session factory: {}", this.sessionFactory);
-            }
-            catch (Exception e) {
-                if (e instanceof ActiveMQException) {
-                    throw (ActiveMQException) e;
-                }
-                else {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        return this.sessionFactory;
-    }
-
-    /**
-     * Fetches the current client session, creating and intializing a new instance as necessary.
-     *
-     * @return
-     *  the current ClientSession instance for this job manager
-     */
-    protected ClientSession getClientSession() throws ActiveMQException {
-        if (this.session == null || this.session.isClosed()) {
-            log.debug("Creating new ActiveMQ session for async job messages...");
-
-            ClientSessionFactory csf = this.getClientSessionFactory();
-            this.session = csf.createSession();
-
-            log.debug("Created new ActiveMQ session: {}", this.session);
-        }
-
-        return this.session;
-    }
-
-    /**
-     * Fetches the current client producer, creating and initializing a new instance as necessary.
-     *
-     * @return
-     *  the current ClientProducer instance for this job manager
-     */
-    protected ClientProducer getClientProducer() throws ActiveMQException {
-        if (this.producer == null || this.producer.isClosed()) {
-            log.debug("Creating new ActiveMQ producer for async job messages...");
-
-            ClientSession session = this.getClientSession();
-            this.producer = session.createProducer();
-
-            log.debug("Created new ActiveMQ producer: {}", this.producer);
-        }
-
-        return this.producer;
-    }
-
-    /**
-     * Posts a job message to the message bus
-     *
-     * @param JobMessage jobMessage
-     */
-    private void sendJobMessage(JobMessage jobMessage) throws ActiveMQException, JsonProcessingException {
-        // TODO: Clean this up. JobMessage probably shouldn't exist.
-
-        ClientSession session = this.getClientSession();
-        ClientMessage message = session.createMessage(true);
-        message.putStringProperty("job_key", jobMessage.getJobKey());
-
-        String eventString = this.objMapper.writeValueAsString(message);
-        message.getBodyBuffer().writeString(eventString);
-
-        log.debug("Sending message to {}: {}", MessageAddress.JOB_MESSAGE_ADDRESS, eventString);
-
-        ClientProducer producer = this.getClientProducer();
-        producer.send(MessageAddress.JOB_MESSAGE_ADDRESS, message);
-    }
 
     /**
      * Builds an AsyncJobStatus instance from the given job details. The job status will not be
@@ -354,7 +210,7 @@ public class JobManager {
             JobMessage message = new JobMessage(job.getId(), job.getJobKey());
 
             // Send the message
-            this.sendJobMessage(message);
+            this.dispatcher.sendJobMessage(message);
 
             job.setState(JobState.QUEUED);
         }
@@ -371,10 +227,6 @@ public class JobManager {
         // Done!
         return job;
     }
-
-
-
-
 
     /**
      * Executes the specified job immediately on this Candlepin node, skipping any filtering or
@@ -393,6 +245,5 @@ public class JobManager {
 
         return null;
     }
-
 
 }
