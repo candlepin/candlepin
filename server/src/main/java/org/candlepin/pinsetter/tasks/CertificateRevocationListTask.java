@@ -64,6 +64,7 @@ public class CertificateRevocationListTask extends KingpinJob {
         if (filePath == null) {
             throw new JobExecutionException("Invalid " + ConfigProperties.CRL_FILE_PATH, false);
         }
+
         try {
             File crlFile = new File(filePath);
             this.crlFileUtil.syncCRLWithDB(crlFile);
