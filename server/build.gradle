@@ -1,5 +1,4 @@
 import groovy.text.GStringTemplateEngine
-//import groovy.Rspec
 import org.gradle.api.tasks.options.Option
 import org.apache.tools.ant.filters.ReplaceTokens
 
@@ -29,10 +28,7 @@ test {
 processResources {
     from('src/main/resources') {
         include 'version.properties'
-        filter(ReplaceTokens, tokens: [
-                version: project.getVersion(),
-                release: project.findProperty('release')
-        ])
+        expand([version: project.getVersion(), release: project.findProperty('release')])
     }
 }
 
