@@ -138,7 +138,6 @@ public class JobManager {
         this.principalProvider = principalProvider;
     }
 
-
     /**
      * Builds an AsyncJobStatus instance from the given job details. The job status will not be
      * a managed entity and will need to be manually persisted by the caller.
@@ -200,29 +199,34 @@ public class JobManager {
             throw new IllegalArgumentException("job builder is null");
         }
 
-        AsyncJobStatus job = this.buildJobStatus(builder);
-
         // TODO:
         // Add job filtering/deduplication by criteria
 
-        try {
-            // Build the job message
-            JobMessage message = new JobMessage(job.getId(), job.getJobKey());
+        AsyncJobStatus job = this.buildJobStatus(builder);
+        job.setState(JobState.CREATED);
 
-            // Send the message
+
+        try {
+            // Persist the job status so that the ID will be generated.
+            job = this.jobCurator.create(job);
+
+            // Build and send the job message.
+            JobMessage message = new JobMessage(job.getId(), job.getJobKey());
             this.dispatcher.sendJobMessage(message);
 
-            job.setState(JobState.QUEUED);
+            // Update the job state to QUEUED
+            job = job.setState(JobState.QUEUED);
+            this.jobCurator.merge(job);
         }
         catch (Exception e) {
-            job.setState(JobState.FAILED);
-            job.setJobResult(e);
+            log.warn("Error sending async job message.", e);
 
-            // Do we need to persist the job status in this branch? It's basically perma-dead.
+            // We couldn't send the message so discard the job status as it is no longer relevant.
+            if (job != null && job.getId() != null) {
+                this.jobCurator.delete(job);
+            }
+            throw new RuntimeException("Error sending async job message.", e);
         }
-
-        // Persist the job status
-        job = this.jobCurator.create(job);
 
         // Done!
         return job;

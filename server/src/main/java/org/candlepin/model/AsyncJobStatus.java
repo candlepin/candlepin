@@ -91,9 +91,11 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @Column(name = "job_key")
     private String jobKey;
 
+    @Column(name = "job_group")
+    private String group;
+
     @NotNull
     private String name;
-    private String group;
     private String origin;
     private String principal;
 

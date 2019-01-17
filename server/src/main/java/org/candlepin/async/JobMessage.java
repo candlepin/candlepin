@@ -15,7 +15,7 @@
 package org.candlepin.async;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 /**
@@ -27,7 +27,7 @@ public class JobMessage {
     private String jobKey;
 
     @JsonCreator
-    public JobMessage(String jobId, String jobKey) {
+    public JobMessage(@JsonProperty("jobId") String jobId, @JsonProperty("jobKey") String jobKey) {
         // Impl note:
         // While in most cases I would aggressively check for nulls or empty strings and throw an
         // exception, we don't want to do so here, as such exceptions get messy with how

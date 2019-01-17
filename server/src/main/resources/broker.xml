@@ -60,6 +60,11 @@
                     <queue name="event.org.candlepin.audit.AMQPBusPublisher" />
                 </multicast>
             </address>
+            <address name="job">
+                <multicast>
+                    <queue name="jobs" />
+                </multicast>
+            </address>
         </addresses>
 
         <address-settings>
@@ -99,7 +104,7 @@
                 <max-delivery-attempts>1</max-delivery-attempts>
             </address-setting>
 
-            <address-setting match="candlepin.jobs">
+            <address-setting match="job">
                 <auto-create-queues>true</auto-create-queues>
                 <max-size-bytes>10485760</max-size-bytes>
 
