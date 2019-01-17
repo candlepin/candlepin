@@ -27,6 +27,8 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import org.candlepin.async.JobMessageDispatcher;
+import org.candlepin.async.impl.ArtemisJobMessageDispatcher;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
@@ -336,7 +338,7 @@ public class CandlepinModule extends AbstractModule {
     private void miscConfigurations() {
         configureInterceptors();
         configureAuth();
-        configureEventSink();
+        configureActiveMQComponents();
         configurePinsetter();
         configureExporter();
         configureSwagger();
@@ -443,8 +445,9 @@ public class CandlepinModule extends AbstractModule {
         bind(QpidConfigBuilder.class).in(Singleton.class);
     }
 
-    private void configureEventSink() {
+    private void configureActiveMQComponents() {
         if (config.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED)) {
+            bind(JobMessageDispatcher.class).to(ArtemisJobMessageDispatcher.class);
             bind(EventSink.class).to(EventSinkImpl.class);
         }
         else {
