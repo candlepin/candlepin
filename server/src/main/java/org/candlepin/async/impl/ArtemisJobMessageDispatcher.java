@@ -105,7 +105,7 @@ public class ArtemisJobMessageDispatcher implements JobMessageDispatcher {
         ClientMessage message = session.createMessage(true);
         message.putStringProperty("job_key", jobMessage.getJobKey());
 
-        String eventString = this.objMapper.writeValueAsString(message);
+        String eventString = this.objMapper.writeValueAsString(jobMessage);
         message.getBodyBuffer().writeString(eventString);
 
         log.debug("Sending message to {}: {}", MessageAddress.JOB_MESSAGE_ADDRESS, eventString);
