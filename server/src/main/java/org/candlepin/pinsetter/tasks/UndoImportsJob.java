@@ -14,8 +14,8 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.JobBuilder.newJob;
-
+import com.google.inject.persist.Transactional;
+import org.apache.log4j.MDC;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.PoolManager;
@@ -29,14 +29,9 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
-import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
-
-import com.google.inject.persist.Transactional;
-
-import org.apache.log4j.MDC;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -45,14 +40,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.sql.SQLException;
+import javax.inject.Inject;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.persistence.PersistenceException;
-
-
+import static org.quartz.JobBuilder.newJob;
 
 /**
  * Asynchronous job for removing pools created during manifest import.
@@ -72,7 +64,6 @@ public class UndoImportsJob extends UniqueByEntityJob {
     protected SubscriptionServiceAdapter subAdapter;
     protected ExporterMetadataCurator exportCurator;
     protected ImportRecordCurator importRecordCurator;
-
 
 
     @Inject
@@ -98,78 +89,49 @@ public class UndoImportsJob extends UniqueByEntityJob {
      */
     @Transactional
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
-        try {
-            JobDataMap map = context.getMergedJobDataMap();
-            String ownerId = map.getString(JobStatus.TARGET_ID);
-            String ownerKey = map.getString(JobStatus.OWNER_ID);
-            Owner owner = this.ownerCurator.lockAndLoadById(ownerId);
-            Boolean lazy = map.getBoolean(LAZY_REGEN);
-            Principal principal = (Principal) map.get(PinsetterJobListener.PRINCIPAL_KEY);
+        JobDataMap map = context.getMergedJobDataMap();
+        String ownerId = map.getString(JobStatus.TARGET_ID);
+        String ownerKey = map.getString(JobStatus.OWNER_ID);
+        Owner owner = this.ownerCurator.lockAndLoadById(ownerId);
+        Principal principal = (Principal) map.get(PinsetterJobListener.PRINCIPAL_KEY);
 
-            // TODO: Should we check the principal again here?
+        // TODO: Should we check the principal again here?
 
-            if (owner == null) {
-                log.debug("Owner no longer exists: {}", ownerKey);
-                context.setResult("Nothing to do; owner no longer exists: " + ownerKey);
-                return;
-            }
-
-            String displayName = owner.getDisplayName();
-
-            // Remove imports
-            ExporterMetadata metadata = this.exportCurator.getByTypeAndOwner(
-                ExporterMetadata.TYPE_PER_USER, owner);
-
-            if (metadata == null) {
-                log.debug("No imports exist for owner {}", displayName);
-                context.setResult("Nothing to do; imports no longer exist for owner: " + displayName);
-                return;
-            }
-
-            log.info("Deleting all pools originating from manifests for owner/org: {}", displayName);
-
-            List<Pool> pools = this.poolManager.listPoolsByOwner(owner).list();
-            for (Pool pool : pools) {
-                if (this.poolManager.isManaged(pool)) {
-                    this.poolManager.deletePool(pool);
-                }
-            }
-
-            // Clear out upstream ID so owner can import from other distributors:
-            UpstreamConsumer uc = owner.getUpstreamConsumer();
-            owner.setUpstreamConsumer(null);
-
-            this.exportCurator.delete(metadata);
-            this.recordManifestDeletion(owner, principal.getUsername(), uc);
-
-            context.setResult("Imported pools removed for owner " + displayName);
+        if (owner == null) {
+            log.debug("Owner no longer exists: {}", ownerKey);
+            context.setResult("Nothing to do; owner no longer exists: " + ownerKey);
+            return;
         }
-        catch (PersistenceException e) {
-            throw new RetryJobException("UndoImportsJob encountered a problem.", e);
-        }
-        catch (RuntimeException e) {
-            Throwable cause = e.getCause();
-            while (cause != null) {
-                if (SQLException.class.isAssignableFrom(cause.getClass())) {
-                    log.warn("Caught a runtime exception wrapping an SQLException.");
-                    throw new RetryJobException("UndoImportsJob encountered a problem.", e);
-                }
-                cause = cause.getCause();
-            }
 
-            // Otherwise throw as we would normally for any generic Exception:
-            log.error("UndoImportsJob encountered a problem.", e);
-            context.setResult(e.getMessage());
-            throw new JobExecutionException(e.getMessage(), e, false);
+        String displayName = owner.getDisplayName();
+
+        // Remove imports
+        ExporterMetadata metadata = this.exportCurator.getByTypeAndOwner(
+            ExporterMetadata.TYPE_PER_USER, owner);
+
+        if (metadata == null) {
+            log.debug("No imports exist for owner {}", displayName);
+            context.setResult("Nothing to do; imports no longer exist for owner: " + displayName);
+            return;
         }
-        // Catch any other exception that is fired and re-throw as a
-        // JobExecutionException so that the job will be properly
-        // cleaned up on failure.
-        catch (Exception e) {
-            log.error("UndoImportsJob encountered a problem.", e);
-            context.setResult(e.getMessage());
-            throw new JobExecutionException(e.getMessage(), e, false);
+
+        log.info("Deleting all pools originating from manifests for owner/org: {}", displayName);
+
+        List<Pool> pools = this.poolManager.listPoolsByOwner(owner).list();
+        for (Pool pool : pools) {
+            if (this.poolManager.isManaged(pool)) {
+                this.poolManager.deletePool(pool);
+            }
         }
+
+        // Clear out upstream ID so owner can import from other distributors:
+        UpstreamConsumer uc = owner.getUpstreamConsumer();
+        owner.setUpstreamConsumer(null);
+
+        this.exportCurator.delete(metadata);
+        this.recordManifestDeletion(owner, principal.getUsername(), uc);
+
+        context.setResult("Imported pools removed for owner " + displayName);
     }
 
     private void recordManifestDeletion(Owner owner, String username, UpstreamConsumer uc) {

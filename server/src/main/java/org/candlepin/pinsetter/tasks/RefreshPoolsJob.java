@@ -14,21 +14,16 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.quartz.JobBuilder.newJob;
-
+import com.google.inject.Inject;
+import org.apache.log4j.MDC;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.pinsetter.core.RetryJobException;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.MDC;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -36,9 +31,7 @@ import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
-
-import javax.persistence.PersistenceException;
+import static org.quartz.JobBuilder.newJob;
 
 /**
  * Asynchronous job for refreshing the entitlement pools for specific
@@ -75,52 +68,23 @@ public class RefreshPoolsJob extends UniqueByEntityJob {
      * @param context the job's execution context
      */
     public void toExecute(JobExecutionContext context) throws JobExecutionException {
-        try {
-            JobDataMap map = context.getMergedJobDataMap();
-            String ownerKey = map.getString(JobStatus.TARGET_ID);
-            Boolean lazy = map.getBoolean(LAZY_REGEN);
-            Owner owner = ownerCurator.getByKey(ownerKey);
+        JobDataMap map = context.getMergedJobDataMap();
+        String ownerKey = map.getString(JobStatus.TARGET_ID);
+        boolean lazy = map.getBoolean(LAZY_REGEN);
+        Owner owner = ownerCurator.getByKey(ownerKey);
 
-            if (owner == null) {
-                context.setResult("Nothing to do. Owner no longer exists");
-                return;
-            }
-
-            // Assume that we verified the request in the resource layer:
-            poolManager.getRefresher(this.subAdapter, this.ownerAdapter, lazy)
-                .setUnitOfWork(unitOfWork)
-                .add(owner)
-                .run();
-
-            context.setResult("Pools refreshed for owner " + owner.getDisplayName());
+        if (owner == null) {
+            context.setResult("Nothing to do. Owner no longer exists");
+            return;
         }
-        catch (PersistenceException e) {
-            throw new RetryJobException("RefreshPoolsJob encountered a problem.", e);
-        }
-        catch (RuntimeException e) {
-            Throwable cause = e.getCause();
 
-            while (cause != null) {
-                if (SQLException.class.isAssignableFrom(cause.getClass())) {
-                    log.warn("Caught a runtime exception wrapping an SQLException.");
-                    throw new RetryJobException("RefreshPoolsJob encountered a problem.", e);
-                }
-                cause = cause.getCause();
-            }
+        // Assume that we verified the request in the resource layer:
+        poolManager.getRefresher(this.subAdapter, this.ownerAdapter, lazy)
+            .setUnitOfWork(unitOfWork)
+            .add(owner)
+            .run();
 
-            // Otherwise throw as we would normally for any generic Exception:
-            log.error("RefreshPoolsJob encountered a problem.", e);
-            context.setResult(e.toString());
-            throw new JobExecutionException(e.toString(), e, false);
-        }
-        // Catch any other exception that is fired and re-throw as a
-        // JobExecutionException so that the job will be properly
-        // cleaned up on failure.
-        catch (Exception e) {
-            log.error("RefreshPoolsJob encountered a problem.", e);
-            context.setResult(e.toString());
-            throw new JobExecutionException(e.toString(), e, false);
-        }
+        context.setResult("Pools refreshed for owner " + owner.getDisplayName());
     }
 
     /**
