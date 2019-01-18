@@ -15,70 +15,34 @@
 package org.candlepin.audit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.client.ClientMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 
 /**
- * A MessageReceiver implementation that on failure to handle an event, will put the message
- * back in the associated queue and will retry the send on a configured basis. This is the
- * default ActiveMQ message handler implementation.
+ * An abstract base class for all message receivers listening for Event messages.
  */
-public class EventMessageReceiver extends MessageReceiver {
+public abstract class EventMessageReceiver extends MessageReceiver {
 
-    private static Logger log = LoggerFactory.getLogger(EventMessageReceiver.class);
+    protected EventListener listener;
 
-    public EventMessageReceiver(EventListener listener, ActiveMQConnection connection,
-        ObjectMapper mapper) throws ActiveMQException {
-        super(listener, connection, mapper);
+    public EventMessageReceiver(EventListener listener, ActiveMQSessionFactory sessionFactory,
+        ObjectMapper mapper) {
+        super(ArtemisMessageSource.getQueueName(listener), sessionFactory, mapper);
+        this.listener = listener;
+    }
+
+    // FIXME This should not be determined by the listener once the class is created
+    //       since the QpidEventMessageReceiver already knows that Qpid is required.
+    @Override
+    public boolean requiresQpid() {
+        return this.listener.requiresQpid();
     }
 
     @Override
-    public void onMessage(ClientMessage msg) {
-        String body = "";
-        try {
-            // Acknowledge the message so that the server knows that it was received.
-            // By doing this, the server can update the delivery counts which plays
-            // part in calculating redelivery delays.
-            msg.acknowledge();
-            log.debug("ActiveMQ message {} acknowledged for listener: {}", msg.getMessageID(), listener);
-
-            // Process the message via our EventListener framework.
-            body = msg.getBodyBuffer().readString();
-            log.debug("Got event: {}", body);
-            Event event = mapper.readValue(body, Event.class);
-            listener.onEvent(event);
-
-            log.debug("Message listener {} processed message: {}: SUCCESS", listener, msg.getMessageID());
-            // Finally commit the session so that the message is taken out of the queue.
-            session.commit();
-        }
-        catch (Exception e) {
-            // Log a warning instead of a full stack trace to reduce log size.
-            String messageId = (msg == null) ? "" : Long.toString(msg.getMessageID());
-            String reason = (e.getCause() == null) ? e.getMessage() : e.getCause().getMessage();
-            log.error("Unable to process message {}: {}", messageId, reason);
-
-            log.debug("Message listener {} processed message: {}: FAILURE", listener, msg.getMessageID());
-
-            // If debugging is enabled log a more in depth message.
-            log.debug("Unable to process message. Rolling back client session.\n{}", body, e);
-            try {
-                // When any exception occurs while processing the message, we need to roll back
-                // the session so that the message remains on the queue.
-                session.rollback();
-            }
-            catch (ActiveMQException amqe) {
-                log.error("Unable to roll back client session.", amqe);
-            }
-
-            // Session was rolled back, nothing left to do.
-        }
-    }
-
-    protected String getQueueAddress() {
-        return MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS;
+    protected void initialize() throws Exception {
+        session = this.sessionFactory.getIngressSession(false);
+        consumer = session.createConsumer(queueName);
+        consumer.setMessageHandler(this);
+        session.start();
     }
 
 }

@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -41,11 +40,11 @@ public class ActiveMQContextListener {
     private static  Logger log = LoggerFactory.getLogger(ActiveMQContextListener.class);
 
     private EmbeddedActiveMQ activeMQServer;
-    private EventSource eventSource;
+    private ArtemisMessageSource messageSource;
 
     public void contextDestroyed() {
         if (activeMQServer != null) {
-            eventSource.shutDown();
+            messageSource.shutDown();
             try {
                 activeMQServer.stop();
                 log.info("ActiveMQ server stopped.");
@@ -95,45 +94,25 @@ public class ActiveMQContextListener {
             activeMQStatusMonitor.registerListener(injector.getInstance(SuspendModeTransitioner.class));
         }
 
-        // Set up the EventSource.
-        eventSource = injector.getInstance(EventSource.class);
-        // EventSource must listen for ActiveMQ status changes so that connections can be rebuilt.
-        activeMQStatusMonitor.registerListener(eventSource);
+        // Set up the ArtemisMessageSource.
+        messageSource = injector.getInstance(ArtemisMessageSource.class);
+        // ArtemisMessageSource must listen for ActiveMQ status changes so that connections can be rebuilt.
+        activeMQStatusMonitor.registerListener(messageSource);
 
-        setupAmqp(injector, candlepinConfig, eventSource);
-
-        // Register all listeners now that a connection to the server is established.
-        List<EventListener> eventListeners = new ArrayList<>();
-        getActiveMQListeners(candlepinConfig).forEach(listenerClass -> {
-            try {
-                Class<?> clazz = this.getClass().getClassLoader().loadClass(listenerClass);
-                eventListeners.add((EventListener) injector.getInstance(clazz));
-            }
-            catch (Exception e) {
-                log.warn("Unable to register listener {}", listenerClass, e);
-            }
-        });
-
-        for (EventListener listener : eventListeners) {
-            try {
-                eventSource.registerListener(listener);
-            }
-            catch (Exception e) {
-                log.warn("Unable to register listener {}", listener, e);
-            }
-        }
+        setupAmqp(injector, candlepinConfig, messageSource);
 
         // Initialize the ActiveMQ status monitor so that client sessions can be established
         // if the broker is active.
         activeMQStatusMonitor.initialize();
     }
 
-    private void setupAmqp(Injector injector, Configuration candlepinConfig, EventSource eventSource) {
+    private void setupAmqp(Injector injector, Configuration candlepinConfig,
+        ArtemisMessageSource messageSource) {
         if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             // Listen for Qpid connection changes so that the appropriate ClientSessions
             // can be shutdown/restarted when Qpid status changes.
             QpidStatusMonitor qpidStatusMonitor = injector.getInstance(QpidStatusMonitor.class);
-            qpidStatusMonitor.addStatusChangeListener(eventSource);
+            qpidStatusMonitor.addStatusChangeListener(messageSource);
         }
     }
 

@@ -27,9 +27,8 @@ import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,25 +52,18 @@ public class QpidEventMessageReceiverTest {
     @Spy private ObjectMapper mapper = new ObjectMapper();
     @Spy private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
 
-    private EventSourceConnection connection;
+    private ActiveMQSessionFactory sessionFactory;
     private QpidEventMessageReceiver receiver;
 
     @Before
     public void init() throws Exception {
         when(clientMessage.getBodyBuffer()).thenReturn(activeMQBuffer);
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(clientSession);
+        when(clientSessionFactory.createSession()).thenReturn(clientSession);
         when(clientSession.createConsumer(anyString())).thenReturn(clientConsumer);
 
-        this.connection = new EventSourceConnection(mock(ActiveMQStatusMonitor.class),
-            mock(Configuration.class)) {
+        this.sessionFactory = new TestingActiveMQSessionFactory(clientSessionFactory, null);
 
-            @Override
-            ClientSessionFactory getFactory() {
-                return clientSessionFactory;
-            }
-        };
-
-        receiver = new QpidEventMessageReceiver(eventListener, this.connection, new ObjectMapper());
+        receiver = new QpidEventMessageReceiver(eventListener, this.sessionFactory, new ObjectMapper());
         // Calling connect will initialize the ClientSession
         receiver.connect();
     }
