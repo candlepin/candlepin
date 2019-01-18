@@ -78,6 +78,7 @@ public class JobManager {
             throw new IllegalArgumentException("jobClass is null");
         }
 
+        log.info("Registering job: {}: {}", jobKey, jobClass.getCanonicalName());
         return jobs.put(jobKey, jobClass);
     }
 
@@ -225,6 +226,7 @@ public class JobManager {
             if (job != null && job.getId() != null) {
                 this.jobCurator.delete(job);
             }
+
             throw new RuntimeException("Error sending async job message.", e);
         }
 
@@ -239,15 +241,17 @@ public class JobManager {
      * <strong>Note</strong>: Generally, this method should not be called directly, and jobs should
      * be queued using the <tt>queueJob</tt> method instead.
      *
-     * @param
+     * @param message the JobMessage containing the information about the job that should
+     *                be executed.
      *
      * @return
      *  a JobStatus instance representing the job's status
      */
-    public AsyncJobStatus executeJob() {
+    public AsyncJobStatus executeJob(JobMessage message) throws PreJobExecutionException {
         // TODO: Finish me
-
-        return null;
+        // Temporarily set the Completed state.
+        return new AsyncJobStatus()
+                   .setState(JobState.COMPLETED);
     }
 
 }

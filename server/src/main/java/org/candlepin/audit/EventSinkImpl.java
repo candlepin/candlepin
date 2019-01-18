@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.guice.CandlepinRequestScoped;
@@ -57,19 +58,19 @@ public class EventSinkImpl implements EventSink {
     private ModeManager modeManager;
     private Configuration config;
 
-    private EventSinkConnection connection;
+    private ActiveMQSessionFactory sessionFactory;
     private EventMessageSender messageSender;
 
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
-        ObjectMapper mapper, Configuration config, EventSinkConnection connection,
+        ObjectMapper mapper, Configuration config, ActiveMQSessionFactory sessionFactory,
         ModeManager modeManager) throws ActiveMQException {
         this.eventFactory = eventFactory;
         this.mapper = mapper;
         this.eventFilter = eventFilter;
         this.modeManager = modeManager;
         this.config = config;
-        this.connection = connection;
+        this.sessionFactory = sessionFactory;
     }
 
     // FIXME This method really does not belong here. It should probably be moved
@@ -78,7 +79,7 @@ public class EventSinkImpl implements EventSink {
     public List<QueueStatus> getQueueInfo() {
         List<QueueStatus> results = new LinkedList<>();
 
-        try (ClientSession session = this.connection.createClientSession()) {
+        try (ClientSession session = this.sessionFactory.getEgressSession(false)) {
             session.start();
             for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
                 String queueName = "event." + listenerClassName;
@@ -117,7 +118,7 @@ public class EventSinkImpl implements EventSink {
             // Lazily initialize the message sender when the first
             // message gets queued.
             if (messageSender == null) {
-                messageSender = new EventMessageSender(this.connection);
+                messageSender = new EventMessageSender(this.sessionFactory);
             }
             messageSender.queueMessage(mapper.writeValueAsString(event));
         }
@@ -219,11 +220,11 @@ public class EventSinkImpl implements EventSink {
      */
     private class EventMessageSender {
 
-        private ActiveMQConnection connection;
+        private ActiveMQSessionFactory sessionFactory;
         private ClientSession session;
         private ClientProducer producer;
 
-        public EventMessageSender(ActiveMQConnection connection) {
+        public EventMessageSender(ActiveMQSessionFactory sessionFactory) {
             try {
                 /*
                  * Uses a transacted ActiveMQ session, events will not be dispatched until
@@ -231,10 +232,10 @@ public class EventSinkImpl implements EventSink {
                  * messages safely and the session is then ready to start over the next time
                  * the thread is used.
                  */
-                session = connection.createClientSession();
+                session = sessionFactory.getEgressSession(true);
                 producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
             }
-            catch (ActiveMQException e) {
+            catch (Exception e) {
                 throw new RuntimeException(e);
             }
             log.debug("Created new message sender.");

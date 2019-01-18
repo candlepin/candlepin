@@ -38,6 +38,8 @@ import javax.inject.Inject;
 public class ArtemisJobMessageDispatcher implements JobMessageDispatcher {
     private static Logger log = LoggerFactory.getLogger(ArtemisJobMessageDispatcher.class);
 
+    public static final String JOB_KEY_MESSAGE_PROPERTY = "job_key";
+
     private ActiveMQSessionFactory sessionFactory;
     private ClientSession session;
     private ClientProducer producer;
@@ -70,7 +72,7 @@ public class ArtemisJobMessageDispatcher implements JobMessageDispatcher {
         if (this.session == null || this.session.isClosed()) {
             log.debug("Creating new ActiveMQ session for sending async job messages...");
 
-            this.session = this.sessionFactory.getEgressSession();
+            this.session = this.sessionFactory.getEgressSession(false);
 
             log.debug("Created new ActiveMQ session: {}", this.session);
         }
@@ -103,7 +105,7 @@ public class ArtemisJobMessageDispatcher implements JobMessageDispatcher {
     public void sendJobMessage(JobMessage jobMessage) throws Exception {
         ClientSession session = this.getClientSession();
         ClientMessage message = session.createMessage(true);
-        message.putStringProperty("job_key", jobMessage.getJobKey());
+        message.putStringProperty(JOB_KEY_MESSAGE_PROPERTY, jobMessage.getJobKey());
 
         String eventString = this.objMapper.writeValueAsString(jobMessage);
         message.getBodyBuffer().writeString(eventString);

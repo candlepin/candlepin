@@ -18,44 +18,39 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
 import com.google.inject.Singleton;
-import org.candlepin.controller.ActiveMQStatusListener;
-import org.candlepin.controller.QpidStatusListener;
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Collection;
 
 /**
- * EventSource
+ * An implementation of a MessageSource backed by Artemis. This message source manages
+ * a collection of MessageReceivers that listen for messages that are put in the Artemis
+ * message queues.
  */
 @Singleton
-public class EventSource implements QpidStatusListener, ActiveMQStatusListener {
-    private static Logger log = LoggerFactory.getLogger(EventSource.class);
+public class ArtemisMessageSource implements MessageSource {
+    private static Logger log = LoggerFactory.getLogger(ArtemisMessageSource.class);
 
     private ObjectMapper mapper;
-    private EventSourceConnection connection;
-    private List<MessageReceiver> messageReceivers = new LinkedList<>();
+    private ActiveMQSessionFactory sessionFactory;
+    private Collection<MessageReceiver> messageReceivers;
 
     @Inject
-    public EventSource(EventSourceConnection connection, ObjectMapper mapper) {
-        this.connection = connection;
+    public ArtemisMessageSource(ActiveMQSessionFactory sessionFactory, ObjectMapper mapper,
+        MessageSourceReceiverFactory receiverFactory) {
+        this.sessionFactory = sessionFactory;
         this.mapper = mapper;
+        this.messageReceivers = receiverFactory.get(this.sessionFactory);
     }
 
-    protected void shutDown() {
+    @Override
+    public void shutDown() {
         closeEventReceivers();
-        this.connection.close();
-    }
-
-    void registerListener(EventListener listener) throws Exception {
-        log.debug("Registering event listener for queue: {}", EventSource.getQueueName(listener));
-        if (listener.requiresQpid()) {
-            this.messageReceivers.add(new QpidEventMessageReceiver(listener, this.connection, mapper));
-        }
-        else {
-            this.messageReceivers.add(new EventMessageReceiver(listener, this.connection, mapper));
-        }
+        // TODO Need to determine if it is OK to not close the sessionFactory.
+        //      On candlepin shutdown, will this be required.
+//        this.sessionFactory.close();
     }
 
     private void closeEventReceivers() {
@@ -68,7 +63,7 @@ public class EventSource implements QpidStatusListener, ActiveMQStatusListener {
             return;
         }
 
-        log.debug("EventSource was notified of a QpidStatus change: {}", newStatus);
+        log.debug("ArtemisMessageSource was notified of a QpidStatus change: {}", newStatus);
         for (MessageReceiver receiver : this.messageReceivers) {
             if (!receiver.requiresQpid()) {
                 continue;
@@ -99,7 +94,7 @@ public class EventSource implements QpidStatusListener, ActiveMQStatusListener {
      */
     @Override
     public void onStatusUpdate(ActiveMQStatus oldStatus, ActiveMQStatus newStatus) {
-        log.debug("ActiveMQ status has been updated: {}:{}", oldStatus, newStatus);
+        log.info("ActiveMQ status has been updated: {}:{}", oldStatus, newStatus);
         if (ActiveMQStatus.DOWN.equals(newStatus) && !ActiveMQStatus.DOWN.equals(oldStatus)) {
             log.info("Shutting down all message receivers because the broker went down.");
             shutDown();

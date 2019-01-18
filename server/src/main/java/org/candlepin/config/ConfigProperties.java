@@ -17,6 +17,9 @@ package org.candlepin.config;
 
 import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
+// TODO: Remove this, probably
+import org.candlepin.async.temp.TestJob1;
+
 import org.candlepin.common.config.Configuration;
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
@@ -276,6 +279,9 @@ public class ConfigProperties {
 
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
 
+    public static final String ENABLED_ASYNC_JOBS = "candlepin.jobs.enabled_jobs";
+    public static final String MAX_JOB_THREADS = "candlepin.jobs.max_threads";
+
     public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {
         private static final long serialVersionUID = 1L;
 
@@ -413,6 +419,14 @@ public class ConfigProperties {
             // ManifestCleanerJob config
             // Max Age: 24 hours
             this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
+
+            // Async Job Defaults
+            this.put(MAX_JOB_THREADS, "10");
+
+            String[] allowed = new String[] {
+                TestJob1.getJobKey()
+            };
+            this.put(ENABLED_ASYNC_JOBS, StringUtils.join(allowed, ","));
         }
     };
 
