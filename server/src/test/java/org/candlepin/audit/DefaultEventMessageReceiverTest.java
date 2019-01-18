@@ -25,6 +25,7 @@ import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ActiveMQStatusMonitor;
@@ -48,7 +49,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class EventMessageReceiverTest {
+public class DefaultEventMessageReceiverTest {
 
     @Mock
     private ClientSessionFactory clientSessionFactory;
@@ -62,23 +63,18 @@ public class EventMessageReceiverTest {
     private ObjectMapper mapper = new ObjectMapper();
     @Spy private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
 
-    private EventSourceConnection connection;
-    private EventMessageReceiver receiver;
+    private ActiveMQSessionFactory sessionFactory;
+    private DefaultEventMessageReceiver receiver;
 
     @Before
     public void init() throws Exception {
         when(clientMessage.getBodyBuffer()).thenReturn(activeMQBuffer);
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(clientSession);
+        when(clientSessionFactory.createSession()).thenReturn(clientSession);
         when(clientSession.createConsumer(anyString())).thenReturn(clientConsumer);
 
-        this.connection = new EventSourceConnection(monitor, config) {
-            @Override
-            ClientSessionFactory getFactory() {
-                return clientSessionFactory;
-            }
-        };
+        this.sessionFactory = new TestingActiveMQSessionFactory(clientSessionFactory, null);
 
-        receiver = new EventMessageReceiver(eventListener, this.connection, mapper);
+        receiver = new DefaultEventMessageReceiver(eventListener, this.sessionFactory, mapper);
         receiver.connect();
     }
 
@@ -135,7 +131,8 @@ public class EventMessageReceiverTest {
 
     @Test
     public void sessionCloseIgnoredIfSessionIsNull() throws Exception {
-        EventMessageReceiver receiver = new EventMessageReceiver(eventListener, this.connection, mapper);
+        DefaultEventMessageReceiver receiver = new DefaultEventMessageReceiver(eventListener,
+            this.sessionFactory, mapper);
         receiver.close();
         verify(clientSession, never()).close();
 

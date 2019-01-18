@@ -60,4 +60,9 @@ public class JobMessage {
     public String getJobKey() {
         return this.jobKey;
     }
+
+    @Override
+    public String toString() {
+        return String.format("[%s]: %s", this.jobKey, this.jobId);
+    }
 }
