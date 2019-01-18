@@ -31,7 +31,7 @@ import java.util.List;
  */
 @Singleton
 public class EventSource implements QpidStatusListener, ActiveMQStatusListener {
-    private static  Logger log = LoggerFactory.getLogger(EventSource.class);
+    private static Logger log = LoggerFactory.getLogger(EventSource.class);
 
     private ObjectMapper mapper;
     private EventSourceConnection connection;
