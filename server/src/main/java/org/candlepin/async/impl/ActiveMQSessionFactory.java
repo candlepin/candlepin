@@ -97,11 +97,11 @@ public class ActiveMQSessionFactory {
          * @return
          *  the current ClientSession instance for this job manager
          */
-        public ClientSession getClientSession() throws Exception {
+        public ClientSession getClientSession(boolean transacted) throws Exception {
             log.debug("Creating new ActiveMQ session...");
 
             ClientSessionFactory csf = this.getClientSessionFactory();
-            ClientSession session = csf.createSession();
+            ClientSession session = transacted ? csf.createTransactedSession() : csf.createSession();
 
             log.debug("Created new ActiveMQ session: {}", session);
 
@@ -176,6 +176,11 @@ public class ActiveMQSessionFactory {
             // not present in the configuration rather than crashing out?
             locator.setMinLargeMessageSize(this.config.getInt(ConfigProperties.ACTIVEMQ_LARGE_MSG_SIZE));
 
+            // Continuously attempt reconnects to the broker if the connection is lost. This
+            // is to ensure that message sends can survive while a broker is restarted so long as
+            // candlepin remains up.
+            locator.setReconnectAttempts(-1);
+
             this.egressSessionManager = new SessionManager(locator);
         }
 
@@ -185,23 +190,27 @@ public class ActiveMQSessionFactory {
     /**
      * Fetches a new ingress session, configured for receiving messages.
      *
+     * @param transacted if true, a transacted client session will be created.
+     *
      * @return
      *  a ClientSession instance configured for receiving messages
      */
-    public ClientSession getIngressSession() throws Exception {
+    public ClientSession getIngressSession(boolean transacted) throws Exception {
         SessionManager manager = this.getIngressSessionManager();
-        return manager.getClientSession();
+        return manager.getClientSession(transacted);
     }
 
     /**
      * Fetches a new egress session, configured for sending messages.
      *
+     * @param transacted if true, a transacted client session will be created.
+     *
      * @return
      *  a ClientSession instance configured for sending messages
      */
-    public ClientSession getEgressSession() throws Exception {
+    public ClientSession getEgressSession(boolean transacted) throws Exception {
         SessionManager manager = this.getEgressSessionManager();
-        return manager.getClientSession();
+        return manager.getClientSession(transacted);
     }
 
 }

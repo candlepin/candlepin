@@ -17,8 +17,8 @@ package org.candlepin.audit;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.Principal;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.guice.PrincipalProvider;
@@ -70,7 +70,7 @@ public class EventSinkImplTest {
     @Mock private ServerLocator mockLocator;
     @Mock private ModeManager mockModeManager;
 
-    private EventSinkConnection eventSinkConnection;
+    private ActiveMQSessionFactory amqSessionFactory;
     private EventFactory factory;
     private EventFilter eventFilter;
     private EventSinkImpl eventSinkImpl;
@@ -84,20 +84,14 @@ public class EventSinkImplTest {
         this.principal = TestUtil.createOwnerPrincipal();
         eventFilter = new EventFilter(new CandlepinCommonTestConfig());
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
-        when(mockSessionFactory.createTransactedSession()).thenReturn(mockClientSession);
+        when(mockSessionFactory.createSession()).thenReturn(mockClientSession);
         when(mockClientSession.createProducer(anyString())).thenReturn(mockClientProducer);
         when(mockClientSession.createMessage(anyBoolean())).thenReturn(mockClientMessage);
         when(mockClientSession.createMessage(anyByte(), anyBoolean())).thenReturn(mockClientMessage);
         when(mockClientMessage.getBodyBuffer()).thenReturn(ActiveMQBuffers.fixedBuffer(2000));
         when(mockSessionFactory.getServerLocator()).thenReturn(mockLocator);
 
-        this.eventSinkConnection = new EventSinkConnection(mock(Configuration.class)) {
-            @Override
-            ClientSessionFactory getFactory() {
-                return mockSessionFactory;
-            }
-        };
-
+        this.amqSessionFactory = new TestingActiveMQSessionFactory(null, mockSessionFactory);
         this.mapper = spy(new ObjectMapper());
         this.eventSinkImpl = createEventSink(mockSessionFactory);
         o = new Owner("test owner");
@@ -109,7 +103,7 @@ public class EventSinkImplTest {
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) throws Exception {
         EventSinkImpl sink = new EventSinkImpl(eventFilter, factory, mapper,
-            new CandlepinCommonTestConfig(), eventSinkConnection, mockModeManager);
+            new CandlepinCommonTestConfig(), this.amqSessionFactory, mockModeManager);
         return sink;
     }
 

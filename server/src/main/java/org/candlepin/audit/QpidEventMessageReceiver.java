@@ -18,21 +18,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Receives messages from an Artemis Queue. Each receiver creates and handles its own session.
  */
-public class QpidEventMessageReceiver extends MessageReceiver {
+public class QpidEventMessageReceiver extends EventMessageReceiver {
     private static Logger log = LoggerFactory.getLogger(QpidEventMessageReceiver.class);
 
     private static final String AMQ_ORIG_ADDRESS = "_AMQ_ORIG_ADDRESS";
     private static final String AMQ_ORIG_MSG_ID = "_AMQ_ORIG_MESSAGE_ID";
 
-    public QpidEventMessageReceiver(EventListener listener, ActiveMQConnection connection,
-        ObjectMapper mapper) throws ActiveMQException {
-        super(listener, connection, mapper);
+    public QpidEventMessageReceiver(EventListener listener, ActiveMQSessionFactory sessionFactory,
+        ObjectMapper mapper) {
+        super(listener, sessionFactory, mapper);
     }
 
     /**

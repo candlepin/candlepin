@@ -26,6 +26,8 @@ import org.candlepin.config.ConfigProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -37,10 +39,15 @@ import java.util.concurrent.TimeUnit;
  * Monitors the status of the ActiveMQ connection and notifies listeners when
  * there are issues with the connection.
  */
+// FIXME Need to have this class hold its own connection for monitoring or we need
+//       to hook into the ActiveMQSessionFactory's connection some how.
 @Singleton
-public class ActiveMQStatusMonitor implements Runnable, CloseListener {
+public class ActiveMQStatusMonitor implements Closeable, Runnable, CloseListener {
 
     private static Logger log = LoggerFactory.getLogger(ActiveMQStatusMonitor.class);
+
+    private ServerLocator locator;
+    private ClientSessionFactory clientSessionFactory;
 
     private Configuration config;
     private long monitorInterval;
@@ -48,15 +55,25 @@ public class ActiveMQStatusMonitor implements Runnable, CloseListener {
     private ActiveMQStatus lastReported;
     private ScheduledExecutorService executorService;
     private Future<?> future = null;
-    private final Object lock = new Object();
+
+    // Assume that the initial connection is not available until
+    // it is tested.
+    protected boolean connectionOk = false;
 
     @Inject
-    public ActiveMQStatusMonitor(Configuration config) {
+    public ActiveMQStatusMonitor(Configuration config) throws Exception {
         this.config = config;
         this.monitorInterval = config.getLong(ConfigProperties.ACTIVEMQ_CONNECTION_MONITOR_INTERVAL);
         this.registeredListeners = new LinkedList<>();
         executorService = Executors.newSingleThreadScheduledExecutor();
         this.lastReported = ActiveMQStatus.UNKNOWN;
+        initializeLocator();
+    }
+
+    // Protected for testing purposes.
+    protected void initializeLocator() throws Exception {
+        String serverUrl = this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+        locator = ActiveMQClient.createServerLocator(serverUrl);
     }
 
     /**
@@ -80,21 +97,20 @@ public class ActiveMQStatusMonitor implements Runnable, CloseListener {
 
     @Override
     public void connectionClosed() {
+        connectionOk = false;
         notifyListeners(ActiveMQStatus.DOWN);
         monitorConnection();
     }
 
-    private void monitorConnection() {
+    private synchronized void monitorConnection() {
         // Since there can be multiple connections reporting that they have closed,
         // ensure that we only start one monitoring task.
-        synchronized (lock) {
-            if (future == null || future.isDone() || future.isCancelled()) {
-                log.info("Scheduling connection retries.");
-                future = executorService.scheduleAtFixedRate(this, 1, monitorInterval, TimeUnit.MILLISECONDS);
-            }
-            else {
-                log.info("Monitor already running.");
-            }
+        if (future == null || future.isDone() || future.isCancelled()) {
+            log.info("Scheduling connection retries.");
+            future = executorService.scheduleAtFixedRate(this, 1, monitorInterval, TimeUnit.MILLISECONDS);
+        }
+        else {
+            log.info("Monitor already running.");
         }
     }
 
@@ -107,28 +123,21 @@ public class ActiveMQStatusMonitor implements Runnable, CloseListener {
         }
     }
 
-    protected boolean testConnection() {
-        ServerLocator locator = null;
-        ClientSessionFactory factory = null;
-        try {
-            String serverUrl = config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
-            locator = ActiveMQClient.createServerLocator(serverUrl);
-            locator.createSessionFactory();
-            log.info("Connection to ActiveMQ is available.");
-            return true;
-        }
-        catch (Exception e) {
-            log.debug("Connection to ActiveMQ is unavailable.", e);
-            return false;
-        }
-        finally {
-            if (factory != null) {
-                factory.close();
+    protected synchronized boolean testConnection() {
+        if (!connectionOk) {
+            try {
+                clientSessionFactory = locator.createSessionFactory();
+                clientSessionFactory.getConnection().addCloseListener(this);
+                log.info("Connection to ActiveMQ is available.");
+                connectionOk = true;
             }
-            if (locator != null) {
-                locator.close();
+            catch (Exception e) {
+                log.debug("Connection to ActiveMQ is unavailable.", e);
+                connectionOk = false;
             }
         }
+
+        return connectionOk;
     }
 
     private void notifyListeners(ActiveMQStatus newStatus) {
@@ -143,5 +152,15 @@ public class ActiveMQStatusMonitor implements Runnable, CloseListener {
             }
         });
         lastReported = newStatus;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (this.clientSessionFactory != null) {
+            this.clientSessionFactory.close();
+        }
+        if (this.locator != null) {
+            this.locator.close();
+        }
     }
 }

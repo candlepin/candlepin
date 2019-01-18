@@ -16,6 +16,7 @@ package org.candlepin.audit;
 
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ActiveMQStatusMonitor;
@@ -56,7 +57,7 @@ import java.util.stream.Stream;
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class EventMessageReceiverTest {
+public class DefaultEventMessageReceiverTest {
 
     @Mock private ClientSessionFactory clientSessionFactory;
     @Mock private ClientSession clientSession;
@@ -68,23 +69,18 @@ public class EventMessageReceiverTest {
     @Spy private ObjectMapper mapper = new ObjectMapper();
     @Spy private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
 
-    private EventSourceConnection connection;
-    private EventMessageReceiver receiver;
+    private ActiveMQSessionFactory sessionFactory;
+    private DefaultEventMessageReceiver receiver;
 
     @BeforeEach
     public void init() throws Exception {
         when(clientMessage.getBodyBuffer()).thenReturn(activeMQBuffer);
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(clientSession);
+        when(clientSessionFactory.createSession()).thenReturn(clientSession);
         when(clientSession.createConsumer(anyString())).thenReturn(clientConsumer);
 
-        this.connection = new EventSourceConnection(monitor, config) {
-            @Override
-            ClientSessionFactory getFactory() {
-                return clientSessionFactory;
-            }
-        };
+        this.sessionFactory = new TestingActiveMQSessionFactory(clientSessionFactory, null);
 
-        receiver = new EventMessageReceiver(eventListener, this.connection, mapper);
+        receiver = new DefaultEventMessageReceiver(eventListener, this.sessionFactory, mapper);
         receiver.connect();
     }
 
@@ -169,7 +165,8 @@ public class EventMessageReceiverTest {
 
     @Test
     public void sessionCloseIgnoredIfSessionIsNull() throws Exception {
-        EventMessageReceiver receiver = new EventMessageReceiver(eventListener, this.connection, mapper);
+        DefaultEventMessageReceiver receiver = new DefaultEventMessageReceiver(eventListener,
+            this.sessionFactory, mapper);
         receiver.close();
         verify(clientSession, never()).close();
 

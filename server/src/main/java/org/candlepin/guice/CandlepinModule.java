@@ -29,9 +29,15 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import org.candlepin.async.JobMessageDispatcher;
 import org.candlepin.async.impl.ArtemisJobMessageDispatcher;
+import org.candlepin.async.temp.AsyncJobResource;
+import org.candlepin.async.temp.TestJob1;
 import org.candlepin.audit.AMQPBusPublisher;
+import org.candlepin.audit.ArtemisMessageSource;
+import org.candlepin.audit.ArtemisMessageSourceReceiverFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
+import org.candlepin.audit.MessageSource;
+import org.candlepin.audit.MessageSourceReceiverFactory;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.audit.QpidConfigBuilder;
 import org.candlepin.audit.QpidConnection;
@@ -217,17 +223,13 @@ public class CandlepinModule extends AbstractModule {
         CandlepinRequestScope requestScope = new CandlepinRequestScope();
         bindScope(CandlepinRequestScoped.class, requestScope);
         bind(CandlepinRequestScope.class).toInstance(requestScope);
-
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
         configureJPA();
+        bindPki();
 
-        bind(PKIUtility.class).to(JSSPKIUtility.class).asEagerSingleton();
-        bind(CertificateReader.class).asEagerSingleton();
-        bind(PrivateKeyReader.class).to(JSSPrivateKeyReader.class);
-        bind(X509ExtensionUtil.class);
         bind(ResolverUtil.class);
         bind(GuestMigration.class);
 
@@ -304,38 +306,50 @@ public class CandlepinModule extends AbstractModule {
         this.configureModelTranslator();
     }
 
+    private void bindPki() {
+        bind(PKIUtility.class).to(JSSPKIUtility.class).asEagerSingleton();
+        bind(CertificateReader.class).asEagerSingleton();
+        bind(PrivateKeyReader.class).to(JSSPrivateKeyReader.class);
+        bind(X509ExtensionUtil.class);
+    }
+
     private void resources() {
-        bind(ConsumerResource.class);
-        bind(ConsumerContentOverrideResource.class);
         bind(ActivationKeyContentOverrideResource.class);
-        bind(HypervisorResource.class);
-        bind(ConsumerTypeResource.class);
-        bind(ContentResource.class);
-        bind(PoolResource.class);
-        bind(EntitlementResource.class);
-        bind(OwnerResource.class);
-        bind(OwnerProductResource.class);
-        bind(OwnerContentResource.class);
-        bind(RoleResource.class);
-        bind(RootResource.class);
-        bind(ProductResource.class);
-        bind(SubscriptionResource.class);
         bind(ActivationKeyResource.class);
+        bind(AdminResource.class);
+        bind(AsyncJobResource.class);
+        bind(AtomFeedResource.class);
+        bind(CdnResource.class);
         bind(CertificateSerialResource.class);
         bind(CrlResource.class);
-        bind(JobResource.class);
-        bind(RulesResource.class);
-        bind(AdminResource.class);
-        bind(StatusResource.class);
-        bind(EnvironmentResource.class);
-        bind(UserResource.class);
-        bind(DistributorVersionResource.class);
+        bind(ConsumerContentOverrideResource.class);
+        bind(ConsumerResource.class);
+        bind(ConsumerTypeResource.class);
+        bind(ContentResource.class);
         bind(DeletedConsumerResource.class);
-        bind(CdnResource.class);
+        bind(DistributorVersionResource.class);
+        bind(EntitlementResource.class);
+        bind(EnvironmentResource.class);
+        bind(EventResource.class);
         bind(GuestIdResource.class);
+        bind(HypervisorResource.class);
+        bind(JobResource.class);
+        bind(OwnerContentResource.class);
+        bind(OwnerProductResource.class);
+        bind(OwnerResource.class);
+        bind(PoolResource.class);
+        bind(ProductResource.class);
+        bind(RoleResource.class);
+        bind(RootResource.class);
+        bind(RulesResource.class);
+        bind(SubscriptionResource.class);
+        bind(StatusResource.class);
+        bind(UserResource.class);
     }
 
     private void miscConfigurations() {
+        // Temporary bindings
+        bindTempAsynJobClasses();
         configureInterceptors();
         configureAuth();
         configureActiveMQComponents();
@@ -356,6 +370,10 @@ public class CandlepinModule extends AbstractModule {
             .configure()
             .messageInterpolator(interpolatorProvider.get())
             .buildValidatorFactory();
+    }
+
+    private void bindTempAsynJobClasses() {
+        bind(TestJob1.class);
     }
 
     protected void configureJPA() {
@@ -438,7 +456,6 @@ public class CandlepinModule extends AbstractModule {
 
     private void configureAmqp() {
         // for lazy loading:
-
         bind(AMQPBusPublisher.class).in(Singleton.class);
         //TODO make sure these two classes are always singletons
         bind(QpidConnection.class).in(Singleton.class);
@@ -448,6 +465,8 @@ public class CandlepinModule extends AbstractModule {
     private void configureActiveMQComponents() {
         if (config.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED)) {
             bind(JobMessageDispatcher.class).to(ArtemisJobMessageDispatcher.class);
+            bind(MessageSource.class).to(ArtemisMessageSource.class);
+            bind(MessageSourceReceiverFactory.class).to(ArtemisMessageSourceReceiverFactory.class);
             bind(EventSink.class).to(EventSinkImpl.class);
         }
         else {
