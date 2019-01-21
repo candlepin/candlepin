@@ -14,22 +14,9 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
-
-import com.google.inject.Inject;
-
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.FileAppender;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
+import com.google.inject.Inject;
+import org.slf4j.LoggerFactory;
 
 /**
  * LoggingListener
@@ -40,52 +27,26 @@ import java.util.TimeZone;
  * See http://slf4j.org/faq.html#when
  */
 public class LoggingListener implements EventListener {
+
     private static Logger auditLog;
 
-    private final DateFormat df;
-
     @Inject
-    public LoggingListener(Configuration config) {
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        auditLog = lc.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
-
-        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
-        encoder.setContext(lc);
-        encoder.setPattern("%m");
-        encoder.start();
-
-        FileAppender<ILoggingEvent> appender = new FileAppender<>();
-        appender.setFile(config.getString(ConfigProperties.AUDIT_LOG_FILE));
-        appender.setEncoder(encoder);
-        appender.setName("AUDITLOG");
-        appender.setContext(lc);
-        appender.start();
-
-        auditLog.addAppender(appender);
-        // Keep these messages in audit.log only
-        auditLog.setAdditive(false);
-
-        TimeZone tz = TimeZone.getDefault();
-        // Format for ISO8601 to match our other logging:
-        df = new SimpleDateFormat("yyyy-MM-dd' 'HH:mm:ssZ");
-        df.setTimeZone(tz);
+    public LoggingListener() {
+        auditLog = (Logger) LoggerFactory
+            .getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
     }
 
     @Override
-    @SuppressWarnings("checkstyle:indentation")
     public void onEvent(Event e) {
         auditLog.info(
-            "{} principalType={} principal={} target={} entityId={} type={} owner={} eventData={}\n",
-            new Object[] {
-                df.format(e.getTimestamp()),
-                e.getPrincipal().getType(),
-                e.getPrincipal().getName(),
-                e.getTarget(),
-                e.getEntityId(),
-                e.getType(),
-                e.getOwnerId(),
-                e.getEventData()}
-        );
+            "principalType={} principal={} target={} entityId={} type={} owner={} eventData={}\n",
+            e.getPrincipal().getType(),
+            e.getPrincipal().getName(),
+            e.getTarget(),
+            e.getEntityId(),
+            e.getType(),
+            e.getOwnerId(),
+            e.getEventData());
     }
 
     @Override
