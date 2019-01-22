@@ -649,6 +649,199 @@ describe 'Refresh Pools' do
     expect(payload.products.first.content.first.path).to eq(content2.contentUrl)
   end
 
+  it 'invalidates entitlements when pool quantity is reduced' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    content_id = random_string('test_content')
+    content = create_upstream_content(content_id, { :content_url => 'http://www.url.com' })
+
+    product_id = random_string(nil, true)
+    product = create_upstream_product(product_id, { :name => 'test_prod' })
+
+    add_content_to_product_upstream(product_id, content_id)
+
+    sub_id = random_string('test_subscription')
+    create_upstream_subscription(sub_id, owner_key, product_id, {:quantity => 5})
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+    expect(pools.first.quantity).to eq(5)
+
+    # Verify the product exists in its initial state
+    ds_product = @cp.get_product(owner_key, product_id)
+    expect(ds_product).to_not be_nil
+    expect(ds_product.name).to eq('test_prod')
+
+    # Consume the pool multiple times so we have entitlements to revoke
+    5.times do |i|
+      user = user_client(owner, random_string('test_user'))
+      consumer_client = consumer_client(user, random_string('test_consumer'), :system, nil,
+        { 'system.certificate_version' => '3.0' })
+
+      entitlements = consumer_client.consume_pool(pools.first.id, { :quantity => 1 })
+      expect(entitlements.length).to eq(1)
+
+      consumer = @cp.get_consumer(consumer_client.uuid)
+      expect(consumer.entitlementCount).to eq(1)
+    end
+
+    # Verify the entitlement count for this pool
+    entitlements = @cp.list_pool_entitlements(pools.first.id)
+    expect(entitlements.length).to eq(5)
+
+    # Modify the subscription upstream
+    update_upstream_subscription(sub_id, {:quantity => 1})
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+    expect(pools.first.quantity).to eq(1)
+
+    # Verify the entitlement count has changed
+    entitlements = @cp.list_pool_entitlements(pools.first.id)
+    expect(entitlements.length).to eq(1)
+  end
+
+  it 'invalidates bonus pool entitlements when master pool quantity is reduced' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    content_id = random_string('test_content')
+    content = create_upstream_content(content_id, { :content_url => 'http://www.url.com' })
+
+    product_id = random_string(nil, true)
+    product = create_upstream_product(product_id, { :name => 'test_prod', :attributes => { "virt_limit" => "1" } })
+
+    add_content_to_product_upstream(product_id, content_id)
+
+    sub_id = random_string('test_subscription')
+    create_upstream_subscription(sub_id, owner_key, product_id, {:quantity => 5})
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(2) # pool + bonus pool
+
+    # Swap if the order isn't our expected order
+    pools[0], pools[1] = pools[1], pools[0] if pools.first.type == "BONUS"
+
+    expect(pools.first.quantity).to eq(5)
+    expect(pools.last.quantity).to eq(5)
+
+    # Verify the product exists in its initial state
+    ds_product = @cp.get_product(owner_key, product_id)
+    expect(ds_product).to_not be_nil
+    expect(ds_product.name).to eq('test_prod')
+
+    # Consume the pool multiple times so we have entitlements to revoke
+    5.times do |i|
+      user = user_client(owner, random_string('test_user'))
+      consumer_client = consumer_client(user, random_string('test_consumer'), :system, nil,
+        { 'system.certificate_version' => '3.0', 'virt.is_guest' => true})
+
+      entitlements = consumer_client.consume_pool(pools.last.id, { :quantity => 1 })
+      expect(entitlements.length).to eq(1)
+
+      consumer = @cp.get_consumer(consumer_client.uuid)
+      expect(consumer.entitlementCount).to eq(1)
+    end
+
+    # Verify the entitlement count for this pool
+    entitlements = @cp.list_pool_entitlements(pools.first.id)
+    expect(entitlements.length).to eq(0)
+    entitlements = @cp.list_pool_entitlements(pools.last.id)
+    expect(entitlements.length).to eq(5)
+
+    # Modify the subscription upstream
+    update_upstream_subscription(sub_id, {:quantity => 1})
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(2) # pool + bonus pool
+
+    # Swap if the order isn't our expected order
+    pools[0], pools[1] = pools[1], pools[0] if pools.first.type == "BONUS"
+
+    expect(pools.first.quantity).to eq(1)
+    expect(pools.last.quantity).to eq(1)
+
+    # Verify the entitlement count has changed
+    entitlements = @cp.list_pool_entitlements(pools.first.id)
+    expect(entitlements.length).to eq(0)
+    entitlements = @cp.list_pool_entitlements(pools.last.id)
+    expect(entitlements.length).to eq(1)
+  end
+
+  it 'invalidates bonus pool entitlements when bonus pool quantity is reduced' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    content_id = random_string('test_content')
+    content = create_upstream_content(content_id, { :content_url => 'http://www.url.com' })
+
+    product_id = random_string(nil, true)
+    product = create_upstream_product(product_id, { :name => 'test_prod', :attributes => { "virt_limit" => "5" } })
+
+    add_content_to_product_upstream(product_id, content_id)
+
+    sub_id = random_string('test_subscription')
+    create_upstream_subscription(sub_id, owner_key, product_id, {:quantity => 1})
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(2) # pool + bonus pool
+
+    # Swap if the order isn't our expected order
+    pools[0], pools[1] = pools[1], pools[0] if pools.first.type == "BONUS"
+
+    expect(pools.first.quantity).to eq(1)
+    expect(pools.last.quantity).to eq(5)
+
+    # Verify the product exists in its initial state
+    ds_product = @cp.get_product(owner_key, product_id)
+    expect(ds_product).to_not be_nil
+    expect(ds_product.name).to eq('test_prod')
+
+    # Consume the pool multiple times so we have entitlements to revoke
+    5.times do |i|
+      user = user_client(owner, random_string('test_user'))
+      consumer_client = consumer_client(user, random_string('test_consumer'), :system, nil,
+        { 'system.certificate_version' => '3.0', 'virt.is_guest' => true})
+
+      entitlements = consumer_client.consume_pool(pools.last.id, { :quantity => 1 })
+      expect(entitlements.length).to eq(1)
+
+      consumer = @cp.get_consumer(consumer_client.uuid)
+      expect(consumer.entitlementCount).to eq(1)
+    end
+
+    # Verify the entitlement count for this pool
+    entitlements = @cp.list_pool_entitlements(pools.first.id)
+    expect(entitlements.length).to eq(0)
+    entitlements = @cp.list_pool_entitlements(pools.last.id)
+    expect(entitlements.length).to eq(5)
+
+    # Modify the subscription upstream
+    update_upstream_product(product.id, { :attributes => { "virt_limit" => "1" } })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(2) # pool + bonus pool
+
+    # Swap if the order isn't our expected order
+    pools[0], pools[1] = pools[1], pools[0] if pools.first.type == "BONUS"
+
+    expect(pools.first.quantity).to eq(1)
+    expect(pools.last.quantity).to eq(1)
+
+    # Verify the entitlement count has changed
+    entitlements = @cp.list_pool_entitlements(pools.first.id)
+    expect(entitlements.length).to eq(0)
+    entitlements = @cp.list_pool_entitlements(pools.last.id)
+    expect(entitlements.length).to eq(1)
+  end
+
   def concat_serials(normal_ent, bonus_ent)
     normal_serial = normal_ent['certificates'][0]['serial']['id']
     bonus_serial = bonus_ent['certificates'][0]['serial']['id']
