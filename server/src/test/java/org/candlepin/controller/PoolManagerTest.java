@@ -1305,10 +1305,13 @@ public class PoolManagerTest {
         when(cqmock2.list()).thenReturn(Collections.<Consumer>emptyList());
         when(consumerCuratorMock.getConsumers(anyCollection())).thenReturn(cqmock2);
 
+        // Any positive value is acceptable here
+        when(entitlementCurator.getInBlockSize()).thenReturn(50);
+
         this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
 
         verify(mockPoolCurator).batchDelete(eq(pools), anyCollectionOf(String.class));
-        verify(entitlementCurator).batchDelete(eq(poolEntitlements));
+        verify(entitlementCurator).batchDelete(eq(new HashSet<Entitlement>(poolEntitlements)));
     }
 
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {
