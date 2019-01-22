@@ -75,7 +75,7 @@ import javax.inject.Singleton;
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /** The recommended number of expired pools to fetch in a single call to listExpiredPools */
-    public static final int EXPIRED_POOL_BLOCK_SIZE = 2048;
+    public static final int EXPIRED_POOL_BLOCK_SIZE = 1000;
 
     private static Logger log = LoggerFactory.getLogger(PoolCurator.class);
     private ConsumerCurator consumerCurator;
@@ -1225,15 +1225,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     public Collection<String> getEntitlementIdsForPools(Collection<String> poolIds) {
+        Set<String> eids = new HashSet<>();
+
         if (poolIds != null && !poolIds.isEmpty()) {
-            return this.currentSession().createCriteria(Pool.class, "p")
-                .createAlias("p.entitlements", "e")
-                .add(CPRestrictions.in("p.id", poolIds))
-                .setProjection(Projections.distinct(Projections.property("e.id")))
-                .list();
+            for (List<String> block : this.partition(poolIds)) {
+                eids.addAll(this.currentSession().createCriteria(Pool.class, "p")
+                    .createAlias("p.entitlements", "e")
+                    .add(Restrictions.in("p.id", block))
+                    .setProjection(Projections.distinct(Projections.property("e.id")))
+                    .list());
+            }
         }
 
-        return new LinkedList<>();
+        return eids;
     }
 
     /**
@@ -1249,15 +1253,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     public Collection<String> getPoolIdsForSourceEntitlements(Collection<String> entIds) {
+        Set<String> pids = new HashSet<>();
+
         if (entIds != null && !entIds.isEmpty()) {
-            return this.currentSession().createCriteria(Pool.class, "p")
-                .createAlias("p.sourceEntitlement", "e")
-                .add(CPRestrictions.in("e.id", entIds))
-                .setProjection(Projections.distinct(Projections.property("p.id")))
-                .list();
+            for (List<String> block : this.partition(entIds)) {
+                pids.addAll(this.currentSession().createCriteria(Pool.class, "p")
+                    .createAlias("p.sourceEntitlement", "e")
+                    .add(Restrictions.in("e.id", block))
+                    .setProjection(Projections.distinct(Projections.property("p.id")))
+                    .list());
+            }
         }
 
-        return new LinkedList<>();
+        return pids;
     }
 
     /**
@@ -1271,15 +1279,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     public Collection<String> getPoolIdsForEntitlements(Collection<String> entIds) {
+        Set<String> pids = new HashSet<>();
+
         if (entIds != null && !entIds.isEmpty()) {
-            return this.currentSession().createCriteria(Entitlement.class, "e")
-                .createAlias("e.pool", "p")
-                .add(CPRestrictions.in("e.id", entIds))
-                .setProjection(Projections.distinct(Projections.property("p.id")))
-                .list();
+            for (List<String> block : this.partition(entIds)) {
+                pids.addAll(this.currentSession().createCriteria(Entitlement.class, "e")
+                    .createAlias("e.pool", "p")
+                    .add(Restrictions.in("e.id", block))
+                    .setProjection(Projections.distinct(Projections.property("p.id")))
+                    .list());
+            }
         }
 
-        return new LinkedList<>();
+        return pids;
     }
 
     @SuppressWarnings("unchecked")
