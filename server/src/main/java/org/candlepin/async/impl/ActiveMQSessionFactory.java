@@ -14,6 +14,7 @@
  */
 package org.candlepin.async.impl;
 
+import org.apache.activemq.artemis.core.remoting.CloseListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 
@@ -43,7 +44,11 @@ public class ActiveMQSessionFactory {
      * Manages a session factory and session generation, recreating and reopening the factory as
      * necessary.
      */
-    private static class SessionManager {
+    /**
+     * Manages a session factory and session generation, recreating and reopening the factory as
+     * necessary.
+     */
+    private static class SessionManager implements CloseListener {
         private final ServerLocator locator;
 
         private ClientSessionFactory sessionFactory;
@@ -73,11 +78,13 @@ public class ActiveMQSessionFactory {
          * @return
          *  the ClientSessionFactory instance for this job manager
          */
-        public ClientSessionFactory getClientSessionFactory() throws Exception {
+        public synchronized ClientSessionFactory getClientSessionFactory() throws Exception {
             if (this.sessionFactory == null || this.sessionFactory.isClosed()) {
                 log.debug("Creating new ActiveMQ client session factory...");
 
                 this.sessionFactory = locator.createSessionFactory();
+                this.sessionFactory.getConnection().addCloseListener(this);
+
                 log.debug("Created new ActiveMQ client session factory: {}", this.sessionFactory);
             }
 
@@ -99,6 +106,13 @@ public class ActiveMQSessionFactory {
             log.debug("Created new ActiveMQ session: {}", session);
 
             return session;
+        }
+
+        @Override
+        public void connectionClosed() {
+            if (this.sessionFactory != null) {
+                this.sessionFactory.close();
+            }
         }
     }
 
@@ -127,7 +141,7 @@ public class ActiveMQSessionFactory {
      * @return
      *  a SessionManager for sessions configured for receiving messages
      */
-    protected SessionManager getIngressSessionManager() throws Exception {
+    protected synchronized SessionManager getIngressSessionManager() throws Exception {
         if (this.ingressSessionManager == null) {
             // TODO:
             // This needs to be updated such that it's properly configured for whatever
@@ -153,7 +167,7 @@ public class ActiveMQSessionFactory {
      * @return
      *  a SessionManager for sessions configured for sending messages
      */
-    protected SessionManager getEgressSessionManager() throws Exception {
+    protected synchronized SessionManager getEgressSessionManager() throws Exception {
         if (this.egressSessionManager == null) {
             ServerLocator locator = ActiveMQClient.createServerLocator(
                 this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL));
