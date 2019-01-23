@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.0
+Version: 2.6.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,86 @@ fi
 
 #raw
 %changelog
+* Wed Jan 23 2019 Kevin Howell <khowell@redhat.com> 2.6.1-1
+- 1482942: Remove unnecessary deleted consumer checks (ojanus@redhat.com)
+- 1556930: Index to make hypervisor uuid lookup faster in Postgresql
+  (wpoteat@redhat.com)
+- Added additional spec tests for pool refresh scenarios (crog@redhat.com)
+- All Jobs Should Not Retry On Any Persistence Failure[ENT-733]
+  (ojanus@redhat.com)
+- 1620226: Perform CRL generation without exceeding memory and maxing CPU
+  (mstead@redhat.com)
+- 1660878: changed the possible syspurpose status states - Now the syspurpose
+  status states will be 'matched', 'mismatched' and   'not specified', instead
+  of 'valid', 'invalid' and 'partial' - Scenarios of mixed SLAs/Usages that
+  would previously fall under the   'partial' category, will now be 'matched'.
+  Scenarios of multiple   addons that are not all satisfied, that would
+  previously fall under   the 'partial' category, will now be 'mismatched' -
+  Also, an additional reason will not be added for each pool that has a
+  mismatched sla or usage. Only one general mismatch reason is sent now
+  (nmoumoul@redhat.com)
+- Remove emojis from unicode test. (awood@redhat.com)
+- Use MariaDB JDBC connector. (awood@redhat.com)
+- Updated httpclient library (mstead@redhat.com)
+- Removed double initialization of producer map (mstead@redhat.com)
+- Added sockets to SP test data (mstead@redhat.com)
+- 1660533: Maintain backwards compatibility in rules for system purpose
+  (mstead@redhat.com)
+- 1658291: Enter suspend mode when Qpid queue loses exchange and/or binding.
+  (mstead@redhat.com)
+- 1599456: fix physical system activation key registration - Now a physical
+  system using activation keys to register will not fail   with an
+  authorization error. (nmoumoul@redhat.com)
+- 1588097: Expose owner of ComplianceStatusDTO's pools - Now the output of GET
+  /consumers/{consumer_uuid}/compliance will have the   owner field of
+  compliant products' entitlements' pools populated. (nmoumoul@redhat.com)
+- Allow tomcat to read the candlepin CA cert (jturel@redhat.com)
+- Added test data to support system purpose functionality (mstead@redhat.com)
+- 1588101: dynamicly filter activation key's pools subfields
+  (nmoumoul@redhat.com)
+- 1652967: auto-attach selects pools with matching role/addon - auto-attach
+  will now select pools that only provide either a matching role or addon, but
+  do not provide any installed products. (nmoumoul@redhat.com)
+- 1652737: role & addons should not affect entitlement status - Entitlement
+  Compliance status will no longer be affected by role & addons attributes. -
+  Added tests for this use case, and also further syspurpose/auto-attach
+  regression tests. - When a stack now contains a pool that provides a matching
+  role or addon, that pool will stay in the stack and be selected.
+  (nmoumoul@redhat.com)
+- 1651651: Unneeded guest migration call leads to exception
+  (wpoteat@redhat.com)
+- 1631553: Use Product attribute names for owner syspurpose
+  (nmoumoul@redhat.com)
+- Do not bind HostedTestSubscriptionResource as eager singleton
+  (mstead@redhat.com)
+- Use ConcurrentHashMap to prevent ConcurrentModificationExceptions
+  (mstead@redhat.com)
+- Reconnect to Artemis broker when connection goes down (mstead@redhat.com)
+- Fixed StaleStateException during dirty entitlement regeneration
+  (crog@redhat.com)
+- ENT-884 Reuse Objectmappers when possible (nmoumoul@redhat.com)
+- 1634451: Fixed an issue with syspurpose changes not updating status
+  (crog@redhat.com)
+- 1640215: Fix incorrect partial compliance status on consumers
+  (awood@redhat.com)
+- 1591383: When content access mode is org_environment, disable auto-attach for
+  org (wpoteat@redhat.com)
+- Added additional tests for syspurpose fields (crog@redhat.com)
+- Fix reference error in JS rules (jturel@redhat.com)
+- 1618398: Remove service level checking for consumers (wpoteat@redhat.com)
+- Moved the service config file out of script (mstead@redhat.com)
+- Externalize Artemis service template (mstead@redhat.com)
+- Fixed incorrect address setting match in broker.xml (mstead@redhat.com)
+- Default broker config tweaks (mstead@redhat.com)
+- Removed connection-ttl-override from broker config (mstead@redhat.com)
+- General script cleanup (mstead@redhat.com)
+- Enable artemis server so it is restarted on reboot (mstead@redhat.com)
+- Use tar to unpack artemis instead of tarfile lib (mstead@redhat.com)
+- Embed service configuration to the artemis script (mstead@redhat.com)
+- Added script to deploy artemis as a service (mstead@redhat.com)
+- Fixed Namespace in broker.xml (mstead@redhat.com)
+- Externalize Artemis Configuration (mstead@redhat.com)
+
 * Tue Oct 16 2018 Kevin Howell <khowell@redhat.com> 2.6.0-1
 - ActiveMQ sessions are now closed after a commit or rollback (crog@redhat.com)
 
