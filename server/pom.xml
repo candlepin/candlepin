@@ -132,7 +132,7 @@
     <com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>2.9.4</com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>
     <org.candlepin-candlepin-common.version>2.0.3</org.candlepin-candlepin-common.version>
     <org.postgresql-postgresql.version>42.2.2</org.postgresql-postgresql.version>
-    <mysql-mysql-connector-java.version>5.1.26</mysql-mysql-connector-java.version>
+    <org.mariadb.jdbc-mariadb-java-client.version>2.3.0</org.mariadb.jdbc-mariadb-java-client.version>
     <org.jmock-jmock.version>2.5.1</org.jmock-jmock.version>
     <org.jmock-jmock-junit4.version>2.5.1</org.jmock-jmock-junit4.version>
   </properties>
@@ -1412,9 +1412,9 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <version>${mysql-mysql-connector-java.version}</version>
+      <groupId>org.mariadb.jdbc</groupId>
+      <artifactId>mariadb-java-client</artifactId>
+      <version>${org.mariadb.jdbc-mariadb-java-client.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
