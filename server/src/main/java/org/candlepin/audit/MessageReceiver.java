@@ -20,6 +20,7 @@ import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.MessageHandler;
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,27 +32,25 @@ public abstract class MessageReceiver implements MessageHandler {
 
     private static Logger log = LoggerFactory.getLogger(MessageReceiver.class);
 
-    private ActiveMQConnection connection;
+    protected ActiveMQSessionFactory sessionFactory;
 
     protected ClientSession session;
     protected ObjectMapper mapper;
-    protected EventListener listener;
+
     protected ClientConsumer consumer;
     protected String queueName;
 
+    // FIXME Do we even need this? Looks like it is just for logging.
     protected abstract String getQueueAddress();
 
-    public MessageReceiver(EventListener listener, ActiveMQConnection connection, ObjectMapper mapper)
-        throws ActiveMQException {
-
-        this.connection = connection;
+    public MessageReceiver(String queueName, ActiveMQSessionFactory sessionFactory, ObjectMapper mapper) {
+        this.sessionFactory = sessionFactory;
         this.mapper = mapper;
-        this.listener = listener;
-        this.queueName = EventSource.getQueueName(listener);
+        this.queueName = queueName;
     }
 
     public boolean requiresQpid() {
-        return this.listener.requiresQpid();
+        return false;
     }
 
     /**
@@ -59,7 +58,7 @@ public abstract class MessageReceiver implements MessageHandler {
      */
     public void pause() {
         try {
-            log.debug("Pausing message consumption for: {}.", listener);
+            log.debug("Pausing message consumption for: {}.", queueName);
             this.consumer.close();
         }
         catch (ActiveMQException e) {
@@ -77,7 +76,7 @@ public abstract class MessageReceiver implements MessageHandler {
         }
         try {
             if (this.consumer.isClosed()) {
-                log.debug("Resuming message consumption for {}.", listener);
+                log.debug("Resuming message consumption for {}.", queueName);
                 this.consumer = session.createConsumer(queueName);
                 this.consumer.setMessageHandler(this);
             }
@@ -91,16 +90,8 @@ public abstract class MessageReceiver implements MessageHandler {
      * Close the current session.
      */
     public void close() {
-        log.debug("Shutting down message receiver for {}.", listener);
+        log.debug("Shutting down message receiver for {}.", queueName);
         if (session != null && !session.isClosed()) {
-
-            try {
-                this.session.stop();
-            }
-            catch (ActiveMQException e) {
-                log.warn("MessageReceiver could not stop client session.", e);
-            }
-
             try {
                 this.session.close();
             }
@@ -111,13 +102,11 @@ public abstract class MessageReceiver implements MessageHandler {
 
     }
 
-    public void connect() throws ActiveMQException {
-        if (session == null || session.isClosed()) {
-            session = this.connection.createClientSession();
+    protected abstract void initialize() throws Exception;
 
-            consumer = session.createConsumer(queueName);
-            consumer.setMessageHandler(this);
-            session.start();
+    public void connect() throws Exception {
+        if (session == null || session.isClosed()) {
+            initialize();
         }
     }
 }

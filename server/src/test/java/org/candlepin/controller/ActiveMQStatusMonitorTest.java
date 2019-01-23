@@ -82,11 +82,15 @@ public class ActiveMQStatusMonitorTest {
     }
 
     private class TestingMonitor extends ActiveMQStatusMonitor {
-        private boolean connectionOk;
 
-        public TestingMonitor(Configuration config) {
+        public TestingMonitor(Configuration config) throws Exception {
             super(config);
             this.connectionOk = true;
+        }
+
+        @Override
+        public void initializeLocator() throws Exception {
+            // Bypass static locator creation
         }
 
         @Override

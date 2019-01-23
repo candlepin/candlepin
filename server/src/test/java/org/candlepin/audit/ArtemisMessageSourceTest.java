@@ -23,39 +23,56 @@ import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
-import org.apache.activemq.artemis.api.core.client.ServerLocator;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.controller.ActiveMQStatusMonitor;
+import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+
 
 /**
- * EventSourceTest
+ * ArtemisMessageSourceTest
  */
 @RunWith(MockitoJUnitRunner.class)
-public class EventSourceTest {
+public class ArtemisMessageSourceTest {
 
     @Mock private ClientSessionFactory clientSessionFactory;
 
+    private ActiveMQSessionFactory sessionFactory;
+
+    @Before
+    public void setup() {
+        this.sessionFactory = createConnection();
+    }
+
     @Test
     public void eventSourceDoesNotConnectEventReceiversUntilNotifiedConnectionEstablished() throws Exception {
-        EventSourceConnection connection = createConnection();
-        EventSource source = new EventSource(connection, new ObjectMapper());
-        source.registerListener(mock(EventListener.class));
+        ActiveMQSessionFactory connection = createConnection();
+
+        List<MessageReceiver> messageReceivers = new LinkedList<>();
+        messageReceivers.add(new DefaultEventMessageReceiver(mock(EventListener.class),
+            connection, mock(ObjectMapper.class)));
+
+        MessageSourceReceiverFactory receiverFactory = mock(MessageSourceReceiverFactory.class);
+        when(receiverFactory.get(eq(connection))).thenReturn(messageReceivers);
+
+        ArtemisMessageSource source = new ArtemisMessageSource(connection, new ObjectMapper(),
+            receiverFactory);
 
         // Should not attempt to create a client session.
         verifyZeroInteractions(clientSessionFactory);
 
         ClientSession session = mock(ClientSession.class);
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+        when(clientSessionFactory.createSession()).thenReturn(session);
         when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
 
         // Simulate connection notification.
         source.onStatusUpdate(ActiveMQStatus.UNKNOWN, ActiveMQStatus.CONNECTED);
-        verify(clientSessionFactory).createSession(eq(false), eq(false), eq(0));
         verify(session).createConsumer(any(String.class));
         verify(session, times(1)).start();
         verify(session, never()).stop();
@@ -67,75 +84,71 @@ public class EventSourceTest {
         ClientSession session1 = mock(ClientSession.class);
         ClientSession session2 = mock(ClientSession.class);
 
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0)))
+        when(clientSessionFactory.createSession())
             .thenReturn(session1).thenReturn(session2);
         when(session1.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
         when(session2.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(
-            mock(EventListener.class), mock(EventListener.class));
-        eventSource.shutDown();
+        DefaultEventMessageReceiver receiver1 = new DefaultEventMessageReceiver(mock(EventListener.class),
+            sessionFactory, mock(ObjectMapper.class));
+        DefaultEventMessageReceiver receiver2 = new DefaultEventMessageReceiver(mock(EventListener.class),
+            sessionFactory, mock(ObjectMapper.class));
 
-        // Verify that all client sessions were stopped and closed.
-        verify(session1).stop();
+        ArtemisMessageSource messageSource =
+            createEventSourceStubbedWithFactoryCreation(receiver1, receiver2);
+        messageSource.shutDown();
+
+        // Verify that all client sessions were closed.
         verify(session1).close();
-
-        verify(session2).stop();
         verify(session2).close();
-
-        // Verify that the client session factory was closed.
-        verify(clientSessionFactory).close();
     }
 
     @Test
     public void shouldStopAndCloseSessionOnShutdownWhenExceptionThrownOnStop() throws Exception {
         ClientSession session = mock(ClientSession.class);
 
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+        when(clientSessionFactory.createSession()).thenReturn(session);
         when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
         doThrow(new ActiveMQException("Forced")).when(session).stop();
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(mock(EventListener.class));
-        eventSource.shutDown();
+        DefaultEventMessageReceiver receiver = new DefaultEventMessageReceiver(mock(EventListener.class),
+            sessionFactory, mock(ObjectMapper.class));
+
+        ArtemisMessageSource messageSource = createEventSourceStubbedWithFactoryCreation(receiver);
+        messageSource.shutDown();
 
         // Verify that close was at least still called.
         verify(session).close();
-
-        // Verify that the client session factory was closed regardless of the exception.
-        verify(clientSessionFactory).close();
     }
 
     @Test
     public void shouldStopAndCloseSessionOnShutdownWhenExceptionThrownOnClose() throws Exception {
         ClientSession session = mock(ClientSession.class);
 
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+        when(clientSessionFactory.createSession()).thenReturn(session);
         when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
         doThrow(new ActiveMQException("Forced")).when(session).close();
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(mock(EventListener.class));
-        eventSource.shutDown();
+        DefaultEventMessageReceiver receiver = new DefaultEventMessageReceiver(mock(EventListener.class),
+            sessionFactory, mock(ObjectMapper.class));
 
-        // Verify that stop was at least still called.
-        verify(session).stop();
+        ArtemisMessageSource messageSource = createEventSourceStubbedWithFactoryCreation(receiver);
+        messageSource.shutDown();
 
-        // Verify that the client session factory was closed regardless of the exception.
-        verify(clientSessionFactory).close();
+        // Verify that close was at least still called.
+        verify(session).close();
     }
 
     @Test
     public void eventSourceDoesNothingWhenQpidStatusDoesntChange() throws Exception {
         ClientSession session = mock(ClientSession.class);
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+        when(clientSessionFactory.createSession()).thenReturn(session);
         when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
 
-        EventListener listener = mock(EventListener.class);
-        when(listener.requiresQpid()).thenReturn(true);
+        ArtemisMessageSource messageSource =
+            createEventSourceStubbedWithFactoryCreation(createQpidReceiver());
+        messageSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.DOWN);
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
-        eventSource.registerListener(listener);
-
-        eventSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.DOWN);
         // Start was called only during setup.
         verify(session, times(1)).start();
         verify(session, never()).stop();
@@ -144,17 +157,15 @@ public class EventSourceTest {
     @Test
     public void eventSourceClosesEventReceiverClientConsumerWhenQpidGoesDown() throws Exception {
         ClientSession session = mock(ClientSession.class);
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+        when(clientSessionFactory.createSession()).thenReturn(session);
 
         ClientConsumer consumer = mock(ClientConsumer.class);
         when(session.createConsumer(any(String.class))).thenReturn(consumer);
 
-        EventListener listener = mock(EventListener.class);
-        when(listener.requiresQpid()).thenReturn(true);
+        ArtemisMessageSource messageSource =
+            createEventSourceStubbedWithFactoryCreation(createQpidReceiver());
+        messageSource.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.DOWN);
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
-
-        eventSource.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.DOWN);
         // Start was called only on construction
         verify(session, times(1)).start();
         verify(consumer).close();
@@ -164,7 +175,7 @@ public class EventSourceTest {
     @Test
     public void eventSourceCreatesNewEventReceiverClientSessionWhenQpidComesUp() throws Exception {
         ClientSession session = mock(ClientSession.class);
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+        when(clientSessionFactory.createSession()).thenReturn(session);
 
         // Initially created before qpid goes down.
         ClientConsumer consumer1 = mock(ClientConsumer.class);
@@ -174,11 +185,10 @@ public class EventSourceTest {
         ClientConsumer consumer2 = mock(ClientConsumer.class);
         when(session.createConsumer(any(String.class))).thenReturn(consumer1, consumer2);
 
-        EventListener listener = mock(EventListener.class);
-        when(listener.requiresQpid()).thenReturn(true);
+        QpidEventMessageReceiver receiver = createQpidReceiver();
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
-        eventSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);
+        ArtemisMessageSource messageSource = createEventSourceStubbedWithFactoryCreation(receiver);
+        messageSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);
 
         // Start was called only during setup.
         verify(session, times(1)).start();
@@ -190,14 +200,14 @@ public class EventSourceTest {
     public void eventSourceDoesNothingWithEventReceiverClientSessionWhenListenerDoesntRequireQpid()
         throws Exception {
         ClientSession session = mock(ClientSession.class);
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(session);
+        when(clientSessionFactory.createSession()).thenReturn(session);
         when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
 
-        EventListener listener = mock(EventListener.class);
-        when(listener.requiresQpid()).thenReturn(false);
+        DefaultEventMessageReceiver receiver = new DefaultEventMessageReceiver(mock(EventListener.class),
+            sessionFactory, mock(ObjectMapper.class));
 
-        EventSource eventSource = createEventSourceStubbedWithFactoryCreation(listener);
-        eventSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);
+        ArtemisMessageSource messageSource = createEventSourceStubbedWithFactoryCreation(receiver);
+        messageSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);
 
         // Start was called only during setup.
         verify(session, times(1)).start();
@@ -205,18 +215,17 @@ public class EventSourceTest {
     }
 
     /**
-     * Creates a new EventSource with a mocked ClientSessionFactory.
+     * Creates a new ArtemisMessageSource with a mocked ClientSessionFactory.
      *
-     * @return the new EventSource
+     * @return the new ArtemisMessageSource
      */
-    private EventSource createEventSourceStubbedWithFactoryCreation(EventListener ... listeners)
+    private ArtemisMessageSource createEventSourceStubbedWithFactoryCreation(MessageReceiver ... receivers)
         throws Exception {
-        EventSourceConnection connection = createConnection();
-        EventSource source = new EventSource(connection, new ObjectMapper());
+        MessageSourceReceiverFactory receiverFactory = mock(MessageSourceReceiverFactory.class);
+        when(receiverFactory.get(eq(sessionFactory))).thenReturn(Arrays.asList(receivers));
 
-        for (EventListener listener : listeners) {
-            source.registerListener(listener);
-        }
+        ArtemisMessageSource source = new ArtemisMessageSource(sessionFactory, new ObjectMapper(),
+            receiverFactory);
 
         // Listener client sessions are not created until the source has been notified
         // that the connection can be made. Simulate this.
@@ -224,17 +233,14 @@ public class EventSourceTest {
         return source;
     }
 
-    private EventSourceConnection createConnection() {
-        return new EventSourceConnection(mock(ActiveMQStatusMonitor.class), mock(Configuration.class)) {
+    private ActiveMQSessionFactory createConnection() {
+        return new TestingActiveMQSessionFactory(clientSessionFactory, null);
+    }
 
-            @Override
-            ClientSessionFactory getFactory() {
-                this.locator = mock(ServerLocator.class);
-                this.factory = clientSessionFactory;
-                return clientSessionFactory;
-            }
-
-        };
+    private QpidEventMessageReceiver createQpidReceiver() {
+        EventListener listener = mock(EventListener.class);
+        when(listener.requiresQpid()).thenReturn(true);
+        return new QpidEventMessageReceiver(listener, this.sessionFactory, mock(ObjectMapper.class));
     }
 
 }
