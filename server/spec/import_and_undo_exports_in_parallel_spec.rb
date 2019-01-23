@@ -87,20 +87,6 @@ describe 'Import and Undo Manifest in parallel' do
     return thr
   end
 
-  def wait_for_undo_job(job)
-    r = wait_for_job(job['id'], 30) #undo_import can be still running becase is async,
-                                    #otherwise '409 Conflict - concurrent modification' can occur
-
-    status = @cp.get_job(job["id"])
-    if status["state"] != "FINISHED"
-      raise UndoImportException, "UndoImportsJob didn't finish, instead it has state = #{status['state']}"
-    end
-  end
-
-  def time_limit_on_thread_expired(thr)
-    return (thr == nil)
-  end
-
   def concurrent_undo_and_import_manifest(import_owner, iu_exporter)
     @cp.import(import_owner['key'], iu_exporter.export1_filename)
     undo_job = nil
@@ -113,6 +99,20 @@ describe 'Import and Undo Manifest in parallel' do
     thr = t1.join
 
     return thr
+  end
+
+  def wait_for_undo_job(job)
+    r = wait_for_job(job['id'], 60) #undo_import can be still running becase is async,
+    #otherwise '409 Conflict - concurrent modification' can occur
+
+    status = @cp.get_job(job["id"])
+    if status["state"] != "FINISHED"
+      raise UndoImportException, "UndoImportsJob didn't finish, instead it has state = #{status['state']}"
+    end
+  end
+
+  def time_limit_on_thread_expired(thr)
+    return (thr == nil)
   end
   # -----------------------------------------------------------
 end
