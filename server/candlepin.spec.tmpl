@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.9
+Version: 2.5.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,11 @@ fi
 
 #raw
 %changelog
+* Wed Jan 23 2019 Kevin Howell <khowell@redhat.com> 2.5.10-1
+- Updated httpclient library (mstead@redhat.com)
+- 1658289: Enter suspend mode when Qpid queue loses exchange and/or binding.
+  (mstead@redhat.com)
+
 * Tue Dec 11 2018 Kevin Howell <khowell@redhat.com> 2.5.9-1
 - Allow tomcat to read the candlepin CA cert (jturel@redhat.com)
 
