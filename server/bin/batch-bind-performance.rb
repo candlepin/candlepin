@@ -30,6 +30,7 @@ def time_rand(from = 0.0, to = Time.now)
 end
 
 def wait_for_job(job_id, timeout_seconds)
+  puts "Waiting #{timeout_seconds} seconds for a job No. #{job_id}."
   states = ['FINISHED', 'CANCELED', 'FAILED']
   wait_interval = 0.005 # seconds
   total_taken = 0
@@ -38,9 +39,11 @@ def wait_for_job(job_id, timeout_seconds)
     total_taken += wait_interval
     status = @cp.get_job(job_id)
     if states.include? status['state']
+      puts "A Job No. #{job_id} finished in time."
       return
     end
   end
+  puts "Wait timed out for a job No. #{job_id}."
 end
 
 # from http://burgestrand.se/articles/quick-and-simple-ruby-thread-pool.html

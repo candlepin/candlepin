@@ -102,7 +102,7 @@ describe 'Import and Undo Manifest in parallel' do
   end
 
   def wait_for_undo_job(job)
-    r = wait_for_job(job['id'], 60) #undo_import can be still running becase is async,
+    r = wait_for_job(job['id'], 60) #undo_import can be still running because is async,
     #otherwise '409 Conflict - concurrent modification' can occur
 
     status = @cp.get_job(job["id"])
