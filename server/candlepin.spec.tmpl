@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.12
+Version: 2.4.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,20 @@ fi
 
 #raw
 %changelog
+* Wed Jan 23 2019 Kevin Howell <khowell@redhat.com> 2.4.13-1
+- 1668454: Fix problems with CPM.deletePools with large datasets
+  (crog@redhat.com)
+- Updated httpclient library (mstead@redhat.com)
+- 1631735: Enter suspend mode when Qpid queue loses exchange and/or binding.
+  (mstead@redhat.com)
+- Increase the default message re-delivery delays (mstead@redhat.com)
+- Maintain order of messages sent to Qpid (mstead@redhat.com)
+- 1658212: Fixed Artemis resend on error to prevent lost messages
+  (mstead@redhat.com)
+- Updated the update-server-xml script for changes required in F28
+  (crog@redhat.com)
+- Upgraded postgresql-jdbc driver to the latest (mstead@redhat.com)
+
 * Thu Nov 22 2018 Michael Stead <mstead@redhat.com> 2.4.12-1
 - 
 
