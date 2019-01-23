@@ -14,6 +14,7 @@
  */
 package org.candlepin.resteasy.filter;
 
+import com.google.inject.Injector;
 import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -34,19 +35,15 @@ import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
-
-import com.google.inject.Injector;
-
 import org.xnap.commons.i18n.I18n;
 
+import javax.inject.Inject;
+import javax.inject.Provider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
 
 
 /**
@@ -132,12 +129,20 @@ public class StoreFactory {
         @Inject private OwnerCurator ownerCurator;
 
         @Override
-        public Consumer lookup(String key) {
-            if (deletedConsumerCurator.countByConsumerUuid(key) > 0) {
-                throw new GoneException(i18nProvider.get().tr("Unit {0} has been deleted", key), key);
+        public Consumer lookup(final String consumerUuid) {
+            final Consumer byUuid = consumerCurator.findByUuid(consumerUuid);
+            if (byUuid != null) {
+                return byUuid;
             }
+            if (wasDeleted(consumerUuid)) {
+                throw new GoneException(i18nProvider.get()
+                    .tr("Unit {0} has been deleted", consumerUuid), consumerUuid);
+            }
+            return null;
+        }
 
-            return consumerCurator.findByUuid(key);
+        private boolean wasDeleted(final String consumerUuid) {
+            return deletedConsumerCurator.countByConsumerUuid(consumerUuid) > 0;
         }
 
         @Override

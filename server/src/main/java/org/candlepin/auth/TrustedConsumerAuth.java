@@ -42,6 +42,7 @@ public class TrustedConsumerAuth extends ConsumerAuth {
         super(consumerCurator, ownerCurator, deletedConsumerCurator, i18nProvider);
     }
 
+    @Override
     public Principal getPrincipal(HttpRequest httpRequest) {
         ConsumerPrincipal principal = null;
 

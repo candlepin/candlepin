@@ -55,7 +55,7 @@ public class SSLAuthTest {
         this.auth = new SSLAuth(this.consumerCurator,
             this.ownerCurator,
             this.deletedConsumerCurator,
-            i18nProvider);
+            this.i18nProvider);
     }
 
     /**
@@ -115,7 +115,6 @@ public class SSLAuthTest {
         when(this.consumerCurator.findByUuid("235-8")).thenReturn(null);
         assertNull(this.auth.getPrincipal(httpRequest));
     }
-
 
     private void mockCert(String dn) {
         X509Certificate idCert =  mock(X509Certificate.class);

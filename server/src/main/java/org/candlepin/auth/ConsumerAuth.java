@@ -14,15 +14,13 @@
  */
 package org.candlepin.auth;
 
+import com.google.inject.Inject;
 import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -51,30 +49,35 @@ public abstract class ConsumerAuth implements AuthProvider {
         this.i18nProvider = i18nProvider;
     }
 
-    public ConsumerPrincipal createPrincipal(String consumerUuid) {
-        ConsumerPrincipal principal = null;
-
-        if (consumerUuid != null) {
-            // If this UUID has been deleted, return a 410.
-            if (deletedConsumerCurator.countByConsumerUuid(consumerUuid) > 0) {
-                log.debug("Key {} is deleted, throwing GoneException", consumerUuid);
-                throw new GoneException(
-                    i18nProvider.get().tr("Unit {0} has been deleted", consumerUuid), consumerUuid);
-            }
-
-            Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);
-
-            if (consumer != null) {
-                Owner owner = this.ownerCurator.findOwnerById(consumer.getOwnerId());
-                principal = new ConsumerPrincipal(consumer, owner);
-
-                if (log.isDebugEnabled() && principal != null) {
-                    log.debug("principal created for consumer {}", principal.getConsumer().getUuid());
-                }
-            }
+    /**
+     * Creates a principal according to the {@link Consumer} with the given
+     * consumerUuid.
+     *
+     * @param consumerUuid requested consumer
+     * @return created principal
+     */
+    public ConsumerPrincipal createPrincipal(final String consumerUuid) {
+        if (consumerUuid == null) {
+            return null;
         }
 
+        final Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);
+        if (consumer == null) {
+            if (wasDeleted(consumerUuid)) {
+                throw new GoneException(i18nProvider.get()
+                    .tr("Unit {0} has been deleted", consumerUuid), consumerUuid);
+            }
+            return null;
+        }
+
+        final Owner owner = this.ownerCurator.findOwnerById(consumer.getOwnerId());
+        final ConsumerPrincipal principal = new ConsumerPrincipal(consumer, owner);
+        log.debug("principal created for consumer {}", principal.getConsumer().getUuid());
         return principal;
+    }
+
+    private boolean wasDeleted(final String consumerUuid) {
+        return deletedConsumerCurator.countByConsumerUuid(consumerUuid) > 0;
     }
 
 }
