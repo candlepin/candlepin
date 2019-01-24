@@ -339,6 +339,7 @@ class AccessValveEditor(AbstractBaseEditor):
             ("directory", "/var/log/candlepin/"),
             ("prefix", "access"),
             ("rotatable", "false"),
+            ("checkExists", "true"),
             ("suffix", ".log"),
             ("pattern", '%h %l %u %t "%r" %s %b "" "%{user-agent}i sm/%{x-subscription-manager-version}i" "req_time=%T,req=%{requestUuid}r"'),
             ("resolveHosts", "false"),

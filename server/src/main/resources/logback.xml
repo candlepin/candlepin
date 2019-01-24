@@ -2,14 +2,23 @@
 <configuration>
     <contextName>candlepin</contextName>
 
+    <property name="LOG_DIR" value="/var/log/candlepin" />
+    <property name="ARCHIVED_LOG_DIR" value="${LOG_DIR}" />
+    <!--Daily rollover-->
+    <property name="ROLLING_PATTERN" value="%d{yyyy-MM-dd}" />
+    <!--Archive old logs-->
+    <property name="ROLLING_FORMAT" value="gz" />
+    <!--Keep 52 days of history-->
+    <property name="MAX_HISTORY" value="52" />
+
     <turboFilter class="org.candlepin.logging.LoggerAndMDCFilter">
         <key>orgLogLevel</key>
         <topLogger>org.candlepin</topLogger>
         <OnMatch>ACCEPT</OnMatch>
     </turboFilter>
 
-    <appender name="CandlepinAppender" class="ch.qos.logback.core.FileAppender">
-        <file>/var/log/candlepin/candlepin.log</file>
+    <appender name="CandlepinAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/candlepin.log</file>
         <encoder>
             <pattern>%d{ISO8601} [thread=%thread] [%X{requestType}=%X{requestUuid}, org=%X{org}, csid=%X{csid}] %-5p %c - %m%n</pattern>
         </encoder>
@@ -26,20 +35,50 @@
             <OnMatch>DENY</OnMatch>
         </filter>
         -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${ARCHIVED_LOG_DIR}/candlepin.log-${ROLLING_PATTERN}.${ROLLING_FORMAT}</fileNamePattern>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+        </rollingPolicy>
     </appender>
 
-    <appender name="ErrorAppender" class="ch.qos.logback.core.FileAppender">
-        <file>/var/log/candlepin/error.log</file>
+    <appender name="AUDITLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/audit.log</file>
+        <encoder>
+            <pattern>%d{ISO8601} %m</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${ARCHIVED_LOG_DIR}/audit.log-${ROLLING_PATTERN}.${ROLLING_FORMAT}</fileNamePattern>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="ErrorAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/error.log</file>
         <encoder>
             <pattern>%d{ISO8601} [thread=%thread] [%X{requestType}=%X{requestUuid}, org=%X{org}, csid=%X{csid}] %-5p %c - %m%n</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>WARN</level>
         </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${ARCHIVED_LOG_DIR}/error.log-${ROLLING_PATTERN}.${ROLLING_FORMAT}</fileNamePattern>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="SyslogAppender" class="ch.qos.logback.classic.net.SyslogAppender">
+        <syslogHost>localhost</syslogHost>
+        <facility>DAEMON</facility>
+        <suffixPattern>[%thread] %logger %msg</suffixPattern>
     </appender>
 
     <logger name="org.candlepin" level="INFO"/>
-     
+
+    <!-- Keep these messages in audit.log only-->
+    <logger name="org.candlepin.audit.LoggingListener.AuditLog" level="INFO" additivity="false">
+        <appender-ref ref="AUDITLOG" />
+    </logger>
+
     <!-- With each attempt to connect Qpid, we get a warning message: 
           Exception received while trying to verify hostname 
          We decide to silence this in logs because it shouldn't have any significance to
@@ -51,6 +90,7 @@
 
     <root level="WARN">
         <appender-ref ref="CandlepinAppender" />
+        <appender-ref ref="SyslogAppender" />
         <appender-ref ref="ErrorAppender" />
     </root>
 </configuration>

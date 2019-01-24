@@ -17,6 +17,7 @@ package org.candlepin.config;
 
 import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
@@ -36,7 +37,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Defines a map of default properties used to prepopulate the {@link Config}.
+ * Defines a map of default properties used to prepopulate the {@link Configuration}.
  * Also holds static keys for config lookup.
  */
 public class ConfigProperties {
@@ -92,7 +93,6 @@ public class ConfigProperties {
         "candlepin.audit.hornetq.monitor.interval";
 
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
-    public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     /**
      * Enables audit event filtering. See documentation of EventFilter
      */
@@ -301,7 +301,6 @@ public class ConfigProperties {
                 "org.candlepin.audit.DatabaseListener," +
                 "org.candlepin.audit.LoggingListener," +
                 "org.candlepin.audit.ActivationListener");
-            this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
             this.put(AUDIT_FILTER_ENABLED, "false");
 
             /**
