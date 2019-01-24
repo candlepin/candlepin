@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.12
+Version: 2.3.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,11 @@ fi
 
 #raw
 %changelog
+* Thu Jan 24 2019 Kevin Howell <khowell@redhat.com> 2.3.13-1
+- Updated httpclient library (mstead@redhat.com)
+- 1660532: Maintain backwards compatibility in rules for system purpose
+  (mstead@redhat.com)
+
 * Wed Dec 12 2018 Kevin Howell <khowell@redhat.com> 2.3.12-1
 - Updated the update-server-xml script for changes required in F28
   (crog@redhat.com)
