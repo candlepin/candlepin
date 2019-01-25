@@ -36,13 +36,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * DTO representation of the system purpose attributes available across the set of products belonging to an
- * owner
+ * DTO representation of the system purpose attributes available across the set of products or consumers
+ * belonging to an owner
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing the system purpose " +
-    "attributes available across the set of products belonging to an owner")
+    "attributes available across the set of products or consumers belonging to an owner")
 public class SystemPurposeAttributesDTO extends CandlepinDTO<SystemPurposeAttributesDTO> {
     private static final long serialVersionUID = 1L;
 

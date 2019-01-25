@@ -2093,6 +2093,35 @@ public class OwnerResource {
         return dto;
     }
 
+    @ApiOperation(notes = "Retrieves an aggregate of the system purpose settings of the owner's consumers",
+        value = "getConsumersSyspurpose")
+    @ApiResponses({@ApiResponse(code = 404, message = "Owner not found")})
+    @GET
+    @Path("{owner_key}/consumers_system_purpose")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SystemPurposeAttributesDTO getConsumersSyspurpose(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        Owner owner = findOwnerByKey(ownerKey);
+        List<String> consumerRoles = this.consumerCurator.getDistinctSyspurposeRolesByOwner(owner);
+        List<String> consumerUsages = this.consumerCurator.getDistinctSyspurposeUsageByOwner(owner);
+        List<String> consumerSLAs = this.consumerCurator.getDistinctSyspurposeServicelevelByOwner(owner);
+        List<String> consumerAddons = this.consumerCurator.getDistinctSyspurposeAddonsByOwner(owner);
+
+        Map<String, Set<String>> dtoMap = new HashMap<>();
+        Arrays.stream(SystemPurposeAttributeType.values())
+            .forEach(x -> dtoMap.put(x.toString(), new LinkedHashSet<>()));
+
+        dtoMap.get(SystemPurposeAttributeType.ROLES.toString()).addAll(consumerRoles);
+        dtoMap.get(SystemPurposeAttributeType.USAGE.toString()).addAll(consumerUsages);
+        dtoMap.get(SystemPurposeAttributeType.SERVICE_LEVEL.toString()).addAll(consumerSLAs);
+        dtoMap.get(SystemPurposeAttributeType.ADDONS.toString()).addAll(consumerAddons);
+
+        SystemPurposeAttributesDTO dto = new SystemPurposeAttributesDTO();
+        dto.setOwner(translator.translate(owner, OwnerDTO.class));
+        dto.setSystemPurposeAttributes(dtoMap);
+        return dto;
+    }
+
     /**
      * Creates an Ueber Entitlement Certificate
      *

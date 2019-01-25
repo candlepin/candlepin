@@ -1736,7 +1736,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testReturnSysPurposeValuesForOwner() throws Exception {
+    public void testReturnProductSysPurposeValuesForOwner() throws Exception {
         Owner owner = TestUtil.createOwner();
         OwnerCurator oc = mock(OwnerCurator.class);
         OwnerProductCurator opc = mock(OwnerProductCurator.class);
@@ -1780,4 +1780,65 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(expectedUsage, usage);
     }
 
+    @Test
+    public void testReturnConsumerSysPurposeValuesForOwner() throws Exception {
+        Owner owner = TestUtil.createOwner();
+        OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerCurator cc = mock(ConsumerCurator.class);
+
+        OwnerResource resource = new OwnerResource(oc, null, null, cc, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, this.modelTranslator
+        );
+
+        when(oc.getByKey(eq(owner.getKey()))).thenReturn(owner);
+
+        List<String> mockRoles = new ArrayList<>();
+        mockRoles.add("role1");
+        mockRoles.add("role2");
+        mockRoles.add("role3");
+
+        List<String> mockUsages = new ArrayList<>();
+        mockUsages.add("usage1");
+        mockUsages.add("usage2");
+        mockUsages.add("usage3");
+
+        List<String> mockSLAs = new ArrayList<>();
+        mockSLAs.add("sla1");
+        mockSLAs.add("sla2");
+        mockSLAs.add("sla3");
+
+        List<String> mockAddons = new ArrayList<>();
+        mockAddons.add("addon1");
+        mockAddons.add("addon2");
+        mockAddons.add("addon3");
+
+        when(cc.getDistinctSyspurposeRolesByOwner(eq(owner))).thenReturn(mockRoles);
+        when(cc.getDistinctSyspurposeServicelevelByOwner(eq(owner))).thenReturn(mockSLAs);
+        when(cc.getDistinctSyspurposeUsageByOwner(eq(owner))).thenReturn(mockUsages);
+        when(cc.getDistinctSyspurposeAddonsByOwner(eq(owner))).thenReturn(mockAddons);
+
+        SystemPurposeAttributesDTO result = resource.getConsumersSyspurpose(owner.getKey());
+
+        assertEquals(modelTranslator.translate(owner, OwnerDTO.class), result.getOwner());
+        Set<String> addons =
+            result.getSystemPurposeAttributes().get(SystemPurposeAttributeType.ADDONS.toString());
+        Set<String> expectedAddOns = new HashSet<>(Arrays.asList("addon1", "addon2", "addon3"));
+        assertEquals(expectedAddOns, addons);
+
+        Set<String> usage =
+            result.getSystemPurposeAttributes().get(SystemPurposeAttributeType.USAGE.toString());
+        Set<String> expectedUsage = new HashSet<>(Arrays.asList("usage1", "usage2", "usage3"));
+        assertEquals(expectedUsage, usage);
+
+        Set<String> roles =
+            result.getSystemPurposeAttributes().get(SystemPurposeAttributeType.ROLES.toString());
+        Set<String> expectedRoles = new HashSet<>(Arrays.asList("role1", "role2", "role3"));
+        assertEquals(expectedRoles, roles);
+
+        Set<String> serviceLevelAgreements =
+            result.getSystemPurposeAttributes().get(SystemPurposeAttributeType.SERVICE_LEVEL.toString());
+        Set<String> expectedSLAs = new HashSet<>(Arrays.asList("sla1", "sla2", "sla3"));
+        assertEquals(expectedSLAs, serviceLevelAgreements);
+    }
 }

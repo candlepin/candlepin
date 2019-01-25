@@ -339,6 +339,210 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetDistinctSyspurposeRolesByOwnerReturnsAllRoles() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        c1.setRole("role1");
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        c2.setRole("role2");
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        c3.setRole("common_role");
+        Consumer c4 = new Consumer("c3", "u1", owner, ct);
+        c3.setRole("common_role");
+
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.create(c4);
+        consumerCurator.flush();
+
+        List<String> result = consumerCurator.getDistinctSyspurposeRolesByOwner(owner);
+
+        // Make sure 'common_role' is not duplicated in the result
+        assertEquals(3, result.size());
+        assertTrue(result.contains("role1"));
+        assertTrue(result.contains("role2"));
+        assertTrue(result.contains("common_role"));
+    }
+
+    @Test
+    public void testGetDistinctSyspurposeRolesByOwnerDoesNotReturnNullOrEmpty() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        c1.setRole("role1");
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        c2.setRole("");
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        c3.setRole(null);
+
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.flush();
+
+        List<String> result = consumerCurator.getDistinctSyspurposeRolesByOwner(owner);
+
+        // Make sure the result does not contain null or empty roles.
+        assertEquals(1, result.size());
+        assertTrue(result.contains("role1"));
+        assertFalse(result.contains(""));
+        assertFalse(result.contains(null));
+    }
+
+    @Test
+    public void testGetDistinctSyspurposeUsageByOwnerReturnsAllUsages() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        c1.setUsage("usage1");
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        c2.setUsage("usage2");
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        c3.setUsage("common_usage");
+        Consumer c4 = new Consumer("c3", "u1", owner, ct);
+        c3.setUsage("common_usage");
+
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.create(c4);
+        consumerCurator.flush();
+
+        List<String> result = consumerCurator.getDistinctSyspurposeUsageByOwner(owner);
+
+        // Make sure 'common_usage' is not duplicated in the result
+        assertEquals(3, result.size());
+        assertTrue(result.contains("usage1"));
+        assertTrue(result.contains("usage2"));
+        assertTrue(result.contains("common_usage"));
+    }
+
+    @Test
+    public void testGetDistinctSyspurposeUsageByOwnerDoesNotReturnNullOrEmpty() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        c1.setUsage("usage1");
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        c2.setUsage("");
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        c3.setUsage(null);
+
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.flush();
+
+        List<String> result = consumerCurator.getDistinctSyspurposeUsageByOwner(owner);
+
+        // Make sure the result does not contain null or empty usages.
+        assertEquals(1, result.size());
+        assertTrue(result.contains("usage1"));
+        assertFalse(result.contains(""));
+        assertFalse(result.contains(null));
+    }
+
+    @Test
+    public void testGetDistinctSyspurposeServiceLevelByOwnerReturnsAllServiceLevels() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        c1.setServiceLevel("sla1");
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        c2.setServiceLevel("sla2");
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        c3.setServiceLevel("common_sla");
+        Consumer c4 = new Consumer("c3", "u1", owner, ct);
+        c3.setServiceLevel("common_sla");
+
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.create(c4);
+        consumerCurator.flush();
+
+        List<String> result = consumerCurator.getDistinctSyspurposeServicelevelByOwner(owner);
+
+        // Make sure 'common_sla' is not duplicated in the result
+        assertEquals(3, result.size());
+        assertTrue(result.contains("sla1"));
+        assertTrue(result.contains("sla2"));
+        assertTrue(result.contains("common_sla"));
+    }
+
+    @Test
+    public void testGetDistinctSyspurposeServiceLevelByOwnerDoesNotReturnNullOrEmpty() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        c1.setServiceLevel("sla1");
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        c2.setServiceLevel("");
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        c3.setServiceLevel(null);
+
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.flush();
+
+        List<String> result = consumerCurator.getDistinctSyspurposeServicelevelByOwner(owner);
+
+        // Make sure the result does not contain null or empty SLAs.
+        assertEquals(1, result.size());
+        assertTrue(result.contains("sla1"));
+        assertFalse(result.contains(""));
+        assertFalse(result.contains(null));
+    }
+
+    @Test
+    public void testGetDistinctSyspurposeAddonsByOwnerReturnsAllAddons() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        Set<String> addons = new HashSet<>();
+        addons.add("addon1");
+        c1.setAddOns(addons);
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        Set<String> addons2 = new HashSet<>();
+        addons.add("addon2");
+        addons.add("common_addon");
+        c2.setAddOns(addons2);
+        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        Set<String> addons3 = new HashSet<>();
+        addons.add("addon3");
+        addons.add("common_addon");
+        c3.setAddOns(addons3);
+
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.create(c3);
+        consumerCurator.flush();
+
+        List<String> result = consumerCurator.getDistinctSyspurposeAddonsByOwner(owner);
+
+        // Make sure 'common_addon' is not duplicated in the result
+        assertEquals(4, result.size());
+        assertTrue(result.contains("addon1"));
+        assertTrue(result.contains("addon2"));
+        assertTrue(result.contains("addon3"));
+        assertTrue(result.contains("common_addon"));
+    }
+
+    @Test
+    public void testGetDistinctSyspurposeAddonsByOwnerDoesNotReturnNullOrEmpty() {
+        Consumer c1 = new Consumer("c1", "u1", owner, ct);
+        Set<String> addons = new HashSet<>();
+        addons.add("addon1");
+        c1.setAddOns(addons);
+        Consumer c2 = new Consumer("c2", "u1", owner, ct);
+        Set<String> addons2 = new HashSet<>();
+        addons.add(null);
+        addons.add("");
+        c2.setAddOns(addons2);
+
+        consumerCurator.create(c1);
+        consumerCurator.create(c2);
+        consumerCurator.flush();
+
+        List<String> result = consumerCurator.getDistinctSyspurposeAddonsByOwner(owner);
+
+        // Make sure the result does not contain null or empty addons.
+        assertEquals(1, result.size());
+        assertTrue(result.contains("addon1"));
+        assertFalse(result.contains(""));
+        assertFalse(result.contains(null));
+    }
+
+    @Test
     public void addGuestConsumers() {
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
