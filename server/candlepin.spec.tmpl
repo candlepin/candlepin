@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.10
+Version: 2.5.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,14 @@ fi
 
 #raw
 %changelog
+* Tue Jan 29 2019 Kevin Howell <khowell@redhat.com> 2.5.11-1
+- 1670522: Unneeded guest migration call leads to exception
+  (wpoteat@redhat.com)
+- 1556932: Index to make hypervisor uuid lookup faster in Postgresql [ENT-390]
+  [2.5] (wpoteat@redhat.com)
+- 1668462: Fix problems with CPM.deletePools with large datasets
+  (crog@redhat.com)
+
 * Wed Jan 23 2019 Kevin Howell <khowell@redhat.com> 2.5.10-1
 - Updated httpclient library (mstead@redhat.com)
 - 1658289: Enter suspend mode when Qpid queue loses exchange and/or binding.
