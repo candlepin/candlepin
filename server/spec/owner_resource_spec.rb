@@ -5,6 +5,7 @@ require 'candlepin_scenarios'
 require 'rubygems'
 require 'rest_client'
 require 'time'
+require 'json'
 
 describe 'Owner Resource' do
   include CandlepinMethods
@@ -589,7 +590,7 @@ describe 'Owner Resource' do
     # output for owners, so we don't need to verify their presence.
   end
 
-  it 'accepts system purpose attributes' do
+  it 'lists system purpose attributes of its products' do
     owner_key = random_string("owner")
     @cp.create_owner(owner_key)
 
@@ -608,6 +609,51 @@ describe 'Owner Resource' do
     expect(res["systemPurposeAttributes"]["addons"]).to include("addon1")
     expect(res["systemPurposeAttributes"]["addons"]).to include("addon2")
     expect(res["systemPurposeAttributes"]["support_level"]).to include("mysla")
+  end
+
+  it 'lists system purpose attributes of its consumers' do
+    owner1_key = random_string("owner1")
+    owner1 = @cp.create_owner(owner1_key)
+
+    username1 = random_string("user1")
+    user1 = user_client(owner1, username1)
+
+    consumer1 = user1.register(random_string('consumer1'), :system, nil, {}, random_string('consumer1'), owner1_key,
+      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla1', 'common_role', 'usage1', ['addon1'])
+    consumer2 = user1.register(random_string('consumer2'), :system, nil, {}, random_string('consumer2'), owner1_key,
+      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla2', 'common_role', 'usage2', ['addon2'])
+    consumer3 = user1.register(random_string('consumer3'), :system, nil, {}, random_string('consumer3'), owner1_key,
+      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, nil, 'usage3', ['', nil])
+    consumer4 = user1.register(random_string('consumer4'), :system, nil, {}, random_string('consumer4'), owner1_key,
+      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, '', 'usage4', nil)
+
+    user1.list_owner_consumers(owner1_key).length.should == 4
+
+    res = @cp.get_owner_consumers_syspurpose(owner1_key)
+    expect(res["owner"]["key"]).to eq(owner1_key)
+    expect(res["systemPurposeAttributes"]["usage"]).to include("usage1")
+    expect(res["systemPurposeAttributes"]["usage"]).to include("usage2")
+    expect(res["systemPurposeAttributes"]["usage"]).to include("usage3")
+    expect(res["systemPurposeAttributes"]["usage"]).to include("usage4")
+
+    expect(res["systemPurposeAttributes"]["addons"]).to include("addon1")
+    expect(res["systemPurposeAttributes"]["addons"]).to include("addon2")
+    # Make sure to filter null & empty addons.
+    expect(res["systemPurposeAttributes"]["addons"]).to_not include(nil)
+    expect(res["systemPurposeAttributes"]["addons"]).to_not include("")
+
+    expect(res["systemPurposeAttributes"]["support_level"]).to include("sla1")
+    expect(res["systemPurposeAttributes"]["support_level"]).to include("sla2")
+    # Empty serviceLevel means no serviceLevel, so we have to make sure those are filtered those out.
+    expect(res["systemPurposeAttributes"]["support_level"]).to_not include("")
+
+    expect(res["systemPurposeAttributes"]["roles"]).to include("common_role")
+    # Make sure to filter null null & empty roles.
+    expect(res["systemPurposeAttributes"]["roles"]).to_not include(nil)
+    expect(res["systemPurposeAttributes"]["roles"]).to_not include("")
+    # Even though 2 consumers have both specified the 'common_role', output should be deduplicated
+    # and only include one instance of each unique value.
+    res["systemPurposeAttributes"]["roles"].length.should == 1
   end
 end
 

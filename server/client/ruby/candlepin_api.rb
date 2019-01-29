@@ -295,6 +295,10 @@ class Candlepin
     get("/owners/#{owner}/system_purpose")
   end
 
+  def get_owner_consumers_syspurpose(owner)
+    get("/owners/#{owner}/consumers_system_purpose")
+  end
+
   def get_owner_hypervisors(owner, hypervisor_ids = [])
     url = "/owners/#{owner}/hypervisors"
     params = {

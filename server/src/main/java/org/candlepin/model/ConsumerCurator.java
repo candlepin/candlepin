@@ -328,6 +328,88 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return this.cpQueryFactory.<Consumer>buildQuery();
     }
 
+    /**
+     * Fetches all unique role attribute values set by all the consumers of the specified owner.
+     *
+     * @param owner
+     *  The owner the consumers belong to.
+     * @return
+     *  A list of the all the distinct values of the role attribute that the consumers belonging to the
+     *  specified owner have set.
+     */
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<String> getDistinctSyspurposeRolesByOwner(Owner owner) {
+        return this.createSecureCriteria()
+            .add(Restrictions.eq("ownerId", owner.getId()))
+            .add(Restrictions.neOrIsNotNull("role", ""))
+            .setProjection(Projections.property("role"))
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
+            .list();
+    }
+
+    /**
+     * Fetches all unique usage attribute values set by all the consumers of the specified owner.
+     *
+     * @param owner
+     *  The owner the consumers belong to.
+     * @return
+     *  A list of the all the distinct values of the usage attribute that the consumers belonging to the
+     *  specified owner have set.
+     */
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<String> getDistinctSyspurposeUsageByOwner(Owner owner) {
+        return this.createSecureCriteria()
+            .add(Restrictions.eq("ownerId", owner.getId()))
+            .add(Restrictions.neOrIsNotNull("usage", ""))
+            .setProjection(Projections.property("usage"))
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
+            .list();
+    }
+
+    /**
+     * Fetches all unique serviceLevel attribute values set by all the consumers of the specified owner.
+     *
+     * @param owner
+     *  The owner the consumers belong to.
+     * @return
+     *  A list of the all the distinct values of the serviceLevel attribute that the consumers belonging
+     *  to the specified owner have set.
+     */
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<String> getDistinctSyspurposeServicelevelByOwner(Owner owner) {
+        return this.createSecureCriteria()
+            .add(Restrictions.eq("ownerId", owner.getId()))
+            .add(Restrictions.neOrIsNotNull("serviceLevel", ""))
+            .setProjection(Projections.property("serviceLevel"))
+            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
+            .list();
+    }
+
+    /**
+     * Fetches all unique addon attribute values set by all the consumers of the specified owner.
+     *
+     * @param owner
+     *  The owner the consumers belong to.
+     * @return
+     *  A list of the all the distinct values of the addon attribute that the consumers belonging
+     *  to the specified owner have set.
+     */
+    @SuppressWarnings("unchecked")
+    @Transactional
+    public List<String> getDistinctSyspurposeAddonsByOwner(Owner owner) {
+        String sql = "SELECT DISTINCT add_on FROM cp_sp_add_on, cp_consumer " +
+            "WHERE cp_consumer.id = cp_sp_add_on.consumer_id " +
+            "AND cp_consumer.owner_id = :ownerid " +
+            "AND add_on IS NOT NULL " +
+            "AND add_on != ''";
+        Query query = this.currentSession().createSQLQuery(sql);
+        query.setParameter("ownerid", owner.getId());
+        return query.list();
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
     public CandlepinQuery<Consumer> listByOwner(Owner owner) {
