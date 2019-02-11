@@ -141,11 +141,11 @@ public class StoreFactory {
         }
 
         @Override
-        public List<Consumer> lookup(Collection<String> keys) {
+        public Collection<Consumer> lookup(Collection<String> keys) {
             // Do not look for deleted consumers because we do not want to throw
             // an exception and reject the whole request just because one of
             // the requested items is deleted.
-            return consumerCurator.findByUuids(keys).list();
+            return consumerCurator.findByUuids(keys);
         }
 
         @Override
