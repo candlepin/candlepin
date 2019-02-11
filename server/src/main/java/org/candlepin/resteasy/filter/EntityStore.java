@@ -18,7 +18,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Persisted;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Classes implementing EntityStore are used to look up the Owner for a particular
@@ -28,6 +27,6 @@ import java.util.List;
  */
 interface EntityStore<E extends Persisted> {
     E lookup(String key);
-    List<E> lookup(Collection<String> keys);
+    Collection<E> lookup(Collection<String> keys);
     Owner getOwner(E entity);
 }
