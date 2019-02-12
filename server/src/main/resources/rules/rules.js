@@ -1,4 +1,4 @@
-// Version: 5.32
+// Version: 5.33
 
 /*
  * Default Candlepin rule set.
@@ -2627,7 +2627,7 @@ var Autobind = {
      *  - The pool's SLA is null or in the exempt list.
      *  - The pool's SLA is non-null, non-exempt, and the consumer does not have any existing entitlements.
      *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
-     *    but none of their products has an SLA.
+     *    but none of their products has an SLA or a product has an SLA and it is exempt.
      *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
      *    and at least one of them has a product with a non-null SLA that matches the pool SLA.
      *
@@ -2679,6 +2679,7 @@ var Autobind = {
                 var setOfEntitlements = productMap[productId];
                 setOfEntitlements.forEach(function(entitlement) {
                     var sla = entitlement.pool.getProductAttribute('support_level');
+                    var exempt = entitlement.pool.getProductAttribute('support_level_exempt');
                     var exists = false;
                     for (i = 0 ; i < sla_list.length ; i++) {
                         if (Utils.equalsIgnoreCase(sla_list[i], sla)) {
@@ -2687,7 +2688,7 @@ var Autobind = {
                         }
                     }
 
-                    if (!exists && sla) {
+                    if (!exists && sla  && !exempt) {
                         sla_list.push(sla);
                     }
                 });
