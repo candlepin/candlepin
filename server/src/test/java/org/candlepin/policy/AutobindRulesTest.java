@@ -2369,6 +2369,256 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(poolWithAddonOnly, 1)));
     }
 
+    /*
+     * This test demonstrates that a pool that satisfies the consumer's SLA will be selected
+     * during autoattach even if all other syspurpose attributes and the sockets, cores & ram mismatch,
+     * and that the sockets, cores & ram mismatch will not have a higher impact than the SLA match.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testShouldSelectPoolWhenSLAMatchesButOtherSysPurposeAttributesAndSocketsRamCoresMismatch() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setServiceLevel("mysla");
+        consumer.setFact("cpu.cpu_socket(s)", "1");
+        consumer.setFact("cpu.core(s)_per_socket", "1");
+        consumer.setFact("memory.memtotal", "9980456");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, "random_role", "random_addon",
+            "mysla", "random_usage");
+        prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
+        prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
+        prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Pool genericPool = TestUtil.createPool(owner, genericProduct);
+        genericPool.setId("genericPool");
+        genericPool.setQuantity(1L);
+        genericPool.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(genericPool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
+    /*
+     * This test demonstrates that a pool that satisfies the consumer's role will be selected
+     * during autoattach even if all other syspurpose attributes and the sockets, cores & ram mismatch,
+     * and that the sockets, cores & ram mismatch will not have a higher impact than the role match.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testShouldSelectPoolWhenRoleMatchesButOtherSysPurposeAttributesAndSocketsRamCoresMismatch() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("myrole");
+        consumer.setFact("cpu.cpu_socket(s)", "1");
+        consumer.setFact("cpu.core(s)_per_socket", "1");
+        consumer.setFact("memory.memtotal", "9980456");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, "myrole", "random_addon",
+            "random_sla", "random_usage");
+        prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
+        prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
+        prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Pool genericPool = TestUtil.createPool(owner, genericProduct);
+        genericPool.setId("genericPool");
+        genericPool.setQuantity(1L);
+        genericPool.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(genericPool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
+    /*
+     * This test demonstrates that a pool that satisfies the consumer's addons will be selected
+     * during autoattach even if all other syspurpose attributes and the sockets, cores & ram mismatch,
+     * and that the sockets, cores & ram mismatch will not have a higher impact than the addons match.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testShouldSelectPoolWhenAddonsMatchButOtherSysPurposeAttributesAndSocketsRamCoresMismatch() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.addAddOn("myaddon");
+        consumer.setFact("cpu.cpu_socket(s)", "1");
+        consumer.setFact("cpu.core(s)_per_socket", "1");
+        consumer.setFact("memory.memtotal", "9980456");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, "random_role", "myaddon",
+            "random_sla", "random_usage");
+        prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
+        prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
+        prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Pool genericPool = TestUtil.createPool(owner, genericProduct);
+        genericPool.setId("genericPool");
+        genericPool.setQuantity(1L);
+        genericPool.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(genericPool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
+    /*
+     * This test demonstrates that a pool that satisfies the consumer's SLA will be selected
+     * during autoattach even if all other syspurpose attributes and the vcpu & ram mismatch,
+     * and that the vcpu & ram mismatch will not have a higher impact than the SLA match.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testShouldSelectPoolWhenSLAMatchesButOtherSysPurposeAttributesAndVcpuRamMismatch() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setServiceLevel("mysla");
+        consumer.setFact("memory.memtotal", "9980456");
+        consumer.setFact("virt.is_guest", "True");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, "random_role", "random_addon",
+            "mysla", "random_usage");
+        prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
+        prodMCT1650.setAttribute(Product.Attributes.VCPU, "32");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Pool genericPool = TestUtil.createPool(owner, genericProduct);
+        genericPool.setId("genericPool");
+        genericPool.setQuantity(1L);
+        genericPool.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(genericPool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
+    /*
+     * This test demonstrates that a pool that satisfies the consumer's usage will be selected
+     * during autoattach even if it provides a role, and the consumer did not specify a role,
+     * and even if another pool benefits from not having a role specified but does not provide the usage
+     * the consumer requires.
+     *
+     * (Alternatively: The 'null rule' score on a pool, should not overpower the 'match rule' of another
+     * pool in a different syspurpose attribute.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsRoleNullRuleShouldNotOverpowerUsageMatch() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setUsage("myusage");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        // This pool will get 0 score for having a role, since the consumer did not specify one at all,
+        // but it will get a 'match score' for having the usage that the consumer has specified.
+        Product prodMCT1650 = createSysPurposeProduct(null, "another_role", null,
+            null, "myusage");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.addProvidedProduct(product69);
+        MCT1650.setQuantity(1L);
+
+        // This pool will get a 'null rule' score for not having a role specified, just as the consumer
+        // does not have a role specified.
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Pool genericPool = TestUtil.createPool(owner, genericProduct);
+        genericPool.setId("genericPool");
+        genericPool.setQuantity(1L);
+        genericPool.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(genericPool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
     @Test
     public void testFindBestWillNotCompleteAPartialStackFromAnotherId() {
         consumer.setFact("cpu.cpu_socket(s)", "8");
