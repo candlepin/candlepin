@@ -535,4 +535,87 @@ describe 'Autobind On Owner' do
     status['compliantAddOns']['provided_addon'][0]['pool']['id'].should == pool_with_addon_only.id
     status['compliantRole']['provided_role'][0]['pool']['id'].should == pool_with_role_only.id
   end
+
+  it 'sla match should have a higher impact than socket mismatch or other syspurpose mismatches on a pool' do
+    mkt_product1 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:attributes => {:support_level => 'mysla', :sockets => 2,
+                                  :roles => 'random_role', :usage => 'random_usage', :addons => 'one,two'},
+                                   :owner => owner_key})
+    mkt_product2 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:owner => owner_key})
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
+    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {"cpu.cpu_socket(s)" => 1}, nil, owner_key, [],
+        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        "mysla")
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+    entitlements[0].pool.id.should == p1.id
+  end
+
+  it 'pool with virt_only match should not overpower pool with usage match' do
+    mkt_product1 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:attributes => {:usage => 'my_usage'},
+                                   :owner => owner_key})
+    mkt_product2 = create_product(random_string('product'),
+                                  random_string('product'),
+                                 {:attributes => {:virt_only => 'True'},
+                                 :owner => owner_key})
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
+    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {"virt.is_guest" => "True"}, nil, owner_key, [],
+        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        nil, nil, "my_usage", [])
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+    entitlements[0].pool.id.should == p1.id
+  end
+
+  it 'pool with virt_only match and syspurpose mismatches should not overpower physical pools without syspurpose matches or mismatches' do
+    mkt_product1 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:owner => owner_key})
+    mkt_product2 = create_product(random_string('product'),
+                                  random_string('product'),
+                                 {:attributes => {:virt_only => 'True', :roles => "random_role", :support_level => "random_sla", :usage => "random_usage"},
+                                 :owner => owner_key})
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
+    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {"virt.is_guest" => "True"}, nil, owner_key, [],
+        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        "unsatisfied_sla", "unsatisfied_role", "unsatisfied_usage", [])
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+    entitlements[0].pool.id.should == p1.id
+  end
 end

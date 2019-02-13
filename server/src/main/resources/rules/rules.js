@@ -1,4 +1,4 @@
-// Version: 5.31
+// Version: 5.32
 
 /*
  * Default Candlepin rule set.
@@ -477,83 +477,70 @@ function get_mock_ent_for_pool(pool, consumer) {
 
 function get_pool_priority(pool, consumer) {
     log.debug("Calculating pool priority for pool " + pool.id + "...");
-    // start with a default
-    var priority = 100;
+    // start with a default large enough to make sure that if all the highest syspurpose mismatch rules get
+    // applied (5600 * -0.5 +...+ 350 * -0.5 = -2800 -1400 -700 -350 -175 = -5425), the total score will not go below zero.
+    var priority = 5450;
+    log.debug("Starting with default initial score of {}", priority);
 
-    // list of syspurpose attributes and their corresponding weights.
+    // List of syspurpose attributes and their corresponding weights: the relationship between them,
+    // and the ones of less important attributes, is such that each one of them
+    // is larger than all the other attributes below it combined
+    // (e.g. usage: 350 > requires_host+virt_only+sockets+ram+cores+vcpu: 330).
     var attrs = {
-        'products': 20,
-        'roles': 10,
-        'addons': 5,
-        'support_level': 3,
-        'usage': 1
+        'products': 5600,
+        'roles': 2800,
+        'addons': 1400,
+        'support_level': 700,
+        'usage': 350
     };
 
-    var matchesPurpose = false;
     Object.keys(attrs).forEach(function(attr) {
         var specifiedSet = consumer.retrieveConsumerSpecifiedAttributeValues(attr);
         var unsatisfiedSet = consumer.retrieveConsumerUnsatisfiedAttributeValues(attr);
         var poolSet = pool.retrievePoolAttributeValues(attr);
-        log.debug("Number of values found for attribute '" + attr + "': specifiedSet: " + specifiedSet.length + ", unsatisfiedSet: "
-            + unsatisfiedSet.length + ", poolSet: " + poolSet.length);
+        log.debug("Number of values found for attribute {}: specifiedSet: {}, unsatisfiedSet: {}, poolSet: {}",
+            attr, specifiedSet.length, unsatisfiedSet.length, poolSet.length);
 
         var attrScore = 0;
         var match_rule_score = 0;
         var null_rule_score = 0;
         var mismatch_rule_score = 0;
 
+        log.debug("Evaluating attribute {} with weight {}", attr, attrs[attr]);
         if (unsatisfiedSet.length === 0 && poolSet.length === 0) {
             null_rule_score = 0.1;
+            log.debug("NULL rule score for attribute {} and pool {}, which is: {}", attr, pool.id, null_rule_score);
         }
 
         if (unsatisfiedSet.length > 0) {
             match_rule_score = Utils.intersection(unsatisfiedSet, poolSet).length / unsatisfiedSet.length;
+            log.debug("MATCH rule score for attribute {} and pool {}, which is: {}", attr, pool.id, match_rule_score);
         }
 
         if (specifiedSet.length > 0 && poolSet.length > 0) {
             mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.5;
+            log.debug("MISMATCH rule score for attribute {} and pool {}, which is: {}", attr, pool.id, mismatch_rule_score);
         }
 
         attrScore = (null_rule_score + match_rule_score + mismatch_rule_score) * attrs[attr];
+        log.debug("Final syspurpose score for attribute {} and pool {} = {}", attr, pool.id, attrScore);
 
-        if (attrScore != 0) {
-            log.debug("evaluating " + attr + " with weight " + attrs[attr]);
-            if (null_rule_score != 0) {
-                log.debug("null rule score: " + null_rule_score);
-            }
-            if (match_rule_score != 0) {
-                log.debug("match rule score: " + match_rule_score);
-                matchesPurpose = true;
-            }
-            if (mismatch_rule_score != 0) {
-                log.debug("mismatch rule score: " + mismatch_rule_score);
-            }
-
-            log.debug("final score = " + attrScore);
-        }
         priority += attrScore;
     });
 
-    // increment to give more weightage to syspurpose fields
-    if (matchesPurpose) {
-        priority += 450;
-        log.debug("incrementing syspurpose score by 450");
-    }
+    log.debug("Current overall score is: {}", priority);
 
     // use virt only if possible
     // if the consumer is not virt, the pool will have been filtered out
     if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
         priority += 100;
+        log.debug("Increasing score by 100 for attribute: {}.", VIRT_ONLY);
     }
 
     // better still if host_specific
     if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null) {
         priority += 150;
-    }
-
-    // Decrease the priority of shared pools slightly so that non-shared pools will get consumed first.
-    if (pool.hasSharedAncestor) {
-        priority -= 10;
+        log.debug("Increasing score by 150 for attribute: {}.", REQUIRES_HOST_ATTRIBUTE);
     }
 
     /*
@@ -583,13 +570,15 @@ function get_pool_priority(pool, consumer) {
                     // We double this value so that it trumps the date comparator
                     var requirementpriority = Math.max(0, 10-(poolVal-consumerVal)-((required-1)/2)) * 2;
                     priority += requirementpriority;
+                    log.debug("Increasing score by {} (calculated) for attribute: {}", requirementpriority, attribute);
                 }
             } else {
                 priority += 20;
+                log.debug("Increasing score by 20 (default) for attribute: {}", attribute);
             }
         }
     }
-    log.debug("Final priority score: " + priority);
+    log.debug("Final overall score for pool {}: {}", pool.id, priority);
     return priority;
 }
 
@@ -2413,6 +2402,7 @@ var Autobind = {
              * Sort pools for pruning (helps us later with quantity as well)
              */
             compare_pools: function(pool0, pool1) {
+                log.debug("Running compare_pools for pools: {} and {}...", pool0.id, pool1.id);
                 var priority0 = get_pool_priority(pool0, consumer);
                 var priority1 = get_pool_priority(pool1, consumer);
 
@@ -2443,6 +2433,7 @@ var Autobind = {
              * should be used afterward to compare the group with other entitlement groups
              */
             get_average_priority: function() {
+                log.debug("Running get_average_priority...");
                 if (this.average_priority === null) {
                     var len = this.pools.length;
                     var total = 0;
@@ -2825,7 +2816,7 @@ var Autobind = {
 
     // been adding more attributes to break ties, there's probably a better way to write this at this point
     find_best_ent_group: function(all_groups, installed, role, addons) {
-        var max_provide = 0;
+        log.debug("Running find_best_ent_group...")
         var stacked = false;
         var best = null;
         var total_poolquantity = Number.MAX_VALUE;
@@ -2845,51 +2836,70 @@ var Autobind = {
             var group_poolquantity = group.get_total_quantity();
             var group_num_host_specific = group.num_host_specific();
             var group_num_virt_only = group.num_virt_only();
-
-            if (!role_needed && !addons_needed && (intersection <= 0 ||
+            log.debug("find_best_ent_group - Best Values from all processed groups until now: " +
+                "best_avg_prio: {}, total_poolquantity: {}"+
+                ", best_num_virt_only: {}, best_num_host_specific: {}",
+                best_avg_prio, total_poolquantity, best_num_virt_only, best_num_host_specific);
+            log.debug("find_best_ent_group - Current Values for group with pool: {}: group_avg_prio: {}, group_num_virt_only: {}"+
+                ", intersection: {}, role_needed: {}, addons_needed: {}, group_poolquantity: {}",
+                group.pools[0].id, group_avg_prio, group_num_virt_only, intersection, role_needed, addons_needed, group_poolquantity);
+            if ((!role_needed && !addons_needed && intersection <= 0) ||
                 (host_specific_found && group_num_host_specific < best_num_host_specific) ||
-                (virt_only_found && group_num_virt_only < best_num_virt_only))) {
+                (virt_only_found && group_num_virt_only < best_num_virt_only)) {
                 // Skip this group if we've found virt or host_specific and this group is not.
+                log.debug("find_best_ent_group - [group with pool: {}] Skip this group if we've " +
+                    "found virt or host_specific and this group is not, or if it does not satisfy any products, " +
+                     "roles or addons.", group.pools[0].id);
                 continue;
             }
 
+            log.debug("find_best_ent_group - Checking if group with pool: {} is the new best group...", group.pools[0].id);
             new_best_found = false;
             if (group_num_host_specific > best_num_host_specific) {
                 host_specific_found = true;
                 new_best_found = true;
+                log.debug("find_best_ent_group: [group with pool: {}] group_num_host_specific > best_num_host_specific", group.pools[0].id);
             }
             else if (group_num_host_specific < best_num_host_specific) {
                 new_best_found = false;
+                log.debug("find_best_ent_group: [group with pool: {}] group_num_host_specific < best_num_host_specific", group.pools[0].id);
+            }
+            else if (group_avg_prio > best_avg_prio) {
+                new_best_found = true;
+                log.debug("find_best_ent_group: [group with pool: {}] group_avg_prio > best_avg_prio", group.pools[0].id);
+            }
+            else if (group_avg_prio < best_avg_prio) {
+                new_best_found = false;
+                log.debug("find_best_ent_group: [group with pool: {}] group_avg_prio < best_avg_prio", group.pools[0].id);
             }
             else if (group_num_virt_only > best_num_virt_only) {
                 virt_only_found = true;
                 new_best_found = true;
+                log.debug("find_best_ent_group: [group with pool: {}] group_num_virt_only > best_num_virt_only", group.pools[0].id);
             }
             else if (group_num_virt_only < best_num_virt_only) {
                 new_best_found = false;
-            }
-            else if (group_avg_prio > best_avg_prio) {
-                new_best_found = true;
-            }
-            else if (group_avg_prio < best_avg_prio) {
-                new_best_found = false;
+                log.debug("find_best_ent_group: [group with pool: {}] group_num_virt_only < best_num_virt_only", group.pools[0].id);
             }
             else if (group_poolquantity < total_poolquantity) {
                 new_best_found = true;
+                log.debug("find_best_ent_group: [group with pool: {}] group_poolquantity < total_poolquantity", group.pools[0].id);
             }
             else if (group_poolquantity > total_poolquantity) {
                 new_best_found = false;
+                log.debug("find_best_ent_group: [group with pool: {}] group_poolquantity > total_poolquantity", group.pools[0].id);
             }
             else if (stacked && !group.stackable) {
                 new_best_found = true;
+                log.debug("find_best_ent_group: [group with pool: {}] stacked && !group.stackable", group.pools[0].id);
             }
             else if(role_needed || addons_needed) {
                 new_best_found = true;
+                log.debug("find_best_ent_group: [group with pool: {}] role_needed || addons_needed", group.pools[0].id);
             }
 
             if (new_best_found) {
                 stacked = group.stackable;
-                max_provide = intersection;
                 total_poolquantity = group_poolquantity;
                 best_avg_prio = group_avg_prio;
                 best = group;
@@ -2902,6 +2912,7 @@ var Autobind = {
     },
 
     get_best_entitlement_groups: function(all_groups, installed, compliance, role, addons) {
+        log.debug("Running get_best_entitlement_groups...");
         var best = [];
         var partial_stacks = [];
         for (var stack_id in compliance["partialStacks"]) {
@@ -2929,13 +2940,16 @@ var Autobind = {
         }
 
         var group = this.find_best_ent_group(all_groups, installed, role, addons);
+
         while (group != null) {
+            log.debug("get_best_entitlement_groups: New Best is group with pool: {}", group.pools[0].id);
             best.push(group);
             var prods_in_common = this.get_common_products(installed, group);
             for (var j = installed.length - 1; j >= 0; j--) {
                 var current = installed[j];
                 if (prods_in_common.indexOf(current) !== -1) {
                     installed.splice(j, 1);
+                    log.debug("get_best_entitlement_groups: Remove product we just satisfied from list of installed products...");
                 }
             }
             group.installed = prods_in_common;
@@ -2945,18 +2959,23 @@ var Autobind = {
                 var current = addons[j];
                 if (addons_in_common.indexOf(current) !== -1) {
                     addons.splice(j, 1);
+                    log.debug("get_best_entitlement_groups: Remove addon we just satisfied from list of specified addons...");
                 }
             }
             group.addons = addons_in_common;
 
             var role_in_common = this.get_common_role(role, group);
             if (role_in_common.indexOf(role) !== -1) {
+                log.debug("get_best_entitlement_groups: Remove role we just satisfied from list of specified roles...");
                 role = "";
             }
             group.roles = role_in_common;
 
+            log.debug("get_best_entitlement_groups: Will run find_best_ent_group another time...");
             group = this.find_best_ent_group(all_groups, installed, role, addons);
         }
+
+        log.debug("get_best_entitlement_groups: Returning best entitlement groups...");
         return best;
     },
 
@@ -3818,10 +3837,13 @@ var PoolType = {
 }
 
 /**
- * Namespace for determining ability to override a specific content set
- *  value
+ * Namespace for determining ability to override a specific content set value
  *
  * The list of disallowed value names are listed in this method
+ *
+ * DEPRECATED:
+ *  This functionality has been moved to ContentOverrideValidator as of Candlepin 2.5.5. This method
+ *  will no longer be called by Candlepin and is considered deprecated.
  */
 var Override = {
     get_override_context: function() {
