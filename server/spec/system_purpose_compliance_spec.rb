@@ -14,26 +14,26 @@ describe 'System purpose compliance' do
     @consumer2 = consumer_client(@user2, random_string("consumer2"))
   end
 
-  it 'should be valid for a consumer sans purpose preference' do
+  it 'should be not specified for a consumer sans purpose preference' do
       consumer = @user2.register(
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'valid'
+      status['status'].should == 'not specified'
   end
 
-  it 'should be invalid for unsatisfied role' do
+  it 'should be mismatched for unsatisfied role' do
       consumer = @user2.register(
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'unsatisfied-role', nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantRole'].should == 'unsatisfied-role'
       status.reasons.size.should == 1
       status.reasons.include?("unsatisfied role: unsatisfied-role").should == true
   end
 
-  it 'should change to valid after satisfying role' do
+  it 'should change to matched after satisfying role' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:roles => 'myrole'},
@@ -43,15 +43,16 @@ describe 'System purpose compliance' do
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'myrole', nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantRole'].include?('myrole').should == true
+
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'valid'
+      status['status'].should == 'matched'
       status['compliantRole']['myrole'][0]['pool']['id'].should == p.id
   end
 
-  it 'should be valid for any SLA when consumer has null SLA' do
+  it 'should be not specified for any SLA when consumer has null SLA' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:support_level => 'mysla'},
@@ -63,11 +64,11 @@ describe 'System purpose compliance' do
       status = @user2.get_purpose_compliance(consumer['uuid'])
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      expect(status['status']).to eq('valid')
+      expect(status['status']).to eq('not specified')
       expect(status['compliantSLA']).to be_empty
   end
 
-  it 'should be valid for any usage when consumer has null usage' do
+  it 'should be not specified for any usage when consumer has null usage' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:usage => 'myusage'},
@@ -79,11 +80,11 @@ describe 'System purpose compliance' do
       status = @user2.get_purpose_compliance(consumer['uuid'])
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      expect(status['status']).to eq('valid')
+      expect(status['status']).to eq('not specified')
       expect(status['compliantUsage']).to be_empty
   end
 
-  it 'should be valid for any role when consumer has null role' do
+  it 'should be not specified for any role when consumer has null role' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:roles => 'myrole'},
@@ -95,11 +96,11 @@ describe 'System purpose compliance' do
       status = @user2.get_purpose_compliance(consumer['uuid'])
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      expect(status['status']).to eq('valid')
+      expect(status['status']).to eq('not specified')
       expect(status['compliantRole']).to be_empty
   end
 
-  it 'should be valid for any addons when consumer has null addons' do
+  it 'should be not specified for any addons when consumer has null addons' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:addons => 'myaddon,myotheraddon'},
@@ -111,22 +112,22 @@ describe 'System purpose compliance' do
       status = @user2.get_purpose_compliance(consumer['uuid'])
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      expect(status['status']).to eq('valid')
+      expect(status['status']).to eq('not specified')
       expect(status['compliantAddOns']).to be_empty
   end
 
-  it 'should be invalid for unsatisfied usage' do
+  it 'should be mismatched for unsatisfied usage' do
       consumer = @user2.register(
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, 'taylor', nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantUsage'].should == 'taylor'
       status.reasons.size.should == 1
       status.reasons.include?("unsatisfied usage: taylor").should == true
   end
 
-  it 'should change to valid after satisfying usage' do
+  it 'should change to matched after satisfying usage' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:usage => 'myusage'},
@@ -136,20 +137,21 @@ describe 'System purpose compliance' do
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, 'myusage', nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantUsage'].include?('myusage').should == true
+
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'valid'
+      status['status'].should == 'matched'
       status['compliantUsage']['myusage'][0]['pool']['id'].should == p.id
   end
 
-  it 'should be invalid for unsatisfied add on' do
+  it 'should be mismatched for unsatisfied addon' do
       consumer = @user2.register(
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1', 'addon2'])
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantAddOns'].include?('addon1').should == true
       status['nonCompliantAddOns'].include?('addon2').should == true
       status.reasons.size.should == 2
@@ -157,7 +159,7 @@ describe 'System purpose compliance' do
       status.reasons.include?("unsatisfied add on: addon2").should == true
   end
 
-  it 'should change to valid after satisfying add ons' do
+  it 'should change to matched after satisfying all addons' do
       product1 = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:addons => "addon1"},
@@ -173,26 +175,26 @@ describe 'System purpose compliance' do
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1', 'addon2'])
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantAddOns'].include?('addon1').should == true
       status['nonCompliantAddOns'].include?('addon2').should == true
 
       @user2.consume_pool(p1.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'partial'
+      status['status'].should == 'mismatched'
       status['nonCompliantAddOns'].size.should == 1
       status['nonCompliantAddOns'].should == ['addon2']
       status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
 
       @user2.consume_pool(p2.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'valid'
+      status['status'].should == 'matched'
       status['nonCompliantAddOns'].size.should == 0
       status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
       status['compliantAddOns']['addon2'][0]['pool']['id'].should == p2.id
   end
 
-  it 'should be invalid for unsatisfied sla' do
+  it 'should be mismatched for unsatisfied sla' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:support_level => 'mysla'},
@@ -202,10 +204,10 @@ describe 'System purpose compliance' do
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, 'mysla', nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantSLA'].include?('mysla').should == true
       status.reasons.size.should == 1
-      status.reasons.include?("unsatisfied sla: mysla").should == true
+      status.reasons.include?('unsatisfied sla: mysla').should == true
 
       # should not change for another SLA
       product = create_product(random_string('product'),
@@ -215,15 +217,14 @@ describe 'System purpose compliance' do
       p = create_pool_and_subscription(@owner2['key'], product.id)
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantSLA'].include?('mysla').should == true
-      status.reasons.size.should == 2
-      status['nonPreferredSLA']['anothersla'][0]['pool']['id'].should == p.id
-      status['reasons'].include?('expected sla is mysla but pool '+p.id+' with product '+product.id+' provides SLA: anothersla').should == true
+      puts status['nonCompliantSLA']
+      status.reasons.size.should == 1
       status['reasons'].include?('unsatisfied sla: mysla').should == true
   end
 
-  it 'should change to valid after satisfying sla' do
+  it 'should change to matched after satisfying sla' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:support_level => 'mysla'},
@@ -233,15 +234,16 @@ describe 'System purpose compliance' do
           random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, 'mysla', nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantSLA'].include?('mysla').should == true
+
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'valid'
+      status['status'].should == 'matched'
       status['compliantSLA']['mysla'][0]['pool']['id'].should == p.id
   end
 
-  it 'should be partial for mixed SLAs' do
+  it 'should be matched for mixed SLAs' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:support_level => 'mysla'},
@@ -258,13 +260,12 @@ describe 'System purpose compliance' do
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       @user2.consume_pool(another_p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'partial'
+      status['status'].should == 'matched'
       status['compliantSLA']['mysla'][0]['pool']['id'].should == p.id
-      status['nonPreferredSLA']['anothersla'][0]['pool']['id'].should == another_p.id
-      status['reasons'][0].should == 'expected sla is mysla but pool '+another_p.id+' with product '+another_product.id+' provides SLA: anothersla'
+      status['reasons'].size.should == 0
   end
 
-  it 'should be partial for mixed usages' do
+  it 'should be matched for mixed usages' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:usage => 'myusage'},
@@ -281,14 +282,12 @@ describe 'System purpose compliance' do
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       @user2.consume_pool(another_p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'partial'
+      status['status'].should == 'matched'
       status['compliantUsage']['myusage'][0]['pool']['id'].should == p.id
-      status['nonPreferredUsage']['anotherusage'][0]['pool']['id'].should == another_p.id
-      status['reasons'].size.should == 1
-      status['reasons'][0].should == 'expected usage is myusage but pool '+another_p.id+' with product '+another_product.id+' provides Usage: anotherusage'
+      status['reasons'].size.should == 0
   end
 
-  it 'should change to invalid after revoking pools' do
+  it 'should change to mismatched after revoking pools' do
       product = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:usage => 'myusage'},
@@ -299,12 +298,12 @@ describe 'System purpose compliance' do
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, 'myusage', nil)
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'valid'
+      status['status'].should == 'matched'
       status['compliantUsage']['myusage'][0]['pool']['id'].should == p.id
 
       @user2.revoke_all_entitlements(consumer.uuid)
       status = @user2.get_purpose_compliance(consumer['uuid'])
-      status['status'].should == 'invalid'
+      status['status'].should == 'mismatched'
       status['nonCompliantUsage'].include?('myusage').should == true
       status['compliantUsage'].size.should == 0
   end

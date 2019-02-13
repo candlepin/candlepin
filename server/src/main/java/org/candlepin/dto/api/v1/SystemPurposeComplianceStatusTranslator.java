@@ -95,8 +95,6 @@ public class SystemPurposeComplianceStatusTranslator implements
             Map<String, Set<Entitlement>> compliantAddOns = source.getCompliantAddOns();
             Map<String, Set<Entitlement>> compliantUsage = source.getCompliantUsage();
             Map<String, Set<Entitlement>> compliantSLA = source.getCompliantSLA();
-            Map<String, Set<Entitlement>> nonPreferredSLA = source.getNonPreferredSLA();
-            Map<String, Set<Entitlement>> nonPreferredUsage = source.getNonPreferredUsage();
 
             if (compliantRole != null) {
                 compliantRole.values().forEach(entitlements::addAll);
@@ -114,14 +112,6 @@ public class SystemPurposeComplianceStatusTranslator implements
                 compliantSLA.values().forEach(entitlements::addAll);
             }
 
-            if (nonPreferredSLA != null) {
-                nonPreferredSLA.values().forEach(entitlements::addAll);
-            }
-
-            if (nonPreferredUsage != null) {
-                nonPreferredUsage.values().forEach(entitlements::addAll);
-            }
-
             // TODO: Use the bulk translation once available
             for (Entitlement entitlement : entitlements) {
                 EntitlementDTO dto = translator.translate(entitlement, EntitlementDTO.class);
@@ -136,16 +126,12 @@ public class SystemPurposeComplianceStatusTranslator implements
             destination.setCompliantAddOns(this.translateEntitlementMap(compliantAddOns, translated));
             destination.setCompliantUsage(this.translateEntitlementMap(compliantUsage, translated));
             destination.setCompliantSLA(this.translateEntitlementMap(compliantSLA, translated));
-            destination.setNonPreferredSLA(this.translateEntitlementMap(nonPreferredSLA, translated));
-            destination.setNonPreferredUsage(this.translateEntitlementMap(nonPreferredUsage, translated));
         }
         else {
             destination.setCompliantRole(null);
             destination.setCompliantAddOns(null);
             destination.setCompliantUsage(null);
             destination.setCompliantSLA(null);
-            destination.setNonPreferredSLA(null);
-            destination.setNonPreferredUsage(null);
         }
 
         return destination;
