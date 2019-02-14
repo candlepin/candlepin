@@ -21,6 +21,8 @@ import org.candlepin.async.JobManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * A basic AsyncJob implementation that we can build out to manually test the
@@ -50,7 +52,26 @@ public class TestJob1 implements AsyncJob {
     @Override
     public String execute(JobExecutionContext jdata) throws JobExecutionException {
         // TODO Finish this implementation once we work on the bits that actually execute the job.
+        log.info("TestJob1 has been started!");
+        final boolean forceFailure = jdata.getJobData().getAsBoolean("force_failure");
+        final boolean sleep = jdata.getJobData().getAsBoolean("sleep");
+        if (sleep) {
+            sleep();
+        }
+        if (forceFailure) {
+            throw new JobExecutionException("Forced failure!");
+        }
         log.info("TestJob1 has been executed!");
         return null;
+    }
+
+    private void sleep() {
+        try {
+            TimeUnit.SECONDS.sleep(10);
+        }
+        catch (Exception e) {
+            log.info("TestJob1 has been interrupted!");
+            Thread.currentThread().interrupt();
+        }
     }
 }
