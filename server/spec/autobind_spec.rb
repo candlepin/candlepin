@@ -618,4 +618,41 @@ describe 'Autobind On Owner' do
     entitlements.size.should == 1
     entitlements[0].pool.id.should == p1.id
   end
+
+  it 'should allow a consumer auto attach when SLA of current entitlement is exempt' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Standard'},
+                               :owner => owner_key})
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Layered',
+                                               :support_level_exempt => 'true'},
+                               :owner => owner_key})
+    pool1 = create_pool_and_subscription(owner_key, product1.id)
+    pool2 = create_pool_and_subscription(owner_key, product2.id)
+
+    installed = [
+        {'productId' => product1.id, 'productName' => product1['name']},
+        {'productId' => product2.id, 'productName' => product2['name']}]
+
+    consumer = @cp.register(random_string('system'), :system, nil,
+                                {}, nil, owner_key, [], installed)
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 2
+
+    entitlements.each do |ent|
+      if ent.pool['id'] == pool1.id
+        @cp.unbind_entitlement(ent.id, {:uuid => consumer.uuid})
+      end
+    end
+
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 2
+  end
 end
