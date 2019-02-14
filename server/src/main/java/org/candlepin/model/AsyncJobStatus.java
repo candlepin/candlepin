@@ -129,6 +129,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @Column(name = "job_result")
     @Type(type = "org.candlepin.hibernate.JsonSerializedDataType")
     private Object jobResult;
+    @Column(name = "job_exec_source")
+    private String jobExecSource;
 
 
     /**
@@ -543,6 +545,36 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      */
     public AsyncJobStatus setJobResult(Object resultData) {
         this.jobResult = resultData;
+        return this;
+    }
+
+    /**
+     * Fetches the execution source of this job. If the source has not yet been
+     * set, this method returns null.
+     *
+     * @return The execution source of this job status, or null if the source
+     * has not been set
+     */
+    public String getJobExecSource() {
+        return jobExecSource;
+    }
+
+    /**
+     * Sets the execution source of this job. If the source is null or empty,
+     * any existing origin will be cleared.
+     *
+     * @param execSource The execution source to set to this job status, or null
+     * to clear it
+     *
+     * @return this job status instance
+     */
+    public AsyncJobStatus setJobExecSource(final String execSource) {
+        if (execSource == null || execSource.isEmpty()) {
+            this.jobExecSource = null;
+        }
+        else {
+            this.jobExecSource = execSource;
+        }
         return this;
     }
 
