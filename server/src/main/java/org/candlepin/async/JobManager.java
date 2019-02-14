@@ -14,25 +14,27 @@
  */
 package org.candlepin.async;
 
+import com.google.inject.Injector;
+import com.google.inject.persist.UnitOfWork;
+import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.filter.LoggingFilter;
+import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
+import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
-
-import org.apache.log4j.MDC;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
+import org.slf4j.MDC;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 
 /**
@@ -40,16 +42,18 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class JobManager {
+
     private static Logger log = LoggerFactory.getLogger(JobManager.class);
 
     /** Stores our mapping of job keys to job classes */
     private static Map<String, Class<? extends AsyncJob>> jobs = new HashMap<>();
 
+    private final AsyncJobStatusCurator jobCurator;
+    private final JobMessageDispatcher dispatcher;
+    private final CandlepinRequestScope candlepinRequestScope;
+    private final PrincipalProvider principalProvider;
+    private final Injector injector;
 
-    private AsyncJobStatusCurator jobCurator;
-    private JobMessageDispatcher dispatcher;
-
-    private PrincipalProvider principalProvider;
 
 
     /**
@@ -125,18 +129,21 @@ public class JobManager {
         return jobs.get(jobKey);
     }
 
-
     /**
      * Creates a new JobManager instance
      */
     @Inject
-    public JobManager(AsyncJobStatusCurator jobCurator, JobMessageDispatcher dispatcher,
-        PrincipalProvider principalProvider) {
-
-        this.jobCurator = jobCurator;
-        this.dispatcher = dispatcher;
-
-        this.principalProvider = principalProvider;
+    public JobManager(
+        final AsyncJobStatusCurator jobCurator,
+        final JobMessageDispatcher dispatcher,
+        final PrincipalProvider principalProvider,
+        final CandlepinRequestScope scope,
+        final Injector injector) {
+        this.jobCurator = Objects.requireNonNull(jobCurator);
+        this.dispatcher = Objects.requireNonNull(dispatcher);
+        this.candlepinRequestScope = Objects.requireNonNull(scope);
+        this.principalProvider = Objects.requireNonNull(principalProvider);
+        this.injector = Objects.requireNonNull(injector);
     }
 
     /**
@@ -165,7 +172,7 @@ public class JobManager {
 
         // Add environment-specific metadata
         job.setOrigin(Util.getHostname());
-        job.setCorrelationId((String) MDC.get(LoggingFilter.CSID));
+        job.setCorrelationId(MDC.get(LoggingFilter.CSID));
 
         Principal principal = this.principalProvider.get();
         job.setPrincipal(principal != null ? principal.getName() : null);
@@ -205,7 +212,6 @@ public class JobManager {
 
         AsyncJobStatus job = this.buildJobStatus(builder);
         job.setState(JobState.CREATED);
-
 
         try {
             // Persist the job status so that the ID will be generated.
@@ -247,11 +253,86 @@ public class JobManager {
      * @return
      *  a JobStatus instance representing the job's status
      */
-    public AsyncJobStatus executeJob(JobMessage message) throws PreJobExecutionException {
-        // TODO: Finish me
-        // Temporarily set the Completed state.
-        return new AsyncJobStatus()
-                   .setState(JobState.COMPLETED);
+    public AsyncJobStatus executeJob(final JobMessage message)
+        throws PreJobExecutionException, JobExecutionException {
+        final AsyncJobStatus status = this.jobCurator.get(message.getJobId());
+        if (status == null) {
+            throw new PreJobExecutionException("JobStatus(" + message.toString() + ") was not found.");
+        }
+        if (status.getState() == JobState.CANCELED) {
+            throw new PreJobExecutionException("Job(" + message.toString() + ") was CANCELLED.");
+        }
+        final Class<? extends AsyncJob> jobClass = getJobClass(message.getJobKey());
+        candlepinRequestScope.enter();
+        final EventSink eventSink = injector.getInstance(EventSink.class);
+        final UnitOfWork uow = injector.getInstance(UnitOfWork.class);
+        uow.begin();
+        try {
+            setupLogging(status);
+            final AsyncJob job = injector.getInstance(jobClass);
+            if (job == null) {
+                throw new PreJobExecutionException("Job(" + message.toString() + ") could not be created.");
+            }
+            setRunning(message.getJobId());
+            final Object result = job.execute(status);
+            updateStatus(message.getJobId(), AsyncJobStatus.JobState.COMPLETED, result);
+            eventSink.sendEvents();
+            return status;
+        }
+        catch (Exception e) {
+            updateStatus(message.getJobId(), AsyncJobStatus.JobState.FAILED, e.getMessage());
+            eventSink.rollback();
+            throw e;
+        }
+        finally {
+            uow.end();
+            candlepinRequestScope.exit();
+        }
+    }
+
+    private void setupLogging(final AsyncJobStatus jdata) {
+        MDC.put("requestType", "job");
+        if (jdata != null) {
+            final JobDataMap map = jdata.getJobData();
+
+            String requestUuid = null;
+            String orgKey = null;
+            String orgLogLevel = null;
+
+            MDC.put(LoggingFilter.CSID, jdata.getCorrelationId());
+            if (map != null) {
+                requestUuid = map.getAsString("requestUuid");
+                // Impl note: we use the OWNER_ID map key to store the org key
+                orgKey = map.getAsString(JobStatus.OWNER_ID);
+                orgLogLevel = map.getAsString(JobStatus.OWNER_LOG_LEVEL);
+            }
+
+            if (requestUuid != null) {
+                MDC.put("requestUuid", requestUuid);
+            }
+
+            if (orgKey != null) {
+                MDC.put("org", orgKey);
+            }
+
+            if (orgLogLevel != null) {
+                MDC.put("orgLogLevel", orgLogLevel);
+            }
+        }
+    }
+
+    private void setRunning(final String jobId) {
+        final AsyncJobStatus status = this.jobCurator.get(jobId);
+        status.setJobExecSource(Util.getHostname());
+        status.setState(AsyncJobStatus.JobState.RUNNING);
+        this.jobCurator.merge(status);
+    }
+
+    private void updateStatus(final String jobId, final AsyncJobStatus.JobState state, final Object result) {
+        final AsyncJobStatus status = this.jobCurator.get(jobId);
+        status.setJobResult(result);
+        status.setState(state);
+        this.jobCurator.merge(status);
     }
 
 }
