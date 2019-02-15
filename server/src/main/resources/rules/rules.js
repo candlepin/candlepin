@@ -499,7 +499,7 @@ function get_pool_priority(pool, consumer) {
         var unsatisfiedSet = consumer.retrieveConsumerUnsatisfiedAttributeValues(attr);
         var poolSet = pool.retrievePoolAttributeValues(attr);
         log.debug("Number of values found for attribute {}: specifiedSet: {}, unsatisfiedSet: {}, poolSet: {}",
-            attr, specifiedSet.length, unsatisfiedSet.length, poolSet.length);
+            [attr, specifiedSet.length, unsatisfiedSet.length, poolSet.length]);
 
         var attrScore = 0;
         var match_rule_score = 0;
@@ -509,21 +509,21 @@ function get_pool_priority(pool, consumer) {
         log.debug("Evaluating attribute {} with weight {}", attr, attrs[attr]);
         if (unsatisfiedSet.length === 0 && poolSet.length === 0) {
             null_rule_score = 0.1;
-            log.debug("NULL rule score for attribute {} and pool {}, which is: {}", attr, pool.id, null_rule_score);
+            log.debug("NULL rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, null_rule_score]);
         }
 
         if (unsatisfiedSet.length > 0) {
             match_rule_score = Utils.intersection(unsatisfiedSet, poolSet).length / unsatisfiedSet.length;
-            log.debug("MATCH rule score for attribute {} and pool {}, which is: {}", attr, pool.id, match_rule_score);
+            log.debug("MATCH rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, match_rule_score]);
         }
 
         if (specifiedSet.length > 0 && poolSet.length > 0) {
             mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.5;
-            log.debug("MISMATCH rule score for attribute {} and pool {}, which is: {}", attr, pool.id, mismatch_rule_score);
+            log.debug("MISMATCH rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, mismatch_rule_score]);
         }
 
         attrScore = (null_rule_score + match_rule_score + mismatch_rule_score) * attrs[attr];
-        log.debug("Final syspurpose score for attribute {} and pool {} = {}", attr, pool.id, attrScore);
+        log.debug("Final syspurpose score for attribute {} and pool {} = {}", [attr, pool.id, attrScore]);
 
         priority += attrScore;
     });
@@ -2840,10 +2840,10 @@ var Autobind = {
             log.debug("find_best_ent_group - Best Values from all processed groups until now: " +
                 "best_avg_prio: {}, total_poolquantity: {}"+
                 ", best_num_virt_only: {}, best_num_host_specific: {}",
-                best_avg_prio, total_poolquantity, best_num_virt_only, best_num_host_specific);
+                [best_avg_prio, total_poolquantity, best_num_virt_only, best_num_host_specific]);
             log.debug("find_best_ent_group - Current Values for group with pool: {}: group_avg_prio: {}, group_num_virt_only: {}"+
                 ", intersection: {}, role_needed: {}, addons_needed: {}, group_poolquantity: {}",
-                group.pools[0].id, group_avg_prio, group_num_virt_only, intersection, role_needed, addons_needed, group_poolquantity);
+                [group.pools[0].id, group_avg_prio, group_num_virt_only, intersection, role_needed, addons_needed, group_poolquantity]);
             if ((!role_needed && !addons_needed && intersection <= 0) ||
                 (host_specific_found && group_num_host_specific < best_num_host_specific) ||
                 (virt_only_found && group_num_virt_only < best_num_virt_only)) {
