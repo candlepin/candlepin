@@ -30,21 +30,25 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.SQLQuery;
+import org.hibernate.LockOptions;
+import org.hibernate.LockMode;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.transform.ResultTransformer;
@@ -64,20 +68,11 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.NonUniqueResultException;
-import javax.persistence.NoResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Path;
 
 
 
@@ -885,9 +880,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         SessionImpl session = (SessionImpl) this.currentSession();
         ClassMetadata metadata = session.getSessionFactory().getClassMetadata(this.entityType);
 
-        if (metadata == null || !metadata.hasIdentifierProperty()) {
+        if (metadata == null || !metadata.hasIdentifierProperty() || !metadata.isMutable()) {
             throw new UnsupportedOperationException(
-                "lockAndLoad only supports entities with database identifiers");
+                "lockAndLoad only supports mutable entities with database identifiers");
         }
 
         return this.lockAndLoadById(this.entityType, metadata.getIdentifier(entity, session));
@@ -922,9 +917,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         final SessionImpl session = (SessionImpl) this.currentSession();
         final ClassMetadata metadata = session.getSessionFactory().getClassMetadata(this.entityType);
 
-        if (metadata == null || !metadata.hasIdentifierProperty()) {
+        if (metadata == null || !metadata.hasIdentifierProperty() || !metadata.isMutable()) {
             throw new UnsupportedOperationException(
-                "lockAndLoad only supports entities with database identifiers");
+                "lockAndLoad only supports mutable entities with database identifiers");
         }
 
         Iterable<Serializable> iterable = new Iterable<Serializable>() {
@@ -996,9 +991,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
         // Get the entity's metadata so we can ask Hibernate for the name of its identifier
         // and check if it's already in the session cache without doing a database lookup
-        if (metadata == null || !metadata.hasIdentifierProperty()) {
+        if (metadata == null || !metadata.hasIdentifierProperty() || !metadata.isMutable()) {
             throw new UnsupportedOperationException(
-                "lockAndLoad only supports entities with database identifiers");
+                "lockAndLoad only supports mutable entities with database identifiers");
         }
 
         // Fetch the entity persister and session context so we can check the session cache for an
@@ -1013,47 +1008,23 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
         if (entity == null) {
             // The entity isn't in the local session, we'll need to query for it
-
-            String idName = metadata.getIdentifierPropertyName();
-            if (idName == null) {
-                // This shouldn't happen.
-                throw new RuntimeException("Unable to fetch identifier property name");
-            }
-
-            // Impl note:
-            // We're building the query here using JPA Criteria to avoid fiddling with string
-            // building and, potentially, erroneously using the class name as the entity name.
-            // Additionally, using a query (as opposed to the .find and .load methods) lets us set
-            // the flush, cache and lock modes for the entity we're attempting to fetch.
-            CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-            CriteriaQuery<E> query = builder.createQuery(entityClass);
-            Root<E> root = query.from(entityClass);
-            Path<Serializable> target = root.<Serializable>get(idName);
-            ParameterExpression<Serializable> param = builder.parameter(Serializable.class);
-
-            query.select(root).where(builder.equal(target, param));
-
-            // Note that it's critical here to set both modes, as Hibernate is wildly inconsistent
-            // (and non-standard) in which properties it actually accepts when processing its own
-            // config objects. The cache mode combination specified below ends up being evaluated
-            // by Hibernate down to a CacheMode.REFRESH.
-            try {
-                entity = entityManager.createQuery(query)
-                    .setFlushMode(FlushModeType.COMMIT)
-                    .setHint(AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheRetrieveMode.BYPASS)
-                    .setHint(AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.REFRESH)
-                    .setLockMode(LockModeType.PESSIMISTIC_WRITE)
-                    .setParameter(param, id)
-                    .getSingleResult();
-            }
-            catch (NoResultException exception) {
-                // No entity found matching the ID. We don't define this as an error case, so we're
-                // going to silently discard the exception.
-            }
+            entity = ((Session) session).byId(entityClass)
+                .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
+                .with(CacheMode.REFRESH)
+                .load(id);
         }
         else {
-            // It's already available locally. Issue a refresh with a lock.
-            entityManager.refresh(entity, LockModeType.PESSIMISTIC_WRITE);
+            EntityEntry entry = context.getEntry(entity);
+
+            // Make sure the entry hasn't been deleted or otherwise removed.
+            if (entry.isExistsInDatabase() && entry.getStatus() != Status.DELETED &&
+                entry.getStatus() != Status.GONE) {
+
+                entityManager.refresh(entity, LockModeType.PESSIMISTIC_WRITE);
+            }
+            else {
+                entity = null; // It's not in the DB yet/anymore. Nothing to lock or refresh here.
+            }
         }
 
         return entity;
@@ -1116,9 +1087,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             SessionImpl session = (SessionImpl) this.currentSession();
             ClassMetadata metadata = session.getFactory().getClassMetadata(entityClass);
 
-            if (metadata == null || !metadata.hasIdentifierProperty()) {
+            if (metadata == null || !metadata.hasIdentifierProperty() || !metadata.isMutable()) {
                 throw new UnsupportedOperationException(
-                    "lockAndLoad only supports entities with database identifiers");
+                    "lockAndLoad only supports mutable entities with database identifiers");
             }
 
             EntityPersister persister = session.getFactory().getEntityPersister(metadata.getEntityName());
@@ -1136,7 +1107,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                     E entity = (E) context.getEntity(key);
 
                     if (entity != null) {
-                        entitySet.put(id, entity);
+                        EntityEntry entry = context.getEntry(entity);
+
+                        // Make sure the entry hasn't been deleted or otherwise removed.
+                        if (entry.isExistsInDatabase() && entry.getStatus() != Status.DELETED &&
+                            entry.getStatus() != Status.GONE) {
+
+                            entitySet.put(id, entity);
+                        }
                     }
                     else {
                         idSet.add(id);
@@ -1158,43 +1136,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 }
             }
 
-            // Build a query to fetch the remaining entities
+            // Fetch the remaining entities from the DB
             if (idSet.size() > 0) {
-                // Get the entity's metadata so we can ask Hibernate for the name of its identifier
-                String idName = metadata.getIdentifierPropertyName();
-                if (idName == null) {
-                    // This shouldn't happen.
-                    throw new RuntimeException("Unable to fetch identifier property name");
-                }
-
-                // Impl note:
-                // We're building the query here using JPA Criteria to avoid fiddling with string
-                // building and, potentially, erroneously using the class name as the entity name.
-                // Additionally, using a query (as opposed to the .find and .load methods) lets us set
-                // the flush, cache and lock modes for the entity we're attempting to fetch.
-                CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-                CriteriaQuery<E> query = builder.createQuery(entityClass);
-                Root<E> root = query.from(entityClass);
-                Path<Serializable> target = root.<Serializable>get(idName);
-                ParameterExpression<List> param = builder.parameter(List.class);
-
-                query.select(root).where(target.in(param));
-
-                // Note that it's critical here to set both modes, as Hibernate is wildly inconsistent
-                // (and non-standard) in which properties it actually accepts when processing its own
-                // config objects. The cache mode combination specified below ends up being evaluated
-                // by Hibernate down to a CacheMode.REFRESH.
-                TypedQuery<E> executable = entityManager.createQuery(query)
-                    .setFlushMode(FlushModeType.COMMIT)
-                    .setHint(AvailableSettings.SHARED_CACHE_RETRIEVE_MODE, CacheRetrieveMode.BYPASS)
-                    .setHint(AvailableSettings.SHARED_CACHE_STORE_MODE, CacheStoreMode.REFRESH)
-                    .setLockMode(LockModeType.PESSIMISTIC_WRITE);
-
-                // Step through the query in blocks
-                for (List<Serializable> block : Iterables.partition(idSet, getBatchBlockSize())) {
-                    executable.setParameter(param, block);
-                    result.addAll(executable.getResultList());
-                }
+                result.addAll(((Session) session)
+                    .byMultipleIds(this.entityType())
+                    .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
+                    .with(CacheMode.REFRESH)
+                    .enableSessionCheck(false)
+                    .multiLoad(new ArrayList(idSet)));
             }
         }
 
