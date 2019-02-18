@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.13
+Version: 2.3.14
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,15 @@ fi
 
 #raw
 %changelog
+* Mon Feb 18 2019 Kevin Howell <khowell@redhat.com> 2.3.14-1
+- Logging compatibility for older candlepins (wpoteat@redhat.com)
+- 1677338: An existing entitlement with exempt sla will block other auto
+  attaches. [ENT-1158] (wpoteat@redhat.com)
+- 1669199,1656876: Increase syspurpose impact on auto-attach
+  (nmoumoul@redhat.com)
+- 1674415: changed the possible syspurpose status states
+  (nmoumoul@redhat.com)
+
 * Thu Jan 24 2019 Kevin Howell <khowell@redhat.com> 2.3.13-1
 - Updated httpclient library (mstead@redhat.com)
 - 1660532: Maintain backwards compatibility in rules for system purpose
