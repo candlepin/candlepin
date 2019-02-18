@@ -82,6 +82,7 @@ import com.google.inject.Module;
 import com.google.inject.persist.PersistFilter;
 import com.google.inject.util.Modules;
 
+import org.hibernate.Session;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -302,6 +303,10 @@ public class DatabaseTestFixture {
 
     protected EntityManager getEntityManager() {
         return this.getEntityManagerProvider().get();
+    }
+
+    protected Session getCurrentSession() {
+        return (Session) this.getEntityManager().getDelegate();
     }
 
     /**
