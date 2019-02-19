@@ -984,7 +984,7 @@ describe 'Hypervisor Resource', :type => :virt do
     result = virtwho.hypervisor_check_in(owner['key'], hostguestmapping)
     result.should_not be_nil
 
-    test_host = user.register("test-host", :system, nil, {"system_uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+    test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
 
     @cp.list_consumers({:owner=>owner['key']}).length.should == 2
     test_host = @cp.get_consumer(test_host['uuid'])
@@ -1003,7 +1003,7 @@ describe 'Hypervisor Resource', :type => :virt do
     result_data.created.size.should == 1
     hypervisor_uuid = result_data.created[0]
 
-    test_host = user.register("test-host", :system, nil, {"system_uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+    test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
 
     @cp.list_consumers({:owner=>owner['key']}).length.should == 1
     test_host = @cp.get_consumer(test_host['uuid'])
@@ -1015,7 +1015,7 @@ describe 'Hypervisor Resource', :type => :virt do
     owner = create_owner random_string('owner')
     user = user_client(owner, random_string('user'))
 
-    test_host = user.register("test-host", :system, nil, {"system_uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+    test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
 
     virtwho = create_virtwho_client(user)
     host_hyp_id = "test-uuid"
@@ -1034,7 +1034,7 @@ describe 'Hypervisor Resource', :type => :virt do
     owner = create_owner random_string('owner')
     user = user_client(owner, random_string('user'))
 
-    test_host = user.register("test-host", :system, nil, {"system_uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+    test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
 
     host_hyp_id = "test-uuid"
     guests = ['g1', 'g2']
