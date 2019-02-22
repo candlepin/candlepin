@@ -224,12 +224,15 @@ public class OwnerManager {
         }
 
         // Lock the owner
-        owner = ownerCurator.lockAndLoad(owner);
+        Owner locked = ownerCurator.lockAndLoad(owner);
+        if (locked == null) {
+            throw new IllegalStateException("Unable to obtain exclusive lock on owner: " + owner);
+        }
 
         // Fetch the upstream list and mode
-        String upstreamList = adapter.getContentAccessModeList(owner.getKey());
-        String upstreamMode = adapter.getContentAccessMode(owner.getKey());
-        String currentMode = owner.getContentAccessMode();
+        String upstreamList = adapter.getContentAccessModeList(locked.getKey());
+        String upstreamMode = adapter.getContentAccessMode(locked.getKey());
+        String currentMode = locked.getContentAccessMode();
 
         // This shouldn't happen, but in the event our upstream source is having issues, let's
         // not put ourselves in a bad state as well.
@@ -265,18 +268,18 @@ public class OwnerManager {
         }
 
         // Set new values
-        owner.setContentAccessModeList(upstreamList);
+        locked.setContentAccessModeList(upstreamList);
 
         // If the content access mode changed, we'll need to update it and refresh the access certs
         if (!StringUtils.isEmpty(currentMode) ? !currentMode.equals(upstreamMode) :
             !StringUtils.isEmpty(upstreamMode)) {
 
-            owner.setContentAccessMode(upstreamMode);
+            locked.setContentAccessMode(upstreamMode);
 
-            ownerCurator.merge(owner);
+            ownerCurator.merge(locked);
             ownerCurator.flush();
 
-            this.refreshOwnerForContentAccess(owner);
+            this.refreshOwnerForContentAccess(locked);
         }
     }
 
@@ -289,15 +292,18 @@ public class OwnerManager {
     @Transactional
     public void refreshOwnerForContentAccess(Owner owner) {
         // we need to update the owner's consumers if the content access mode has changed
-        owner = ownerCurator.lockAndLoad(owner);
+        Owner locked = ownerCurator.lockAndLoad(owner);
+        if (locked == null) {
+            throw new IllegalStateException("Unable to obtain exclusive lock for owner: " + owner);
+        }
 
-        String cam = owner.getContentAccessMode();
+        String cam = locked.getContentAccessMode();
         if (ContentAccessCertServiceAdapter.ENTITLEMENT_ACCESS_MODE.equals(cam)) {
-            contentAccessCertCurator.deleteForOwner(owner);
+            contentAccessCertCurator.deleteForOwner(locked);
         }
 
         // removed cached versions of content access cert data
-        ownerEnvContentAccessCurator.removeAllForOwner(owner.getId());
+        ownerEnvContentAccessCurator.removeAllForOwner(locked.getId());
         ownerCurator.flush();
     }
 
