@@ -8,7 +8,6 @@ import logging
 from optparse import OptionParser
 import os
 import re
-import sys
 import zipfile
 
 import cp_connectors as cp
@@ -18,31 +17,23 @@ log = logging.getLogger('org_migrator')
 
 
 
-# def get_table_columns(table_name):
-#     columns = None
-#     cursor = None
-
-#     try:
-#         cursor = db.execQuery('SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=%s;', (table_name,))
-
-#         for row in cursor:
-#             if columns is None:
-#                 columns = []
-
-#             columns.append(row[0])
-
-#         return columns
-#     finally:
-#         if cursor is not None:
-#             cursor.close()
-
-def get_cursor_columns(cursor):
+def get_cursor_columns(db, cursor):
     if hasattr(cursor, 'column_names'):
         return cursor.column_names
     elif hasattr(cursor, 'description'):
         return [col.name for col in cursor.description]
     else:
         raise Exception('Cannot determine column names for cursor')
+
+
+def get_cursor_column_types(db, cursor):
+    if hasattr(cursor, 'column_names'):
+        return [db.get_type_as_string(col[1]) for col in cursor.description]
+    elif hasattr(cursor, 'description'):
+        return [db.get_type_as_string(col.type_code) for col in cursor.description]
+    else:
+        raise Exception('Cannot determine column types for cursor')
+
 
 def resolve_org(db, org):
     org_id = None
@@ -57,10 +48,23 @@ def resolve_org(db, org):
 
     return org_id
 
+
+def list_orgs(db):
+    orgs = []
+
+    cursor = db.execQuery("SELECT DISTINCT account FROM cp_owner");
+    for row in cursor:
+        orgs.append(row[0])
+
+    return orgs
+
+
 def jsonify(data):
     def data_converter(obj):
-        if isinstance(obj, bytearray):
+        if isinstance(obj, bytearray) or isinstance(obj, buffer):
             return binascii.b2a_base64(obj)
+        if isinstance(obj, datetime.datetime):
+            return str(obj)
 
     return json.dumps(data, default=data_converter)
 
@@ -74,6 +78,31 @@ def validate_column_names(table, columns):
         if dbobj_re.match(column) is None:
             raise Exception("Column %s.%s uses invalid characters" % (table, column))
 
+
+def boolean_converter(columns, chain=None):
+    def convert_row(col_names, row):
+        for col in columns:
+            idx = col_names.index(col)
+            row[idx] = bool(row[idx])
+
+        if callable(chain):
+            row = chain(col_names, row)
+
+        return row
+    return convert_row
+
+
+def base64_decoder(columns, chain=None):
+    def decode_row(col_names, row):
+        for col in columns:
+            idx = col_names.index(col)
+            row[idx] = binascii.a2b_base64(row[idx])
+
+        if callable(chain):
+            row = chain(row)
+
+        return row
+    return decode_row
 
 
 
@@ -105,9 +134,10 @@ class ModelManager(object):
 
     def _write_cursor_to_json(self, file, table, cursor, row_cb=None):
         output = {
-            'table':    table,
-            'columns':  get_cursor_columns(cursor),
-            'rows':     []
+            'table':        table,
+            'columns':      get_cursor_columns(self.db, cursor),
+            'column_types': get_cursor_column_types(self.db, cursor),
+            'rows':         []
         }
 
         for row in cursor:
@@ -124,7 +154,7 @@ class ModelManager(object):
         self._write_cursor_to_json(file, table, cursor)
         cursor.close()
 
-    def _bulk_insert(self, table, columns, rows, decode=[]):
+    def _bulk_insert(self, table, columns, rows, row_hook=None):
         log.debug('Importing %d rows into table: %s', len(rows), table)
         pblock = ', '.join(['%s'] * len(columns))
 
@@ -133,34 +163,25 @@ class ModelManager(object):
 
         # TODO: optimize this so we can do like 10-25 rows at a time, rather than just one
 
-        decode_idx = []
+        # try:
+        cursor = self.db.cursor()
 
-        if len(decode) > 0:
-            for col in decode:
-                decode_idx.append(columns.index(col))
+        for row in rows:
+            if callable(row_hook):
+                row = row_hook(columns, row)
 
-        try:
-            cursor = self.db.cursor()
+            cursor.execute(query, row)
 
-            for row in rows:
-                # Decode binary rows as necessary
-                if len(decode_idx) > 0:
-                    for (idx, col) in enumerate(row):
-                        if idx in decode_idx:
-                            row[idx] = binascii.a2b_base64(col)
+        cursor.close()
 
-                cursor.execute(query, row)
+        return True
+        # TODO: Uncomment this if we figure out a sane way to get Python to not hide the original
+        # stack trace
+        # except Exception as e:
+        #     self.db.rollback()
+        #     raise e
 
-            cursor.close()
-
-            self.db.commit()
-            return True
-        except Exception as e:
-            self.db.rollback()
-            raise e
-
-
-    def _import_json(self, file, decode=[]):
+    def _import_json(self, file, row_hook=None):
         log.debug('Importing data from file: %s', file)
         result = False
 
@@ -175,7 +196,7 @@ class ModelManager(object):
 
             if type(data.get('rows')) == list:
                 if len(data.get('rows')) > 0:
-                    result = self._bulk_insert(data['table'], data['columns'], data['rows'], decode)
+                    result = self._bulk_insert(data['table'], data['columns'], data['rows'], row_hook)
                 else:
                     result = True
 
@@ -183,7 +204,6 @@ class ModelManager(object):
             log.error('Unable to import JSON from file: %s', file)
 
         return result
-
 
 
 
@@ -210,6 +230,7 @@ class OwnerManager(ModelManager):
         return result
 
 
+
 class UeberCertManager(ModelManager):
     def __init__(self, org_id, archive, db):
         super(UeberCertManager, self).__init__(org_id, archive, db)
@@ -232,7 +253,7 @@ class UeberCertManager(ModelManager):
             return True
 
         result = self._import_json('cp_cert_serial-ueber.json')
-        result = result and self._import_json('cp_ueber_cert.json', ['cert', 'privatekey'])
+        result = result and self._import_json('cp_ueber_cert.json', base64_decoder(['cert', 'privatekey']))
 
         # Impl note:
         # cert tables that reference their parent object are imported by those managers
@@ -299,8 +320,8 @@ class ProductManager(ModelManager):
 
         result = self._import_json('cp2_products.json')
         result = result and self._import_json('cp2_product_attributes.json')
-        result = result and self._import_json('cp2_product_certificates.json', ['cert', 'privatekey'])
-        result = result and self._import_json('cp2_product_content.json')
+        result = result and self._import_json('cp2_product_certificates.json', base64_decoder(['cert', 'privatekey']))
+        result = result and self._import_json('cp2_product_content.json', boolean_converter(['enabled']))
         result = result and self._import_json('cp2_owner_products.json')
 
         self._imported = result
@@ -388,15 +409,15 @@ class ConsumerManager(ModelManager):
 
         result = self._import_consumer_types('cp_consumer_type.json')
 
-        result = result and self._import_json('cp_cert_serial-cac.json')
-        result = result and self._import_json('cp_cont_access_cert.json', ['cert', 'privatekey'])
-        result = result and self._import_json('cp_cert_serial-ic.json')
-        result = result and self._import_json('cp_id_cert-local.json', ['cert', 'privatekey'])
-        result = result and self._import_json('cp_cert_serial-uc.json')
-        result = result and self._import_json('cp_id_cert-upstream.json', ['cert', 'privatekey'])
-        result = result and self._import_json('cp_key_pair.json', ['publickey', 'privatekey'])
+        result = result and self._import_json('cp_cert_serial-cac.json', boolean_converter(['collected', 'revoked']))
+        result = result and self._import_json('cp_cont_access_cert.json', base64_decoder(['cert', 'privatekey']))
+        result = result and self._import_json('cp_cert_serial-ic.json', boolean_converter(['collected', 'revoked']))
+        result = result and self._import_json('cp_id_cert-local.json', base64_decoder(['cert', 'privatekey']))
+        result = result and self._import_json('cp_cert_serial-uc.json', boolean_converter(['collected', 'revoked']))
+        result = result and self._import_json('cp_id_cert-upstream.json', base64_decoder(['cert', 'privatekey']))
+        result = result and self._import_json('cp_key_pair.json', base64_decoder(['publickey', 'privatekey']))
 
-        result = result and self._import_json('cp_consumer.json')
+        result = result and self._import_json('cp_consumer.json', boolean_converter(['autoheal']))
         result = result and self._import_json('cp_consumer_capability.json')
         result = result and self._import_json('cp_consumer_content_tags.json')
         result = result and self._import_json('cp_consumer_facts.json')
@@ -479,14 +500,11 @@ class ConsumerManager(ModelManager):
                     rowcount = self.db.execUpdate(insert_stmt, row)
                     inserted = inserted + rowcount
 
-            self.db.commit()
-
             log.debug("Consumer types committed, %d updated, %d inserted", updated, inserted)
             return True
         except Exception as e:
             self.db.rollback()
             raise e
-
 
 
 
@@ -530,8 +548,6 @@ class PoolManager(ModelManager):
             if len(eids) < 1:
                 return
 
-            eids = eids
-
             pids = []
             rows = []
             columns = None
@@ -542,15 +558,16 @@ class PoolManager(ModelManager):
 
                 pblock = ', '.join(['%s'] * len(block))
                 cursor = self.db.execQuery('SELECT e.* FROM cp_pool p WHERE p.sourceentitlement_id IN (' + pblock + ') ORDER BY created ASC', block)
-                columns = get_cursor_columns(cursor)
+                columns = get_cursor_columns(self.db, cursor)
+                column_types = get_cursor_column_types(self.db, cursor)
                 rows = rows + list(cursor)
                 cursor.close()
 
-
             output = {
-                'table':    'cp_pool',
-                'columns':  columns,
-                'rows':     rows
+                'table':        'cp_pool',
+                'columns':      columns,
+                'column_types': column_types,
+                'rows':         rows
             }
 
             self.archive.writestr("cp_pool-%d.json" % (depth,), jsonify(output))
@@ -559,8 +576,6 @@ class PoolManager(ModelManager):
         def fetch_entitlements(pids, depth=0):
             if len(pids) < 1:
                 return
-
-            pids = pids
 
             eids = []
             rows = []
@@ -572,14 +587,16 @@ class PoolManager(ModelManager):
 
                 pblock = ', '.join(['%s'] * len(block))
                 cursor = self.db.execQuery('SELECT e.* FROM cp_entitlement e WHERE e.pool_id IN (' + pblock + ') ORDER BY created ASC', block)
-                columns = get_cursor_columns(cursor)
+                columns = get_cursor_columns(self.db, cursor)
+                column_types = get_cursor_column_types(self.db, cursor)
                 rows = rows + list(cursor)
                 cursor.close()
 
             output = {
-                'table':    'cp_entitlement',
-                'columns':  columns,
-                'rows':     rows
+                'table':        'cp_entitlement',
+                'columns':      columns,
+                'column_types': column_types,
+                'rows':         rows
             }
 
             self.archive.writestr("cp_entitlement-%d.json" % (depth,), jsonify(output))
@@ -616,20 +633,20 @@ class PoolManager(ModelManager):
         if self.imported:
             return True
 
-        result = self._import_json('cp_cert_serial-cdn.json')
-        result = result and self._import_json('cp_cdn_certificate.json')
+        result = self._import_json('cp_cert_serial-cdn.json', boolean_converter(['collected', 'revoked']))
+        result = result and self._import_json('cp_cdn_certificate.json', base64_decoder(['cert', 'privatekey']))
         result = result and self._import_json('cp_cdn.json')
         result = result and self._import_json('cp_branding.json')
-        result = result and self._import_json('cp_cert_serial-pool.json')
-        result = result and self._import_json('cp_certificate.json')
+        result = result and self._import_json('cp_cert_serial-pool.json', boolean_converter(['collected', 'revoked']))
+        result = result and self._import_json('cp_certificate.json', base64_decoder(['cert', 'privatekey']))
 
         try:
             # do iterative pool/entitlement import until we hit a key error, indicating we're out of
             # files to import
             depth = 0
             while True:
-                result = result and self._import_json("cp_pool-%d.json" % (depth,))
-                result = result and self._import_json("cp_entitlement-%d.json" % (depth,))
+                result = result and self._import_json("cp_pool-%d.json" % (depth,), boolean_converter(['activesubscription']))
+                result = result and self._import_json("cp_entitlement-%d.json" % (depth,), boolean_converter(['dirty', 'updatedonstart']))
 
                 depth = depth + 1
         except KeyError:
@@ -642,8 +659,8 @@ class PoolManager(ModelManager):
         result = result and self._import_json('cp2_pool_derprov_products.json')
         result = result and self._import_json('cp2_pool_source_sub.json')
         result = result and self._import_json('cp_product_pool_attribute.json')
-        result = result and self._import_json('cp_cert_serial-ent.json')
-        result = result and self._import_json('cp_ent_certificate.json')
+        result = result and self._import_json('cp_cert_serial-ent.json', boolean_converter(['collected', 'revoked']))
+        result = result and self._import_json('cp_ent_certificate.json', base64_decoder(['cert', 'privatekey']))
 
         self._imported = result
         return result
@@ -708,6 +725,7 @@ class OrgMigrator(object):
         raise NotImplementedError("Not yet implemented")
 
 
+
 class OrgExporter(OrgMigrator):
     def __init__(self, dbconn, archive_file, org_id):
         archive = zipfile.ZipFile(archive_file, mode='w', compression=zipfile.ZIP_DEFLATED)
@@ -717,7 +735,6 @@ class OrgExporter(OrgMigrator):
     def execute(self):
         # Impl note:
         # Order doesn't matter for export, so we can just run through the list once
-
         for task in self.workers:
             exporter = self._get_model_exporter(task)
 
@@ -729,14 +746,18 @@ class OrgExporter(OrgMigrator):
                     return False
 
                 log.info('Export task completed: %s', task.__name__)
+            else:
+                log.debug('Skipping redundant export task: %s', task.__name__)
 
         return True
 
+
+
 class OrgImporter(OrgMigrator):
-    def __init__(self, dbconn, archive_file, org_id):
+    def __init__(self, dbconn, archive_file):
         archive = zipfile.ZipFile(archive_file, 'r')
 
-        super(OrgImporter, self).__init__(dbconn, archive, org_id)
+        super(OrgImporter, self).__init__(dbconn, archive, None)
 
     def execute(self):
         return self._import_impl(self.workers)
@@ -763,12 +784,9 @@ class OrgImporter(OrgMigrator):
 
                 log.info('Import task completed: %s', task.__name__)
             else:
-                log.debug('Skipping import task: %s', task.__name__)
+                log.debug('Skipping redundant import task: %s', task.__name__)
 
         return True
-
-
-
 
 
 
@@ -778,45 +796,41 @@ def parse_options():
     parser = OptionParser(usage=usage)
 
     parser.add_option("--debug", action="store_true", default=False,
-            help="Enables debug output")
+        help="Enables debug output")
 
     parser.add_option("--dbtype", action="store", default='postgresql',
-            help="The type of database to target. Can target MySQL, MariaDB or PostgreSQL; defaults to PostgreSQL")
+        help="The type of database to target. Can target MySQL, MariaDB or PostgreSQL; defaults to PostgreSQL")
     parser.add_option("--username", action="store", default='candlepin',
-            help="The username to use when connecting to the database; defaults to 'candlepin'")
+        help="The username to use when connecting to the database; defaults to 'candlepin'")
     parser.add_option("--password", action="store", default='',
-            help="The password to use when connecting to the database")
+        help="The password to use when connecting to the database")
     parser.add_option("--host", action="store", default='localhost',
-            help="The hostname/address of the database server; defaults to 'localhost'")
+        help="The hostname/address of the database server; defaults to 'localhost'")
     parser.add_option("--port", action="store", default=None,
-            help="The port to use when connecting to the database server")
+        help="The port to use when connecting to the database server")
     parser.add_option("--db", action="store", default='candlepin',
-            help="The database to use; defaults to 'candlepin'")
+        help="The database to use; defaults to 'candlepin'")
     parser.add_option("--file", action="store", default='export.zip',
-            help="The name of the file to export to or import from; defaults to 'export.zip''")
+        help="The name of the file to export to or import from; defaults to 'export.zip'")
 
     parser.add_option("--import", dest='act_import', action="store_true", default=False,
-            help="Sets the operating mode to IMPORT; cannot be used with --export")
+        help="Sets the operating mode to IMPORT; cannot be used with --export or --list")
     parser.add_option("--export", dest='act_export', action="store_true", default=False,
-            help="Sets the operating mode to EXPORT; cannot be used with --import")
+        help="Sets the operating mode to EXPORT; cannot be used with --import or --list")
+    parser.add_option("--list", dest="act_list", action="store_true", default=False,
+        help="Sets the operating mode to LIST; cannot be used with --import or --export")
 
-    parser.add_option("--tomcat-version", action="store", default=None, type=str, dest="tc_version",
-            help="specify a Tomcat version to target")
 
     (options, args) = parser.parse_args()
 
-    # if options.help:
-    #     parser.print_usage()
-    #     sys.exit(0)
+    if not options.act_import and not options.act_export and not options.act_list:
+        parser.error("One of --import, --export, or --list must be specified")
 
-    if len(args) < 1:
-        parser.error("Must provide an organization to import or export")
+    if not (options.act_import ^ options.act_export ^ options.act_list) or (options.act_import and options.act_export and options.act_list):
+        parser.error("Only one of --import, --export, and --list may be specified in a given command")
 
-    if options.act_import and options.act_export:
-        parser.error("--import and --export cannot be specified in the same command")
-
-    if not options.act_import and not options.act_export:
-        parser.error("One of --import or --export must be specified")
+    if len(args) < 1 and options.act_export:
+        parser.error("Must provide an organization to export")
 
     return (options, args)
 
@@ -827,33 +841,61 @@ def main():
 
     if options.debug:
         log.setLevel(logging.DEBUG)
+        cp.set_log_level(logging.DEBUG)
 
     db = None
 
     try:
         db = cp.get_db_connector(options.dbtype, options.host, options.port, options.username, options.password, options.db)
-        log.info('Using backend: %s', db.backend())
-
-        org_id = resolve_org(db, args[0])
-        log.info('Resolved org "%s" to org ID: %s', args[0], org_id)
+        log.info('Using database: %s @ %s', db.backend(), options.host)
 
         if options.act_import:
-            importer = OrgImporter(db, options.file, org_id)
+            # Use the provided argument if the --file is still default
+            if options.file == 'export.zip' and len(args) > 0:
+                options.file = args[0]
+
+            # Verify the file exists (as a file) and can be read so we can kick out a cleaner
+            # error message than a spooky exception
+            if not os.access(options.file, os.R_OK) or not os.path.isfile(options.file):
+                log.error("File does not exist or cannot be read: %s", options.file)
+                return
+
+            importer = OrgImporter(db, options.file)
 
             log.info('Importing data from file: %s', options.file)
-            importer.execute()
+            with(db.start_transaction(readonly=False)) as transaction:
+                if importer.execute():
+                    transaction.commit()
+                    log.info('Task complete! Shutting down...')
+                else:
+                    transaction.rollback()
+                    log.error("Import task failed. Shutting down...")
 
         elif options.act_export:
-            exporter = OrgExporter(db, options.file, org_id)
+            org_id = resolve_org(db, args[0])
 
-            log.info('Exporting data to file: %s', options.file)
-            exporter.execute()
+            if org_id is not None:
+                log.info('Resolved org "%s" to org ID: %s', args[0], org_id)
 
-        log.info('Task complete! Shutting down...')
+                exporter = OrgExporter(db, options.file, org_id)
+
+                log.info('Exporting data to file: %s', options.file)
+                with(db.start_transaction(readonly=True)) as transaction:
+                    if exporter.execute():
+                        transaction.commit()
+                        log.info('Task complete! Shutting down...')
+                    else:
+                        transaction.rollback()
+                        log.error("Import task failed. Shutting down...")
+            else:
+                log.error("No such org: %s", args[0])
+
+        elif options.act_list:
+            print "Available orgs: %s" % (list_orgs(db))
+
     finally:
         if db is not None:
             db.close()
-
 
 
 if __name__ == "__main__":
