@@ -143,7 +143,7 @@ describe 'Autobind On Owner' do
         random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1'])
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantAddOns'].include?('addon1').should == true
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -151,7 +151,7 @@ describe 'Autobind On Owner' do
     entitlements.size.should == 2
     # print ("entitlements: " + entitlements.inspect())
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'valid'
+    status['status'].should == 'matched'
     status['nonCompliantAddOns'].size.should == 0
     status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
   end
@@ -174,7 +174,7 @@ describe 'Autobind On Owner' do
         random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'role1', nil, [])
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantRole'].include?('role1').should == true
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -182,7 +182,7 @@ describe 'Autobind On Owner' do
     entitlements.size.should == 2
     # print ("entitlements: " + entitlements.inspect())
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'valid'
+    status['status'].should == 'matched'
     status['nonCompliantRole'].should be_nil
     status['compliantRole']['role1'][0]['pool']['id'].should == p1.id
   end
@@ -208,7 +208,7 @@ describe 'Autobind On Owner' do
         random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'role1', nil, [])
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantRole'].include?('role1').should == true
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -216,7 +216,7 @@ describe 'Autobind On Owner' do
     entitlements.size.should == 1
     # print ("entitlements: " + entitlements.inspect())
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'valid'
+    status['status'].should == 'matched'
     status['nonCompliantRole'].should be_nil
     status['compliantRole']['role1'][0]['pool']['id'].should == p1.id
   end
@@ -242,7 +242,7 @@ describe 'Autobind On Owner' do
         random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1'])
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantAddOns'].include?('addon1').should == true
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -250,7 +250,7 @@ describe 'Autobind On Owner' do
     entitlements.size.should == 1
     # print ("entitlements: " + entitlements.inspect())
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'valid'
+    status['status'].should == 'matched'
     status['nonCompliantAddOns'].size.should == 0
     status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
   end
@@ -274,7 +274,7 @@ describe 'Autobind On Owner' do
         random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1','addon2'])
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantAddOns'].include?('addon1').should == true
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -282,7 +282,7 @@ describe 'Autobind On Owner' do
     entitlements.size.should == 2
     # print ("entitlements: " + entitlements.inspect())
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'valid'
+    status['status'].should == 'matched'
     status['nonCompliantAddOns'].size.should == 0
     status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
     status['compliantAddOns']['addon2'][0]['pool']['id'].should == p2.id
@@ -309,7 +309,7 @@ describe 'Autobind On Owner' do
         random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, "my_usage", [])
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantUsage'].include?('my_usage').should == true
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -318,7 +318,7 @@ describe 'Autobind On Owner' do
     entitlements[0].pool.id.should == p1.id
 
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'valid'
+    status['status'].should == 'matched'
     status['nonCompliantUsage'].should be_nil
     status['compliantUsage']['my_usage'][0]['pool']['id'].should == p1.id
   end
@@ -342,7 +342,7 @@ describe 'Autobind On Owner' do
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, "provided_role", nil, [])
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantRole'].include?('provided_role').should == true
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -351,7 +351,7 @@ describe 'Autobind On Owner' do
     entitlements[0].pool.id.should == p1.id
 
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'valid'
+    status['status'].should == 'matched'
     status['nonCompliantRole'].should be_nil
     status['compliantRole']['provided_role'][0]['pool']['id'].should == p1.id
   end
@@ -375,7 +375,7 @@ describe 'Autobind On Owner' do
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ["provided_addon", "random_addon"])
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantAddOns'].include?('provided_addon').should == true
     status['nonCompliantAddOns'].include?('random_addon').should == true
 
@@ -385,7 +385,7 @@ describe 'Autobind On Owner' do
     entitlements[0].pool.id.should == p1.id
 
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'partial'
+    status['status'].should == 'mismatched'
     status['nonCompliantAddOns'].include?('random_addon').should == true
     status['compliantAddOns']['provided_addon'][0]['pool']['id'].should == p1.id
   end
@@ -409,7 +409,7 @@ describe 'Autobind On Owner' do
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, "provided_usage", [])
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantUsage'].include?('provided_usage').should == true
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -417,7 +417,7 @@ describe 'Autobind On Owner' do
     entitlements.size.should == 0
 
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantUsage'].include?('provided_usage').should == true
   end
 
@@ -440,7 +440,7 @@ describe 'Autobind On Owner' do
         nil, [], nil, nil, nil, nil, nil, 0, nil, "provided_sla", nil, nil, [])
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantSLA'].include?('provided_sla').should == true
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -448,7 +448,7 @@ describe 'Autobind On Owner' do
     entitlements.size.should == 0
 
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantSLA'].include?('provided_sla').should == true
   end
 
@@ -497,7 +497,7 @@ describe 'Autobind On Owner' do
             "provided_sla", "provided_role", "provided_usage", ["provided_addon", "another_addon"])
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantSLA'].include?('provided_sla').should == true
     status['nonCompliantUsage'].include?('provided_usage').should == true
     status['nonCompliantRole'].include?('provided_role').should == true
@@ -527,7 +527,7 @@ describe 'Autobind On Owner' do
     end
 
     status = @cp.get_purpose_compliance(consumer.uuid)
-    status['status'].should == 'invalid'
+    status['status'].should == 'mismatched'
     status['nonCompliantSLA'].include?('provided_sla').should == true
     status['nonCompliantUsage'].include?('provided_usage').should == true
     status['nonCompliantAddOns'].include?('another_addon').should == true
