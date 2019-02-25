@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.11
+Version: 2.5.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,12 @@ fi
 
 #raw
 %changelog
+* Mon Feb 25 2019 Kevin Howell <khowell@redhat.com> 2.5.12-1
+- 1679289: Addressed issues surrounding locking with unmanaged entities
+  (crog@redhat.com)
+- 1674419: changed the possible syspurpose status states
+  (nmoumoul@redhat.com)
+
 * Tue Jan 29 2019 Kevin Howell <khowell@redhat.com> 2.5.11-1
 - 1670522: Unneeded guest migration call leads to exception
   (wpoteat@redhat.com)
