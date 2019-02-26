@@ -13,13 +13,9 @@
  * in this software or its documentation.
  */
 package org.candlepin.model;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -43,6 +39,7 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -176,8 +173,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     private Consumer createConsumerAndBindItToProduct(Owner o, Product product, String subId) {
         Consumer c = createConsumer(o);
-        Pool p = createPool(o, product, 1L, subId,
-            "subsSubKey", Util.yesterday(), Util.tomorrow());
+        Pool p = createPool(o, product, 1L, subId, "subsSubKey", Util.yesterday(), Util.tomorrow());
         createEntitlement(o, c, p, null);
         return c;
     }
@@ -212,7 +208,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertTrue(expected.isEmpty());
 
         List<String> cids = Arrays.asList("c1", "c2", "c3");
-        List<Consumer> actual = consumerCurator.getConsumers(cids).list();
+        Collection<Consumer> actual = consumerCurator.getConsumers(cids);
         assertTrue(actual.isEmpty());
     }
 
@@ -233,7 +229,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertTrue(expected.contains(c3));
 
         List<String> cids = Arrays.asList(c1.getId(), c2.getId(), c3.getId());
-        List<Consumer> actual = consumerCurator.getConsumers(cids).list();
+        Collection<Consumer> actual = consumerCurator.getConsumers(cids);
         assertEquals(3, actual.size());
         assertTrue(actual.contains(c1));
         assertTrue(actual.contains(c2));
@@ -263,7 +259,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertTrue(expected.contains(c5));
 
         List<String> cids = Arrays.asList(c1.getId(), c3.getId(), c5.getId());
-        List<Consumer> actual = consumerCurator.getConsumers(cids).list();
+        Collection<Consumer> actual = consumerCurator.getConsumers(cids);
         assertEquals(3, actual.size());
         assertTrue(actual.contains(c1));
         assertTrue(actual.contains(c3));
@@ -273,7 +269,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetConsumersFetchLessThanRequested() {
+    public void testGetConsumersFetchFewerThanRequested() {
         Consumer c1 = new Consumer("c1", "u1", owner, ct);
         Consumer c2 = new Consumer("c2", "u1", owner, ct);
         Consumer c3 = new Consumer("c3", "u1", owner, ct);
@@ -289,7 +285,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertTrue(expected.contains(c3));
 
         List<String> cids = Arrays.asList(c1.getId(), c2.getId(), c3.getId(), "c4", "c5");
-        List<Consumer> actual = consumerCurator.getConsumers(cids).list();
+        Collection<Consumer> actual = consumerCurator.getConsumers(cids);
         assertEquals(3, actual.size());
         assertTrue(actual.contains(c1));
         assertTrue(actual.contains(c2));
@@ -312,8 +308,53 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertTrue(expected.contains(c2));
         assertTrue(expected.contains(c3));
 
-        List<Consumer> actual = consumerCurator.getConsumers(null).list();
+        Collection<Consumer> actual = consumerCurator.getConsumers(null);
         assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void testGetConsumerInputPartioning() {
+        int partitionBlockSize = 5;
+
+        ConsumerCurator curator = Mockito.spy(consumerCurator);
+        when(curator.getInBlockSize()).thenReturn(partitionBlockSize);
+
+        Map<String, Consumer> consumers = new HashMap<>();
+
+        // Create a pile of consumers
+        for (int i = 0; i < partitionBlockSize * 5; ++i) {
+            Consumer consumer = new Consumer("consumer-" + i, "user-" + i, owner, ct);
+            consumer.setUuid("uuid-" + i);
+
+            curator.create(consumer);
+
+            consumers.put(consumer.getUuid(), consumer);
+        }
+
+        curator.flush();
+
+        Set<String> input = new HashSet<>();
+        Set<Consumer> expected = new HashSet<>();
+        for (int i = 0; i < partitionBlockSize * 10; ++i) {
+            Consumer consumer = consumers.get("uuid-" + i);
+
+            if (consumer != null) {
+                expected.add(consumer);
+                input.add(consumer.getId());
+            }
+            else {
+                input.add("id-" + i);
+            }
+        }
+
+        // Verify we can successfully fetch all of the requested consumers
+        Collection<Consumer> output = curator.getConsumers(input);
+
+        assertEquals(output.size(), expected.size());
+
+        for (Consumer consumer : expected) {
+            assertTrue(output.contains(consumer));
+        }
     }
 
     @Test
@@ -332,7 +373,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertTrue(expected.contains(c2));
         assertTrue(expected.contains(c3));
 
-        List<Consumer> actual = consumerCurator.getConsumers(new LinkedList()).list();
+        Collection<Consumer> actual = consumerCurator.getConsumers(new LinkedList());
         assertEquals(0, actual.size());
     }
 
@@ -786,10 +827,50 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer3.setUuid("3");
         consumer3 = consumerCurator.create(consumer3);
 
-        List<Consumer> results = consumerCurator.findByUuids(Arrays.asList("1", "2")).list();
+        Collection<Consumer> results = consumerCurator.findByUuids(Arrays.asList("1", "2"));
         assertTrue(results.contains(consumer));
         assertTrue(results.contains(consumer2));
         assertFalse(results.contains(consumer3));
+    }
+
+    @Test
+    public void testFindByUuidsInputPartioning() {
+        int partitionBlockSize = 5;
+
+        ConsumerCurator curator = Mockito.spy(consumerCurator);
+        when(curator.getInBlockSize()).thenReturn(partitionBlockSize);
+
+        Map<String, Consumer> consumers = new HashMap<>();
+
+        // Create a pile of consumers
+        for (int i = 0; i < partitionBlockSize * 5; ++i) {
+            Consumer consumer = new Consumer("consumer-" + i, "user-" + i, owner, ct);
+            consumer.setUuid("uuid-" + i);
+
+            curator.create(consumer);
+
+            consumers.put(consumer.getUuid(), consumer);
+        }
+
+        curator.flush();
+
+        Set<String> input = new HashSet<>();
+        Set<Consumer> expected = new HashSet<>();
+        for (int i = 0; i < partitionBlockSize * 3 + 1; ++i) {
+            Consumer consumer = consumers.get("uuid-" + i);
+
+            input.add(consumer.getUuid());
+            expected.add(consumer);
+        }
+
+        // Verify we can successfully fetch all of the requested consumers
+        Collection<Consumer> output = curator.findByUuids(input);
+
+        assertEquals(output.size(), expected.size());
+
+        for (Consumer consumer : expected) {
+            assertTrue(output.contains(consumer));
+        }
     }
 
     @Test
@@ -809,11 +890,51 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer3.setUuid("3");
         consumer3 = consumerCurator.create(consumer3);
 
-        List<Consumer> results = consumerCurator
-            .findByUuidsAndOwner(Arrays.asList("2"), owner2.getId()).list();
+        Collection<Consumer> results = consumerCurator
+            .findByUuidsAndOwner(Arrays.asList("2"), owner2.getId());
         assertTrue(results.contains(consumer2));
         assertFalse(results.contains(consumer));
         assertFalse(results.contains(consumer3));
+    }
+
+    @Test
+    public void testFindByUuidsAndOwnerInputPartioning() {
+        int partitionBlockSize = 5;
+
+        ConsumerCurator curator = Mockito.spy(consumerCurator);
+        when(curator.getInBlockSize()).thenReturn(partitionBlockSize);
+
+        Map<String, Consumer> consumers = new HashMap<>();
+
+        // Create a pile of consumers
+        for (int i = 0; i < partitionBlockSize * 5; ++i) {
+            Consumer consumer = new Consumer("consumer-" + i, "user-" + i, owner, ct);
+            consumer.setUuid("uuid-" + i);
+
+            curator.create(consumer);
+
+            consumers.put(consumer.getUuid(), consumer);
+        }
+
+        curator.flush();
+
+        Set<String> input = new HashSet<>();
+        Set<Consumer> expected = new HashSet<>();
+        for (int i = 0; i < partitionBlockSize * 3 + 1; ++i) {
+            Consumer consumer = consumers.get("uuid-" + i);
+
+            input.add(consumer.getUuid());
+            expected.add(consumer);
+        }
+
+        // Verify we can successfully fetch all of the requested consumers
+        Collection<Consumer> output = curator.findByUuidsAndOwner(input, owner.getId());
+
+        assertEquals(output.size(), expected.size());
+
+        for (Consumer consumer : expected) {
+            assertTrue(output.contains(consumer));
+        }
     }
 
     @Test

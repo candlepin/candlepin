@@ -776,14 +776,10 @@ public class ConsumerResourceTest {
         consumers.add(c);
         consumers.add(c2);
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(consumers);
-        when(cqmock.iterator()).thenReturn(consumers.iterator());
-
         List<String> uuids = new ArrayList<>();
         uuids.add(c.getUuid());
         uuids.add(c2.getUuid());
-        when(mockConsumerCurator.findByUuids(eq(uuids))).thenReturn(cqmock);
+        when(mockConsumerCurator.findByUuids(eq(uuids))).thenReturn(consumers);
 
         ComplianceStatus status = new ComplianceStatus();
         when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class)))
