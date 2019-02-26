@@ -15,14 +15,17 @@
 package org.candlepin.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.TimeZone;
 
 /**
  * DateSerializer
@@ -31,18 +34,18 @@ import java.util.TimeZone;
  * The format used is ISO 8601
  */
 public class DateSerializer extends JsonSerializer<Date> {
-    private final SimpleDateFormat dateFormat;
+    private final DateTimeFormatter dateFormat;
 
     public DateSerializer() {
-        // This SimpleDateFormat is ISO 8601 without milliseconds
-        this.dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-        this.dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        // This DateTimeFormatter pattern is ISO 8601 without milliseconds
+        this.dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
     }
 
     @Override
     public void serialize(Date date, JsonGenerator jgen, SerializerProvider serializerProvider)
-        throws IOException, JsonProcessingException {
-
-        jgen.writeString(this.dateFormat.format(date));
+        throws IOException {
+        Instant instant = date.toInstant();
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+        jgen.writeString(this.dateFormat.format(ZonedDateTime.of(localDateTime, ZoneId.of("UTC"))));
     }
 }
