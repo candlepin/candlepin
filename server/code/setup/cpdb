@@ -16,13 +16,16 @@
 
 """ A CLI utility for managing the Candlepin database. """
 
+from __future__ import print_function
+from optparse import OptionParser
 
-import commands
 import sys
 import os
 
-from optparse import OptionParser
-from subprocess import Popen, PIPE
+try:
+    from commands import getstatusoutput
+except ImportError:
+    from subprocess import getstatusoutput
 
 if os.path.exists('/usr/sbin/tomcat') and not os.path.exists('/usr/sbin/tomcat6'):
     TOMCAT = 'tomcat'
@@ -33,7 +36,7 @@ JBOSS_CLASSPATH = "/var/lib/jbossas/server/production/deploy/candlepin.war/WEB-I
 TOMCAT_CLASSPATH = "/var/lib/" + TOMCAT + "/webapps/candlepin/WEB-INF/classes/"
 
 def run_command(command):
-    (status, output) = commands.getstatusoutput(command)
+    (status, output) = getstatusoutput(command)
     if status > 0:
         error_out(command, status, output)
     return output
@@ -101,10 +104,10 @@ class DbSetup(object):
         # Add in output level. By default, Liquibase defaults to "off"
         liquibase_options += " --logLevel=%s" % ('debug' if self.verbose else 'severe')
 
-        print liquibase_options
+        print(liquibase_options)
 
         output = run_command("liquibase %s migrate -Dcommunity=%s" % (liquibase_options, self.community))
-        print output
+        print(output)
 
 
 class PostgresqlSetup(DbSetup):
@@ -138,7 +141,7 @@ class PostgresqlSetup(DbSetup):
             if self.port:
                 command = "%s -p %s" % (command, self.port)
         command = "%s %s" % (command, self.db)
-        (status, output) = commands.getstatusoutput(command)
+        (status, output) = getstatusoutput(command)
 
         if status > 0 and output.find("already exists") > 0:
             print("Candlepin database already exists, skipping...")
@@ -149,7 +152,7 @@ class PostgresqlSetup(DbSetup):
     def drop(self):
         print("Dropping candlepin database")
         command = "dropdb -U %s %s" % (self.username, self.db)
-        (status, output) = commands.getstatusoutput(command)
+        (status, output) = getstatusoutput(command)
         if status > 0 and output.find('does not exist') > 0:
             return
         elif status > 0:

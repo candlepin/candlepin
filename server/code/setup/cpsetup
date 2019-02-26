@@ -21,14 +21,24 @@ This script should be idempotent, as puppet will re-run this to keep
 the server functional.
 """
 
+from __future__ import print_function
+from optparse import OptionParser
+
 import sys
-import commands
 import os.path, os
 import socket
 import re
 import time
-import httplib
-from optparse import OptionParser
+
+try:
+    from commands import getstatusoutput
+except ImportError:
+    from subprocess import getstatusoutput
+
+try:
+    from httplib import HTTPConnection
+except ImportError:
+    from http.client import HTTPConnection
 
 CANDLEPIN_CONF = '/etc/candlepin/candlepin.conf'
 
@@ -38,7 +48,7 @@ else:
     TOMCAT = 'tomcat6'
 
 def run_command(command):
-    (status, output) = commands.getstatusoutput(command)
+    (status, output) = getstatusoutput(command)
     if status > 0:
         sys.stderr.write("\n########## ERROR ############\n")
         sys.stderr.write("Error running command: %s\n" % command)
@@ -119,7 +129,7 @@ class TomcatSetup(object):
 
     def wait_for_startup(self):
         print("Waiting for tomcat to restart...")
-        conn = httplib.HTTPConnection('localhost:8080')
+        conn = HTTPConnection('localhost:8080')
         for x in range(1,5):
             time.sleep(5)
             try:
@@ -268,7 +278,7 @@ def main(argv):
     if not options.skipdbcfg:
         write_candlepin_conf(options)
     else:
-        print "** Skipping configuration file setup"
+        print("** Skipping configuration file setup")
 
     certsetup = CertSetup()
     certsetup.generate()
