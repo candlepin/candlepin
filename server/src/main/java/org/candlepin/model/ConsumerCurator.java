@@ -280,20 +280,38 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     @Transactional
-    public CandlepinQuery<Consumer> findByUuids(Collection<String> uuids) {
-        DetachedCriteria criteria = this.createSecureDetachedCriteria()
-            .add(Restrictions.in("uuid", uuids));
+    public Collection<Consumer> findByUuids(Collection<String> uuids) {
+        Set<Consumer> consumers = new HashSet<>();
 
-        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
+        for (List<String> block : this.partition(uuids)) {
+            // Unfortunately, this needs to be a secure criteria due to the contexts in which this
+            // is called.
+            Criteria criteria = this.createSecureCriteria()
+                .add(Restrictions.in("uuid", block));
+
+            consumers.addAll(criteria.list());
+        }
+
+        return consumers;
     }
 
     @Transactional
-    public CandlepinQuery<Consumer> findByUuidsAndOwner(Collection<String> uuids, String ownerId) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("ownerId", ownerId))
-            .add(Restrictions.in("uuid", uuids));
+    public Collection<Consumer> findByUuidsAndOwner(Collection<String> uuids, String ownerId) {
+        Set<Consumer> consumers = new HashSet<>();
 
-        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
+        javax.persistence.Query query = this.getEntityManager()
+            .createQuery("SELECT c FROM Consumer c WHERE c.ownerId = :oid AND c.uuid IN (:uuids)")
+            .setParameter("oid", ownerId);
+
+        if (uuids != null && !uuids.isEmpty()) {
+            for (List<String> block : this.partition(uuids)) {
+                query.setParameter("uuids", block);
+
+                consumers.addAll(query.getResultList());
+            }
+        }
+
+        return consumers;
     }
 
     // NOTE: This is a giant hack that is for use *only* by SSLAuth in order
@@ -317,15 +335,27 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return
      *  A query to fetch the consumers with the specified consumer IDs
      */
-    public CandlepinQuery<Consumer> getConsumers(Collection<String> consumerIds) {
+    public Collection<Consumer> getConsumers(Collection<String> consumerIds) {
         if (consumerIds != null && !consumerIds.isEmpty()) {
-            DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-                .add(CPRestrictions.in("id", consumerIds));
+            List<String> cids;
 
-            return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
+            // Unfortunately multiLoad does not accept a generic collection, so we need to cast it
+            // or convert it as necessary.
+            if (consumerIds instanceof List) {
+                cids = (List<String>) consumerIds;
+            }
+            else {
+                cids = new ArrayList(consumerIds);
+            }
+
+            return this.currentSession()
+                .byMultipleIds(this.entityType())
+                .enableSessionCheck(true)
+                .enableOrderedReturn(false)
+                .multiLoad(cids);
         }
 
-        return this.cpQueryFactory.<Consumer>buildQuery();
+        return Collections.emptyList();
     }
 
     @SuppressWarnings("unchecked")
