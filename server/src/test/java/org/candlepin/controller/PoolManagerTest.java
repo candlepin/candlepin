@@ -1301,9 +1301,7 @@ public class PoolManagerTest {
         when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
         when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
 
-        CandlepinQuery<Consumer> cqmock2 = mock(CandlepinQuery.class);
-        when(cqmock2.list()).thenReturn(Collections.<Consumer>emptyList());
-        when(consumerCuratorMock.getConsumers(anyCollection())).thenReturn(cqmock2);
+        when(consumerCuratorMock.getConsumers(anyCollection())).thenReturn(Collections.<Consumer>emptyList());
 
         // Any positive value is acceptable here
         when(entitlementCurator.getInBlockSize()).thenReturn(50);
