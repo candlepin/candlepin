@@ -62,7 +62,7 @@ JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
                :version => JACKSON_VERSION)]
 
 SUN_JAXB = ['com.sun.xml.bind:jaxb-impl:jar:2.3.0',
-	    'com.sun.xml.bind:jaxb-core:jar:2.3.0']
+        'com.sun.xml.bind:jaxb-core:jar:2.3.0']
 
 CORE_TESTING = [
   'junit:junit:jar:4.12',
@@ -90,11 +90,13 @@ LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
 
 JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.2.Final',
          'javax.transaction:jta:jar:1.1', 'javax.persistence:javax.persistence-api:jar:2.2']
+
 ANTLR = ['antlr:antlr:jar:2.7.7']
 
-EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.3.6.Final',
-           'net.sf.ehcache:ehcache:jar:2.10.1',
-           'org.ehcache:jcache:jar:1.0.0', 'javax.cache:cache-api:jar:1.0.0',
+EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.3.8.Final',
+           'net.sf.ehcache:ehcache:jar:2.10.3',
+           'org.ehcache:jcache:jar:1.0.0',
+           'javax.cache:cache-api:jar:1.0.0',
            'net.sf.ehcache:management-ehcache-v2:jar:2.10.1']
 
 VALIDATOR = ['org.hibernate.validator:hibernate-validator:jar:6.0.7.Final',
@@ -103,24 +105,20 @@ VALIDATOR = ['org.hibernate.validator:hibernate-validator:jar:6.0.7.Final',
 
 HIBERNATE = [group('hibernate-core', 'hibernate-c3p0',
                    :under => 'org.hibernate',
-                   :version => '5.3.6.Final'),
-
-             'org.hibernate.common:hibernate-commons-annotations:jar:5.0.2.Final',
-             'org.hibernate:hibernate-tools:jar:3.2.4.GA',
+                   :version => '5.3.8.Final'),
              ANTLR,
              EHCACHE,
              VALIDATOR,
-             'org.ow2.asm:asm:jar:6.2.1',
-             'net.bytebuddy:byte-buddy-dep:jar:1.8.18',
-             'cglib:cglib:jar:2.2',
-             'org.javassist:javassist:jar:3.20.0-GA',
-             'com.fasterxml:classmate:jar:1.3.1',
-             'org.freemarker:freemarker:jar:2.3.15',
+             'org.hibernate.common:hibernate-commons-annotations:jar:5.0.4.Final',
+             'net.bytebuddy:byte-buddy:jar:1.9.4',
+             'org.javassist:javassist:jar:3.23.1-GA',
+             'com.fasterxml:classmate:jar:1.3.4',
              'com.mchange:c3p0:jar:0.9.5.2',
              'com.mchange:mchange-commons-java:jar:0.2.11',
-             'dom4j:dom4j:jar:1.6.1',
-             'org.jboss:jandex:jar:2.0.0.Final',
-             'org.jboss.logging:jboss-logging:jar:3.3.0.Final'
+             'org.dom4j:dom4j:jar:2.1.1',
+             'org.jboss:jandex:jar:2.0.5.Final',
+             'org.jboss.logging:jboss-logging:jar:3.3.2.Final',
+             'javax.activation:javax.activation-api:jar:1.2.0'
              ] + JAVAX
 
 POSTGRESQL = 'org.postgresql:postgresql:jar:42.2.2'
