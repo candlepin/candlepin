@@ -33,6 +33,7 @@
     <org.slf4j-jcl-over-slf4j.version>1.7.12</org.slf4j-jcl-over-slf4j.version>
     <org.slf4j-log4j-over-slf4j.version>1.7.12</org.slf4j-log4j-over-slf4j.version>
     <org.slf4j-slf4j-api.version>1.7.25</org.slf4j-slf4j-api.version>
+    <net.logstash.logback-logstash-logback-encoder.version>5.3</net.logstash.logback-logstash-logback-encoder.version>
     <com.google.inject.extensions-guice-assistedinject.version>4.1.0</com.google.inject.extensions-guice-assistedinject.version>
     <com.google.inject.extensions-guice-multibindings.version>4.1.0</com.google.inject.extensions-guice-multibindings.version>
     <com.google.inject.extensions-guice-servlet.version>4.1.0</com.google.inject.extensions-guice-servlet.version>
@@ -268,6 +269,17 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${org.slf4j-slf4j-api.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <version>${net.logstash.logback-logstash-logback-encoder.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
