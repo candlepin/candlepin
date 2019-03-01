@@ -655,4 +655,31 @@ describe 'Autobind On Owner' do
     entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
     entitlements.size.should == 2
   end
+
+  it 'stacked pools that provide identical roles & addons the consumer has specified, should remove duplicates from the stack' do
+    mkt_product1 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:attributes => {:roles => "my_role", :addons => "my_addon"},
+                                  :owner => owner_key})
+    mkt_product2 = create_product(random_string('product'),
+                                  random_string('product'),
+                                 {:attributes => {:roles => "my_role", :addons => "my_addon"},
+                                 :owner => owner_key})
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
+    create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [],
+        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        "my_sla", "my_role", "my_usage", ["my_addon"])
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+  end
 end
