@@ -79,6 +79,10 @@ LOGBACK = [group('logback-core', 'logback-classic',
                  :under => 'ch.qos.logback',
                  :version => '1.2.3')]
 
+LOGSTASH = [group('logstash-logback-encoder',
+                 :under => 'net.logstash.logback',
+                 :version => '5.3')]
+
 # Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
 # JCL for example.
 SLF4J_BRIDGES = [group('jcl-over-slf4j', 'log4j-over-slf4j',
@@ -86,7 +90,7 @@ SLF4J_BRIDGES = [group('jcl-over-slf4j', 'log4j-over-slf4j',
                        :version => '1.7.12')]
 SLF4J = 'org.slf4j:slf4j-api:jar:1.7.25'
 
-LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J]
+LOGGING = [LOGBACK, SLF4J_BRIDGES, SLF4J, LOGSTASH]
 
 JAVAX = ['org.hibernate.javax.persistence:hibernate-jpa-2.1-api:jar:1.0.2.Final',
          'javax.transaction:jta:jar:1.1', 'javax.persistence:javax.persistence-api:jar:2.2']

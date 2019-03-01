@@ -97,6 +97,7 @@
     <org.slf4j-jcl-over-slf4j.version>1.7.12</org.slf4j-jcl-over-slf4j.version>
     <org.slf4j-log4j-over-slf4j.version>1.7.12</org.slf4j-log4j-over-slf4j.version>
     <org.slf4j-slf4j-api.version>1.7.25</org.slf4j-slf4j-api.version>
+    <net.logstash.logback-logstash-logback-encoder.version>5.3</net.logstash.logback-logstash-logback-encoder.version>
     <net.oauth.core-oauth.version>20100527</net.oauth.core-oauth.version>
     <net.oauth.core-oauth-provider.version>20100527</net.oauth.core-oauth-provider.version>
     <javax.servlet-servlet-api.version>2.5</javax.servlet-servlet-api.version>
@@ -1015,6 +1016,17 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${org.slf4j-slf4j-api.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <version>${net.logstash.logback-logstash-logback-encoder.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

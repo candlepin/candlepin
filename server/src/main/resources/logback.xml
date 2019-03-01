@@ -66,6 +66,15 @@
         </rollingPolicy>
     </appender>
 
+    <!--This appender can be used for logging in JSON format into the syslog-->
+    <!--<appender name="SyslogAppender" class="net.logstash.logback.appender.LogstashSocketAppender">-->
+        <!--<host>127.0.0.1</host>-->
+        <!--<port>514</port>-->
+        <!--<prefix class="ch.qos.logback.classic.PatternLayout">-->
+            <!--<pattern>candlepin @cee:</pattern>-->
+        <!--</prefix>-->
+    <!--</appender>-->
+
     <appender name="SyslogAppender" class="ch.qos.logback.classic.net.SyslogAppender">
         <syslogHost>localhost</syslogHost>
         <facility>DAEMON</facility>
