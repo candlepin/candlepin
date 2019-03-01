@@ -2145,6 +2145,101 @@ public class AutobindRulesTest {
     }
 
     /*
+     * This test demonstrates that autoattach should select both pools in the same stack, if one provides
+     * one of the consumer's specified addons, and the other provides the second.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldSelectBothPoolsInStackWhenEachOfThemProvidesAnUnsatisfiedAddon() {
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("First Addon");
+        addons.add("Second Addon");
+        consumer.setAddOns(addons);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+
+        // Create a stackable pool with a product which provides the addon the consumer has,
+        // but not the installed product the consumer has.
+        Product prodMCT1650 = createSysPurposeProduct(null, null, "First Addon,random_addon",
+            null, null);
+        prodMCT1650.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prodMCT1650.setAttribute("multi-entitlement", "yes");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.setQuantity(1L);
+
+        // Create a stackable pool (of the same stack as the previous pool)
+        // with a product which provides the installed product the consumer has,
+        // but not the addon the consumer has.
+        Product prodMCT80 = createSysPurposeProduct(null, null, "Second Addon",
+            null, null);
+        prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prodMCT80.setAttribute("multi-entitlement", "yes");
+        Pool MCT80 = TestUtil.createPool(owner, prodMCT80);
+        MCT80.setId("MCT80");
+        MCT80.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(MCT80);
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(2, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(MCT80, 1)));
+    }
+
+    /*
+     * This test demonstrates that autoattach should select both pools in the same stack, if one provides
+     * one of the consumer's specified addon, and the other provides the consumer's specified role.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldSelectBothPoolsInStackWhenOneProvidesAddonAndTheOtherRole() {
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("My Addon");
+        consumer.setAddOns(addons);
+        consumer.setRole("My Role");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+
+        // Create a stackable pool which provides only the addon the consumer has specified.
+        Product prodMCT1650 = createSysPurposeProduct(null, null, "My Addon",
+            null, null);
+        prodMCT1650.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prodMCT1650.setAttribute("multi-entitlement", "yes");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.setQuantity(1L);
+
+        // Create a stackable pool which provides only the role the consumer has specified.
+        Product prodMCT80 = createSysPurposeProduct(null, "My Role", null,
+            null, null);
+        prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prodMCT80.setAttribute("multi-entitlement", "yes");
+        Pool MCT80 = TestUtil.createPool(owner, prodMCT80);
+        MCT80.setId("MCT80");
+        MCT80.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(MCT80);
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(2, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(MCT80, 1)));
+    }
+
+    /*
      * This test demonstrates that a pool that provides a certain role, will be selected
      * during autoattach if that role matches the one the consumer specified, even if
      * no installed product is covered by that pool.(because roles, as well as addons, are special
@@ -2617,6 +2712,196 @@ public class AutobindRulesTest {
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
+    /*
+     * This test demonstrates that autoattach should select only one pool from the same stack, if there are
+     * more than one identical pools that can support the consumers product and role in that stack.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldRemoveIdenticalPoolsFromStackThatProvidesProductAndRole() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Create two identical candidate stackable pools that both provide
+        // the product and role that the consumer has set.
+        Product prod1 = createSysPurposeProduct(null, "RHEL Server,random_role", null,
+            null, null);
+        prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prod1.setAttribute("multi-entitlement", "yes");
+        Pool pool1 = TestUtil.createPool(owner, prod1);
+        pool1.setId("pool1");
+        pool1.setQuantity(100L);
+        pool1.addProvidedProduct(product69);
+
+        Product prod2 = createSysPurposeProduct(null, "RHEL Server,random_role", null,
+            null, null);
+        prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prod2.setAttribute("multi-entitlement", "yes");
+        Pool pool2 = TestUtil.createPool(owner, prod2);
+        pool2.setId("pool2");
+        pool2.setQuantity(100L);
+        pool2.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(pool1);
+        pools.add(pool2);
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        // Only one of the pools should have been attached.
+        assertEquals("Only one pool should have been attached.", 1, bestPools.size());
+        assertEquals("The attached pool should have consumed quantity of 1.",
+            1, (int) bestPools.get(0).getQuantity());
+    }
+
+    /*
+     * This test demonstrates that autoattach should select only one pool from the same stack, if there are
+     * more than one identical pools that can support the consumers product and addons in that stack.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldRemoveIdenticalPoolsFromStackThatProvidesProductAndAddons() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("my_addon1");
+        addons.add("my_addon2");
+        consumer.setAddOns(addons);
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Create two identical candidate stackable pools that both provide
+        // the product and addons that the consumer has set.
+        Product prod1 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role",
+            null, null);
+        prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prod1.setAttribute("multi-entitlement", "yes");
+        Pool pool1 = TestUtil.createPool(owner, prod1);
+        pool1.setId("pool1");
+        pool1.setQuantity(100L);
+        pool1.addProvidedProduct(product69);
+
+        Product prod2 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role",
+            null, null);
+        prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prod2.setAttribute("multi-entitlement", "yes");
+        Pool pool2 = TestUtil.createPool(owner, prod2);
+        pool2.setId("pool2");
+        pool2.setQuantity(100L);
+        pool2.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(pool1);
+        pools.add(pool2);
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        // Only one of the pools should have been attached.
+        assertEquals("Only one pool should have been attached.", 1, bestPools.size());
+        assertEquals("The attached pool should have consumed quantity of 1.",
+            1, (int) bestPools.get(0).getQuantity());
+    }
+
+    /*
+     * This test demonstrates that autoattach should select only one pool from the same stack, if there is
+     * only one pool in that stack that provides the specified consumer addon, while another pool in the
+     * stack only provides addons that the consumer has not specified.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldRemovePoolsFromStackThatProvideUnnecessaryAddon() {
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("my_addon1");
+        addons.add("my_addon2");
+        consumer.setAddOns(addons);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Create two identical candidate stackable pools that both provide
+        // the product and addons that the consumer has set.
+        Product prod1 = createSysPurposeProduct(null, null, "random_addon",
+            null, null);
+        prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prod1.setAttribute("multi-entitlement", "yes");
+        Pool pool1 = TestUtil.createPool(owner, prod1);
+        pool1.setId("pool1");
+        pool1.setQuantity(100L);
+
+        Product prod2 = createSysPurposeProduct(null, null, "my_addon1",
+            null, null);
+        prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prod2.setAttribute("multi-entitlement", "yes");
+        Pool pool2 = TestUtil.createPool(owner, prod2);
+        pool2.setId("pool2");
+        pool2.setQuantity(100L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(pool1);
+        pools.add(pool2);
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        // Only one of the pools should have been attached.
+        assertEquals("Only one pool should have been attached.", 1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
+    }
+
+    /*
+     * This test demonstrates that autoattach should select only one pool from the same stack, if there is
+     * only one pool in that stack that provides the specified consumer role, while another pool in the
+     * stack only provides a role that the consumer has not specified.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldRemovePoolsFromStackThatProvideUnnecessaryRole() {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("my_role");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Create two identical candidate stackable pools that both provide
+        // the product and addons that the consumer has set.
+        Product prod1 = createSysPurposeProduct(null, "random_role", null,
+            null, null);
+        prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prod1.setAttribute("multi-entitlement", "yes");
+        Pool pool1 = TestUtil.createPool(owner, prod1);
+        pool1.setId("pool1");
+        pool1.setQuantity(100L);
+
+        Product prod2 = createSysPurposeProduct(null, "my_role", null,
+            null, null);
+        prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
+        prod2.setAttribute("multi-entitlement", "yes");
+        Pool pool2 = TestUtil.createPool(owner, prod2);
+        pool2.setId("pool2");
+        pool2.setQuantity(100L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(pool1);
+        pools.add(pool2);
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        // Only one of the pools should have been attached.
+        assertEquals("Only one pool should have been attached.", 1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
     }
 
     @Test

@@ -1,4 +1,4 @@
-// Version: 5.33
+// Version: 5.34
 
 /*
  * Default Candlepin rule set.
@@ -2134,6 +2134,7 @@ var Autobind = {
              * are removed.
              */
             validate: function(context) {
+                log.debug("Running validate for stack_id: {}", this.stack_id);
                 var all_ents = this.get_all_ents(this.pools).concat(this.attached_ents);
 
                 if (all_ents.length == 0) {
@@ -2288,39 +2289,30 @@ var Autobind = {
              * enforce different attributes
              */
             remove_extra_attrs: function(role, addons) {
+                log.debug("Running remove_extra_attrs for stack_id: {}...", this.stack_id);
                 var possible_pool_sets = [];
                 possible_pool_sets.push(this.pools);
-                var original_provided = this.get_provided_products().length;
+                var satisfiable_prod_size = this.get_provided_products().length;
+                var satisfiable_role = this.get_common_role(this.consumer.role);
+                var satisfiable_addon_size = this.get_common_addons(this.consumer.addOns).length;
                 var sets_to_check = this.get_attribute_sets(this.pools); //array of arrays of attributes to remove
                 for (var setIdx = 0; setIdx < sets_to_check.length; setIdx++) {
                     var attrs_to_remove = sets_to_check[setIdx];
                     for (var attrIdx = 0; attrIdx < attrs_to_remove.length; attrIdx++) {
                         var attr = attrs_to_remove[attrIdx];
-
                         var pools_without = [];
                         for (var i = 0; i < this.pools.length; i++) {
                             var pool = this.pools[i];
                             var prodAttrValue = pool.getProductAttribute(attr);
-
-                            var poolRoles = pool.getProductAttribute("roles") !== null ?
-                                pool.getProductAttribute("roles").split(",") : [];
-                            var roleMatch = contains(poolRoles, role);
-
-                            var poolAddons = pool.getProductAttribute("addons") !== null ?
-                                pool.getProductAttribute("addons").split(",") : [];
-                            var addonMatch = false;
-                            for (var k = 0; k < poolAddons.length; k++) {
-                                addonMatch = addonMatch || contains(addons, poolAddons[k]);
-                            }
-
-                            if ((!prodAttrValue || prodAttrValue === null) &&
-                                !roleMatch &&
-                                !addonMatch) {
+                            if (!prodAttrValue || prodAttrValue === null) {
                                 pools_without.push(pool);
                             }
                         }
-                        all_ents = this.get_all_ents(pools_without).concat(this.attached_ents);
-                        if (Compliance.getStackCoverage(this.consumer, this.stack_id, all_ents).covered && (this.get_provided_products_pools(pools_without).length == original_provided)) {
+                        var all_ents = this.get_all_ents(pools_without).concat(this.attached_ents);
+                        if (Compliance.getStackCoverage(this.consumer, this.stack_id, all_ents).covered &&
+                            this.get_provided_products_pools(pools_without).length == satisfiable_prod_size &&
+                            this.get_common_role(this.consumer.role) === satisfiable_role &&
+                            this.get_common_addons(this.consumer.addOns).length == satisfiable_addon_size) {
                             possible_pool_sets.push(pools_without);
                         }
                     }
@@ -2362,6 +2354,7 @@ var Autobind = {
              * TODO: needs elaboration
              */
             prune_pools: function(role, addons) {
+                log.debug("Running prune_pools for stack_id: {}...", this.stack_id);
                 // We know this group is required at this point,
                 // so we cannot remove the one pool if it's non-stackable
                 if (!this.stackable) {
@@ -2372,27 +2365,27 @@ var Autobind = {
                 this.pools.sort(this.compare_pools);
                 var temp = null;
                 var prior_pool_size = this.pools.length;
-                var provided_size = this.get_provided_products().length;
+                var satisfiable_prod_size = this.get_provided_products().length;
+                var satisfiable_role = this.get_common_role(this.consumer.role);
+                var satisfiable_addon_size = this.get_common_addons(this.consumer.addOns).length;
+
                 for (var i = this.pools.length - 1; i >= 0; i--) {
                     temp = this.pools[i];
 
-                    var poolRoles = temp.getProductAttribute("roles") !== null ?
-                        temp.getProductAttribute("roles").split(",") : [];
-                    var roleMatch = contains(poolRoles, role);
-
-                    var poolAddons = temp.getProductAttribute("addons") !== null ?
-                        temp.getProductAttribute("addons").split(",") : [];
-                    var addonMatch = false;
-                    for (var k = 0; k < poolAddons.length; k++) {
-                        addonMatch = addonMatch || contains(addons, poolAddons[k]);
-                    }
-
                     this.pools.splice(i, 1);
+                    log.debug("prune_pools - temporarily removing pool: {}", temp.id);
+
                     var ents = this.get_all_ents(this.pools);
                     if (ents.length == 0 || !Compliance.getStackCoverage(this.consumer, this.stack_id, ents.concat(this.attached_ents)).covered ||
-                        this.get_provided_products().length != provided_size || roleMatch || addonMatch) {
+                        this.get_provided_products().length != satisfiable_prod_size ||
+                        this.get_common_role(this.consumer.role) != satisfiable_role ||
+                        this.get_common_addons(this.consumer.addOns).length != satisfiable_addon_size) {
                         // if something has broken, we add the pool back
+                        log.debug("prune_pools - adding pool {} back in the stack.", temp.id);
                         this.pools.push(temp);
+                    }
+                    else {
+                        log.debug("prune_pools - permanently removing pool: {} because it is redundant", temp.id);
                     }
                 }
                 log.debug("removed " + (prior_pool_size - this.pools.length) + " of " + prior_pool_size + " pools");
@@ -2539,6 +2532,38 @@ var Autobind = {
 
             get_roles: function() {
                 return get_role_pools(this.pools);
+            },
+
+            /*
+             * Returns the list of addons that the stack will cover, which the consumer requires.
+             */
+            get_common_addons: function(addons) {
+                var group_addons = this.get_addons();
+                var common_addons = [];
+                for (var i = 0; i < group_addons.length; i++) {
+                    var group_addon = group_addons[i];
+                    if (contains(addons, group_addon)) {
+                        common_addons.push(group_addon);
+                    }
+                }
+                return common_addons;
+            },
+
+            /*
+             * Returns the role that the stack will cover, which the consumer requires.
+             */
+            get_common_role: function(role) {
+                if (role == null) {
+                    return null;
+                }
+                var group_roles = this.get_roles();
+                for (var i = 0; i < group_roles.length; i++) {
+                    var group_role = group_roles[i];
+                    if (group_role === role) {
+                        return role;
+                    }
+                }
+                return null;
             }
         };
     },
@@ -2736,6 +2761,7 @@ var Autobind = {
      * Builds entitlement group objects that allow us to treat stacks and individual entitlements the same
      */
     build_entitlement_groups: function(valid_pools, installed, consumer, attached_ents, consider_derived, context) {
+        log.debug("Running build_entitlement_groups...");
         var ent_groups = [];
         for (var i = 0; i < valid_pools.length; i++) {
             var pool = valid_pools[i];
@@ -2782,42 +2808,9 @@ var Autobind = {
         return common_products;
     },
 
-    /*
-     * Returns the list of addons that the stack will cover, which the consumer requires.
-     */
-    get_common_addons: function(addons, group) {
-        var group_addons = group.get_addons();
-        log.debug("group_addons: " + group_addons);
-        var common_addons = [];
-        for (var i = 0; i < group_addons.length; i++) {
-            var group_addon = group_addons[i];
-            if (contains(addons, group_addon)) {
-                common_addons.push(group_addon);
-            }
-        }
-        return common_addons;
-    },
-
-    /*
-     * Returns the list of productIds that the stack will cover, which the consumer requires.
-     */
-    get_common_role: function(role, group) {
-        if (role == null) {
-            return "";
-        }
-        var group_roles = group.get_roles();
-        for (var i = 0; i < group_roles.length; i++) {
-            var group_role = group_roles[i];
-            if (group_role === role) {
-                return role;
-            }
-        }
-        return "";
-    },
-
     // been adding more attributes to break ties, there's probably a better way to write this at this point
     find_best_ent_group: function(all_groups, installed, role, addons) {
-        log.debug("Running find_best_ent_group...")
+        log.debug("Running find_best_ent_group...");
         var stacked = false;
         var best = null;
         var total_poolquantity = Number.MAX_VALUE;
@@ -2832,8 +2825,8 @@ var Autobind = {
             var group = all_groups[i];
             var group_avg_prio = group.get_average_priority();
             var intersection = this.get_common_products(installed, group).length;
-            var role_needed = this.get_common_role(role, group) !== "";
-            var addons_needed = this.get_common_addons(addons, group).length > 0;
+            var role_needed = group.get_common_role(role) != null;
+            var addons_needed = group.get_common_addons(addons).length > 0;
             var group_poolquantity = group.get_total_quantity();
             var group_num_host_specific = group.num_host_specific();
             var group_num_virt_only = group.num_virt_only();
@@ -2955,7 +2948,7 @@ var Autobind = {
             }
             group.installed = prods_in_common;
 
-            var addons_in_common = this.get_common_addons(addons, group);
+            var addons_in_common = group.get_common_addons(addons);
             for (var j = addons.length -1; j >= 0; j--) {
                 var current = addons[j];
                 if (addons_in_common.indexOf(current) !== -1) {
@@ -2963,14 +2956,11 @@ var Autobind = {
                     log.debug("get_best_entitlement_groups: Remove addon we just satisfied from list of specified addons...");
                 }
             }
-            group.addons = addons_in_common;
 
-            var role_in_common = this.get_common_role(role, group);
-            if (role_in_common.indexOf(role) !== -1) {
+            if (group.get_common_role(role) != null) {
                 log.debug("get_best_entitlement_groups: Remove role we just satisfied from list of specified roles...");
-                role = "";
+                role = null;
             }
-            group.roles = role_in_common;
 
             log.debug("get_best_entitlement_groups: Will run find_best_ent_group another time...");
             group = this.find_best_ent_group(all_groups, installed, role, addons);
@@ -3082,14 +3072,14 @@ var Autobind = {
                 // Only really consider the group if it provides a necessary product, role, addon,
                 // or stacks with an existing partial stack
                 if (this.get_common_products(installed, ent_group).length > 0 ||
-                    this.get_common_role(role, ent_group).length > 0 ||
-                    this.get_common_addons(addons, ent_group).length > 0 ||
+                    ent_group.get_common_role(role) != null ||
+                    ent_group.get_common_addons(addons).length > 0 ||
                     (ent_group.attached_ents !== null && ent_group.attached_ents.length > 0)) {
                     valid_groups.push(ent_group);
                     ent_group.remove_extra_attrs(role, addons);
                     ent_group.prune_pools(role, addons);
                 } else {
-                    log.debug("Group " + ent_group.stack_id + " provides no needed products");
+                    log.debug("Group with stack id {} provides no needed products, roles or addons", ent_group.stack_id);
                 }
             } else {
                 log.debug("Group " + ent_group.stack_id + " failed validation.");
@@ -3158,7 +3148,9 @@ function get_addons_pools(in_pools) {
         var pool = in_pools[i];
         var pool_addons = pool.retrievePoolAttributeValues("addons");
         for (var k = 0; k < pool_addons.length; k++) {
-            addons.push(pool_addons[k]);
+            if (!Utils.inArray(addons, pool_addons[k])) {
+                addons.push(pool_addons[k]);
+            }
         }
     }
     log.debug("get_addons_pools:  " + addons);
@@ -3172,7 +3164,9 @@ function get_role_pools(in_pools) {
         var pool = in_pools[i];
         var pool_roles = pool.retrievePoolAttributeValues("roles");
         for (var k = 0 ; k < pool_roles.length ; k++) {
-            roles.push(pool_roles[k]);
+            if (!Utils.inArray(roles, pool_roles[k])) {
+                roles.push(pool_roles[k]);
+            }
         }
     }
     log.debug("get_role_pools:  " + roles);
