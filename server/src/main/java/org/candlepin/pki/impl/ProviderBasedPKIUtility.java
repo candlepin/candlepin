@@ -64,8 +64,7 @@ import java.util.Set;
 public abstract class ProviderBasedPKIUtility implements PKIUtility {
     private static Logger log = LoggerFactory.getLogger(ProviderBasedPKIUtility.class);
 
-    // TODO : configurable?
-    public static final int RSA_KEY_SIZE = 2048;
+    public static final int RSA_KEY_SIZE = 4096;
 
     protected CertificateReader reader;
     protected SubjectKeyIdentifierWriter subjectKeyWriter;
