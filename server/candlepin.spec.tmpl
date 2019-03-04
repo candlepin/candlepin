@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.14
+Version: 2.3.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,13 @@ fi
 
 #raw
 %changelog
+* Mon Mar 04 2019 Kevin Howell <khowell@redhat.com> 2.3.15-1
+- 1684508: Remove redundant role & addon pools from stacks
+  (nmoumoul@redhat.com)
+- 1683304: Synchronize java.util.Date serializations (nmoumoul@redhat.com)
+- 1679286: Addressed issues surrounding locking with unmanaged entities
+  (crog@redhat.com)
+
 * Mon Feb 18 2019 Kevin Howell <khowell@redhat.com> 2.3.14-1
 - Logging compatibility for older candlepins (wpoteat@redhat.com)
 - 1677338: An existing entitlement with exempt sla will block other auto
