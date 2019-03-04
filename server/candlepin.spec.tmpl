@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.1
+Version: 2.6.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,41 @@ fi
 
 #raw
 %changelog
+* Mon Mar 04 2019 Nikos Moumoulidis <nmoumoul@redhat.com> 2.6.2-1
+- 1683169: Remove redundant role & addon pools from stacks
+  (nmoumoul@redhat.com)
+- 1669191: Add Logstash dependency to allow json logging[ENT-1134]
+  (ojanus@redhat.com)
+- Update pom file with new dependencies. (awood@redhat.com)
+- Replace old test certificates. (awood@redhat.com)
+- 1679597: Synchronize java.util.Date serializations (nmoumoul@redhat.com)
+- Addressed issues surrounding locking with unmanaged entities
+  (crog@redhat.com)
+- 1601517: Added input partitioning to select ConsumerCurator methods
+  (crog@redhat.com)
+- Logging compatibility for older candlepins (wpoteat@redhat.com)
+- 1677340: An existing entitlement with exempt sla will block other auto
+  attaches. [ENT-1158] (wpoteat@redhat.com)
+- 1667238,1655703: Increase syspurpose impact on auto-attach - Pool priority
+  (and consequently, syspurpose attribute matches) will now have a higher
+  impact than a virt_only match when breaking ties during auto-attach. -
+  Syspurpose attributes will now always have a higher impact than all other
+  attributes (requires_host,virt_only,ram,cores,sockets, cpu,vcpu) during auto-
+  attach prioritization scoring. - A match of the usage attribute will now have
+  a higher impact than not having a role, when the consumer has not specified
+  any role (1669185). - Added helpful debug logging in the auto-attach rules
+  code. (nmoumoul@redhat.com)
+- Added the org_migrator utility (crog@redhat.com)
+- 1623491: Get syspurpose attributes of an owner's consumers - Created new API
+  /owners/{owner_key}/consumers_system_purpose used to retrieve an aggregate of
+  all the syspurpose attributes that the owner's consumers have specified.
+  (nmoumoul@redhat.com)
+- 1668463: Fix problems with CPM.deletePools with large datasets
+  (crog@redhat.com)
+- 1520502: Move to syslog/journald[ENT-397] (ojanus@redhat.com)
+- Allow passing credentials to cpsetup via environment variables[ENT-940]
+  (ojanus@redhat.com)
+
 * Wed Jan 23 2019 Kevin Howell <khowell@redhat.com> 2.6.1-1
 - 1482942: Remove unnecessary deleted consumer checks (ojanus@redhat.com)
 - 1556930: Index to make hypervisor uuid lookup faster in Postgresql
