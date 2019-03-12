@@ -1,4 +1,4 @@
-// Version: 5.34
+// Version: 5.35
 
 /*
  * Default Candlepin rule set.
@@ -478,8 +478,8 @@ function get_mock_ent_for_pool(pool, consumer) {
 function get_pool_priority(pool, consumer) {
     log.debug("Calculating pool priority for pool " + pool.id + "...");
     // start with a default large enough to make sure that if all the highest syspurpose mismatch rules get
-    // applied (5600 * -0.5 +...+ 350 * -0.5 = -2800 -1400 -700 -350 -175 = -5425), the total score will not go below zero.
-    var priority = 5450;
+    // applied (5600 * -0.05 +...+ 350 * -0.05 = -280 -140 -70 -35 -17.5 = -542.5), the total score will not go below zero.
+    var priority = 545;
     log.debug("Starting with default initial score of {}", priority);
 
     // List of syspurpose attributes and their corresponding weights: the relationship between them,
@@ -518,7 +518,7 @@ function get_pool_priority(pool, consumer) {
         }
 
         if (specifiedSet.length > 0 && poolSet.length > 0) {
-            mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.5;
+            mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.05;
             log.debug("MISMATCH rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, mismatch_rule_score]);
         }
 
