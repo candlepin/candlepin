@@ -45,6 +45,7 @@ public class ConsumerEnricher {
     private static final String RED_STATUS = "red";
     private static final String YELLOW_STATUS = "yellow";
     private static final String GREEN_STATUS = "green";
+    private static final String GRAY_STATUS = "gray";
 
     private ComplianceRules complianceRules;
     private OwnerProductCurator ownerProductCurator;
@@ -89,6 +90,9 @@ public class ConsumerEnricher {
 
             // The hash lookups are likely faster than the linear search through an array, so we'll
             // do those first.
+            if (status.isDisabled()) {
+                cip.setStatus(GRAY_STATUS);
+            }
             if (status.getCompliantProducts().containsKey(pid)) {
                 cip.setStatus(GREEN_STATUS);
             }

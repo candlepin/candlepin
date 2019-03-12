@@ -28,6 +28,7 @@ import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -83,6 +84,13 @@ public class SystemPurposeComplianceRules {
         boolean updateConsumer, boolean currentCompliance) {
 
         SystemPurposeComplianceStatus status = new SystemPurposeComplianceStatus(i18n);
+
+        if (consumer.getOwner().getContentAccessMode().equals(
+            ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE)) {
+            status.setDisabled(true);
+            applyStatus(consumer, status, updateConsumer);
+            return status;
+        }
 
         if (existingEntitlements == null) {
             existingEntitlements = new LinkedList<>();
