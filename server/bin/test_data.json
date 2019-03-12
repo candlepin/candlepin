@@ -2094,6 +2094,25 @@
             }
         },
         {
+            "name": "SP Server Instance Based (S: Standard, U: Production, R: SP Server)",
+            "id": "sp-server-instancebased",
+            "type": "MKT",
+            "provided_products": [
+                "99000"
+            ],
+            "attributes": {
+                "sockets": 1,
+                "instance_multiplier": 2,
+                "virt_limit": 1,
+                "host_limited": "true",
+                "management_enabled" : 1,
+                "support_level" : "Standard",
+                "support_type" : "L1-L3",
+                "usage" : "Production",
+                "roles" : "SP Server"
+            }
+        },
+        {
             "name": "SP Starter Pack (S: Premium, R: SP Starter)",
             "id": "sp-starter-pack",
             "type": "MKT",
