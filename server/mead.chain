@@ -12,8 +12,3 @@ packages=gettext java-1.8.0-openjdk-devel
 scmurl=${mead_scm}?server#${git_ref}
 buildrequires=org.candlepin-candlepin-common
 packages=java-1.8.0-openjdk-devel
-
-[candlepin]
-type=wrapper
-scmurl=${mead_scm}?server#${git_ref}
-buildrequires=org.candlepin-candlepin
