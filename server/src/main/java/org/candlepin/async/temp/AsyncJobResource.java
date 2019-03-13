@@ -72,14 +72,42 @@ public class AsyncJobResource {
         @QueryParam("sleep") @DefaultValue("false") Boolean sleep, @QueryParam("persist")
         @DefaultValue("false") Boolean persist) {
 
-        return jobManager.queueJob(new JobBuilder()
-            .setJobKey("TEST_JOB1")
+        // for (int j = 0; j < 10000; ++j) {
+        //     JobBuilder builder = new JobBuilder()
+        //         .setJobKey("TEST_JOB-" + j)
+        //         .setJobGroup("async")
+        //         .setJobName("Test Job " + j)
+        //         .setJobArgument("force_failure", forceFailure)
+        //         .setJobArgument("sleep", sleep)
+        //         .setJobArgument("persist", persist);
+
+        //     // Add a ton of random constraints for performance testing
+        //     for (int i = 0; i < 100; ++i) {
+        //         builder.setUniqueConstraint("constraint-" + i, "value-" + i);
+        //     }
+
+        //     jobManager.queueJob(builder);
+        // }
+
+        // return null;
+
+
+        JobBuilder builder = new JobBuilder()
+            .setJobKey("TEST_JOB")
             .setJobGroup("async")
-            .setJobName("Test Job 1")
+            .setJobName("Test Job")
             .setJobArgument("force_failure", forceFailure)
             .setJobArgument("sleep", sleep)
-            .setJobArgument("persist", persist)
-        );
+            .setJobArgument("persist", persist);
+
+        // Add a ton of random constraints for performance testing
+        for (int i = 0; i < 100; ++i) {
+            builder.setUniqueConstraint("constraint-" + i, "value-" + i);
+        }
+
+        return jobManager.queueJob(builder);
+
+
 
     }
 

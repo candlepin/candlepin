@@ -81,7 +81,7 @@ public class JobMessageReceiver extends MessageReceiver {
             // Finally commit the session so that the message is taken out of the queue.
             session.commit();
         }
-        catch (PreJobExecutionException pjee) {
+        catch (JobInitializationException jie) {
             // Expected when:
             //   * Job status could not be found
             //   * Job was determined cancelled before execution.
@@ -89,7 +89,7 @@ public class JobMessageReceiver extends MessageReceiver {
                 session.commit();
             }
             catch (ActiveMQException amqe) {
-                log.error("Unable to commit job message after receiving PreJobExecutionException.", amqe);
+                log.error("Unable to commit job message after receiving JobInitializationException.", amqe);
                 // Nothing we can do. The job will be lost.
             }
         }

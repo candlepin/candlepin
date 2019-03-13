@@ -14,7 +14,15 @@
  */
 package org.candlepin.model;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Predicate;
 
 
 
@@ -28,6 +36,52 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
         super(AsyncJobStatus.class);
     }
 
-    // TODO: Add things here as needed
+    /**
+     * Fetches existing jobs matching the provided job name and constraint hash, optionally matching
+     * the group and states
+     *
+     * @param jobName
+     *  The name of the jobs to find
+     *
+     * @param jobGroup
+     *  The group in which to search for jobs
+     *
+     * @param constraintHash
+     *  A hash of the job constraints to find
+     *
+     * @param states
+     *  A collection of states to use for filtering jobs
+     *
+     * @return
+     *  A collection of jobs matching the input name, group, constraints and states
+     */
+    public Collection<AsyncJobStatus> findJobsByConstraints(String jobName, String jobGroup,
+        Collection<AsyncJobStatus.JobState> states, String constraintHash) {
+
+        // If we don't have a job name or a constraint hash, there's nothing to find here
+        if (jobName == null || jobName.isEmpty() || constraintHash == null || constraintHash.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<AsyncJobStatus> query = builder.createQuery(this.entityType());
+        Root<AsyncJobStatus> root = query.from(this.entityType());
+
+        Predicate whereClause = builder.and(
+            builder.equal(root.get("name"), jobName),
+            builder.equal(root.get("constraintHash"), constraintHash));
+
+        if (jobGroup != null && !jobGroup.isEmpty()) {
+            whereClause = builder.and(whereClause, builder.equal(root.get("group"), jobGroup));
+        }
+
+        if (states != null && !states.isEmpty()) {
+            whereClause = builder.and(whereClause, root.get("state").in(states));
+        }
+
+        query.select(root).where(whereClause);
+        return entityManager.createQuery(query).getResultList();
+    }
 
 }

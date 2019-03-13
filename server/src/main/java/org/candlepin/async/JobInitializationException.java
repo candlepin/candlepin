@@ -14,8 +14,10 @@
  */
 package org.candlepin.async;
 
+
+
 /**
- * The PreJobExecutionException represents an error that occurs before a job is
+ * The JobInitializationException represents an error that occurs before a job is
  * actually executed by the JobManager. The JobManager should throw this exeception
  * anytime that a job is invalid and can not be run. The JobMessageReceiver will
  * discard the associated job message when it encounters this exception, so it should
@@ -27,14 +29,14 @@ package org.candlepin.async;
  *         - Job was determined cancelled before execution.
  * </pre>
  */
-public class PreJobExecutionException extends Exception {
+public class JobInitializationException extends Exception {
 
     /**
      * Create an instance of this exception with the specified message.
      *
      * @param message a message describing the cause of the exception.
      */
-    public PreJobExecutionException(String message) {
+    public JobInitializationException(String message) {
         super(message);
     }
 }

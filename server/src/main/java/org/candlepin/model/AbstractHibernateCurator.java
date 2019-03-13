@@ -86,7 +86,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
     @Inject protected CandlepinQueryFactory cpQueryFactory;
-    @Inject protected Provider<EntityManager> entityManager;
+    @Inject protected Provider<EntityManager> emProvider;
     @Inject protected Provider<I18n> i18nProvider;
     @Inject protected Configuration config;
     @Inject private PrincipalProvider principalProvider;
@@ -588,8 +588,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
     }
 
+    public EntityManager getEntityManager() {
+        return this.emProvider.get();
+    }
+
     public Session currentSession() {
-        return (Session) entityManager.get().getDelegate();
+        return (Session) this.getEntityManager().getDelegate();
     }
 
     public Session openSession() {
@@ -597,9 +601,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return factory.openSession();
     }
 
-    public EntityManager getEntityManager() {
-        return entityManager.get();
-    }
 
     /**
      * Fetches the natural ID loader for this entity. This loader can be used and reused to

@@ -14,8 +14,6 @@
  */
 package org.candlepin.async;
 
-import com.google.inject.Injector;
-import com.google.inject.persist.UnitOfWork;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.filter.LoggingFilter;
@@ -26,15 +24,25 @@ import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
+
+import com.google.inject.Injector;
+import com.google.inject.persist.UnitOfWork;
+
+import org.apache.commons.codec.binary.Hex;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import java.security.MessageDigest;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 
 
 /**
@@ -139,11 +147,52 @@ public class JobManager {
         final PrincipalProvider principalProvider,
         final CandlepinRequestScope scope,
         final Injector injector) {
+
         this.jobCurator = Objects.requireNonNull(jobCurator);
         this.dispatcher = Objects.requireNonNull(dispatcher);
         this.candlepinRequestScope = Objects.requireNonNull(scope);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.injector = Objects.requireNonNull(injector);
+    }
+
+    /**
+     * Calculates a hash for the unique job constraints of a given job. If the provided map of
+     * constraints is null or empty, this method returns null.
+     *
+     * @param constraints
+     *  A map of unique job constraints for which to calculate a hash
+     *
+     * @return
+     *  a hash of the provided job constraints, or null if no constraints were provided
+     */
+    private String calculateUniqueJobConstraintHash(Map<String, String> constraints) {
+        if (constraints == null || constraints.isEmpty()) {
+            return null;
+        }
+
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+
+            for (Map.Entry<String, String> entry : constraints.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+
+                if (key != null && !key.isEmpty()) {
+                    md.update(key.getBytes("UTF-8"));
+
+                    if (value != null) {
+                        md.update(value.getBytes("UTF-8"));
+                    }
+                }
+            }
+
+            return Hex.encodeHexString(md.digest());
+        }
+        catch (Exception exception) {
+            // This shouldn't happen, since we're using SHA-1 and UTF-8, but if it does, we're
+            // in trouble.
+            throw new RuntimeException(exception);
+        }
     }
 
     /**
@@ -169,6 +218,7 @@ public class JobManager {
         job.setJobKey(builder.getJobKey());
         job.setName(builder.getJobName());
         job.setGroup(builder.getJobGroup());
+        job.setUniqueConstraintHash(this.calculateUniqueJobConstraintHash(builder.getUniqueConstraints()));
 
         // Add environment-specific metadata
         job.setOrigin(Util.getHostname());
@@ -208,8 +258,26 @@ public class JobManager {
         }
 
         // TODO:
-        // Add job filtering/deduplication by criteria
+        // Add validation for required parts of a job
 
+
+        // Don't allow this job to be queued if we already have a non-terminal job with the same
+        // constraints
+        Collection<AsyncJobStatus> matching = this.jobCurator.findJobsByConstraints(builder.getJobName(),
+            builder.getJobGroup(), AsyncJobStatus.JobState.getNonTerminalStates(),
+            this.calculateUniqueJobConstraintHash(builder.getUniqueConstraints()));
+
+        if (matching != null && !matching.isEmpty()) {
+            if (matching.size() > 1) {
+                log.warn("Multiple jobs found matching the specified job constraints: {}",
+                    builder.getUniqueConstraints());
+            }
+
+            // Return only the first in the event we find more than one.
+            return matching.iterator().next();
+        }
+
+        // Build the job status from the provided builder
         AsyncJobStatus job = this.buildJobStatus(builder);
         job.setState(JobState.CREATED);
 
@@ -254,24 +322,31 @@ public class JobManager {
      *  a JobStatus instance representing the job's status
      */
     public AsyncJobStatus executeJob(final JobMessage message)
-        throws PreJobExecutionException, JobExecutionException {
+        throws JobInitializationException, JobExecutionException {
+
         final AsyncJobStatus status = this.jobCurator.get(message.getJobId());
+
         if (status == null) {
-            throw new PreJobExecutionException("JobStatus(" + message.toString() + ") was not found.");
+            throw new JobInitializationException("JobStatus(" + message.toString() + ") was not found.");
         }
+
         if (status.getState() == JobState.CANCELED) {
-            throw new PreJobExecutionException("Job(" + message.toString() + ") was CANCELLED.");
+            throw new JobInitializationException("Job(" + message.toString() + ") was CANCELLED.");
         }
-        final Class<? extends AsyncJob> jobClass = getJobClass(message.getJobKey());
+
         candlepinRequestScope.enter();
+
+        final Class<? extends AsyncJob> jobClass = getJobClass(message.getJobKey());
         final EventSink eventSink = injector.getInstance(EventSink.class);
         final UnitOfWork uow = injector.getInstance(UnitOfWork.class);
+
         uow.begin();
+
         try {
             setupLogging(status);
             final AsyncJob job = injector.getInstance(jobClass);
             if (job == null) {
-                throw new PreJobExecutionException("Job(" + message.toString() + ") could not be created.");
+                throw new JobInitializationException("Job(" + message.toString() + ") could not be created.");
             }
             setRunning(message.getJobId());
             final Object result = job.execute(status);
@@ -293,15 +368,19 @@ public class JobManager {
     private void setupLogging(final AsyncJobStatus jdata) {
         MDC.put("requestType", "job");
         if (jdata != null) {
-            final JobDataMap map = jdata.getJobData();
-
             String requestUuid = null;
             String orgKey = null;
             String orgLogLevel = null;
 
             MDC.put(LoggingFilter.CSID, jdata.getCorrelationId());
+
+            // TODO: This is carry over from the PinsetterKernel and should be rewritten in a way
+            // that decouples it from both the old code and packages (drop JobStatus), and decouples
+            // the job data from the job metadata.
+            final JobDataMap map = jdata.getJobData();
             if (map != null) {
                 requestUuid = map.getAsString("requestUuid");
+
                 // Impl note: we use the OWNER_ID map key to store the org key
                 orgKey = map.getAsString(JobStatus.OWNER_ID);
                 orgLogLevel = map.getAsString(JobStatus.OWNER_LOG_LEVEL);

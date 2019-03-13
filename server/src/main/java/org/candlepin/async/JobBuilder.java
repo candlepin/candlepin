@@ -17,6 +17,8 @@ package org.candlepin.async;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 
 
@@ -29,7 +31,7 @@ public class JobBuilder {
     private String name;
     private String group;
     private Map<String, Object> arguments;
-    private Map<String, String> restrictions;
+    private SortedMap<String, String> constraints;
     private int retries;
     private boolean logJobExecution;
 
@@ -40,7 +42,7 @@ public class JobBuilder {
      */
     public JobBuilder() {
         this.arguments = new HashMap<>();
-        this.restrictions = new HashMap<>();
+        this.constraints = new TreeMap<>();
     }
 
     /**
@@ -158,6 +160,53 @@ public class JobBuilder {
     }
 
     /**
+     * Adds a unique constraint to this job. If this job is passed to the job manager while an
+     * existing job matches any of the unique constraints, the new job will be rejected as a
+     * duplicate.
+     *
+     * @param key
+     *  The key defining the unique constraint; i.e. "product_id" or "owner_id"
+     *
+     * @param value
+     *  The value of the unique constraint
+     *
+     * @throws IllegalArgumentException
+     *  if either key or value is null or empty
+     *
+     * @return
+     *  this JobBuilder instance
+     */
+    public JobBuilder setUniqueConstraint(String key, String value) {
+        // Impl note:
+        // It's potentially problematic if someone sets empty values here, but I don't think
+        // it would break any queries or otherwise not work; it'd just be... silly and make
+        // debugging a bit painful.
+        if (key == null || key.isEmpty()) {
+            throw new IllegalArgumentException("key is null or empty");
+        }
+
+        if (value == null || value.isEmpty()) {
+            throw new IllegalArgumentException("value is null or empty");
+        }
+
+        this.constraints.put(key, value);
+        return this;
+    }
+
+    /**
+     * Fetches a mapping of the unique constraints set for this job. If the job does not have any
+     * constraints, this method returns an empty map. Note that the map returned by this method
+     * cannot be modified directly, though changes made to the unique constraints by this builder
+     * will be reflected in the returned map.
+     *
+     * @return
+     *  the map of unique constraints for this job
+     */
+    public SortedMap<String, String> getUniqueConstraints() {
+        return Collections.unmodifiableSortedMap(this.constraints);
+    }
+
+    /**
      * Sets the value of an argument to pass into the job at the time of execution. As the value
      * may be serialized and deserialized before the job is executed, it is best to avoid setting
      * any values which are sensitive to transient data or have large trees of data.
@@ -191,51 +240,6 @@ public class JobBuilder {
      */
     public Map<String, Object> getJobArguments() {
         return Collections.unmodifiableMap(this.arguments);
-    }
-
-    /**
-     * Adds a unique restriction to this job. If this job is passed to the job manager while an
-     * existing job matches any of the unique restrictions, the new job will be rejected as a
-     * duplicate.
-     *
-     * @param key
-     *  The key defining the unique restriction; i.e. "product_id" or "owner_id"
-     *
-     * @param value
-     *  The value of the unique restriction
-     *
-     * @return
-     *  this JobBuilder instance
-     */
-    public JobBuilder addUniqueRestriction(String key, String value) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        if (value == null) {
-            throw new IllegalArgumentException("value is null");
-        }
-
-        // Impl note:
-        // It's potentially problematic if someone sets empty values here, but I don't think
-        // it would break any queries or otherwise not work; it'd just be... silly and make
-        // debugging a bit painful.
-
-        this.restrictions.put(key, value);
-        return this;
-    }
-
-    /**
-     * Fetches a mapping of the unique restrictions set for this job. If the job does not have any
-     * restrictions, this method returns an empty map. Note that the map returned by this method
-     * cannot be modified directly, though changes made to the unique restrictions by this builder
-     * will be reflected in the returned map.
-     *
-     * @return
-     *  the map of unique restrictions for this job
-     */
-    public Map<String, String> getUniqueRestrictions() {
-        return Collections.unmodifiableMap(this.restrictions);
     }
 
     /**
@@ -310,8 +314,8 @@ public class JobBuilder {
         //          .setName("my_task")
         //          .setTaskArgument("key", "value")
         //          .setTaskArgument("key2", "value2")
-        //          .addUniqueRestriction("owner", owner_id_here)
-        //          .addUniqueRestriction("product", product_id_here)
+        //          .addUniqueConstraint("owner", owner_id_here)
+        //          .addUniqueConstraint("product", product_id_here)
         //          .addTaskMetadata("correlation_id", cid)
         //          .setRetryCount(3)
         //

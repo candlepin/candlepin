@@ -24,6 +24,7 @@
             <column name="origin" type="varchar(255)"/>
             <column name="principal" type="varchar(255)"/>
             <column name="correlation_id" type="varchar(255)"/>
+            <column name="constraint_hash" type="varchar(64)"/>
 
             <column name="state" type="int"/>
             <column name="attempts" type="int"/>
@@ -37,26 +38,20 @@
     </changeSet>
 
     <changeSet id="20181121151738-2" author="crog">
-        <createTable tableName="cp2_async_job_constraints">
-            <column name="job_id" type="varchar(255)">
-                <constraints
-                    nullable="false"
-                    foreignKeyName="cp2_async_job_constraints_fk1"
-                    references="cp2_async_jobs(id)"
-                    deleteCascade="true"
-                />
-            </column>
+        <createIndex tableName="cp2_async_jobs"
+            indexName="cp2_async_jobs_idx1" unique="false">
+            <column name="name"/>
+        </createIndex>
 
-            <column name="key" type="varchar(255)"/>
-            <column name="value" type="varchar(255)"/>
-        </createTable>
-    </changeSet>
+        <createIndex tableName="cp2_async_jobs"
+            indexName="cp2_async_jobs_idx2" unique="false">
+            <column name="constraint_hash"/>
+        </createIndex>
 
-    <changeSet id="20181121151738-3" author="crog">
-        <addPrimaryKey tableName="cp2_async_job_constraints"
-            columnNames="job_id,key"
-            constraintName="cp2_async_job_constraints_pk"
-        />
+        <createIndex tableName="cp2_async_jobs"
+            indexName="cp2_async_jobs_idx3" unique="false">
+            <column name="state"/>
+        </createIndex>
     </changeSet>
 
 </databaseChangeLog>

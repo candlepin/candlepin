@@ -20,20 +20,16 @@ import org.candlepin.async.JobDataMap;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
-import java.util.HashMap;
 
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -71,14 +67,67 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         /** The job was canceled by request */
         CANCELED(true);
 
+        private static Collection<JobState> terminals;
+        private static Collection<JobState> nonterminals;
+
         private final boolean terminal;
 
         JobState(boolean terminal) {
             this.terminal = terminal;
         }
 
+        /**
+         * Checks if this job state is terminal.
+         *
+         * @return
+         *  true if this job state is terminal; false otherwise
+         */
         public boolean isTerminal() {
             return this.terminal;
+        }
+
+        /**
+         * Fetches an immutable collection of terminal job states.
+         *
+         * @return
+         *  an immutable collection of terminal job states
+         */
+        public static Collection<JobState> getTerminalStates() {
+            if (terminals == null) {
+                ArrayList<JobState> states = new ArrayList<>();
+
+                for (JobState state : JobState.values()) {
+                    if (state.isTerminal()) {
+                        states.add(state);
+                    }
+                }
+
+                terminals = Collections.unmodifiableList(states);
+            }
+
+            return terminals;
+        }
+
+        /**
+         * Fetches an immutable collection of non-terminal job states.
+         *
+         * @return
+         *  an immutable collection of non-terminal job states
+         */
+        public static Collection<JobState> getNonTerminalStates() {
+            if (nonterminals == null) {
+                ArrayList<JobState> states = new ArrayList<>();
+
+                for (JobState state : JobState.values()) {
+                    if (!state.isTerminal()) {
+                        states.add(state);
+                    }
+                }
+
+                nonterminals = Collections.unmodifiableList(states);
+            }
+
+            return nonterminals;
         }
     }
 
@@ -107,11 +156,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
 
     private JobState state;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "cp2_async_job_constraints", joinColumns = @JoinColumn(name = "job_id"))
-    @MapKeyColumn(name = "key")
-    @Column(name = "value")
-    private Map<String, String> constraints;
+    @Column(name = "constraint_hash")
+    private String constraintHash;
 
     private int attempts;
     @Column(name = "max_attempts")
@@ -129,6 +175,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @Column(name = "job_result")
     @Type(type = "org.candlepin.hibernate.JsonSerializedDataType")
     private Object jobResult;
+
+    // TODO: Merge this with the job metadata
     @Column(name = "job_exec_source")
     private String jobExecSource;
 
@@ -137,7 +185,6 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      * Creates a new AsyncJobStatus instance with no configuration
      */
     public AsyncJobStatus() {
-        this.constraints = new HashMap<>();
         this.state = JobState.CREATED;
     }
 
@@ -387,6 +434,32 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         }
 
         this.state = state;
+        return this;
+    }
+
+    /**
+     * Fetches the constraint hash for this job. If the constraints have not yet been set, this
+     * method returns null
+     *
+     * @return
+     *  the hash of unique constraints for this job
+     */
+    public String getUniqueConstraintHash() {
+        return this.constraintHash;
+    }
+
+    /**
+     * Sets or clears the unique constraint hash for this job status. If the provided constraint
+     * hash is null or empty, any existing hash will be cleared.
+     *
+     * @param constraintHash
+     *  The unique constraint hash to set for this job
+     *
+     * @return
+     *  this job status instance
+     */
+    public AsyncJobStatus setUniqueConstraintHash(String constraintHash) {
+        this.constraintHash = constraintHash != null && !constraintHash.isEmpty() ? constraintHash : null;
         return this;
     }
 
