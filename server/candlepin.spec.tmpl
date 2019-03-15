@@ -40,7 +40,11 @@ BuildRequires: /usr/bin/pathfix.py
 
 Requires: java >= 1:1.8.0
 Requires: wget
+%if 0%{?rhel} == 8
+Requires: pki-servlet-container
+%else
 Requires: tomcat >= 0:7.0.0
+%endif
 Requires: liquibase >= 0:3.0.0
 Requires: jss
 # Need JDBC driver for cpdb
