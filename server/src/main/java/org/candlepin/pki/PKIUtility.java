@@ -54,8 +54,7 @@ import java.util.Set;
 public abstract class PKIUtility {
     private static Logger log = LoggerFactory.getLogger(PKIUtility.class);
 
-    // TODO : configurable?
-    public static final int RSA_KEY_SIZE = 2048;
+    public static final int RSA_KEY_SIZE = 4096;
     public static final String SIGNATURE_ALGO = "SHA256WithRSA";
 
     protected CertificateReader reader;
