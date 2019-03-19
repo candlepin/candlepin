@@ -1,6 +1,7 @@
 # encoding: utf-8
 require 'spec_helper'
 require 'candlepin_scenarios'
+require 'json'
 require 'unpack'
 require 'time'
 
@@ -372,6 +373,100 @@ describe 'Content Access' do
       @cp.delete_owner(@import_owner['key'])
       @cp_export.cleanup()
  end
+
+
+  RSpec.shared_examples "manifest import" do |async|
+    it "will import a manifest when only the access mode changes" do
+      skip("candlepin running in standalone mode") unless is_hosted?
+
+      cp = Candlepin.new('admin', 'admin')
+      cp_export = async ? AsyncStandardExporter.new : StandardExporter.new
+      owner = cp_export.owner
+
+      export1 = cp_export.create_candlepin_export()
+      export1_file = cp_export.export_filename
+
+      # Sleep long enough to ensure the timestamps would change
+      sleep 1
+
+      candlepin_client = cp_export.candlepin_client
+      candlepin_client.update_consumer({'contentAccessMode' => "org_environment"})
+      export2 = cp_export.create_candlepin_export()
+      export2_file = cp_export.export_filename
+
+      def read_json_file(filename)
+        file = File.open(filename)
+        json = JSON.load(file)
+        file.close()
+
+        return json
+      end
+
+      # Verify the exports are indeed different
+      export1_metadata = read_json_file("#{export1.export_dir}/meta.json")
+      export2_metadata = read_json_file("#{export2.export_dir}/meta.json")
+
+      expect(export2_metadata['created']).to_not eq(export1_metadata['created'])
+
+      # Verify the consumer access mode is updated and correct in the second export
+      export1_consumer = read_json_file("#{export1.export_dir}/consumer.json")
+      export2_consumer = read_json_file("#{export2.export_dir}/consumer.json")
+
+      expect(export2_consumer['contentAccessMode']).to_not eq(export1_consumer['contentAccessMode'])
+      expect(export2_consumer['contentAccessMode']).to eq("org_environment")
+
+      candlepin_consumer = candlepin_client.get_consumer()
+      candlepin_consumer.unregister(candlepin_consumer['uuid'])
+
+      # Import the first manifest
+      import_owner = create_owner(random_string("import_org"), nil, {
+        'contentAccessModeList' => 'org_environment,test_access_mode,entitlement',
+        'contentAccessMode' => "org_environment"
+      })
+      import_username = random_string("import-user")
+      import_owner_client = user_client(import_owner, import_username)
+
+      import_record = @cp.import(import_owner['key'], export1_file)
+      import_record.status.should == 'SUCCESS'
+      import_record.statusMessage.should == "#{import_owner['key']} file imported successfully."
+
+      owner = @cp.get_owner(import_owner['key'])
+      expect(owner['contentAccessMode']).to_not eq(export2_consumer['contentAccessMode'])
+
+      pools = @cp.list_owner_pools(import_owner['key'])
+
+      # Import the second manifest. This should set the content access mode properly
+      import_record = @cp.import(import_owner['key'], export2_file)
+      import_record.status.should == 'SUCCESS'
+      import_record.statusMessage.should == "#{import_owner['key']} file imported successfully."
+
+      owner = @cp.get_owner(import_owner['key'])
+      expect(owner['contentAccessMode']).to eq(export2_consumer['contentAccessMode'])
+
+      pools2 = @cp.list_owner_pools(import_owner['key'])
+
+      # Remove last updated time, since that changes anyway...? This seems odd, but as long as no other
+      # details change, it's fine... I guess.
+      pools.each { |p| p.delete("updated") }
+      pools2.each { |p| p.delete("updated") }
+
+      # Sort the objects by UUIDs so we don't get false negatives there.
+      pools = pools.sort_by { |p| p.id }
+      pools2 = pools2.sort_by { |p| p.id }
+
+      expect(pools2).to eq(pools)
+
+      cp_export.cleanup()
+    end
+  end
+
+  describe "Async Tests" do
+    it_should_behave_like "manifest import", true
+  end
+
+  describe "Sync import tests" do
+    it_should_behave_like "manifest import", false
+  end
 
 
  it "will express on consumers at the distributor" do
