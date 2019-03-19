@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function, division, absolute_import
 
 """
 This script is used for generating testing RPM repositories
@@ -20,9 +21,8 @@ Name:           ${name}
 Version:        ${version}
 Release:        ${release}
 License:        GPL License
-Packager:       Jiri Hnidek <jhnidek redhat com>
+Packager:       John Doe <john doe com>
 Vendor:         Red Hat
-Group:          Networking/Daemons
 URL:            http://www.tricky-testing-animals.org/
 BuildArch:      noarch
  
@@ -32,7 +32,7 @@ This is a ${name} package.
 %%files
  
 %%changelog
-* Fri Mar 1 2019 Jiri Hnidek <jhnidek redhat com> 0
+* Fri Mar 1 2019 John Doe <john doe com> 0
 - ${name}
 """
 
@@ -42,9 +42,9 @@ GPG_NAME_EMAIL = "noreply@candlepinproject.org"
 
 GPG_BATCH_GEN_SCRIPT_CONTENT = """
 Key-Type: 1
-Key-Length: 2048
+Key-Length: 4096
 Subkey-Type: 1
-Subkey-Length: 2048
+Subkey-Length: 4096 
 Name-Real: %s
 Name-Email: %s
 Expire-Date: 0
@@ -81,7 +81,7 @@ def run_command(command, verbose=False):
     # Print output of command
     if verbose is True:
         for line in process.stdout.readlines():
-            print line
+            print(line)
 
     # Wait for result of process
     ret = process.wait()
@@ -144,8 +144,8 @@ def add_packages_to_repo(packages_list, repo_path, repository):
     for pkg_name in packages_list:
         print("\tAdding package %s" % pkg_name)
         pkg_file_name = pkg_name + '-1-0.noarch.rpm'
-        src_pkg_file_path = RPMBUILD_ROOT_DIR + '/RPMS/noarch/' + pkg_file_name
-        dst_pkg_file_path = repo_path + '/RPMS/' + pkg_file_name
+        src_pkg_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'RPMS' ,'noarch', pkg_file_name)
+        dst_pkg_file_path = os.path.join(repo_path, 'RPMS', pkg_file_name)
         shutil.copyfile(src_pkg_file_path, dst_pkg_file_path)
 
 
@@ -167,13 +167,15 @@ def generate_repositories(repo_definitions):
     for repo in repo_definitions:
         repo_path = REPO_ROOT_DIR + repo['content_url']
         print("creating repository %s in %s" % (repo['name'], repo_path ))
-        if not os.path.exists(repo_path + '/RPMS'):
-            os.makedirs(repo_path + '/RPMS')
+
+        repo_path_rpms = os.path.join(repo_path, 'RPMS')
+        if not os.path.exists(repo_path_rpms):
+            os.makedirs(repo_path_rpms)
 
         add_packages_to_repo(repo['packages'], repo_path, repo)
 
         # Create repository with RPM packages
-        run_command('createrepo %s' % repo_path)
+        run_command('createrepo_c %s' % repo_path)
 
         # Try to create temporary product on candlepin server
         ret = create_repo_product(repo)
@@ -310,7 +312,8 @@ def create_dummy_package(package):
     rpm_spec_content = template.substitute(d)
 
     # Path to spec file
-    spec_file_path = RPMBUILD_ROOT_DIR + '/SPECS/' + name + '.spec'
+
+    spec_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'SPECS', name + '.spec')
 
     # Save content of spec file to real file
     with open(spec_file_path, 'w') as fp:
@@ -319,7 +322,8 @@ def create_dummy_package(package):
     # Generate RPM package using rpmbuild
     run_command('rpmbuild -bb %s' % spec_file_path)
 
-    rpm_file_path = RPMBUILD_ROOT_DIR + '/RPMS/' + arch + '/' + name + '-' + version + '-' + release + '.' + arch + '.rpm'
+    rpm_file_name = name + '-' + version + '-' + release + '.' + arch + '.rpm'
+    rpm_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'RPMS', arch, rpm_file_name)
 
     # Resign RPM package with GPG key
     # Note: GPG is interesting software requiring passphrase and it's almost impossible to avoid
@@ -344,7 +348,7 @@ def generate_packages(package_definitions):
 
     # Make all remaining subdirs for rpmbuild
     for subdir in rpmbuild_sub_dirs:
-        subdir_path = RPMBUILD_ROOT_DIR + '/' + subdir
+        subdir_path = os.path.join(RPMBUILD_ROOT_DIR, subdir)
         if not os.path.exists(subdir_path):
             os.makedirs(subdir_path)
 
@@ -361,7 +365,7 @@ def create_gpg_batch_gen_script():
     # Create temporary directory first
     temp_dir_path = tempfile.mkdtemp()
 
-    script_path = temp_dir_path + "/gpg_batch_gen_script"
+    script_path = os.path.join(temp_dir_path, 'gpg_batch_gen_script')
 
     with open(script_path, "w") as fp:
         fp.write(GPG_BATCH_GEN_SCRIPT_CONTENT)
