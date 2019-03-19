@@ -20,12 +20,19 @@ import static org.mockito.Mockito.*;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.SystemPurposeComplianceStatus;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -96,6 +103,51 @@ public class EventFactoryTest {
             "{\"productName\":\"Awesome Middleware\"," +
             "\"message\":\"Supports architecture ppc64 but the system is x86_64.\"}]," +
             "\"status\":\"invalid\"}";
+        Event event = eventFactory.complianceCreated(consumer, status);
+        assertEquals(expectedEventData, event.getEventData());
+    }
+
+    @Test
+    public void testSyspurposeComplianceCreatedSetsEventData() {
+        Consumer consumer = mock(Consumer.class);
+        SystemPurposeComplianceStatus status = mock(SystemPurposeComplianceStatus.class);
+
+        when(consumer.getName()).thenReturn("consumer-name");
+        when(consumer.getOwnerId()).thenReturn("owner-id");
+        when(consumer.getUuid()).thenReturn("48b09f4e-f18c-4765-9c41-9aed6f122739");
+        when(status.getStatus()).thenReturn("mismatched");
+
+        String reason1 = "unsatisfied usage: Production";
+        String reason2 = "unsatisfied sla: Premium";
+        String reason3 = "unsatisfied role: Red Hat Enterprise Linux Server";
+
+        when(status.getReasons()).thenReturn(ImmutableSet.of(reason1, reason2, reason3));
+        when(status.getNonCompliantRole()).thenReturn("Red Hat Enterprise Linux Server");
+        when(status.getNonCompliantAddOns()).thenReturn(new HashSet<>());
+        when(status.getNonCompliantSLA()).thenReturn("Premium");
+        when(status.getNonCompliantUsage()).thenReturn("Production");
+        Map<String, Set<Entitlement>> entitlements = new HashMap<>();
+        when(status.getCompliantRole()).thenReturn(entitlements);
+        when(status.getCompliantAddOns()).thenReturn(entitlements);
+        when(status.getCompliantSLA()).thenReturn(entitlements);
+        when(status.getCompliantUsage()).thenReturn(entitlements);
+
+        String expectedEventData = "{" +
+            "\"nonCompliantUsage\":\"Production\"," +
+            "\"compliantAddOns\":{}," +
+            "\"nonCompliantRole\":\"Red Hat Enterprise Linux Server\"," +
+            "\"reasons\":[" +
+            "\"unsatisfied usage: Production\"," +
+            "\"unsatisfied sla: Premium\"," +
+            "\"unsatisfied role: Red Hat Enterprise Linux Server\"" +
+            "]," +
+            "\"compliantSLA\":{}," +
+            "\"nonCompliantAddOns\":[]," +
+            "\"compliantRole\":{}," +
+            "\"nonCompliantSLA\":\"Premium\"," +
+            "\"compliantUsage\":{}," +
+            "\"status\":\"mismatched\"" +
+            "}";
         Event event = eventFactory.complianceCreated(consumer, status);
         assertEquals(expectedEventData, event.getEventData());
     }

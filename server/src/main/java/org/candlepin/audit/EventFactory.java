@@ -249,6 +249,14 @@ public class EventFactory {
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("status", compliance.getStatus());
         eventData.put("reasons", Collections.unmodifiableSet(compliance.getReasons()));
+        eventData.put("nonCompliantSLA", compliance.getNonCompliantSLA());
+        eventData.put("nonCompliantRole", compliance.getNonCompliantRole());
+        eventData.put("nonCompliantUsage", compliance.getNonCompliantUsage());
+        eventData.put("nonCompliantAddOns", compliance.getNonCompliantAddOns());
+        eventData.put("compliantSLA", compliance.getCompliantSLA());
+        eventData.put("compliantRole", compliance.getCompliantRole());
+        eventData.put("compliantUsage", compliance.getCompliantUsage());
+        eventData.put("compliantAddOns", compliance.getCompliantAddOns());
         try {
             String eventDataJson = mapper.writeValueAsString(eventData);
             // Instead of an internal db id, compliance.created events now use
