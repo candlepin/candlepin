@@ -4,6 +4,9 @@
 # This file should be imported and used by other scripts, rather than having business logic added to it
 # directly.
 
+# This requires mysql-connector or psycopg2 for mysql/mariadb and postgresql respectively. "Compatible"
+# packages may introduce odd issues (i.e. mysql-connector-python is known to cause problems)
+
 import os
 
 import logging
@@ -20,13 +23,59 @@ class HTTPConnector(object):
 
 
 class DBConnector(object):
+    class TransactionContext():
+        def __init__(self, db):
+            self._active = True
+            self._db = db
+
+        def __enter__(self):
+            # Since we return this from a start_transaction call, we don't need to do anything
+            # here
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            # If we still have a transaction open, we need to commit on successful exit and
+            # rollback on exception
+            if self._active and self._db.in_transaction():
+                if exc_type is None:
+                    self.commit()
+                else:
+                    log.debug("with-statement exited with exception; rolling back transaction")
+                    self.rollback()
+
+            # Do not suppress any exceptions
+            return False
+
+        def commit(self):
+            if not self._active or not self._db.in_transaction():
+                raise RuntimeError("Transaction already closed")
+
+            self._db.commit()
+            self._active = False
+
+        def rollback(self):
+            if not self._active or not self._db.in_transaction():
+                raise RuntimeError("Transaction already closed")
+
+            self._db.rollback()
+            self._active = False
+
+
+
     def __init__(self, db):
         self.db = db
+
+        # Default auto-commit to True to make some of the transaction stuff easier to setup later
+        # This will be automatically shut off once a transaction is started.
+        self.db.autocommit = True
 
     def __del__(self):
         self.close()
 
     def backend(self):
+        raise NotImplementedError("Not yet implemented")
+
+    def get_type_as_string(self, type_code):
         raise NotImplementedError("Not yet implemented")
 
     def close(self):
@@ -36,11 +85,21 @@ class DBConnector(object):
     def is_closed(self):
         raise NotImplementedError("Not yet implemented")
 
+    def start_transaction(self, readonly=False):
+        raise NotImplementedError("Not yet implemented")
+
+    def in_transaction(self):
+        raise NotImplementedError("Not yet implemented")
+
     def commit(self):
+        log.debug("Committing transaction")
         self.db.commit()
+        self.db.autocommit=True
 
     def rollback(self):
+        log.debug("Rolling back transaction")
         self.db.rollback()
+        self.db.autocommit=True
 
     def cursor(self):
         return self.db.cursor()
@@ -68,7 +127,6 @@ class DBConnector(object):
             cursor.execute(query, parameters)
             count = cursor.rowcount
 
-            self.commit()
             cursor.close()
 
             return count
@@ -100,14 +158,48 @@ class PSQLConnector(DBConnector):
 
         super(PSQLConnector, self).__init__(psql.connect(**params))
 
+        # Get the types from the DB so we can map them for storing types
+        self._init_types()
+
     def backend(self):
         return 'PostgreSQL'
+
+    def _init_types(self):
+        cursor = self.execQuery('SELECT oid, typname FROM pg_type')
+
+        self._type_map = {}
+        for row in cursor:
+            self._type_map[row[0]] = row[1]
+
+        cursor.close()
+
+    def get_type_as_string(self, type_code):
+        if type_code in self._type_map:
+            return self._type_map[type_code]
+
+        return None
 
     def is_closed(self):
         if self.db is not None and self.db.closed == 0:
             return False
 
         return True
+
+    def start_transaction(self, readonly=False):
+        self.db.set_session(readonly=readonly, autocommit=False)
+
+        # Transactions are automatically started on the first command if autocommit is set to false, so
+        # let's do a quick no-op query to get things started
+        cursor = self.cursor()
+        cursor.execute('SELECT 1')
+        cursor.close()
+
+        return DBConnector.TransactionContext(self)
+
+
+    def in_transaction(self):
+        tx_states = [self.psql.extensions.STATUS_BEGIN, self.psql.extensions.STATUS_IN_TRANSACTION, self.psql.extensions.STATUS_PREPARED]
+        return not self.is_closed() and self.db.status in tx_states
 
 
 
@@ -150,15 +242,32 @@ class MySQLConnector(DBConnector):
     def backend(self):
         return 'MySQL/MariaDB'
 
+    def get_type_as_string(self, type_code):
+        from mysql.connector import FieldType
+        return FieldType.get_info(type_code)
+
     def is_closed(self):
         if self.db is not None and self.db.is_connected():
             return False
 
         return True
 
+    def start_transaction(self, readonly=False):
+        # Impl note: Read-only isn't supported. We could hack it by making commit do a rollback instead,
+        # but that feels worse than doing nothing. Eventually remove this and start supporting it again.
+        log.debug("MySql read-only transactions are not supported; ignoring config");
+
+        self.db.autocommit=False
+        self.db.start_transaction()
+        return DBConnector.TransactionContext(self)
+
+    def in_transaction(self):
+        return not self.is_closed() and self.db.in_transaction
 
 
 
+def set_log_level(level):
+    log.setLevel(level)
 
 def get_http_connector(host, username, password, secure):
     pass #TODO
