@@ -14,22 +14,17 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
-
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Provider;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.SessionWrapper;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Provider;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
@@ -37,32 +32,39 @@ import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
 
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 @RunWith(JUnitParamsRunner.class)
 public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
-    private static Logger log = LoggerFactory.getLogger(CandlepinQueryInterceptorTest.class);
 
-    protected JsonProvider mockJsonProvider;
-    protected JsonFactory mockJsonFactory;
-    protected JsonGenerator mockJsonGenerator;
-    protected ObjectMapper mockObjectMapper;
-    protected OutputStream mockOutputStream;
-    protected Provider<EntityManager> emProvider;
+    private JsonProvider mockJsonProvider;
+    private JsonFactory mockJsonFactory;
+    private JsonGenerator mockJsonGenerator;
+    private ObjectMapper mockObjectMapper;
+    private OutputStream mockOutputStream;
+    private Provider<EntityManager> emProvider;
+    private Session session;
 
     @Override
     public void init() throws Exception {
@@ -92,7 +94,7 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
         // properties via hsqldb.
         this.emProvider = mock(Provider.class);
         Session currentSession = (Session) this.getEntityManager().getDelegate();
-        Session wrappedSession = spy(new SessionWrapper(currentSession));
+        this.session = spy(new SessionWrapper(currentSession));
         EntityManager mockEntityManager = mock(EntityManager.class);
         Session mockSession = mock(Session.class);
         SessionFactory mockSessionFactory = mock(SessionFactory.class);
@@ -100,8 +102,8 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
         when(this.emProvider.get()).thenReturn(mockEntityManager);
         when(mockEntityManager.getDelegate()).thenReturn(mockSession);
         when(mockSession.getSessionFactory()).thenReturn(mockSessionFactory);
-        when(mockSessionFactory.openSession()).thenReturn(wrappedSession);
-        doNothing().when(wrappedSession).close();
+        when(mockSessionFactory.openSession()).thenReturn(this.session);
+        doNothing().when(this.session).close();
 
         // Create some owners to play with
         for (int i = 0; i < 5; ++i) {
@@ -207,7 +209,6 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
 
         assertSame(owners, response.getEntity());
 
-
         // Single entity
         Owner owner = owners.get(0);
         response.setEntity(owner);
@@ -215,6 +216,25 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
         cqi.postProcess(response);
 
         assertSame(owner, response.getEntity());
+    }
+
+    @Test
+    public void shouldCloseSessionWhenExceptionOccurs() {
+        doThrow(new RuntimeException()).when(this.mockJsonProvider)
+            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+        final ServerResponse response = new ServerResponse();
+        response.setEntity(this.ownerCurator.listAll());
+        final CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(
+            this.mockJsonProvider, this.emProvider);
+
+        try {
+            cqi.postProcess(response);
+            fail("Should not happen!");
+        }
+        catch (RuntimeException e) {
+            verify(this.session).close();
+        }
+
     }
 
 }
