@@ -39,6 +39,7 @@ import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
 
 import com.google.inject.Inject;
 
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,6 +176,16 @@ public class ComplianceRules {
         Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
             consumer.getGuestIds().stream()
                 .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+
+
+        // Status can only be 'disabled' when in golden ticket mode
+        if (consumer.getOwner() != null && ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(
+            consumer.getOwner().getContentAccessMode())) {
+            ComplianceStatus cs = new ComplianceStatus(new Date());
+            cs.setDisabled(true);
+            applyStatus(consumer, cs, updateConsumer);
+            return cs;
+        }
 
         // Do not calculate compliance status for distributors. It is prohibitively
         // expensive and meaningless

@@ -35,6 +35,7 @@ public class SystemPurposeComplianceStatus {
     public static final String MATCHED = "matched";
     public static final String MISMATCHED = "mismatched";
     public static final String NOT_SPECIFIED = "not specified";
+    public static final String DISABLED = "disabled";
 
     // Date this compliance was set on
     private Date date;
@@ -48,6 +49,7 @@ public class SystemPurposeComplianceStatus {
     private Map<String, Set<Entitlement>> compliantUsage;
     private Set<String> reasons;
     private I18n i18n;
+    private boolean disabled = false;
 
     public SystemPurposeComplianceStatus(I18n i18n) {
         this.compliantRole = new HashMap<>();
@@ -223,6 +225,9 @@ public class SystemPurposeComplianceStatus {
      */
     public String getStatus() {
 
+        if (isDisabled()) {
+            return DISABLED;
+        }
         if (isCompliant()) {
             if (isNotSpecified()) {
                 return NOT_SPECIFIED;
@@ -254,5 +259,13 @@ public class SystemPurposeComplianceStatus {
         }
 
         this.reasons.add(i18n.tr(reason, principles));
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    public boolean isDisabled() {
+        return this.disabled;
     }
 }
