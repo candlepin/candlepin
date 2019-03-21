@@ -814,6 +814,37 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
+     * Locks a collection of entities with a pessimisitic write lock. Note that none of the entities
+     * will be refreshed as a result of a call to this method. If an entity needs to be locked and
+     * refreshed, used the lockAndLoad method family instead.
+     *
+     * @param entities
+     *  A collection of entities to lock
+     *
+     * @return
+     *  the provided collection of now-locked entities
+     */
+    public Collection<E> lock(Iterable<E> entities) {
+        Map<Serializable, E> entityMap = new TreeMap<>();
+
+        SessionImpl session = (SessionImpl) this.currentSession();
+        ClassMetadata metadata = session.getSessionFactory().getClassMetadata(this.entityType);
+
+        // Step through and toss all the entities into our TreeMap, which orders its entries using
+        // the natural order of the key. This will ensure that we have our entity collection sorted
+        // by entity ID, which should help avoid deadlock by having a deterministic locking order.
+        for (E entity : entities) {
+            entityMap.put(metadata.getIdentifier(entity, session), entity);
+        }
+
+        for (E entity : entityMap.values()) {
+            this.lock(entity);
+        }
+
+        return entityMap.values();
+    }
+
+    /**
      * Locks the specified entity with a pessimistic write lock. Note that the entity will not be
      * refreshed as a result of a call to this method. If the entity needs to be locked and
      * refreshed, use the lockAndLoad method family instead.
