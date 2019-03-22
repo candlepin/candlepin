@@ -1,9 +1,13 @@
-import groovy.text.GStringTemplateEngine
+// vim: set expandtab sts=4 sw=4 ai:
 
-apply plugin: 'war'
+import groovy.text.GStringTemplateEngine
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+apply plugin: "war"
 apply plugin: Gettext
 
-description = 'Candlepin Server'
+description = "Candlepin Server"
 
 // Copy the resources to the main classes directory so that the
 // persistence context is in the the same classpath entry for
@@ -15,45 +19,28 @@ gettext {
     keys_project_dir = "${project.rootDir}/common"
 }
 
-// Set the JVM arguments to be used for testing
-test {
-    useJUnitPlatform()
-    maxHeapSize = '2g'
-    jvmArgs '-XX:+HeapDumpOnOutOfMemoryError'
-}
-
 // substitut the version & release in the version.properties used by the status resource at runtime
 processResources {
-    from('src/main/resources') {
-        include 'version.properties'
-        expand([version: project.getVersion(), release: project.findProperty('release')])
+    from("src/main/resources") {
+        include "version.properties"
+        expand([version: project.getVersion(), release: project.findProperty("release")])
     }
 }
 
 war {
-    if (! hostedtest){
-        rootSpec.exclude('**/hostedtest/**')
+    if (!hostedtest) {
+        rootSpec.exclude("**/hostedtest/**")
     }
     manifest {
         attributes(
-                "Implementation-Title": "The Candlepin Project",
-                "Copyright": "Red Hat, Inc. 2018"
+            "Implementation-Title": "The Candlepin Project",
+            "Copyright": "Red Hat, Inc. 2018"
         )
     }
     // Copy the license file into place in the final manifest
     from(projectDir) {
-        include 'LICENSE'
-        into('META-INF')
-    }
-}
-
-configurations {
-    compile {
-        extendsFrom(antlr, commons, ehcache, guice, jackson, javax, liquibase, logging_deps, sun_jaxb, swagger,
-                resteasy, collections)
-    }
-    testCompile {
-        extendsFrom(core_testing, jukito, liquibase_slf4j)
+        include "LICENSE"
+        into("META-INF")
     }
 }
 
@@ -61,88 +48,211 @@ task rspec(type: Rspec)
 
 // A task to generate the the candlepin config file for use in etc or other locations.
 task generateConfig() {
-    def template = file('conf/candlepin.conf.template')
+    def template = file("conf/candlepin.conf.template")
     def targetFile = file("$buildDir/candlepin.conf")
     doLast {
         // change contents via cli options
         def binding = [project: project]
         // change file contents
         def tmp = new GStringTemplateEngine()
-                .createTemplate(template)
-                .make(binding)
-        targetFile.write(tmp.toString(), 'UTF-8')
+            .createTemplate(template)
+            .make(binding)
+        targetFile.write(tmp.toString(), "UTF-8")
     }
 }
 
 dependencies {
 
-    compile project(':candlepin-common')
+    compile project(":candlepin-common")
+
+    compile libraries.antlr
+    compile libraries.commons
+    compile libraries.collections
+    compile libraries.guice
+    compile libraries.jackson
+    compile libraries.javax
+    compile libraries.liquibase
+    compile libraries.logging_deps
+    compile libraries.oauth
+    compile libraries.resteasy
+    compile libraries.sun_jaxb
+    compile libraries.swagger
+    compile libraries.validator
+
+    testCompile libraries.core_testing
+    testCompile libraries.jukito
+    testCompile libraries.liquibase_slf4j
+    testCompile libraries.jmock
 
     // Hibernate
-    compile 'org.hibernate:hibernate-core:5.3.6.Final' exclude module: '*'
-    compile 'org.hibernate:hibernate-c3p0:5.3.6.Final' exclude module: '*'
-    compile 'org.hibernate.common:hibernate-commons-annotations:5.0.2.Final' exclude module: '*'
-    compile 'org.hibernate:hibernate-tools:3.2.4.GA' exclude module: '*'
-    compile 'org.hibernate.validator:hibernate-validator:6.0.7.Final' exclude module: '*'
-    annotationProcessor 'org.hibernate.validator:hibernate-validator-annotation-processor:6.0.7.Final'
-    compile 'org.ow2.asm:asm:6.2.1' exclude module: '*'
-    compile 'net.bytebuddy:byte-buddy-dep:1.8.18' exclude module: '*'
-    compile 'cglib:cglib:2.2' exclude module: '*'
-    compile 'org.javassist:javassist:3.20.0-GA' exclude module: '*'
-    compile 'com.fasterxml:classmate:1.3.1' exclude module: '*'
-    compile 'org.freemarker:freemarker:2.3.15' exclude module: '*'
-    compile 'com.mchange:c3p0:0.9.5.2' exclude module: '*'
-    compile 'com.mchange:mchange-commons-java:0.2.11' exclude module: '*'
-    compile 'dom4j:dom4j:1.6.1' exclude module: '*'
-    compile 'org.jboss:jandex:2.0.0.Final' exclude module: '*'
-    compile 'org.jboss.logging:jboss-logging:3.3.0.Final' exclude module: '*'
+    compile "org.hibernate:hibernate-core:5.3.8.Final"
+    compile "org.hibernate:hibernate-c3p0:5.3.8.Final"
+    compile "org.hibernate.common:hibernate-commons-annotations:5.0.4.Final"
+    compile "org.hibernate:hibernate-tools:3.2.4.GA"
+    compile "org.hibernate.validator:hibernate-validator:6.0.7.Final"
+    compile libraries.hibernate_validator_ap
+    annotationProcessor libraries.hibernate_validator_ap
+    compile "org.ow2.asm:asm:6.2.1"
+    compile "net.bytebuddy:byte-buddy-dep:1.9.4"
+    compile "cglib:cglib:2.2"
+    compile "org.javassist:javassist:3.23.1-GA"
+    compile "com.fasterxml:classmate:1.3.4"
+    compile "org.freemarker:freemarker:2.3.15"
+    compile "com.mchange:c3p0:0.9.5.2"
+    compile "com.mchange:mchange-commons-java:0.2.11"
+    compile "org.dom4j:dom4j:2.1.1"
+    compile "org.jboss:jandex:2.0.5.Final"
+    compile "org.jboss.logging:jboss-logging:3.3.2.Final"
+    compile "javax.activation:javax.activation-api:1.2.0"
+
+    // Ehcache
+    compile "org.hibernate:hibernate-ehcache:5.3.8.Final"
+    compile "net.sf.ehcache:ehcache:2.10.3"
+    compile "org.ehcache:jcache:1.0.0"
+    compile "javax.cache:cache-api:1.0.0"
+    compile "net.sf.ehcache:management-ehcache-v2:2.10.1"
 
     // DB Drivers
-    compile 'org.postgresql:postgresql:42.2.2' exclude module: '*'
-    compile 'mysql:mysql-connector-java:5.1.26' exclude module: '*'
+    compile "org.postgresql:postgresql:42.2.2"
+    compile "mysql:mysql-connector-java:5.1.26"
+    compile "org.mariadb.jdbc:mariadb-java-client:2.3.0"
 
     // Testing DB Drivers
-    testCompile 'org.hsqldb:hsqldb:2.3.2' exclude module: '*'
+    testCompile "org.hsqldb:hsqldb:2.3.2"
 
-    compile 'com.googlecode.gettext-commons:gettext-commons:0.9.8' exclude module: '*'
+    compile libraries.gettext
 
     // Only include bouncycastle for testing purposes (compare against jss)
-    testCompile 'org.bouncycastle:bcpkix-jdk15on:1.60' exclude module: '*'
-    testCompile 'org.bouncycastle:bcprov-jdk15on:1.60' exclude module: '*'
+    testCompile "org.bouncycastle:bcpkix-jdk15on:1.60"
+    testCompile "org.bouncycastle:bcprov-jdk15on:1.60"
 
-    compile 'org.mozilla:jss:4.5.0' exclude module: '*'
-    compile 'ldapjdk:ldapjdk:4.19' exclude module: '*'
-    compile 'org.quartz-scheduler:quartz:2.2.1' exclude module: '*'
+    compile "org.mozilla:jss:4.5.0"
+    compile "ldapjdk:ldapjdk:4.19"
+    compile "org.quartz-scheduler:quartz:2.2.1"
 
     // These for ActiveMQ Artemis
-    compile 'org.apache.activemq:artemis-server:2.4.0' exclude module: '*'
-    compile 'org.apache.activemq:artemis-core-client:2.4.0' exclude module: '*'
-    compile 'org.apache.activemq:artemis-commons:2.4.0' exclude module: '*'
-    compile 'org.apache.activemq:artemis-selector:2.4.0' exclude module: '*'
-    compile 'org.apache.activemq:artemis-journal:2.4.0' exclude module: '*'
-    compile 'io.netty:netty-all:4.1.16.Final' exclude module: '*'
-    compile 'commons-beanutils:commons-beanutils:1.9.3' exclude module: '*'
-    compile 'org.jgroups:jgroups:3.6.13.Final' exclude module: '*'
-    compile 'org.apache.geronimo.specs:geronimo-json_1.0_spec:1.0-alpha-1' exclude module: '*'
-    compile 'org.apache.johnzon:johnzon-core:0.9.5' exclude module: '*'
+    compile "org.apache.activemq:artemis-server:${versions.artemis}"
+    compile "org.apache.activemq:artemis-core-client:${versions.artemis}"
+    compile "org.apache.activemq:artemis-commons:${versions.artemis}"
+    compile "org.apache.activemq:artemis-selector:${versions.artemis}"
+    compile "org.apache.activemq:artemis-journal:${versions.artemis}"
+    compile "io.netty:netty-all:4.1.16.Final"
+    compile "commons-beanutils:commons-beanutils:1.9.3"
+    compile "org.jgroups:jgroups:3.6.13.Final"
+    compile "org.apache.geronimo.specs:geronimo-json_1.0_spec:1.0-alpha-1"
+    compile "org.apache.johnzon:johnzon-core:0.9.5"
 
     // AMQP drivers for talking to QPID
-    compile 'org.apache.qpid:qpid-common:0.32' exclude module: '*'
-    compile 'org.apache.qpid:qpid-client:0.32' exclude module: '*'
-    compile 'org.apache.mina:mina-core:1.0.1' exclude module: '*'
-    compile 'org.apache.mina:mina-filter-ssl:1.0.1' exclude module: '*'
-    compile 'geronimo-spec:geronimo-spec-jms:1.1-rc4' exclude module: '*'
+    compile "org.apache.qpid:qpid-common:0.32"
+    compile "org.apache.qpid:qpid-client:0.32"
+    compile "org.apache.mina:mina-core:1.0.1"
+    compile "org.apache.mina:mina-filter-ssl:1.0.1"
+    compile "geronimo-spec:geronimo-spec-jms:1.1-rc4"
 
     // Javascript engine
-    compile 'org.mozilla:rhino:1.7R3' exclude module: '*'
+    compile "org.mozilla:rhino:1.7R3"
 
-    // Validation
-    compile 'javax.validation:validation-api:2.0.1.Final' exclude module: '*'
+    providedCompile libraries.javax_validation
+    providedCompile libraries.javax_servlet
 
-    providedCompile 'javax.servlet:servlet-api:2.5' exclude module: '*'
+    if (use_logdriver) {
+        compile "org.slf4j:log4j-over-slf4j:1.7.5"
+        compile "logdriver:logdriver:1.0"
+    }
 
-    if (use_logdriver){
-        compile 'org.slf4j:log4j-over-slf4j:1.7.5'
-        compile 'logdriver:logdriver:1.0'
+}
+
+test {
+    useJUnitPlatform()
+
+    // Sometimes causes out of memory on vagrant
+    maxHeapSize = "2g"
+    jvmArgs "-XX:+HeapDumpOnOutOfMemoryError"
+
+    testLogging {
+        // set options for log level LIFECYCLE
+        events TestLogEvent.FAILED,
+            TestLogEvent.PASSED,
+            TestLogEvent.SKIPPED
+//            TestLogEvent.STANDARD_OUT
+        exceptionFormat TestExceptionFormat.FULL
+        showExceptions true
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED,
+                TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_ERROR,
+                TestLogEvent.STANDARD_OUT
+            exceptionFormat TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+                def startItem = "|  ", endItem = "  |"
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println("\n" + ("-" * repeatLength) + "\n" + startItem + output + endItem + "\n" + ("-" * repeatLength))
+            }
+        }
+    }
+}
+
+task pom {
+    doLast {
+        // Exclude all transitive dependencies
+        configurations.all*.exclude module: "*"
+
+        pom {
+            project {
+                name "Candlepin"
+                description "The Candlepin Entitlement Engine"
+                parent {
+                    groupId "org.candlepin"
+                    artifactId "candlepin-parent"
+                    version "2.0"
+                    relativePath ".."
+                }
+                packaging "war"
+                properties {
+                    release "1"
+                }
+                build([:]) {
+                    plugins {
+                        plugin {
+                            artifactId "maven-surefire-plugin"
+                        }
+                        plugin {
+                            artifactId "maven-assembly-plugin"
+                        }
+                        plugin {
+                            artifactId "maven-compiler-plugin"
+                        }
+                        plugin {
+                            groupId "org.owasp"
+                            artifactId "dependency-check-maven"
+                        }
+                    }
+                }
+            }
+        }
+        .withXml {
+            // We need to add this dependency so that the Maven assembly plugin will
+            // include the source of the common project in the final assembly.
+            // TODO Replace version, group, etc.. with variables
+            def dependency = asNode().getAt("dependencies")[0].appendNode("dependency")
+            dependency.appendNode("groupId", project.group)
+            dependency.appendNode("artifactId", "candlepin-common")
+            dependency.appendNode("version", project.version)
+            dependency.appendNode("type", "tar.gz")
+            dependency.appendNode("classifier", "complete")
+            dependency.appendNode("scope", "provided")
+        }.writeTo("pom.xml")
     }
 }

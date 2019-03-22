@@ -1,6 +1,5 @@
-apply plugin: 'java'
-apply plugin: 'java-gradle-plugin'
-
+apply plugin: "java"
+apply plugin: "java-gradle-plugin"
 
 dependencies {
     compile gradleApi()
@@ -9,12 +8,12 @@ dependencies {
 gradlePlugin {
     plugins {
         specVersionPlugin {
-            id = 'org.candlepin.gradle.SpecVersion'
-            implementationClass = 'org.candlepin.gradle.SpecVersion'
+            id = "org.candlepin.gradle.SpecVersion"
+            implementationClass = "org.candlepin.gradle.SpecVersion"
         }
         gettextPlugin {
-            id = 'gettext'
-            implementationClass = 'Gettext'
+            id = "gettext"
+            implementationClass = "Gettext"
         }
     }
 }
