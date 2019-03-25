@@ -1970,7 +1970,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             complianceRules.getStatus(consumer);
-            systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(), null, true, true);
+            systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(), null, true);
         }
 
         consumerCurator.flush();
@@ -2371,7 +2371,7 @@ public class CandlepinPoolManager implements PoolManager {
                     for (Consumer consumer : subList) {
                         this.complianceRules.getStatus(consumer);
                         this.systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(),
-                            null, true, true);
+                            null, true);
 
                         // Detach the consumer object (and its children that receive cascaded detaches),
                         // otherwise during the status calculations, the facts proxy objects objects will be

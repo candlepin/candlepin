@@ -623,7 +623,7 @@ describe 'Owner Resource' do
     consumer2 = user1.register(random_string('consumer2'), :system, nil, {}, random_string('consumer2'), owner1_key,
       [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla2', 'common_role', 'usage2', ['addon2'])
     consumer3 = user1.register(random_string('consumer3'), :system, nil, {}, random_string('consumer3'), owner1_key,
-      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, nil, 'usage3', ['', nil])
+      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, nil, 'usage3', [''])
     consumer4 = user1.register(random_string('consumer4'), :system, nil, {}, random_string('consumer4'), owner1_key,
       [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, '', 'usage4', nil)
 
