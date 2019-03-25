@@ -53,7 +53,7 @@ public class ActiveEntitlementJob extends KingpinJob {
         for (String id : ids) {
             Consumer c = consumerCurator.get(id);
             complianceRules.getStatus(c);
-            systemPurposeComplianceRules.getStatus(c, c.getEntitlements(), null, true, true);
+            systemPurposeComplianceRules.getStatus(c, c.getEntitlements(), null, true);
         }
     }
 }

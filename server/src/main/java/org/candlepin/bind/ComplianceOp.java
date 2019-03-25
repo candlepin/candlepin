@@ -73,7 +73,6 @@ public class ComplianceOp implements BindOperation {
             consumer,
             consumer.getEntitlements(),
             entitlementMap.values(),
-            false,
             false);
 
         for (Map.Entry<String, Entitlement> entry: entitlementMap.entrySet()) {
