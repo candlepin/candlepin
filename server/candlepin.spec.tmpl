@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.12
+Version: 2.5.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,14 @@ fi
 
 #raw
 %changelog
+* Tue Mar 26 2019 Kevin Howell <khowell@redhat.com> 2.5.13-1
+- 1664788: Change default key size to 4096 bits. (awood@redhat.com)
+- 1687894: Expose useful data on System Purpose Compliance event
+  (jturel@redhat.com)
+- 1683305: Synchronize java.util.Date serializations (nmoumoul@redhat.com)
+- 1674544: Added input partitioning to select ConsumerCurator methods
+  (crog@redhat.com)
+
 * Mon Feb 25 2019 Kevin Howell <khowell@redhat.com> 2.5.12-1
 - 1679289: Addressed issues surrounding locking with unmanaged entities
   (crog@redhat.com)
