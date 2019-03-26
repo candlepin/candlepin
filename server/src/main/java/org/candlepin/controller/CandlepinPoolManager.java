@@ -74,6 +74,7 @@ import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
