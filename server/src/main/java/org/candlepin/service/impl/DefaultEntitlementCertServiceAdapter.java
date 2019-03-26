@@ -448,8 +448,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getPool().getEndDate()));
         }
 
-        log.debug("WE HAVE {} POOL QUANTITIES TO LOOP THROUGH", poolQuantities.size());
-
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Pool pool = entry.getValue().getPool();
