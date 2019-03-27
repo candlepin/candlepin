@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.15
+Version: 2.3.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,13 @@ fi
 
 #raw
 %changelog
+* Wed Mar 27 2019 Kevin Howell <khowell@redhat.com> 2.3.16-1
+- 1644707: RevocationOp no longer refreshes pools while locking
+  (crog@redhat.com)
+- Added additional tests to verify import functionality (crog@redhat.com)
+- 1664789: Change default key size to 4096 bits. (awood@redhat.com)
+- 1687779: Better syspurpose matches during auto-attach (nmoumoul@redhat.com)
+
 * Mon Mar 04 2019 Kevin Howell <khowell@redhat.com> 2.3.15-1
 - 1684508: Remove redundant role & addon pools from stacks
   (nmoumoul@redhat.com)
