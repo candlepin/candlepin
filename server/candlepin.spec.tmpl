@@ -45,10 +45,8 @@ Requires: tomcat >= 0:7.0.0
 %else
 Requires: pki-servlet-container >= 0:7.0.0
 %endif
-Requires: liquibase >= 0:3.0.0
 Requires: jss
-# Need JDBC driver for cpdb
-Requires: postgresql-jdbc
+Requires: javapackages-tools
 
 %description
 Candlepin is an open source entitlement management system.

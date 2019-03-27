@@ -19,8 +19,9 @@
 from __future__ import print_function
 from optparse import OptionParser
 
-import sys
+import glob
 import os
+import sys
 
 try:
     from commands import getstatusoutput
@@ -34,6 +35,7 @@ else:
 
 JBOSS_CLASSPATH = "/var/lib/jbossas/server/production/deploy/candlepin.war/WEB-INF/classes/"
 TOMCAT_CLASSPATH = "/var/lib/" + TOMCAT + "/webapps/candlepin/WEB-INF/classes/"
+JAR_PATH = "/var/lib/" + TOMCAT + "/webapps/candlepin/WEB-INF/lib/"
 
 def run_command(command):
     (status, output) = getstatusoutput(command)
@@ -79,7 +81,7 @@ class DbSetup(object):
 
     def _run_liquibase(self, changelog_path):
         # Figure out what to append to the classpath for liquibase:
-        classpath = self.jdbc_jar
+        classpath = ":".join(glob.glob(JAR_PATH + "*postgresql*.jar"))
 
         if os.path.exists('target/classes'):
             classpath = "%s:%s" % (classpath, 'target/classes/')
@@ -106,7 +108,7 @@ class DbSetup(object):
 
         print(liquibase_options)
 
-        output = run_command("liquibase %s migrate -Dcommunity=%s" % (liquibase_options, self.community))
+        output = run_command("/usr/share/candlepin/liquibase.sh %s migrate -Dcommunity=%s" % (liquibase_options, self.community))
         print(output)
 
 
@@ -115,7 +117,6 @@ class PostgresqlSetup(DbSetup):
         super(PostgresqlSetup, self).__init__(username, password, db, community, verbose)
         self.host = host
         self.port = port
-        self.jdbc_jar = "/usr/share/java/postgresql-jdbc.jar"
         self.driver_class = "org.postgresql.Driver"
 
         # Adjust the jdbc URL for correct deployment:
