@@ -1108,4 +1108,23 @@ describe 'Hypervisor Resource', :type => :virt do
     }
     job_detail = async_update_hypervisor(owner, user, host_hyp_id1, host_hyp_id1, guests, nil, nil, host_facts)
   end
+
+  it 'should allow the hypervisor id to be changed on the consumer' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    host_hyp_id_1 = "hypervisor_id_1"
+    host_hyp_id_2 = "hypervisor_id_2"
+    host_system_id = "system_id"
+    guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
+    guests = ['g1', 'g2']
+
+    test_host = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_1)
+    @cp.update_consumer({:uuid => test_host.uuid, :guestIds => guest_set})
+    @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_1
+
+    async_update_hypervisor(owner, user, host_hyp_id_1, host_hyp_id_2, guests, true,nil, {"dmi.system.uuid" => host_system_id})
+    test_host = @cp.get_consumer(test_host.uuid)
+    @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_2
+  end
 end
