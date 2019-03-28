@@ -30,11 +30,12 @@ import java.util.HashMap;
 public class CertificateReaderTest {
 
     @Test
-    public void readkey() throws Exception {
-        String caCert = getClass().getClassLoader().getResource("certs/test.crt").toURI().getPath();
-        String caCertUpstream = getClass().getClassLoader().getResource("certs/upstream").toURI().getPath();
-        String caKey = getClass().getClassLoader().getResource("keys/pkcs1-des-encrypted.pem").toURI().getPath();
-        Configuration config = new MapConfiguration(
+    public void readKey() throws Exception {
+        final ClassLoader loader = getClass().getClassLoader();
+        final String caCert = loader.getResource("certs/test.crt").toURI().getPath();
+        final String caCertUpstream = loader.getResource("certs/upstream").toURI().getPath();
+        final String caKey = loader.getResource("keys/pkcs1-des-encrypted.pem").toURI().getPath();
+        final Configuration config = new MapConfiguration(
             new HashMap<String, String>() {
                 {
                     put(ConfigProperties.CA_CERT, caCert);
