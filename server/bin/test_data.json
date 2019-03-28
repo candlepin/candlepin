@@ -41,7 +41,8 @@
         },
         {
             "name": "slow-eagle",
-            "version": "1"
+            "version": "1",
+            "release": "07"
         },
         {
             "name": "cool-mouse",
@@ -71,7 +72,8 @@
             "label": "never-enabled-content",
             "type": "yum",
             "vendor": "test-vendor",
-            "content_url": "/foo/path/never",
+            "content_url": "/foo/path/never_enabled",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 600,
             "packages": ["tricky-frog", "slow-eagle", "white-lion"]
         },
@@ -81,8 +83,8 @@
             "label": "tagged-content",
             "type": "yum",
             "vendor": "test-vendor",
-            "content_url": "/foo/path/always",
-
+            "content_url": "/foo/path/tagged",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "required_tags": "TAG1,TAG2",
             "packages": ["lazy-fox", "white-lion", "fluffy-snake"]
         },
@@ -92,7 +94,8 @@
             "label": "content-label",
             "type": "yum",
             "vendor": "test-vendor",
-            "content_url": "/foo/path",
+            "content_url": "/foo/path/common",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 0,
             "packages": ["jumping-snail", "cool-mouse"]
         },
@@ -102,7 +105,7 @@
             "label": "content-label-no-gpg",
             "type": "yum",
             "vendor": "test-vendor",
-            "content_url": "/foo/path/no",
+            "content_url": "/foo/path/no_gpg",
             "metadata_expire": 0,
             "packages": ["slow-eagle", "schrodingers-kitten"]
         },
@@ -112,7 +115,7 @@
             "label": "content-label-empty-gpg",
             "type": "yum",
             "vendor": "test-vendor",
-            "content_url": "/foo/path/empty",
+            "content_url": "/foo/path/empty_gpg",
             "gpg_url": "",
             "metadata_expire": 0,
             "packages": ["cool-mouse", "lazy-fox"]
@@ -124,6 +127,7 @@
             "type": "yum",
             "vendor": "test-vendor",
             "content_url": "/example.com/awesomeos-modifier",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "modified_products": ["37060", "27060"],
             "packages": ["awesome-pig"]
         },
@@ -134,6 +138,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/generic/awesomeos",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-rabbit"]
         },
@@ -144,6 +149,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/x86",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-goat"]
         },
@@ -154,6 +160,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/i386",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-sheep"]
         },
@@ -164,6 +171,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/i686",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-chicken"]
         },
@@ -174,6 +182,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/x86_64",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-sheep", "awesome-chicken"]
         },
@@ -184,6 +193,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/ia64",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-rabbit", "awesome-rabbit"]
         },
@@ -194,6 +204,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/ppc64",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-chicken", "awesome-sheep"]
         },
@@ -204,6 +215,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/ppc",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-chicken", "awesome-sheep", "awesome-rabbit"]
         },
@@ -214,6 +226,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/s390x",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-cow", "awesome-pig"]
         },
@@ -224,6 +237,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "packages": ["awesome-chicken", "awesome-rabbit", "awesome-sheep", "awesome-cow"]
         },
@@ -234,6 +248,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/i386_content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "arches": "i386",
             "metadata_expire": 3600,
             "packages": ["awesome-sheep"]
@@ -245,6 +260,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/x86_64_i368_content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "arches": "x86_64,i386",
             "metadata_expire": 3600,
             "packages": ["awesome-cow"]
@@ -256,6 +272,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/x86_64_content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "arches": "x86_64",
             "metadata_expire": 3600,
             "packages": ["awesome-rabbit"]
@@ -267,6 +284,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/s390x_content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "arches": "s390x",
             "metadata_expire": 3600,
             "packages": ["awesome-pig"]
@@ -278,6 +296,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/ppc64_content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "arches": "ppc64",
             "metadata_expire": 3600,
             "packages": ["awesome-pig", "awesome-sheep"]
@@ -289,6 +308,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/ppc_content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "arches": "ppc",
             "metadata_expire": 3600,
             "packages": ["awesome-sheep", "awesome-rabbit"]
@@ -300,6 +320,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/i64_content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "arches": "ia64",
             "metadata_expire": 3600,
             "packages": ["awesome-sheep", "awesome-cow"]
@@ -311,6 +332,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-server-scalable-fs",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "modified_products": ["37060"],
             "packages": ["awesome-sheep", "schrodingers-kitten"]
@@ -322,6 +344,7 @@
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-workstation-scalable-fs",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "metadata_expire": 3600,
             "modified_products": ["27060"],
             "packages": ["awesome-sheep", "jumping-snail"]
@@ -333,6 +356,7 @@
             "type": "containerImage",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-docker-images",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "packages": ["awesome-sheep", "flying-fish"]
         },
         {
@@ -342,6 +366,7 @@
             "type": "ostree",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-ostree",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "packages": ["awesome-sheep", "fluffy-snake"]
         }
     ],
@@ -356,7 +381,8 @@
                     "label": "admin-content-label",
                     "type": "yum",
                     "vendor": "test-vendor",
-                    "content_url": "/admin/foo/path",
+                    "content_url": "/admin/foo/path/common",
+                    "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "metadata_expire": 0,
                     "packages": ["fluffy-snake"]
                 },
@@ -367,6 +393,7 @@
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/admin/foo/path/always",
+                    "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "required_tags": "TAG1,TAG2",
                     "packages": ["tricky-frog"]
                 },
@@ -377,6 +404,7 @@
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/admin/foo/path/never",
+                    "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "metadata_expire": 600,
                     "packages": ["lazy-fox"]
                 }
@@ -465,7 +493,8 @@
                     "label": "snowy-content-label",
                     "type": "yum",
                     "vendor": "test-vendor",
-                    "content_url": "/snowy/foo/path",
+                    "content_url": "/snowy/foo/path/common",
+                    "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "metadata_expire": 0,
                     "packages": ["slow-eagle"]
                 },
@@ -476,6 +505,7 @@
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/snowy/foo/path/always",
+                    "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "required_tags": "TAG1,TAG2",
                     "packages": ["jumping-snail"]
                 },
@@ -486,6 +516,7 @@
                     "type": "yum",
                     "vendor": "test-vendor",
                     "content_url": "/snowy/foo/path/never",
+                    "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "metadata_expire": 600,
                     "packages": ["tricky-frog"]
                 }

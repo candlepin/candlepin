@@ -101,9 +101,10 @@ create_test_repos() {
     fi
     $SUDO chown -R tomcat:tomcat "${REPOS}"
     echo ""
-    echo "Run this command on registered system to use created repositories:"
+    echo "Run following commands on registered system to use created repositories:"
     echo ""
     echo "    subscription-manager config --rhsm.baseurl=http://<ip_of_this_server>:8080"
+    echo "    curl http://<ip_of_this_server>:8080/RPM-GPG-KEY-candlepin > /etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin"
     echo ""
 }
 

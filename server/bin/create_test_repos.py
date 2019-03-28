@@ -7,6 +7,7 @@ This script is used for generating testing RPM repositories
 
 import sys
 import os
+import stat
 import json
 import string
 import subprocess
@@ -14,6 +15,9 @@ import shutil
 import tempfile
 import requests
 
+# To disable warning that we do insecure connection to localhost
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 RPM_SPEC_FILE_TEMPLATE = """
 Summary:        ${Name} package
@@ -40,24 +44,37 @@ GPG_NAME_REAL = "candlepin"
 
 GPG_NAME_EMAIL = "noreply@candlepinproject.org"
 
+GPG_PASSPHRASE = "secret"
+
+# When Fedora is used or gpg 2.1 is used, then it will be possible
+# to use following options and not to use passphrase and expect script
+#
+# %%no-protection
+# %%transient-key
+#
 GPG_BATCH_GEN_SCRIPT_CONTENT = """
 Key-Type: 1
 Key-Length: 4096
-Subkey-Type: 1
-Subkey-Length: 4096 
 Name-Real: %s
 Name-Email: %s
 Expire-Date: 0
-%%no-protection
-%%transient-key
+Passphrase: %s
 %%commit
-""" % (GPG_NAME_REAL, GPG_NAME_EMAIL)
+""" % (GPG_NAME_REAL, GPG_NAME_EMAIL, GPG_PASSPHRASE)
+
+EXPECT_SCRIPT_CONTENT = """#!/usr/bin/expect -f
+spawn rpm --addsign {*}$argv
+expect -exact "Enter pass phrase: "
+send -- "%s\r"
+expect eof
+""" % GPG_PASSPHRASE
 
 GPG_EXPORTED_CANDLEPIN_KEY = os.path.expanduser("~") + "/RPM-GPG-KEY-candlepin"
 
 RPMMACROS_CONTENT = """
 %%_signature gpg
 %%_gpg_name %s
+%%_gpgbin /usr/bin/gpg2
 """ % GPG_NAME_REAL
 
 RPMBUILD_ROOT_DIR = os.path.expanduser("~") + "/rpmbuild"
@@ -68,6 +85,8 @@ CANLDEPIN_SERVER_BASE_URL = "https://localhost:8443/candlepin/"
 
 CANDLEPIN_USER = 'admin'
 CANDLEPIN_PASS = 'admin'
+
+TEST_DATA_JSON_MTIME = 0.0
 
 
 def run_command(command, verbose=False):
@@ -103,6 +122,10 @@ def read_test_data(filename):
     except IOError as err:
         print("Unable to read file: %s with test data: %s" % (filename, str(err)))
         return None
+
+    global TEST_DATA_JSON_MTIME
+    TEST_DATA_JSON_MTIME = os.path.getmtime(filename)
+
     return data
 
 
@@ -137,19 +160,37 @@ def get_repo_definitions(test_data):
     return repo_definitions
 
 
-def add_packages_to_repo(packages_list, repo_path, repository):
+def add_packages_to_repo(packages_list, repo_path, package_definitions):
     """
     This function tries to add list of packages to the repository
     """
     for pkg_name in packages_list:
-        print("\tAdding package %s" % pkg_name)
-        pkg_file_name = pkg_name + '-1-0.noarch.rpm'
-        src_pkg_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'RPMS' ,'noarch', pkg_file_name)
+        # Try to get information about package from package definitions
+        try:
+            pkg = package_definitions[pkg_name]
+        except KeyError, TypeError:
+            version = '1'
+            release = '0'
+            arch = 'noarch'
+        else:
+            version = pkg.get('version', '1')
+            release = pkg.get('release', '0')
+            arch = pkg.get('arch', 'noarch')
+
+        # Construct name of package
+        pkg_file_name = '%s-%s-%s.%s.rpm' % (pkg_name, version, release, arch)
+        src_pkg_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'RPMS' , arch, pkg_file_name)
         dst_pkg_file_path = os.path.join(repo_path, 'RPMS', pkg_file_name)
-        shutil.copyfile(src_pkg_file_path, dst_pkg_file_path)
+
+        # Check if RPm file exist
+        if os.path.isfile(src_pkg_file_path):
+            print("\tadding package %s" % pkg_name)
+            shutil.copyfile(src_pkg_file_path, dst_pkg_file_path)
+        else:
+            print("\tpackage %s not defined" % pkg_name)
 
 
-def generate_repositories(repo_definitions):
+def generate_repositories(repo_definitions, package_definitions):
     """
     This function tries to generate yum repositories with some dummy packages
     """
@@ -171,8 +212,15 @@ def generate_repositories(repo_definitions):
         repo_path_rpms = os.path.join(repo_path, 'RPMS')
         if not os.path.exists(repo_path_rpms):
             os.makedirs(repo_path_rpms)
+        else:
+            # Delete all previous RPM files, because we don't to have there
+            # obsolete RPM files (definition of rpm has been changed in test_data.json)
+            for file_name in os.listdir(repo_path_rpms):
+                file_path = os.path.join(repo_path_rpms, file_name)
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
 
-        add_packages_to_repo(repo['packages'], repo_path, repo)
+        add_packages_to_repo(repo['packages'], repo_path, package_definitions)
 
         # Create repository with RPM packages
         run_command('createrepo_c %s' % repo_path)
@@ -190,7 +238,7 @@ def generate_repositories(repo_definitions):
             with open('productid', 'w') as fp:
                 fp.write(cert)
             # This command add productid certificate to repository
-            run_command('modifyrepo productid %s/repodata' % repo_path)
+            run_command('modifyrepo_c productid %s/repodata' % repo_path)
             # Remove temporary cert file
             os.remove('productid')
 
@@ -281,7 +329,8 @@ def remove_repo_product(content, owner='admin'):
 
 def get_package_definitions(test_data):
     """
-    Try to get list of package definitions from test_data
+    Try to get list of package definitions from test_data and
+    convert the list to dictionary
     """
     if test_data is None:
         return None
@@ -291,18 +340,36 @@ def get_package_definitions(test_data):
     except KeyError as err:
         print('Test data does not include any definition of packages')
         return None
+
+    # Convert list to dictionary to be able to find packages faster
+    package_definitions = { pkg['name']: pkg for pkg in package_definitions }
     
     return package_definitions
 
 
-def create_dummy_package(package):
+def create_dummy_package(package, expect_script_path):
     """
     This function tries to create dummy RPM package
     """
+    global TEST_DATA_JSON_MTIME
+    
     name = package['name']
+    # Default values
     version = package.get('version', '1')
     release = package.get('release', '0')
     arch = package.get('arch', 'noarch')
+
+    # Path to rpm file
+    rpm_file_name = name + '-' + version + '-' + release + '.' + arch + '.rpm'
+    rpm_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'RPMS', arch, rpm_file_name)
+
+    # Creating and signing many RPM packages can be time consuming. So, if RPM
+    # package aready exists, then it is not created again.
+    if os.path.isfile(rpm_file_path):
+        rpm_mtime = os.path.getmtime(rpm_file_path)
+        if rpm_mtime > TEST_DATA_JSON_MTIME:
+            print("RPM %s already exist" % name)
+            return
 
     print("creating RPM %s" % name)
 
@@ -312,7 +379,6 @@ def create_dummy_package(package):
     rpm_spec_content = template.substitute(d)
 
     # Path to spec file
-
     spec_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'SPECS', name + '.spec')
 
     # Save content of spec file to real file
@@ -322,14 +388,7 @@ def create_dummy_package(package):
     # Generate RPM package using rpmbuild
     run_command('rpmbuild -bb %s' % spec_file_path)
 
-    rpm_file_name = name + '-' + version + '-' + release + '.' + arch + '.rpm'
-    rpm_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'RPMS', arch, rpm_file_name)
-
-    # Resign RPM package with GPG key
-    # Note: GPG is interesting software requiring passphrase and it's almost impossible to avoid
-    # using of passphrase on Centos7. For this reason packages will be without GPG signatures.
-    #
-    #run_command('rpm --resign %s' % rpm_file_path)
+    run_command('%s %s' % (expect_script_path, rpm_file_path))
     
 
 def generate_packages(package_definitions):
@@ -352,9 +411,25 @@ def generate_packages(package_definitions):
         if not os.path.exists(subdir_path):
             os.makedirs(subdir_path)
 
-    for pkg in package_definitions:
-        create_dummy_package(pkg)
+    # Following script has to be used, because rpmsing or rpm --sign
+    # reads input of passphrase using getpass() despite the gpg is
+    # not protected by any passphrase. The environment variable has
+    # to be set to en_EN.utf8 or it has to be unset. Otherwise expect
+    # script will not work, because prompt of getpass() will be
+    # different from "Enter pass phrase: ".
+    # NOTE: The rpmsing doesn't try to read passphrase on Fedora,
+    # when gpg is not protected by passphrase.
+    os.environ["LANG"] = "en_EN.uft8"
+    expect_script_path, temp_dir_path = create_expect_script()
 
+    # Change permission to be able to execute the script
+    os.chmod(expect_script_path, stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+    for pkg in package_definitions.values():
+        create_dummy_package(pkg, expect_script_path)
+
+    # Remove temporary directory containing script for entering passphrase
+    shutil.rmtree(temp_dir_path)
 
 def create_gpg_batch_gen_script():
     """
@@ -410,13 +485,30 @@ def create_gpg_key():
     # Export gpg key
     ret += run_command('gpg --export -a %s > %s' % (GPG_NAME_REAL, GPG_EXPORTED_CANDLEPIN_KEY))
 
-    # Copy exported GPG key to default path
-    ret += run_command('cp %s /etc/pki/rpm-gpg/' % GPG_EXPORTED_CANDLEPIN_KEY)
-
-    # Import GPG key to rpm db
+    # Import GPG key to rpm db (not necessary), but "rpm -K signed_file.rpm" can be used
     ret += run_command('rpm --import %s' % GPG_EXPORTED_CANDLEPIN_KEY)
 
+    # Copy exported GPG key to root dir of static content provided by tomcat
+    ret += run_command('cp %s %s' % (GPG_EXPORTED_CANDLEPIN_KEY, REPO_ROOT_DIR))
+
     return ret
+
+
+def create_expect_script():
+    """
+    This function tries to create expect script using for executing rpmsing command.
+    It is necessary to use epect script, because rpmsing command requires reading
+    input using getpass() system call and stdin cannot be used in this case.
+    """
+    # Create temporary directory first
+    temp_dir_path = tempfile.mkdtemp()
+
+    script_path = os.path.join(temp_dir_path, 'rpm_sign.exp')
+
+    with open(script_path, "w") as fp:
+        fp.write(EXPECT_SCRIPT_CONTENT)
+
+    return script_path, temp_dir_path
 
 
 def modify_rpmmacros():
@@ -438,19 +530,12 @@ def main():
     else:
         test_data = read_test_data(sys.argv[1])
 
-        # When GPG is used, then add following line to most of
-        # definitions of content (test_data.json)
-        #
-        # "gpg_url": "/foo/path/never/gpg"
+        gpg_exists = does_gpg_key_exist()
 
-        # It is not reliable to use GPG for automatic testing
-        # gpg_exists = does_gpg_key_exist()
-
-        # if gpg_exists != 0:
-        #     print("")
-        #     print("Creating GPG key...")
-        #     print(GPG_BATCH_GEN_SCRIPT_CONTENT)
-        #     create_gpg_key()
+        if gpg_exists != 0:
+            print("")
+            print("Creating GPG key...")
+            create_gpg_key()
 
         modify_rpmmacros()
 
@@ -466,7 +551,7 @@ def main():
 
         repo_definitions = get_repo_definitions(test_data)
 
-        generate_repositories(repo_definitions)
+        generate_repositories(repo_definitions, package_definitions)
             
 
 if __name__ == '__main__':
