@@ -36,7 +36,9 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
 
 BuildRequires: selinux-policy-doc
+%if 0%{?rhel} == 8
 BuildRequires: /usr/bin/pathfix.py
+%endif
 
 Requires: java >= 1:1.8.0
 Requires: wget
@@ -92,8 +94,6 @@ SELinux policy module supporting candlepin
 %setup -q %{SOURCE0}
 %if 0%{?rhel} == 8
 pathfix.py -pni "%{__python3} %{py3_shbang_opts}" code/setup/cpdb code/setup/cpsetup
-%else
-pathfix.py -pni "%{__python2} %{py2_shbang_opts}" code/setup/cpdb code/setup/cpsetup
 %endif
 
 %build
