@@ -92,7 +92,7 @@ public class RevocationOp {
         if (overflowing.isEmpty()) {
             return null;
         }
-        overflowing = poolCurator.lockAndLoad(overflowing);
+        overflowing = poolCurator.lock(overflowing);
         for (Pool pool : overflowing) {
             poolNewConsumed.put(pool, pool.getConsumed());
             List<Pool> shared = poolCurator.listSharedPoolsOf(pool);
