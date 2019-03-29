@@ -33,8 +33,6 @@ public class JobBuilder {
     private int retries;
     private boolean logJobExecution;
 
-
-
     /**
      * Creates an empty JobBuilder
      */
@@ -57,7 +55,6 @@ public class JobBuilder {
 
         return builder.setJobKey(jobKey);
     }
-
 
     /**
      * Sets the key for the job class to handle execution of this job. If the key does represent a
@@ -301,20 +298,16 @@ public class JobBuilder {
     // dump all of the fields in the log line for any job that has it. Would be an easy, generic way
     // to add logging info to the jobs in a way that's not unique to any particular job.
 
-
-
+    //      JobBuilder builder = new JobBuilder()
+    //          .forTask(runnable job class or key here)
+    //          .setName("my_task")
+    //          .setTaskArgument("key", "value")
+    //          .setTaskArgument("key2", "value2")
+    //          .addUniqueRestriction("owner", owner_id_here)
+    //          .addUniqueRestriction("product", product_id_here)
+    //          .addTaskMetadata("correlation_id", cid)
+    //          .setRetryCount(3)
+    //
+    //      jobManager.queueJob(builder);
 
 }
-        //      JobBuilder builder = new JobBuilder()
-        //          .forTask(runnable job class or key here)
-        //          .setName("my_task")
-        //          .setTaskArgument("key", "value")
-        //          .setTaskArgument("key2", "value2")
-        //          .addUniqueRestriction("owner", owner_id_here)
-        //          .addUniqueRestriction("product", product_id_here)
-        //          .addTaskMetadata("correlation_id", cid)
-        //          .setRetryCount(3)
-        //
-        //      jobManager.queueJob(builder);
-
-

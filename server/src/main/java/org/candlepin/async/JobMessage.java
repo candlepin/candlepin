@@ -63,6 +63,6 @@ public class JobMessage {
 
     @Override
     public String toString() {
-        return String.format("[%s]: %s", this.jobKey, this.jobId);
+        return String.format("JobMessage [id: %s, key: %s]", this.jobKey, this.jobId);
     }
 }
