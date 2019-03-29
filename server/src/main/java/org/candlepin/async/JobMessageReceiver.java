@@ -61,6 +61,7 @@ public class JobMessageReceiver extends MessageReceiver {
     @Override
     public void onMessage(ClientMessage message) {
         String body = "";
+
         try {
             // Acknowledge the message so that the server knows that it was received.
             // By doing this, the server can update the delivery counts which plays
@@ -70,41 +71,32 @@ public class JobMessageReceiver extends MessageReceiver {
             // Read the message and deserialize the data.
             body = message.getBodyBuffer().readString();
             log.debug("Got event: {}", body);
+
             JobMessage jobMessage = mapper.readValue(body, JobMessage.class);
             log.debug("ActiveMQ message {} received for async job: {}.", message.getMessageID(), jobMessage);
 
             // Execute the job
             AsyncJobStatus jobStatus = manager.executeJob(jobMessage);
-            log.debug("Job complete: {}:{}:{}", jobMessage.getJobId(), jobMessage.getJobKey(),
-                jobStatus.getState());
-
-            // Finally commit the session so that the message is taken out of the queue.
-            session.commit();
         }
-        catch (PreJobExecutionException pjee) {
-            // Expected when:
-            //   * Job status could not be found
-            //   * Job was determined cancelled before execution.
-            try {
-                session.commit();
-            }
-            catch (ActiveMQException amqe) {
-                log.error("Unable to commit job message after receiving PreJobExecutionException.", amqe);
-                // Nothing we can do. The job will be lost.
-            }
+        catch (JobException e) {
+            // The job failed; we're going to assume the job manager has handled everything
+            // and ignore it here.
         }
         catch (Exception e) {
             // Once a job actually executes, the failure should be recorded in the job's status
             // and should never reach this code. This catch block will trap the exception, log
             // the error and put the message back on the queue.
+            // The only time we should hit this branch is if something blows up while attempting
+            // to process the job message.
             String messageId = (message == null) ? "" : Long.toString(message.getMessageID());
             String reason = (e.getCause() == null) ? e.getMessage() : e.getCause().getMessage();
 
             // Log a warning instead of a full stack trace to reduce log size.
-            log.warn("Job execution failed! {}: {}", messageId, reason);
+            log.warn("Job message processing failed! {}: {}", messageId, reason);
 
             // If debugging is enabled log a more in depth message.
             log.debug("Unable to process message. Rolling back client session.\n{}", body, e);
+
             try {
                 // Roll back the session so that the message remains on the queue.
                 session.rollback();
@@ -112,8 +104,18 @@ public class JobMessageReceiver extends MessageReceiver {
             catch (ActiveMQException amqe) {
                 log.error("Unable to roll back client session.", amqe);
             }
+        }
+        finally {
+            // Finally commit the session so that the message is taken out of the queue.
+            // We're always committing here since retry logic will fire off a new message rather
+            // than attempting to redeliver this one.
 
-            // Session was rolled back, nothing left to do.
+            try {
+                session.commit();
+            }
+            catch (ActiveMQException amqe) {
+                log.error("Unable to commit client session", amqe);
+            }
         }
     }
 

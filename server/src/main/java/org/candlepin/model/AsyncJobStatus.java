@@ -58,6 +58,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     public enum JobState {
         /** The job has been created, but not yet queued or executed */
         CREATED(false),
+        /** The job is blocked by a collision or inability to queue the job message */
+        WAITING(false),
         /** The job has been sent to the backing job messaging/queueing system to be picked up */
         QUEUED(false),
         /** The job has been picked up and is currently being executed */
@@ -69,7 +71,9 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         /** The job failed during execution in a way that does not allow retries */
         FAILED(true),
         /** The job was canceled by request */
-        CANCELED(true);
+        CANCELED(true),
+        /** The job was aborted due to an inability to schedule or queue the job */
+        ABORTED(true);
 
         private final boolean terminal;
 
@@ -105,6 +109,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @Column(name = "correlation_id")
     private String correlationId;
 
+    @NotNull
     private JobState state;
 
     @ElementCollection(fetch = FetchType.LAZY)
@@ -139,6 +144,9 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     public AsyncJobStatus() {
         this.constraints = new HashMap<>();
         this.state = JobState.CREATED;
+
+        this.attempts = 0;
+        this.maxAttempts = 1;
     }
 
     /**
@@ -469,8 +477,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     /**
      * Fetches the end time of the most recent run attempt of this job. The end time will represent
      * the time the job returned control to the job executor, either through successful completion
-     * or failure. If this job has not yet been attempted, or its first attempt is currently in
-     * progress, this method returns null.
+     * or failure. If this job has not yet been attempted, or it is currently in progress, this
+     * method returns null.
      *
      * @return
      *  the end time of the most recent run attempt of this job, or null if the job has not yet
