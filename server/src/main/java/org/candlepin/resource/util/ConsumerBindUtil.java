@@ -82,6 +82,7 @@ public class ConsumerBindUtil {
         // Process activation keys.
 
         boolean listSuccess = false;
+        boolean isCAModeEnabledForAny = false;
         for (ActivationKey key : keys) {
             boolean keySuccess = true;
             handleActivationKeyOverrides(consumer, key.getContentOverrides());
@@ -89,8 +90,11 @@ public class ConsumerBindUtil {
             keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
             if (key.isAutoAttach() != null && key.isAutoAttach()) {
                 if (autoattachDisabledForOwner || key.getOwner().isContentAccessEnabled()) {
-                    String caMessage = key.getOwner().isContentAccessEnabled() ?
-                        " because of the content access mode setting" : "";
+                    String caMessage = "";
+                    if (key.getOwner().isContentAccessEnabled()) {
+                        caMessage = " because of the content access mode setting";
+                        isCAModeEnabledForAny = true;
+                    }
                     log.warn(
                         "Auto-attach is disabled for owner{}. Skipping auto-attach for consumer/key: {}/{}",
                         caMessage, consumer.getUuid(), key.getName());
@@ -104,7 +108,7 @@ public class ConsumerBindUtil {
             }
             listSuccess |= keySuccess;
         }
-        if (!listSuccess) {
+        if (!listSuccess && !isCAModeEnabledForAny) {
             throw new BadRequestException(
                 i18n.tr("None of the subscriptions on the activation key were available for attaching."));
         }
