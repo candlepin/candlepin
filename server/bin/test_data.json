@@ -381,7 +381,7 @@
                     "label": "admin-content-label",
                     "type": "yum",
                     "vendor": "test-vendor",
-                    "content_url": "/admin/foo/path/common",
+                    "content_url": "/foo/admin/path/common",
                     "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "metadata_expire": 0,
                     "packages": ["fluffy-snake"]
@@ -392,7 +392,7 @@
                     "label": "admin-tagged-content",
                     "type": "yum",
                     "vendor": "test-vendor",
-                    "content_url": "/admin/foo/path/always",
+                    "content_url": "/foo//adminpath/always",
                     "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "required_tags": "TAG1,TAG2",
                     "packages": ["tricky-frog"]
@@ -403,7 +403,7 @@
                     "label": "admin-never-enabled-content",
                     "type": "yum",
                     "vendor": "test-vendor",
-                    "content_url": "/admin/foo/path/never",
+                    "content_url": "/foo/admin/path/never",
                     "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "metadata_expire": 600,
                     "packages": ["lazy-fox"]

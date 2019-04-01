@@ -190,6 +190,45 @@ def add_packages_to_repo(packages_list, repo_path, package_definitions):
             print("\tpackage %s not defined" % pkg_name)
 
 
+def get_owners():
+    """
+    Get list of owner names.
+    """
+    try:
+        response = requests.get(
+            CANLDEPIN_SERVER_BASE_URL + 'owners/',
+            auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
+            verify=False)
+    except Exception as err:
+        print('Error: %s' % str(err))
+        return None
+
+    json_data = response.json()
+    owner_names = [ owner['key'] for owner in json_data ]
+    return owner_names
+
+
+def generate_symlinks_for_owners(owner_names):
+    """
+    When content access mode is org_environment is switched on for some
+    owner, then path to content is changed a little bit. It adds
+    the name of owner to the beginning of path. e.g. path to content
+    is changed from: /path/to/foo to /snowwhite/path/to/foo. For this
+    reason it is necessary to add symbolic link for every owner.
+    """
+    if owner_names is None:
+        return
+
+    for owner_name in owner_names:
+        symlink_name = os.path.join(REPO_ROOT_DIR, owner_name)
+        try:
+            print('\tcreating symbolic link %s' % symlink_name)
+            if not os.path.islink(symlink_name):
+                os.symlink(REPO_ROOT_DIR, symlink_name)
+        except OSError as err:
+            print("Unable to create symbolic link: %s (%s)" % (symlink_name, str(err)))
+
+
 def generate_repositories(repo_definitions, package_definitions):
     """
     This function tries to generate yum repositories with some dummy packages
@@ -245,6 +284,17 @@ def generate_repositories(repo_definitions, package_definitions):
         # Remove temporary product from candelpin server
         remove_repo_product(repo)
 
+    # Copy exported file to root of repositories
+    gpg_key_path = os.path.join(REPO_ROOT_DIR, "RPM-GPG-KEY-candlepin")
+    try:
+        shutil.copyfile(GPG_EXPORTED_CANDLEPIN_KEY, gpg_key_path)
+    except OSError as err:
+        print("Unable to copy GPG key: %s (%s)" % (gpg_key_path, str(err)))
+
+    # Create symbolic links for owners (golden ticket)
+    print("\nCreating symbolic links for owners...")
+    owner_names = get_owners()
+    generate_symlinks_for_owners(owner_names)
 
 def get_productid_cert(content, owner='admin'):
     """
@@ -527,31 +577,34 @@ def modify_rpmmacros():
 def main():
     if len(sys.argv) != 2:
         print("Error: syntax %s test_data.json" % sys.argv[0])
-    else:
-        test_data = read_test_data(sys.argv[1])
+        return 1
 
-        gpg_exists = does_gpg_key_exist()
+    test_data = read_test_data(sys.argv[1])
 
-        if gpg_exists != 0:
-            print("")
-            print("Creating GPG key...")
-            create_gpg_key()
+    gpg_exists = does_gpg_key_exist()
 
-        modify_rpmmacros()
-
+    if gpg_exists != 0:
         print("")
-        print("Creating packages...")
+        print("Creating GPG key...")
+        create_gpg_key()
 
-        package_definitions = get_package_definitions(test_data)
+    modify_rpmmacros()
 
-        generate_packages(package_definitions)
+    print("")
+    print("Creating packages...")
 
-        print("")
-        print("Creating repositories...")
+    package_definitions = get_package_definitions(test_data)
 
-        repo_definitions = get_repo_definitions(test_data)
+    generate_packages(package_definitions)
 
-        generate_repositories(repo_definitions, package_definitions)
+    print("")
+    print("Creating repositories...")
+
+    repo_definitions = get_repo_definitions(test_data)
+
+    generate_repositories(repo_definitions, package_definitions)
+
+    return 0
             
 
 if __name__ == '__main__':
