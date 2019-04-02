@@ -11,7 +11,7 @@ describe 'vCPU Limiting' do
     @vcpu_product = create_product(nil, random_string("Product1"), :attributes =>
                 {:version => '6.4',
                  :vcpu => 8,
-                 :cores => 2,
+                 :cores => 8,
                  :sockets => 1,
                  :warning_period => 15,
                  :management_enabled => true,
@@ -22,7 +22,7 @@ describe 'vCPU Limiting' do
     @vcpu_stackable_prod = create_product(nil, random_string("Product2"), :attributes =>
                 {:version => '6.4',
                  :vcpu => 8,
-                 :cores => 2,
+                 :cores => 8,
                  :sockets => 1,
                  :warning_period => 15,
                  :management_enabled => true,

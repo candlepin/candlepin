@@ -138,7 +138,6 @@ public class AutobindRulesTest {
         activeGuestAttrs.put("active", "1");
     }
 
-
     @Test
     public void testFindBestWithSingleProductSinglePoolReturnsProvidedPool() {
         Product product = TestUtil.createProduct(productId, "A test product");
@@ -153,6 +152,32 @@ public class AutobindRulesTest {
             false);
 
         assertEquals(1, bestPools.size());
+    }
+
+    @Test
+    public void singleProductSinglePoolShouldFindBestWithCorrectQuantity() {
+        final Product product = TestUtil.createProduct(productId, "A test product");
+        product.setAttribute("stacking_id", productId);
+        product.setAttribute("multi-entitlement", "yes");
+        product.setAttribute("instance_multiplier", "2");
+        product.setAttribute("cores", "2");
+        product.setAttribute("sockets", "1");
+        final Pool pool = TestUtil.createPool(owner, product);
+        pool.setId("DEAD-BEEF");
+        final List<Pool> pools = new LinkedList<>();
+        pools.add(pool);
+
+        consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("cpu.cpu(s)", "8");
+        consumer.setFact("cpu.cpu_socket(s)", "8");
+        consumer.setFact("cpu.core(s)_per_socket", "1");
+
+        final List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
+            false);
+
+        assertEquals(1, bestPools.size());
+        assertEquals(2, bestPools.get(0).getQuantity().intValue());
     }
 
     @Test

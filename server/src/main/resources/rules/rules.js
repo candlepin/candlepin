@@ -1,4 +1,4 @@
-// Version: 5.35
+// Version: 5.37
 
 /*
  * Default Candlepin rule set.
@@ -161,7 +161,7 @@ function getComplianceAttributes(consumer) {
  * Model object related functions.
  */
 
-function createPool(pool) {
+function createPool(pool, consumer) {
 
     // Lazily initialized arrays of provided product IDs. Includes the pool's
     // main productId.
@@ -313,6 +313,21 @@ function createPool(pool) {
         }
         return poolSet;
     };
+
+    // When pool is missing vcpu and consumer is virtual, pool should use cores
+    // instead so we calculate calculate vcpu based on cores and sockets
+    pool.calculateVcpu = function (consumer) {
+        if (Utils.isGuest(consumer) && !this.hasAttribute(VCPU_ATTRIBUTE) && this.hasAttribute(CORES_ATTRIBUTE)) {
+            pool.attributes.push({
+                name: VCPU_ATTRIBUTE,
+                value: parseInt(this.getAttribute(CORES_ATTRIBUTE)) * 2
+            });
+        }
+    };
+
+    if (consumer != null) {
+        pool.calculateVcpu(consumer);
+    }
 
     return pool;
 }
@@ -1582,19 +1597,19 @@ var Entitlement = {
         context = JSON.parse(json_context);
 
         if ("pool" in context) {
-            context.pool = createPool(context.pool);
+            context.pool = createPool(context.pool, context.consumer);
         }
 
         if ("pools" in context) {
             for (var i = 0; i < context.pools.length; i++) {
-                context.pools[i] = createPool(context.pools[i]);
+                context.pools[i] = createPool(context.pools[i], context.consumer);
             }
         }
 
         if ("poolQuantities" in context) {
             context.pools = [];
             for (var i = 0; i < context.poolQuantities.length; i++) {
-                context.pools[i] = createPool(context.poolQuantities[i].pool);
+                context.pools[i] = createPool(context.poolQuantities[i].pool, context.consumer);
                 context.pools[i].quantityRequested = context.poolQuantities[i].quantity;
             }
         }
@@ -2595,13 +2610,13 @@ var Autobind = {
             for (var key in nextMap) {
                 var ents = nextMap[key];
                 for (var entIdx = 0; entIdx < ents.length; entIdx++) {
-                    ents[entIdx].pool = createPool(ents[entIdx].pool);
+                    ents[entIdx].pool = createPool(ents[entIdx].pool, context.consumer);
                 }
             }
         }
 
         for (var i = 0; i < context.pools.length; i++) {
-            context.pools[i] = createPool(context.pools[i]);
+            context.pools[i] = createPool(context.pools[i], context.consumer);
             var pool = context.pools[i];
             if (pool.quantity == -1) {
                 // In the unlimited case, we need at most the number required to cover the system
@@ -3188,11 +3203,11 @@ var Compliance = {
         // Add some methods to the various Pool objects:
         for (var k = 0; k < ((context.entitlements) ? context.entitlements.length : 0); k++) {
             var e = context.entitlements[k];
-            e.pool = createPool(e.pool);
+            e.pool = createPool(e.pool, context.consumer);
         }
 
         if ("entitlement" in context) {
-            context.entitlement.pool = createPool(context.entitlement.pool);
+            context.entitlement.pool = createPool(context.entitlement.pool, context.consumer);
         }
 
         // Older candlepins don't send this value, assume they need to calculate compliantUntil
@@ -3689,21 +3704,22 @@ var Quantity = {
         context = JSON.parse(json_context);
 
         if ("pool" in context) {
-            context.pool = createPool(context.pool);
+            context.pool = createPool(context.pool, context.consumer);
         }
 
         if ("pools" in context) {
             for (var i = 0; i < context.pools.length; i++) {
-                context.pools[i] = createPool(context.pools[i]);
+                context.pools[i] = createPool(context.pools[i], context.consumer);
             }
         }
 
         if ("validEntitlements" in context) {
             for (var i = 0; i < context.validEntitlements.length; i++) {
                 var e = context.validEntitlements[i];
-                e.pool = createPool(e.pool);
+                e.pool = createPool(e.pool, context.consumer);
             }
         }
+
         return context;
     },
 

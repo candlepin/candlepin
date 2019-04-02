@@ -14,11 +14,7 @@
  */
 package org.candlepin.policy.js.quantity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
-
+import com.google.inject.Provider;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
@@ -42,9 +38,6 @@ import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-
-import com.google.inject.Provider;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -59,6 +52,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
 /**
  * QuantityRulesTest
@@ -223,6 +221,20 @@ public class QuantityRulesTest {
     }
 
     @Test
+    public void shouldUseCoresIfNoVcpu() {
+        consumer.setFact(IS_VIRT, "true");
+        consumer.setFact(SOCKET_FACT, "1");
+        consumer.setFact(CORES_FACT, "8");
+        pool.getProduct().setAttribute(CORES_ATTRIBUTE, "2");
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
+
+        final SuggestedQuantityDTO suggested = quantityRules
+            .getSuggestedQuantity(pool, consumer, new Date());
+
+        assertEquals(new Long(2), suggested.getSuggested());
+    }
+
+    @Test
     public void testVirtUses1IfNoVcpu() {
         // Ensure that we start this test with no entitlements.
         consumer.getEntitlements().clear();
@@ -267,7 +279,7 @@ public class QuantityRulesTest {
     public void testUnlimitedQuantity() {
         consumer.setFact(SOCKET_FACT, "8");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
-        pool.setQuantity(new Long(-1));
+        pool.setQuantity(-1L);
         SuggestedQuantityDTO suggested =
             quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
@@ -574,7 +586,7 @@ public class QuantityRulesTest {
 
         pool.getProduct().setAttribute(GUEST_LIMIT_ATTRIBUTE, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
-        pool.setQuantity(new Long(-1));
+        pool.setQuantity(-1L);
         SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(new Long(4), suggested.getSuggested());
     }

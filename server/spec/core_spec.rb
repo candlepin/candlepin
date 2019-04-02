@@ -29,7 +29,41 @@ describe 'Core Limiting' do
     @core_socket_pool = create_pool_and_subscription(@owner['key'], @core_and_socket_product.id, 10,
                                               [], '18881', '1222')
 
+    # Create a stackable product limiting by socket.
+    prod3 = random_string("Product3")
+    @socket_product = create_product(nil, prod3, :attributes => {
+        :version => '6.4',
+        :cores => 2,
+        :sockets => 1,
+        :instance_multiplier => 2,
+        :stacking_id => prod3,
+        :'multi-entitlement' => 'yes',
+        :warning_period => 15,
+        :management_enabled => true,
+        :support_level => 'standard',
+        :support_type => 'excellent',})
+    @socket_pool = create_pool_and_subscription(@owner['key'], @socket_product.id, 5, [], '1888', '1234')
+
     @user = user_client(@owner, random_string('test-user'))
+  end
+
+  it 'should use cores if vcpu is not available' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+      {'system.certificate_version' => '3.2',
+       # Simulate 8 sockets as would be returned from system fact
+       'cpu.core(s)_per_socket'=> '1',
+       'cpu.cpu(s)'=> '8',
+       'cpu.cpu_socket(s)'=> '8',
+       'virt.is_guest'=> 'true'
+      })
+    installed = [
+      {'productId' => @socket_product.id, 'productName' => @socket_product.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+    # Perform healing
+    ents = system.consume_product()
+    ents.size.should == 1
+    ents[0].quantity.should == 2
   end
 
   it 'can consume core entitlement if requesting v3.2 certificate' do

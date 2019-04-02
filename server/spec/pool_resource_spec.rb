@@ -243,6 +243,9 @@ describe 'Pool Resource' do
 
     pools = @cp.list_pools
 
+    # Wait for events to arrive
+    sleep 1
+
     events = @cp.list_owner_events(owner['key'])
     pool_created_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'CREATED' }
     pool_created_events.size.should eq(6)
