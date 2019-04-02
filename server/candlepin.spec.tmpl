@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.13
+Version: 2.5.14
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,14 @@ fi
 
 #raw
 %changelog
+* Tue Apr 02 2019 Kevin Howell <khowell@redhat.com> 2.5.14-1
+- 1694752: allow hypervisor id update when it changes in the hypervisor report
+  (wpoteat@redhat.com)
+- 1694728: Added index on column key_id in cp_content_override
+  (crog@redhat.com)
+- 1679289: Entitlement revocation no longer refreshes pools while locking
+  (crog@redhat.com)
+
 * Tue Mar 26 2019 Kevin Howell <khowell@redhat.com> 2.5.13-1
 - 1664788: Change default key size to 4096 bits. (awood@redhat.com)
 - 1687894: Expose useful data on System Purpose Compliance event
