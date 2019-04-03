@@ -16,6 +16,7 @@ package org.candlepin.async.impl;
 
 import org.candlepin.async.JobMessage;
 import org.candlepin.async.JobMessageDispatcher;
+import org.candlepin.async.JobMessageDispatchException;
 import org.candlepin.audit.MessageAddress;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -102,18 +103,23 @@ public class ArtemisJobMessageDispatcher implements JobMessageDispatcher {
     /**
      * {@inheritDoc}
      */
-    public void sendJobMessage(JobMessage jobMessage) throws Exception {
-        ClientSession session = this.getClientSession();
-        ClientMessage message = session.createMessage(true);
-        message.putStringProperty(JOB_KEY_MESSAGE_PROPERTY, jobMessage.getJobKey());
+    public void sendJobMessage(JobMessage jobMessage) throws JobMessageDispatchException {
+        try {
+            ClientSession session = this.getClientSession();
+            ClientMessage message = session.createMessage(true);
+            message.putStringProperty(JOB_KEY_MESSAGE_PROPERTY, jobMessage.getJobKey());
 
-        String eventString = this.objMapper.writeValueAsString(jobMessage);
-        message.getBodyBuffer().writeString(eventString);
+            String eventString = this.objMapper.writeValueAsString(jobMessage);
+            message.getBodyBuffer().writeString(eventString);
 
-        log.debug("Sending message to {}: {}", MessageAddress.JOB_MESSAGE_ADDRESS, eventString);
+            log.debug("Sending message to {}: {}", MessageAddress.JOB_MESSAGE_ADDRESS, eventString);
 
-        ClientProducer producer = this.getClientProducer();
-        producer.send(MessageAddress.JOB_MESSAGE_ADDRESS, message);
+            ClientProducer producer = this.getClientProducer();
+            producer.send(MessageAddress.JOB_MESSAGE_ADDRESS, message);
+        }
+        catch (Exception e) {
+            throw new JobMessageDispatchException(e);
+        }
     }
 
 }
