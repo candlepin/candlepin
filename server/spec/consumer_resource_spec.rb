@@ -514,6 +514,27 @@ describe 'Consumer Resource' do
     consumer.uuid.should == 'custom-uuid'
   end
 
+  it 'should not allow the system uuid to be used to match a consumer across orgs' do
+    owner1 = create_owner random_string('owner')
+    user1 = user_client(owner1, random_string('user'))
+    owner2 = create_owner random_string('owner')
+    user2 = user_client(owner2, random_string('user'))
+
+    host_name = random_string("hostname")
+    system_id = "system_id"
+
+    test1 = user1.register(host_name, :system, nil, {"dmi.system.uuid" => system_id, "virt.is_guest"=>"false"}, nil, owner1['key'])
+    @cp.get_consumer(test1.uuid)['uuid'].should == test1['uuid']
+
+    # different org should not use the same consumer record because of system uuid
+    test2 = user2.register(host_name, :system, nil, {"dmi.system.uuid" => system_id, "virt.is_guest"=>"false"}, nil, owner2['key'])
+    @cp.get_consumer(test2.uuid)['uuid'].should_not == test1['uuid']
+
+    # same org should use the same consumer record because of system uuid
+    test3 = user1.register(host_name, :system, nil, {"dmi.system.uuid" => system_id, "virt.is_guest"=>"false"}, nil, owner1['key'])
+    @cp.get_consumer(test3.uuid)['uuid'].should == test1['uuid']
+  end
+
   def verify_installed_pids(consumer, product_ids)
     installed_ids = consumer['installedProducts'].collect { |p| p['productId'] }
     installed_ids.length.should == product_ids.length
