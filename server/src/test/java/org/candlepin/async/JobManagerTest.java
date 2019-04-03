@@ -39,6 +39,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InOrder;
 import org.slf4j.MDC;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -88,7 +89,7 @@ public class JobManagerTest {
         private List<JobMessage> messages = new ArrayList<>();
 
         @Override
-        public void sendJobMessage(JobMessage jobMessage) throws Exception {
+        public void sendJobMessage(JobMessage jobMessage) throws JobMessageDispatchException {
             this.messages.add(jobMessage);
         }
 
@@ -135,6 +136,7 @@ public class JobManagerTest {
         doReturn(this.jobCurator).when(this.injector).getInstance(AsyncJobStatusCurator.class);
         doReturn(this.uow).when(this.injector).getInstance(UnitOfWork.class);
         doAnswer(returnsFirstArg()).when(this.jobCurator).merge(any(AsyncJobStatus.class));
+        doAnswer(returnsFirstArg()).when(this.jobCurator).create(any(AsyncJobStatus.class));
     }
 
     private JobManager createJobManager() {
@@ -495,7 +497,7 @@ public class JobManagerTest {
         assertEquals(JOB_ID, message.getJobId());
         assertEquals(JOB_KEY, message.getJobKey());
 
-        assertEquals(JobState.FAILED_WITH_RETRY, status.getState());
+        assertEquals(JobState.QUEUED, status.getState());
     }
 
     @Test
@@ -560,4 +562,53 @@ public class JobManagerTest {
         assertEquals(0, this.dispatcher.getSentMessages().size());
         assertEquals(JobState.FAILED, status.getState());
     }
+
+    @Test(expected = JobStateManagementException.class)
+    public void testFailedStateUpdateResultsInStateManagementExceptionDuringRetryExecution()
+        throws JobException {
+
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setMaxAttempts(3));
+
+        AsyncJob job = jdata -> {
+            doThrow(new SQLException()).when(jobCurator).merge(status);
+            throw new JobExecutionException("kaboom");
+        };
+
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        doReturn(JOB_ID).when(status).getId();
+        doReturn(status).when(this.jobCurator).get(JOB_ID);
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+
+        JobManager manager = this.createJobManager();
+        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+    }
+
+    @Test(expected = JobMessageDispatchException.class)
+    public void testFailedMessageDispatchResultsInMessageDispatchExceptionDuringRetryExecution()
+        throws JobException {
+
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setMaxAttempts(3));
+
+        AsyncJob job = jdata -> {
+            throw new JobExecutionException("kaboom");
+        };
+
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        doReturn(JOB_ID).when(status).getId();
+        doReturn(status).when(this.jobCurator).get(JOB_ID);
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+
+        this.dispatcher = mock(CollectingJobMessageDispatcher.class);
+        doThrow(new JobMessageDispatchException()).when(this.dispatcher).sendJobMessage(any());
+
+        JobManager manager = this.createJobManager();
+        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+    }
+
 }

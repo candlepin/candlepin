@@ -23,14 +23,12 @@ package org.candlepin.async;
  */
 public class JobExecutionException extends JobException {
 
-    protected final boolean terminal;
-
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized,
      * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
     public JobExecutionException() {
-        this(false);
+        super(false);
     }
 
     /**
@@ -42,8 +40,7 @@ public class JobExecutionException extends JobException {
      *  retried.
      */
     public JobExecutionException(boolean terminal) {
-        super();
-        this.terminal = terminal;
+        super(terminal);
     }
 
     /**
@@ -55,7 +52,7 @@ public class JobExecutionException extends JobException {
      *  method.
      */
     public JobExecutionException(String message) {
-        this(message, false);
+        super(message, false);
     }
 
     /**
@@ -71,8 +68,7 @@ public class JobExecutionException extends JobException {
      *  retried.
      */
     public JobExecutionException(String message, boolean terminal) {
-        super(message);
-        this.terminal = terminal;
+        super(message, terminal);
     }
 
     /**
@@ -86,7 +82,7 @@ public class JobExecutionException extends JobException {
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
     public JobExecutionException(Throwable cause) {
-        this(cause, false);
+        super(cause, false);
     }
 
     /**
@@ -104,8 +100,7 @@ public class JobExecutionException extends JobException {
      *  retried.
      */
     public JobExecutionException(Throwable cause, boolean terminal) {
-        super(cause);
-        this.terminal = terminal;
+        super(cause, terminal);
     }
 
     /**
@@ -123,7 +118,7 @@ public class JobExecutionException extends JobException {
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
     public JobExecutionException(String message, Throwable cause) {
-        this(message, cause, false);
+        super(message, cause, false);
     }
 
     /**
@@ -145,19 +140,7 @@ public class JobExecutionException extends JobException {
      *  retried.
      */
     public JobExecutionException(String message, Throwable cause, boolean terminal) {
-        super(message, cause);
-        this.terminal = terminal;
-    }
-
-    /**
-     * Checks if this exception represents a terminal, or non-recoverable exception, indicating the
-     * job should not be retried.
-     *
-     * @return
-     *  true if the exception is a terminal exception; false otherwise
-     */
-    public boolean isTerminal() {
-        return this.terminal;
+        super(message, cause, terminal);
     }
 
 }
