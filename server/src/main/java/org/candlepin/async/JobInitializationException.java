@@ -30,11 +30,122 @@ package org.candlepin.async;
 public class JobInitializationException extends JobException {
 
     /**
-     * Create an instance of this exception with the specified message.
+     * Constructs a new exception with null as its detail message. The cause is not initialized,
+     * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
+     */
+    public JobInitializationException() {
+        super(false);
+    }
+
+    /**
+     * Constructs a new exception with null as its detail message. The cause is not initialized,
+     * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      *
-     * @param message a message describing the cause of the exception.
+     * @param terminal
+     *  whether or not the exception is terminal or non-recoverable and the job should not be
+     *  retried.
+     */
+    public JobInitializationException(boolean terminal) {
+        super(terminal);
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message. The cause is not initialized,
+     * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
+     *
+     * @param message
+     *  the detail message. The detail message is saved for later retrieval by the getMessage()
+     *  method.
      */
     public JobInitializationException(String message) {
-        super(message);
+        super(message, false);
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message. The cause is not initialized,
+     * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
+     *
+     * @param message
+     *  the detail message. The detail message is saved for later retrieval by the getMessage()
+     *  method.
+     *
+     * @param terminal
+     *  whether or not the exception is terminal or non-recoverable and the job should not be
+     *  retried.
+     */
+    public JobInitializationException(String message, boolean terminal) {
+        super(message, terminal);
+    }
+
+    /**
+     * Constructs a new exception with the specified cause and a detail message of
+     * <tt>(cause == null ? null : cause.toString())</tt> (which typically contains the and
+     * detail message of cause). This constructor is useful for exceptions that are little more
+     * than wrappers for other throwables (for example, PrivilegedActionException).
+     *
+     * @param cause
+     *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
+     *  value is permitted, and indicates that the cause is nonexistent or unknown.
+     */
+    public JobInitializationException(Throwable cause) {
+        super(cause, false);
+    }
+
+    /**
+     * Constructs a new exception with the specified cause and a detail message of
+     * <tt>(cause == null ? null : cause.toString())</tt> (which typically contains the and
+     * detail message of cause). This constructor is useful for exceptions that are little more
+     * than wrappers for other throwables (for example, PrivilegedActionException).
+     *
+     * @param cause
+     *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
+     *  value is permitted, and indicates that the cause is nonexistent or unknown.
+     *
+     * @param terminal
+     *  whether or not the exception is terminal or non-recoverable and the job should not be
+     *  retried.
+     */
+    public JobInitializationException(Throwable cause, boolean terminal) {
+        super(cause, terminal);
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message and cause.
+     * <p></p>
+     * Note that the detail message associated with cause is not automatically incorporated in this
+     * exception's detail message.
+     *
+     * @param message
+     *  the detail message. The detail message is saved for later retrieval by the getMessage()
+     *  method.
+     *
+     * @param cause
+     *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
+     *  value is permitted, and indicates that the cause is nonexistent or unknown.
+     */
+    public JobInitializationException(String message, Throwable cause) {
+        super(message, cause, false);
+    }
+
+    /**
+     * Constructs a new exception with the specified detail message and cause.
+     * <p></p>
+     * Note that the detail message associated with cause is not automatically incorporated in this
+     * exception's detail message.
+     *
+     * @param message
+     *  the detail message. The detail message is saved for later retrieval by the getMessage()
+     *  method.
+     *
+     * @param cause
+     *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
+     *  value is permitted, and indicates that the cause is nonexistent or unknown.
+     *
+     * @param terminal
+     *  whether or not the exception is terminal or non-recoverable and the job should not be
+     *  retried.
+     */
+    public JobInitializationException(String message, Throwable cause, boolean terminal) {
+        super(message, cause, terminal);
     }
 }
