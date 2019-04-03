@@ -2,6 +2,18 @@
 
 APP_DB_NAME="candlepin"
 MAX_STARTUP_WAIT_TIME=30
+CP_EXTRACT_DIR=/var/tmp/candlepin
+
+prepare_classpath() {
+    mkdir -p ${CP_EXTRACT_DIR}
+    rm -rf ${CP_EXTRACT_DIR}/*
+    cd ${CP_EXTRACT_DIR}
+    # Workspace might not be cleaned up
+    jar xf $(find ${PROJECT_DIR}/target -name 'candlepin*.war' | head -n 1)
+    chmod -R 744 ${CP_EXTRACT_DIR}
+    cd -
+    export CP_LIQUIBASE_CLASSPATH="${CP_EXTRACT_DIR}/WEB-INF/lib"
+}
 
 gendb() {
     if [ "$USE_MYSQL" == "1" ]; then
@@ -29,8 +41,10 @@ gendb() {
         CHANGELOG="changelog-update.xml"
     fi
 
+    prepare_classpath
+
     info_msg "$MESSAGE"
-    LQCOMMAND="liquibase --driver=${JDBC_DRIVER} --classpath=$PROJECT_DIR/src/main/resources/:build/classes/java/main/:${JDBC_JAR} --changeLogFile=db/changelog/$CHANGELOG --url=${JDBC_URL} --username=candlepin"
+    LQCOMMAND="${PROJECT_DIR}/bin/liquibase.sh --driver=${JDBC_DRIVER} --classpath=$PROJECT_DIR/src/main/resources/:build/classes/java/main/:${JDBC_JAR} --changeLogFile=db/changelog/$CHANGELOG --url=${JDBC_URL} --username=candlepin"
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
