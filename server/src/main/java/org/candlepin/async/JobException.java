@@ -17,18 +17,19 @@ package org.candlepin.async;
 
 
 /**
- * The JobExecutionException represents an unexpected error that occurred during the runtime of a
- * job. This exception may be thrown manually by the job itself, or generated if a runtime
- * exception bubbles up to the job management framework.
+ * The JobException represents the class of unexpected errors that may occur within the job
+ * system.
  */
-public class JobExecutionException extends JobException {
+public class JobException extends Exception {
+
+    protected final boolean terminal;
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized,
      * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public JobExecutionException() {
-        super(false);
+    public JobException() {
+        this(false);
     }
 
     /**
@@ -39,8 +40,9 @@ public class JobExecutionException extends JobException {
      *  whether or not the exception is terminal or non-recoverable and the job should not be
      *  retried.
      */
-    public JobExecutionException(boolean terminal) {
-        super(terminal);
+    public JobException(boolean terminal) {
+        super();
+        this.terminal = terminal;
     }
 
     /**
@@ -51,8 +53,8 @@ public class JobExecutionException extends JobException {
      *  the detail message. The detail message is saved for later retrieval by the getMessage()
      *  method.
      */
-    public JobExecutionException(String message) {
-        super(message, false);
+    public JobException(String message) {
+        this(message, false);
     }
 
     /**
@@ -67,8 +69,9 @@ public class JobExecutionException extends JobException {
      *  whether or not the exception is terminal or non-recoverable and the job should not be
      *  retried.
      */
-    public JobExecutionException(String message, boolean terminal) {
-        super(message, terminal);
+    public JobException(String message, boolean terminal) {
+        super(message);
+        this.terminal = terminal;
     }
 
     /**
@@ -81,8 +84,8 @@ public class JobExecutionException extends JobException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public JobExecutionException(Throwable cause) {
-        super(cause, false);
+    public JobException(Throwable cause) {
+        this(cause, false);
     }
 
     /**
@@ -99,8 +102,9 @@ public class JobExecutionException extends JobException {
      *  whether or not the exception is terminal or non-recoverable and the job should not be
      *  retried.
      */
-    public JobExecutionException(Throwable cause, boolean terminal) {
-        super(cause, terminal);
+    public JobException(Throwable cause, boolean terminal) {
+        super(cause);
+        this.terminal = terminal;
     }
 
     /**
@@ -117,8 +121,8 @@ public class JobExecutionException extends JobException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public JobExecutionException(String message, Throwable cause) {
-        super(message, cause, false);
+    public JobException(String message, Throwable cause) {
+        this(message, cause, false);
     }
 
     /**
@@ -139,8 +143,20 @@ public class JobExecutionException extends JobException {
      *  whether or not the exception is terminal or non-recoverable and the job should not be
      *  retried.
      */
-    public JobExecutionException(String message, Throwable cause, boolean terminal) {
-        super(message, cause, terminal);
+    public JobException(String message, Throwable cause, boolean terminal) {
+        super(message, cause);
+        this.terminal = terminal;
+    }
+
+    /**
+     * Checks if this exception represents a terminal, or non-recoverable exception, indicating the
+     * job should not be retried.
+     *
+     * @return
+     *  true if the exception is a terminal exception; false otherwise
+     */
+    public boolean isTerminal() {
+        return this.terminal;
     }
 
 }

@@ -29,9 +29,9 @@ public interface JobMessageDispatcher {
      * @param jobMessage
      *  The JobMessage to send
      *
-     * @throws Exception
+     * @throws JobMessageDispatchException
      *  if the message cannot be sent for any reason
      */
-    void sendJobMessage(JobMessage jobMessage) throws Exception;
+    void sendJobMessage(JobMessage jobMessage) throws JobMessageDispatchException;
 
 }

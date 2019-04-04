@@ -14,8 +14,6 @@
  */
 package org.candlepin.async;
 
-import com.google.inject.Injector;
-import com.google.inject.persist.UnitOfWork;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.filter.LoggingFilter;
@@ -26,15 +24,22 @@ import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
+
+import com.google.inject.Injector;
+import com.google.inject.persist.UnitOfWork;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 
 
 /**
@@ -47,13 +52,6 @@ public class JobManager {
 
     /** Stores our mapping of job keys to job classes */
     private static Map<String, Class<? extends AsyncJob>> jobs = new HashMap<>();
-
-    private final AsyncJobStatusCurator jobCurator;
-    private final JobMessageDispatcher dispatcher;
-    private final CandlepinRequestScope candlepinRequestScope;
-    private final PrincipalProvider principalProvider;
-    private final Injector injector;
-
 
 
     /**
@@ -129,6 +127,13 @@ public class JobManager {
         return jobs.get(jobKey);
     }
 
+
+    private final AsyncJobStatusCurator jobCurator;
+    private final JobMessageDispatcher dispatcher;
+    private final CandlepinRequestScope candlepinRequestScope;
+    private final PrincipalProvider principalProvider;
+    private final Injector injector;
+
     /**
      * Creates a new JobManager instance
      */
@@ -167,7 +172,7 @@ public class JobManager {
         AsyncJobStatus job = new AsyncJobStatus();
 
         job.setJobKey(builder.getJobKey());
-        job.setName(builder.getJobName());
+        job.setName(builder.getJobName() != null ? builder.getJobName() : builder.getJobKey());
         job.setGroup(builder.getJobGroup());
 
         // Add environment-specific metadata
@@ -210,34 +215,92 @@ public class JobManager {
         // TODO:
         // Add job filtering/deduplication by criteria
 
-        AsyncJobStatus job = this.buildJobStatus(builder);
-        job.setState(JobState.CREATED);
+        AsyncJobStatus status = this.buildJobStatus(builder);
+        status.setState(JobState.CREATED);
 
         try {
             // Persist the job status so that the ID will be generated.
-            job = this.jobCurator.create(job);
+            status = this.jobCurator.create(status);
 
-            // Build and send the job message.
-            JobMessage message = new JobMessage(job.getId(), job.getJobKey());
-            this.dispatcher.sendJobMessage(message);
+            // Build and send the job message and update the job state accordingly
+            status = this.postJobStatusMessage(status);
+        }
+        catch (JobStateManagementException e) {
+            log.error("Unable to update state for job: {}; leaving job in its previous state for " +
+                "state resync upon execution", status.getName());
 
-            // Update the job state to QUEUED
-            job = job.setState(JobState.QUEUED);
-            this.jobCurator.merge(job);
+            // We were unable to update the state from CREATED->QUEUED, but we were able to send
+            // the message to Artemis. We *should* be fine once the job executes and corrects
+            // itself. The job will skip the QUEUED state and transition right into RUNNING, but
+            // that's fine... I guess.
+
+            // Manually update the state just to be certain. This won't persist, but at least our
+            // output will be consistent.
+            status.setState(JobState.QUEUED);
+        }
+        catch (JobMessageDispatchException e) { // Temporary exception branch
+            log.error("Unable to dispatch job message for new job: {}; deleting job and returning",
+                status.getName());
+
+            // We created the job, but were unable to send the job to Artemis. The job is dead
+            // at this point. We *could* retry, but at the time of writing, we have no mechanism
+            // for enabling retry or async messaging (comes with scheduling). As such, we'll
+            // kill the job
+
+            this.jobCurator.delete(status);
+
+            status.setState(JobState.FAILED);
+            status.setJobResult(e);
         }
         catch (Exception e) {
-            log.warn("Error sending async job message.", e);
+            log.error("Unexpected exception occurred while queueing job: {}", status.getName(), e);
 
-            // We couldn't send the message so discard the job status as it is no longer relevant.
-            if (job != null && job.getId() != null) {
-                this.jobCurator.delete(job);
-            }
+            // Uh oh. If we're here, something very very bad has happened. This probably indicates
+            // the database is unavailable or we, otherwise, cannot persist the AsyncJobStatus
+            // instance. We'd delete it, but that'll likely fail, too. Best thing to do here is
+            // just return the job status with the FAILED info.
 
-            throw new RuntimeException("Error sending async job message.", e);
+            // If this occurs do to some other unexpected failure, we'll have some state cleanup
+            // to deal with, probably.
+
+            status.setState(JobState.FAILED);
+            status.setJobResult(e);
         }
 
         // Done!
-        return job;
+        return status;
+    }
+
+    /**
+     * Creates and dispatches a job message for the given job status, then updates the state of
+     * the job to QUEUED.
+     *
+     * @param status
+     *  The job for which to dispatch a job message
+     *
+     * @return
+     *  the updated job status
+     */
+    private AsyncJobStatus postJobStatusMessage(AsyncJobStatus status)
+        throws JobStateManagementException, JobMessageDispatchException {
+
+        try {
+            // Build and send the job message
+            JobMessage message = new JobMessage(status.getId(), status.getJobKey());
+            this.dispatcher.sendJobMessage(message);
+
+            // Update the job's status
+            status = this.updateJobStatus(status, JobState.QUEUED, null);
+
+            return status;
+        }
+        catch (JobMessageDispatchException e) {
+            log.error("Job \"{}\" could not be queued; failed to dispatch job message", status.getName(), e);
+
+            this.updateJobStatus(status, JobState.FAILED, e);
+
+            throw e;
+        }
     }
 
     /**
@@ -253,36 +316,63 @@ public class JobManager {
      * @return
      *  a JobStatus instance representing the job's status
      */
-    public AsyncJobStatus executeJob(final JobMessage message)
-        throws PreJobExecutionException, JobExecutionException {
-        final AsyncJobStatus status = this.jobCurator.get(message.getJobId());
-        if (status == null) {
-            throw new PreJobExecutionException("JobStatus(" + message.toString() + ") was not found.");
-        }
-        if (status.getState() == JobState.CANCELED) {
-            throw new PreJobExecutionException("Job(" + message.toString() + ") was CANCELLED.");
-        }
+    public AsyncJobStatus executeJob(final JobMessage message) throws JobException {
+        AsyncJobStatus status = this.fetchJobStatus(message);
+
         final Class<? extends AsyncJob> jobClass = getJobClass(message.getJobKey());
         candlepinRequestScope.enter();
         final EventSink eventSink = injector.getInstance(EventSink.class);
         final UnitOfWork uow = injector.getInstance(UnitOfWork.class);
-        uow.begin();
+
         try {
+            uow.begin();
             setupLogging(status);
+
             final AsyncJob job = injector.getInstance(jobClass);
+
             if (job == null) {
-                throw new PreJobExecutionException("Job(" + message.toString() + ") could not be created.");
+                log.error("Unable to instantiate job class \"{}\" for job: {}",
+                    jobClass.getName(), message.getJobKey());
+
+                throw new JobInitializationException("Unable to instantiate job class: " +
+                    jobClass.getName());
             }
-            setRunning(message.getJobId());
-            final Object result = job.execute(status);
-            updateStatus(message.getJobId(), AsyncJobStatus.JobState.COMPLETED, result);
+
+            status.setJobExecSource(Util.getHostname());
+            status.incrementAttempts();
+            status.setStartTime(new Date());
+            status.setEndTime(null);
+            this.updateJobStatus(status, JobState.RUNNING, null);
+
+            // TODO: Make this line optional, based on job configuration
+            log.info("Starting job \"{}\" using class: {}", status.getName(), jobClass.getName());
+
+            Object result = null;
+
+            try {
+                result = job.execute(status);
+            }
+            catch (JobExecutionException e) {
+                boolean retry = !e.isTerminal() && status.getAttempts() < status.getMaxAttempts();
+                status = this.processJobFailure(status, eventSink, e, retry);
+
+                throw e;
+            }
+            catch (Exception e) {
+                boolean retry = status.getAttempts() < status.getMaxAttempts();
+                status = this.processJobFailure(status, eventSink, e, retry);
+
+                throw new JobExecutionException(e);
+            }
+
             eventSink.sendEvents();
+            status.setEndTime(new Date());
+            status = this.updateJobStatus(status, JobState.COMPLETED, result);
+
+            // TODO: Make this line optional, based on job configuration
+            log.info("Job \"{}\" completed in {}ms", status.getName(), this.getJobRuntime(status));
+
             return status;
-        }
-        catch (Exception e) {
-            updateStatus(message.getJobId(), AsyncJobStatus.JobState.FAILED, e.getMessage());
-            eventSink.rollback();
-            throw e;
         }
         finally {
             uow.end();
@@ -321,18 +411,148 @@ public class JobManager {
         }
     }
 
-    private void setRunning(final String jobId) {
-        final AsyncJobStatus status = this.jobCurator.get(jobId);
-        status.setJobExecSource(Util.getHostname());
-        status.setState(AsyncJobStatus.JobState.RUNNING);
-        this.jobCurator.merge(status);
+    /**
+     * Fetches and validates the job status associated with the given message.
+     *
+     * @param message
+     *  The message for which to fetch the job status
+     *
+     * @throws JobInitializationException
+     *  if the job status cannot be queried, found or it is not in a valid state
+     *
+     * @return
+     *  the AsyncJobStatus instance associated with the given message
+     */
+    private AsyncJobStatus fetchJobStatus(JobMessage message) throws JobInitializationException {
+        AsyncJobStatus status;
+
+        try {
+            status = this.jobCurator.get(message.getJobId());
+        }
+        catch (Exception e) {
+            // This should only happen if the DB is down when we attempt to fetch a job from the
+            // curator. This is a non-terminal error as we must assume the job is still there
+            // waiting to be run
+            String errmsg = String.format("Unable to query job status for message: %s", message);
+            throw new JobInitializationException(errmsg, e, false);
+        }
+
+        if (status == null) {
+            String errmsg = String.format("Unable to find job status for message: %s", message);
+
+            log.error(errmsg);
+            throw new JobInitializationException(errmsg, true);
+        }
+
+        if (status.getState() == null || status.getState().isTerminal()) {
+            String errmsg = String.format("Job \"%s\" is in an unknown or terminal state: %s",
+                status.getName(), status.getState());
+
+            log.error(errmsg);
+            throw new JobInitializationException(errmsg, true);
+        }
+
+        return status;
+
     }
 
-    private void updateStatus(final String jobId, final AsyncJobStatus.JobState state, final Object result) {
-        final AsyncJobStatus status = this.jobCurator.get(jobId);
-        status.setJobResult(result);
-        status.setState(state);
-        this.jobCurator.merge(status);
+    /**
+     * Updates the state of the provided job status
+     *
+     * @param status
+     *  The AsyncJobStatus to update
+     *
+     * @param state
+     *  The state to set
+     *
+     * @param result
+     *  The result to assign to the job
+     *
+     * @throws JobStateManagementException
+     *  if the job state is unable to be updated due to a database failure
+     *
+     * @return
+     *  the updated AsyncJobStatus entity
+     */
+    private AsyncJobStatus updateJobStatus(AsyncJobStatus status, JobState state, Object result)
+        throws JobStateManagementException {
+
+        JobState initState = status.getState();
+
+        try {
+            status.setState(state);
+            status.setJobResult(result);
+
+            return this.jobCurator.merge(status);
+        }
+        catch (Exception e) {
+            String errmsg = String.format("Unable to update job state for job \"%s\": %s -> %s",
+                status.getName(), initState, state);
+
+            log.error(errmsg, e);
+            throw new JobStateManagementException(status, initState, state, errmsg, e, state.isTerminal());
+        }
+    }
+
+    /**
+     * Calculates the runtime of the given job. If the job has not completed its execution attempt,
+     * this method returns -1;
+     *
+     * @param status
+     *  The AsyncJobStatus for which to calculate the job runtime
+     *
+     * @return
+     *  the runtime of the job in milliseconds, or -1 if the job has not yet completed its most
+     *  recent execution attempt
+     */
+    private long getJobRuntime(AsyncJobStatus status) {
+        Date start = status.getStartTime();
+        Date end = status.getEndTime();
+
+        return (start != null && end != null) ? end.getTime() - start.getTime() : -1;
+    }
+
+    /**
+     * Processes the failure of a job by rolling back pending events and updating the job state. If
+     * the job is to be retried, a new job message will be dispatched accordingly.
+     *
+     * @param status
+     *  an AsyncJobStatus instance representing the failed job
+     *
+     * @param exception
+     *  the exception representing the failure that occurred
+     *
+     * @param retry
+     *  whether or not the job should be retried
+     *
+     * @return
+     *  the updated AsyncJobStatus entity
+     */
+    private AsyncJobStatus processJobFailure(AsyncJobStatus status, EventSink eventSink, Exception exception,
+        boolean retry) throws JobStateManagementException, JobMessageDispatchException {
+
+        // Set the end of the execution attempt
+        status.setEndTime(new Date());
+
+        // Rollback any unsent events
+        eventSink.rollback();
+
+        if (retry) {
+            status = this.updateJobStatus(status, JobState.FAILED_WITH_RETRY, exception);
+
+            log.warn("Job \"{}\" failed in {}ms; retrying...",
+                status.getName(), this.getJobRuntime(status), exception);
+
+            this.postJobStatusMessage(status);
+        }
+        else {
+            status = this.updateJobStatus(status, JobState.FAILED, exception);
+
+            log.error("Job \"{}\" failed in {}ms",
+                status.getName(), this.getJobRuntime(status), exception);
+        }
+
+        return status;
     }
 
 }

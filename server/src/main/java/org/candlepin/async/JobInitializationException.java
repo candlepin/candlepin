@@ -14,20 +14,26 @@
  */
 package org.candlepin.async;
 
-
-
 /**
- * The JobExecutionException represents an unexpected error that occurred during the runtime of a
- * job. This exception may be thrown manually by the job itself, or generated if a runtime
- * exception bubbles up to the job management framework.
+ * The JobInitializationException represents an error that occurs before a job is
+ * actually executed by the JobManager. The JobManager should throw this exeception
+ * anytime that a job is invalid and can not be run. The JobMessageReceiver will
+ * discard the associated job message when it encounters this exception, so it should
+ * only be thrown in cases where the job is no longer applicable.
+ *
+ * <pre>
+ *     Example scenarios include:
+ *         - Job status could not be found before execution.
+ *         - Job was determined cancelled before execution.
+ * </pre>
  */
-public class JobExecutionException extends JobException {
+public class JobInitializationException extends JobException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized,
      * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public JobExecutionException() {
+    public JobInitializationException() {
         super(false);
     }
 
@@ -39,7 +45,7 @@ public class JobExecutionException extends JobException {
      *  whether or not the exception is terminal or non-recoverable and the job should not be
      *  retried.
      */
-    public JobExecutionException(boolean terminal) {
+    public JobInitializationException(boolean terminal) {
         super(terminal);
     }
 
@@ -51,7 +57,7 @@ public class JobExecutionException extends JobException {
      *  the detail message. The detail message is saved for later retrieval by the getMessage()
      *  method.
      */
-    public JobExecutionException(String message) {
+    public JobInitializationException(String message) {
         super(message, false);
     }
 
@@ -67,7 +73,7 @@ public class JobExecutionException extends JobException {
      *  whether or not the exception is terminal or non-recoverable and the job should not be
      *  retried.
      */
-    public JobExecutionException(String message, boolean terminal) {
+    public JobInitializationException(String message, boolean terminal) {
         super(message, terminal);
     }
 
@@ -81,7 +87,7 @@ public class JobExecutionException extends JobException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public JobExecutionException(Throwable cause) {
+    public JobInitializationException(Throwable cause) {
         super(cause, false);
     }
 
@@ -99,7 +105,7 @@ public class JobExecutionException extends JobException {
      *  whether or not the exception is terminal or non-recoverable and the job should not be
      *  retried.
      */
-    public JobExecutionException(Throwable cause, boolean terminal) {
+    public JobInitializationException(Throwable cause, boolean terminal) {
         super(cause, terminal);
     }
 
@@ -117,7 +123,7 @@ public class JobExecutionException extends JobException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public JobExecutionException(String message, Throwable cause) {
+    public JobInitializationException(String message, Throwable cause) {
         super(message, cause, false);
     }
 
@@ -139,8 +145,7 @@ public class JobExecutionException extends JobException {
      *  whether or not the exception is terminal or non-recoverable and the job should not be
      *  retried.
      */
-    public JobExecutionException(String message, Throwable cause, boolean terminal) {
+    public JobInitializationException(String message, Throwable cause, boolean terminal) {
         super(message, cause, terminal);
     }
-
 }

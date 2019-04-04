@@ -21,36 +21,83 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
 import org.hamcrest.core.StringContains;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
+
 import org.mockito.InOrder;
 import org.slf4j.MDC;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+
+
+@RunWith(JUnitParamsRunner.class)
 public class JobManagerTest {
+
+    private static class StateCollectingStatus extends AsyncJobStatus {
+
+        private final List<JobState> states = new ArrayList<>();
+
+        @Override
+        public AsyncJobStatus setState(final JobState state) {
+            super.setState(state);
+            this.states.add(state);
+            return this;
+        }
+
+        public boolean containsAll(JobState... states) {
+            return new HashSet<>(this.states).containsAll(Arrays.asList(states));
+        }
+    }
+
+    /**
+     * A JobMessageDispatcher implementation that collects the messages sent for verification
+     */
+    private static class CollectingJobMessageDispatcher implements JobMessageDispatcher {
+        private List<JobMessage> messages = new ArrayList<>();
+
+        @Override
+        public void sendJobMessage(JobMessage jobMessage) throws JobMessageDispatchException {
+            this.messages.add(jobMessage);
+        }
+
+        public List<JobMessage> getSentMessages() {
+            return this.messages;
+        }
+    }
+
 
     private static final String JOB_ID = "jobId";
     private static final String JOB_KEY = TestJob1.getJobKey();
@@ -66,7 +113,7 @@ public class JobManagerTest {
     private AsyncJobStatusCurator jobCurator;
     private PrincipalProvider principalProvider;
     private CandlepinRequestScope scope;
-    private JobMessageDispatcher dispatcher;
+    private CollectingJobMessageDispatcher dispatcher;
     private Injector injector;
     private EventSink eventSink;
     private UnitOfWork uow;
@@ -80,7 +127,7 @@ public class JobManagerTest {
         this.jobCurator = mock(AsyncJobStatusCurator.class);
         this.principalProvider = mock(PrincipalProvider.class);
         this.scope = mock(CandlepinRequestScope.class);
-        this.dispatcher = mock(JobMessageDispatcher.class);
+        this.dispatcher = new CollectingJobMessageDispatcher();
         this.injector = mock(Injector.class);
         this.eventSink = mock(EventSink.class);
         this.uow = mock(UnitOfWork.class);
@@ -88,51 +135,67 @@ public class JobManagerTest {
         doReturn(this.eventSink).when(this.injector).getInstance(EventSink.class);
         doReturn(this.jobCurator).when(this.injector).getInstance(AsyncJobStatusCurator.class);
         doReturn(this.uow).when(this.injector).getInstance(UnitOfWork.class);
+        doAnswer(returnsFirstArg()).when(this.jobCurator).merge(any(AsyncJobStatus.class));
+        doAnswer(returnsFirstArg()).when(this.jobCurator).create(any(AsyncJobStatus.class));
+    }
+
+    private JobManager createJobManager() {
+        return new JobManager(
+            jobCurator, dispatcher, principalProvider, scope, injector);
     }
 
     @Test
-    public void jobShouldFailWhenJobStatusIsNotFound()
-        throws PreJobExecutionException, JobExecutionException {
+    public void jobShouldFailWhenJobStatusIsNotFound() throws JobException {
         doReturn(null).when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
-        thrown.expect(PreJobExecutionException.class);
-        thrown.expectMessage(StringContains.containsString("not found"));
+        thrown.expect(JobInitializationException.class);
+        thrown.expectMessage(StringContains.containsString("Unable to find"));
+
+        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+    }
+
+    public Object[] getTerminalJobStates() {
+        List<JobState> states = new ArrayList<>();
+
+        for (JobState state : JobState.values()) {
+            if (state.isTerminal()) {
+                states.add(state);
+            }
+        }
+
+        return states.toArray();
+    }
+
+    @Test
+    @Parameters(method = "getTerminalJobStates")
+    public void jobShouldFailWhenJobStateIsTerminal(JobState state) throws JobException {
+        doReturn(new AsyncJobStatus().setState(state)).when(jobCurator).get(anyString());
+        final JobManager manager = createJobManager();
+
+        thrown.expect(JobInitializationException.class);
+        thrown.expectMessage(StringContains.containsString("unknown or terminal state"));
 
         manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
     }
 
     @Test
-    public void jobShouldFailWhenJobWasCancelled() throws PreJobExecutionException, JobExecutionException {
-        doReturn(new AsyncJobStatus().setState(AsyncJobStatus.JobState.CANCELED))
+    public void shouldFailWhenJobCouldNotBeConstructed() throws JobException {
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
-        thrown.expect(PreJobExecutionException.class);
-        thrown.expectMessage(StringContains.containsString("CANCELLED"));
-
-        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
-    }
-
-
-    @Test
-    public void shouldFailWhenJobCouldNotBeConstructed()
-        throws PreJobExecutionException, JobExecutionException {
-        doReturn(new AsyncJobStatus().setState(AsyncJobStatus.JobState.QUEUED))
-            .when(jobCurator).get(anyString());
-        final JobManager manager = createJobManager();
-
-        thrown.expect(PreJobExecutionException.class);
-        thrown.expectMessage(StringContains.containsString("could not be created"));
+        thrown.expect(JobInitializationException.class);
+        thrown.expectMessage(StringContains.containsString("Unable to instantiate"));
 
         manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
     }
 
     @Test
-    public void jobShouldBeExecuted() throws PreJobExecutionException, JobExecutionException {
+    public void jobShouldBeExecuted() throws JobException {
         final AsyncJob spy = mock(AsyncJob.class);
         doReturn(spy).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(AsyncJobStatus.JobState.QUEUED))
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
@@ -142,13 +205,15 @@ public class JobManagerTest {
     }
 
     @Test
-    public void shouldSetupDMC() throws JobExecutionException, PreJobExecutionException {
-        final AsyncJobStatus status = mock(AsyncJobStatus.class);
+    public void shouldSetupDMC() throws JobException {
         final Map<String, Object> map = new HashMap<>();
         map.put(REQUEST_UUID_KEY, REQUEST_UUID);
         map.put(JobStatus.OWNER_ID, OWNER_ID);
         map.put(JobStatus.OWNER_LOG_LEVEL, OWNER_LOG_LEVEL);
-        doReturn(new JobDataMap(map)).when(status).getJobData();
+
+        final AsyncJobStatus status = new AsyncJobStatus()
+            .setJobData(map);
+
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob1.class);
         doReturn(status).when(jobCurator).get(JOB_ID);
         final JobManager manager = createJobManager();
@@ -162,9 +227,9 @@ public class JobManagerTest {
     }
 
     @Test
-    public void shouldSendEvents() throws JobExecutionException, PreJobExecutionException {
+    public void shouldSendEvents() throws JobException {
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(AsyncJobStatus.JobState.QUEUED))
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
@@ -179,7 +244,7 @@ public class JobManagerTest {
             throw new JobExecutionException();
         };
         doReturn(job).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(AsyncJobStatus.JobState.QUEUED))
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
@@ -187,32 +252,34 @@ public class JobManagerTest {
             manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
             fail("Should not happen");
         }
-        catch (PreJobExecutionException | JobExecutionException e) {
+        catch (JobException e) {
             verify(this.eventSink).rollback();
         }
     }
 
     @Test
-    public void successfulJobShouldEndAsCompleted() throws JobExecutionException, PreJobExecutionException {
+    public void successfulJobShouldEndAsCompleted() throws JobException {
         final StateCollectingStatus status = new StateCollectingStatus();
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(AsyncJobStatus.JobState.QUEUED))
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
         doReturn(status).when(this.jobCurator).get(JOB_ID);
+
+
         final JobManager manager = createJobManager();
 
         manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
 
         assertTrue(status.containsAll(
-            AsyncJobStatus.JobState.RUNNING,
-            AsyncJobStatus.JobState.COMPLETED));
+            JobState.RUNNING,
+            JobState.COMPLETED));
     }
 
     @Test
-    public void shouldSetJobExecSource() throws PreJobExecutionException, JobExecutionException {
+    public void shouldSetJobExecSource() throws JobException {
         final AsyncJobStatus status = new AsyncJobStatus();
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(AsyncJobStatus.JobState.QUEUED))
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
         doReturn(status).when(this.jobCurator).get(JOB_ID);
         final JobManager manager = createJobManager();
@@ -224,7 +291,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void failedJobShouldEndAsFailed() throws PreJobExecutionException {
+    public void failedJobShouldEndAsFailed() throws JobInitializationException {
         final StateCollectingStatus status = new StateCollectingStatus();
         final AsyncJob mock = jdata -> {
             throw new JobExecutionException();
@@ -237,19 +304,18 @@ public class JobManagerTest {
             manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
             fail("Should not happen");
         }
-        catch (JobExecutionException e) {
+        catch (JobException e) {
             assertTrue(status.containsAll(
-                AsyncJobStatus.JobState.RUNNING,
-                AsyncJobStatus.JobState.FAILED));
+                JobState.RUNNING,
+                JobState.FAILED));
         }
     }
 
     @Test
-    public void shouldSurroundJobExecutionWithUnitOfWork()
-        throws JobExecutionException, PreJobExecutionException {
+    public void shouldSurroundJobExecutionWithUnitOfWork() throws JobException {
         final AsyncJob job = mock(AsyncJob.class);
         doReturn(job).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(AsyncJobStatus.JobState.QUEUED))
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
         final InOrder inOrder = inOrder(uow, job, uow);
         final JobManager manager = createJobManager();
@@ -262,11 +328,10 @@ public class JobManagerTest {
     }
 
     @Test
-    public void shouldProperlyEndUnitOfWorkOfFailedJobs()
-        throws JobExecutionException, PreJobExecutionException {
+    public void shouldProperlyEndUnitOfWorkOfFailedJobs() throws JobException {
         final AsyncJob job = mock(AsyncJob.class);
         doReturn(job).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(AsyncJobStatus.JobState.QUEUED))
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
         doThrow(new JobExecutionException()).when(job).execute(any());
         final InOrder inOrder = inOrder(uow, job, uow);
@@ -283,25 +348,267 @@ public class JobManagerTest {
         }
     }
 
-    private JobManager createJobManager() {
-        return new JobManager(
-            jobCurator, dispatcher, principalProvider, scope, injector);
+    @Test
+    public void testStartTimeIsSetOnExecution() throws JobException {
+        AsyncJob job = jdata -> { return null; };
+        AsyncJobStatus status = new AsyncJobStatus()
+            .setState(JobState.QUEUED);
+
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+        doReturn(status).when(this.jobCurator).get(anyString());
+
+        assertNull(status.getStartTime());
+        Date start = new Date();
+
+        JobManager manager = this.createJobManager();
+        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+
+        Date end = new Date();
+
+        assertNotNull(status.getStartTime());
+        assertTrue(start.compareTo(status.getStartTime()) <= 0);
+        assertTrue(end.compareTo(status.getStartTime()) >= 0);
     }
 
-    private static class StateCollectingStatus extends AsyncJobStatus {
+    @Test
+    public void testEndTimeIsSetOnExecution() throws JobException {
+        AsyncJob job = jdata -> { return null; };
+        AsyncJobStatus status = new AsyncJobStatus()
+            .setState(JobState.QUEUED);
 
-        private final List<JobState> states = new ArrayList<>();
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+        doReturn(status).when(this.jobCurator).get(anyString());
 
-        @Override
-        public AsyncJobStatus setState(final JobState state) {
-            super.setState(state);
-            this.states.add(state);
-            return this;
+        assertNull(status.getEndTime());
+        Date start = new Date();
+
+        JobManager manager = this.createJobManager();
+        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+
+        Date end = new Date();
+
+        assertNotNull(status.getEndTime());
+        assertTrue(start.compareTo(status.getEndTime()) <= 0);
+        assertTrue(end.compareTo(status.getEndTime()) >= 0);
+    }
+
+    @Test
+    public void testEndTimeIsSetOnExecutionFailure() {
+        AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
+        AsyncJobStatus status = new AsyncJobStatus()
+            .setState(JobState.QUEUED);
+
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+        doReturn(status).when(this.jobCurator).get(anyString());
+
+        assertNull(status.getEndTime());
+        Date start = new Date();
+
+        try {
+            JobManager manager = this.createJobManager();
+            manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+
+            fail("Expected exception was not thrown by JobManager.executeJob");
+        }
+        catch (JobException e) {
+            // This is expected
+            assertEquals("kaboom", e.getMessage());
         }
 
-        public boolean containsAll(JobState... states) {
-            return new HashSet<>(this.states).containsAll(Arrays.asList(states));
+        Date end = new Date();
+
+        assertNotNull(status.getEndTime());
+        assertTrue(start.compareTo(status.getEndTime()) <= 0);
+        assertTrue(end.compareTo(status.getEndTime()) >= 0);
+    }
+
+    @Test
+    public void testAttemptCountIsIncrementedOnExecution() throws JobException {
+        AsyncJob job = jdata -> { return null; };
+        AsyncJobStatus status = new AsyncJobStatus()
+            .setState(JobState.QUEUED);
+
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+        doReturn(status).when(this.jobCurator).get(anyString());
+
+        assertEquals(0, status.getAttempts());
+
+        JobManager manager = this.createJobManager();
+        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+
+        assertEquals(1, status.getAttempts());
+    }
+
+    @Test
+    public void testAttemptCountRemainsIncrementedOnExecutionFailure() throws JobException {
+        AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
+        AsyncJobStatus status = new AsyncJobStatus()
+            .setState(JobState.QUEUED);
+
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+        doReturn(status).when(this.jobCurator).get(anyString());
+
+        assertEquals(0, status.getAttempts());
+
+        try {
+            JobManager manager = this.createJobManager();
+            manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+
+            fail("Expected exception was not thrown by JobManager.executeJob");
         }
+        catch (JobException e) {
+            // This is expected
+            assertEquals("kaboom", e.getMessage());
+        }
+
+        assertEquals(1, status.getAttempts());
+    }
+
+    @Test
+    public void testFailingWithRetryGeneratesNewJobMessage() {
+        AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setMaxAttempts(3));
+
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        doReturn(JOB_ID).when(status).getId();
+
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+        doReturn(status).when(this.jobCurator).get(anyString());
+
+        assertEquals(0, this.dispatcher.getSentMessages().size());
+
+        try {
+            JobManager manager = this.createJobManager();
+            manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+
+            fail("Expected exception was not thrown by JobManager.executeJob");
+        }
+        catch (JobException e) {
+            // This is expected
+            assertEquals("kaboom", e.getMessage());
+        }
+
+        assertEquals(1, this.dispatcher.getSentMessages().size());
+
+        JobMessage message = this.dispatcher.getSentMessages().get(0);
+        assertEquals(JOB_ID, message.getJobId());
+        assertEquals(JOB_KEY, message.getJobKey());
+
+        assertEquals(JobState.QUEUED, status.getState());
+    }
+
+    @Test
+    public void testFailingWithRetryDoesNotRetryWhenAttemptsExhaused() {
+        AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .incrementAttempts()
+            .setMaxAttempts(2));
+
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        doReturn(JOB_ID).when(status).getId();
+
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+        doReturn(status).when(this.jobCurator).get(anyString());
+
+        assertEquals(0, this.dispatcher.getSentMessages().size());
+
+        try {
+            JobManager manager = this.createJobManager();
+            manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+
+            fail("Expected exception was not thrown by JobManager.executeJob");
+        }
+        catch (JobException e) {
+            // This is expected
+            assertEquals("kaboom", e.getMessage());
+        }
+
+        assertEquals(0, this.dispatcher.getSentMessages().size());
+        assertEquals(JobState.FAILED, status.getState());
+    }
+
+    @Test
+    public void testFailingWithRetryDoesNotRetryOnTerminalFailure() {
+        AsyncJob job = jdata -> { throw new JobExecutionException("kaboom", true); };
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setMaxAttempts(3));
+
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        doReturn(JOB_ID).when(status).getId();
+
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+        doReturn(status).when(this.jobCurator).get(anyString());
+
+        assertEquals(0, this.dispatcher.getSentMessages().size());
+
+        try {
+            JobManager manager = this.createJobManager();
+            manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+
+            fail("Expected exception was not thrown by JobManager.executeJob");
+        }
+        catch (JobException e) {
+            // This is expected
+            assertEquals("kaboom", e.getMessage());
+        }
+
+        assertEquals(0, this.dispatcher.getSentMessages().size());
+        assertEquals(JobState.FAILED, status.getState());
+    }
+
+    @Test(expected = JobStateManagementException.class)
+    public void testFailedStateUpdateResultsInStateManagementExceptionDuringRetryExecution()
+        throws JobException {
+
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setMaxAttempts(3));
+
+        AsyncJob job = jdata -> {
+            doThrow(new SQLException()).when(jobCurator).merge(status);
+            throw new JobExecutionException("kaboom");
+        };
+
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        doReturn(JOB_ID).when(status).getId();
+        doReturn(status).when(this.jobCurator).get(JOB_ID);
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+
+        JobManager manager = this.createJobManager();
+        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+    }
+
+    @Test(expected = JobMessageDispatchException.class)
+    public void testFailedMessageDispatchResultsInMessageDispatchExceptionDuringRetryExecution()
+        throws JobException {
+
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setMaxAttempts(3));
+
+        AsyncJob job = jdata -> {
+            throw new JobExecutionException("kaboom");
+        };
+
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        doReturn(JOB_ID).when(status).getId();
+        doReturn(status).when(this.jobCurator).get(JOB_ID);
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+
+        this.dispatcher = mock(CollectingJobMessageDispatcher.class);
+        doThrow(new JobMessageDispatchException()).when(this.dispatcher).sendJobMessage(any());
+
+        JobManager manager = this.createJobManager();
+        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
     }
 
 }
