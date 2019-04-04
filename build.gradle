@@ -1,229 +1,235 @@
+// vim: set expandtab sts=4 sw=4 ai:
+
 plugins {
-  id "nebula.lint" version "10.1.2"
-  id "org.candlepin.gradle.SpecVersion"
+    id "nebula.lint" version "10.1.2"
+    id "org.candlepin.gradle.SpecVersion"
 }
 
+version = "2.0"
+
+ext.versions = [
+    artemis: "2.4.0",
+    resteasy: "3.5.1.Final",
+    jackson: "2.9.4",
+    swagger: "1.5.7",
+    logback: "1.2.3",
+    guice: "4.1.0",
+    checkstyle: "8.2",
+    jaxb: "2.3.0",
+    junit5: "5.4.1",
+]
+
+ext.libraries = [
+    antlr: "antlr:antlr:2.7.7",
+    resteasy: [
+        "org.jboss.resteasy:resteasy-jaxrs:${versions.resteasy}",
+        "org.jboss.resteasy:resteasy-jaxb-provider:${versions.resteasy}",
+        "org.jboss.resteasy:resteasy-guice:${versions.resteasy}",
+        "org.jboss.resteasy:resteasy-atom-provider:${versions.resteasy}",
+        "org.jboss.resteasy:resteasy-multipart-provider:${versions.resteasy}",
+        "org.scannotation:scannotation:1.0.3",
+        "org.apache.httpcomponents:httpclient:4.3.6",
+        "org.apache.james:apache-mime4j:0.6",
+        "javax.mail:mail:1.4.7",
+        "javax.ws.rs:javax.ws.rs-api:2.1",
+        "javax.json.bind:javax.json.bind-api:1.0",
+        "org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.1_spec:1.0.0.Final",
+        "javax.annotation:javax.annotation-api:1.3.2",
+        "org.eclipse.microprofile.rest.client:microprofile-rest-client-api:1.0.1",
+        "org.reactivestreams:reactive-streams:1.0.0.final",
+    ],
+    jackson: [
+        "com.fasterxml.jackson.core:jackson-annotations:${versions.jackson}",
+        "com.fasterxml.jackson.core:jackson-core:${versions.jackson}",
+        "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:${versions.jackson}",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${versions.jackson}",
+        "com.fasterxml.jackson.module:jackson-module-jsonSchema:${versions.jackson}",
+        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:${versions.jackson}",
+        "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5:${versions.jackson}",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${versions.jackson}",
+    ],
+    swagger: [
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${versions.jackson}",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:${versions.jackson}",
+        "io.swagger:swagger-jaxrs:${versions.swagger}",
+        "io.swagger:swagger-core:${versions.swagger}",
+        "io.swagger:swagger-models:${versions.swagger}",
+        "io.swagger:swagger-annotations:${versions.swagger}",
+        "org.reflections:reflections:0.9.10",
+        "org.apache.commons:commons-lang3:3.2.1",
+    ],
+    sun_jaxb: [
+        "com.sun.xml.bind:jaxb-impl:${versions.jaxb}",
+        "com.sun.xml.bind:jaxb-core:${versions.jaxb}",
+    ],
+    core_testing: [
+        "org.junit.jupiter:junit-jupiter-api:${versions.junit5}",
+        "org.junit.jupiter:junit-jupiter-params:${versions.junit5}",
+        "org.junit.vintage:junit-vintage-engine:${versions.junit5}",
+        "org.hamcrest:hamcrest-library:1.3",
+        "org.hamcrest:hamcrest-core:1.3",
+        "org.mockito:mockito-all:1.9.5",
+        "pl.pragmatists:JUnitParams:1.0.3",
+        "junit:junit:4.12",
+    ],
+    jukito: "org.jukito:jukito:1.4",
+    logging_deps: [
+        "ch.qos.logback:logback-core:${versions.logback}",
+        "ch.qos.logback:logback-classic:${versions.logback}",
+        // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
+        // JCL for example.
+        "org.slf4j:jcl-over-slf4j:1.7.12",
+        "org.slf4j:log4j-over-slf4j:1.7.12",
+        "org.slf4j:slf4j-api:1.7.25",
+        "net.logstash.logback:logstash-logback-encoder:5.3",
+    ],
+    javax: [
+        "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final",
+        "javax.transaction:jta:1.1",
+        "javax.persistence:javax.persistence-api:2.2",
+    ],
+    commons: [
+        "commons-codec:commons-codec:1.11",
+        "commons-collections:commons-collections:3.2.2",
+        "commons-io:commons-io:1.4",
+        "commons-lang:commons-lang:2.5",
+    ],
+    guice: [
+        "com.google.inject.extensions:guice-assistedinject:${versions.guice}",
+        "com.google.inject.extensions:guice-multibindings:${versions.guice}",
+        "com.google.inject.extensions:guice-servlet:${versions.guice}",
+        "com.google.inject.extensions:guice-throwingproviders:${versions.guice}",
+        "com.google.inject.extensions:guice-persist:${versions.guice}",
+        "com.google.inject:guice:${versions.guice}",
+        "aopalliance:aopalliance:1.0",
+        "javax.inject:javax.inject:1",
+    ],
+    liquibase: "org.liquibase:liquibase-core:3.1.0",
+    liquibase_slf4j: "com.mattbertolini:liquibase-slf4j:1.2.1",
+    oauth: [
+        "net.oauth.core:oauth:20100527",
+        "net.oauth.core:oauth-provider:20100527",
+    ],
+    collections: "com.google.guava:guava:25.1-jre",
+    hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.7.Final",
+    checkstyle: "com.puppycrawl.tools:checkstyle:${versions.checkstyle}",
+    gettext: "com.googlecode.gettext-commons:gettext-commons:0.9.8",
+    javax_servlet: "javax.servlet:servlet-api:2.5",
+    javax_validation: "javax.validation:validation-api:2.0.1.Final",
+    jmock: [
+        "org.jmock:jmock:2.5.1",
+        "org.jmock:jmock-junit4:2.5.1",
+    ],
+    validator: [
+        "org.hibernate.validator:hibernate-validator:6.0.7.Final",
+        "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.7.Final",
+        "javax.validation:validation-api:2.0.1.Final",
+    ],
+]
+
 allprojects {
+    group = "org.candlepin"
+    apply plugin: "maven"
+    apply plugin: "nebula.lint"
 
-  group = 'org.candlepin'
-  apply plugin: 'maven'
-  apply plugin: 'nebula.lint'
+    gradleLint {
+        rules = ["dependency-parentheses"]
+//    rules = ["dependency-parentheses", "unused-exclude-by-dep"]
+//    criticalRules = ["unused-dependency"]
+    }
 
-  gradleLint {
-    rules = ['dependency-parentheses']
-//    rules = ['dependency-parentheses', 'unused-exclude-by-dep']
-//    criticalRules = ['unused-dependency']
-  }
+    // Disable all transitive dependencies except junit
+    configurations.all {
+        dependencies.matching { !it.group.contains("junit") || !it.name.contains("junit") }.all {
+            transitive = false
+        }
+    }
 
-  configurations {
-    antlr
-    commons
-    collections
-    core_testing
-    ehcache
-    guice
-    jackson
-    javax
-    jukito
-    logging_deps
-    liquibase
-    liquibase_slf4j
-    oauth
-    resteasy
-    sun_jaxb
-    swagger
-  }
-
-
-  dependencies {
-    resteasy 'org.jboss.resteasy:resteasy-jaxrs:3.5.1.Final' exclude module: '*'
-    resteasy 'org.jboss.resteasy:resteasy-jaxb-provider:3.5.1.Final' exclude module: '*'
-    resteasy 'org.jboss.resteasy:resteasy-guice:3.5.1.Final' exclude module: '*'
-    resteasy 'org.jboss.resteasy:resteasy-atom-provider:3.5.1.Final' exclude module: '*'
-    resteasy 'org.jboss.resteasy:resteasy-multipart-provider:3.5.1.Final' exclude module: '*'
-    resteasy 'org.scannotation:scannotation:1.0.3' exclude module: '*'
-    resteasy 'org.apache.httpcomponents:httpclient:4.3.6' exclude module: '*'
-    resteasy 'org.apache.james:apache-mime4j:0.6' exclude module: '*'
-    resteasy 'javax.mail:mail:1.4.7' exclude module: '*'
-    resteasy 'javax.ws.rs:javax.ws.rs-api:2.1' exclude module: '*'
-    resteasy 'javax.json.bind:javax.json.bind-api:1.0' exclude module: '*'
-    resteasy 'org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.1_spec:1.0.0.Final' exclude module: '*'
-    resteasy 'javax.annotation:javax.annotation-api:1.3.2' exclude module: '*'
-    resteasy 'org.eclipse.microprofile.rest.client:microprofile-rest-client-api:1.0.1' exclude module: '*'
-    resteasy 'org.reactivestreams:reactive-streams:1.0.0.final' exclude module: '*'
-
-
-    jackson "com.fasterxml.jackson.core:jackson-annotations:2.9.4" exclude module: '*'
-    jackson 'com.fasterxml.jackson.core:jackson-core:2.9.4' exclude module: '*'
-    jackson 'com.fasterxml.jackson.core:jackson-databind:2.9.4' exclude module: '*'
-    jackson 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.4' exclude module: '*'
-    jackson 'com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.4' exclude module: '*'
-    jackson 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.9.4' exclude module: '*'
-    jackson 'com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.4' exclude module: '*'
-    jackson 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5:2.9.4' exclude module: '*'
-    jackson 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.4' exclude module: '*'
-
-    // Used for swagger
-    swagger 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.4' exclude module: '*'
-    swagger 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.9.4' exclude module: '*'
-    swagger 'io.swagger:swagger-jaxrs:1.5.7' exclude module: '*'
-    swagger 'io.swagger:swagger-core:1.5.7' exclude module: '*'
-    swagger 'io.swagger:swagger-models:1.5.7' exclude module: '*'
-    swagger 'io.swagger:swagger-annotations:1.5.7' exclude module: '*'
-    swagger 'org.reflections:reflections:0.9.10' exclude module: '*'
-    swagger 'org.apache.commons:commons-lang3:3.2.1' exclude module: '*'
-
-
-    sun_jaxb 'com.sun.xml.bind:jaxb-impl:2.3.0' exclude module: '*'
-    sun_jaxb 'com.sun.xml.bind:jaxb-core:2.3.0' exclude module: '*'
-
-    core_testing 'org.junit.jupiter:junit-jupiter-api:5.3.1'
-    core_testing 'org.junit.vintage:junit-vintage-engine:5.3.1'
-    core_testing 'org.hamcrest:hamcrest-library:1.3'
-    core_testing 'org.hamcrest:hamcrest-core:1.3'
-    core_testing 'org.mockito:mockito-all:1.9.5'
-    core_testing 'pl.pragmatists:JUnitParams:1.0.3'
-
-    jukito 'org.jukito:jukito:1.4'
-
-    logging_deps 'ch.qos.logback:logback-core:1.2.3' exclude module: '*'
-    logging_deps 'ch.qos.logback:logback-classic:1.2.3' exclude module: '*'
-    // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
-    // JCL for example.
-    logging_deps 'org.slf4j:jcl-over-slf4j:1.7.12' exclude module: '*'
-    logging_deps 'org.slf4j:log4j-over-slf4j:1.7.12' exclude module: '*'
-    logging_deps 'org.slf4j:slf4j-api:1.7.25' exclude module: '*'
-
-    javax 'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final' exclude module: '*'
-    javax 'javax.transaction:jta:1.1' exclude module: '*'
-    javax 'javax.persistence:javax.persistence-api:2.2' exclude module: '*'
-
-    antlr 'antlr:antlr:2.7.7' exclude module: '*'
-
-    ehcache 'org.hibernate:hibernate-ehcache:5.3.6.Final' exclude module: '*'
-    ehcache 'net.sf.ehcache:ehcache:2.10.1' exclude module: '*'
-    ehcache 'org.ehcache:jcache:1.0.0'exclude module: '*'
-    ehcache 'javax.cache:cache-api:1.0.0' exclude module: '*'
-    ehcache 'net.sf.ehcache:management-ehcache-v2:2.10.1' exclude module: '*'
-
-    commons 'commons-codec:commons-codec:1.11'
-    commons 'commons-collections:commons-collections:3.2.2'
-    commons 'commons-io:commons-io:1.4'
-    commons 'commons-lang:commons-lang:2.5'
-
-    guice 'com.google.inject.extensions:guice-assistedinject:4.1.0' exclude module: '*'
-    guice 'com.google.inject.extensions:guice-multibindings:4.1.0' exclude module: '*'
-    guice 'com.google.inject.extensions:guice-servlet:4.1.0' exclude module: '*'
-    guice 'com.google.inject.extensions:guice-throwingproviders:4.1.0' exclude module: '*'
-    guice 'com.google.inject.extensions:guice-persist:4.1.0' exclude module: '*'
-    guice 'com.google.inject:guice:4.1.0' exclude module: '*'
-    guice 'aopalliance:aopalliance:1.0' exclude module: '*'
-    guice 'javax.inject:javax.inject:1' exclude module: '*'
-
-    liquibase 'org.liquibase:liquibase-core:3.1.0' exclude module: '*'
-    liquibase_slf4j 'com.mattbertolini:liquibase-slf4j:1.2.1' exclude module: '*'
-
-    oauth 'net.oauth.core:oauth:20100527' exclude module: '*'
-    oauth 'net.oauth.core:oauth-provider:20100527' exclude module: '*'
-
-    collections 'com.google.guava:guava:25.1-jre' exclude module: '*'
-
-    /*
-
-
-VALIDATOR = ['org.hibernate.validator:hibernate-validator:jar:6.0.7.Final',
-             'org.hibernate.validator:hibernate-validator-annotation-processor:jar:6.0.7.Final',
-             'javax.validation:validation-api:jar:2.0.1.Final']
-
-SERVLET = 'javax.servlet:servlet-api:jar:2.5'
-
-
-SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
-
-
-
-SCANNOTATION = 'org.scannotation:scannotation:jar:1.0.3'
-     */
-
-  }
 }
 
 subprojects {
-  apply plugin: 'java'
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
-  tasks.withType(JavaCompile) {
-  	options.encoding = 'UTF-8'
-//    options.compilerArgs << '-Xlint:deprecation'
-  }
+    apply plugin: "java"
 
-  repositories {
-    mavenLocal()
-    mavenCentral()
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 
-    maven { url "http://repo.jenkins-ci.org/public/" }
-    maven { url "http://repository.jboss.org/nexus/content/groups/public/" }
-    maven { url "http://oauth.googlecode.com/svn/code/maven/" }
-    // For LogDriver
-    ivy { url "http://awood.fedorapeople.org/ivy/candlepin/" }
-  }
+    tasks.withType(JavaCompile) {
+        options.encoding = "UTF-8"
+//    options.compilerArgs << "-Xlint:deprecation"
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+
+        maven { url "http://repo.jenkins-ci.org/public/" }
+        maven { url "http://repository.jboss.org/nexus/content/groups/public/" }
+        maven { url "http://oauth.googlecode.com/svn/code/maven/" }
+        // For LogDriver
+        ivy { url "http://awood.fedorapeople.org/ivy/candlepin/" }
+    }
 }
 
 // Add checkstyle to just the common & server projects
-configure(subprojects.findAll {it.name == 'candlepin-common' || it.name == 'candlepin'} ) {
-  apply plugin: 'checkstyle'
-  configurations {
-    checkstyle
-  }
-
-  ext {
-    logdriver_class = "net.rkbloom.logdriver.LogDriver"
-    use_logdriver = "true".equals(project.findProperty("logdriver"))
-
-    cpdb_username = "candlepin"
-    cpdb_password = ""
-    db_name = 'candlepin'
-    if (! project.findProperty('db_host')||
-            (project.findProperty('db_host') && "".equals(project.findProperty('db_host')))){
-      db_host = 'localhost'
-    }
-    if (project.findProperty('app_db_name') && ! "".equals(project.findProperty('app_db_name'))){
-      db_name = project.findProperty('app_db_name')
-    }
-    // IF MYSQL set up the mysql stuff
-    // else set up postgres (default)
-    if (project.findProperty('database_server') == 'mysql') {
-      jdbc_driver_class = 'com.mysql.jdbc.Driver'
-      jdbc_dialect = 'org.hibernate.dialect.MySQL5InnoDBDialect'
-      jdbc_quartz_driver_class = 'org.quartz.impl.jdbcjobstore.StdJDBCDelegate'
-      jdbc_url = "jdbc:mysql://${db_host}/${db_name}"
-    } else {
-      jdbc_driver_class = 'org.postgresql.Driver'
-      jdbc_dialect = 'org.hibernate.dialect.PostgreSQLDialect'
-      jdbc_quartz_driver_class = 'org.quartz.impl.jdbcjobstore.PostgreSQLDelegate'
-      jdbc_url = "jdbc:postgresql://${db_host}/${db_name}"
+configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "candlepin" }) {
+    apply plugin: "checkstyle"
+    configurations {
+        checkstyle
     }
 
-    amqp_enabled = 'true'.equals(project.findProperty("qpid"))
-    external_broker = 'true'.equals(project.findProperty('external_broker'))
-    hostedtest = 'true'.equals(project.findProperty('hostedtest'))
-  }
+    ext {
+        logdriver_class = "net.rkbloom.logdriver.LogDriver"
+        use_logdriver = "true".equals(project.findProperty("logdriver"))
 
+        cpdb_username = "candlepin"
+        cpdb_password = ""
+        db_name = "candlepin"
+        if (!project.findProperty("db_host") ||
+            (project.findProperty("db_host") && "".equals(project.findProperty("db_host")))) {
+            db_host = "localhost"
+        }
+        if (project.findProperty("app_db_name") && !"".equals(project.findProperty("app_db_name"))) {
+            db_name = project.findProperty("app_db_name")
+        }
+        // IF MYSQL set up the mysql stuff
+        // else set up postgres (default)
+        if (project.findProperty("database_server") == "mysql") {
+            jdbc_driver_class = "com.mysql.jdbc.Driver"
+            jdbc_dialect = "org.hibernate.dialect.MySQL5InnoDBDialect"
+            jdbc_quartz_driver_class = "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"
+            jdbc_url = "jdbc:mysql://${db_host}/${db_name}"
+        } else {
+            jdbc_driver_class = "org.postgresql.Driver"
+            jdbc_dialect = "org.hibernate.dialect.PostgreSQLDialect"
+            jdbc_quartz_driver_class = "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
+            jdbc_url = "jdbc:postgresql://${db_host}/${db_name}"
+        }
 
-  checkstyle {
-    configFile = file("${rootProject.rootDir}/project_conf/checks.xml")
-    configProperties = [
-            'checkstyle.header.file': file("${rootProject.rootDir}/project_conf/HEADER.txt").getCanonicalPath(),
-            'javadoc.type.scope': 'package',
-            'javadoc.method.scope': 'public',
-            'javadoc.lazy': 'false',
-            'javadoc.missing.param': 'true',
-            'javadoc.var.scope': 'public',
-            'checkstyle.cache.file': file("${project.buildDir}/cache/checkstyle.cache.src").getCanonicalPath()]
-  }
+        amqp_enabled = "true".equals(project.findProperty("qpid"))
+        external_broker = "true".equals(project.findProperty("external_broker"))
+        hostedtest = "true".equals(project.findProperty("hostedtest"))
+    }
 
-  dependencies {
-    checkstyle 'com.puppycrawl.tools:checkstyle:8.2'
-    checkstyle project(':checks')
-  }
+    checkstyle {
+        configFile = file("${rootProject.rootDir}/project_conf/checks.xml")
+        configProperties = [
+            "checkstyle.header.file": file("${rootProject.rootDir}/project_conf/HEADER.txt").getCanonicalPath(),
+            "javadoc.type.scope": "package",
+            "javadoc.method.scope": "public",
+            "javadoc.lazy": "false",
+            "javadoc.missing.param": "true",
+            "javadoc.var.scope": "public",
+            "checkstyle.cache.file": file("${project.buildDir}/cache/checkstyle.cache.src").getCanonicalPath()]
+    }
+
+    dependencies {
+        checkstyle libraries.checkstyle
+        checkstyle project(":checks")
+    }
+}
+
+wrapper {
+    gradleVersion = "5.3"
+    distributionType = Wrapper.DistributionType.ALL
 }

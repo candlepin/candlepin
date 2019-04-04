@@ -1,7 +1,48 @@
-description 'Candlepin Checkstyle plugin'
+// vim: set expandtab sts=4 sw=4 ai:
+
+description "Candlepin Checkstyle plugin"
+version = "0.3"
 
 dependencies {
-    compile 'com.puppycrawl.tools:checkstyle:8.2' exclude module: '*'
-    compile 'org.antlr:antlr4-runtime:4.5.3' exclude module: '*'
-    compile 'antlr:antlr:2.7.7' exclude module: '*'
+    compile libraries.checkstyle
+    compile "org.antlr:antlr4-runtime:4.5.3"
+    compile libraries.antlr
+}
+
+task pom {
+    doLast {
+        pom {
+            // Exclude all transitive dependencies
+            configurations.all*.exclude module: "*"
+
+            project {
+                name "Candlepin Style Checks"
+                description "Custom Checkstyle checks for Candlepin"
+                artifactId "candlepin-checks"
+                packaging "jar"
+                parent {
+                    groupId "org.candlepin"
+                    artifactId "candlepin-parent"
+                    version "2.0"
+                    relativePath ".."
+                }
+                build([:]) {
+                    plugins {
+                        plugin {
+                            groupId "org.apache.maven.plugins"
+                            artifactId "maven-surefire-plugin"
+                        }
+                        plugin {
+                            groupId "org.apache.maven.plugins"
+                            artifactId "maven-assembly-plugin"
+                        }
+                        plugin {
+                            groupId "org.apache.maven.plugins"
+                            artifactId "maven-compiler-plugin"
+                        }
+                    }
+                }
+            }
+        }.writeTo("pom.xml")
+    }
 }
