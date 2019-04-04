@@ -33,6 +33,78 @@ describe 'System purpose compliance' do
       status.reasons.include?("unsatisfied role: unsatisfied-role").should == true
   end
 
+  it 'should be matched on a future date for a future entitlement' do
+      product = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:roles => 'myrole'},
+                               :owner => @owner2['key']})
+      start_date = Date.new(2037, 1, 1)
+      end_date = Date.new(2037, 12, 31)
+      p = create_pool_and_subscription(@owner2['key'], product.id, nil, nil, nil, nil, nil, start_date, end_date)
+
+      consumer = @user2.register(
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'myrole', nil, nil)
+
+      status = @user2.get_purpose_compliance(consumer['uuid'], on_date=Date.new(2037, 5, 5))
+      status['status'].should == 'mismatched'
+      status['nonCompliantRole'].include?('myrole').should == true
+
+      @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+
+      # Check that the status is only matched during the period that the entitlement is valid
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      status['status'].should == 'mismatched'
+      status['nonCompliantRole'].include?('myrole').should == true
+
+      status = @user2.get_purpose_compliance(consumer['uuid'], on_date=Date.new(2037, 5, 5))
+      status['status'].should == 'matched'
+      status['compliantRole']['myrole'][0]['pool']['id'].should == p.id
+
+      status = @user2.get_purpose_compliance(consumer['uuid'], on_date=Date.new(2036, 12, 31))
+      status['status'].should == 'mismatched'
+      status['nonCompliantRole'].include?('myrole').should == true
+
+      status = @user2.get_purpose_compliance(consumer['uuid'], on_date=Date.new(2038, 1, 1))
+      status['status'].should == 'mismatched'
+      status['nonCompliantRole'].include?('myrole').should == true
+  end
+
+  it 'should not recalculate consumer status during status call with specified date' do
+      product = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:roles => 'myrole'},
+                               :owner => @owner2['key']})
+      start_date = Date.new(2037, 1, 1)
+      end_date = Date.new(2037, 12, 31)
+      p = create_pool_and_subscription(@owner2['key'], product.id, nil, nil, nil, nil, nil, start_date, end_date)
+
+      # check that the status has been calculated during consumer registration
+      consumer = @user2.register(
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'myrole', nil, nil)
+      consumer = @user2.get_consumer(consumer['uuid'])
+      consumer.systemPurposeStatus.should == 'mismatched'
+
+      # check that the status has not been miscalculated during a bind operation
+      @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+      consumer = @user2.get_consumer(consumer['uuid'])
+      consumer.systemPurposeStatus.should == 'mismatched'
+
+      status = @user2.get_purpose_compliance(consumer['uuid'])
+      status['status'].should == 'mismatched'
+      status['nonCompliantRole'].include?('myrole').should == true
+      consumer = @user2.get_consumer(consumer['uuid'])
+      consumer.systemPurposeStatus.should == 'mismatched'
+
+      # check that the status has not been recalculated & persisted during a call using on_date
+      status = @user2.get_purpose_compliance(consumer['uuid'], on_date=Date.new(2037, 5, 5))
+      status['status'].should == 'matched'
+      status['compliantRole']['myrole'][0]['pool']['id'].should == p.id
+      consumer = @user2.get_consumer(consumer['uuid'])
+      consumer.systemPurposeStatus.should == 'mismatched'
+  end
+
   it 'should change to matched after satisfying role' do
       product = create_product(random_string('product'),
                               random_string('product'),

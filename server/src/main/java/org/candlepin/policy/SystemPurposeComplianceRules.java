@@ -17,6 +17,7 @@ package org.candlepin.policy;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -28,12 +29,14 @@ import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -70,19 +73,54 @@ public class SystemPurposeComplianceRules {
     }
 
     /**
-     * Check compliance status for a consumer on a specific date.
+     * Check system purpose compliance status for a consumer for the current date.
      *
-     * @param consumer Consumer to check.
-     * @param updateConsumer whether or not to use consumerCurator.update
-     *        (also expensive)
-     * @return Compliance status.
+     * @param consumer The consumer to check.
+     * @param existingEntitlements The consumer's existing entitlements.
+     * @param newEntitlements New entitlements of the consumer.
+     * @param updateConsumer Whether or not to use consumerCurator.update
+     *
+     * @return The system purpose compliance status currently.
      */
-    @SuppressWarnings("checkstyle:indentation")
     public SystemPurposeComplianceStatus getStatus(Consumer consumer,
         Collection<Entitlement> existingEntitlements, Collection<Entitlement> newEntitlements,
-        boolean updateConsumer, boolean currentCompliance) {
+        boolean updateConsumer) {
+
+        return getStatus(consumer, existingEntitlements, newEntitlements,
+            null, updateConsumer);
+    }
+
+    /**
+     * Check system purpose compliance status for a consumer on a specific date.
+     *
+     * @param consumer The consumer to check.
+     * @param existingEntitlements The consumer's existing entitlements.
+     * @param newEntitlements New entitlements of the consumer.
+     * @param date The date to check compliance status for.
+     * @param updateConsumer Whether or not to use consumerCurator.update
+     *
+     * @return The system purpose compliance status for the given date.
+     */
+    @SuppressWarnings({"checkstyle:indentation", "checkstyle:methodlength"})
+    public SystemPurposeComplianceStatus getStatus(Consumer consumer,
+        Collection<Entitlement> existingEntitlements, Collection<Entitlement> newEntitlements,
+        Date date, boolean updateConsumer) {
 
         SystemPurposeComplianceStatus status = new SystemPurposeComplianceStatus(i18n);
+
+        // Do not calculate compliance status for distributors. It is prohibitively
+        // expensive and meaningless
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+        if (ctype != null && (ctype.isManifest())) {
+            return status;
+        }
+
+        if (consumer.getOwner().getContentAccessMode().equals(
+            ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE)) {
+            status.setDisabled(true);
+            applyStatus(consumer, status, updateConsumer);
+            return status;
+        }
 
         if (existingEntitlements == null) {
             existingEntitlements = new LinkedList<>();
@@ -96,6 +134,18 @@ public class SystemPurposeComplianceRules {
             existingEntitlements.stream(),
             newEntitlements.stream())
             .collect(Collectors.toSet());
+
+        // If we're calculating status for the current date, apply this change to the consumer & emit event.
+        boolean currentCompliance = false;
+        if (date == null) {
+            currentCompliance = true;
+            date = new Date();
+        }
+
+        // Filter the entitlements based on the given date.
+        Date finalDate = date;
+        entitlements.removeIf(element -> finalDate.compareTo(element.getStartDate()) < 0 ||
+            finalDate.compareTo(element.getEndDate()) > 0);
 
         for (Entitlement entitlement : entitlements) {
             String unsatisfedRole = consumer.getRole();

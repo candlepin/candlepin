@@ -19,7 +19,7 @@ describe 'Import Test Group:', :serial => true do
       @cp = Candlepin.new('admin', 'admin')
       skip("candlepin running in hosted mode") if is_hosted?
 
-      @cp_export = StandardExporter.new
+      @cp_export = async ? AsyncStandardExporter.new : StandardExporter.new
       @cp_export.create_candlepin_export()
       @cp_export_file = @cp_export.export_filename
       @cp_correlation_id = "a7b79f6d-63ca-40d8-8bfb-f255041f4e3a"

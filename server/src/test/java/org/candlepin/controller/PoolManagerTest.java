@@ -1911,7 +1911,7 @@ public class PoolManagerTest {
         assertEquals(1, derivedPool.getEntitlements().size());
 
         Collection<Pool> overPools = Collections.singletonList(derivedPool);
-        when(mockPoolCurator.lockAndLoad(any(Collection.class))).thenReturn(overPools);
+        when(mockPoolCurator.lock(any(Collection.class))).thenReturn(overPools);
         when(mockPoolCurator.lockAndLoad(pool)).thenReturn(pool);
         when(enforcerMock.update(any(Consumer.class), any(Entitlement.class), any(Integer.class)))
             .thenReturn(new ValidationResult());
@@ -1992,7 +1992,7 @@ public class PoolManagerTest {
         when(mockPoolCurator.retrieveOrderedEntitlementsOf(eq(Arrays.asList(derivedPool, derivedPool2))))
             .thenReturn(Arrays.asList(derivedEnt, derivedEnt2, derivedEnt3));
         Collection<Pool> overPools = new ArrayList<Pool>(){{ add(derivedPool); add(derivedPool2); }};
-        when(mockPoolCurator.lockAndLoad(any(Collection.class))).thenReturn(overPools);
+        when(mockPoolCurator.lock(any(Collection.class))).thenReturn(overPools);
         when(mockPoolCurator.lockAndLoad(eq(derivedPool))).thenReturn(derivedPool);
         when(mockPoolCurator.lockAndLoad(eq(derivedPool2))).thenReturn(derivedPool2);
         when(mockPoolCurator.lockAndLoad(eq(derivedPool3))).thenReturn(derivedPool3);

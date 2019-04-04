@@ -818,11 +818,10 @@ public class ConsumerResource {
                 consumerBindUtil.handleActivationKeys(consumerToCreate, keys, owner.isAutobindDisabled());
             }
 
-            // Don't allow complianceRules to update entitlementStatus, because we're about to perform
-            // an update unconditionally.
+            // This should update compliance on consumerToCreate, but not call the curator
             complianceRules.getStatus(consumerToCreate, null, false, false);
             systemPurposeComplianceRules.getStatus(consumerToCreate, consumerToCreate.getEntitlements(),
-                null, false, false);
+                null, false);
             consumerCurator.update(consumerToCreate);
 
             log.info("Consumer {} created in org {}",
@@ -1342,7 +1341,7 @@ public class ConsumerResource {
 
             // this should update compliance on toUpdate, but not call the curator
             complianceRules.getStatus(toUpdate, null, false, false);
-            systemPurposeComplianceRules.getStatus(toUpdate, toUpdate.getEntitlements(), null, false, true);
+            systemPurposeComplianceRules.getStatus(toUpdate, toUpdate.getEntitlements(), null, false);
 
             Event event = eventBuilder.setEventData(toUpdate).buildEvent();
             sink.queueEvent(event);
@@ -2645,9 +2644,8 @@ public class ConsumerResource {
         SystemPurposeComplianceStatus status = null;
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         Date date = ResourceDateParser.parseDateString(onDate);
-        date = date != null ? date : new Date();
-        List<Entitlement> entitlements = entitlementCurator.listByConsumerAndDate(consumer, date).list();
-        status = this.systemPurposeComplianceRules.getStatus(consumer, entitlements, null, true, true);
+        status = this.systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(), null,
+            date, true);
 
         return this.translator.translate(status, SystemPurposeComplianceStatusDTO.class);
     }

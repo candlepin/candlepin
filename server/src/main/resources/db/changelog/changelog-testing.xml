@@ -2322,4 +2322,5 @@
     <include file="db/changelog/20181116110941-virt-fact-index.xml"/>
     <include file="db/changelog/20181121151738-add-async-job-tables.xml"/>
     <include file="db/changelog/20190222103500-add-async-job-exec-source.xml"/>
+    <include file="db/changelog/20190401093722-add-content-override-index.xml"/>
 </databaseChangeLog>

@@ -38,6 +38,7 @@ public class ComplianceStatus {
     public static final String GREEN = "valid";
     public static final String YELLOW = "partial";
     public static final String RED = "invalid";
+    public static final String GRAY = "disabled";
 
     private Date date;
     private Date compliantUntil;
@@ -47,6 +48,7 @@ public class ComplianceStatus {
     private Map<String, Set<Entitlement>> partialStacks;
     private Map<String, DateRange> productComplianceDateRanges;
     private Set<ComplianceReason> reasons;
+    private boolean disabled = false;
 
     public ComplianceStatus() {
         this.nonCompliantProducts = new HashSet<>();
@@ -206,6 +208,9 @@ public class ComplianceStatus {
     }
 
     public String getStatus() {
+        if (isDisabled()) {
+            return GRAY;
+        }
         if (isCompliant()) {
             return GREEN;
         }
@@ -227,5 +232,13 @@ public class ComplianceStatus {
         }
 
         this.reasons = reasons;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    public boolean isDisabled() {
+        return this.disabled;
     }
 }

@@ -70,6 +70,7 @@ import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.BrandingInfo;
@@ -87,11 +88,15 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -108,6 +113,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.ws.rs.core.MediaType;
+
+
 
 /**
  * PoolManager
@@ -144,6 +153,8 @@ public class CandlepinPoolManager implements PoolManager {
     private PinsetterKernel pinsetterKernel;
     private OwnerManager ownerManager;
     private BindChainFactory bindChainFactory;
+
+    @Inject protected JsonProvider jsonProvider;
 
     /**
      * @param poolCurator
@@ -231,6 +242,22 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, ? extends SubscriptionInfo> subscriptionMap = compiler.getSubscriptions();
         Map<String, ? extends ProductInfo> productMap = compiler.getProducts();
         Map<String, ? extends ContentInfo> contentMap = compiler.getContent();
+
+        // If trace output is enabled, dump some JSON representing the subscriptions we received so
+        // we can simulate this in a testing environment.
+        if (log.isTraceEnabled() || "TRACE".equalsIgnoreCase(owner.getLogLevel())) {
+            try {
+                ObjectMapper mapper = this.jsonProvider
+                    .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+
+                log.trace("Received {} subscriptions from upstream:", subscriptionMap.size());
+                log.trace(mapper.writeValueAsString(subscriptionMap.values()));
+                log.trace("Finished outputting upstream subscriptions");
+            }
+            catch (Exception e) {
+                log.trace("Exception occurred while outputting upstream subscriptions", e);
+            }
+        }
 
         // Persist content changes
         log.debug("Importing {} content...", contentMap.size());
@@ -615,7 +642,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Entitlement> entitlementsToRevoke = new ArrayList<>();
 
         // Impl note: this may remove pools which are not backed by the DB.
-        overflowing = poolCurator.lockAndLoad(overflowing);
+        overflowing = poolCurator.lock(overflowing);
 
         List<Entitlement> overFlowingEnts = this.poolCurator.retrieveOrderedEntitlementsOf(overflowing);
         Map<String, List<Entitlement>> entMap = new HashMap<>();
@@ -1883,6 +1910,8 @@ public class CandlepinPoolManager implements PoolManager {
         // we're operating on a list of existing entities, not expecting to pull from the DB and don't care
         // about anything that was deleted, we can safely ignore the output here and continue working with
         // the existing list.
+        // TODO: This is dangerous (thanks to Hibernate quirks)! We should update this to use explicit locks
+        // and refreshes on entities where we know the state.
         poolCurator.lockAndLoad(poolsToLock);
         log.info("Batch revoking {} entitlements", entsToRevoke.size());
         entsToRevoke = new ArrayList<>(entsToRevoke);
@@ -1970,7 +1999,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             complianceRules.getStatus(consumer);
-            systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(), null, true, true);
+            systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(), null, true);
         }
 
         consumerCurator.flush();
@@ -2371,7 +2400,7 @@ public class CandlepinPoolManager implements PoolManager {
                     for (Consumer consumer : subList) {
                         this.complianceRules.getStatus(consumer);
                         this.systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(),
-                            null, true, true);
+                            null, true);
 
                         // Detach the consumer object (and its children that receive cascaded detaches),
                         // otherwise during the status calculations, the facts proxy objects objects will be

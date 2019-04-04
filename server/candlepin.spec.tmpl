@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.2
+Version: 2.6.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -36,15 +36,19 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
 
 BuildRequires: selinux-policy-doc
+%if 0%{?rhel} == 8
 BuildRequires: /usr/bin/pathfix.py
+%endif
 
 Requires: java >= 1:1.8.0
 Requires: wget
+%if 0%{?rhel} <= 7
 Requires: tomcat >= 0:7.0.0
-Requires: liquibase >= 0:3.0.0
+%else
+Requires: pki-servlet-container >= 0:7.0.0
+%endif
 Requires: jss
-# Need JDBC driver for cpdb
-Requires: postgresql-jdbc
+Requires: javapackages-tools
 
 %description
 Candlepin is an open source entitlement management system.
@@ -90,8 +94,6 @@ SELinux policy module supporting candlepin
 %setup -q %{SOURCE0}
 %if 0%{?rhel} == 8
 pathfix.py -pni "%{__python3} %{py3_shbang_opts}" code/setup/cpdb code/setup/cpsetup
-%else
-pathfix.py -pni "%{__python2} %{py2_shbang_opts}" code/setup/cpdb code/setup/cpsetup
 %endif
 
 %build
@@ -223,6 +225,28 @@ fi
 
 #raw
 %changelog
+* Wed Mar 27 2019 Kevin Howell <khowell@redhat.com> 2.6.3-1
+- Added additional tests to verify import functionality (crog@redhat.com)
+- Update deploy and cpdb to use CP-provided Liquibase[ENT-1209]
+  (ojanus@redhat.com)
+- Syspurose Status filter on date fixes (nmoumoul@redhat.com)
+- Made some improvements to the org_migrator utility (crog@redhat.com)
+- 1591704: Disable status checks when org_environment is content access mode
+  (wpoteat@redhat.com)
+- Switch servlet dependency for RHEL8 (khowell@redhat.com)
+- Add spec setup for python shebang in cpdb and cpsetup (zhunting@redhat.com)
+- Fixed issue with system purpose instance based sub test data
+  (mstead@redhat.com)
+- Close session when exception occurs[ENT-509] (ojanus@redhat.com)
+- 1687535: Better syspurpose matches during auto-attach (nmoumoul@redhat.com)
+- Added system purpose instance based sub to test data (mstead@redhat.com)
+- Make cpdb and cpsetup python3 compatible (zhunting@redhat.com)
+- 1685208: Expose useful data on System Purpose Compliance event
+  (jturel@redhat.com)
+- Adjust candlepin spec to account for removal of policyhelp from selinx-policy
+  (zhunting@redhat.com)
+- 1650992: Change default key size to 4096 bits. (awood@redhat.com)
+
 * Mon Mar 04 2019 Nikos Moumoulidis <nmoumoul@redhat.com> 2.6.2-1
 - 1683169: Remove redundant role & addon pools from stacks
   (nmoumoul@redhat.com)
