@@ -86,7 +86,7 @@ public class EntitleByProductsJob extends KingpinJob {
         map.put("product_ids", prodIds);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());
-        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID_KEY));
         map.put("entitle_date", entitleDate);
         map.put("from_pools", fromPools);
 

@@ -178,7 +178,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getId());
         map.put(LAZY_REGEN, lazy);
-        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID_KEY));
 
         // Not sure if this is the best way to go:
         // Give each job a UUID to ensure that it is unique

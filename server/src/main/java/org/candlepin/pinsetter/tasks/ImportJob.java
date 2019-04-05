@@ -128,7 +128,7 @@ public class ImportJob extends UniqueByEntityJob {
         map.put(STORED_FILE_ID, storedFileId);
         map.put(UPLOADED_FILE_NAME, uploadedFileName);
         map.put(CONFLICT_OVERRIDES, overrides.asStringArray());
-        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID_KEY));
 
         JobDetail detail = newJob(ImportJob.class)
             .withIdentity("import_" + Util.generateUUID())

@@ -22,7 +22,6 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
-import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
 import com.google.inject.Injector;
@@ -175,15 +174,23 @@ public class JobManager {
         job.setName(builder.getJobName() != null ? builder.getJobName() : builder.getJobKey());
         job.setGroup(builder.getJobGroup());
 
-        // Add environment-specific metadata
+        // Add environment-specific metadata...
         job.setOrigin(Util.getHostname());
-        job.setCorrelationId(MDC.get(LoggingFilter.CSID));
-
         Principal principal = this.principalProvider.get();
         job.setPrincipal(principal != null ? principal.getName() : null);
 
-        // TODO: add manually added metadata
+        // Metadata and Logging configuration...
+        job.setMetadata(builder.getJobMetadata());
 
+        String csid = MDC.get(LoggingFilter.CSID_KEY);
+        if (csid != null && !csid.isEmpty()) {
+            job.addMetadata(LoggingFilter.CSID_KEY, csid);
+        }
+
+        job.setLogLevel(builder.getLogLevel());
+        job.logExecutionDetails(builder.logExecutionDetails());
+
+        // Retry and runtime configuration...
         job.setMaxAttempts(builder.getRetryCount() + 1);
         job.setJobData(builder.getJobArguments());
 
@@ -226,8 +233,14 @@ public class JobManager {
             status = this.postJobStatusMessage(status);
         }
         catch (JobStateManagementException e) {
-            log.error("Unable to update state for job: {}; leaving job in its previous state for " +
-                "state resync upon execution", status.getName());
+            if (log.isDebugEnabled()) {
+                log.error("Unable to update state for job: {}; leaving job in its previous state for " +
+                    "state resync upon execution", status.getName(), e);
+            }
+            else {
+                log.error("Unable to update state for job: {}; leaving job in its previous state for " +
+                    "state resync upon execution", status.getName());
+            }
 
             // We were unable to update the state from CREATED->QUEUED, but we were able to send
             // the message to Artemis. We *should* be fine once the job executes and corrects
@@ -240,7 +253,7 @@ public class JobManager {
         }
         catch (JobMessageDispatchException e) { // Temporary exception branch
             log.error("Unable to dispatch job message for new job: {}; deleting job and returning",
-                status.getName());
+                status.getName(), e);
 
             // We created the job, but were unable to send the job to Artemis. The job is dead
             // at this point. We *could* retry, but at the time of writing, we have no mechanism
@@ -338,14 +351,15 @@ public class JobManager {
                     jobClass.getName());
             }
 
-            status.setJobExecSource(Util.getHostname());
+            status.setExecutor(Util.getHostname());
             status.incrementAttempts();
             status.setStartTime(new Date());
             status.setEndTime(null);
             this.updateJobStatus(status, JobState.RUNNING, null);
 
-            // TODO: Make this line optional, based on job configuration
-            log.info("Starting job \"{}\" using class: {}", status.getName(), jobClass.getName());
+            if (status.logExecutionDetails()) {
+                log.info("Starting job \"{}\" using class: {}", status.getName(), jobClass.getName());
+            }
 
             Object result = null;
 
@@ -369,8 +383,9 @@ public class JobManager {
             status.setEndTime(new Date());
             status = this.updateJobStatus(status, JobState.COMPLETED, result);
 
-            // TODO: Make this line optional, based on job configuration
-            log.info("Job \"{}\" completed in {}ms", status.getName(), this.getJobRuntime(status));
+            if (status.logExecutionDetails()) {
+                log.info("Job \"{}\" completed in {}ms", status.getName(), this.getJobRuntime(status));
+            }
 
             return status;
         }
@@ -380,34 +395,25 @@ public class JobManager {
         }
     }
 
-    private void setupLogging(final AsyncJobStatus jdata) {
+    /**
+     * Configures the logging environment and injects metadata for the specified job
+     *
+     * @param status
+     *  the job status to use to configure the logging environment
+     */
+    private void setupLogging(final AsyncJobStatus status) {
         MDC.put("requestType", "job");
-        if (jdata != null) {
-            final JobDataMap map = jdata.getJobData();
+        MDC.put("requestUuid", status.getId());
 
-            String requestUuid = null;
-            String orgKey = null;
-            String orgLogLevel = null;
+        // Inject all of our metadata...
+        for (Map.Entry<String, String> entry : status.getMetadata().entrySet()) {
+            MDC.put(entry.getKey(), entry.getValue());
+        }
 
-            MDC.put(LoggingFilter.CSID, jdata.getCorrelationId());
-            if (map != null) {
-                requestUuid = map.getAsString("requestUuid");
-                // Impl note: we use the OWNER_ID map key to store the org key
-                orgKey = map.getAsString(JobStatus.OWNER_ID);
-                orgLogLevel = map.getAsString(JobStatus.OWNER_LOG_LEVEL);
-            }
-
-            if (requestUuid != null) {
-                MDC.put("requestUuid", requestUuid);
-            }
-
-            if (orgKey != null) {
-                MDC.put("org", orgKey);
-            }
-
-            if (orgLogLevel != null) {
-                MDC.put("orgLogLevel", orgLogLevel);
-            }
+        // Update the logging level if we've one set...
+        String logLevel = status.getLogLevel();
+        if (logLevel != null && !logLevel.isEmpty()) {
+            MDC.put("logLevel", logLevel);
         }
     }
 
@@ -434,6 +440,8 @@ public class JobManager {
             // curator. This is a non-terminal error as we must assume the job is still there
             // waiting to be run
             String errmsg = String.format("Unable to query job status for message: %s", message);
+
+            log.debug(errmsg, e);
             throw new JobInitializationException(errmsg, e, false);
         }
 

@@ -137,7 +137,7 @@ public class EntitlerJob extends KingpinJob {
         map.put("pool_and_quantities", poolQuantities);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, consumer.getUuid());
-        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID_KEY));
 
         JobDetail detail = newJob(EntitlerJob.class)
             .withIdentity("bind_by_pool_" + Util.generateUUID())

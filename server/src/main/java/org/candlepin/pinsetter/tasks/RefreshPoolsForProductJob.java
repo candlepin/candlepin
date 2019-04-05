@@ -90,7 +90,7 @@ public class RefreshPoolsForProductJob extends KingpinJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.PRODUCT);
         map.put(JobStatus.TARGET_ID, product.getUuid());
         map.put(LAZY_REGEN, lazy);
-        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID_KEY));
 
         JobDetail detail = newJob(RefreshPoolsForProductJob.class)
             .withIdentity("refresh_pools_for_product" + Util.generateUUID())
