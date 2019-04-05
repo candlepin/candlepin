@@ -21,6 +21,7 @@ import org.candlepin.async.JobManager;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.slf4j.Logger;
@@ -29,8 +30,10 @@ import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -50,16 +53,20 @@ public class AsyncJobResource {
     private I18n i18n;
     private ModelTranslator translator;
     private JobManager jobManager;
+    private AsyncJobStatusCurator jobCurator;
 
     @Inject
     public AsyncJobResource(OwnerCurator ownerCurator, I18n i18n, OwnerServiceAdapter ownerService,
-        Configuration config, ModelTranslator translator, JobManager jobManager) {
+        Configuration config, ModelTranslator translator, JobManager jobManager,
+        AsyncJobStatusCurator jobCurator) {
+
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
         this.ownerService = ownerService;
         this.config = config;
         this.translator = translator;
         this.jobManager = jobManager;
+        this.jobCurator = jobCurator;
     }
 
     @PUT
@@ -68,19 +75,43 @@ public class AsyncJobResource {
     @Path("test")
     @ApiOperation(notes = "A simple test resource that will kick off TestJob1 via the async job framework",
         value = "Run TestJob1")
-    public AsyncJobStatus forceFailure(@QueryParam("fail") @DefaultValue("false") Boolean forceFailure,
-        @QueryParam("sleep") @DefaultValue("false") Boolean sleep, @QueryParam("persist")
-        @DefaultValue("false") Boolean persist) {
+    public AsyncJobStatus forceFailure(
+        @QueryParam("fail") @DefaultValue("false") Boolean forceFailure,
+        @QueryParam("sleep") @DefaultValue("false") Boolean sleep,
+        @QueryParam("persist") @DefaultValue("false") Boolean persist,
+        @QueryParam("log_exec") @DefaultValue("true") Boolean logExec,
+        @QueryParam("log_level") @DefaultValue("INFO") String logLevel,
+        @QueryParam("retries") @DefaultValue("0") Integer retries) {
+
+        log.trace("TRACE MESSAGE");
+        log.debug("DEBUG MESSAGE");
+        log.info("INFO MESSAGE");
+        log.warn("WARN MESSAGE");
+        log.error("ERROR MESSAGE");
 
         return jobManager.queueJob(new JobBuilder()
             .setJobKey("TEST_JOB1")
             .setJobGroup("async")
             .setJobName("Test Job 1")
+            .setLogLevel(logLevel)
+            .logExecutionDetails(logExec != null ? logExec.booleanValue() : true)
+            .setRetryCount(retries != null ? retries.intValue() : 0)
+            .setJobMetadata("build time", String.valueOf(System.currentTimeMillis()))
+            .setJobMetadata("owner_key", "admin")
+            .setJobMetadata("owner_id", "admin")
+            .setJobMetadata("org", "admin")
             .setJobArgument("force_failure", forceFailure)
             .setJobArgument("sleep", sleep)
             .setJobArgument("persist", persist)
         );
+    }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{job_id}")
+    @ApiOperation(notes = "Fetches the job info for a given job ID", value = "")
+    public AsyncJobStatus get(@PathParam("job_id") String jobId) {
+        return this.jobCurator.get(jobId);
     }
 
 }

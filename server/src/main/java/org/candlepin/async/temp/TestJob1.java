@@ -18,10 +18,16 @@ import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.async.JobManager;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+import java.util.Collection;
 
 
 /**
@@ -31,8 +37,15 @@ import java.util.concurrent.TimeUnit;
 public class TestJob1 implements AsyncJob {
 
     private static Logger log = LoggerFactory.getLogger(TestJob1.class);
-
     private static final String JOB_KEY = "TEST_JOB1";
+
+    private OwnerCurator ownerCurator;
+
+    @Inject
+    public TestJob1(OwnerCurator ownerCurator) {
+        this.ownerCurator = ownerCurator;
+    }
+
 
     // Register the job with the JobManager
     static {
@@ -53,14 +66,29 @@ public class TestJob1 implements AsyncJob {
     public String execute(JobExecutionContext jdata) throws JobExecutionException {
         // TODO Finish this implementation once we work on the bits that actually execute the job.
         log.info("TestJob1 has been started!");
+
+        log.trace("this is a trace line");
+        log.debug("this is a debug line");
+        log.info("this is an info line");
+        log.warn("this is a warning line");
+        log.error("this is an error line");
+
+        log.info("FETCHING OWNER INFO!");
+        Collection<Owner> owners = this.ownerCurator.listAll().list();
+        log.info("OWNERS: {}", owners);
+
+
         final boolean forceFailure = jdata.getJobData().getAsBoolean("force_failure");
         final boolean sleep = jdata.getJobData().getAsBoolean("sleep");
+
         if (sleep) {
             sleep();
         }
+
         if (forceFailure) {
             throw new JobExecutionException("Forced failure!");
         }
+
         log.info("TestJob1 has been executed!");
         return null;
     }
