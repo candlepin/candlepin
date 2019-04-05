@@ -101,22 +101,31 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @NotNull
     private String name;
     private String origin;
+    private String executor;
     private String principal;
 
-    // TODO: If we add more stuff like this field, we should create another table to store
-    // job metadata rather than continuing to bolt more columns onto this for fields that may
-    // not be filled/configured globally (i.e. announce completion and job log level)
-    @Column(name = "correlation_id")
-    private String correlationId;
+    @Column(name = "log_level")
+    private String logLevel;
+    @Column(name = "log_execution_details")
+    private boolean logExecutionDetails;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "cp2_async_job_metadata", joinColumns = @JoinColumn(name = "job_id"))
+    @MapKeyColumn(name = "key")
+    @Column(name = "value")
+    private Map<String, String> metadata;
+
+    @Column(name = "previous_state")
+    private JobState previousState;
 
     @NotNull
     private JobState state;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "cp2_async_job_constraints", joinColumns = @JoinColumn(name = "job_id"))
-    @MapKeyColumn(name = "key")
-    @Column(name = "value")
-    private Map<String, String> constraints;
+    // @ElementCollection(fetch = FetchType.LAZY)
+    // @CollectionTable(name = "cp2_async_job_constraints", joinColumns = @JoinColumn(name = "job_id"))
+    // @MapKeyColumn(name = "key")
+    // @Column(name = "value")
+    // private Map<String, String> constraints;
 
     private int attempts;
     @Column(name = "max_attempts")
@@ -134,19 +143,20 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @Column(name = "job_result")
     @Type(type = "org.candlepin.hibernate.JsonSerializedDataType")
     private Object jobResult;
-    @Column(name = "job_exec_source")
-    private String jobExecSource;
+
 
 
     /**
      * Creates a new AsyncJobStatus instance with no configuration
      */
     public AsyncJobStatus() {
-        this.constraints = new HashMap<>();
+        // this.constraints = new HashMap<>();
         this.state = JobState.CREATED;
 
         this.attempts = 0;
         this.maxAttempts = 1;
+
+        this.logExecutionDetails = true;
     }
 
     /**
@@ -314,6 +324,31 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     }
 
     /**
+     * Fetches the executor of this job. If the job has not yet been run, or the executor has
+     * otherwise not been set, this method returns null.
+     *
+     * @return
+     *  the executor of this job, or null if the executor has not been set
+     */
+    public String getExecutor() {
+        return this.executor;
+    }
+
+    /**
+     * Sets the executor of this job. If the executor is null or empty, any existing executor will
+     * be cleared.
+     *
+     * @param executor
+     *  The executor to set to this job status, or null to clear it
+     *
+     * @return this job status instance
+     */
+    public AsyncJobStatus setExecutor(final String executor) {
+        this.executor = (executor != null && !executor.isEmpty()) ? executor : null;
+        return this;
+    }
+
+    /**
      * Fetches the name of the principal that created this job status. If the job is a system-level
      * job, or the principal has not yet been set, this method returns null.
      *
@@ -341,28 +376,112 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     }
 
     /**
-     * Fetches the correlation ID of this job status. If the correlation ID has not yet been set,
-     * this method returns null.
+     * Fetches the log level with which this job will be executed. If the log level has not been
+     * set, this method returns null.
      *
      * @return
-     *  The correlation ID of this job status, or null if the correlation ID has not been set
+     *  the log level for this job, or null if the log level has not been set
      */
-    public String getCorrelationId() {
-        return this.correlationId;
+    public String getLogLevel() {
+        return this.logLevel;
     }
 
     /**
-     * Sets the correlation ID of this job. If the correlation ID is null or empty, any existing ID
-     * will be cleared.
+     * Sets the log level with which this job will be executed. If the log level is null or empty,
+     * any existing log level will be cleared.
      *
-     * @param correlationId
-     *  The correlation ID to set of this job status, or null to clear it
+     * @param logLevel
+     *  the log level to set for this job, or null to clear it
      *
      * @return
      *  this job status instance
      */
-    public AsyncJobStatus setCorrelationId(String correlationId) {
-        this.correlationId = (correlationId != null && !correlationId.isEmpty()) ? correlationId : null;
+    public AsyncJobStatus setLogLevel(String logLevel) {
+        this.logLevel = logLevel != null && !logLevel.isEmpty() ? logLevel : null;
+        return this;
+    }
+
+    /**
+     * Fetches whether or not the execution details, such as job initialization and total runtime
+     * upon successful completion, should be logged for this job. Defaults to true.
+     *
+     * @return
+     *  true if the execution details for this job should be logged; false otherwise
+     */
+    public boolean logExecutionDetails() {
+        return this.logExecutionDetails;
+    }
+
+    /**
+     * Sets whether or not the execution details, such as job initialization and total runtime
+     * upon successful completion, should be logged for this job.
+     *
+     * @param enabled
+     *  true to enable logging of execution details; false to disable it
+     *
+     * @return
+     *  this job status instance
+     */
+    public AsyncJobStatus logExecutionDetails(boolean enabled) {
+        this.logExecutionDetails = enabled;
+        return this;
+    }
+
+    /**
+     * Fetches the metadata for this job. If this job does not have any metadata, this method
+     * returns an empty map.
+     *
+     * @return
+     *  the job's metadata as a map
+     */
+    public Map<String, String> getMetadata() {
+        return this.metadata != null ?
+            Collections.unmodifiableMap(this.metadata) :
+            Collections.emptyMap();
+    }
+
+    /**
+     * Sets the metadata for this job. If the metadata is null or empty, any existing metadata will
+     * be cleared.
+     *
+     * @param metadata
+     *  The metadata to assign to this job
+     *
+     * @return
+     *  this job status instance
+     */
+    public AsyncJobStatus setMetadata(Map<String, String> metadata) {
+        this.metadata = new HashMap<>();
+
+        if (metadata != null) {
+            this.metadata.putAll(metadata);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds or updates a metadata entry for this job.
+     *
+     * @param key
+     *  The key for the metadata entry
+     *
+     * @param value
+     *  The value of the metadata entry
+     *
+     * @return
+     *  this job status instance
+     */
+    public AsyncJobStatus addMetadata(String key, String value) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        if (this.metadata == null) {
+            this.metadata = new HashMap<>();
+        }
+
+        this.metadata.put(key, value);
         return this;
     }
 
@@ -374,6 +493,17 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      */
     public JobState getState() {
         return this.state;
+    }
+
+    /**
+     * Fetches the previous state of this job. If the job state has not yet been updated, this
+     * method returns null.
+     *
+     * @return
+     *  the previous state of this job
+     */
+    public JobState getPreviousState() {
+        return this.previousState;
     }
 
     /**
@@ -392,6 +522,10 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     public AsyncJobStatus setState(JobState state) {
         if (state == null) {
             throw new IllegalArgumentException("job state is null");
+        }
+
+        if (state != this.state) {
+            this.previousState = this.state;
         }
 
         this.state = state;
@@ -553,36 +687,6 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      */
     public AsyncJobStatus setJobResult(Object resultData) {
         this.jobResult = resultData;
-        return this;
-    }
-
-    /**
-     * Fetches the execution source of this job. If the source has not yet been
-     * set, this method returns null.
-     *
-     * @return The execution source of this job status, or null if the source
-     * has not been set
-     */
-    public String getJobExecSource() {
-        return jobExecSource;
-    }
-
-    /**
-     * Sets the execution source of this job. If the source is null or empty,
-     * any existing origin will be cleared.
-     *
-     * @param execSource The execution source to set to this job status, or null
-     * to clear it
-     *
-     * @return this job status instance
-     */
-    public AsyncJobStatus setJobExecSource(final String execSource) {
-        if (execSource == null || execSource.isEmpty()) {
-            this.jobExecSource = null;
-        }
-        else {
-            this.jobExecSource = execSource;
-        }
         return this;
     }
 

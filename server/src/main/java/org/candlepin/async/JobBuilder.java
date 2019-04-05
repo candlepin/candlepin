@@ -28,17 +28,23 @@ public class JobBuilder {
     private String key;
     private String name;
     private String group;
+    private Map<String, String> metadata;
     private Map<String, Object> arguments;
     private Map<String, String> restrictions;
     private int retries;
-    private boolean logJobExecution;
+    private String logLevel;
+    private boolean logExecutionDetails;
 
     /**
      * Creates an empty JobBuilder
      */
     public JobBuilder() {
+        this.metadata = new HashMap<>();
         this.arguments = new HashMap<>();
         this.restrictions = new HashMap<>();
+
+        this.retries = 0;
+        this.logExecutionDetails = true;
     }
 
     /**
@@ -128,18 +134,11 @@ public class JobBuilder {
      * @param jobGroup
      *  The name of the group to set for this job
      *
-     * @throws IllegalArgumentException
-     *  if the group name is null or empty
-     *
      * @return
      *  this JobBuilder instance
      */
     public JobBuilder setJobGroup(String jobGroup) {
-        if (jobGroup == null || jobGroup.isEmpty()) {
-            throw new IllegalArgumentException("jobGroup is null or empty");
-        }
-
-        this.group = jobGroup;
+        this.group = jobGroup != null && !jobGroup.isEmpty() ? jobGroup : null;
         return this;
     }
 
@@ -190,50 +189,50 @@ public class JobBuilder {
         return Collections.unmodifiableMap(this.arguments);
     }
 
-    /**
-     * Adds a unique restriction to this job. If this job is passed to the job manager while an
-     * existing job matches any of the unique restrictions, the new job will be rejected as a
-     * duplicate.
-     *
-     * @param key
-     *  The key defining the unique restriction; i.e. "product_id" or "owner_id"
-     *
-     * @param value
-     *  The value of the unique restriction
-     *
-     * @return
-     *  this JobBuilder instance
-     */
-    public JobBuilder addUniqueRestriction(String key, String value) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
+    // /**
+    //  * Adds a unique restriction to this job. If this job is passed to the job manager while an
+    //  * existing job matches any of the unique restrictions, the new job will be rejected as a
+    //  * duplicate.
+    //  *
+    //  * @param key
+    //  *  The key defining the unique restriction; i.e. "product_id" or "owner_id"
+    //  *
+    //  * @param value
+    //  *  The value of the unique restriction
+    //  *
+    //  * @return
+    //  *  this JobBuilder instance
+    //  */
+    // public JobBuilder addUniqueRestriction(String key, String value) {
+    //     if (key == null) {
+    //         throw new IllegalArgumentException("key is null");
+    //     }
 
-        if (value == null) {
-            throw new IllegalArgumentException("value is null");
-        }
+    //     if (value == null) {
+    //         throw new IllegalArgumentException("value is null");
+    //     }
 
-        // Impl note:
-        // It's potentially problematic if someone sets empty values here, but I don't think
-        // it would break any queries or otherwise not work; it'd just be... silly and make
-        // debugging a bit painful.
+    //     // Impl note:
+    //     // It's potentially problematic if someone sets empty values here, but I don't think
+    //     // it would break any queries or otherwise not work; it'd just be... silly and make
+    //     // debugging a bit painful.
 
-        this.restrictions.put(key, value);
-        return this;
-    }
+    //     this.restrictions.put(key, value);
+    //     return this;
+    // }
 
-    /**
-     * Fetches a mapping of the unique restrictions set for this job. If the job does not have any
-     * restrictions, this method returns an empty map. Note that the map returned by this method
-     * cannot be modified directly, though changes made to the unique restrictions by this builder
-     * will be reflected in the returned map.
-     *
-     * @return
-     *  the map of unique restrictions for this job
-     */
-    public Map<String, String> getUniqueRestrictions() {
-        return Collections.unmodifiableMap(this.restrictions);
-    }
+    // /**
+    //  * Fetches a mapping of the unique restrictions set for this job. If the job does not have any
+    //  * restrictions, this method returns an empty map. Note that the map returned by this method
+    //  * cannot be modified directly, though changes made to the unique restrictions by this builder
+    //  * will be reflected in the returned map.
+    //  *
+    //  * @return
+    //  *  the map of unique restrictions for this job
+    //  */
+    // public Map<String, String> getUniqueRestrictions() {
+    //     return Collections.unmodifiableMap(this.restrictions);
+    // }
 
     /**
      * Sets the number of times this job will be retried if it fails to complete normally. Values
@@ -261,31 +260,88 @@ public class JobBuilder {
     }
 
     /**
-     * Sets whether or not job execution logging is enabled or disabled for this job. If enabled,
-     * the start time and total runtime of this job will be written to the logs when this job is
-     * started and completed, respectively. Defaults to false.
+     * Fetches the log level with which this job will be executed. If the log level has not been
+     * set, this method returns null.
      *
-     * @param enabled
-     *  Whether or not job execution logging is enabled or disabled
+     * @return
+     *  the log level for this job, or null if the log level has not been set
+     */
+    public String getLogLevel() {
+        return this.logLevel;
+    }
+
+    /**
+     * Sets the log level with which this job will be executed. If the log level is null or empty,
+     * any existing log level will be cleared.
+     *
+     * @param logLevel
+     *  the log level to set for this job, or null to clear it
      *
      * @return
      *  this JobBuilder instance
      */
-    public JobBuilder setJobExecutionLogging(boolean enabled) {
-        this.logJobExecution = enabled;
+    public JobBuilder setLogLevel(String logLevel) {
+        this.logLevel = logLevel != null && !logLevel.isEmpty() ? logLevel : null;
         return this;
     }
 
     /**
-     * Checks whether or not this job should log job execution time.
+     * Fetches whether or not the execution details, such as job initialization and total runtime
+     * upon successful completion, should be logged for this job.
      *
      * @return
-     *  true if the job's execution time should be logged; false otherwise
+     *  true if the execution details for this job should be logged; false otherwise
      */
-    public boolean shouldLogJobExecution() {
-        return this.logJobExecution;
+    public boolean logExecutionDetails() {
+        return this.logExecutionDetails;
     }
 
+    /**
+     * Sets whether or not the execution details, such as job initialization and total runtime
+     * upon successful completion, should be logged for this job.
+     *
+     * @param enabled
+     *  true to enable logging of execution details; false to disable it
+     *
+     * @return
+     *  this JobBuilder instance
+     */
+    public JobBuilder logExecutionDetails(boolean enabled) {
+        this.logExecutionDetails = enabled;
+        return this;
+    }
+
+    /**
+     * Adds or updates a metadata entry for this job.
+     *
+     * @param key
+     *  The key for the metadata entry
+     *
+     * @param value
+     *  The value of the metadata entry
+     *
+     * @return
+     *  this JobBuilder instance
+     */
+    public JobBuilder setJobMetadata(String key, String value) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        this.metadata.put(key, value);
+        return this;
+    }
+
+    /**
+     * Fetches the metadata for this job. If the job does not have any metadata defined, this method
+     * returns an empty map.
+     *
+     * @return
+     *  the metadata for this job
+     */
+    public Map<String, String> getJobMetadata() {
+        return Collections.unmodifiableMap(this.metadata);
+    }
 
 
     // TODO:

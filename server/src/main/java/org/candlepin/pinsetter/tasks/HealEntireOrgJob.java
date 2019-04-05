@@ -121,7 +121,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put("entitle_date", entitleDate);
-        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID_KEY));
 
         JobDetail detail = newJob(HealEntireOrgJob.class)
             .withIdentity("heal_entire_org_" + Util.generateUUID())
