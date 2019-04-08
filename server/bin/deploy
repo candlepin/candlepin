@@ -106,6 +106,22 @@ upload_products() {
   fi
 }
 
+create_test_repos() {
+    if [ ! -d "${REPOS}" ]; then
+        $SUDO mkdir "${REPOS}"
+    fi
+    if [ "$TESTREPO" = "1" ]; then
+        $SUDO $SELF_DIR/create_test_repos.py $SELF_DIR/test_data.json
+    fi
+    $SUDO chown -R tomcat:tomcat "${REPOS}"
+    echo ""
+    echo "Run following commands on registered system to use created repositories:"
+    echo ""
+    echo "    subscription-manager config --rhsm.baseurl=http://<ip_of_this_server>:8080"
+    echo "    curl http://<ip_of_this_server>:8080/RPM-GPG-KEY-candlepin > /etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin"
+    echo ""
+}
+
 create_var_lib_candlepin() {
     $SUDO mkdir -p /var/lib/candlepin
     $SUDO chown tomcat:tomcat /var/lib/candlepin
@@ -146,6 +162,7 @@ usage: deploy [options]
 OPTIONS:
   -f          force cert regeneration
   -g          generate database
+  -r          generate test repositories
   -q          Qpid enabled. Also deploys 'allmsg' queue used by spec tests
   -t          import test data
   -T          import minimal test data, some owners, users, and roles
@@ -200,7 +217,7 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fqgtTHolmavbd:" opt; do
+while getopts ":fqgtTrHolmavbd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
@@ -208,6 +225,7 @@ while getopts ":fqgtTHolmavbd:" opt; do
         q  ) QPID="qpid";;
         t  ) TESTDATA="1";;
         T  ) TESTDATA="MIN";;
+        r  ) TESTREPO="1";;
         l  ) LOGDRIVER="logdriver";;
         m  ) USE_MYSQL="1";;
         a  ) AUTOCONF="1";;
@@ -266,7 +284,7 @@ fi
 DEPLOY="$TC_HOME/webapps/candlepin.war"
 CLEAN="$TC_HOME/webapps/candlepin/"
 
-
+REPOS="$TC_HOME/webapps/ROOT"
 
 
 
@@ -390,4 +408,6 @@ echo
 initialize_cp
 
 upload_products
+create_test_repos
+
 notify
