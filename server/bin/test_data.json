@@ -392,7 +392,7 @@
                     "label": "admin-tagged-content",
                     "type": "yum",
                     "vendor": "test-vendor",
-                    "content_url": "/foo//adminpath/always",
+                    "content_url": "/foo/admin/path/always",
                     "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
                     "required_tags": "TAG1,TAG2",
                     "packages": ["tricky-frog"]

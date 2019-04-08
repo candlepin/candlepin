@@ -105,7 +105,7 @@ class UnmappedProductContentGenerator < PoolGenerator
       :name => self.generate_content_name,
       :id => self.generate_content_id,
       :content_url => "/foo/path/always",
-      :gpg_url => "/foo/path/always/gpg",
+      :gpg_url => "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
     }
 
     products << {
@@ -128,7 +128,7 @@ class SimplePoolGenerator < PoolGenerator
       :name => self.generate_content_name,
       :id => self.generate_content_id,
       :content_url => "/foo/path/always",
-      :gpg_url => "/foo/path/always/gpg",
+      :gpg_url => "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
     }
 
     eng_product = {
@@ -204,7 +204,7 @@ class SharedObjectPoolGenerator < PoolGenerator
           :name => self.generate_content_name + " (shared)",
           :id => self.generate_content_id,
           :content_url => "/foo/path/always",
-          :gpg_url => "/foo/path/always/gpg",
+          :gpg_url => "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
         }
 
         content_name = self.generate_content_name + " (shared, tagged)"
@@ -215,7 +215,7 @@ class SharedObjectPoolGenerator < PoolGenerator
           :type => "yum",
           :vendor => "test-vendor",
           :content_url => "/foo/path/always",
-          :gpg_url => "/foo/path/always/gpg",
+          :gpg_url => "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
           :required_tags => "TAG1,TAG2"
         }
 
@@ -342,7 +342,7 @@ class VDCPoolGenerator < PoolGenerator
         :type => "yum",
         :vendor => "test-vendor",
         :content_url => "/foo/path",
-        :gpg_url => "/foo/path/gpg/",
+        :gpg_url => "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
         :metadata_expire => 0
       }
 
@@ -354,7 +354,7 @@ class VDCPoolGenerator < PoolGenerator
         :type => "yum",
         :vendor => "test-vendor",
         :content_url => "http://example.com/awesomeos-modifier",
-        :gpg_url => "http://example.com/awesomeos-modifier/gpg",
+        :gpg_url => "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
         :modified_products => [base_product_id]
       }
 

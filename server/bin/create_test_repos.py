@@ -282,7 +282,7 @@ def generate_repositories(repo_definitions, package_definitions):
             os.remove('productid')
 
         # Remove temporary product from candelpin server
-        remove_repo_product(repo)
+        #remove_repo_product(repo)
 
     # Copy exported file to root of repositories
     gpg_key_path = os.path.join(REPO_ROOT_DIR, "RPM-GPG-KEY-candlepin")
@@ -333,7 +333,7 @@ def create_repo_product(content, owner="admin"):
 
     # Name and ID have to be in specification of content
     name = content['name']
-    product_id = content['id']
+    content_id = product_id = content['id']
     # Other attributes are optional in definition of content and have default values
     arches = content.get('arches', 'noarch')
     version = content.get('version', '1.0')
@@ -341,17 +341,40 @@ def create_repo_product(content, owner="admin"):
     request_data = {
         'name': name,
         'id': product_id,
-        'arch': arches,
-        'version': version,
-        'content': [product_id, True]
+        'multiplier': 1,
+        'attributes': {
+            'arch': arches,
+            'version': version,
+            'variant': 'ALL',
+            'type': 'SVC'
+        },
+        'dependentProductIds': [],
+        'reliesOn': []
     }
 
+    # Create product itself
     try:
         r = requests.post(
             CANLDEPIN_SERVER_BASE_URL + 'owners/' + owner + '/products',
             json=request_data,
             auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
             verify=False)
+    except Exception as err:
+        print('Error: %s' % str(err))
+        return None
+
+    request_data = {
+        'enabled': True
+    }
+
+    # Add content to this product
+    try:
+        r = requests.post(
+            CANLDEPIN_SERVER_BASE_URL + 'owners/' + owner + '/products/' + str(product_id) + '/content/' + str(content_id),
+            json=request_data,
+            auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
+            verify=False
+            )
     except Exception as err:
         print('Error: %s' % str(err))
         return None
