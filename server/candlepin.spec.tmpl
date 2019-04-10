@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.3
+Version: 2.6.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -225,6 +225,19 @@ fi
 
 #raw
 %changelog
+* Wed Apr 10 2019 Kevin Howell <khowell@redhat.com> 2.6.4-1
+- 1698559: CVE-2019-3891 Do not print database credentials in cpdb
+  (khowell@redhat.com)
+- 1683733: Added index on column key_id in cp_content_override
+  (crog@redhat.com)
+- 1591315: Less confusing warnings, when golden ticket is used; ENT-671
+  (jhnidek@redhat.com)
+- 1410601: allow hypervisor id update when it changes in the hypervisor report
+  (wpoteat@redhat.com)
+- 1644707: Entitlement revocation no longer refreshes pools while locking
+  (crog@redhat.com)
+- Require pathfix.py only on RHEL8 (khowell@redhat.com)
+
 * Wed Mar 27 2019 Kevin Howell <khowell@redhat.com> 2.6.3-1
 - Added additional tests to verify import functionality (crog@redhat.com)
 - Update deploy and cpdb to use CP-provided Liquibase[ENT-1209]
