@@ -23,7 +23,6 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
-import org.candlepin.pinsetter.core.model.JobStatus;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -43,10 +42,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -101,14 +98,6 @@ public class JobManagerTest {
 
     private static final String JOB_ID = "jobId";
     private static final String JOB_KEY = TestJob1.getJobKey();
-    private static final String REQUEST_TYPE_KEY = "requestType";
-    private static final String REQUEST_UUID_KEY = "requestUuid";
-    private static final String ORG_KEY = "org";
-    private static final String ORG_LOG_LEVEL_KEY = "orgLogLevel";
-    private static final String OWNER_ID = "ownerId";
-    private static final String OWNER_LOG_LEVEL = "ownerLogLevel";
-    private static final String REQUEST_UUID = "requestUuid";
-    private static final String REQUEST_TYPE = "job";
 
     private AsyncJobStatusCurator jobCurator;
     private PrincipalProvider principalProvider;
@@ -205,25 +194,25 @@ public class JobManagerTest {
     }
 
     @Test
-    public void shouldSetupDMC() throws JobException {
-        final Map<String, Object> map = new HashMap<>();
-        map.put(REQUEST_UUID_KEY, REQUEST_UUID);
-        map.put(JobStatus.OWNER_ID, OWNER_ID);
-        map.put(JobStatus.OWNER_LOG_LEVEL, OWNER_LOG_LEVEL);
+    public void shouldConfigureLoggingContext() throws JobException {
+        final AsyncJobStatus status = spy(new AsyncJobStatus()
+            .addMetadata("owner_key", "test_owner")
+            .addMetadata("some_key", "some_value")
+            .setLogLevel("TRACE"));
 
-        final AsyncJobStatus status = new AsyncJobStatus()
-            .setJobData(map);
+        doReturn(JOB_ID).when(status).getId();
 
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob1.class);
         doReturn(status).when(jobCurator).get(JOB_ID);
-        final JobManager manager = createJobManager();
 
+        final JobManager manager = createJobManager();
         manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
 
-        assertEquals(REQUEST_TYPE, MDC.get(REQUEST_TYPE_KEY));
-        assertEquals(REQUEST_UUID, MDC.get(REQUEST_UUID_KEY));
-        assertEquals(OWNER_ID, MDC.get(ORG_KEY));
-        assertEquals(OWNER_LOG_LEVEL, MDC.get(ORG_LOG_LEVEL_KEY));
+        assertEquals("job", MDC.get("requestType"));
+        assertEquals(status.getId(), MDC.get("requestUuid"));
+        assertEquals("test_owner", MDC.get("owner_key"));
+        assertEquals("some_value", MDC.get("some_key"));
+        assertEquals("TRACE", MDC.get("logLevel"));
     }
 
     @Test
@@ -276,7 +265,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void shouldSetJobExecSource() throws JobException {
+    public void shouldSetJobExecutor() throws JobException {
         final AsyncJobStatus status = new AsyncJobStatus();
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob1.class);
         doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
@@ -286,8 +275,8 @@ public class JobManagerTest {
 
         manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
 
-        final String execSource = status.getJobExecSource();
-        assertFalse(execSource == null || execSource.isEmpty());
+        final String executor = status.getExecutor();
+        assertFalse(executor == null || executor.isEmpty());
     }
 
     @Test

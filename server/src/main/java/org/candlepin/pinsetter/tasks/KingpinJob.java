@@ -96,7 +96,7 @@ public abstract class KingpinJob implements Job {
             }
 
             if (orgLogLevel != null) {
-                MDC.put("orgLogLevel", orgLogLevel);
+                MDC.put("logLevel", orgLogLevel);
             }
         }
 

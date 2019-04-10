@@ -102,7 +102,7 @@ public class ExportJob extends UniqueByEntityJob {
         map.put(WEBAPP_PREFIX, webAppPrefix);
         map.put(API_URL, apiUrl);
         map.put(EXTENSION_DATA, extensionData);
-        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID_KEY));
 
         return newJob(ExportJob.class)
             .withIdentity("export_" + Util.generateUUID())

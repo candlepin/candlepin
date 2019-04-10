@@ -10,9 +10,9 @@
     <include file="db/changelog/datatypes.xml"/>
 
     <changeSet id="20181121151738-1" author="crog">
-        <createTable tableName="cp2_async_jobs">
+        <createTable tableName="cp_async_jobs">
             <column name="id" type="varchar(36)">
-                <constraints primaryKey="true" primaryKeyName="cp2_async_jobs_pk"/>
+                <constraints primaryKey="true" primaryKeyName="cp_async_jobs_pk"/>
             </column>
 
             <column name="created" type="${timestamp.type}"/>
@@ -22,27 +22,32 @@
             <column name="job_key" type="varchar(255)"/>
             <column name="job_group" type="varchar(32)"/>
             <column name="origin" type="varchar(255)"/>
+            <column name="executor" type="varchar(255)"/>
             <column name="principal" type="varchar(255)"/>
-            <column name="correlation_id" type="varchar(255)"/>
 
+            <column name="previous_state" type="int"/>
             <column name="state" type="int"/>
             <column name="attempts" type="int"/>
             <column name="max_attempts" type="int"/>
             <column name="start_time" type="${timestamp.type}"/>
             <column name="end_time" type="${timestamp.type}"/>
 
+            <column name="log_level" type="varchar(32)"/>
+            <column name="log_execution_details" type="boolean"/>
+
             <column name="job_data" type="${blob.type}"/>
             <column name="job_result" type="${blob.type}"/>
         </createTable>
     </changeSet>
 
+<!--
     <changeSet id="20181121151738-2" author="crog">
-        <createTable tableName="cp2_async_job_constraints">
-            <column name="job_id" type="varchar(255)">
+        <createTable tableName="cp_async_job_constraints">
+            <column name="job_id" type="varchar(36)">
                 <constraints
                     nullable="false"
-                    foreignKeyName="cp2_async_job_constraints_fk1"
-                    references="cp2_async_jobs(id)"
+                    foreignKeyName="cp_async_job_constraints_fk1"
+                    references="cp_async_jobs(id)"
                     deleteCascade="true"
                 />
             </column>
@@ -53,11 +58,34 @@
     </changeSet>
 
     <changeSet id="20181121151738-3" author="crog">
-        <addPrimaryKey tableName="cp2_async_job_constraints"
+        <addPrimaryKey tableName="cp_async_job_constraints"
             columnNames="job_id,key"
-            constraintName="cp2_async_job_constraints_pk"
+            constraintName="cp_async_job_constraints_pk"
         />
     </changeSet>
+-->
 
+    <changeSet id="20181121151738-4" author="crog">
+        <createTable tableName="cp_async_job_metadata">
+            <column name="job_id" type="varchar(36)">
+                <constraints
+                    nullable="false"
+                    foreignKeyName="cp_async_job_metadata_fk1"
+                    references="cp_async_jobs(id)"
+                    deleteCascade="true"
+                />
+            </column>
+
+            <column name="key" type="varchar(255)"/>
+            <column name="value" type="varchar(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20181121151738-5" author="crog">
+        <addPrimaryKey tableName="cp_async_job_metadata"
+            columnNames="job_id,key"
+            constraintName="cp_async_job_metadata_pk"
+        />
+    </changeSet>
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->
