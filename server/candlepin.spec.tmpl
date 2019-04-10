@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.14
+Version: 2.5.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,10 @@ fi
 
 #raw
 %changelog
+* Wed Apr 10 2019 Kevin Howell <khowell@redhat.com> 2.5.15-1
+- 1698561: CVE-2019-3891 Do not print database credentials in cpdb
+  (khowell@redhat.com)
+
 * Tue Apr 02 2019 Kevin Howell <khowell@redhat.com> 2.5.14-1
 - 1694752: allow hypervisor id update when it changes in the hypervisor report
   (wpoteat@redhat.com)
