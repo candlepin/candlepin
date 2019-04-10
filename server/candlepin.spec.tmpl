@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.14
+Version: 2.4.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Wed Apr 10 2019 Kevin Howell <khowell@redhat.com> 2.4.15-1
+- 1698563: CVE-2019-3891 Do not print database credentials in cpdb
+  (khowell@redhat.com)
+
 * Mon Apr 01 2019 Kevin Howell <khowell@redhat.com> 2.4.14-1
 - 1694730: Added index on column key_id in cp_content_override
   (crog@redhat.com)
