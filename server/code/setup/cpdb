@@ -87,16 +87,18 @@ class DbSetup(object):
         if os.path.exists(JBOSS_CLASSPATH):
             classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
 
-        liquibase_options = "--driver=%s --classpath=%s --changeLogFile=%s --url=%s --username=%s" % (
+        liquibase_options = "--driver=%s --classpath=%s --changeLogFile=%s --url=%s --username=$DBUSERNAME" % (
             self.driver_class,
             classpath,
             changelog_path,
             self.jdbc_url,
-            self.username
         )
 
+        os.environ["DBUSERNAME"] = self.username
+
         if self.password:
-            liquibase_options += " --password=%s" % self.password
+            os.environ["DBPASSWORD"] = self.password
+            liquibase_options += " --password=$DBPASSWORD"
 
         # Add in output level. By default, Liquibase defaults to "off"
         liquibase_options += " --logLevel=%s" % ('debug' if self.verbose else 'severe')
