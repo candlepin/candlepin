@@ -8,27 +8,50 @@ describe 'Entitlement Certificate V1 Size' do
     @owner = create_owner random_string('test_owner')
     @content_list = create_batch_content(200)
 
-    @product1 = create_product(nil, nil, :attributes =>
-                {:version => '6.4',
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :virt_only => 'false',
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
+    @product1 = create_product(nil, nil, :attributes => {
+      :version => '6.4',
+      :warning_period => 15,
+      :management_enabled => true,
+      :virt_only => 'false',
+      :support_level => 'standard',
+      :support_type => 'excellent',
+    })
+
     @cp.add_content_to_product(@owner['key'], @product1.id, @content_list[0].id, true)
-    create_pool_and_subscription(@owner['key'], @product1.id, 10, [], '12345', '6789', 'order1')
-    @product2 = create_product(nil, nil, :attributes =>
-                {:version => '6.4',
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :virt_only => 'false',
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
+
+    @cp.create_pool(@owner['key'], @product1.id, {
+      :quantity => 10,
+      :provided_products => [],
+      :contract_number => '12345',
+      :account_number => '6789',
+      :order_number => 'order1',
+      :subscription_id => random_str('source_sub'),
+      :upstream_pool_id => random_str('upstream')
+    })
+
+    @product2 = create_product(nil, nil, :attributes => {
+      :version => '6.4',
+      :warning_period => 15,
+      :management_enabled => true,
+      :virt_only => 'false',
+      :support_level => 'standard',
+      :support_type => 'excellent',
+    })
+
     @cp.add_content_to_product(@owner['key'], @product2.id, @content_list[0].id, true)
-    create_pool_and_subscription(@owner['key'], @product2.id, 10, [], '12345', '6789', 'order1')
+
+    @cp.create_pool(@owner['key'], @product2.id, {
+      :quantity => 1,
+      :provided_products => [],
+      :contract_number => '12345',
+      :account_number => '6789',
+      :order_number => 'order1',
+      :subscription_id => random_str('source_sub'),
+      :upstream_pool_id => random_str('upstream')
+    })
+
     @user = user_client(@owner, random_string('billy'))
-    @system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '1.0'})
+    @system = consumer_client(@user, random_string('system1'), :system, nil, {'system.certificate_version' => '1.0'})
   end
 
   after(:each) do
@@ -45,7 +68,7 @@ describe 'Entitlement Certificate V1 Size' do
     (1..10).each do |i|
       content_ids << @content_list[i].id
     end
-    add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
+    @cp.add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
     ent2 = @system.get_entitlement(ent1.id)
     ent2.certificates[0].serial.id.should_not == ent1.certificates[0].serial.id
@@ -56,7 +79,7 @@ describe 'Entitlement Certificate V1 Size' do
     (11..200).each do |i|
       content_ids.push(@content_list[i].id)
     end
-    add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
+    @cp.add_batch_content_to_product(@owner['key'], @product1.id, content_ids, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
     ent3 = @system.get_entitlement(ent1.id)
     ent3.certificates[0].serial.id.should == ent2.certificates[0].serial.id
@@ -73,13 +96,19 @@ describe 'Entitlement Certificate V1 Size' do
   end
 
   it 'will not allow an excessive content set to block others' do
-    @cp.refresh_pools(@owner['key'])
+    # @cp.refresh_pools(@owner['key'])
+
     ent1 = @system.consume_product(@product1.id)[0]
+    expect(ent1).to_not be_nil
+
     ent2 = @system.consume_product(@product2.id)[0]
+    expect(ent2).to_not be_nil
+
     (1..200).each do |i|
-      add_content_to_product(@owner['key'], @product1.id, @content_list[i].id, true)
+      @cp.add_content_to_product(@owner['key'], @product1.id, @content_list[i].id, true)
     end
-    add_content_to_product(@owner['key'], @product2.id, @content_list[1].id, true)
+
+    @cp.add_content_to_product(@owner['key'], @product2.id, @content_list[1].id, true)
     @cp.regenerate_entitlement_certificates_for_product(@product1.id)
     @cp.regenerate_entitlement_certificates_for_product(@product2.id)
 

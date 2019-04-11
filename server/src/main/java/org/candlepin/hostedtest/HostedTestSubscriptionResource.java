@@ -14,32 +14,22 @@
  */
 package org.candlepin.hostedtest;
 
+import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
-import org.candlepin.controller.ProductManager;
-import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.model.Content;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
+import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.persist.Transactional;
 
-import org.xnap.commons.i18n.I18n;
-
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -64,7 +54,7 @@ import javax.ws.rs.core.MediaType;
  * as the only purpose of this class is to support spec tests.
  */
 @SuppressSwaggerCheck
-@Path("/hostedtest/subscriptions")
+@Path("/hostedtest")
 public class HostedTestSubscriptionResource {
 
     @Inject
@@ -72,30 +62,6 @@ public class HostedTestSubscriptionResource {
 
     @Inject
     private UniqueIdGenerator idGenerator;
-
-    @Inject
-    private ResolverUtil resolverUtil;
-
-    @Inject
-    private ProductManager productManager;
-
-    @Inject
-    private ProductCurator productCurator;
-
-    @Inject
-    private OwnerContentCurator ownerContentCurator;
-
-    @Inject
-    private OwnerCurator ownerCurator;
-
-    @Inject
-    private OwnerProductCurator ownerProductCurator;
-
-    @Inject
-    private I18n i18n;
-
-    @Inject
-    private ModelTranslator translator;
 
     /**
      * API to check if resource is alive
@@ -110,27 +76,125 @@ public class HostedTestSubscriptionResource {
     }
 
     /**
+     * Creates or updates all of the subobjects referenced by the given subscription.
+     *
+     * @deprecated
+     *  This method is a shim to work with the existing "hosted" spec tests that create
+     *  subscriptions and its subobjects from the raw JSON provided. In the future, this should be
+     *  more well-formed and require that objects are created explicitly rather than implicitly.
+     *
+     * @param subscription
+     *  The subscription for which to create or update subobjects.
+     */
+    @Deprecated
+    protected void createSubscriptionObjects(Subscription subscription) {
+        if (subscription == null) {
+            throw new IllegalArgumentException("subscription is null");
+        }
+
+        Map<String, ProductData> pmap = new HashMap<>();
+        Map<String, ContentData> cmap = new HashMap<>();
+
+        this.addProductsToMap(subscription.getProduct(), pmap);
+        this.addProductsToMap(subscription.getProvidedProducts(), pmap);
+        this.addProductsToMap(subscription.getDerivedProduct(), pmap);
+        this.addProductsToMap(subscription.getDerivedProvidedProducts(), pmap);
+
+        for (ProductData product : pmap.values()) {
+            this.addContentToMap(product.getProductContent(), cmap);
+        }
+
+        // Create content...
+        for (ContentData content : cmap.values()) {
+            if (this.adapter.getContent(content.getId()) != null) {
+                this.adapter.updateContent(content.getId(), content);
+            }
+            else {
+                this.adapter.createContent(content);
+            }
+        }
+
+        // Create products...
+        for (ProductData product : pmap.values()) {
+            if (this.adapter.getProduct(product.getId()) != null) {
+                this.adapter.updateProduct(product.getId(), product);
+            }
+            else {
+                this.adapter.createProduct(product);
+            }
+        }
+    }
+
+    private void addProductsToMap(ProductData product, Map<String, ProductData> pmap) {
+        if (product != null) {
+            if (product.getId() == null || product.getId().matches("\\A\\s*\\z")) {
+                throw new BadRequestException("product has a null or empty product ID: " + product);
+            }
+
+            pmap.put(product.getId(), product);
+        }
+    }
+
+    private void addProductsToMap(Collection<ProductData> products, Map<String, ProductData> pmap) {
+        if (products != null) {
+            for (ProductData product : products) {
+                if (product == null) {
+                    throw new BadRequestException("product collection contains a null product");
+                }
+
+                this.addProductsToMap(product, pmap);
+            }
+        }
+    }
+
+    private void addContentToMap(Collection<ProductContentData> content, Map<String, ContentData> cmap) {
+        if (content != null) {
+            for (ProductContentData pcdata : content) {
+                if (pcdata != null) {
+                    ContentData cdata = pcdata.getContent();
+
+                    if (cdata == null) {
+                        throw new BadRequestException("product contains a null content: " + pcdata);
+                    }
+
+                    if (cdata.getId() == null || cdata.getId().matches("\\A\\s*\\z")) {
+                        throw new BadRequestException("content has a null or empty content ID: " + cdata);
+                    }
+
+                    cmap.put(cdata.getId(), cdata);
+                }
+            }
+        }
+    }
+
+
+    /**
      * Creates a new subscription from the subscription JSON provided. Any UUID
      * provided in the JSON will be ignored when creating the new subscription.
      *
      * @param subscription
-     *        A Subscription object built from the JSON provided in the request
+     *  A Subscription object built from the JSON provided in the request
+     *
      * @return
-     *         The newly created Subscription object
+     *  The newly created Subscription object
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Subscription createSubscription(
-        Subscription subscription,
-        @QueryParam("disable_resolution") Boolean disableResolution) {
-        if (subscription.getId() == null || subscription.getId().trim().length() == 0) {
+    @Path("/subscriptions")
+    public Subscription createSubscription(Subscription subscription) {
+        // Generate an ID if necessary
+        if (subscription.getId() == null || subscription.getId().matches("\\A\\s*\\z")) {
             subscription.setId(this.idGenerator.generateId());
         }
-        if (disableResolution != null && disableResolution) {
-            return adapter.createSubscription(subscription);
-        }
-        return adapter.createSubscription(resolverUtil.resolveSubscriptionAndProduct(subscription));
+
+        // Create the subobjects first
+        this.createSubscriptionObjects(subscription);
+
+        // Create subscription object...
+        Subscription sinfo = this.adapter.createSubscription(subscription);
+
+        return sinfo;
     }
 
     /**
@@ -141,8 +205,9 @@ public class HostedTestSubscriptionResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Subscription> listSubscriptions() {
-        return adapter.getSubscriptions();
+    @Path("/subscriptions")
+    public Collection<? extends Subscription> listSubscriptions() {
+        return this.adapter.getSubscriptions();
     }
 
     /**
@@ -156,7 +221,7 @@ public class HostedTestSubscriptionResource {
      *         could not be found
      */
     @GET
-    @Path("/{subscription_id}")
+    @Path("/subscriptions/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription getSubscription(@PathParam("subscription_id") String subscriptionId) {
         return adapter.getSubscription(subscriptionId);
@@ -165,7 +230,8 @@ public class HostedTestSubscriptionResource {
     /**
      * Updates the specified subscription with the provided subscription data.
      *
-     * @param subscriptionNew
+     * @param subscriptionId the ID of the subscription to update
+     * @param subscription
      *        A Subscription object built from the JSON provided in the request;
      *        contains the data to use
      *        to update the specified subscription
@@ -175,8 +241,24 @@ public class HostedTestSubscriptionResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Subscription updateSubscription(Subscription subscriptionNew) {
-        return adapter.updateSubscription(resolverUtil.resolveSubscription(subscriptionNew));
+    @Path("/subscriptions/{subscription_id}")
+    public Subscription updateSubscription(
+        @PathParam("subscription_id") String subscriptionId,
+        Subscription subscription) {
+
+        if (subscription == null) {
+            throw new BadRequestException("no subscription data provided");
+        }
+
+        if (this.adapter.getSubscription(subscriptionId) == null) {
+            throw new NotFoundException("subscription does not yet exist: " + subscriptionId);
+        }
+
+        // Create/Update sub objects
+        this.createSubscriptionObjects(subscription);
+
+        // Update subscription
+        return this.adapter.updateSubscription(subscriptionId, subscription);
     }
 
     /**
@@ -189,133 +271,238 @@ public class HostedTestSubscriptionResource {
      *         otherwise
      */
     @DELETE
-    @Path("/{subscription_id}")
+    @Path("/subscriptions/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public boolean deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
-        return adapter.deleteSubscription(subscriptionId);
+        return adapter.deleteSubscription(subscriptionId) != null;
     }
 
     /**
-     * Deletes all subscriptions.
+     * Deletes all data currently maintained by the backing adapter.
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteAllSubscriptions() {
-        adapter.deleteAllSubscriptions();
+    public void clearData() {
+        this.adapter.clearData();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/owners/{owner_key}/products/{product_id}/batch_content")
+    @Path("/products/{product_id}/batch_content")
     @Transactional
-    public ProductDTO addBatchContent(
-        @PathParam("owner_key") String ownerKey,
+    public ProductData addContentToProduct(
         @PathParam("product_id") String productId,
         Map<String, Boolean> contentMap) {
 
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-        Collection<ProductContent> productContent = new LinkedList<>();
+        ProductData pinfo = this.adapter.getProduct(productId);
 
-        ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
+        if (pinfo == null) {
+            throw new NotFoundException("product not found: " + productId);
+        }
 
-        // Impl note:
-        // This is a wholely inefficient way of doing this. When we return to using ID-based linking
-        // and we're not linking the universe with our model, we can just attach the IDs directly
-        // without needing all this DTO conversion back and forth.
-        // Alternatively, we can shut off Hibernate's auto-commit junk and get in the habit of
-        // calling commit methods as necessary so we don't have to work with DTOs internally.
+        for (String contentId : contentMap.keySet()) {
+            if (this.adapter.getContent(contentId) == null) {
+                throw new NotFoundException("content not found: " + contentId);
+            }
+        }
 
-        boolean changed = false;
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
-            Content content = this.fetchContent(owner, entry.getKey());
+            String contentId = entry.getKey();
+
             boolean enabled = entry.getValue() != null ?
                 entry.getValue() :
                 ProductContent.DEFAULT_ENABLED_STATE;
 
-            ContentDTO cdto = this.translator.translate(content, ContentDTO.class);
-
-            changed |= pdto.addContent(cdto, enabled);
-            addContentToUpstreamSubscriptions(product, content, enabled);
+            this.adapter.addContentToProduct(productId, contentId, enabled);
         }
 
-        if (changed) {
-            product = this.productManager.updateProduct(pdto, owner, true);
-        }
-
-        return this.translator.translate(product, ProductDTO.class);
-    }
-
-    private void addContentToUpstreamSubscriptions(Product product, Content content, boolean enabled) {
-        List<Subscription> subs = adapter.getSubscriptions(product.toDTO());
-        for (Subscription sub: subs) {
-            if (sub.getProduct().getId().contentEquals(product.getId())) {
-                sub.getProduct().addContent(content, enabled);
-            }
-        }
+        return pinfo;
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
-    @Path("/owners/{owner_key}/products/{product_id}/content/{content_id}")
+    @Path("/products/{product_id}/content/{content_id}")
     @Transactional
-    public ProductDTO addContent(
-        @PathParam("owner_key") String ownerKey,
+    public ProductData addContentToProduct(
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId,
         @QueryParam("enabled") Boolean enabled) {
 
         // Package the params up and pass it off to our batch method
         Map<String, Boolean> contentMap = Collections.singletonMap(contentId, enabled);
-        return this.addBatchContent(ownerKey, productId, contentMap);
+        return this.addContentToProduct(productId, contentMap);
     }
 
-    @PUT
-    @Path("/owners/{owner_key}/products/{product_id}")
+    @DELETE
+    @Path("/products/{product_id}/content")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public ProductData removeContentFromProduct(@PathParam("product_id") String productId,
+        Collection<String> contentIds) {
+
+        if (this.adapter.getProduct(productId) == null) {
+            throw new NotFoundException("product not found: " + productId);
+        }
+
+        if (contentIds != null) {
+            for (String contentId : contentIds) {
+                this.adapter.removeContentFromProduct(productId, contentId);
+            }
+        }
+
+        return this.adapter.getProduct(productId);
+    }
+
+    @DELETE
+    @Path("/products/{product_id}/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ProductData removeContentFromProduct(@PathParam("product_id") String productId,
+        @PathParam("content_id") String contentId) {
+
+        return this.removeContentFromProduct(productId, Collections.<String>singletonList(contentId));
+    }
+
+    @GET
+    @Path("/products")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Collection<? extends ProductData> listProducts() {
+        return this.adapter.listProducts();
+    }
+
+    @GET
+    @Path("/products/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public ProductData getProduct(@PathParam("product_id") String productId) {
+        ProductData pinfo = this.adapter.getProduct(productId);
+
+        if (pinfo == null) {
+            throw new NotFoundException("product does not exist: " + productId);
+        }
+
+        return pinfo;
+    }
+
+    @POST
+    @Path("/products")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
-    public ProductDTO updateProduct(
-        @PathParam("owner_key") String ownerKey,
-        @PathParam("product_id") String productId,
-        ProductDTO update) {
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product existing = this.fetchProduct(owner, productId);
-        Product updated = this.productManager.updateProduct(update, owner, true);
-
-        return this.translator.translate(updated, ProductDTO.class);
-    }
-
-    protected Product fetchProduct(Owner owner, String productId) {
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
-
+    public ProductData createProduct(ProductData product) {
         if (product == null) {
-            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+            throw new BadRequestException("product is null");
         }
 
-        return product;
-    }
-
-    protected Owner getOwnerByKey(String key) {
-        Owner owner = this.ownerCurator.lookupByKey(key);
-
-        if (owner == null) {
-            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
+        if (product.getId() == null || product.getId().isEmpty()) {
+            throw new BadRequestException("product lacks a product ID: " + product);
         }
 
-        return owner;
+        if (this.adapter.getProduct(product.getId()) != null) {
+            throw new ConflictException("product already exists: " + product.getId());
+        }
+
+        return this.adapter.createProduct(product);
     }
 
-    protected Content fetchContent(Owner owner, String contentId) {
-        Content content = this.ownerContentCurator.getContentById(owner, contentId);
+    @PUT
+    @Path("/products/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public ProductData updateProduct(
+        @PathParam("product_id") String productId,
+        ProductData update) {
 
+        if (update == null) {
+            throw new BadRequestException("product update is null");
+        }
+
+        if (this.adapter.getProduct(productId) == null) {
+            throw new NotFoundException("product does not yet exist: " + productId);
+        }
+
+        return this.adapter.updateProduct(productId, update);
+    }
+
+    @DELETE
+    @Path("/products/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean deleteProduct(@PathParam("product_id") String productId) {
+        return adapter.deleteProduct(productId) != null;
+    }
+
+
+    @GET
+    @Path("/content")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Collection<? extends ContentData> listContent() {
+        return this.adapter.listContent();
+    }
+
+    @GET
+    @Path("/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public ContentData getContent(@PathParam("content_id") String contentId) {
+        ContentData cinfo = this.adapter.getContent(contentId);
+
+        if (cinfo == null) {
+            throw new NotFoundException("content does not exist: " + contentId);
+        }
+
+        return cinfo;
+    }
+
+    @POST
+    @Path("/content")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public ContentData createContent(ContentData content) {
         if (content == null) {
-            throw new NotFoundException(i18n.tr("Content with ID \"{0}\" could not be found.", contentId));
+            throw new BadRequestException("content is null");
         }
 
-        return content;
+        if (content.getId() == null || content.getId().isEmpty()) {
+            throw new BadRequestException("content lacks a content ID: " + content);
+        }
+
+        if (this.adapter.getContent(content.getId()) != null) {
+            throw new ConflictException("content already exists: " + content.getId());
+        }
+
+        return this.adapter.createContent(content);
     }
+
+    @PUT
+    @Path("/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
+    public ContentData updateContent(
+        @PathParam("content_id") String contentId,
+        ContentData update) {
+
+        if (update == null) {
+            throw new BadRequestException("content update is null");
+        }
+
+        if (this.adapter.getContent(contentId) == null) {
+            throw new NotFoundException("content does not yet exist: " + contentId);
+        }
+
+        return this.adapter.updateContent(contentId, update);
+    }
+
+    @DELETE
+    @Path("/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean deleteContent(@PathParam("content_id") String contentId) {
+        return adapter.deleteContent(contentId) != null;
+    }
+
 }

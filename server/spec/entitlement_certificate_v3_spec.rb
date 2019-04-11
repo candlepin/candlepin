@@ -24,8 +24,29 @@ describe 'Entitlement Certificate V3' do
       return sub
   end
 
+  # TODO: FIXME: Rewrite this test suite. It's currently creating both upstream and downstream objects and
+  # expecting them to be reconciled through the hosted test API stuff, which doesn't properly test the
+  # refresh operations.
+
+  def create_content_ex(params = {})
+    if is_hosted?
+      return create_upstream_content(nil, params)
+    else
+      return create_content(params)
+    end
+  end
+
+  def map_content_to_product(owner_key, product_id, content_id, enabled)
+    if is_hosted?
+      return add_content_to_product_upstream(product_id, content_id, enabled)
+    else
+      return @cp.add_content_to_product(owner_key, product_id, content_id, enabled)
+    end
+  end
+
   before(:each) do
     @owner = create_owner random_string('test_owner')
+
     @product = create_product(nil, nil, :attributes =>
                 {:version => '6.4',
                  :arch => 'i386, x86_64',
@@ -64,6 +85,18 @@ describe 'Entitlement Certificate V3' do
     @cp.add_content_to_product(@owner['key'], @product.id, @content.id, false)
     @cp.add_content_to_product(@owner['key'], @product.id, @arch_content.id, false)
 
+
+    # Create these products and content upstream
+    if is_hosted?
+      create_upstream_product(@product.id, @product)
+      create_upstream_product(@product_30.id, @product_30)
+
+      create_upstream_content(@content.id, @content)
+      create_upstream_content(@arch_content.id, @arch_content)
+
+      add_content_to_product_upstream(@product.id, @content.id, false)
+      add_content_to_product_upstream(@product.id, @arch_content.id, false)
+    end
 
     @pool = create_pool_and_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
     @pool_30 = create_pool_and_subscription(@owner['key'], @product_30.id, 10, [], '123456', '67890', 'order2')
@@ -180,10 +213,10 @@ describe 'Entitlement Certificate V3' do
   end
 
   it 'encoded the content urls' do
-    @content_1 = create_content({:content_url => '/content/dist/rhel/$releasever/$basearch/debug',})
-    add_content_to_product(@owner['key'], @product.id, @content_1.id, true)
-    @content_2 = create_content({:content_url => '/content/beta/rhel/$releasever/$basearch/source/SRPMS',})
-    add_content_to_product(@owner['key'], @product.id, @content_2.id, true)
+    @content_1 = create_content_ex({:content_url => '/content/dist/rhel/$releasever/$basearch/debug',})
+    map_content_to_product(@owner['key'], @product.id, @content_1.id, true)
+    @content_2 = create_content_ex({:content_url => '/content/beta/rhel/$releasever/$basearch/source/SRPMS',})
+    map_content_to_product(@owner['key'], @product.id, @content_2.id, true)
     #refresh the subscription - product resolution will take care of adding the content automatically
     refresh_upstream_subscription(@pool)
     entitlement = @system.consume_product(@product.id)[0]
@@ -205,9 +238,10 @@ describe 'Entitlement Certificate V3' do
   it 'encoded many content urls' do
     number = 100
     number.times do |i|
-      content = create_content({:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}",})
-      add_content_to_product(@owner['key'], @product.id, content.id, true)
+      content = create_content_ex({:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}",})
+      map_content_to_product(@owner['key'], @product.id, content.id, true)
     end
+
     #refresh the subscription - product resolution will take care of adding the content automatically
     refresh_upstream_subscription(@pool)
     entitlement = @system.consume_product(@product.id)[0]
