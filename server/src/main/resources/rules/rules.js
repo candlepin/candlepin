@@ -1,4 +1,4 @@
-// Version: 5.35
+// Version: 5.36
 
 /*
  * Default Candlepin rule set.
@@ -2134,7 +2134,8 @@ var Autobind = {
              * are removed.
              */
             validate: function(context) {
-                log.debug("Running validate for stack_id: {}", this.stack_id);
+                var group_id = this.get_identifier();
+                log.debug("Running validate for {}: '{}'", group_id.type, group_id.value);
                 var all_ents = this.get_all_ents(this.pools).concat(this.attached_ents);
 
                 if (all_ents.length == 0) {
@@ -2152,7 +2153,7 @@ var Autobind = {
                 // At this point, we must be stackable
                 var coverage = Compliance.getStackCoverage(this.consumer, this.stack_id, all_ents);
                 if (!coverage.covered) {
-                    log.debug("stack " + this.stack_id + " is partial with all entitlements stacked.");
+                    log.debug("validate - stack '{}' is partial with all entitlements stacked.", this.stack_id);
                     var attrs_to_remove = [];
                     for(var i = 0; i < coverage.reasons.length; i++) {
                         if (coverage.reasons[i]["key"] == ARCH_ATTRIBUTE) {
@@ -2168,6 +2169,8 @@ var Autobind = {
                     }
                     var pools_without_bad_attrs = [];
                     // remove all pools with attributes that we cannot support
+                    log.debug("validate - Removing all pools with attributes that we cannot support...");
+                    var initial_pool_length = this.pools.length;
                     for (var j = this.pools.length - 1; j >= 0; j--) {
                         var pool = this.pools[j];
                         var pool_is_valid = true;
@@ -2184,6 +2187,9 @@ var Autobind = {
                         }
                     }
                     this.pools = pools_without_bad_attrs;
+                    log.debug("validate - Removed {} of {} pools from stack '{}'",
+                    [initial_pool_length - this.pools.length, initial_pool_length, this.stack_id]);
+
                     all_ents = this.get_all_ents(this.pools).concat(this.attached_ents);
                     coverage = Compliance.getStackCoverage(consumer, this.stack_id, all_ents);
                     return coverage.covered;
@@ -2289,7 +2295,8 @@ var Autobind = {
              * enforce different attributes
              */
             remove_extra_attrs: function(role, addons) {
-                log.debug("Running remove_extra_attrs for stack_id: {}...", this.stack_id);
+                var group_id = this.get_identifier();
+                log.debug("Running remove_extra_attrs for {}: '{}'...", group_id.type, group_id.value);
                 var possible_pool_sets = [];
                 possible_pool_sets.push(this.pools);
                 var satisfiable_prod_size = this.get_provided_products().length;
@@ -2354,7 +2361,8 @@ var Autobind = {
              * TODO: needs elaboration
              */
             prune_pools: function(role, addons) {
-                log.debug("Running prune_pools for stack_id: {}...", this.stack_id);
+                var group_id = this.get_identifier();
+                log.debug("Running prune_pools for {}: '{}'...", group_id.type, group_id.value);
                 // We know this group is required at this point,
                 // so we cannot remove the one pool if it's non-stackable
                 if (!this.stackable) {
@@ -2426,7 +2434,8 @@ var Autobind = {
              * should be used afterward to compare the group with other entitlement groups
              */
             get_average_priority: function() {
-                log.debug("Running get_average_priority...");
+                var group_id = this.get_identifier();
+                log.debug("Running get_average_priority for {}: '{}'...", group_id.type, group_id.value);
                 if (this.average_priority === null) {
                     var len = this.pools.length;
                     var total = 0;
@@ -2564,6 +2573,35 @@ var Autobind = {
                     }
                 }
                 return null;
+            },
+
+            /*
+             * Returns the type and value of the group identifier, to be used for logging.
+             * The type can be either the 'stack_id' or 'pool', and the value either the stack_id value, or
+             * the id of the first pool in the group.
+             *
+             * If the group is not stackable, and it has no pools, then unknown/unknown is returned.
+             */
+            get_identifier: function() {
+                var identifier = {
+                    type: null,
+                    value: null
+                };
+
+                if (this.stackable) {
+                    identifier.type = "stack_id";
+                    identifier.value = this.stack_id;
+                }
+                else if (this.pools.length > 0) {
+                    identifier.type = "pool";
+                    identifier.value = this.pools[0].id;
+                }
+                else {
+                    identifier.type = "unknown";
+                    identifier.value = "unknown";
+                }
+
+                return identifier;
             }
         };
     },
@@ -2830,66 +2868,69 @@ var Autobind = {
             var group_poolquantity = group.get_total_quantity();
             var group_num_host_specific = group.num_host_specific();
             var group_num_virt_only = group.num_virt_only();
+            var group_id = group.get_identifier();
+
             log.debug("find_best_ent_group - Best Values from all processed groups until now: " +
                 "best_avg_prio: {}, total_poolquantity: {}"+
                 ", best_num_virt_only: {}, best_num_host_specific: {}",
                 [best_avg_prio, total_poolquantity, best_num_virt_only, best_num_host_specific]);
-            log.debug("find_best_ent_group - Current Values for group with pool: {}: group_avg_prio: {}, group_num_virt_only: {}"+
+            log.debug("find_best_ent_group - Current Values for group with {}: '{}': group_avg_prio: {}, group_num_virt_only: {}"+
                 ", intersection: {}, role_needed: {}, addons_needed: {}, group_poolquantity: {}",
-                [group.pools[0].id, group_avg_prio, group_num_virt_only, intersection, role_needed, addons_needed, group_poolquantity]);
+                [group_id.type, group_id.value, group_avg_prio, group_num_virt_only, intersection, role_needed, addons_needed, group_poolquantity]);
+
             if ((!role_needed && !addons_needed && intersection <= 0) ||
                 (host_specific_found && group_num_host_specific < best_num_host_specific) ||
                 (virt_only_found && group_num_virt_only < best_num_virt_only)) {
                 // Skip this group if we've found virt or host_specific and this group is not.
-                log.debug("find_best_ent_group - [group with pool: {}] Skip this group if we've " +
+                log.debug("find_best_ent_group - [group with {}: '{}'] Skip this group if we've " +
                     "found virt or host_specific and this group is not, or if it does not satisfy any products, " +
-                     "roles or addons.", group.pools[0].id);
+                     "roles or addons.", group_id.type, group_id.value);
                 continue;
             }
 
-            log.debug("find_best_ent_group - Checking if group with pool: {} is the new best group...", group.pools[0].id);
+            log.debug("find_best_ent_group - Checking if group with {}: '{}' is the new best group...", group_id.type, group_id.value);
             new_best_found = false;
             if (group_num_host_specific > best_num_host_specific) {
                 host_specific_found = true;
                 new_best_found = true;
-                log.debug("find_best_ent_group: [group with pool: {}] group_num_host_specific > best_num_host_specific", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] group_num_host_specific > best_num_host_specific", group_id.type, group_id.value);
             }
             else if (group_num_host_specific < best_num_host_specific) {
                 new_best_found = false;
-                log.debug("find_best_ent_group: [group with pool: {}] group_num_host_specific < best_num_host_specific", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] group_num_host_specific < best_num_host_specific", group_id.type, group_id.value);
             }
             else if (group_avg_prio > best_avg_prio) {
                 new_best_found = true;
-                log.debug("find_best_ent_group: [group with pool: {}] group_avg_prio > best_avg_prio", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] group_avg_prio > best_avg_prio", group_id.type, group_id.value);
             }
             else if (group_avg_prio < best_avg_prio) {
                 new_best_found = false;
-                log.debug("find_best_ent_group: [group with pool: {}] group_avg_prio < best_avg_prio", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] group_avg_prio < best_avg_prio", group_id.type, group_id.value);
             }
             else if (group_num_virt_only > best_num_virt_only) {
                 virt_only_found = true;
                 new_best_found = true;
-                log.debug("find_best_ent_group: [group with pool: {}] group_num_virt_only > best_num_virt_only", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] group_num_virt_only > best_num_virt_only", group_id.type, group_id.value);
             }
             else if (group_num_virt_only < best_num_virt_only) {
                 new_best_found = false;
-                log.debug("find_best_ent_group: [group with pool: {}] group_num_virt_only < best_num_virt_only", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] group_num_virt_only < best_num_virt_only", group_id.type, group_id.value);
             }
             else if (group_poolquantity < total_poolquantity) {
                 new_best_found = true;
-                log.debug("find_best_ent_group: [group with pool: {}] group_poolquantity < total_poolquantity", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] group_poolquantity < total_poolquantity", group_id.type, group_id.value);
             }
             else if (group_poolquantity > total_poolquantity) {
                 new_best_found = false;
-                log.debug("find_best_ent_group: [group with pool: {}] group_poolquantity > total_poolquantity", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] group_poolquantity > total_poolquantity", group_id.type, group_id.value);
             }
             else if (stacked && !group.stackable) {
                 new_best_found = true;
-                log.debug("find_best_ent_group: [group with pool: {}] stacked && !group.stackable", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] stacked && !group.stackable", group_id.type, group_id.value);
             }
             else if(role_needed || addons_needed) {
                 new_best_found = true;
-                log.debug("find_best_ent_group: [group with pool: {}] role_needed || addons_needed", group.pools[0].id);
+                log.debug("find_best_ent_group: [group with {}: '{}'] role_needed || addons_needed", group_id.type, group_id.value);
             }
 
             if (new_best_found) {
@@ -2936,7 +2977,8 @@ var Autobind = {
         var group = this.find_best_ent_group(all_groups, installed, role, addons);
 
         while (group != null) {
-            log.debug("get_best_entitlement_groups: New Best is group with pool: {}", group.pools[0].id);
+            var group_id = group.get_identifier();
+            log.debug("get_best_entitlement_groups: New Best is group with {}: '{}'", group_id.type, group_id.value);
             best.push(group);
             var prods_in_common = this.get_common_products(installed, group);
             for (var j = installed.length - 1; j >= 0; j--) {
@@ -3068,6 +3110,8 @@ var Autobind = {
         var valid_groups = [];
         for (var i = ent_groups.length - 1; i >= 0; i--) {
             var ent_group = ent_groups[i];
+
+            var group_id = ent_group.get_identifier();
             if (ent_group.validate()) {
                 // Only really consider the group if it provides a necessary product, role, addon,
                 // or stacks with an existing partial stack
@@ -3079,10 +3123,10 @@ var Autobind = {
                     ent_group.remove_extra_attrs(role, addons);
                     ent_group.prune_pools(role, addons);
                 } else {
-                    log.debug("Group with stack id {} provides no needed products, roles or addons", ent_group.stack_id);
+                    log.debug("Group with {} '{}' provides no needed products, roles or addons", group_id.type, group_id.value);
                 }
             } else {
-                log.debug("Group " + ent_group.stack_id + " failed validation.");
+                log.debug("Group with {} '{}' failed validation.", group_id.type, group_id.value);
             }
         }
         log.debug("valid ent groups size: " + valid_groups.length);
