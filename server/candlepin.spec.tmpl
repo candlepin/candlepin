@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.4
+Version: 2.6.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,9 @@ fi
 
 #raw
 %changelog
+* Thu Apr 11 2019 Kevin Howell <khowell@redhat.com> 2.6.5-1
+- Install liquibase.sh via RPM (jturel@redhat.com)
+
 * Wed Apr 10 2019 Kevin Howell <khowell@redhat.com> 2.6.4-1
 - 1698559: CVE-2019-3891 Do not print database credentials in cpdb
   (khowell@redhat.com)
