@@ -129,6 +129,7 @@ sed -i 's/#LOGROTATE-3.8#//' %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 
 %{__install} -m 755 code/setup/cpsetup %{buildroot}/%{_datadir}/%{name}/cpsetup
 %{__install} -m 755 code/setup/cpdb %{buildroot}/%{_datadir}/%{name}/cpdb
+%{__install} -m 755 bin/liquibase.sh %{buildroot}/%{_datadir}/%{name}/liquibase.sh
 
 %{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/
 touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
@@ -196,6 +197,7 @@ fi
 
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/cpdb
+%{_datadir}/%{name}/liquibase.sh
 ## amqp dir, keystore & truststore used by qpid JMS client
 %ghost %attr(644, tomcat, tomcat) %{_sysconfdir}/%{name}/certs/amqp/keystore
 %ghost %attr(644, tomcat, tomcat) %{_sysconfdir}/%{name}/certs/amqp/truststore
