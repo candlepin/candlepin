@@ -166,7 +166,7 @@ describe 'Pool Resource' do
     product = create_product(nil, nil,
       {
         :attributes => {:virt_limit => '10'},
-	:owner => owner1['key']
+  :owner => owner1['key']
       }
     )
 
@@ -259,11 +259,15 @@ describe 'Pool Resource' do
         :type => 'type1', :name => 'branding1'}
       b2 = {:productId => 'prodid2',
         :type => 'type2', :name => 'branding2'}
+
       owner = create_owner random_string('some-owner')
       name = random_string("product-")
+
       product = create_product(name, name, :owner => owner['key'])
+
       created = create_pool_and_subscription(owner['key'], product.id, 11,
-        [], '', '', '', nil, nil, false, :branding => [b1,b2])
+        [], '', '', '', nil, nil, false, :branding => [b1, b2])
+
       pool = @cp.get_pool(created['id'])
       pool.quantity.should == 11
       pool.branding.size.should == 2

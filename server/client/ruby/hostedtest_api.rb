@@ -3,10 +3,14 @@ module HostedTest
   @@hosted_mode = nil
   @@hostedtest_alive = nil
 
+  # FIXME: This is broken. There's no distiction between up and downstream data sources, which creates
+  # a lot of problems when it comes to product and content mapping. Hosted test resources should be
+  # entirely upstream, and not rely on, nor require, anything downstream for proper functionality.
+
   def is_hostedtest_alive?
     if @@hostedtest_alive.nil?
       begin
-        @@hostedtest_alive = @cp.get('/hostedtest/subscriptions/is_alive', {}, 'json', true)
+        @@hostedtest_alive = @cp.get('/hostedtest/alive', {}, 'text/plain', true)
       rescue RestClient::ResourceNotFound
         @@hostedttest_alive = false
       end
@@ -15,7 +19,6 @@ module HostedTest
   end
 
   def create_hostedtest_subscription(owner_key, product_id, quantity=1, params={})
-
     provided_products = params[:provided_products] || []
     start_date = params[:start_date] || DateTime.now
     end_date = params[:end_date] || start_date + 365
@@ -63,7 +66,8 @@ module HostedTest
   end
 
   def update_hostedtest_subscription(subscription)
-    return @cp.put("/hostedtest/subscriptions", {}, subscription)
+    id = subscription.id
+    return @cp.put("/hostedtest/subscriptions/#{id}", {}, subscription)
   end
 
   def get_all_hostedtest_subscriptions()
@@ -78,8 +82,8 @@ module HostedTest
     return @cp.delete("/hostedtest/subscriptions/#{id}", {}, nil, true)
   end
 
-  def delete_all_hostedtest_subscriptions()
-    @cp.delete('/hostedtest/subscriptions/', {}, nil, true)
+  def clear_upstream_data()
+    @cp.delete('/hostedtest', {}, nil, true)
   end
 
   def is_hosted?
@@ -109,7 +113,7 @@ module HostedTest
       content_ids.each do |id|
         data[id] = enabled
       end
-      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/batch_content", {}, data)
+      @cp.post("/hostedtest/products/#{product_id}/batch_content", {}, data)
     else
       @cp.add_batch_content_to_product(owner_key, product_id, content_ids, true)
     end
@@ -117,7 +121,7 @@ module HostedTest
 
   def add_content_to_product(owner_key, product_id, content_id, enabled=true)
     if is_hosted?
-      @cp.post("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}/content/#{content_id}", {:enabled => enabled})
+      @cp.post("/hostedtest/products/#{product_id}/content/#{content_id}", {:enabled => enabled})
     else
       @cp.add_content_to_product(owner_key, product_id, content_id, true)
     end
@@ -125,16 +129,19 @@ module HostedTest
 
   def update_product(owner_key, product_id, params={})
     if is_hosted?
+      # FIXME: This is broken
+
       product = {
         :id => product_id
       }
+
       product[:name] = params[:name] if params[:name]
       product[:multiplier] = params[:multiplier] if params[:multiplier]
       product[:attributes] = params[:attributes] if params[:attributes]
       product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
       product[:relies_on] = params[:relies_on] if params[:relies_on]
 
-      @cp.put("/hostedtest/subscriptions/owners/#{owner_key}/products/#{product_id}", {}, product)
+      @cp.put("/hostedtest/products/#{product_id}", {}, product)
     else
       @cp.update_product(owner_key, product_id, params)
     end
@@ -155,6 +162,7 @@ module HostedTest
     params[:order_number] = order_number
     params[:quantity] = quantity
     params[:provided_products] = provided_products
+
     pool = nil
     if is_hosted?
       ensure_hostedtest_resource
@@ -274,5 +282,201 @@ module HostedTest
       delete_all_hostedtest_subscriptions
     end
   end
+
+
+
+
+  def create_upstream_subscription(subscription_id, owner_key, product_id, params = {})
+    start_date = params.delete(:start_date) || Date.today
+    end_date = params.delete(:end_date) || start_date + 365
+
+    # Define subscription with defaults & specified params
+    subscription = {
+      :startDate => start_date,
+      :endDate   => end_date,
+      :product =>  { :id => product_id },
+      :owner =>  { :key => owner_key },
+      :quantity => 1
+    }
+
+    # Merge, but convert some snake-case keys to camel case
+    keys = [:account_number, :contract_number, :order_number, :upstream_pool_id,
+      :provided_products, :derived_product, :derived_provided_products,
+      'account_number', 'contract_number', 'order_number', 'upstream_pool_id',
+      'provided_products', 'derived_product', 'derived_provided_products']
+
+    params.each do |key, value|
+      if keys.include?(key)
+        key = key.to_s.gsub!(/_(\w)/){$1.upcase}
+      end
+
+      subscription[key] = value
+    end
+
+    # Forcefully set identifier
+    subscription[:id] = subscription_id
+
+    return @cp.post('hostedtest/subscriptions', {}, subscription)
+  end
+
+  def list_upstream_subscriptions()
+    return @cp.get('/hostedtest/subscriptions')
+  end
+
+  def get_upstream_subscription(subscription_id)
+    return @cp.get("/hostedtest/subscriptions/#{subscription_id}")
+  end
+
+  def update_upstream_subscription(subscription_id, params = {})
+    subscription = {}
+
+    # Merge, but convert some snake-case keys to camel case
+    keys = ['account_number', 'contract_number', 'order_number', 'upstream_pool_id', 'start_date', 'end_date',
+      'provided_products', 'derived_product', 'derived_provided_products']
+
+    params.each do |key, value|
+      if keys.include?(key.to_s)
+        key = key.to_s.gsub!(/_(\w)/){$1.upcase}
+      end
+
+      subscription[key] = value
+    end
+
+    # Forcefully set identifier
+    subscription[:id] = subscription_id
+
+    return @cp.put("/hostedtest/subscriptions/#{subscription_id}", {}, subscription)
+  end
+
+  def delete_upstream_subscription(subscription_id)
+    return @cp.delete("/hostedtest/subscriptions/#{subscription_id}")
+  end
+
+  def create_upstream_product(product_id = nil, params = {})
+    # Generate an ID if one was not provided
+    if product_id.nil?
+      product_id = random_str('product')
+    end
+
+    # Create a product with some defaults for required fields
+    product = {
+      :multiplier => 1
+    }
+
+    # Merge provided params in
+    product.merge!(params)
+
+    # Forcefully set identifier and name (if absent)
+    product[:id] = product_id
+    product[:name] = product_id if !product[:name] && !product['name']
+
+    return @cp.post('hostedtest/products', {}, product)
+  end
+
+  def list_upstream_products()
+    return @cp.get('/hostedtest/products')
+  end
+
+  def get_upstream_product(product_id)
+    return @cp.get("/hostedtest/products/#{product_id}")
+  end
+
+  def update_upstream_product(product_id, params = {})
+    product = {}.merge(params)
+
+    # Forcefully set identifier
+    product[:id] = product_id
+
+    return @cp.put("/hostedtest/products/#{product_id}", {}, product)
+  end
+
+  def delete_upstream_product(product_id)
+    return @cp.delete("/hostedtest/products/#{product_id}")
+  end
+
+  def create_upstream_content(content_id = nil, params = {})
+    # Generate an ID if one was not provided
+    if content_id.nil?
+      content_id = random_str('content')
+    end
+
+    # Create a content with some defaults for required fields
+    content = {
+      :label => 'label',
+      :type => 'yum',
+      :vendor => 'vendor'
+    }
+
+    # Merge, but convert some snake-case keys to camel case
+    keys = ['content_url', 'gpg_url', 'modified_product_ids', 'metadata_expire', 'required_tags']
+
+    params.each do |key, value|
+      if keys.include?(key.to_s)
+        key = key.to_s.gsub!(/_(\w)/){$1.upcase}
+      end
+
+      content[key] = value
+    end
+
+    # Forcefully assign the ID and name (if absent)
+    content[:id] = content_id
+    content[:name] = content_id if !content[:name]
+
+    return @cp.post('hostedtest/content', {}, content)
+  end
+
+  def list_upstream_contents()
+    return @cp.get('/hostedtest/content')
+  end
+
+  def get_upstream_content(content_id)
+    return @cp.get("/hostedtest/content/#{content_id}")
+  end
+
+  def update_upstream_content(content_id, params = {})
+    content = {}
+
+    # Merge, but convert some snake-case keys to camel case
+    keys = ['content_url', 'gpg_url', 'modified_product_ids', 'metadata_expire', 'required_tags']
+
+    params.each do |key, value|
+      if keys.include?(key.to_s)
+        key = key.to_s.gsub!(/_(\w)/){$1.upcase}
+      end
+
+      content[key] = value
+    end
+
+    # Forcefully set identifier
+    content[:id] = content_id
+
+    return @cp.put("/hostedtest/content/#{content_id}", {}, content)
+  end
+
+  def delete_upstream_content(content_id)
+    return @cp.delete("/hostedtest/content/#{content_id}")
+  end
+
+  def add_batch_content_to_product_upstream(product_id, content_ids, enabled=true)
+    data = {}
+    content_ids.each do |id|
+      data[id] = enabled
+    end
+    @cp.post("/hostedtest/products/#{product_id}/content", {}, data)
+  end
+
+  def add_content_to_product_upstream(product_id, content_id, enabled = true)
+    @cp.post("/hostedtest/products/#{product_id}/content/#{content_id}", { :enabled => enabled })
+  end
+
+  def remove_batch_content_from_product_upstream(product_id, content_ids)
+    @cp.delete("/hostedtest/products/#{product_id}/content", {}, content_ids)
+  end
+
+  def remove_content_from_product_upstream(product_id, content_id)
+    @cp.delete("/hostedtest/products/#{product_id}/content/#{content_id}")
+  end
+
+
 
 end
