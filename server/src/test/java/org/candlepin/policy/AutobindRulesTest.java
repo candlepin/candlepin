@@ -3228,6 +3228,43 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(pool1, 1)));
     }
 
+    /*
+     * This test checks that during autoattach, when removing all pools from a stack group due to them having
+     * attributes that will not support the consumer, should not cause an error.
+     */
+    @Test
+    public void testSelectBestPoolsShouldNotFailWhenAllPoolsFromStackGroupAreRemoved() {
+        List<Pool> pools = createInstanceBasedPool();
+
+        // Create consumer with 12 sockets:
+        setupConsumer("12", false);
+
+        // Create a pre-existing entitlement which only covers some of the sockets:
+        Entitlement mockEnt = mockEntitlement(pools.get(0), 4);
+        consumer.addEntitlement(mockEnt);
+        compliance.addPartiallyCompliantProduct(productId, mockEnt);
+        compliance.addPartialStack("stack_9000", mockEnt);
+
+        // Create a pool with the same stack id, that only provides 2 sockets (cannot cover the consumer):
+        Product prod1 = new Product();
+        prod1.setAttribute(Product.Attributes.STACKING_ID, "stack_9000");
+        prod1.setAttribute(Product.Attributes.SOCKETS, "2");
+        Pool pool1 = TestUtil.createPool(owner, prod1);
+        pool1.setId("pool1");
+        pool1.setQuantity(5L);
+
+        List<Pool> candidatePools = new ArrayList<>();
+        candidatePools.add(pool1);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, candidatePools, compliance, null, new HashSet<>(),
+            false);
+
+        // pool1 should be removed from candidate pools during the 'validate' step,
+        // so no pools should be found for the consumer.
+        assertEquals(0, bestPools.size());
+    }
+
     @Test
     public void testFindBestWillNotCompleteAPartialStackFromAnotherId() {
         consumer.setFact("cpu.cpu_socket(s)", "8");
