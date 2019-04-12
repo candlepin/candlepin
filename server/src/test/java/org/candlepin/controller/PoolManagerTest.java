@@ -16,6 +16,7 @@ package org.candlepin.controller;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyCollection;
@@ -216,13 +217,8 @@ public class PoolManagerTest {
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(
             dummyComplianceStatus);
 
-        when(consumerCuratorMock.lockAndLoad(any(Consumer.class))).thenAnswer(new Answer<Consumer>() {
-            @Override
-            public Consumer answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                return (Consumer) args[0];
-            }
-        });
+        doAnswer(returnsFirstArg()).when(this.consumerCuratorMock).lock(any(Consumer.class));
+        doAnswer(returnsFirstArg()).when(this.mockPoolCurator).lock(any(Pool.class));
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
@@ -364,7 +360,7 @@ public class PoolManagerTest {
         pool.setId("test-id");
         pools.add(pool);
 
-        when(mockPoolCurator.lockAndLoadByIds(any(Iterable.class))).thenReturn(pools);
+        when(mockPoolCurator.lockAndLoad(any(Iterable.class))).thenReturn(pools);
 
         doNothing().when(mockPoolCurator).batchDelete(eq(pools), anySetOf(String.class));
         manager.deletePools(pools);
@@ -1240,7 +1236,7 @@ public class PoolManagerTest {
         p.setConsumed(1L);
         pools.add(p);
 
-        when(mockPoolCurator.lockAndLoadByIds(anyCollection())).thenReturn(pools);
+        when(mockPoolCurator.lockAndLoad(anyCollection())).thenReturn(pools);
 
         mockPoolsList(pools);
 
@@ -1337,7 +1333,7 @@ public class PoolManagerTest {
         manager.cleanupExpiredPools();
 
         // And the pool should be deleted:
-        when(mockPoolCurator.lockAndLoadByIds(anyCollection())).thenReturn(pools);
+        when(mockPoolCurator.lockAndLoad(anyCollection())).thenReturn(pools);
     }
 
     @Test
@@ -1346,7 +1342,7 @@ public class PoolManagerTest {
         p.setSubscriptionId("subid");
         List<Pool> pools = Arrays.asList(p);
 
-        when(mockPoolCurator.lockAndLoadByIds(anyCollection())).thenReturn(pools);
+        when(mockPoolCurator.lockAndLoad(anyCollection())).thenReturn(pools);
         when(mockPoolCurator.listExpiredPools(anyInt())).thenReturn(pools);
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(new ArrayList<>(p.getEntitlements()));
         Subscription sub = new Subscription();
