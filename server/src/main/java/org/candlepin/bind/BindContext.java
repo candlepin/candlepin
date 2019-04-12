@@ -125,7 +125,8 @@ public class BindContext {
      * locks the pools and replaces the existing entities in poolQuantities.
      */
     public void lockPools() {
-        Collection<Pool> pools = poolCurator.lockAndLoadByIds(poolQuantities.keySet());
+        Collection<Pool> pools = poolCurator.lockAndLoad(poolQuantities.keySet());
+        this.poolCurator.refresh(pools);
         for (Pool pool: pools) {
             poolQuantities.get(pool.getId()).setPool(pool);
         }
@@ -133,7 +134,7 @@ public class BindContext {
 
     public Consumer getLockedConsumer() {
         if (lockedConsumer == null) {
-            lockedConsumer = consumerCurator.lockAndLoad(consumer);
+            lockedConsumer = consumerCurator.lock(consumer);
         }
 
         return lockedConsumer;

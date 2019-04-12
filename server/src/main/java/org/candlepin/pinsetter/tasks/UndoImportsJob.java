@@ -92,7 +92,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
         JobDataMap map = context.getMergedJobDataMap();
         String ownerId = map.getString(JobStatus.TARGET_ID);
         String ownerKey = map.getString(JobStatus.OWNER_ID);
-        Owner owner = this.ownerCurator.lockAndLoadById(ownerId);
+        Owner owner = this.ownerCurator.lockAndLoad(ownerId);
         Principal principal = (Principal) map.get(PinsetterJobListener.PRINCIPAL_KEY);
 
         // TODO: Should we check the principal again here?
