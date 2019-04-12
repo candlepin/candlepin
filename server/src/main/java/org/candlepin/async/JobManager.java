@@ -14,8 +14,13 @@
  */
 package org.candlepin.async;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.inject.Injector;
+import com.google.inject.persist.UnitOfWork;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.PrincipalData;
+import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.PrincipalProvider;
@@ -23,22 +28,18 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.util.Util;
-
-import com.google.inject.Injector;
-import com.google.inject.persist.UnitOfWork;
-
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 
 
 /**
@@ -192,7 +193,20 @@ public class JobManager {
 
         // Retry and runtime configuration...
         job.setMaxAttempts(builder.getRetryCount() + 1);
-        job.setJobData(builder.getJobArguments());
+        Map<String, Object> jobArguments = new HashMap<>(builder.getJobArguments());
+
+        // TODO: Find better way to pass principal to the execution thread.
+        if (principal != null) {
+            try {
+                String toJson = Util.toJson(new PrincipalData(principal.getType(), principal.getName()));
+                jobArguments.put(AsyncJobStatus.PRINCIPAL_KEY, toJson);
+            }
+            catch (JsonProcessingException e) {
+                log.error("Could not parse the principal data");
+            }
+        }
+
+        job.setJobData(Collections.unmodifiableMap(jobArguments));
 
         return job;
     }
@@ -331,6 +345,8 @@ public class JobManager {
      */
     public AsyncJobStatus executeJob(final JobMessage message) throws JobException {
         AsyncJobStatus status = this.fetchJobStatus(message);
+
+        setupPrincipal(status.getJobData());
 
         final Class<? extends AsyncJob> jobClass = getJobClass(message.getJobKey());
         candlepinRequestScope.enter();
@@ -563,4 +579,17 @@ public class JobManager {
         return status;
     }
 
+
+    private void setupPrincipal(final JobDataMap jobData) {
+        // TODO remove this guard check once we have better way to share the principal
+        if (!jobData.containsKey("principal")) {
+            log.warn("Principal data are missing from the job data!");
+            return;
+        }
+        final String principalJson = jobData.getAsString(AsyncJobStatus.PRINCIPAL_KEY);
+        final PrincipalData principal = (PrincipalData) Util.fromJson(principalJson, PrincipalData.class);
+        ResteasyProviderFactory.pushContext(
+            Principal.class,
+            new UserPrincipal(principal.getName(), Collections.emptyList(), false));
+    }
 }
