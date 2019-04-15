@@ -88,7 +88,7 @@ public class EntitlerJobTest extends BaseJobTest{
 
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity(pool, 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner.getKey(), pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         assertNotNull(detail);
         PoolIdAndQuantity[] resultPools = (PoolIdAndQuantity[]) detail.getJobDataMap().get(
                 "pool_and_quantities");
@@ -104,7 +104,7 @@ public class EntitlerJobTest extends BaseJobTest{
 
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity(pool, 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner.getKey(), pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
@@ -143,7 +143,7 @@ public class EntitlerJobTest extends BaseJobTest{
     public void serializeJobDataMapForPool() throws IOException {
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity("pool10", 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner.getKey(), pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         serialize(detail.getJobDataMap());
     }
 
@@ -151,7 +151,7 @@ public class EntitlerJobTest extends BaseJobTest{
     public void recoveryIsFalse() {
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity("pool10", 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner.getKey(), pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         assertFalse(detail.requestsRecovery());
         assertTrue(detail.isDurable());
     }
@@ -166,7 +166,7 @@ public class EntitlerJobTest extends BaseJobTest{
     public void handleException() throws JobExecutionException, EntitlementRefusedException {
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity("pool10", 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner.getKey(), pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         Class<HashMap<String, Integer>> className = (Class<HashMap<String, Integer>>) (Class) Map.class;
@@ -183,7 +183,7 @@ public class EntitlerJobTest extends BaseJobTest{
     public void respondWithValidationErrors() throws JobExecutionException, EntitlementRefusedException {
         PoolIdAndQuantity[] pQs = new PoolIdAndQuantity[1];
         pQs[0] = new PoolIdAndQuantity("pool10", 1);
-        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner.getKey(), pQs);
+        JobDetail detail = EntitlerJob.bindByPoolAndQuantities(consumer, owner, pQs);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 

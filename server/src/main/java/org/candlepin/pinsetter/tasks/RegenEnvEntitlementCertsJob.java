@@ -45,10 +45,8 @@ public class RegenEnvEntitlementCertsJob extends KingpinJob {
 
     @Override
     public void toExecute(JobExecutionContext arg0) throws JobExecutionException {
-        Environment env = (Environment) arg0.getJobDetail().getJobDataMap().get(
-            ENV);
-        Set<String> contentIds = (Set<String>)
-            arg0.getJobDetail().getJobDataMap().get(CONTENT);
+        Environment env = (Environment) arg0.getJobDetail().getJobDataMap().get(ENV);
+        Set<String> contentIds = (Set<String>) arg0.getJobDetail().getJobDataMap().get(CONTENT);
         Boolean lazy = arg0.getMergedJobDataMap().getBoolean(LAZY_REGEN);
 
         this.poolManager.regenerateCertificatesOf(env, contentIds, lazy);

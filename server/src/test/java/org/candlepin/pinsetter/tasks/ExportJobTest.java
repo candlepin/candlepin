@@ -65,8 +65,7 @@ public class ExportJobTest extends BaseJobTest {
         Map<String, String> extData = new HashMap<>();
         extData.put("version", "sat-6.2");
 
-        JobDetail detail = job.scheduleExport(distributor, owner.getKey(), cdnLabel, webappPrefix, apiUrl,
-            extData);
+        JobDetail detail = job.scheduleExport(distributor, owner, cdnLabel, webappPrefix, apiUrl, extData);
         JobDataMap dataMap = detail.getJobDataMap();
 
         assertEquals(dataMap.get(JobStatus.OWNER_ID), owner.getKey());
@@ -93,8 +92,7 @@ public class ExportJobTest extends BaseJobTest {
         when(manifestManager.generateAndStoreManifest(eq(distributor.getUuid()), eq(cdnLabel),
             eq(webappPrefix), eq(apiUrl),  eq(extData))).thenReturn(result);
 
-        JobDetail detail = job.scheduleExport(distributor, owner.getKey(), cdnLabel, webappPrefix, apiUrl,
-            extData);
+        JobDetail detail = job.scheduleExport(distributor, owner, cdnLabel, webappPrefix, apiUrl, extData);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         job.execute(ctx);
 

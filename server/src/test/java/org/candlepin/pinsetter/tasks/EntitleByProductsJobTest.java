@@ -66,7 +66,7 @@ public class EntitleByProductsJobTest extends BaseJobTest {
     public void bindByProductsSetup() {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null, owner.getKey());
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null, owner);
         assertNotNull(detail);
         String[] resultpids = (String[]) detail.getJobDataMap().get("product_ids");
         assertEquals("pid2", resultpids[1]);
@@ -78,7 +78,7 @@ public class EntitleByProductsJobTest extends BaseJobTest {
     public void bindByProductsExec() throws Exception  {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null, owner.getKey());
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null, owner);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
@@ -105,7 +105,7 @@ public class EntitleByProductsJobTest extends BaseJobTest {
     @Test
     public void serializeJobDataMapForProducts() throws IOException {
         String[] pids = {"pid1", "pid2", "pid3"};
-        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null, owner.getKey());
+        JobDetail detail = EntitleByProductsJob.bindByProducts(pids, consumer, null, null, owner);
         serialize(detail.getJobDataMap());
     }
 

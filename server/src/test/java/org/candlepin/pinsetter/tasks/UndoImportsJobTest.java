@@ -181,7 +181,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
 
         this.jobDataMap.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         this.jobDataMap.put(JobStatus.TARGET_ID, owner1.getId());
-        this.jobDataMap.put(UndoImportsJob.OWNER_KEY, owner1.getKey());
+        this.jobDataMap.put(JobStatus.OWNER_ID, owner1.getKey());
         this.jobDataMap.put(PinsetterJobListener.PRINCIPAL_KEY, principal);
 
         beginTransaction(); //since we locking owner we need start transaction

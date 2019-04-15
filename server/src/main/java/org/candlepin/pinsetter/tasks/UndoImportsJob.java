@@ -64,7 +64,6 @@ public class UndoImportsJob extends UniqueByEntityJob {
     private static Logger log = LoggerFactory.getLogger(UndoImportsJob.class);
 
     public static final String LAZY_REGEN = "lazy_regen";
-    public static final String OWNER_KEY = "owner_key";
     public static final String JOB_NAME_PREFIX = "undo_imports_";
 
     protected I18n i18n;
@@ -102,7 +101,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
         try {
             JobDataMap map = context.getMergedJobDataMap();
             String ownerId = map.getString(JobStatus.TARGET_ID);
-            String ownerKey = map.getString(OWNER_KEY);
+            String ownerKey = map.getString(JobStatus.OWNER_ID);
             Owner owner = this.ownerCurator.lockAndLoadById(ownerId);
             Boolean lazy = map.getBoolean(LAZY_REGEN);
             Principal principal = (Principal) map.get(PinsetterJobListener.PRINCIPAL_KEY);
@@ -212,9 +211,10 @@ public class UndoImportsJob extends UniqueByEntityJob {
      */
     public static JobDetail forOwner(Owner owner, Boolean lazy) {
         JobDataMap map = new JobDataMap();
+        map.put(JobStatus.OWNER_ID, owner.getKey());
+        map.put(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel());
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getId());
-        map.put(OWNER_KEY, owner.getKey());
         map.put(LAZY_REGEN, lazy);
         map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
 

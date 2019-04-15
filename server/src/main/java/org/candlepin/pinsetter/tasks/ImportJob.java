@@ -122,6 +122,7 @@ public class ImportJob extends UniqueByEntityJob {
         ConflictOverrides overrides) {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.OWNER_ID, owner.getKey());
+        map.put(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel());
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put(STORED_FILE_ID, storedFileId);
