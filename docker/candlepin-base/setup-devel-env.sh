@@ -82,7 +82,7 @@ set -v
 # Install all ruby deps
 gem update --system
 gem install bundler
-bundle install
+bundle install --without=proton
 
 # Installs all Java deps into the image, big time saver
 # We run checkstyle explicitly here so it'll pull down its deps as well
