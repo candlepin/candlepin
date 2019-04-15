@@ -30,18 +30,18 @@ if not ARGV.empty?
   end
 end
 
-data = {'products'=> [], 'content'=> [], 'owners'=> [], 'users'=> [], 'roles'=> []}
+$data = {'products'=> [], 'content'=> [], 'owners'=> [], 'users'=> [], 'roles'=> []}
 @sourceSubId = 0
 
 filenames.each do |filename|
   # puts filename
   product_data_buf = File.read(filename)
   product_data = JSON(product_data_buf, {})
-  data['products'] = data.fetch('products') + product_data['products'] unless product_data['products'].nil?
-  data['content'] = data.fetch('content') + product_data['content'] unless product_data['content'].nil?
-  data['owners'] = data.fetch('owners') + product_data['owners'] unless product_data['owners'].nil?
-  data['users'] = data.fetch('users') + product_data['users'] unless product_data['users'].nil?
-  data['roles'] = data.fetch('roles') + product_data['roles'] unless product_data['roles'].nil?
+  $data['products'] = $data.fetch('products') + product_data['products'] unless product_data['products'].nil?
+  $data['content'] = $data.fetch('content') + product_data['content'] unless product_data['content'].nil?
+  $data['owners'] = $data.fetch('owners') + product_data['owners'] unless product_data['owners'].nil?
+  $data['users'] = $data.fetch('users') + product_data['users'] unless product_data['users'].nil?
+  $data['roles'] = $data.fetch('roles') + product_data['roles'] unless product_data['roles'].nil?
 end
 
 cp = Candlepin.new('admin', 'admin', nil, nil, 'localhost', 8443)
@@ -63,7 +63,7 @@ def create_owner(cp, new_owner)
 end
 
 thread_pool = ThreadPool.new(5)
-data['owners'].each do |new_owner|
+$data['owners'].each do |new_owner|
     thread_pool.schedule(new_owner) do |new_owner|
         create_owner(cp, new_owner)
     end
@@ -85,7 +85,7 @@ end
 
 print "\nCreate some users\n"
 thread_pool = ThreadPool.new(5)
-data['users'].each do |new_user|
+$data['users'].each do |new_user|
     thread_pool.schedule(new_user) {|new_user| create_user(cp, new_user) }
 end
 thread_pool.shutdown
@@ -118,18 +118,14 @@ def create_role(cp, new_role)
 end
 
 thread_pool = ThreadPool.new(5)
-data['roles'].each do |new_role|
+$data['roles'].each do |new_role|
     thread_pool.schedule(new_role) {|new_role| create_role(cp, new_role) }
 end
 thread_pool.shutdown
 
 
-
-# import all the content sets
-print "\nImporting content set data...\n"
-
-def create_content(cp, owner, content)
-  print "#{owner['name']}/#{content['name']}\n"
+def create_content(cp, owner, product, content)
+  print "#{owner['name']}/#{product['id']}/#{content['name']}\n"
 
   params = {}
   modified_products = content['modified_products'] || []
@@ -141,35 +137,25 @@ def create_content(cp, owner, content)
     params[:required_tags] = content['required_tags']
   end
 
-  params[:content_url] = content['content_url']
+  params[:content_url] = content['content_url'] + '/' + product['id'].to_s
   params[:arches] = content['arches']
   params[:gpg_url] = content['gpg_url']
   params[:modified_products] = modified_products
 
+  content_name = product['id'].to_s + '-' + content['name']
+  content_id = product['id'].to_s + content['id'].to_s
+  content_label = product['id'].to_s + '-' + content['label']
+
   cp.create_content(
     owner['name'],
-    content['name'],
-    content['id'],
-    content['label'],
+    content_name,
+    content_id,
+    content_label,
     content['type'],
     content['vendor'],
     params
   )
 end
-
-thread_pool = ThreadPool.new(5)
-data['owners'].each do |owner|
-  if owner.has_key?('content')
-    owner['content'].each do |content|
-      thread_pool.schedule(owner, content) {|owner, content| create_content(cp, owner, content) }
-    end
-  end
-
-  data['content'].each do |content|
-    thread_pool.schedule(owner, content) {|owner, content| create_content(cp, owner, content) }
-  end
-end
-thread_pool.shutdown
 
 
 owners = cp.list_owners({:fetch => true})
@@ -214,6 +200,27 @@ def create_product(cp, owner, product)
   return product_ret
 end
 
+
+def find_content(content_id)
+  $data['owners'].each do |owner|
+    if owner.has_key?('content')
+      owner['content'].each do |content|
+        if content['id'] == content_id
+          return content
+        end
+      end
+    end
+
+    $data['content'].each do |content|
+      if content['id'] == content_id
+        return content
+      end
+    end
+  end
+  return nil
+end
+
+
 def create_eng_product(cp, owner, product)
   product_ret = create_product(cp, owner, product)
   product_content = product['content'] || []
@@ -224,9 +231,19 @@ def create_eng_product(cp, owner, product)
   cert_file.puts(product_cert['cert'])
 
   if not product_content.empty?
-    cp.add_all_content_to_product(owner['name'], product_ret['id'], product_content)
+    product_content.each do |content_id, enabled|
+      content = find_content(content_id)
+      if content != nil
+        create_content(cp, owner, product, content)
+      end
+    end
+    # Modify IDs of content in product_content to mach ids used in create_content
+    prod_id = product['id'].to_s
+    mod_prod_content = product_content.map {|content_id, enabled| [prod_id + content_id.to_s, enabled]}
+    cp.add_all_content_to_product(owner['name'], product_ret['id'], mod_prod_content)
   end
 end
+
 
 def create_mkt_product_and_pools(cp, owner, product)
   product_ret = create_product(cp, owner, product)
@@ -327,7 +344,7 @@ end
 eng_products = []
 mkt_products = []
 
-data['owners'].each do |owner|
+$data['owners'].each do |owner|
     if owner.has_key?('products')
         owner['products'].each do |product|
             if product['type'] == 'MKT'
@@ -338,7 +355,7 @@ data['owners'].each do |owner|
         end
     end
 
-    data['products'].each do |product|
+    $data['products'].each do |product|
         if product['type'] == 'MKT'
             mkt_products << [owner, product]
         else

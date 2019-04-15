@@ -357,7 +357,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-docker-images",
             "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
-            "packages": ["awesome-sheep", "flying-fish"]
+            "packages": []
         },
         {
             "name": "awesomeos-ostree",
@@ -367,7 +367,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-ostree",
             "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
-            "packages": ["awesome-sheep", "fluffy-snake"]
+            "packages": []
         }
     ],
     "owners": [
@@ -815,7 +815,7 @@
     ],
     "products": [
         {
-            "name": "Clustering Bits",
+            "name": "Clustering Bits (no content)",
             "id": "37065",
             "attributes": {
                     "sockets": 2,
@@ -824,7 +824,7 @@
             "content": []
         },
         {
-            "name": "Load Balancing Bits",
+            "name": "Load Balancing Bits (no content)",
             "id": "37070",
             "attributes": {
                 "sockets": 2,
@@ -834,7 +834,7 @@
             "content": []
         },
         {
-            "name": "Shared Storage Bits",
+            "name": "Shared Storage Bits (no content)",
             "id": "37067",
             "attributes": {
                 "sockets": 2,
@@ -844,7 +844,7 @@
             "content": []
         },
         {
-            "name": "Large File Support Bits",
+            "name": "Large File Support Bits (no content)",
             "id": "37068",
             "attributes": {
                 "sockets": 2,
@@ -854,7 +854,7 @@
             "content": []
         },
         {
-            "name": "Management Bits",
+            "name": "Management Bits (no content)",
             "id": "37069",
             "attributes": {
                 "sockets": 2,
@@ -864,7 +864,7 @@
             "content": []
         },
         {
-            "name": "Shared File System Bits",
+            "name": "Shared File System Bits (no content)",
             "id": "88888",
             "attributes": {
                 "sockets": 1,
@@ -891,7 +891,7 @@
             ]
         },
         {
-            "name": "Awesome Hypervisor Bits",
+            "name": "Awesome Hypervisor Bits (no content)",
             "id": "98121",
             "version": "6.1",
             "attributes": {
@@ -1021,7 +1021,7 @@
             }
         },
         {
-            "name": "Awesome OS Server Basic (dc-virt)",
+            "name": "Awesome OS Server Basic (dc-virt, no content)",
             "id": "awesomeos-server-basic-vdc",
             "type": "MKT",
             "version": "0.1",
@@ -1393,7 +1393,7 @@
             ]
         },
         {
-            "name": "Awesome OS for All Arch (excpt for x86_64 content)",
+            "name": "Awesome OS for All Arch (except for x86_64 content)",
             "id": "awesomeos-all-no-86_64-cont",
             "version": "3.11",
             "arch": "ALL",
@@ -1718,7 +1718,7 @@
             }
         },
         {
-            "name": "Awesome OS Super Hypervisor",
+            "name": "Awesome OS Super Hypervisor (no content)",
             "id": "awesomeos-super-hypervisor",
             "version": "6.1",
             "type": "MKT",
