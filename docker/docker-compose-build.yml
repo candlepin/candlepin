@@ -5,9 +5,6 @@ services:
   candlepin-base:
     build: candlepin-base/
     image: ${REGISTRY}/candlepin-base
-  candlepin-rhel6:
-    build: candlepin-rhel6/
-    image: ${REGISTRY}/candlepin-rhel6
   candlepin-rhel7:
     build: candlepin-rhel7/
     image: ${REGISTRY}/candlepin-rhel7
