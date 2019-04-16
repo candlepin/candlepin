@@ -1,0 +1,365 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+
+  Checkstyle configuration that checks the sun coding conventions from:
+
+  - the Java Language Specification at
+    http://java.sun.com/docs/books/jls/second_edition/html/index.html
+
+  - the Sun Code Conventions at http://java.sun.com/docs/codeconv/
+
+  - the Javadoc guidelines at
+    http://java.sun.com/j2se/javadoc/writingdoccomments/index.html
+
+  - the JDK Api documentation http://java.sun.com/j2se/docs/api/index.html
+
+  - some best practices
+
+  Checkstyle is very configurable. Be sure to read the documentation at
+  http://checkstyle.sourceforge.net (or in your downloaded distribution).
+
+  Most Checks are configurable, be sure to consult the documentation.
+
+  To completely disable a check, just comment it out or delete it from the file.
+
+  Finally, it is worth reading the documentation.
+
+  http://checkstyle.sourceforge.net/config.html
+
+-->
+
+<module name="Checker">
+  <module name="SuppressWarningsFilter"/>
+  <module name="SuppressionFilter">
+    <property name="file" value="${config_loc}/suppressions.xml"/>
+  </module>
+
+  <module name="RegexpSingleline">
+     <property name="format" value="\s+$"/>
+     <property name="minimum" value="0"/>
+     <property name="maximum" value="0"/>
+     <property name="message" value="Line has trailing spaces."/>
+  </module>
+  <!--
+     Checks whether files end with a new line.
+     See http://checkstyle.sourceforge.net/config_misc.html#NewlineAtEndOfFile
+    -->
+  <module name="NewlineAtEndOfFile" />
+
+  <!--
+     Checks that property files contain the same keys.
+     See http://checkstyle.sourceforge.net/config_misc.html#Translation
+   -->
+  <module name="Translation"/>
+
+  <!--
+     ##########################################################################
+     HEADERS
+     http://checkstyle.sourceforge.net/config_header.html
+     ##########################################################################
+   -->
+  <module name="RegexpHeader">
+    <property name="header" value="^/\*\*$\n^ \* Copyright \(c\) 20\d\d - 20\d\d Red Hat, Inc.$"/>
+  </module>
+  <module name="Header">
+    <property name="headerFile" value="${config_loc}/HEADER.txt" />
+    <!-- The copyright date line gets checked by the RegexpHeader module -->
+    <property name="ignoreLines" value="2"/>
+  </module>
+
+  <!--
+     #######################################################################
+     WHITESPACE
+     the ones that could not be initialized inside TreeWalker.
+     See http://checkstyle.sourceforge.net/config_whitespace.html
+     #######################################################################
+   -->
+  <module name="FileTabCharacter"/>
+
+  <!--
+     FileSetCheck TreeWalker checks individual Java source files and defines
+     properties that are applicable to checking such files.
+   -->
+  <module name="TreeWalker">
+    <!--
+      Allows us to use @SuppressWarnings to turn off Checkstyle on specific elements.
+
+      Eclipse will complain about unknown tokens in @SuppressWarnings, but you can turn off this warning.
+      Go to Preferences -> Java -> Compiler -> Errors/Warnings
+      Go to the Annotations section and set "Unhandled token in @SuppressWarnings" to Ignore.
+
+      See http://stackoverflow.com/a/22556386
+    -->
+    <module name="SuppressWarningsHolder"/>
+
+    <!--
+       caches information about files that have checked ok; used to avoid
+       repeated checks of the same files
+       <property name="cacheFile" value="./target/checkstyle.cache.src"/>
+     -->
+    <property name="tabWidth" value="4"/>
+
+    <!--
+       #######################################################################
+       ANNOTATION CHECKS
+       #######################################################################
+     -->
+    <module name="AnnotationUseStyle">
+      <property name="elementStyle" value="compact" />
+      <property name="closingParens" value="never" />
+      <property name="trailingArrayComma" value="never" />
+    </module>
+
+    <module name="MissingDeprecated" />
+
+    <!-- Force usage of the Java 7 diamond operator -->
+    <module name="org.candlepin.checks.DiamondOperatorForVariableDefinitionCheck" />
+
+    <!--
+       #######################################################################
+       BLOCK CHECKS
+       See http://checkstyle.sourceforge.net/config_blocks.html
+       #######################################################################
+     -->
+
+    <module name="EmptyBlock">
+      <property name="option" value="text"/>
+    </module>
+    <!-- defaults to end of line -->
+    <module name="LeftCurly">
+      <property name="tokens" value="ANNOTATION_DEF, CLASS_DEF, CTOR_DEF, ENUM_DEF, ENUM_CONSTANT_DEF, INTERFACE_DEF, LITERAL_CATCH, LITERAL_DO, LITERAL_ELSE, LITERAL_FINALLY, LITERAL_FOR, LITERAL_SWITCH, LITERAL_SYNCHRONIZED, LITERAL_TRY, LITERAL_WHILE, METHOD_DEF, STATIC_INIT" />
+    </module>
+    <module name="NeedBraces"/>
+    <module name="RightCurly">
+      <property name="option" value="alone"/>
+    </module>
+    <module name="AvoidNestedBlocks"/>
+
+    <!--
+       #######################################################################
+       CLASS DESIGN
+       See http://checkstyle.sourceforge.net/config_design.html
+       #######################################################################
+     -->
+    <module name="VisibilityModifier">
+      <property name="protectedAllowed" value="true" />
+      <property name="packageAllowed" value="true" />
+    </module>
+    <module name="InterfaceIsType"/>
+    <module name="HideUtilityClassConstructor"/>
+    <module name="ThrowsCount">
+      <property name="max" value="4" />
+    </module>
+
+    <!--
+       #######################################################################
+       CODING
+       See http://checkstyle.sourceforge.net/config_coding.html
+       #######################################################################
+     -->
+    <module name="EmptyStatement"/>
+    <module name="EqualsHashCode"/>
+    <module name="IllegalInstantiation"/>
+    <module name="InnerAssignment"/>
+    <module name="MissingSwitchDefault"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="SuperFinalize"/>
+
+    <!--
+       #######################################################################
+       IMPORTS
+       See http://checkstyle.sourceforge.net/config_imports.html
+       #######################################################################
+     -->
+    <module name="AvoidStarImport">
+        <property name="allowStaticMemberImports" value="true"/>
+    </module>
+    <module name="IllegalImport">
+      <!-- Ban Junit 3 namespace -->
+      <property name="illegalPkgs" value="junit"/>
+    </module>
+
+    <!-- This module should be suppressed in our test classes since we use BouncyCastle there to compare
+    our results against what BouncyCastle calculates -->
+    <module name="IllegalImport">
+      <property name="id" value="IllegalImportBouncyCastle"/>
+      <property name="illegalPkgs" value="org.bouncycastle"/>
+    </module>
+
+    <module name="RedundantImport"/>
+    <module name="UnusedImports"/>
+    <module name="ImportOrder">
+      <!-- Static imports should go at the top of the import list -->
+      <property name="option" value="top"/>
+      <property name="ordered" value="false"/>
+      <!-- ImportOrder is nice in theory, but in practice Eclipse's auto-import ordering can slightly
+         mismatch with what this module requires. -->
+      <!--<property name="groups" value="org.candlepin,com.redhat.rhn,com,org,net,ch,java,javax"/>-->
+      <!--<property name="separated" value="true"/>-->
+
+    </module>
+
+    <!--
+       #######################################################################
+       JAVADOC COMMENTS
+       See http://checkstyle.sourceforge.net/config_javadoc.html
+       #######################################################################
+     -->
+    <module name="JavadocType">
+      <property name="id" value="JavadocTypeMain" />
+      <property name="scope" value="package" />
+    </module>
+    <module name="JavadocType">
+      <property name="id" value="JavadocTypeTest" />
+      <property name="scope" value="nothing" />
+    </module>
+    <module name="JavadocMethod">
+      <property name="id" value="JavadocMethodMain"/>
+      <property name="scope" value="public" />
+      <property name="allowUndeclaredRTE" value="true" />
+      <property name="allowThrowsTagsForSubclasses" value="false" />
+      <property name="allowMissingParamTags" value="true" />
+      <property name="allowMissingThrowsTags" value="true" />
+      <property name="allowMissingReturnTag" value="false" />
+      <property name="allowMissingPropertyJavadoc" value="true" />
+      <property name="allowMissingJavadoc" value="true" />
+    </module>
+    <module name="JavadocMethod">
+      <property name="id" value="JavadocMethodTest"/>
+      <property name="scope" value="nothing" />
+      <property name="allowUndeclaredRTE" value="true" />
+      <property name="allowThrowsTagsForSubclasses" value="true" />
+      <property name="allowMissingParamTags" value="true" />
+      <property name="allowMissingThrowsTags" value="true" />
+      <property name="allowMissingReturnTag" value="true" />
+      <property name="allowMissingPropertyJavadoc" value="true" />
+      <property name="allowMissingJavadoc" value="true" />
+    </module>
+
+    <module name="JavadocVariable">
+      <property name="id" value="JavadocVariableMain"/>
+      <property name="scope" value="package" />
+      <property name="severity" value="ignore"/>
+    </module>
+
+    <module name="JavadocVariable">
+      <property name="id" value="JavadocVariableTest"/>
+      <property name="scope" value="nothing" />
+      <property name="severity" value="ignore"/>
+    </module>
+
+    <!--
+       #######################################################################
+       MISCELLANEOUS
+       See http://checkstyle.sourceforge.net/config_misc.html
+       #######################################################################
+     -->
+    <module name="UpperEll"/>
+    <module name="ArrayTypeStyle"/>
+    <module name="UpperEll"/>
+    <module name="Indentation">
+      <property name="forceStrictCondition" value="true" />
+    </module>
+
+    <!--
+       #######################################################################
+       MODIFIERS
+       See http://checkstyle.sourceforge.net/config_modifier.html
+       #######################################################################
+     -->
+    <module name="ModifierOrder"/>
+    <module name="RedundantModifier">
+      <property name="tokens" value="METHOD_DEF, VARIABLE_DEF, ANNOTATION_FIELD_DEF, INTERFACE_DEF, CLASS_DEF"/>
+    </module>
+
+    <!--
+       #######################################################################
+       NAMING CONVENTIONS
+       See http://checkstyle.sourceforge.net/config_naming.html
+       #######################################################################
+     -->
+    <module name="ConstantName">
+      <property name="format" value="^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$|^log$"/>
+    </module>
+    <module name="LocalFinalVariableName"/>
+    <module name="LocalVariableName"/>
+    <module name="MethodName"/>
+    <module name="PackageName">
+      <property name="format" value="^[a-z]+(\.[A-Za-z][A-Za-z0-9]*)*$"/>
+    </module>
+    <module name="ParameterName"/>
+    <module name="StaticVariableName"/>
+    <module name="TypeName"/>
+
+    <!--
+       #######################################################################
+       SIZES
+       See http://checkstyle.sourceforge.net/config_sizes.html
+       #######################################################################
+     -->
+    <module name="LineLength">
+      <property name="ignorePattern" value="import"/>
+      <property name="max" value="110"/>
+    </module>
+    <module name="MethodLength">
+       <property name="tokens" value="METHOD_DEF"/>
+       <property name="max" value="100"/>
+       <property name="countEmpty" value="false"/>
+    </module>
+    <module name="ParameterNumber">
+      <property name="max" value="30"/>
+    </module>
+
+    <!--
+       #######################################################################
+       WHITESPACE
+       See http://checkstyle.sourceforge.net/config_whitespace.html
+       #######################################################################
+     -->
+    <module name="GenericWhitespace"/>
+    <module name="EmptyForInitializerPad"/>
+    <module name="EmptyForIteratorPad"/>
+    <module name="MethodParamPad">
+      <property name="allowLineBreaks" value="true"/>
+    </module>
+    <module name="NoWhitespaceAfter">
+      <property name="tokens" value="BNOT, DEC, DOT, INC, LNOT, UNARY_MINUS,
+        UNARY_PLUS"/>
+    </module>
+    <module name="NoWhitespaceBefore">
+      <property name="tokens" value="SEMI, POST_DEC, POST_INC"/>
+    </module>
+    <module name="OperatorWrap">
+      <property name="option" value="eol" />
+    </module>
+    <module name="ParenPad"/>
+    <module name="WhitespaceAfter">
+      <property name="tokens" value="COMMA, SEMI, TYPECAST"/>
+    </module>
+    <module name="WhitespaceAround">
+      <property name="tokens" value="ASSIGN, BAND, BAND_ASSIGN, BOR,
+        BOR_ASSIGN, BSR, BSR_ASSIGN, BXOR, BXOR_ASSIGN, COLON, DIV,
+        DIV_ASSIGN, EQUAL, GE, GT, LAND, LE, LITERAL_ASSERT,
+        LITERAL_CATCH, LITERAL_DO, LITERAL_ELSE, LITERAL_FINALLY,
+        LITERAL_FOR, LITERAL_IF, LITERAL_RETURN, LITERAL_SYNCHRONIZED,
+        LITERAL_TRY, LITERAL_WHILE, LOR, LT, MINUS, MINUS_ASSIGN, MOD,
+        MOD_ASSIGN, NOT_EQUAL, PLUS, PLUS_ASSIGN, QUESTION,
+        SL, SLIST, SL_ASSIGN, SR, SR_ASSIGN, STAR, STAR_ASSIGN,
+        TYPE_EXTENSION_AND"/>
+    </module>
+
+    <!--
+       #######################################################################
+       Resource swagger annotations
+       #######################################################################
+    -->
+    <module name="org.candlepin.checks.ResourceSwaggerCheck"/>
+  </module>
+</module>
+
+<!-- vim: set expandtab sts=2 sw=2 ai: -->

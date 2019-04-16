@@ -3,6 +3,7 @@
 plugins {
     id "nebula.lint" version "10.1.2"
     id "org.candlepin.gradle.SpecVersion"
+    id "checkstyle"
 }
 
 version = "2.0"
@@ -139,13 +140,12 @@ allprojects {
 //    criticalRules = ["unused-dependency"]
     }
 
-    // Disable all transitive dependencies except junit
-    configurations.all {
+    // Disable all transitive dependencies except junit in the default configuration
+    configurations.default {
         dependencies.matching { !it.group.contains("junit") || !it.name.contains("junit") }.all {
             transitive = false
         }
     }
-
 }
 
 subprojects {
@@ -174,10 +174,6 @@ subprojects {
 // Add checkstyle to just the common & server projects
 configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "candlepin" }) {
     apply plugin: "checkstyle"
-    configurations {
-        checkstyle
-    }
-
     ext {
         logdriver_class = "net.rkbloom.logdriver.LogDriver"
         use_logdriver = "true".equals(project.findProperty("logdriver"))
@@ -212,15 +208,7 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
     }
 
     checkstyle {
-        configFile = file("${rootProject.rootDir}/project_conf/checks.xml")
-        configProperties = [
-            "checkstyle.header.file": file("${rootProject.rootDir}/project_conf/HEADER.txt").getCanonicalPath(),
-            "javadoc.type.scope": "package",
-            "javadoc.method.scope": "public",
-            "javadoc.lazy": "false",
-            "javadoc.missing.param": "true",
-            "javadoc.var.scope": "public",
-            "checkstyle.cache.file": file("${project.buildDir}/cache/checkstyle.cache.src").getCanonicalPath()]
+        toolVersion = "$versions.checkstyle"
     }
 
     dependencies {
