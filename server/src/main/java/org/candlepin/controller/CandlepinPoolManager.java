@@ -632,6 +632,7 @@ public class CandlepinPoolManager implements PoolManager {
         Set<String> existingPoolIds = new HashSet<>();
         Set<Pool> poolsToDelete = new HashSet<>();
         Set<Pool> poolsToRegenEnts = new HashSet<>();
+        List<Pool> poolsQtyUpdated = new LinkedList<>();
         Set<String> entitlementsToRegen = new HashSet<>();
 
         // Get our list of pool IDs so we can check which of them still exist in the DB...
@@ -667,10 +668,7 @@ public class CandlepinPoolManager implements PoolManager {
             // quantity has changed. delete any excess entitlements from pool
             // the quantity has not yet been expressed on the pool itself
             if (updatedPool.getQuantityChanged()) {
-                RevocationOp revPlan = new RevocationOp(this.poolCurator, this.consumerTypeCurator,
-                    Collections.singletonList(existingPool));
-
-                revPlan.execute(this);
+                poolsQtyUpdated.add(existingPool);
             }
 
             // dates changed. regenerate all entitlement certificates
@@ -694,6 +692,14 @@ public class CandlepinPoolManager implements PoolManager {
         // Flush our merged changes
         if (flush) {
             this.poolCurator.flush();
+        }
+
+        // Check if we need to execute the revocation plan
+        if (poolsQtyUpdated.size() > 0) {
+            RevocationOp revPlan = new RevocationOp(this.poolCurator, this.consumerTypeCurator,
+                poolsQtyUpdated);
+
+            revPlan.execute(this);
         }
 
         // Fetch entitlement IDs for updated pools...

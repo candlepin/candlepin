@@ -89,9 +89,11 @@ public class RevocationOp {
                 overflowing.add(pool);
             }
         }
+
         if (overflowing.isEmpty()) {
             return;
         }
+
         overflowing = poolCurator.lock(overflowing);
         for (Pool pool : overflowing) {
             poolNewConsumed.put(pool, pool.getConsumed());
@@ -104,8 +106,10 @@ public class RevocationOp {
             // we then start revoking the existing entitlements
             determineExcessEntitlements(pool);
         }
+
         // revoke the entitlements amassed above
         poolManager.revokeEntitlements(new ArrayList<>(entitlementsToRevoke));
+
         // here is where we actually change the source entitlement quantities for the shared pools.
         // We have to wait until we get here so that share pool entitlements we want revoked are gone
         for (Entitlement entitlement : shareEntitlementsToAdjust.keySet()) {
