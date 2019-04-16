@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # USAGE: smoke-test.py <image_name> <cp_repo_url>
-# Example: smoke-test.py candlepin/candlepin-rhel6-base http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-6-build/latest/x86_64
+# Example: smoke-test.py candlepin/candlepin-rhel7-base http://download.devel.redhat.com/brewroot/repos/candlepin-mead-rhel-7-build/latest/x86_64
 
 import json
 import os
@@ -68,8 +68,8 @@ parser.add_option("-r", "--rpm",
 if len(args) < 2:
     script_file = os.path.basename(__file__)
     print "USAGE: %s [-t #][-l #] <image_name> <cp_repo_url>" % script_file
-    print "Example: %s candlepin/candlepin-rhel6 http://download.devel.redhat.com/brewroot/repos/" \
-        "candlepin-mead-rhel-6-build/latest/x86_64" % script_file
+    print "Example: %s candlepin/candlepin-rhel7 http://download.devel.redhat.com/brewroot/repos/" \
+        "candlepin-mead-rhel-7-build/latest/x86_64" % script_file
 
     sys.exit(1)
 

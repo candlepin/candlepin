@@ -238,7 +238,7 @@ else
 fi
 
 # Make sure we update the ruby bundle:
-bundle install
+bundle install --without=proton
 mkdir -p /var/log/candlepin
 
 # Setup our tee pipe
