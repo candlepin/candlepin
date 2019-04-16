@@ -63,6 +63,14 @@
         {
             "name": "fluffy-snake",
             "version": "1"
+        },
+        {
+            "name": "awesome-dummy-docker-conf",
+            "version": "1"
+        },
+        {
+            "name": "awesome-dummy-ostree-conf",
+            "version": "1"
         }
     ],
     "content": [
@@ -357,7 +365,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-docker-images",
             "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
-            "packages": []
+            "packages": ["awesome-dummy-docker-conf"]
         },
         {
             "name": "awesomeos-ostree",
@@ -367,7 +375,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-ostree",
             "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
-            "packages": []
+            "packages": ["awesome-dummy-ostree-conf"]
         }
     ],
     "owners": [

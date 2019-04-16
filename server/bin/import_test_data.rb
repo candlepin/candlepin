@@ -125,7 +125,7 @@ thread_pool.shutdown
 
 
 def create_content(cp, owner, product, content)
-  print "#{owner['name']}/#{product['id']}/#{content['name']}\n"
+  print "\t content: #{owner['name']}/#{content['name']}/#{product['id']}\n"
 
   params = {}
   modified_products = content['modified_products'] || []

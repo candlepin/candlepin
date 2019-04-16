@@ -88,6 +88,8 @@ CANDLEPIN_PASS = 'admin'
 
 TEST_DATA_JSON_MTIME = 0.0
 
+CERT_DIR = 'generated_certs'
+
 
 def run_command(command, verbose=False):
     """
@@ -157,25 +159,13 @@ def create_repo_definition(product, content):
     return repo_definition
 
 
-def get_repo_definitions(test_data):
+def get_repo_definitions_for_products(product_definitions, content_definitions):
     """
-    Get list of repositories from test_data
+    Try to get list of repository definitions from list of product definitions
+    and list of content_definitions that are used by products.
     """
-
-    if test_data is None:
-        return []
-
     repo_definitions = []
-
-    try:
-        content_definitions = test_data['content']
-    except KeyError as err:
-        print('Info: Test data does not include any global definition of content')
-        content_definitions = []
-
-    # There can be some "global" definitions of content shared between several products
-    content_definitions = test_data.get('content', [])
-    for product in test_data['products']:
+    for product in product_definitions:
         product_contents = product.get('content', [])
         for prod_cont in product_contents:
             content_id = prod_cont[0]
@@ -185,6 +175,33 @@ def get_repo_definitions(test_data):
                 continue
             repo = create_repo_definition(product, content)
             repo_definitions.append(repo)
+    return repo_definitions
+
+
+def get_repo_definitions(test_data):
+    """
+    Get list of repository definitions from test_data
+    """
+
+    if test_data is None:
+        return []
+
+    repo_definitions = []
+
+    # There can be some "global" definitions of content shared between several products
+    try:
+        product_definitions = test_data['products']
+    except KeyError as err:
+        print('Info: Test data does not include any global definition of products')
+        product_definitions = []
+    try:
+        content_definitions = test_data['content']
+    except KeyError as err:
+        print('Info: Test data does not include any global definition of contents')
+        content_definitions = []
+
+    glob_repo_defs = get_repo_definitions_for_products(product_definitions, content_definitions)
+    repo_definitions.extend(glob_repo_defs)
 
     # There can be also some content specific for owners
     try:
@@ -194,27 +211,16 @@ def get_repo_definitions(test_data):
     
     for owner in owners:
         try:
-            owner_contents = owner['content']
+            owner_product_definitions = owner['products']
         except KeyError as err:
             continue
-
         try:
-            owner_products = owner['products']
+            owner_content_definitions = owner['content']
         except KeyError as err:
             continue
 
-        for product in owner_products:
-            owners_repos = []
-            product_contents = product.get('content', [])
-            for prod_cont in product_contents:
-                content_id = prod_cont[0]
-                content = find_content(owner_contents, content_id)
-                if content is None:
-                    print("Info: unable to find content_id: %s in definition of product: %s" % (content_id, product['name']))
-                    continue
-                repo = create_repo_definition(product, content)
-                owners_repos.append(repo)
-            repo_definitions.extend(owners_repos)
+        owners_repo_defs = get_repo_definitions_for_products(owner_product_definitions, owner_content_definitions)
+        repo_definitions.extend(owners_repo_defs)
     
     return repo_definitions
 
@@ -347,12 +353,25 @@ def generate_repositories(repo_definitions, package_definitions):
     owner_names = get_owners()
     generate_symlinks_for_owners(owner_names)
 
+
 def get_productid_cert(repo_definition, owner='admin'):
     """
     This function tries to get product-id certificate for given repository
     """
     product_id = repo_definition['product_id']
 
+    # Try to read certificate from cached file
+    cert_path = os.path.join(CERT_DIR, str(product_id) + '.pem')
+    try:
+        with open(cert_path, 'r') as fp:
+            cert = fp.read()
+    except IOError as err:
+        pass
+    else:
+        return cert
+
+    # When the certificate cannot be found on the disk, then try to get certificate
+    # from the candlepin server
     try:
         r = requests.get(
             CANLDEPIN_SERVER_BASE_URL + 'owners/' + owner + '/products/' + str(product_id) + '/certificate',
@@ -371,6 +390,14 @@ def get_productid_cert(repo_definition, owner='admin'):
         cert = json_data['cert']
     except KeyError:
         return None
+
+    # When certificate was successfully downloaded from the server, then try to
+    # save the certificate to the file
+    try:
+        with open(cert_path, 'w') as fp:
+            fp.write(cert)
+    except IOError as err:
+        pass
 
     return cert
 
@@ -412,7 +439,7 @@ def create_dummy_package(package, expect_script_path):
     rpm_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'RPMS', arch, rpm_file_name)
 
     # Creating and signing many RPM packages can be time consuming. So, if RPM
-    # package aready exists, then it is not created again.
+    # package already exists, then it is not created again.
     if os.path.isfile(rpm_file_path):
         rpm_mtime = os.path.getmtime(rpm_file_path)
         if rpm_mtime > TEST_DATA_JSON_MTIME:
