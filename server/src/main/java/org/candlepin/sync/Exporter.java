@@ -150,10 +150,6 @@ public class Exporter {
         this.translator = translator;
     }
 
-    public File getFullExport(Consumer consumer) throws ExportCreationException {
-        return getFullExport(consumer, null, null, null, new HashMap<>());
-    }
-
     /**
      * Creates a manifest archive for the target {@link Consumer}.
      *
@@ -286,13 +282,6 @@ public class Exporter {
         return archive;
     }
 
-
-
-    /**
-     * @param out
-     * @param exportDir
-     * @throws IOException
-     */
     private void addFilesToArchive(ZipOutputStream out, int charsToDropFromName,
         File directory) throws IOException {
         for (File file : directory.listFiles()) {

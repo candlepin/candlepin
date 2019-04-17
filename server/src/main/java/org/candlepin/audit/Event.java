@@ -205,7 +205,7 @@ public class Event implements Persisted {
     }
 
     public PrincipalData getPrincipal() {
-        return (PrincipalData) Util.fromJson(this.principalStore,
+        return Util.fromJson(this.principalStore,
             PrincipalData.class);
     }
 
