@@ -9,7 +9,7 @@ prepare_classpath() {
     rm -rf ${CP_EXTRACT_DIR}/*
     cd ${CP_EXTRACT_DIR}
     # Workspace might not be cleaned up
-    jar xf $(find ${PROJECT_DIR}/target -name 'candlepin*.war' | head -n 1)
+    jar xf $(find ${PROJECT_DIR}/build -name 'candlepin*.war' | head -n 1)
     chmod -R 744 ${CP_EXTRACT_DIR}
     cd -
     export CP_LIQUIBASE_CLASSPATH="${CP_EXTRACT_DIR}/WEB-INF/lib"

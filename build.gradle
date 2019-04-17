@@ -125,7 +125,6 @@ ext.libraries = [
     validator: [
         "org.hibernate.validator:hibernate-validator:6.0.7.Final",
         "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.7.Final",
-        "javax.validation:validation-api:2.0.1.Final",
     ],
 ]
 

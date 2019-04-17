@@ -78,6 +78,7 @@ dependencies {
     compile libraries.sun_jaxb
     compile libraries.swagger
     compile libraries.validator
+    compile libraries.javax_validation
 
     testCompile libraries.core_testing
     testCompile libraries.jukito
@@ -110,7 +111,6 @@ dependencies {
     compile "net.sf.ehcache:ehcache:2.10.3"
     compile "org.ehcache:jcache:1.0.0"
     compile "javax.cache:cache-api:1.0.0"
-    compile "net.sf.ehcache:management-ehcache-v2:2.10.1"
 
     // DB Drivers
     compile "org.postgresql:postgresql:42.2.2"
@@ -152,7 +152,6 @@ dependencies {
     // Javascript engine
     compile "org.mozilla:rhino:1.7R3"
 
-    providedCompile libraries.javax_validation
     providedCompile libraries.javax_servlet
 
     if (use_logdriver) {
