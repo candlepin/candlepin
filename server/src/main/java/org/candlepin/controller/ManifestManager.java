@@ -42,6 +42,8 @@ import org.candlepin.model.ImportRecord;
 import org.candlepin.pinsetter.tasks.ExportJob;
 import org.candlepin.pinsetter.tasks.ImportJob;
 import org.candlepin.model.Owner;
+import org.candlepin.pinsetter.tasks.ManifestCleanerJob;
+import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.ExportResult;
@@ -402,7 +404,7 @@ public class ManifestManager {
     /**
      * Stores the specified manifest import file via the {@link ManifestFileService}.
      *
-     * @param the manifest import {@link File} to store
+     * @param importFile the manifest import {@link File} to store
      * @return the id of the stored manifest file.
      */
     @Transactional
