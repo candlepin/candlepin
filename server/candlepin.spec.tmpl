@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.5
+Version: 2.6.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,9 @@ fi
 
 #raw
 %changelog
+* Thu Apr 18 2019 William Poteat <wpoteat@redhat.com> 2.6.6-1
+- 1695619: Fix rules TypeError (nmoumoul@redhat.com)
+
 * Thu Apr 11 2019 Kevin Howell <khowell@redhat.com> 2.6.5-1
 - Install liquibase.sh via RPM (jturel@redhat.com)
 
