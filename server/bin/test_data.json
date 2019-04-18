@@ -71,6 +71,10 @@
         {
             "name": "awesome-dummy-ostree-conf",
             "version": "1"
+        },
+        {
+            "name": "awesome-dummy-deb",
+            "version": "1"
         }
     ],
     "content": [
@@ -376,6 +380,16 @@
             "content_url": "/path/to/awesomeos-ostree",
             "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "packages": ["awesome-dummy-ostree-conf"]
+        },
+        {
+            "name": "awesomeos-deb",
+            "id": 3901,
+            "label": "awesomeos-deb",
+            "type": "deb",
+            "vendor": "Foo Vendor",
+            "content_url": "/path/to/awesomeos-deb",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
+            "packages": ["awesome-dummy-deb"]
         }
     ],
     "owners": [
@@ -907,8 +921,7 @@
                 "vcpu": 4,
                 "warning_period": 30
             },
-            "content": [
-            ]
+            "content": []
         },
         {
             "name": "Awesome OS Instance Server Bits",
@@ -988,6 +1001,21 @@
             "type": "MKT",
             "provided_products": [
                 "37080"
+            ]
+        },
+        {
+            "name": "Awesome OS Debian Bits",
+            "id": "38070",
+            "content": [
+                [3901, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Debian Bits",
+            "id": "awesomeos-debian",
+            "type": "MKT",
+            "provided_products": [
+                "38070"
             ]
         },
         {
@@ -1927,17 +1955,16 @@
             ]
         },
         {
-            "name": "Multi-Attribute Limited Product",
+            "name": "Multi-Attribute Limited Product (no content)",
             "id": "900",
             "version": "1.0",
             "arch": "x86_64",
             "attributes": {
             },
-            "content": [
-            ]
+            "content": []
         },
         {
-            "name": "Multi-Attribute Stackable (2 sockets)",
+            "name": "Multi-Attribute Stackable (2 sockets, no content)",
             "id": "sock2-multiattr",
             "type": "MKT",
             "attributes": {
@@ -1953,7 +1980,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute Stackable (4 cores)",
+            "name": "Multi-Attribute Stackable (4 cores, no content)",
             "id": "cores4-multiattr",
             "type": "MKT",
             "attributes": {
@@ -1968,7 +1995,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute Stackable (2 GB)",
+            "name": "Multi-Attribute Stackable (2 GB, no content)",
             "id": "ram2-multiattr",
             "type": "MKT",
             "attributes": {
@@ -1983,7 +2010,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute Stackable (2 GB, 2 Cores)",
+            "name": "Multi-Attribute Stackable (2 GB, 2 Cores, no content)",
             "id": "2cores-2ram-multiattr",
             "type": "MKT",
             "attributes": {
@@ -1999,7 +2026,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute Stackable (16 cores, 4 sockets, 8GB RAM)",
+            "name": "Multi-Attribute Stackable (16 cores, 4 sockets, 8GB RAM, no content)",
             "id": "sock-core-ram-multiattr",
             "type": "MKT",
             "attributes": {
@@ -2017,7 +2044,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute (non-stackable) (6 cores, 8GB)",
+            "name": "Multi-Attribute (non-stackable) (6 cores, 8GB, no content)",
             "id": "non-stacked-6core8ram-multiattr",
             "type": "MKT",
             "attributes": {
@@ -2031,7 +2058,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute (non-stackable) (24 cores, 6 sockets, 8GB RAM)",
+            "name": "Multi-Attribute (non-stackable) (24 cores, 6 sockets, 8GB RAM, no content)",
             "id": "non-stacked-multiattr",
             "type": "MKT",
             "attributes": {
@@ -2047,7 +2074,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute (multi-entitlement only) (8 cores, 4GB)",
+            "name": "Multi-Attribute (multi-entitlement only) (8 cores, 4GB, no content)",
             "id": "non-stacked-8core4ram-multiattr",
             "type": "MKT",
             "attributes": {
@@ -2068,11 +2095,10 @@
             "arch": "x86_64",
             "attributes": {
             },
-            "content": [
-            ]
+            "content": []
         },
         {
-            "name": "Storage Limited (256 TB)",
+            "name": "Storage Limited (256 TB, no content)",
             "id": "storage-limited-256",
             "type": "MKT",
             "multiplier": 256,
@@ -2089,7 +2115,7 @@
             ]
         },
         {
-            "name": "Development SKU Product",
+            "name": "Development SKU Product, no content",
             "id": "dev-sku-product",
             "type": "MKT",
             "skip_pools": "true",
