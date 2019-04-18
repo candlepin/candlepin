@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.16
+Version: 2.3.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,15 @@ fi
 
 #raw
 %changelog
+* Thu Apr 18 2019 William Poteat <wpoteat@redhat.com> 2.3.17-1
+- 1679286: Moved entitlement revocation to after pool update (crog@redhat.com)
+- 1679286: Removed AHC.lockAndLoadById(s) to address quirks with refresh
+  (crog@redhat.com)
+- Jobs now respect owner-specific logging level where appropriate
+  (crog@redhat.com)
+- 1696690: Fix rules TypeError (nmoumoul@redhat.com)
+- Improved hosted test adapter separation (crog@redhat.com)
+
 * Wed Mar 27 2019 Kevin Howell <khowell@redhat.com> 2.3.16-1
 - 1644707: RevocationOp no longer refreshes pools while locking
   (crog@redhat.com)
