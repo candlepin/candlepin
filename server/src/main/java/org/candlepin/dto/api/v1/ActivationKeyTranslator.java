@@ -69,8 +69,9 @@ public class ActivationKeyTranslator extends TimestampedEntityTranslator<Activat
             .setName(source.getName())
             .setDescription(source.getDescription())
             .setServiceLevel(source.getServiceLevel())
-            .setAutoAttach(source.isAutoAttach());
-
+            .setAutoAttach(source.isAutoAttach())
+            .setUsage(source.getUsage())
+            .setRole(source.getRole());
 
         // Set activation key product IDs
         Set<Product> products = source.getProducts();
@@ -92,6 +93,13 @@ public class ActivationKeyTranslator extends TimestampedEntityTranslator<Activat
         // Set release version
         Release release = source.getReleaseVer();
         dest.setReleaseVersion(release != null ? release.getReleaseVer() : null);
+
+        // Set addons
+        Set<String> addOns = new HashSet<>();
+        for (String addOn : source.getAddOns()) {
+            addOns.add(addOn);
+        }
+        dest.setAddOns(addOns);
 
         // Process nested DTO objects if we have a model translator to use to the translation...
         if (modelTranslator != null) {

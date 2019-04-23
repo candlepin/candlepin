@@ -111,6 +111,23 @@ describe 'Consumer Resource Activation Key' do
     consumer.serviceLevel.should == "VIP"
   end
 
+  it 'should allow a consumer to register with activation keys with syspurpose attributes' do
+    prod1 = create_product(random_string('product1'), random_string('product1'))
+    create_pool_and_subscription(@owner['key'], prod1.id, 10)
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1', nil, nil, 'test-usage', 'test-role', ['addon1','addon2'])
+
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
+                                @owner['key'], ["key1"])
+    consumer.uuid.should_not be_nil
+
+    consumer.usage.should == "test-usage"
+    consumer.role.should == "test-role"
+    consumer['addOns'].length.should == 2
+    expect(consumer['addOns']).to include('addon1')
+    expect(consumer['addOns']).to include('addon2')
+  end
+
   it 'should allow a consumer to register with multiple activation keys with same content override names' do
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
     key2 = @cp.create_activation_key(@owner['key'], 'key2')

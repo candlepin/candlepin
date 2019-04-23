@@ -635,6 +635,18 @@ public class OwnerResource {
             entity.setReleaseVer(new Release(dto.getReleaseVersion()));
         }
 
+        if (dto.getUsage() != null) {
+            entity.setUsage(dto.getUsage());
+        }
+
+        if (dto.getRole() != null) {
+            entity.setRole(dto.getRole());
+        }
+
+        if (dto.getAddOns() != null) {
+            entity.setAddOns(dto.getAddOns());
+        }
+
         if (dto.getPools() != null) {
             if (dto.getPools().isEmpty()) {
                 entity.setPools(new HashSet<>());

@@ -202,6 +202,28 @@ describe 'Activation Keys' do
     service_activation_key['serviceLevel'].should == 'Ultra-VIP'
   end
 
+  it 'should allow syspurpose attributes to be set on keys' do
+    service_activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), nil,  false, 'test-usage', 'test-role',['test-addon1','test-addon2'] )
+    service_activation_key['usage'].should == 'test-usage'
+    service_activation_key['role'].should == 'test-role'
+    service_activation_key['addOns'].length.should == 2
+    expect(service_activation_key['addOns']).to include('test-addon1')
+    expect(service_activation_key['addOns']).to include('test-addon2')
+  end
+
+  it 'should allow syspurpose attributes to be updated on keys' do
+    service_activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'), nil,  false, 'test-usage', 'test-role',['test-addon1','test-addon2'] )
+    service_activation_key['usage'] = 'updated-usage'
+    service_activation_key['role'] = 'updated-role'
+    service_activation_key['addOns'] = ['updated-addon1','updated-addon2']
+    service_activation_key = @cp.update_activation_key(service_activation_key)
+    service_activation_key['usage'] = 'updated-usage'
+    service_activation_key['role'].should == 'updated-role'
+    service_activation_key['addOns'].length.should == 2
+    expect(service_activation_key['addOns']).to include('updated-addon1')
+    expect(service_activation_key['addOns']).to include('updated-addon2')
+  end
+
   it 'should return correct exception for contraint violations' do
     lambda {
       @cp.create_activation_key(@owner['key'], nil)

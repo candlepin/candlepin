@@ -1129,7 +1129,7 @@ class Candlepin
     return get(path, params)
   end
 
-  def create_activation_key(owner_key, name, service_level=nil, autobind=nil)
+  def create_activation_key(owner_key, name, service_level=nil, autobind=nil, usage=nil, role=nil, addons=nil)
     key = {
       :name => name,
     }
@@ -1138,8 +1138,19 @@ class Candlepin
       key['serviceLevel'] = service_level
     end
 
-    key['autoAttach'] = autobind
+    if usage
+      key['usage'] = usage
+    end
 
+    if role
+      key['role'] = role
+    end
+
+    if addons
+      key['addOns'] = addons
+    end
+
+    key['autoAttach'] = autobind
     return post("/owners/#{owner_key}/activation_keys", {}, key)
   end
 
