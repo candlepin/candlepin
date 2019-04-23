@@ -19,7 +19,7 @@ gettext {
     keys_project_dir = "${project.rootDir}/common"
 }
 
-// substitut the version & release in the version.properties used by the status resource at runtime
+// substitute the version & release in the version.properties used by the status resource at runtime
 processResources {
     from("src/main/resources") {
         include "version.properties"
@@ -89,16 +89,12 @@ dependencies {
     compile "org.hibernate:hibernate-core:5.3.8.Final"
     compile "org.hibernate:hibernate-c3p0:5.3.8.Final"
     compile "org.hibernate.common:hibernate-commons-annotations:5.0.4.Final"
-    compile "org.hibernate:hibernate-tools:3.2.4.GA"
     compile "org.hibernate.validator:hibernate-validator:6.0.7.Final"
     compile libraries.hibernate_validator_ap
     annotationProcessor libraries.hibernate_validator_ap
-    compile "org.ow2.asm:asm:6.2.1"
-    compile "net.bytebuddy:byte-buddy-dep:1.9.4"
-    compile "cglib:cglib:2.2"
+    compile "net.bytebuddy:byte-buddy:1.9.4"
     compile "org.javassist:javassist:3.23.1-GA"
     compile "com.fasterxml:classmate:1.3.4"
-    compile "org.freemarker:freemarker:2.3.15"
     compile "com.mchange:c3p0:0.9.5.2"
     compile "com.mchange:mchange-commons-java:0.2.11"
     compile "org.dom4j:dom4j:2.1.1"
