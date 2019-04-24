@@ -37,6 +37,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
+import org.candlepin.pinsetter.tasks.HypervisorHeartbeatUpdateJob;
 import org.candlepin.resource.util.GuestMigration;
 
 import com.google.inject.Inject;
@@ -62,6 +63,7 @@ import javax.inject.Provider;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -285,6 +287,29 @@ public class HypervisorResource {
         Owner owner = this.getOwner(ownerKey);
 
         return HypervisorUpdateJob.forOwner(owner, hypervisorJson, createMissing, principal, reporterId);
+    }
+
+    @ApiOperation(notes = "Updates last check in date of all consumers of the given reporterId.",
+        value = "hypervisorHeartbeatUpdate")
+    @ApiResponses({
+        @ApiResponse(code = 202, message = ""),
+        @ApiResponse(code = 400, message = "Illegal reporter ID was provided"),
+        @ApiResponse(code = 404, message = "Target owner not found.")})
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    @Path("/{owner}/heartbeat")
+    public JobDetail hypervisorHeartbeatUpdate(
+        @PathParam("owner")
+        @Verify(value = Owner.class, require = Access.READ_ONLY, subResource = SubResource.HYPERVISOR)
+        final String ownerKey,
+        @QueryParam("reporter_id") final String reporterId) {
+
+        if (reporterId == null || reporterId.isEmpty()) {
+            throw new IllegalArgumentException("ReporterId is required!");
+        }
+        final Owner owner = this.getOwner(ownerKey);
+        return HypervisorHeartbeatUpdateJob.from(reporterId, owner);
     }
 
     /*

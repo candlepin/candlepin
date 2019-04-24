@@ -560,6 +560,40 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .executeUpdate();
     }
 
+    @Transactional
+    public void heartbeatUpdate(final String reporterId, final Date checkIn, final String ownerKey) {
+        final String query;
+        final String db = config.getProperty("jpa.config.hibernate.connection.driver_class");
+        if (db.contains("mysql")) {
+            query = "" +
+                "UPDATE cp_consumer a" +
+                " JOIN cp_consumer_hypervisor b on a.id = b.consumer_id " +
+                " JOIN cp_owner c on c.id = a.owner_id" +
+                " SET a.lastcheckin = :checkin" +
+                " WHERE b.reporter_id = :reporter" +
+                " AND c.account = :ownerKey";
+        }
+        else if (db.contains("postgresql")) {
+            query = "" +
+                "UPDATE cp_consumer" +
+                " SET lastcheckin = :checkin" +
+                " FROM cp_consumer a, cp_consumer_hypervisor b, cp_owner c" +
+                " WHERE a.id = b.consumer_id" +
+                " AND b.reporter_id = :reporter" +
+                " AND cp_consumer.owner_id = c.id" +
+                " AND c.account = :ownerKey";
+        }
+        else {
+            query = "";
+        }
+
+        this.currentSession().createSQLQuery(query)
+            .setParameter("checkin", checkIn)
+            .setParameter("reporter", reporterId)
+            .setParameter("ownerKey", ownerKey)
+            .executeUpdate();
+    }
+
     private boolean factsChanged(Map<String, String> updatedFacts, Map<String, String> existingFacts) {
         return !existingFacts.equals(updatedFacts);
     }
