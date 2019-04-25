@@ -53,6 +53,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_async_jobs";
+    public static final String PRINCIPAL_KEY = "principal_key";
 
     /** Enum of job states; terminal states represent states at which the job will no longer change */
     public enum JobState {
