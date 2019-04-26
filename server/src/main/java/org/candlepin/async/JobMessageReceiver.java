@@ -44,11 +44,6 @@ public class JobMessageReceiver extends MessageReceiver {
     private ClientConsumer consumer;
     private String msgFilter;
 
-    // Variable we use to track whether or not we have work pending to commit or rollback. Since
-    // the AMQP docs aren't clear on the expected behavior of consecutive commits and/or rollbacks,
-    // we're taking the safe route and avoiding using either if no work is pending.
-    // Note that this will fail if a given instance is shared between multiple threads/queues.
-    private boolean amqpWorkPending;
 
     public JobMessageReceiver(String msgFilter, JobManager manager, ActiveMQSessionFactory sessionFactory,
         ObjectMapper mapper) {
@@ -62,7 +57,11 @@ public class JobMessageReceiver extends MessageReceiver {
     @Override
     protected void initialize() throws Exception {
         session = this.sessionFactory.getIngressSession(false);
-        consumer = session.createConsumer(queueName, msgFilter);
+
+        consumer = msgFilter != null ?
+            session.createConsumer(queueName, msgFilter) :
+            session.createConsumer(queueName);
+
         consumer.setMessageHandler(this);
         session.start();
     }

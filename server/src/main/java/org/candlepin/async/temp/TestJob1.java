@@ -37,7 +37,7 @@ import java.util.Collection;
 public class TestJob1 implements AsyncJob {
 
     private static Logger log = LoggerFactory.getLogger(TestJob1.class);
-    private static final String JOB_KEY = "TEST_JOB1";
+    private static final String JOB_KEY = "TestJob1";
 
     private OwnerCurator ownerCurator;
 
@@ -78,8 +78,8 @@ public class TestJob1 implements AsyncJob {
         log.info("OWNERS: {}", owners);
 
 
-        final boolean forceFailure = jdata.getJobData().getAsBoolean("force_failure");
-        final boolean sleep = jdata.getJobData().getAsBoolean("sleep");
+        final boolean forceFailure = jdata.getJobData().getAsBoolean("force_failure", false);
+        final boolean sleep = jdata.getJobData().getAsBoolean("sleep", false);
 
         if (sleep) {
             sleep();

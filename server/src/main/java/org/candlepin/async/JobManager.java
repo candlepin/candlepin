@@ -14,45 +14,140 @@
  */
 package org.candlepin.async;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.inject.Injector;
-import com.google.inject.persist.UnitOfWork;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.auth.UserPrincipal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.filter.LoggingFilter;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ModeChangeListener;
+import org.candlepin.controller.ModeManager;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
+import org.candlepin.model.CandlepinModeChange;
+import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.util.Util;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import com.google.inject.Injector;
+import com.google.inject.persist.UnitOfWork;
+
+import org.quartz.CronTrigger;
+import org.quartz.CronScheduleBuilder;
+import org.quartz.Job;
+import org.quartz.JobDetail;
+import org.quartz.JobKey;
+import org.quartz.ScheduleBuilder;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerFactory;
+import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.quartz.TriggerKey;
+import org.quartz.impl.matchers.GroupMatcher;
+import org.quartz.spi.JobFactory;
+import org.quartz.spi.TriggerFiredBundle;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 
 
 /**
  * The JobManager manages the queueing, execution and general bookkeeping on jobs
  */
 @Singleton
-public class JobManager {
+public class JobManager implements ModeChangeListener {
+    private static final Logger log = LoggerFactory.getLogger(JobManager.class);
 
-    private static Logger log = LoggerFactory.getLogger(JobManager.class);
+    private static final String QRTZ_GROUP_CONFIG = "cp_async_config";
+    private static final String QRTZ_GROUP_MANUAL = "cp_async_manual";
+
+    // Temporary constant for the principal key; used to store the principal in the job data
+    public static final String PRINCIPAL_KEY = "principal_key";
 
     /** Stores our mapping of job keys to job classes */
-    private static Map<String, Class<? extends AsyncJob>> jobs = new HashMap<>();
+    private static final Map<String, Class<? extends AsyncJob>> JOB_KEY_MAP = new HashMap<>();
 
+    /**
+     * Enum representing known manager states, and valid state transitions
+     */
+    public static enum ManagerState {
+        // Impl note: We have to use strings here since we can't reference enums that haven't yet
+        // been defined. This is slightly less efficient than I'd like, but whatever.
+        CREATED("INITIALIZED", "SHUTDOWN"),
+        INITIALIZED("RUNNING", "PAUSED", "SHUTDOWN"),
+        RUNNING("RUNNING", "PAUSED", "SHUTDOWN"),
+        PAUSED("RUNNING", "PAUSED", "SHUTDOWN"),
+        SHUTDOWN();
+
+        private final String[] transitions;
+
+        ManagerState(String... transitions) {
+            this.transitions = transitions != null && transitions.length > 0 ? transitions : null;
+        }
+
+        public boolean isValidTransition(ManagerState state) {
+            if (state != null && this.transitions != null) {
+                for (String transition : this.transitions) {
+                    if (transition.equals(state.name())) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public boolean isTerminal() {
+            return this.transitions == null;
+        }
+    }
+
+    /**
+     * Bridge between the Quartz job and Candlepin job execution interfaces
+     */
+    private static class QuartzJobExecutor implements Job, JobFactory {
+        private final JobManager manager;
+
+        public QuartzJobExecutor(JobManager manager) {
+            this.manager = manager;
+        }
+
+        @Override
+        public Job newJob(TriggerFiredBundle bundle, Scheduler scheduler) throws SchedulerException {
+            return this;
+        }
+
+        @Override
+        public void execute(org.quartz.JobExecutionContext context) throws org.quartz.JobExecutionException {
+            String name = context.getJobDetail().getKey().getName();
+
+            log.trace("Queuing job: {}", name);
+            this.manager.queueJob(JobBuilder.forJob(name));
+        }
+    }
 
     /**
      * Registers the given class for the specified key. If the key was already registered to
@@ -81,7 +176,7 @@ public class JobManager {
         }
 
         log.info("Registering job: {}: {}", jobKey, jobClass.getCanonicalName());
-        return jobs.put(jobKey, jobClass);
+        return JOB_KEY_MAP.put(jobKey, jobClass);
     }
 
     /**
@@ -103,7 +198,7 @@ public class JobManager {
             throw new IllegalArgumentException("jobKey is null or empty");
         }
 
-        return jobs.remove(jobKey);
+        return JOB_KEY_MAP.remove(jobKey);
     }
 
     /**
@@ -124,31 +219,406 @@ public class JobManager {
             throw new IllegalArgumentException("jobKey is null or empty");
         }
 
-        return jobs.get(jobKey);
+        return JOB_KEY_MAP.get(jobKey);
     }
 
-
+    private final Configuration configuration;
+    private final SchedulerFactory schedulerFactory;
+    private final ModeManager modeManager;
     private final AsyncJobStatusCurator jobCurator;
     private final JobMessageDispatcher dispatcher;
     private final CandlepinRequestScope candlepinRequestScope;
     private final PrincipalProvider principalProvider;
     private final Injector injector;
 
+    private ManagerState state;
+    private QuartzJobExecutor qrtzExecutor;
+    private Scheduler scheduler;
+
+    private boolean clustered;
+    private Set<String> whitelist;
+    private Set<String> blacklist;
+    private Map<String, Configuration> jobConfig;
+
+
     /**
      * Creates a new JobManager instance
      */
     @Inject
     public JobManager(
-        final AsyncJobStatusCurator jobCurator,
-        final JobMessageDispatcher dispatcher,
-        final PrincipalProvider principalProvider,
-        final CandlepinRequestScope scope,
-        final Injector injector) {
+        Configuration configuration,
+        SchedulerFactory schedulerFactory,
+        ModeManager modeManager,
+        AsyncJobStatusCurator jobCurator,
+        JobMessageDispatcher dispatcher,
+        PrincipalProvider principalProvider,
+        CandlepinRequestScope scope,
+        Injector injector) {
+
+        this.configuration = Objects.requireNonNull(configuration);
+        this.schedulerFactory = Objects.requireNonNull(schedulerFactory);
+        this.modeManager = Objects.requireNonNull(modeManager);
         this.jobCurator = Objects.requireNonNull(jobCurator);
         this.dispatcher = Objects.requireNonNull(dispatcher);
         this.candlepinRequestScope = Objects.requireNonNull(scope);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.injector = Objects.requireNonNull(injector);
+
+        this.state = ManagerState.CREATED;
+        this.qrtzExecutor = new QuartzJobExecutor(this);
+
+        this.readJobConfiguration(this.configuration);
+    }
+
+    /**
+     * Reads the job configuration from the provided configuration.
+     *
+     * @param config
+     *  The configuration instance from which to read the job config
+     */
+    private void readJobConfiguration(Configuration config) {
+        // Check if our scheduler is running in "clustered" mode
+        this.clustered = config.getBoolean("org.quartz.jobStore.isClustered", false);
+
+        // Get the job whitelist and blacklist
+        List<String> list = config.getList(ConfigProperties.ASYNC_JOBS_WHITELIST, null);
+        this.whitelist = list != null ? new HashSet<>(list) : null;
+
+        list = config.getList(ConfigProperties.ASYNC_JOBS_BLACKLIST, null);
+        this.blacklist = list != null ? new HashSet<>(list) : null;
+
+        // Read the per-job configuration
+        this.jobConfig = new HashMap<>();
+        String prefix = ConfigProperties.ASYNC_JOBS_PREFIX;
+        Pattern regex = Pattern.compile("\\A" + Pattern.quote(prefix) + "(.+)\\.[^.]+\\z");
+
+        Iterable<String> cfgKeys = config.getKeys();
+        if (cfgKeys != null) {
+            for (String key : cfgKeys) {
+                Matcher matcher = regex.matcher(key);
+
+                if (matcher.matches()) {
+                    String job = matcher.group(1);
+
+                    if (!this.jobConfig.containsKey(job)) {
+                        Configuration subset = config.strippedSubset(prefix + job + '.');
+                        this.jobConfig.put(job, subset);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Perform final initialization once that could not be performed during construction. Once this
+     * method has been called, it should not be called again.
+     *
+     * @throws IllegalStateException
+     *  if this JobManager has already been initialized, or is otherwise in a state where
+     *  initialization cannot be performed
+     */
+    public synchronized void initialize() {
+        // TODO: We're probably going to want to add some bits to avoid queuing/scheduling new jobs
+        // during shutdown. We probably also want to have a means of closing the message listeners
+        // backing all of this as well, so we don't try to execute jobs before we're initialized or
+        // during/after shutdown.
+
+        // Perform state transition
+        this.validateStateTransition(ManagerState.INITIALIZED);
+
+        try {
+            log.info("Initializing job manager");
+
+            if (this.state == ManagerState.CREATED) {
+                if (this.scheduler == null || this.scheduler.isShutdown()) {
+                    this.scheduler = this.schedulerFactory.getScheduler();
+                }
+
+                this.synchronizeJobSchedule();
+                this.scheduler.setJobFactory(this.qrtzExecutor);
+                this.modeManager.registerModeChangeListener(this);
+            }
+
+            log.info("Job manager initialization complete");
+            this.state = ManagerState.INITIALIZED;
+        }
+        catch (Exception e) {
+            log.error("Unexpected exception occurred during initialization", e);
+
+            try {
+                if (this.scheduler != null) {
+                    this.scheduler.shutdown();
+                    this.scheduler = null;
+                }
+            }
+            catch (SchedulerException se) {
+                log.error("Unable to shutdown quartz scheduler while processing other exceptions", se);
+            }
+
+            // TODO: Change this to something a bit nicer. Maybe a JobException?
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Starts or resumes this job manager if it is currently not running, allowing jobs to be
+     * executed. If the job manager is already running, this method silently returns.
+     *
+     * @throws IllegalStateException
+     *  if this JobManager has not been initialized, has already shutdown or Candlepin is
+     *  in suspend mode
+     */
+    public synchronized void start() {
+        log.trace("Start request received");
+
+        this.validateStateTransition(ManagerState.RUNNING);
+
+        // Check that we're not in suspend mode
+        CandlepinModeChange lastMode = this.modeManager.getLastCandlepinModeChange();
+        if (lastMode != null && lastMode.getMode() != Mode.NORMAL) {
+            throw new IllegalStateException("Candlepin must be in NORMAL mode to start the job manager");
+        }
+
+        try {
+            if (this.state == ManagerState.INITIALIZED || this.state == ManagerState.PAUSED) {
+                this.scheduler.start();
+            }
+
+            log.info("Job manager started");
+            this.state = ManagerState.RUNNING;
+        }
+        catch (Exception e) {
+            log.error("Unexpected exception occurred while starting job manager", e);
+        }
+    }
+
+    /**
+     * Synonym of the start operation.
+     *
+     * @throws IllegalStateException
+     *  if this JobManager has not been initialized or has already shutdown
+     */
+    public void resume() {
+        this.start();
+    }
+
+
+    /**
+     * Pauses this job manager, preventing jobs from being executed until the manager is resumed.
+     * If the job manager is already paused, this method silently returns.
+     * <p></p>
+     * Pausing will not stop currently executing jobs, nor will it prevent new jobs from being
+     * scheduled or queued for later execution. If a scheduled job's next appointed time occurs
+     * while the manager is paused, the collision will be resolved according to the job's
+     * constraints.
+     *
+     * @throws IllegalStateException
+     *  if this JobManager has not been initialized or has already shutdown
+     */
+    public synchronized void pause() {
+        log.trace("Pause request received");
+
+        this.validateStateTransition(ManagerState.PAUSED);
+
+        try {
+            if (this.state == ManagerState.RUNNING) {
+                this.scheduler.standby();
+            }
+
+            log.info("Job manager paused");
+            this.state = ManagerState.PAUSED;
+        }
+        catch (Exception e) {
+            log.error("Unexpected exception occurred while pausing job manager", e);
+        }
+    }
+
+    /**
+     * Shuts down this job manager, preventing jobs from being scheduled, queued or executed.
+     * Shutting down will not stop currently executing jobs, but will stop this manager from
+     * processing any new execution requests.
+     *
+     * @throws IllegalStateException
+     *  if this JobManager has already been shutdown, or is otherwise in a state where a shut
+     *  down cannot be performed
+     */
+    public synchronized void shutdown() {
+        // TODO: actually do something with this
+
+        this.validateStateTransition(ManagerState.SHUTDOWN);
+
+        try {
+            log.info("Shutting down job manager");
+
+            if (this.state == ManagerState.RUNNING || this.state == ManagerState.PAUSED) {
+                this.scheduler.shutdown(true);
+            }
+
+            log.info("Job manager shut down");
+            this.state = ManagerState.SHUTDOWN;
+        }
+        catch (Exception e) {
+            log.error("Unexpected exception occurred while shutting down job manager", e);
+        }
+    }
+
+    /**
+     * Checks if the target state is a valid state from which the current state can transition.
+     *
+     * @param target
+     *  The target state to enter
+     *
+     * @throws IllegalStateException
+     *  if the target state is an invalid transition from the current state
+     */
+    private void validateStateTransition(ManagerState target) {
+        if (!this.state.isValidTransition(target)) {
+            String errmsg = String.format("Cannot transition manager state from \"%s\" to \"%s\"",
+                this.state.name(), target.name());
+
+            log.error(errmsg);
+            throw new IllegalStateException(errmsg);
+        }
+    }
+
+    /**
+     * Checks if the specified job is enabled. Jobs default to enabled, but can be disabled if any
+     * of the following occur, in order:
+     *
+     *  - The per-job enabled flag is set to false
+     *  - The job is in the async jobs blacklist
+     *  - The async jobs whitelist is non-empty and does not contain the specified job
+     *
+     * @param jobKey
+     *  The key of the job to check, or the job's fully qualified class name if the job does not have
+     *  a job key
+     *
+     * @return
+     *  true if the job is enabled, false otherwise
+     */
+    public boolean isJobEnabled(String jobKey) {
+        if (jobKey == null) {
+            throw new IllegalArgumentException("jobKey is null");
+        }
+
+        // Check per-job config
+        Configuration config = this.jobConfig.get(jobKey);
+        if (config != null && !config.getBoolean(ConfigProperties.ASYNC_JOBS_SUFFIX_ENABLED, true)) {
+            return false;
+        }
+
+        // Check blacklist
+        if (this.blacklist != null && this.blacklist.contains(jobKey)) {
+            return false;
+        }
+
+        // Check whitelist
+        if (this.whitelist != null && !this.whitelist.contains(jobKey)) {
+            return false;
+        }
+
+        // Job is enabled!
+        return true;
+    }
+
+
+    /**
+     * Ensures the jobs automatically scheduled according to the system configuration are in sync
+     * with the current configuration.
+     */
+    private void synchronizeJobSchedule() throws SchedulerException {
+        // TODO: Quartz isn't doing much for us here. Perhaps we'd be better off with our own
+        // minimalistic scheduler, since we only need cron, delay and interval scheduling. Quartz
+        // seems pretty heavy considering what we actually use it for here.
+
+        GroupMatcher<JobKey> qrtzJobMatcher = GroupMatcher.jobGroupEquals(QRTZ_GROUP_CONFIG);
+        Set<JobKey> qrtzJobKeys = this.scheduler.getJobKeys(qrtzJobMatcher);
+
+        Set<String> existing = new HashSet<>();
+        Set<JobKey> unschedule = new HashSet<>();
+
+        // TODO: Improve this! There isn't a scenario where this works in the way it should.
+
+        if (qrtzJobKeys != null && qrtzJobKeys.size() > 0) {
+            log.debug("Checking {} existing scheduled jobs...", qrtzJobKeys.size());
+
+            for (JobKey key : qrtzJobKeys) {
+                // Impl note: using the key's name as the job key works, but it limits each
+                // job to exactly one schedule, which may or may not be a good thing.
+                Configuration config = this.jobConfig.get(key.getName());
+
+                // Check if the job has any configuration at all
+                if (config == null) {
+                    unschedule.add(key);
+                    continue;
+                }
+
+                String schedule = config.getString(ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, null);
+                boolean enabled = this.isJobEnabled(key.getName());
+
+                // Check that the job is enabled and is still scheduled
+                if (!enabled || schedule == null) {
+                    unschedule.add(key);
+                    continue;
+                }
+
+                Trigger trigger = this.scheduler.getTrigger(
+                    TriggerKey.triggerKey(key.getName(), key.getGroup()));
+
+                // Check that the job has a trigger, it's a cron trigger, and the schedule matches
+                // the schedule in the current configuration
+                if (trigger == null || !(trigger instanceof CronTrigger) ||
+                    !((CronTrigger) trigger).getCronExpression().equals(schedule)) {
+
+                    unschedule.add(key);
+                    continue;
+                }
+
+                // Job exists and matches our schedule, we can skip it later
+                existing.add(key.getName());
+            }
+        }
+
+        // Unschedule dead/invalid jobs
+        for (JobKey key : unschedule) {
+            this.scheduler.deleteJob(key);
+            log.info("Removed existing schedule for job: {}", key.getName());
+        }
+
+        // Schedule new jobs
+        for (Map.Entry<String, Configuration> entry : this.jobConfig.entrySet()) {
+            try {
+                String jobName = entry.getKey();
+                Configuration config = entry.getValue();
+
+                String schedule = config.getString(ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, null);
+                boolean enabled = this.isJobEnabled(jobName);
+
+                // If the job is not enabled, already scheduled or has no schedule, skip it.
+                if (!enabled || existing.contains(jobName) || schedule == null) {
+                    continue;
+                }
+
+                ScheduleBuilder qtzSchedule = CronScheduleBuilder.cronSchedule(schedule)
+                    .withMisfireHandlingInstructionDoNothing();
+
+                Trigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(jobName, QRTZ_GROUP_CONFIG)
+                    .withSchedule(qtzSchedule)
+                    .build();
+
+                JobDetail detail = org.quartz.JobBuilder.newJob(QuartzJobExecutor.class)
+                    .withIdentity(jobName, QRTZ_GROUP_CONFIG)
+                    .build();
+
+                this.scheduler.scheduleJob(detail, trigger);
+
+                log.info("Scheduled job \"{}\" with cron schedule: {}", jobName, schedule);
+            }
+            catch (Exception e) {
+                log.error("Unable to schedule job \"{}\":", e);
+            }
+        }
     }
 
     /**
@@ -178,6 +648,7 @@ public class JobManager {
         // Add environment-specific metadata...
         job.setOrigin(Util.getHostname());
         Principal principal = this.principalProvider.get();
+        builder.setJobArgument("principal", principal);
         job.setPrincipal(principal != null ? principal.getName() : null);
 
         // Metadata and Logging configuration...
@@ -199,7 +670,7 @@ public class JobManager {
         if (principal != null) {
             try {
                 String toJson = Util.toJson(new PrincipalData(principal.getType(), principal.getName()));
-                jobArguments.put(AsyncJobStatus.PRINCIPAL_KEY, toJson);
+                jobArguments.put(PRINCIPAL_KEY, toJson);
             }
             catch (JsonProcessingException e) {
                 log.error("Could not parse the principal data");
@@ -228,13 +699,22 @@ public class JobManager {
      *  an AsyncJobStatus instance representing the queued job's status, or the status of the
      *  existing job if it already exists
      */
-    public AsyncJobStatus queueJob(JobBuilder builder) {
+    public synchronized AsyncJobStatus queueJob(JobBuilder builder) {
+        // TODO: Check manager state
+
         if (builder == null) {
             throw new IllegalArgumentException("job builder is null");
         }
 
         // TODO:
+        // Validate builder state
+
+        // TODO:
         // Add job filtering/deduplication by criteria
+
+        // TODO:
+        // Don't allow queueing jobs which are disabled? Should that be disabled entirely or not
+        // runnable by this node?
 
         AsyncJobStatus status = this.buildJobStatus(builder);
         status.setState(JobState.CREATED);
@@ -245,6 +725,7 @@ public class JobManager {
 
             // Build and send the job message and update the job state accordingly
             status = this.postJobStatusMessage(status);
+            log.debug("Job queued: {}", status);
         }
         catch (JobStateManagementException e) {
             if (log.isDebugEnabled()) {
@@ -343,10 +824,10 @@ public class JobManager {
      * @return
      *  a JobStatus instance representing the job's status
      */
-    public AsyncJobStatus executeJob(final JobMessage message) throws JobException {
-        AsyncJobStatus status = this.fetchJobStatus(message);
+    public synchronized AsyncJobStatus executeJob(final JobMessage message) throws JobException {
+        // TODO: Check manager state
 
-        setupPrincipal(status.getJobData());
+        AsyncJobStatus status = this.fetchJobStatus(message);
 
         final Class<? extends AsyncJob> jobClass = getJobClass(message.getJobKey());
         candlepinRequestScope.enter();
@@ -356,6 +837,9 @@ public class JobManager {
         try {
             uow.begin();
             setupLogging(status);
+
+            // TODO: fix this
+            setupPrincipal(status.getJobData());
 
             final AsyncJob job = injector.getInstance(jobClass);
 
@@ -476,8 +960,18 @@ public class JobManager {
             throw new JobInitializationException(errmsg, true);
         }
 
-        return status;
+        // Sanity check: make sure we don't try to execute a job that's disabled on this node
+        // This shouldn't happen, as we should be properly filtering which messages we pull off the
+        // message queue, but if that fails, we'll fall back to failing non-terminally.
+        if (status.getJobKey() == null || !this.isJobEnabled(status.getJobKey())) {
+            String errmsg = String.format("Job \"%s\" (%s) is not enabled on this node",
+                status.getName(), status.getJobKey());
 
+            log.error(errmsg);
+            throw new JobInitializationException(errmsg, false);
+        }
+
+        return status;
     }
 
     /**
@@ -579,17 +1073,37 @@ public class JobManager {
         return status;
     }
 
-
     private void setupPrincipal(final JobDataMap jobData) {
         // TODO remove this guard check once we have better way to share the principal
         if (!jobData.containsKey("principal")) {
             log.warn("Principal data are missing from the job data!");
             return;
         }
-        final String principalJson = jobData.getAsString(AsyncJobStatus.PRINCIPAL_KEY);
+        final String principalJson = jobData.getAsString(PRINCIPAL_KEY);
         final PrincipalData principal = Util.fromJson(principalJson, PrincipalData.class);
         ResteasyProviderFactory.pushContext(
             Principal.class,
             new UserPrincipal(principal.getName(), Collections.emptyList(), false));
+    }
+
+    /**
+     * @{inheritDoc}
+     */
+    @Override
+    public void modeChanged(Mode mode) {
+        if (mode != null) {
+            switch (mode) {
+                case SUSPEND:
+                    this.pause();
+                    break;
+
+                case NORMAL:
+                    this.start();
+                    break;
+
+                default:
+                    log.warn("Received an unexpected mode change notice: {}", mode);
+            }
+        }
     }
 }
