@@ -90,6 +90,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -1360,6 +1361,18 @@ public class ConsumerResource {
             // consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
             toUpdate.setServiceLevel(level);
             changesMade = true;
+
+            // BZ 1699386 Update support level in all attributes of products
+            for (Entitlement entitlement : toUpdate.getEntitlements()) {
+                Pool pool = entitlement.getPool();
+                if (pool != null) {
+                    Product product = pool.getProduct();
+                    if (product != null) {
+                        log.info("     Updating product support level setting.");
+                        product.setAttribute(Product.Attributes.SUPPORT_LEVEL, level);
+                    }
+                }
+            }
         }
 
         String role = updated.getRole();
