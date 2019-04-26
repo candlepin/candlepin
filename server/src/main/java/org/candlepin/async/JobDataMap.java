@@ -49,6 +49,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void clear() {
         this.map.clear();
     }
@@ -56,6 +57,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean containsKey(Object key) {
         return this.map.containsKey(key);
     }
@@ -63,6 +65,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean containsValue(Object value) {
         return this.map.containsValue(value);
     }
@@ -70,6 +73,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<Map.Entry<String, Object>> entrySet() {
         return this.map.entrySet();
     }
@@ -77,6 +81,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object obj) {
         return this.map.equals(obj);
     }
@@ -84,6 +89,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object get(Object key) {
         return this.map.get(key);
     }
@@ -91,6 +97,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode() {
         return this.map.hashCode();
     }
@@ -98,6 +105,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isEmpty() {
         return this.map.isEmpty();
     }
@@ -105,6 +113,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<String> keySet() {
         return this.map.keySet();
     }
@@ -112,6 +121,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object put(String key, Object value) {
         return this.map.put(key, value);
     }
@@ -119,6 +129,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void putAll(Map<? extends String, ? extends Object> map) {
         this.map.putAll(map);
     }
@@ -126,6 +137,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object remove(Object key) {
         return this.map.remove(key);
     }
@@ -133,6 +145,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int size() {
         return this.map.size();
     }
@@ -140,6 +153,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Collection<Object> values() {
         return this.map.values();
     }
@@ -147,6 +161,7 @@ public class JobDataMap implements Map<String, Object> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder(this.getClass().getName());
 
