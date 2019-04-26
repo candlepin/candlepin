@@ -274,7 +274,7 @@ public class ExporterTest {
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
 
-        File export = e.getFullExport(consumer);
+        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
         // VERIFY
         assertNotNull(export);
@@ -329,7 +329,7 @@ public class ExporterTest {
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
 
-        e.getFullExport(consumer);
+        e.getFullExport(consumer, null, null, null, new HashMap<>());
     }
 
     @Test
@@ -370,7 +370,7 @@ public class ExporterTest {
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
-        File export = e.getFullExport(consumer);
+        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
         // VERIFY
         assertNotNull(export);
@@ -422,7 +422,7 @@ public class ExporterTest {
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
-        File export = e.getFullExport(consumer);
+        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
         // VERIFY
         assertNotNull(export);
@@ -480,7 +480,7 @@ public class ExporterTest {
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
-        File export = e.getFullExport(consumer);
+        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
         verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
     }
@@ -544,7 +544,7 @@ public class ExporterTest {
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
             exportExtensionAdapter, translator);
-        File export = e.getFullExport(consumer);
+        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
             new VerifyDistributorVersion("test-dist-ver.json"));

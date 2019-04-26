@@ -587,7 +587,7 @@ public class JobManager {
             return;
         }
         final String principalJson = jobData.getAsString(AsyncJobStatus.PRINCIPAL_KEY);
-        final PrincipalData principal = (PrincipalData) Util.fromJson(principalJson, PrincipalData.class);
+        final PrincipalData principal = Util.fromJson(principalJson, PrincipalData.class);
         ResteasyProviderFactory.pushContext(
             Principal.class,
             new UserPrincipal(principal.getName(), Collections.emptyList(), false));
