@@ -125,6 +125,7 @@ public class PinsetterKernelTest {
         verify(sched).setJobFactory(eq(jfactory));
         verify(lm, never()).addJobListener(eq(jlistener));
     }
+
     @Test
     public void ctor() throws Exception {
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,

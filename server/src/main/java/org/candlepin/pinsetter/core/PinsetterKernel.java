@@ -306,6 +306,7 @@ public class PinsetterKernel implements ModeChangeListener {
         if (existingCronTriggers.size() > 0) {
             log.warn("Cleaning up " + existingCronTriggers.size() + " obsolete triggers.");
         }
+
         for (CronTrigger t : existingCronTriggers) {
             boolean result = scheduler.deleteJob(t.getJobKey());
             log.warn(t.getJobKey() + " deletion success?: " + result);
@@ -519,8 +520,7 @@ public class PinsetterKernel implements ModeChangeListener {
             return !scheduler.isInStandbyMode();
         }
         catch (SchedulerException e) {
-            throw new PinsetterException("There was a problem gathering" +
-                        "scheduler status ", e);
+            throw new PinsetterException("There was a problem gathering scheduler status ", e);
         }
     }
 

@@ -52,38 +52,51 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class AsyncJobStatus extends AbstractHibernateObject implements JobExecutionContext {
 
     /** Name of the table backing this object in the database */
-    public static final String DB_TABLE = "cp2_async_jobs";
-    public static final String PRINCIPAL_KEY = "principal_key";
+    public static final String DB_TABLE = "cp_async_jobs";
 
     /** Enum of job states; terminal states represent states at which the job will no longer change */
     public enum JobState {
         /** The job has been created, but not yet queued or executed */
-        CREATED(false),
+        CREATED("WAITING", "SCHEDULED", "QUEUED", "RUNNING", "CANCELED", "ABORTED"),
         /** The job is blocked by a collision or inability to queue the job message */
-        WAITING(false),
+        WAITING("SCHEDULED", "QUEUED", "RUNNING", "CANCELED", "ABORTED"),
+        /** The job has been scheduled to run at some time in the future */
+        SCHEDULED("QUEUED", "RUNNING", "CANCELED", "ABORTED"),
         /** The job has been sent to the backing job messaging/queueing system to be picked up */
-        QUEUED(false),
+        QUEUED("RUNNING", "CANCELED"),
         /** The job has been picked up and is currently being executed */
-        RUNNING(false),
+        RUNNING("FAILED", "FAILED_WITH_RETRY", "COMPLETED", "CANCELED"),
         /** The job failed during execution, and has been rescheduled to be retried */
-        FAILED_WITH_RETRY(false),
+        FAILED_WITH_RETRY("SCHEDULED", "QUEUED", "RUNNING", "CANCELED"),
         /** The job has completed successfully */
-        COMPLETED(true),
+        COMPLETED(),
         /** The job failed during execution in a way that does not allow retries */
-        FAILED(true),
+        FAILED(),
         /** The job was canceled by request */
-        CANCELED(true),
+        CANCELED(),
         /** The job was aborted due to an inability to schedule or queue the job */
-        ABORTED(true);
+        ABORTED();
 
-        private final boolean terminal;
+        private final String[] transitions;
 
-        JobState(boolean terminal) {
-            this.terminal = terminal;
+        JobState(String... transitions) {
+            this.transitions = transitions != null && transitions.length > 0 ? transitions : null;
+        }
+
+        public boolean isValidTransition(JobState state) {
+            if (state != null && this.transitions != null) {
+                for (String transition : this.transitions) {
+                    if (transition.equals(state.name())) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public boolean isTerminal() {
-            return this.terminal;
+            return this.transitions == null;
         }
     }
 
@@ -111,7 +124,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     private boolean logExecutionDetails;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "cp2_async_job_metadata", joinColumns = @JoinColumn(name = "job_id"))
+    @CollectionTable(name = "cp_async_job_metadata", joinColumns = @JoinColumn(name = "job_id"))
     @MapKeyColumn(name = "key")
     @Column(name = "value")
     private Map<String, String> metadata;
@@ -123,7 +136,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     private JobState state;
 
     // @ElementCollection(fetch = FetchType.LAZY)
-    // @CollectionTable(name = "cp2_async_job_constraints", joinColumns = @JoinColumn(name = "job_id"))
+    // @CollectionTable(name = "cp_async_job_constraints", joinColumns = @JoinColumn(name = "job_id"))
     // @MapKeyColumn(name = "key")
     // @Column(name = "value")
     // private Map<String, String> constraints;

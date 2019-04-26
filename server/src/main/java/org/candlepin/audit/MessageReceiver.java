@@ -74,6 +74,7 @@ public abstract class MessageReceiver implements MessageHandler {
             log.warn("MessageReceiver was unable to resume message consumption. Artemis DOWN!");
             return;
         }
+
         try {
             if (this.consumer.isClosed()) {
                 log.debug("Resuming message consumption for {}.", queueName);
