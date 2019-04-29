@@ -88,6 +88,8 @@ CANDLEPIN_PASS = 'admin'
 
 TEST_DATA_JSON_MTIME = 0.0
 
+CERT_DIR = 'generated_certs'
+
 
 def run_command(command, verbose=False):
     """
@@ -129,19 +131,77 @@ def read_test_data(filename):
     return data
 
 
+def find_content(content_definitions, content_id):
+    """
+    Try to find content with specified content_id
+    """
+
+    for content in content_definitions:
+        if content['id'] == content_id:
+            return content
+
+    return None
+
+
+def create_repo_definition(product, content):
+    """
+    Create definition of repository from definition of content. Note: Definitions of
+    content are shared between several products in test data.
+    """
+    repo_definition = {
+        'name': product['id'] + '-' + content['name'],
+        'product_id': product['id'],
+        'type': content['type'],
+        'content_url': os.path.join(content['content_url'], product['id']),
+        'gpg_url': content.get('gpg_url', ""),
+        'packages': content.get('packages', [])
+    }
+    return repo_definition
+
+
+def get_repo_definitions_for_products(product_definitions, content_definitions):
+    """
+    Try to get list of repository definitions from list of product definitions
+    and list of content_definitions that are used by products.
+    """
+    repo_definitions = []
+    for product in product_definitions:
+        product_contents = product.get('content', [])
+        for prod_cont in product_contents:
+            content_id = prod_cont[0]
+            content = find_content(content_definitions, content_id)
+            if content is None:
+                print("Info: unable to find content_id: %s in definition of product: %s" % (content_id, product['name']))
+                continue
+            repo = create_repo_definition(product, content)
+            repo_definitions.append(repo)
+    return repo_definitions
+
+
 def get_repo_definitions(test_data):
     """
-    Get list of repositories from test_data
+    Get list of repository definitions from test_data
     """
 
     if test_data is None:
         return []
 
+    repo_definitions = []
+
+    # There can be some "global" definitions of content shared between several products
     try:
-        repo_definitions = test_data['content']
+        product_definitions = test_data['products']
     except KeyError as err:
-        print('Info: Test data does not include any global definition of repositories')
-        repo_definitions = []
+        print('Info: Test data does not include any global definition of products')
+        product_definitions = []
+    try:
+        content_definitions = test_data['content']
+    except KeyError as err:
+        print('Info: Test data does not include any global definition of contents')
+        content_definitions = []
+
+    glob_repo_defs = get_repo_definitions_for_products(product_definitions, content_definitions)
+    repo_definitions.extend(glob_repo_defs)
 
     # There can be also some content specific for owners
     try:
@@ -151,11 +211,16 @@ def get_repo_definitions(test_data):
     
     for owner in owners:
         try:
-            owner_content = owner['content']
+            owner_product_definitions = owner['products']
         except KeyError as err:
             continue
-        else:
-            repo_definitions.extend(owner_content)
+        try:
+            owner_content_definitions = owner['content']
+        except KeyError as err:
+            continue
+
+        owners_repo_defs = get_repo_definitions_for_products(owner_product_definitions, owner_content_definitions)
+        repo_definitions.extend(owners_repo_defs)
     
     return repo_definitions
 
@@ -264,11 +329,6 @@ def generate_repositories(repo_definitions, package_definitions):
         # Create repository with RPM packages
         run_command('createrepo_c %s' % repo_path)
 
-        # Try to create temporary product on candlepin server
-        ret = create_repo_product(repo)
-        if ret is None:
-            continue
-
         # Try to get product certificate from candlepin server and add it to repository
         cert = get_productid_cert(repo)
         if cert is not None:
@@ -280,9 +340,6 @@ def generate_repositories(repo_definitions, package_definitions):
             run_command('modifyrepo_c productid %s/repodata' % repo_path)
             # Remove temporary cert file
             os.remove('productid')
-
-        # Remove temporary product from candelpin server
-        #remove_repo_product(repo)
 
     # Copy exported file to root of repositories
     gpg_key_path = os.path.join(REPO_ROOT_DIR, "RPM-GPG-KEY-candlepin")
@@ -296,12 +353,25 @@ def generate_repositories(repo_definitions, package_definitions):
     owner_names = get_owners()
     generate_symlinks_for_owners(owner_names)
 
-def get_productid_cert(content, owner='admin'):
-    """
-    This function tries to get product-id certificate for given repository (content)
-    """
-    product_id = content['id']
 
+def get_productid_cert(repo_definition, owner='admin'):
+    """
+    This function tries to get product-id certificate for given repository
+    """
+    product_id = repo_definition['product_id']
+
+    # Try to read certificate from cached file
+    cert_path = os.path.join(CERT_DIR, str(product_id) + '.pem')
+    try:
+        with open(cert_path, 'r') as fp:
+            cert = fp.read()
+    except IOError as err:
+        pass
+    else:
+        return cert
+
+    # When the certificate cannot be found on the disk, then try to get certificate
+    # from the candlepin server
     try:
         r = requests.get(
             CANLDEPIN_SERVER_BASE_URL + 'owners/' + owner + '/products/' + str(product_id) + '/certificate',
@@ -321,83 +391,15 @@ def get_productid_cert(content, owner='admin'):
     except KeyError:
         return None
 
+    # When certificate was successfully downloaded from the server, then try to
+    # save the certificate to the file
+    try:
+        with open(cert_path, 'w') as fp:
+            fp.write(cert)
+    except IOError as err:
+        pass
+
     return cert
-
-
-def create_repo_product(content, owner="admin"):
-    """
-    This function tries to create temporary product for getting product-id certificate.
-    We need to create certificate with id that contains only one content and id of
-    product is equal to id of content.
-    """
-
-    # Name and ID have to be in specification of content
-    name = content['name']
-    content_id = product_id = content['id']
-    # Other attributes are optional in definition of content and have default values
-    arches = content.get('arches', 'noarch')
-    version = content.get('version', '1.0')
-
-    request_data = {
-        'name': name,
-        'id': product_id,
-        'multiplier': 1,
-        'attributes': {
-            'arch': arches,
-            'version': version,
-            'variant': 'ALL',
-            'type': 'SVC'
-        },
-        'dependentProductIds': [],
-        'reliesOn': []
-    }
-
-    # Create product itself
-    try:
-        r = requests.post(
-            CANLDEPIN_SERVER_BASE_URL + 'owners/' + owner + '/products',
-            json=request_data,
-            auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
-            verify=False)
-    except Exception as err:
-        print('Error: %s' % str(err))
-        return None
-
-    request_data = {
-        'enabled': True
-    }
-
-    # Add content to this product
-    try:
-        r = requests.post(
-            CANLDEPIN_SERVER_BASE_URL + 'owners/' + owner + '/products/' + str(product_id) + '/content/' + str(content_id),
-            json=request_data,
-            auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
-            verify=False
-            )
-    except Exception as err:
-        print('Error: %s' % str(err))
-        return None
-
-    return r
-
-
-def remove_repo_product(content, owner='admin'):
-    """
-    This function tries to remove temporary products from candlepin server
-    """
-    product_id = content['id']
-
-    try:
-        r = requests.delete(
-            CANLDEPIN_SERVER_BASE_URL + 'owners/' + owner + '/products/' + str(product_id),
-            auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
-            verify=False)
-    except Exception as err:
-        print('Error: %s' % str(err))
-        return None
-
-    return r
 
 
 def get_package_definitions(test_data):
@@ -437,7 +439,7 @@ def create_dummy_package(package, expect_script_path):
     rpm_file_path = os.path.join(RPMBUILD_ROOT_DIR, 'RPMS', arch, rpm_file_name)
 
     # Creating and signing many RPM packages can be time consuming. So, if RPM
-    # package aready exists, then it is not created again.
+    # package already exists, then it is not created again.
     if os.path.isfile(rpm_file_path):
         rpm_mtime = os.path.getmtime(rpm_file_path)
         if rpm_mtime > TEST_DATA_JSON_MTIME:

@@ -63,6 +63,18 @@
         {
             "name": "fluffy-snake",
             "version": "1"
+        },
+        {
+            "name": "awesome-dummy-docker-conf",
+            "version": "1"
+        },
+        {
+            "name": "awesome-dummy-ostree-conf",
+            "version": "1"
+        },
+        {
+            "name": "awesome-dummy-deb",
+            "version": "1"
         }
     ],
     "content": [
@@ -357,7 +369,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-docker-images",
             "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
-            "packages": ["awesome-sheep", "flying-fish"]
+            "packages": ["awesome-dummy-docker-conf"]
         },
         {
             "name": "awesomeos-ostree",
@@ -367,7 +379,17 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos-ostree",
             "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
-            "packages": ["awesome-sheep", "fluffy-snake"]
+            "packages": ["awesome-dummy-ostree-conf"]
+        },
+        {
+            "name": "awesomeos-deb",
+            "id": 3901,
+            "label": "awesomeos-deb",
+            "type": "deb",
+            "vendor": "Foo Vendor",
+            "content_url": "/path/to/awesomeos-deb",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
+            "packages": ["awesome-dummy-deb"]
         }
     ],
     "owners": [
@@ -815,7 +837,7 @@
     ],
     "products": [
         {
-            "name": "Clustering Bits",
+            "name": "Clustering Bits (no content)",
             "id": "37065",
             "attributes": {
                     "sockets": 2,
@@ -824,7 +846,7 @@
             "content": []
         },
         {
-            "name": "Load Balancing Bits",
+            "name": "Load Balancing Bits (no content)",
             "id": "37070",
             "attributes": {
                 "sockets": 2,
@@ -834,7 +856,7 @@
             "content": []
         },
         {
-            "name": "Shared Storage Bits",
+            "name": "Shared Storage Bits (no content)",
             "id": "37067",
             "attributes": {
                 "sockets": 2,
@@ -844,7 +866,7 @@
             "content": []
         },
         {
-            "name": "Large File Support Bits",
+            "name": "Large File Support Bits (no content)",
             "id": "37068",
             "attributes": {
                 "sockets": 2,
@@ -854,7 +876,7 @@
             "content": []
         },
         {
-            "name": "Management Bits",
+            "name": "Management Bits (no content)",
             "id": "37069",
             "attributes": {
                 "sockets": 2,
@@ -864,7 +886,7 @@
             "content": []
         },
         {
-            "name": "Shared File System Bits",
+            "name": "Shared File System Bits (no content)",
             "id": "88888",
             "attributes": {
                 "sockets": 1,
@@ -891,7 +913,7 @@
             ]
         },
         {
-            "name": "Awesome Hypervisor Bits",
+            "name": "Awesome Hypervisor Bits (no content)",
             "id": "98121",
             "version": "6.1",
             "attributes": {
@@ -899,8 +921,7 @@
                 "vcpu": 4,
                 "warning_period": 30
             },
-            "content": [
-            ]
+            "content": []
         },
         {
             "name": "Awesome OS Instance Server Bits",
@@ -983,6 +1004,21 @@
             ]
         },
         {
+            "name": "Awesome OS Debian Bits",
+            "id": "38070",
+            "content": [
+                [3901, true]
+            ]
+        },
+        {
+            "name": "Awesome OS Debian Bits",
+            "id": "awesomeos-debian",
+            "type": "MKT",
+            "provided_products": [
+                "38070"
+            ]
+        },
+        {
             "name": "Awesome OS Server Bundled",
             "id": "awesomeos-server",
             "type": "MKT",
@@ -1021,7 +1057,7 @@
             }
         },
         {
-            "name": "Awesome OS Server Basic (dc-virt)",
+            "name": "Awesome OS Server Basic (dc-virt, no content)",
             "id": "awesomeos-server-basic-vdc",
             "type": "MKT",
             "version": "0.1",
@@ -1393,7 +1429,7 @@
             ]
         },
         {
-            "name": "Awesome OS for All Arch (excpt for x86_64 content)",
+            "name": "Awesome OS for All Arch (except for x86_64 content)",
             "id": "awesomeos-all-no-86_64-cont",
             "version": "3.11",
             "arch": "ALL",
@@ -1718,7 +1754,7 @@
             }
         },
         {
-            "name": "Awesome OS Super Hypervisor",
+            "name": "Awesome OS Super Hypervisor (no content)",
             "id": "awesomeos-super-hypervisor",
             "version": "6.1",
             "type": "MKT",
@@ -1919,17 +1955,16 @@
             ]
         },
         {
-            "name": "Multi-Attribute Limited Product",
+            "name": "Multi-Attribute Limited Product (no content)",
             "id": "900",
             "version": "1.0",
             "arch": "x86_64",
             "attributes": {
             },
-            "content": [
-            ]
+            "content": []
         },
         {
-            "name": "Multi-Attribute Stackable (2 sockets)",
+            "name": "Multi-Attribute Stackable (2 sockets, no content)",
             "id": "sock2-multiattr",
             "type": "MKT",
             "attributes": {
@@ -1945,7 +1980,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute Stackable (4 cores)",
+            "name": "Multi-Attribute Stackable (4 cores, no content)",
             "id": "cores4-multiattr",
             "type": "MKT",
             "attributes": {
@@ -1960,7 +1995,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute Stackable (2 GB)",
+            "name": "Multi-Attribute Stackable (2 GB, no content)",
             "id": "ram2-multiattr",
             "type": "MKT",
             "attributes": {
@@ -1975,7 +2010,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute Stackable (2 GB, 2 Cores)",
+            "name": "Multi-Attribute Stackable (2 GB, 2 Cores, no content)",
             "id": "2cores-2ram-multiattr",
             "type": "MKT",
             "attributes": {
@@ -1991,7 +2026,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute Stackable (16 cores, 4 sockets, 8GB RAM)",
+            "name": "Multi-Attribute Stackable (16 cores, 4 sockets, 8GB RAM, no content)",
             "id": "sock-core-ram-multiattr",
             "type": "MKT",
             "attributes": {
@@ -2009,7 +2044,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute (non-stackable) (6 cores, 8GB)",
+            "name": "Multi-Attribute (non-stackable) (6 cores, 8GB, no content)",
             "id": "non-stacked-6core8ram-multiattr",
             "type": "MKT",
             "attributes": {
@@ -2023,7 +2058,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute (non-stackable) (24 cores, 6 sockets, 8GB RAM)",
+            "name": "Multi-Attribute (non-stackable) (24 cores, 6 sockets, 8GB RAM, no content)",
             "id": "non-stacked-multiattr",
             "type": "MKT",
             "attributes": {
@@ -2039,7 +2074,7 @@
             ]
         },
         {
-            "name": "Multi-Attribute (multi-entitlement only) (8 cores, 4GB)",
+            "name": "Multi-Attribute (multi-entitlement only) (8 cores, 4GB, no content)",
             "id": "non-stacked-8core4ram-multiattr",
             "type": "MKT",
             "attributes": {
@@ -2060,11 +2095,10 @@
             "arch": "x86_64",
             "attributes": {
             },
-            "content": [
-            ]
+            "content": []
         },
         {
-            "name": "Storage Limited (256 TB)",
+            "name": "Storage Limited (256 TB, no content)",
             "id": "storage-limited-256",
             "type": "MKT",
             "multiplier": 256,
@@ -2081,7 +2115,7 @@
             ]
         },
         {
-            "name": "Development SKU Product",
+            "name": "Development SKU Product, no content",
             "id": "dev-sku-product",
             "type": "MKT",
             "skip_pools": "true",
