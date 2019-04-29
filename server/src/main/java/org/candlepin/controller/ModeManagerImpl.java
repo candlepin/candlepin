@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -86,7 +87,8 @@ public class ModeManagerImpl implements ModeManager {
             fireModeChangeEvent(m);
         }
         if (m.equals(Mode.SUSPEND)) {
-            log.warn("Candlepin is entering suspend mode for the following reasons: {}", reasons);
+            log.warn("Candlepin is entering suspend mode for the following reasons: {}",
+                Arrays.asList(reasons));
         }
 
         cpMode = new CandlepinModeChange(new Date(), m, reasons);

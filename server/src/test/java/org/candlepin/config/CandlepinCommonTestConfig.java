@@ -33,9 +33,10 @@ public class CandlepinCommonTestConfig extends MapConfiguration {
         try {
             String cert = getClass().getResource("candlepin-ca.crt").toURI().getPath();
             String key = getClass().getResource("candlepin-ca.key").toURI().getPath();
+            String certUpstream = getClass().getClassLoader().getResource("certs/upstream").toURI().getPath();
 
             setProperty(ConfigProperties.CA_CERT, cert);
-            setProperty(ConfigProperties.CA_CERT_UPSTREAM, "target/test/resources/certs/upstream");
+            setProperty(ConfigProperties.CA_CERT_UPSTREAM, certUpstream);
             setProperty(ConfigProperties.CA_KEY, key);
             setProperty(ConfigProperties.CA_KEY_PASSWORD, "password");
             setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");

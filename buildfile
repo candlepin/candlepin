@@ -100,8 +100,8 @@ ANTLR = ['antlr:antlr:jar:2.7.7']
 EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.3.8.Final',
            'net.sf.ehcache:ehcache:jar:2.10.3',
            'org.ehcache:jcache:jar:1.0.0',
-           'javax.cache:cache-api:jar:1.0.0',
-           'net.sf.ehcache:management-ehcache-v2:jar:2.10.1']
+           'javax.cache:cache-api:jar:1.0.0'
+          ]
 
 VALIDATOR = ['org.hibernate.validator:hibernate-validator:jar:6.0.7.Final',
              'org.hibernate.validator:hibernate-validator-annotation-processor:jar:6.0.7.Final',

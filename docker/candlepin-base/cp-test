@@ -27,6 +27,46 @@ export AUTOCONF=1
 export FORCECERT=1
 export UNITTEST=0
 
+# functions to abstract away buildr vs. gradle differences
+build_clean() {
+    if [ -f ./gradlew ]; then
+        ./gradlew clean
+    else
+        buildr clean
+    fi
+}
+build_lint() {
+    if [ -f ./gradlew ]; then
+        ./gradlew checkstyleMain
+    else
+        buildr lint
+    fi
+}
+build_unittest() {
+    UTCMD=$1
+    if [ -f ../gradlew ]; then
+        ../gradlew test
+    else
+        buildr $UTCMD
+    fi
+}
+
+build_rspec() {
+    RSPEC_FILTER=$1
+
+    BUILDR_ARGS="rspec"
+    if [ ! -z "$RSPEC_FILTER" ]; then
+        BUILDR_ARGS="rspec:${RSPEC_FILTER}"
+        GRADLE_ARGS="--spec ${RSPEC_FILTER}"
+    fi
+
+    if [ -f ../gradlew ]; then
+        ../gradlew rspec ${GRADLE_ARGS}
+    else
+        buildr "${BUILDR_ARGS}"
+    fi
+}
+
 trapex() {
     target="$1"
     shift
@@ -93,7 +133,7 @@ cleanup() {
         # Run buildr clean in our target CP directory
         if [ "$CLEAN_CP" == "1" ]; then
             cd $CP_HOME
-            buildr clean
+            build_clean
         fi
 
         # Collect artifacts up to this point. If we're about to drop into a shell, we'll leave any
@@ -131,7 +171,7 @@ OPTIONS:
                    of times u was specifed in the arguments
   -l               run the linters against the code
   -s               run a bash shell when done
-  -b <task>        execute the specified buildr task
+  -b <task>        execute the specified buildr task (deprecated)
   -c <ref>         git reference to checkout
   -p <project>     subproject to build (defaults to "server")
   -j <version>     use a specific Java version instead of the auto-detected default
@@ -250,7 +290,7 @@ if [ "$LINTER" == "1" ]; then
 
     cd $CP_HOME
     tee /var/log/candlepin/lint.log < /tmp/teepipe &
-    buildr lint > /tmp/teepipe 2>&1
+    build_lint > /tmp/teepipe 2>&1
 fi
 
 # TODO: keep track of return code?
@@ -272,7 +312,7 @@ if [ "$UNITTEST" -gt 0 ]; then
     for (( i=1; i<=$UNITTEST; i++ ))
     do
         tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
-        buildr $UTCMD > /tmp/teepipe 2>&1
+        build_unittest $UTCMD > /tmp/teepipe 2>&1
         rm -f /tmp/teepipe
         mkfifo /tmp/teepipe
     done
@@ -332,16 +372,13 @@ if [ "$RSPEC" == "1" ]; then
     CLEAN_CP=1
 
     tee /var/log/candlepin/rspec.log < /tmp/teepipe &
-
-    BUILDR_ARGS="rspec"
-    if [ ! -z "$RSPEC_FILTER" ]; then
-        BUILDR_ARGS="rspec:${RSPEC_FILTER}"
-    fi
-
-    buildr "${BUILDR_ARGS}" > /tmp/teepipe 2>&1
+    build_rspec $RSPEC_FILTER > /tmp/teepipe 2>&1
 fi
 
 if [ ! -z "$BUILDR_TASK" ]; then
+    if [ -f ../gradlew ]; then
+        echo 'Warning: buildr is deprecated in this branch.'
+    fi
     echo "Running buildr $BUILDR_TASK..."
     CLEAN_CP=1
 
