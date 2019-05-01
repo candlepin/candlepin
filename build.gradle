@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 // vim: set expandtab sts=4 sw=4 ai:
 
 plugins {
@@ -135,8 +138,10 @@ allprojects {
 
     gradleLint {
         rules = ["dependency-parentheses"]
-//    rules = ["dependency-parentheses", "unused-exclude-by-dep"]
-//    criticalRules = ["unused-dependency"]
+        // Turn these on selectively.  They are a little too sensitive to leave on all the time,
+        // but they provide useful information when run occasionally.
+        // rules = ["dependency-parentheses", "unused-exclude-by-dep"]
+        // criticalRules = ["unused-dependency"]
     }
 
     // TODO This is an eyesore. We should just be enabling transitive deps everywhere and then
@@ -156,7 +161,7 @@ subprojects {
 
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
-//    options.compilerArgs << "-Xlint:deprecation"
+        // options.compilerArgs << "-Xlint:deprecation"
     }
 
     repositories {
@@ -171,7 +176,6 @@ subprojects {
     }
 }
 
-// Add checkstyle to just the common & server projects
 configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "candlepin" }) {
     apply plugin: "checkstyle"
     apply plugin: "org.candlepin.gradle.SpecVersion"
@@ -190,8 +194,7 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
         if (project.findProperty("app_db_name") && !"".equals(project.findProperty("app_db_name"))) {
             db_name = project.findProperty("app_db_name")
         }
-        // IF MYSQL set up the mysql stuff
-        // else set up postgres (default)
+        // If MYSQL set up the mysql stuff else set up postgres (default)
         if (project.findProperty("database_server") == "mysql") {
             jdbc_driver_class = "com.mysql.jdbc.Driver"
             jdbc_dialect = "org.hibernate.dialect.MySQL5InnoDBDialect"
@@ -216,6 +219,48 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
     dependencies {
         checkstyle libraries.checkstyle
         checkstyle project(":checks")
+    }
+
+    test {
+        useJUnitPlatform()
+
+        // Sometimes causes out of memory on vagrant
+        maxHeapSize = "2g"
+        jvmArgs "-XX:+HeapDumpOnOutOfMemoryError"
+
+        testLogging {
+            // set options for log level LIFECYCLE
+            events TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED
+                // TestLogEvent.STANDARD_OUT
+            exceptionFormat TestExceptionFormat.FULL
+            showExceptions true
+            showCauses true
+            showStackTraces true
+
+            // set options for log level DEBUG and INFO
+            debug {
+                events TestLogEvent.STARTED,
+                    TestLogEvent.FAILED,
+                    TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED,
+                    TestLogEvent.STANDARD_ERROR,
+                    TestLogEvent.STANDARD_OUT
+                exceptionFormat TestExceptionFormat.FULL
+            }
+            info.events = debug.events
+            info.exceptionFormat = debug.exceptionFormat
+
+            afterSuite { desc, result ->
+                if (!desc.parent) { // will match the outermost suite
+                    def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+                    def startItem = "|  ", endItem = "  |"
+                    def repeatLength = startItem.length() + output.length() + endItem.length()
+                    println("\n" + ("-" * repeatLength) + "\n" + startItem + output + endItem + "\n" + ("-" * repeatLength))
+                }
+            }
+        }
     }
 }
 
