@@ -24,25 +24,25 @@ tasks.withType(Checkstyle) {
 }
 
 dependencies {
-    compile libraries.collections
-    compile libraries.commons
-    compile libraries.guice
-    compile libraries.jackson
-    compile libraries.javax
-    compile libraries.liquibase
-    compile libraries.logging_deps
-    compile libraries.oauth
-    compile libraries.resteasy
-    compile libraries.hibernate_validator_ap
-    compile libraries.gettext
-    compile libraries.javax_servlet
-    compile libraries.javax_validation
-    compile libraries.validator
+    implementation libraries.collections
+    implementation libraries.commons
+    implementation libraries.guice
+    implementation libraries.jackson
+    implementation libraries.javax
+    implementation libraries.liquibase
+    implementation libraries.logging_deps
+    implementation libraries.oauth
+    implementation libraries.resteasy
+    implementation libraries.hibernate_validator_ap
+    implementation libraries.gettext
+    implementation libraries.javax_servlet
+    implementation libraries.javax_validation
+    implementation libraries.validator
 
-    testCompile libraries.core_testing
-    testCompile libraries.liquibase_slf4j
-    testCompile libraries.jukito
-    testCompile libraries.jmock
+    testImplementation libraries.core_testing
+    testImplementation libraries.liquibase_slf4j
+    testImplementation libraries.jukito
+    testImplementation libraries.jmock
 }
 
 task pom {
