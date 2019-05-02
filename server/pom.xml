@@ -63,7 +63,6 @@
     <net.sf.ehcache-ehcache.version>2.10.3</net.sf.ehcache-ehcache.version>
     <org.ehcache-jcache.version>1.0.0</org.ehcache-jcache.version>
     <javax.cache-cache-api.version>1.0.0</javax.cache-cache-api.version>
-    <net.sf.ehcache-management-ehcache-v2.version>2.10.1</net.sf.ehcache-management-ehcache-v2.version>
     <org.hibernate.validator-hibernate-validator.version>6.0.7.Final</org.hibernate.validator-hibernate-validator.version>
     <org.hibernate.validator-hibernate-validator-annotation-processor.version>6.0.7.Final</org.hibernate.validator-hibernate-validator-annotation-processor.version>
     <javax.validation-validation-api.version>2.0.1.Final</javax.validation-validation-api.version>
@@ -642,17 +641,6 @@
       <groupId>javax.cache</groupId>
       <artifactId>cache-api</artifactId>
       <version>${javax.cache-cache-api.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.ehcache</groupId>
-      <artifactId>management-ehcache-v2</artifactId>
-      <version>${net.sf.ehcache-management-ehcache-v2.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>

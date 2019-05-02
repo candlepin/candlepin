@@ -4,9 +4,9 @@ description "Candlepin Checkstyle plugin"
 version = "0.3"
 
 dependencies {
-    compile libraries.checkstyle
-    compile "org.antlr:antlr4-runtime:4.5.3"
-    compile libraries.antlr
+    implementation libraries.checkstyle
+    implementation "org.antlr:antlr4-runtime:4.5.3"
+    implementation libraries.antlr
 }
 
 task pom {

@@ -1,13 +1,10 @@
 // vim: set expandtab sts=4 sw=4 ai:
-
 import groovy.text.GStringTemplateEngine
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+description = "Candlepin Server"
 
 apply plugin: "war"
 apply plugin: Gettext
-
-description = "Candlepin Server"
 
 // Copy the resources to the main classes directory so that the
 // persistence context is in the the same classpath entry for
@@ -34,7 +31,7 @@ war {
     manifest {
         attributes(
             "Implementation-Title": "The Candlepin Project",
-            "Copyright": "Red Hat, Inc. 2018"
+            "Copyright": "Red Hat, Inc. 2009-" + new Date().format("y")
         )
     }
     // Copy the license file into place in the final manifest
@@ -62,141 +59,98 @@ task generateConfig() {
 }
 
 dependencies {
+    annotationProcessor libraries.hibernate_validator_ap
 
-    compile project(":candlepin-common")
+    implementation project(":candlepin-common")
 
-    compile libraries.antlr
-    compile libraries.commons
-    compile libraries.collections
-    compile libraries.guice
-    compile libraries.jackson
-    compile libraries.javax
-    compile libraries.liquibase
-    compile libraries.logging_deps
-    compile libraries.oauth
-    compile libraries.resteasy
-    compile libraries.sun_jaxb
-    compile libraries.swagger
-    compile libraries.validator
-    compile libraries.javax_validation
-
-    testCompile libraries.core_testing
-    testCompile libraries.jukito
-    testCompile libraries.liquibase_slf4j
-    testCompile libraries.jmock
+    implementation libraries.antlr
+    implementation libraries.commons
+    implementation libraries.collections
+    implementation libraries.gettext
+    implementation libraries.guice
+    implementation libraries.jackson
+    implementation libraries.javax
+    implementation libraries.liquibase
+    implementation libraries.logging_deps
+    implementation libraries.oauth
+    implementation libraries.resteasy
+    implementation libraries.sun_jaxb
+    implementation libraries.swagger
+    implementation libraries.validator
+    implementation libraries.javax_validation
 
     // Hibernate
-    compile "org.hibernate:hibernate-core:5.3.8.Final"
-    compile "org.hibernate:hibernate-c3p0:5.3.8.Final"
-    compile "org.hibernate.common:hibernate-commons-annotations:5.0.4.Final"
-    compile "org.hibernate.validator:hibernate-validator:6.0.7.Final"
-    compile libraries.hibernate_validator_ap
-    annotationProcessor libraries.hibernate_validator_ap
-    compile "net.bytebuddy:byte-buddy:1.9.4"
-    compile "org.javassist:javassist:3.23.1-GA"
-    compile "com.fasterxml:classmate:1.3.4"
-    compile "com.mchange:c3p0:0.9.5.2"
-    compile "com.mchange:mchange-commons-java:0.2.11"
-    compile "org.dom4j:dom4j:2.1.1"
-    compile "org.jboss:jandex:2.0.5.Final"
-    compile "org.jboss.logging:jboss-logging:3.3.2.Final"
-    compile "javax.activation:javax.activation-api:1.2.0"
+    implementation "org.hibernate:hibernate-core:5.3.8.Final"
+    implementation "org.hibernate:hibernate-c3p0:5.3.8.Final"
+    implementation "org.hibernate.common:hibernate-commons-annotations:5.0.4.Final"
+    implementation "org.hibernate.validator:hibernate-validator:6.0.7.Final"
+    implementation "net.bytebuddy:byte-buddy:1.9.4"
+    implementation "org.javassist:javassist:3.23.1-GA"
+    implementation "com.fasterxml:classmate:1.3.4"
+    implementation "com.mchange:c3p0:0.9.5.2"
+    implementation "com.mchange:mchange-commons-java:0.2.11"
+    implementation "org.dom4j:dom4j:2.1.1"
+    implementation "org.jboss:jandex:2.0.5.Final"
+    implementation "org.jboss.logging:jboss-logging:3.3.2.Final"
+    implementation "javax.activation:javax.activation-api:1.2.0"
 
     // Ehcache
-    compile "org.hibernate:hibernate-ehcache:5.3.8.Final"
-    compile "net.sf.ehcache:ehcache:2.10.3"
-    compile "org.ehcache:jcache:1.0.0"
-    compile "javax.cache:cache-api:1.0.0"
+    implementation "org.hibernate:hibernate-ehcache:5.3.8.Final"
+    implementation "net.sf.ehcache:ehcache:2.10.3"
+    implementation "org.ehcache:jcache:1.0.0"
+    implementation "javax.cache:cache-api:1.0.0"
 
-    // DB Drivers
-    compile "org.postgresql:postgresql:42.2.2"
-    compile "mysql:mysql-connector-java:5.1.26"
-    compile "org.mariadb.jdbc:mariadb-java-client:2.3.0"
-
-    // Testing DB Drivers
-    testCompile "org.hsqldb:hsqldb:2.3.2"
-
-    compile libraries.gettext
-
-    // Only include bouncycastle for testing purposes (compare against jss)
-    testCompile "org.bouncycastle:bcpkix-jdk15on:1.60"
-    testCompile "org.bouncycastle:bcprov-jdk15on:1.60"
-
-    compile "org.mozilla:jss:4.5.0"
-    compile "ldapjdk:ldapjdk:4.19"
-    compile "org.quartz-scheduler:quartz:2.2.1"
+    implementation "org.mozilla:jss:4.5.0"
+    implementation "ldapjdk:ldapjdk:4.19"
+    implementation "org.quartz-scheduler:quartz:2.2.1"
 
     // These for ActiveMQ Artemis
-    compile "org.apache.activemq:artemis-server:${versions.artemis}"
-    compile "org.apache.activemq:artemis-core-client:${versions.artemis}"
-    compile "org.apache.activemq:artemis-commons:${versions.artemis}"
-    compile "org.apache.activemq:artemis-selector:${versions.artemis}"
-    compile "org.apache.activemq:artemis-journal:${versions.artemis}"
-    compile "io.netty:netty-all:4.1.16.Final"
-    compile "commons-beanutils:commons-beanutils:1.9.3"
-    compile "org.jgroups:jgroups:3.6.13.Final"
-    compile "org.apache.geronimo.specs:geronimo-json_1.0_spec:1.0-alpha-1"
-    compile "org.apache.johnzon:johnzon-core:0.9.5"
+    implementation "org.apache.activemq:artemis-server:${versions.artemis}"
+    implementation "org.apache.activemq:artemis-core-client:${versions.artemis}"
+    implementation "org.apache.activemq:artemis-commons:${versions.artemis}"
+    implementation "org.apache.activemq:artemis-selector:${versions.artemis}"
+    implementation "org.apache.activemq:artemis-journal:${versions.artemis}"
+    implementation "io.netty:netty-all:4.1.16.Final"
+    implementation "commons-beanutils:commons-beanutils:1.9.3"
+    implementation "org.jgroups:jgroups:3.6.13.Final"
+    implementation "org.apache.geronimo.specs:geronimo-json_1.0_spec:1.0-alpha-1"
+    implementation "org.apache.johnzon:johnzon-core:0.9.5"
 
     // AMQP drivers for talking to QPID
-    compile "org.apache.qpid:qpid-common:0.32"
-    compile "org.apache.qpid:qpid-client:0.32"
-    compile "org.apache.mina:mina-core:1.0.1"
-    compile "org.apache.mina:mina-filter-ssl:1.0.1"
-    compile "geronimo-spec:geronimo-spec-jms:1.1-rc4"
+    implementation "org.apache.qpid:qpid-common:0.32"
+    implementation "org.apache.qpid:qpid-client:0.32"
+    implementation "org.apache.mina:mina-core:1.0.1"
+    implementation "org.apache.mina:mina-filter-ssl:1.0.1"
+    implementation "geronimo-spec:geronimo-spec-jms:1.1-rc4"
 
     // Javascript engine
-    compile "org.mozilla:rhino:1.7R3"
+    implementation "org.mozilla:rhino:1.7R3"
 
-    providedCompile libraries.javax_servlet
+    // Listed twice due to design decision by the Gradle team: https://discuss.gradle.org/t/compileonly-dependencies-are-not-available-in-tests/15366/3
+    compileOnly libraries.javax_servlet
+    testCompile libraries.javax_servlet
 
     if (use_logdriver) {
-        compile "org.slf4j:log4j-over-slf4j:1.7.5"
-        compile "logdriver:logdriver:1.0"
+        implementation "org.slf4j:log4j-over-slf4j:1.7.5"
+        implementation "logdriver:logdriver:1.0"
     }
 
-}
+    // DB Drivers
+    runtimeOnly "org.postgresql:postgresql:42.2.2"
+    runtimeOnly "mysql:mysql-connector-java:5.1.26"
+    runtimeOnly "org.mariadb.jdbc:mariadb-java-client:2.3.0"
 
-test {
-    useJUnitPlatform()
+    testImplementation libraries.core_testing
+    testImplementation libraries.jukito
+    testImplementation libraries.liquibase_slf4j
+    testImplementation libraries.jmock
 
-    // Sometimes causes out of memory on vagrant
-    maxHeapSize = "2g"
-    jvmArgs "-XX:+HeapDumpOnOutOfMemoryError"
+    // Only include bouncycastle for testing purposes (compare against jss)
+    testImplementation "org.bouncycastle:bcpkix-jdk15on:1.60"
+    testImplementation "org.bouncycastle:bcprov-jdk15on:1.60"
 
-    testLogging {
-        // set options for log level LIFECYCLE
-        events TestLogEvent.FAILED,
-            TestLogEvent.PASSED,
-            TestLogEvent.SKIPPED
-//            TestLogEvent.STANDARD_OUT
-        exceptionFormat TestExceptionFormat.FULL
-        showExceptions true
-        showCauses true
-        showStackTraces true
-
-        // set options for log level DEBUG and INFO
-        debug {
-            events TestLogEvent.STARTED,
-                TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_ERROR,
-                TestLogEvent.STANDARD_OUT
-            exceptionFormat TestExceptionFormat.FULL
-        }
-        info.events = debug.events
-        info.exceptionFormat = debug.exceptionFormat
-
-        afterSuite { desc, result ->
-            if (!desc.parent) { // will match the outermost suite
-                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
-                def startItem = "|  ", endItem = "  |"
-                def repeatLength = startItem.length() + output.length() + endItem.length()
-                println("\n" + ("-" * repeatLength) + "\n" + startItem + output + endItem + "\n" + ("-" * repeatLength))
-            }
-        }
-    }
+    // Testing DB Drivers
+    testRuntime "org.hsqldb:hsqldb:2.3.2"
 }
 
 task pom {

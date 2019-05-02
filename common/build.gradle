@@ -1,8 +1,4 @@
 // vim: set expandtab sts=4 sw=4 ai:
-
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
-
 description = "Candlepin Common"
 
 apply plugin: Msgfmt
@@ -28,63 +24,25 @@ tasks.withType(Checkstyle) {
 }
 
 dependencies {
-    compile libraries.collections
-    compile libraries.commons
-    compile libraries.guice
-    compile libraries.jackson
-    compile libraries.javax
-    compile libraries.liquibase
-    compile libraries.logging_deps
-    compile libraries.oauth
-    compile libraries.resteasy
-    compile libraries.hibernate_validator_ap
-    compile libraries.gettext
-    compile libraries.javax_servlet
-    compile libraries.javax_validation
-    compile libraries.validator
+    implementation libraries.collections
+    implementation libraries.commons
+    implementation libraries.guice
+    implementation libraries.jackson
+    implementation libraries.javax
+    implementation libraries.liquibase
+    implementation libraries.logging_deps
+    implementation libraries.oauth
+    implementation libraries.resteasy
+    implementation libraries.hibernate_validator_ap
+    implementation libraries.gettext
+    implementation libraries.javax_servlet
+    implementation libraries.javax_validation
+    implementation libraries.validator
 
-    testCompile libraries.core_testing
-    testCompile libraries.liquibase_slf4j
-    testCompile libraries.jukito
-    testCompile libraries.jmock
-}
-
-test {
-    useJUnitPlatform()
-
-    testLogging {
-        // set options for log level LIFECYCLE
-        events TestLogEvent.FAILED,
-            TestLogEvent.PASSED,
-            TestLogEvent.SKIPPED
-//            TestLogEvent.STANDARD_OUT
-        exceptionFormat TestExceptionFormat.FULL
-        showExceptions true
-        showCauses true
-        showStackTraces true
-
-        // set options for log level DEBUG and INFO
-        debug {
-            events TestLogEvent.STARTED,
-                TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_ERROR,
-                TestLogEvent.STANDARD_OUT
-            exceptionFormat TestExceptionFormat.FULL
-        }
-        info.events = debug.events
-        info.exceptionFormat = debug.exceptionFormat
-
-        afterSuite { desc, result ->
-            if (!desc.parent) { // will match the outermost suite
-                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
-                def startItem = "|  ", endItem = "  |"
-                def repeatLength = startItem.length() + output.length() + endItem.length()
-                println("\n" + ("-" * repeatLength) + "\n" + startItem + output + endItem + "\n" + ("-" * repeatLength))
-            }
-        }
-    }
+    testImplementation libraries.core_testing
+    testImplementation libraries.liquibase_slf4j
+    testImplementation libraries.jukito
+    testImplementation libraries.jmock
 }
 
 task pom {

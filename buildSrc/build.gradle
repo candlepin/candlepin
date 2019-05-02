@@ -2,7 +2,7 @@ apply plugin: "java"
 apply plugin: "java-gradle-plugin"
 
 dependencies {
-    compile gradleApi()
+    implementation gradleApi()
 }
 
 gradlePlugin {
