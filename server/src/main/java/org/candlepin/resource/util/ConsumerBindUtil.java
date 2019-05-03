@@ -88,6 +88,10 @@ public class ConsumerBindUtil {
             handleActivationKeyOverrides(consumer, key.getContentOverrides());
             handleActivationKeyRelease(consumer, key.getReleaseVer());
             keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
+            handleActivationKeyUsage(consumer, key.getUsage());
+            handleActivationKeyRole(consumer, key.getRole());
+            handleActivationKeyAddons(consumer, key.getAddOns());
+
             if (key.isAutoAttach() != null && key.isAutoAttach()) {
                 if (autoattachDisabledForOwner || key.getOwner().isContentAccessEnabled()) {
                     String caMessage = "";
@@ -209,6 +213,26 @@ public class ConsumerBindUtil {
         }
         else  {
             return true;
+        }
+    }
+
+    private void handleActivationKeyUsage(Consumer consumer, String usage) {
+        if (usage != null && !usage.isEmpty()) {
+            consumer.setUsage(usage);
+        }
+    }
+
+    private void handleActivationKeyRole(Consumer consumer, String role) {
+        if (role != null && !role.isEmpty()) {
+            consumer.setRole(role);
+        }
+    }
+
+    private void handleActivationKeyAddons(Consumer consumer, Set<String> addOns) {
+        if (addOns != null && !addOns.isEmpty()) {
+            Set<String> newAddOns = new HashSet<>();
+            newAddOns.addAll(addOns);
+            consumer.setAddOns(newAddOns);
         }
     }
 

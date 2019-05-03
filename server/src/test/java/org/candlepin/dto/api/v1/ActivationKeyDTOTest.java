@@ -56,6 +56,8 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
         this.values.put("Owner", owner);
         this.values.put("ReleaseVersion", "test-release-ver");
         this.values.put("ServiceLevel", "test-service-level");
+        this.values.put("Usage", "test-usage");
+        this.values.put("Role", "test-role");
         this.values.put("AutoAttach", true);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
@@ -73,6 +75,10 @@ public class ActivationKeyDTOTest extends AbstractDTOTest<ActivationKeyDTO> {
         productDTO.put("productId", "test-id-prodDto");
         productDTOs.add(productDTO);
         this.values.put("ProductDTOs", productDTOs);
+
+        Set<String> addOns = new HashSet<>();
+        addOns.add("test-addon");
+        this.values.put("AddOns", addOns);
 
         Set<ContentOverrideDTO> overrides = new HashSet<>();
         overrides.add(new ContentOverrideDTO()

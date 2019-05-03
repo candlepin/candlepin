@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20190423122527-1" author="wpoteat">
+        <comment> Add system purpose usage column to cp_activation_key</comment>
+        <addColumn tableName="cp_activation_key">
+            <column name="sp_usage" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="20190423122527-2" author="wpoteat">
+        <comment> Add system purpose role column to cp_activation_key</comment>
+        <addColumn tableName="cp_activation_key">
+            <column name="sp_role" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20190423122527-3" author="wpoteat">
+        <comment>Add required table to store an activation key's system purpose addons.</comment>
+        <createTable tableName="cp_act_key_sp_add_on">
+            <column name="activation_key_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="add_on" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20190423122527-4" author="wpoteat">
+        <comment>Add a foreign key reference to consumer.</comment>
+        <addForeignKeyConstraint constraintName="cp_act_key_add_on_fk"
+                                 onDelete="CASCADE"
+                                 baseTableName="cp_act_key_sp_add_on"
+                                 baseColumnNames="activation_key_id"
+                                 referencedTableName="cp_activation_key"
+                                 referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="20190423122527-5" author="wpoteat">
+        <comment>Add index on add_on column since it is used when removing addons.</comment>
+        <createIndex indexName="idx_act_key_add_on" tableName="cp_act_key_sp_add_on" unique="false">
+            <column name="add_on"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

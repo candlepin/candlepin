@@ -35,7 +35,9 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -105,6 +107,19 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
     @Column(length = 255, nullable =  true)
     @Size(max = 255)
     private String serviceLevel;
+
+    @Column(name = "sp_usage", length = 255, nullable =  true)
+    @Size(max = 255)
+    private String usage;
+
+    @Column(name = "sp_role", length = 255, nullable =  true)
+    @Size(max = 255)
+    private String role;
+
+    @ElementCollection
+    @CollectionTable(name = "cp_act_key_sp_add_on", joinColumns = @JoinColumn(name = "activation_key_id"))
+    @Column(name = "add_on")
+    private Set<String> addOns = new HashSet<>();
 
     // must allow null state to determine if an update intended to alter
     @Column(name = "auto_attach")
@@ -419,6 +434,48 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
      */
     public void setServiceLevel(String serviceLevel) {
         this.serviceLevel = serviceLevel;
+    }
+
+    /**
+     * @return the usage
+     */
+    public String getUsage() {
+        return usage;
+    }
+
+    /**
+     * @param usage the usage to set
+     */
+    public void setUsage(String usage) {
+        this.usage = usage;
+    }
+
+    /**
+     * @return the role
+     */
+    public String getRole() {
+        return role;
+    }
+
+    /**
+     * @param role the role to set
+     */
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    /**
+     * @return the addons
+     */
+    public Set<String> getAddOns() {
+        return addOns;
+    }
+
+    /**
+     * @param addOns the addOns to set
+     */
+    public void setAddOns(Set<String> addOns) {
+        this.addOns = addOns;
     }
 
     /**

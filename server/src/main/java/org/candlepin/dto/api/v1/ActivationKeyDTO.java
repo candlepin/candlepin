@@ -145,6 +145,9 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
 
     private String releaseVer;
     private String serviceLevel;
+    private String usage;
+    private String role;
+    private Set<String> addOns;
     private Boolean autoAttach;
     private Set<ActivationKeyPoolDTO> pools;
 
@@ -300,6 +303,68 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
         return this;
     }
 
+    /**
+     * Retrieves the usage of this ActivationKeyDTO object.
+     *
+     * @return the usage of this ActivationKeyDTO object.
+     */
+    public String getUsage() {
+        return usage;
+    }
+
+    /**
+     * Sets the usage of this ActivationKeyDTO object.
+     *
+     * @param usage the usage of this ActivationKeyDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ActivationKeyDTO setUsage(String usage) {
+        this.usage = usage;
+        return this;
+    }
+
+    /**
+     * Retrieves the role of this ActivationKeyDTO object.
+     *
+     * @return the role of this ActivationKeyDTO object.
+     */
+    public String getRole() {
+        return role;
+    }
+
+    /**
+     * Sets the role of this ActivationKeyDTO object.
+     *
+     * @param role the role of this ActivationKeyDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ActivationKeyDTO setRole(String role) {
+        this.role = role;
+        return this;
+    }
+
+    /**
+     * Retrieves the add ons of this ActivationKeyDTO object.
+     *
+     * @return the add ons of this ActivationKeyDTO object.
+     */
+    public SetView<String> getAddOns() {
+        return this.addOns != null ? new SetView<>(this.addOns) : null;
+    }
+
+    /**
+     * Sets the add ons of this ActivationKeyDTO object.
+     *
+     * @param addOns the add ons of this ActivationKeyDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ActivationKeyDTO setAddOns(Set<String> addOns) {
+        this.addOns = addOns != null ?  new HashSet<>(addOns) : null;
+        return this;
+    }
     /**
      * Returns true if auto attach is enabled for this ActivationKeyDTO object, false otherwise.
      *
@@ -715,6 +780,9 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
                 .append(thisOwnerId, thatOwnerId)
                 .append(this.getReleaseVersion(), that.getReleaseVersion())
                 .append(this.getServiceLevel(), that.getServiceLevel())
+                .append(this.getUsage(), that.getUsage())
+                .append(this.getRole(), that.getRole())
+                .append(this.getAddOns(), that.getAddOns())
                 .append(this.isAutoAttach(), that.isAutoAttach())
                 .append(this.getPools(), that.getPools())
                 .append(this.getProductIds(), that.getProductIds())
@@ -742,6 +810,9 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
             .append(this.getOwner() != null ? this.getOwner().getId() : null)
             .append(this.getReleaseVersion())
             .append(this.getServiceLevel())
+            .append(this.getUsage())
+            .append(this.getRole())
+            .append(this.getAddOns())
             .append(this.isAutoAttach())
             .append(this.getPools())
             .append(this.getProductIds())
@@ -794,6 +865,9 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
             .setOwner(source.getOwner())
             .setReleaseVersion(source.getReleaseVersion())
             .setServiceLevel(source.getServiceLevel())
+            .setUsage(source.getUsage())
+            .setRole(source.getRole())
+            .setAddOns(source.getAddOns())
             .setAutoAttach(source.isAutoAttach())
             .setPools(source.getPools())
             .setProductIds(source.getProductIds())

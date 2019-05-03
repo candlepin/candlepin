@@ -39,7 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -175,6 +177,20 @@ public class ActivationKeyResource {
 
         if (update.getDescription() != null) {
             toUpdate.setDescription(update.getDescription());
+        }
+
+        if (update.getUsage() != null) {
+            toUpdate.setUsage(update.getUsage());
+        }
+
+        if (update.getRole() != null) {
+            toUpdate.setRole(update.getRole());
+        }
+
+        if (update.getAddOns() != null) {
+            Set<String> addOns = new HashSet<>();
+            addOns.addAll(update.getAddOns());
+            toUpdate.setAddOns(addOns);
         }
 
         if (update.isAutoAttach() != null) {
