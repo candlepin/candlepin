@@ -172,7 +172,7 @@ subprojects {
         maven { url "http://repository.jboss.org/nexus/content/groups/public/" }
         maven { url "http://oauth.googlecode.com/svn/code/maven/" }
         // For LogDriver
-        ivy { url "http://awood.fedorapeople.org/ivy/candlepin/" }
+        maven { url "http://awood.fedorapeople.org/ivy/candlepin/" }
     }
 }
 
