@@ -59,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.util.Collections;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,6 +69,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -710,9 +712,6 @@ public class JobManager implements ModeChangeListener {
         // Validate builder state
 
         // TODO:
-        // Add job filtering/deduplication by criteria
-
-        // TODO:
         // Don't allow queueing jobs which are disabled? Should that be disabled entirely or not
         // runnable by this node?
 
@@ -720,12 +719,46 @@ public class JobManager implements ModeChangeListener {
         status.setState(JobState.CREATED);
 
         try {
-            // Persist the job status so that the ID will be generated.
-            status = this.jobCurator.create(status);
+            // Check if the queueing is blocked by constraints
+            Collection<JobConstraint> constraints = builder.getConstraints();
+            Set<AsyncJobStatus> blockingJobs = new HashSet<>();
 
-            // Build and send the job message and update the job state accordingly
-            status = this.postJobStatusMessage(status);
-            log.debug("Job queued: {}", status);
+            if (constraints != null && !constraints.isEmpty()) {
+                Collection<AsyncJobStatus> jobs = this.jobCurator.getNonTerminalJobs();
+
+                for (AsyncJobStatus existing : jobs) {
+                    // Check inbound job's constraints
+                    for (JobConstraint constraint : constraints) {
+                        if (constraint.test(status, existing)) {
+                            blockingJobs.add(existing);
+                        }
+                    }
+
+                    // TODO: Add support for two-way checking of job constraints
+                }
+            }
+
+            if (blockingJobs.isEmpty()) {
+                // Persist the job status so that the ID will be generated.
+                status = this.jobCurator.create(status);
+
+                // Build and send the job message and update the job state accordingly
+                status = this.postJobStatusMessage(status);
+                log.info("Job queued: {}", status);
+            }
+            else {
+                // TODO: Add support for the WAITING option. For now, always default to ABORTED
+
+                String jobIds = blockingJobs.stream()
+                    .map(AsyncJobStatus::getId)
+                    .collect(Collectors.joining(", "));
+
+                status.setState(JobState.ABORTED);
+                status.setJobResult(String.format("Job queuing blocked by the following jobs: %s", jobIds));
+
+                log.info("Unable to queue job: {}; blocked by the following existing jobs: {}",
+                    status.getName(), jobIds);
+            }
         }
         catch (JobStateManagementException e) {
             if (log.isDebugEnabled()) {
