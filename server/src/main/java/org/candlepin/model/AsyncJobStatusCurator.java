@@ -14,6 +14,14 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.AsyncJobStatus.JobState;
+
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.inject.Singleton;
 
 
@@ -28,6 +36,54 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
         super(AsyncJobStatus.class);
     }
 
-    // TODO: Add things here as needed
+    /**
+     * Fetches a collection of jobs in the given states. If no jobs can be found in the states
+     * specified, this method returns an empty collection.
+     *
+     * @param states
+     *  a collection of states to use for filtering jobs
+     *
+     * @return
+     *  a collection of jobs in the provided states
+     */
+    public List<AsyncJobStatus> getJobsInState(Collection<AsyncJobStatus.JobState> states) {
+        if (states != null && !states.isEmpty()) {
+            String jpql = "SELECT aj FROM AsyncJobStatus aj WHERE aj.state IN (:states)";
 
+            return this.getEntityManager()
+                .createQuery(jpql, AsyncJobStatus.class)
+                .setParameter("states", states)
+                .getResultList();
+        }
+
+        return new ArrayList<>();
+    }
+
+    /**
+     * Fetches a collection of jobs in the given states. If no jobs can be found in the states
+     * specified, this method returns an empty collection.
+     *
+     * @param states
+     *  an array of states to use for filtering jobs
+     *
+     * @return
+     *  a collection of jobs in the provided states
+     */
+    public List<AsyncJobStatus> getJobsInState(AsyncJobStatus.JobState... states) {
+        return states != null ? this.getJobsInState(Arrays.asList(states)) : new ArrayList();
+    }
+
+    /**
+     * Fetches a collection of jobs currently in non-terminal states
+     *
+     * @return
+     *  a collection of jobs in non-terminal states
+     */
+    public List<AsyncJobStatus> getNonTerminalJobs() {
+        Collection<JobState> states = Arrays.stream(JobState.values())
+            .filter(s -> !s.isTerminal())
+            .collect(Collectors.toSet());
+
+        return this.getJobsInState(states);
+    }
 }
