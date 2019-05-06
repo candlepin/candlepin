@@ -14,9 +14,12 @@
  */
 package org.candlepin.async;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 
 
@@ -30,7 +33,7 @@ public class JobBuilder {
     private String group;
     private Map<String, String> metadata;
     private Map<String, Object> arguments;
-    private Map<String, String> restrictions;
+    private Set<JobConstraint> constraints;
     private int retries;
     private String logLevel;
     private boolean logExecutionDetails;
@@ -41,7 +44,7 @@ public class JobBuilder {
     public JobBuilder() {
         this.metadata = new HashMap<>();
         this.arguments = new HashMap<>();
-        this.restrictions = new HashMap<>();
+        this.constraints = new HashSet<>();
 
         this.retries = 0;
         this.logExecutionDetails = true;
@@ -189,50 +192,35 @@ public class JobBuilder {
         return Collections.unmodifiableMap(this.arguments);
     }
 
-    // /**
-    //  * Adds a unique restriction to this job. If this job is passed to the job manager while an
-    //  * existing job matches any of the unique restrictions, the new job will be rejected as a
-    //  * duplicate.
-    //  *
-    //  * @param key
-    //  *  The key defining the unique restriction; i.e. "product_id" or "owner_id"
-    //  *
-    //  * @param value
-    //  *  The value of the unique restriction
-    //  *
-    //  * @return
-    //  *  this JobBuilder instance
-    //  */
-    // public JobBuilder addUniqueRestriction(String key, String value) {
-    //     if (key == null) {
-    //         throw new IllegalArgumentException("key is null");
-    //     }
+    /**
+     * Adds a queuing constraint to this job builder. If the constraint has already been added, it
+     * will not be added again.
+     *
+     * @param constraint
+     *  the queuing constraint to add to this job
+     *
+     * @return
+     *  this JobBuilder instance
+     */
+    public JobBuilder addConstraint(JobConstraint constraint) {
+        if (constraint == null) {
+            throw new IllegalArgumentException("constraint is null");
+        }
 
-    //     if (value == null) {
-    //         throw new IllegalArgumentException("value is null");
-    //     }
+        this.constraints.add(constraint);
+        return this;
+    }
 
-    //     // Impl note:
-    //     // It's potentially problematic if someone sets empty values here, but I don't think
-    //     // it would break any queries or otherwise not work; it'd just be... silly and make
-    //     // debugging a bit painful.
-
-    //     this.restrictions.put(key, value);
-    //     return this;
-    // }
-
-    // /**
-    //  * Fetches a mapping of the unique restrictions set for this job. If the job does not have any
-    //  * restrictions, this method returns an empty map. Note that the map returned by this method
-    //  * cannot be modified directly, though changes made to the unique restrictions by this builder
-    //  * will be reflected in the returned map.
-    //  *
-    //  * @return
-    //  *  the map of unique restrictions for this job
-    //  */
-    // public Map<String, String> getUniqueRestrictions() {
-    //     return Collections.unmodifiableMap(this.restrictions);
-    // }
+    /**
+     * Fetches the collection of queuing constraints to apply to this job. If this job does not have
+     * any constraints, this method returns an empty collection.
+     *
+     * @return
+     *  a collection of queuing constraints to apply to this job
+     */
+    public Collection<JobConstraint> getConstraints() {
+        return Collections.unmodifiableSet(this.constraints);
+    }
 
     /**
      * Sets the number of times this job will be retried if it fails to complete normally. Values

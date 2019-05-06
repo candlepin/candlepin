@@ -61,8 +61,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -976,4 +978,67 @@ public class JobManagerTest {
 
         manager.start();
     }
+
+    @Test
+    public void testJobIsQueuedIfConstraintsPass() {
+        Map<String, Object> ejobData1 = new HashMap<>();
+        ejobData1.put("arg1", "val1");
+
+        Map<String, Object> ejobData2 = new HashMap<>();
+        ejobData2.put("arg1", "val2");
+
+        AsyncJobStatus ejob1 = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setJobData(ejobData1));
+
+        AsyncJobStatus ejob2 = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setJobData(ejobData2));
+
+        JobBuilder builder = JobBuilder.forJob(JOB_KEY)
+            .addConstraint(JobConstraints.uniqueByArgument("arg1"))
+            .setJobArgument("arg1", "val3");
+
+        doReturn(Arrays.asList(ejob1, ejob2)).when(this.jobCurator).getNonTerminalJobs();
+
+        JobManager manager = this.createJobManager();
+        AsyncJobStatus result = manager.queueJob(builder);
+
+        assertNotNull(result);
+        assertEquals(JobState.QUEUED, result.getState());
+    }
+
+    @Test
+    public void testJobDoesNotQueueIfConstraintFails() {
+        Map<String, Object> ejobData1 = new HashMap<>();
+        ejobData1.put("arg1", "val1");
+
+        Map<String, Object> ejobData2 = new HashMap<>();
+        ejobData2.put("arg1", "val2");
+
+        AsyncJobStatus ejob1 = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setJobData(ejobData1));
+
+        AsyncJobStatus ejob2 = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED)
+            .setJobData(ejobData2));
+
+        JobBuilder builder = JobBuilder.forJob(JOB_KEY)
+            .addConstraint(JobConstraints.uniqueByArgument("arg1"))
+            .setJobArgument("arg1", "val2");
+
+        doReturn(Arrays.asList(ejob1, ejob2)).when(this.jobCurator).getNonTerminalJobs();
+
+        JobManager manager = this.createJobManager();
+        AsyncJobStatus result = manager.queueJob(builder);
+
+        assertNotNull(result);
+        assertEquals(JobState.ABORTED, result.getState());
+    }
+
 }

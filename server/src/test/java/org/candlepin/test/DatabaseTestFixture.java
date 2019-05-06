@@ -31,6 +31,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.LiquibaseExtension;
+import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -128,6 +129,7 @@ public class DatabaseTestFixture {
 
     @Inject protected ActivationKeyCurator activationKeyCurator;
     @Inject protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
+    @Inject protected AsyncJobStatusCurator asyncJobCurator;
     @Inject protected CdnCurator cdnCurator;
     @Inject protected ConsumerCurator consumerCurator;
     @Inject protected ConsumerTypeCurator consumerTypeCurator;
