@@ -279,8 +279,17 @@ public class ConfigProperties {
 
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
 
-    public static final String ENABLED_ASYNC_JOBS = "candlepin.jobs.enabled_jobs";
-    public static final String MAX_JOB_THREADS = "candlepin.jobs.max_threads";
+    public static final String ASYNC_JOBS_THREADS = "candlepin.async.threads";
+    public static final String ASYNC_JOBS_WHITELIST = "candlepin.async.whitelist";
+    public static final String ASYNC_JOBS_BLACKLIST = "candlepin.async.blacklist";
+
+    // Used for per-job configuration. The full syntax is "PREFIX.{job_name}.SUFFIX". For instance,
+    // to configure the schedule flag for the job TestJob1, the full configuration would be:
+    // candlepin.async.jobs.TestJob1.schedule=0 0 0/3 * * ?
+    public static final String ASYNC_JOBS_PREFIX = "candlepin.async.jobs.";
+    public static final String ASYNC_JOBS_SUFFIX_SCHEDULE = "schedule";
+    public static final String ASYNC_JOBS_SUFFIX_ENABLED = "enabled";
+
 
     public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {
         private static final long serialVersionUID = 1L;
@@ -421,12 +430,19 @@ public class ConfigProperties {
             this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
 
             // Async Job Defaults
-            this.put(MAX_JOB_THREADS, "10");
+            this.put(ASYNC_JOBS_THREADS, "10");
 
+            // TODO: Find a better way to load job classes
             String[] allowed = new String[] {
                 TestJob1.getJobKey()
             };
-            this.put(ENABLED_ASYNC_JOBS, StringUtils.join(allowed, ","));
+
+
+
+
+
+
+
         }
     };
 

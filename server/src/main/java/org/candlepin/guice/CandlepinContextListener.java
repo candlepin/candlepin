@@ -18,6 +18,7 @@ import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
 import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
 import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ActiveMQContextListener;
 import org.candlepin.audit.QpidConnection;
@@ -90,6 +91,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
     private ActiveMQContextListener activeMQContextListener;
     private PinsetterContextListener pinsetterListener;
+    private JobManager jobManager;
     private LoggerContextListener loggerListener;
 
     // a bit of application-initialization code. Not sure if this is the
@@ -185,8 +187,14 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
                 true, true, true, true);
         }
 
+        // TODO: Remove this once Pinsetter is fully replaced by the JobManager
         pinsetterListener = injector.getInstance(PinsetterContextListener.class);
         pinsetterListener.contextInitialized();
+
+        // Setup the job manager
+        this.jobManager = injector.getInstance(JobManager.class);
+        this.jobManager.initialize();
+        this.jobManager.start();
 
         loggerListener = injector.getInstance(LoggerContextListener.class);
 
@@ -205,6 +213,10 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         if (config.getBoolean(ACTIVEMQ_ENABLED)) {
             activeMQContextListener.contextDestroyed();
         }
+
+        // Tear down the job manager
+        this.jobManager.shutdown();
+
         pinsetterListener.contextDestroyed();
         loggerListener.contextDestroyed();
 

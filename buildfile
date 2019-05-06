@@ -177,7 +177,7 @@ OAUTH= [group('oauth',
               :under => 'net.oauth.core',
               :version => '20100527')]
 
-QUARTZ = 'org.quartz-scheduler:quartz:jar:2.2.1'
+QUARTZ = 'org.quartz-scheduler:quartz:jar:2.2.2'
 
 ACTIVEMQ = [group('artemis-server',
                   'artemis-core-client',

@@ -187,9 +187,13 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
+
 import org.quartz.JobListener;
 import org.quartz.TriggerListener;
+import org.quartz.SchedulerFactory;
+import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobFactory;
+
 import org.xnap.commons.i18n.I18n;
 
 import io.swagger.jaxrs.config.BeanConfig;
@@ -345,6 +349,7 @@ public class CandlepinModule extends AbstractModule {
         configureInterceptors();
         configureAuth();
         configureActiveMQComponents();
+        configureAsyncJobs();
         configurePinsetter();
         configureExporter();
         configureSwagger();
@@ -403,6 +408,11 @@ public class CandlepinModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY")).to(ConfigProperties.PREFIX_APIURL);
     }
 
+    private void configureAsyncJobs() {
+        bind(JobMessageDispatcher.class).to(ArtemisJobMessageDispatcher.class);
+        bind(SchedulerFactory.class).to(StdSchedulerFactory.class);
+    }
+
     private void configurePinsetter() {
         bind(JobFactory.class).to(GuiceJobFactory.class);
         bind(JobListener.class).to(PinsetterJobListener.class);
@@ -456,7 +466,6 @@ public class CandlepinModule extends AbstractModule {
 
     private void configureActiveMQComponents() {
         if (config.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED)) {
-            bind(JobMessageDispatcher.class).to(ArtemisJobMessageDispatcher.class);
             bind(MessageSource.class).to(ArtemisMessageSource.class);
             bind(MessageSourceReceiverFactory.class).to(ArtemisMessageSourceReceiverFactory.class);
             bind(EventSink.class).to(EventSinkImpl.class);

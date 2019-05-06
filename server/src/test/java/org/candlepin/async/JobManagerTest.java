@@ -16,16 +16,25 @@ package org.candlepin.async;
 
 import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
+
 import org.candlepin.async.temp.TestJob1;
 import org.candlepin.audit.EventSink;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ModeManager;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
+import org.candlepin.model.CandlepinModeChange;
+import org.candlepin.model.CandlepinModeChange.Mode;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import org.hamcrest.core.StringContains;
 
@@ -36,6 +45,15 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import org.mockito.InOrder;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+import org.quartz.CronTrigger;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerFactory;
+import org.quartz.Trigger;
+
 import org.slf4j.MDC;
 
 import java.sql.SQLException;
@@ -43,6 +61,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -55,6 +74,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
@@ -99,38 +119,97 @@ public class JobManagerTest {
     private static final String JOB_ID = "jobId";
     private static final String JOB_KEY = TestJob1.getJobKey();
 
+    private Configuration configuration;
+    private SchedulerFactory schedulerFactory;
+    private ModeManager modeManager;
     private AsyncJobStatusCurator jobCurator;
     private PrincipalProvider principalProvider;
-    private CandlepinRequestScope scope;
+    private CandlepinRequestScope requestScope;
     private CollectingJobMessageDispatcher dispatcher;
     private Injector injector;
     private EventSink eventSink;
     private UnitOfWork uow;
+
+    private Scheduler scheduler;
+    private List<ImmutablePair<String, String>> scheduledJobs;
 
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        this.configuration = new CandlepinCommonTestConfig();
+        this.schedulerFactory = mock(SchedulerFactory.class);
+        this.modeManager = mock(ModeManager.class);
         this.jobCurator = mock(AsyncJobStatusCurator.class);
         this.principalProvider = mock(PrincipalProvider.class);
-        this.scope = mock(CandlepinRequestScope.class);
+        this.requestScope = mock(CandlepinRequestScope.class);
         this.dispatcher = new CollectingJobMessageDispatcher();
         this.injector = mock(Injector.class);
         this.eventSink = mock(EventSink.class);
         this.uow = mock(UnitOfWork.class);
+
+        this.scheduler = mock(Scheduler.class);
+        this.scheduledJobs = new LinkedList<>();
 
         doReturn(this.eventSink).when(this.injector).getInstance(EventSink.class);
         doReturn(this.jobCurator).when(this.injector).getInstance(AsyncJobStatusCurator.class);
         doReturn(this.uow).when(this.injector).getInstance(UnitOfWork.class);
         doAnswer(returnsFirstArg()).when(this.jobCurator).merge(any(AsyncJobStatus.class));
         doAnswer(returnsFirstArg()).when(this.jobCurator).create(any(AsyncJobStatus.class));
+        doReturn(this.scheduler).when(this.schedulerFactory).getScheduler();
+        doAnswer(new Answer<Date>() {
+            @Override
+            public Date answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                String key = null;
+                String schedule = null;
+
+                if (args[0] != null) {
+                    if (((JobDetail) args[0]).getKey() != null) {
+                        key = ((JobDetail) args[0]).getKey().getName();
+                    }
+                    else {
+                        key = "null job key";
+                    }
+                }
+
+                if (args[1] instanceof CronTrigger) {
+                    schedule = ((CronTrigger) args[1]).getCronExpression();
+                }
+                else {
+                    schedule = "unknown trigger: " +
+                        (args[1] != null ? args[1].getClass().getName() : "null");
+                }
+
+                scheduledJobs.add(new ImmutablePair<String, String>(key, schedule));
+                return null; // This is probably bad, but at the time of writing, it'll work.
+            }
+        }).when(this.scheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
 
+    private void verifyScheduledJob(String key, String schedule) {
+        String actual = null;
+
+        for (ImmutablePair<String, String> job : this.scheduledJobs) {
+            if (key.equals(job.getKey())) {
+                actual = job.getValue();
+            }
+        }
+
+        if (schedule != null) {
+            assertEquals(schedule, actual);
+        }
+        else {
+            assertNull(actual);
+        }
+    }
+
+
     private JobManager createJobManager() {
-        return new JobManager(
-            jobCurator, dispatcher, principalProvider, scope, injector);
+        return new JobManager(this.configuration, this.schedulerFactory, this.modeManager, this.jobCurator,
+            this.dispatcher, this.principalProvider, this.requestScope, this.injector);
     }
 
     @Test
@@ -159,7 +238,11 @@ public class JobManagerTest {
     @Test
     @Parameters(method = "getTerminalJobStates")
     public void jobShouldFailWhenJobStateIsTerminal(JobState state) throws JobException {
-        doReturn(new AsyncJobStatus().setState(state)).when(jobCurator).get(anyString());
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(state));
+
+        doReturn(status).when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
         thrown.expect(JobInitializationException.class);
@@ -170,8 +253,10 @@ public class JobManagerTest {
 
     @Test
     public void shouldFailWhenJobCouldNotBeConstructed() throws JobException {
-        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
-            .when(jobCurator).get(anyString());
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY));
+
+        doReturn(status).when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
         thrown.expect(JobInitializationException.class);
@@ -182,10 +267,13 @@ public class JobManagerTest {
 
     @Test
     public void jobShouldBeExecuted() throws JobException {
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED));
+
         final AsyncJob spy = mock(AsyncJob.class);
         doReturn(spy).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
-            .when(jobCurator).get(anyString());
+        doReturn(status).when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
         manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
@@ -196,6 +284,7 @@ public class JobManagerTest {
     @Test
     public void shouldConfigureLoggingContext() throws JobException {
         final AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
             .addMetadata("owner_key", "test_owner")
             .addMetadata("some_key", "some_value")
             .setLogLevel("TRACE"));
@@ -217,9 +306,12 @@ public class JobManagerTest {
 
     @Test
     public void shouldSendEvents() throws JobException {
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED));
+
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
-            .when(jobCurator).get(anyString());
+        doReturn(status).when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
         manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
@@ -232,9 +324,13 @@ public class JobManagerTest {
         final AsyncJob job = jdata -> {
             throw new JobExecutionException();
         };
+
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED));
+
         doReturn(job).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
-            .when(jobCurator).get(anyString());
+        doReturn(status).when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
         try {
@@ -249,6 +345,8 @@ public class JobManagerTest {
     @Test
     public void successfulJobShouldEndAsCompleted() throws JobException {
         final StateCollectingStatus status = new StateCollectingStatus();
+        status.setJobKey(JOB_KEY);
+
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob1.class);
         doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
@@ -266,7 +364,9 @@ public class JobManagerTest {
 
     @Test
     public void shouldSetJobExecutor() throws JobException {
-        final AsyncJobStatus status = new AsyncJobStatus();
+        final AsyncJobStatus status = new AsyncJobStatus()
+            .setJobKey(JOB_KEY);
+
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob1.class);
         doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
             .when(jobCurator).get(anyString());
@@ -282,9 +382,12 @@ public class JobManagerTest {
     @Test
     public void failedJobShouldEndAsFailed() throws JobInitializationException {
         final StateCollectingStatus status = new StateCollectingStatus();
+        status.setJobKey(JOB_KEY);
+
         final AsyncJob mock = jdata -> {
             throw new JobExecutionException();
         };
+
         doReturn(mock).when(injector).getInstance(TestJob1.class);
         doReturn(status).when(this.jobCurator).get(JOB_ID);
         final JobManager manager = createJobManager();
@@ -302,10 +405,13 @@ public class JobManagerTest {
 
     @Test
     public void shouldSurroundJobExecutionWithUnitOfWork() throws JobException {
+        AsyncJobStatus status = new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED);
+
         final AsyncJob job = mock(AsyncJob.class);
         doReturn(job).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
-            .when(jobCurator).get(anyString());
+        doReturn(status).when(jobCurator).get(anyString());
         final InOrder inOrder = inOrder(uow, job, uow);
         final JobManager manager = createJobManager();
 
@@ -318,10 +424,13 @@ public class JobManagerTest {
 
     @Test
     public void shouldProperlyEndUnitOfWorkOfFailedJobs() throws JobException {
+        AsyncJobStatus status = new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
+            .setState(JobState.QUEUED);
+
         final AsyncJob job = mock(AsyncJob.class);
         doReturn(job).when(injector).getInstance(TestJob1.class);
-        doReturn(new AsyncJobStatus().setState(JobState.QUEUED))
-            .when(jobCurator).get(anyString());
+        doReturn(status).when(jobCurator).get(anyString());
         doThrow(new JobExecutionException()).when(job).execute(any());
         final InOrder inOrder = inOrder(uow, job, uow);
         final JobManager manager = createJobManager();
@@ -341,6 +450,7 @@ public class JobManagerTest {
     public void testStartTimeIsSetOnExecution() throws JobException {
         AsyncJob job = jdata -> { return null; };
         AsyncJobStatus status = new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob1.class);
@@ -363,6 +473,7 @@ public class JobManagerTest {
     public void testEndTimeIsSetOnExecution() throws JobException {
         AsyncJob job = jdata -> { return null; };
         AsyncJobStatus status = new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob1.class);
@@ -385,6 +496,7 @@ public class JobManagerTest {
     public void testEndTimeIsSetOnExecutionFailure() {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
         AsyncJobStatus status = new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob1.class);
@@ -415,6 +527,7 @@ public class JobManagerTest {
     public void testAttemptCountIsIncrementedOnExecution() throws JobException {
         AsyncJob job = jdata -> { return null; };
         AsyncJobStatus status = new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob1.class);
@@ -432,6 +545,7 @@ public class JobManagerTest {
     public void testAttemptCountRemainsIncrementedOnExecutionFailure() throws JobException {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
         AsyncJobStatus status = new AsyncJobStatus()
+            .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob1.class);
@@ -600,4 +714,266 @@ public class JobManagerTest {
         manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
     }
 
+    @Test(expected = JobInitializationException.class)
+    public void testJobExecutionFailsWithNoJobKey() throws JobException {
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setState(JobState.QUEUED)
+            .setMaxAttempts(3));
+
+        AsyncJob job = jdata -> { return null; };
+
+        doReturn(JOB_ID).when(status).getId();
+        doReturn(status).when(this.jobCurator).get(JOB_ID);
+        doReturn(job).when(this.injector).getInstance(TestJob1.class);
+
+        JobManager manager = this.createJobManager();
+        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+    }
+
+    @Test
+    public void testJobIsEnabledDefaultsEnabledWithNoConfiguration() {
+        JobManager manager = this.createJobManager();
+
+        boolean result = manager.isJobEnabled(JOB_KEY);
+        assertTrue(result);
+    }
+
+    @Test
+    public void testJobIsEnabledProperlyWhitelistsJobs() {
+        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
+        List<String> whitelist = jobs.subList(1, 3);
+
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_WHITELIST, String.join(",", whitelist));
+
+        JobManager manager = this.createJobManager();
+
+        for (String jobKey : jobs) {
+            boolean expected = whitelist.contains(jobKey);
+            boolean result = manager.isJobEnabled(jobKey);
+
+            assertEquals(expected, result);
+        }
+    }
+
+    @Test
+    public void testJobIsEnabledProperlyBlacklistsJobs() {
+        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
+        List<String> blacklist = jobs.subList(1, 3);
+
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, String.join(",", blacklist));
+
+        JobManager manager = this.createJobManager();
+
+        for (String jobKey : jobs) {
+            boolean expected = !blacklist.contains(jobKey);
+            boolean result = manager.isJobEnabled(jobKey);
+
+            assertEquals(expected, result);
+        }
+    }
+
+    @Test
+    public void testJobIsEnabledAllowsJobsToBeDisabled() {
+        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
+        List<String> disabled = jobs.subList(1, 3);
+
+        for (String jobKey : disabled) {
+            this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + jobKey + '.' +
+                ConfigProperties.ASYNC_JOBS_SUFFIX_ENABLED, "false");
+        }
+
+        JobManager manager = this.createJobManager();
+
+        for (String jobKey : jobs) {
+            boolean expected = !disabled.contains(jobKey);
+            boolean result = manager.isJobEnabled(jobKey);
+
+            assertEquals(expected, result);
+        }
+    }
+
+    @Test
+    public void testJobIsEnabledProperlyCombinesWhitelistAndBlacklist() {
+        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
+        List<String> whitelist = jobs.subList(1, 2);
+        List<String> blacklist = jobs.subList(2, 4);
+
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_WHITELIST, String.join(",", whitelist));
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, String.join(",", blacklist));
+
+        JobManager manager = this.createJobManager();
+
+        for (String jobKey : jobs) {
+            boolean expected = whitelist.contains(jobKey) && !blacklist.contains(jobKey);
+            boolean result = manager.isJobEnabled(jobKey);
+
+            assertEquals(expected, result);
+        }
+    }
+
+    @Test
+    public void testJobIsEnabledProperlyCombinesWhitelistAndBlacklistAndPerJobConfig() {
+        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
+        List<String> whitelist = jobs.subList(1, 3);
+        List<String> blacklist = jobs.subList(2, 4);
+        List<String> disabled = jobs.subList(3, 5);
+
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_WHITELIST, String.join(",", whitelist));
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, String.join(",", blacklist));
+        for (String jobKey : disabled) {
+            this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + jobKey + '.' +
+                ConfigProperties.ASYNC_JOBS_SUFFIX_ENABLED, "false");
+        }
+
+        JobManager manager = this.createJobManager();
+
+        for (String jobKey : jobs) {
+            boolean expected = whitelist.contains(jobKey) && !blacklist.contains(jobKey) &&
+                !disabled.contains(jobKey);
+            boolean result = manager.isJobEnabled(jobKey);
+
+            assertEquals(expected, result);
+        }
+    }
+
+    @Test
+    public void testJobScheduling() {
+        String schedule = "%d * * * * ?";
+        int jobs = 3;
+
+        for (int i = 0; i < jobs; ++i) {
+            this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '-' + i + '.' +
+                ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, String.format(schedule, i));
+        }
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+
+        for (int i = 0; i < jobs; ++i) {
+            this.verifyScheduledJob(JOB_KEY + '-' + i, String.format(schedule, i));
+        }
+    }
+
+    @Test
+    public void testJobSchedulingDoesNotScheduleDisabledJobs() {
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '.' +
+            ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, "5 * * * * ?");
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '.' +
+            ConfigProperties.ASYNC_JOBS_SUFFIX_ENABLED, "false");
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+
+        assertEquals(0, this.scheduledJobs.size());
+    }
+
+    @Test
+    public void testJobSchedulingDoesNotScheduleBlacklistedJobs() {
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '.' +
+            ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, "5 * * * * ?");
+
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, "a,b," + JOB_KEY + ",d,e");
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+
+        assertEquals(0, this.scheduledJobs.size());
+    }
+
+    @Test
+    public void testJobSchedulingDoesNotScheduleJobsNotOnWhitelist() {
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '.' +
+            ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, "5 * * * * ?");
+
+        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_WHITELIST, "a,b,c,d,e");
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+
+        assertEquals(0, this.scheduledJobs.size());
+    }
+
+    @Test
+    public void verifyModeChangePausesSchedulerOnSuspendMode() throws Exception {
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+        manager.start();
+
+        manager.modeChanged(Mode.SUSPEND);
+
+        verify(this.scheduler, times(1)).standby();
+    }
+
+    @Test
+    public void verifyModeChangeResumesSchedulerOnNormalMode() throws Exception {
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+
+        manager.modeChanged(Mode.NORMAL);
+
+        verify(this.scheduler, times(1)).start();
+    }
+
+    @Test
+    public void testManagerCanBeInitializedAfterCreation() {
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+    }
+
+    @Test
+    public void testManagerCanBeShutdownAfterCreation() {
+        JobManager manager = this.createJobManager();
+        manager.shutdown();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testManagerCannotBePausedBeforeInit() {
+        JobManager manager = this.createJobManager();
+        manager.pause();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testManagerCannotBeResumedBeforeInit() {
+        JobManager manager = this.createJobManager();
+        manager.resume();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testManagerCannotBeInitializedTwice() {
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+        manager.initialize();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testManagerCannotBeInitializedAfterShutdown() {
+        JobManager manager = this.createJobManager();
+        manager.shutdown();
+        manager.initialize();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testManagerCannotBePausedAfterShutdown() {
+        JobManager manager = this.createJobManager();
+        manager.shutdown();
+        manager.pause();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testManagerCannotBeResumedAfterShutdown() {
+        JobManager manager = this.createJobManager();
+        manager.shutdown();
+        manager.pause();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testManagerCannotBeStartedInSuspendMode() {
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+
+        CandlepinModeChange mode = new CandlepinModeChange(new Date(), Mode.SUSPEND);
+        doReturn(mode).when(this.modeManager).getLastCandlepinModeChange();
+
+        manager.start();
+    }
 }

@@ -29,6 +29,8 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import org.candlepin.async.JobMessageDispatcher;
+import org.candlepin.async.impl.ArtemisJobMessageDispatcher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -137,7 +139,9 @@ import org.jukito.TestSingleton;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.quartz.JobListener;
+import org.quartz.SchedulerFactory;
 import org.quartz.TriggerListener;
+import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
@@ -350,6 +354,10 @@ public class TestingModules {
 
             // Bind model translator
             bind(ModelTranslator.class).to(StandardTranslator.class).asEagerSingleton();
+
+            // Async job stuff
+            bind(JobMessageDispatcher.class).to(ArtemisJobMessageDispatcher.class);
+            bind(SchedulerFactory.class).to(StdSchedulerFactory.class);
         }
 
         @Provides @Singleton @Named("EventFactoryObjectMapper")
