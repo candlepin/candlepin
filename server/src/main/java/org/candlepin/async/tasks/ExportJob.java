@@ -15,24 +15,25 @@
 package org.candlepin.async.tasks;
 
 import com.google.inject.Inject;
-import org.apache.log4j.MDC;
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobBuilder;
 import org.candlepin.async.JobDataMap;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobManager;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
-import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.util.Util;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+
+
 
 /**
  * A job that generates a compressed file representation of a Consumer. Once the job
@@ -43,6 +44,8 @@ import java.util.Map;
  */
 public class ExportJob implements AsyncJob {
 
+    protected static final String OWNER_KEY = "org";
+    protected static final String CONSUMER_KEY = "consumer_uuid";
     protected static final String CDN_LABEL = "cdn_label";
     protected static final String WEBAPP_PREFIX = "webapp_prefix";
     protected static final String API_URL = "api_url";
@@ -77,7 +80,7 @@ public class ExportJob implements AsyncJob {
     @Override
     public Object execute(final JobExecutionContext jdata) throws JobExecutionException {
         final JobDataMap map = jdata.getJobData();
-        final String consumerUuid = map.getAsString(JobStatus.TARGET_ID);
+        final String consumerUuid = map.getAsString(CONSUMER_KEY);
         final String cdnLabel = map.getAsString(CDN_LABEL);
         final String webAppPrefix = map.getAsString(WEBAPP_PREFIX);
         final String apiUrl = map.getAsString(API_URL);
@@ -113,16 +116,14 @@ public class ExportJob implements AsyncJob {
         final Map<String, String> extensionData
     ) {
         return JobBuilder.forJob(JOB_KEY)
-            .setJobGroup("async")
-            .setJobName("export_" + Util.generateUUID())
-            .setJobArgument(JobStatus.OWNER_ID, owner.getKey())
-            .setJobArgument(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel())
-            .setJobArgument(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER)
-            .setJobArgument(JobStatus.TARGET_ID, consumer.getUuid())
+            .setJobName("export-" + Util.generateUUID())
+            .setJobArgument(CONSUMER_KEY, consumer.getUuid())
             .setJobArgument(CDN_LABEL, cdnLabel)
             .setJobArgument(WEBAPP_PREFIX, webAppPrefix)
             .setJobArgument(API_URL, apiUrl)
             .setJobArgument(EXTENSION_DATA, extensionData)
-            .setJobArgument(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID_KEY));
+            .setJobMetadata(OWNER_KEY, owner.getKey())
+            .setLogLevel(owner.getLogLevel())
+            .addConstraint(JobConstraints.uniqueByArgument(CONSUMER_KEY));
     }
 }
