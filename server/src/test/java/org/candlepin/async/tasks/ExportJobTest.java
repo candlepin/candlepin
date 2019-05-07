@@ -20,7 +20,6 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
-import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.BaseJobTest;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.test.TestUtil;
@@ -60,25 +59,32 @@ public class ExportJobTest extends BaseJobTest {
     }
 
     @Test
-    public void checkJobDetail() {
+    public void checkJobBuilder() {
+        String logLevel = "test_level";
+
         final Owner owner = TestUtil.createOwner();
         owner.setId(TestUtil.randomString());
+        owner.setKey("test_key");
+        owner.setLogLevel(logLevel);
         final Consumer distributor = TestUtil.createDistributor(owner);
 
         final Map<String, String> extData = new HashMap<>();
         extData.put("version", "sat-6.2");
 
-        final JobBuilder detail = ExportJob.scheduleExport(
+        final JobBuilder builder = ExportJob.scheduleExport(
             distributor, owner, CDN_LABEL, WEBAPP_PREFIX, API_URL, extData);
-        final Map<String, Object> dataMap = detail.getJobArguments();
 
-        assertEquals(dataMap.get(JobStatus.OWNER_ID), owner.getKey());
-        assertEquals(dataMap.get(JobStatus.TARGET_ID), distributor.getUuid());
-        assertEquals(dataMap.get(JobStatus.TARGET_TYPE), JobStatus.TargetType.CONSUMER);
+        final Map<String, Object> dataMap = builder.getJobArguments();
+        assertEquals(dataMap.get(ExportJob.CONSUMER_KEY), distributor.getUuid());
         assertEquals(dataMap.get(ExportJob.CDN_LABEL), CDN_LABEL);
         assertEquals(dataMap.get(ExportJob.WEBAPP_PREFIX), WEBAPP_PREFIX);
         assertEquals(dataMap.get(ExportJob.API_URL), API_URL);
         assertEquals(dataMap.get(ExportJob.EXTENSION_DATA), extData);
+
+        Map<String, String> metadata = builder.getJobMetadata();
+        assertEquals(owner.getKey(), metadata.get(ExportJob.OWNER_KEY));
+
+        assertEquals(logLevel, builder.getLogLevel());
     }
 
     @Test
