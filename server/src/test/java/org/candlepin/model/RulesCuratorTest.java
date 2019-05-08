@@ -86,15 +86,4 @@ public class RulesCuratorTest extends DatabaseTestFixture {
         Rules updateRules = rulesCurator.getRules();
         assertEquals(rules.getRules(), updateRules.getRules());
     }
-
-    @Test
-    public void uploadMultipleRules() {
-        Rules rules = new Rules("// Version: 5.1000\n// rules1 ");
-        rulesCurator.update(rules);
-        Rules rules2 = new Rules("// Version: 5.1001\n// rules2 ");
-        rulesCurator.update(rules2);
-        Rules updateRules = rulesCurator.getRules();
-        assertEquals(rules2.getRules(), updateRules.getRules());
-    }
-
 }
