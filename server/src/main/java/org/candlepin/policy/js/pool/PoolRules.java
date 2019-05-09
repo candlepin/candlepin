@@ -533,7 +533,6 @@ public class PoolRules {
         else {
             for (Branding b : pool.getBranding()) {
                 if (!existingPool.getBranding().contains(b)) {
-                    syncBranding(pool, existingPool);
                     brandingChanged = true;
                     break;
                 }
@@ -543,6 +542,7 @@ public class PoolRules {
         if (brandingChanged) {
             syncBranding(pool, existingPool);
         }
+
         return brandingChanged;
     }
 
