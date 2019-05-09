@@ -28,7 +28,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
@@ -41,14 +40,9 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
@@ -56,13 +50,11 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -782,13 +774,19 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return entities;
     }
 
-    public void refresh(E... entities) {
+    public void refresh(Iterable<E> entities) {
         if (entities != null) {
             EntityManager manager = this.getEntityManager();
 
             for (E entity : entities) {
                 manager.refresh(entity);
             }
+        }
+    }
+
+    public void refresh(E... entities) {
+        if (entities != null) {
+            this.refresh(Arrays.asList(entities));
         }
     }
 
@@ -861,6 +859,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return entityMap.values();
     }
 
+    public Collection<E> lock(E... entities) {
+        return entities != null ? this.lock(Arrays.asList(entities)) : null;
+    }
+
     /**
      * Locks the specified entity with a pessimistic write lock. Note that the entity will not be
      * refreshed as a result of a call to this method. If the entity needs to be locked and
@@ -910,102 +912,18 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * Refreshes/reloads the given entity and locks it using a pessimistic write lock.
-     *
-     * @param entity
-     *  The entity to lock and load
-     *
-     * @return
-     *  The locked entity
-     */
-    public E lockAndLoad(E entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
-        }
-
-        // Pull the entity's metadata and identifier, just in case we were passed a detached
-        // entity or some such.
-        SessionImpl session = (SessionImpl) this.currentSession();
-        ClassMetadata metadata = session.getSessionFactory().getClassMetadata(this.entityType);
-
-        if (metadata == null || !metadata.hasIdentifierProperty() || !metadata.isMutable()) {
-            throw new UnsupportedOperationException(
-                "lockAndLoad only supports mutable entities with database identifiers");
-        }
-
-        return this.lockAndLoadById(this.entityType, metadata.getIdentifier(entity, session));
-    }
-
-    /**
-     * Locks the given collection of entities, reloading them as necessary.
-     *
-     * @param entities
-     *  A collection of entities to lock
-     *
-     * @throws RuntimeException
-     *  If this method is called for a curator handling an entity type that is not a subclass of
-     *  the AbstractHibernateObject class.
-     *
-     * @return
-     *  The collection of locked entities
-     */
-    public Collection<E> lockAndLoad(Iterable<E> entities) {
-        // Impl note:
-        // We're going to take advantage of some blackbox knowledge of how LockAndLoadByIds works to
-        // minimize the amount of extra loops we need to do. We can pass a custom iterable which
-        // fetches the entity's ID on the call to "next" and pass that through to LockAndLoadByIds.
-
-        if (entities == null) {
-            return Collections.<E>emptyList();
-        }
-
-        // We redeclare the collection here so we don't require the final modifier in subclass
-        // definitions
-        final Iterable<E> entityCollection = entities;
-        final SessionImpl session = (SessionImpl) this.currentSession();
-        final ClassMetadata metadata = session.getSessionFactory().getClassMetadata(this.entityType);
-
-        if (metadata == null || !metadata.hasIdentifierProperty() || !metadata.isMutable()) {
-            throw new UnsupportedOperationException(
-                "lockAndLoad only supports mutable entities with database identifiers");
-        }
-
-        Iterable<Serializable> iterable = new Iterable<Serializable>() {
-            @Override
-            public Iterator<Serializable> iterator() {
-                return new Iterator<Serializable>() {
-                    private Iterator<E> entityIterator;
-
-                    /* initializer */ {
-                        this.entityIterator = entityCollection.iterator();
-                    }
-
-                    @Override
-                    public boolean hasNext() {
-                        return this.entityIterator.hasNext();
-                    }
-
-                    @Override
-                    public Serializable next() {
-                        E next = this.entityIterator.next();
-                        return next != null ? metadata.getIdentifier(next, session) : null;
-                    }
-
-                    @Override
-                    public void remove() {
-                        this.entityIterator.remove();
-                    }
-                };
-            }
-        };
-
-        return this.lockAndLoadByIds(this.entityType, iterable);
-    }
-
-    /**
      * Loads an entity with a pessimistic lock using the specified ID. If the entity has already
-     * been loaded, it will be refreshed with the lock instead. If a  matching entity could not be
+     * been loaded, it will be refreshed with the lock instead. If a matching entity could not be
      * found, this method returns null.
+     * <p></p>
+     * <strong>Note:</strong> There is no guarantee that the entity returned by this method will be
+     * loaded from the database at the time it is called. Due to various caching mechanisms, it's
+     * possible that an existing entity will be returned in its current state, including any
+     * pending, uncommitted changes or operations. As such, the only guarantees this method
+     * provides is that if a non-null value is returned, it will be a locked instance of the entity.
+     * Any desired refresh or resynchronization behavior must be done by the caller after this
+     * method returns.
+     *
      *
      * @param id
      *  The id of the entity to load/refresh and lock
@@ -1013,14 +931,22 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  A locked entity instance, or null if a matching entity could not be found
      */
-    public E lockAndLoadById(Serializable id) {
-        return this.lockAndLoadById(this.entityType, id);
+    public E lockAndLoad(Serializable id) {
+        return this.lockAndLoad(this.entityType, id);
     }
 
     /**
      * Loads an entity with a pessimistic lock using the specified entity class and ID. If the
-     * entity has already been loaded, it will be refreshed with the lock instead. If a  matching
+     * entity has already been loaded, it will be refreshed with the lock instead. If a matching
      * entity could not be found, this method returns null.
+     * <p></p>
+     * <strong>Note:</strong> There is no guarantee that the entity returned by this method will be
+     * loaded from the database at the time it is called. Due to various caching mechanisms, it's
+     * possible that an existing entity will be returned in its current state, including any
+     * pending, uncommitted changes or operations. As such, the only guarantees this method
+     * provides is that if a non-null value is returned, it will be a locked instance of the entity.
+     * Any desired refresh or resynchronization behavior must be done by the caller after this
+     * method returns.
      *
      * @param entityClass
      *  The class representing the type of entity to fetch (i.e. Pool.class or Product.class)
@@ -1032,55 +958,24 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  A locked entity instance, or null if a matching entity could not be found
      */
     @SuppressWarnings("unchecked")
-    protected E lockAndLoadById(Class<E> entityClass, Serializable id) {
-        EntityManager entityManager = this.getEntityManager();
-        SessionImpl session = (SessionImpl) this.currentSession();
-        ClassMetadata metadata = session.getFactory().getClassMetadata(entityClass);
-
-        // Get the entity's metadata so we can ask Hibernate for the name of its identifier
-        // and check if it's already in the session cache without doing a database lookup
-        if (metadata == null || !metadata.hasIdentifierProperty() || !metadata.isMutable()) {
-            throw new UnsupportedOperationException(
-                "lockAndLoad only supports mutable entities with database identifiers");
-        }
-
-        // Fetch the entity persister and session context so we can check the session cache for an
-        // entity before hitting the database.
-        EntityPersister persister = session.getFactory().getEntityPersister(metadata.getEntityName());
-        PersistenceContext context = session.getPersistenceContext();
-
-        // Lookup whether or not we have an entity with a given ID in the current session's cache.
-        // See the notes in lockAndLoadByIds for details as to why we're going about it this way.
-        EntityKey key = session.generateEntityKey(id, persister);
-        E entity = (E) context.getEntity(key);
-
-        if (entity == null) {
-            // The entity isn't in the local session, we'll need to query for it
-            entity = ((Session) session).byId(entityClass)
-                .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
-                .with(CacheMode.REFRESH)
-                .load(id);
-        }
-        else {
-            EntityEntry entry = context.getEntry(entity);
-
-            // Make sure the entry hasn't been deleted or otherwise removed.
-            if (entry.isExistsInDatabase() && entry.getStatus() != Status.DELETED &&
-                entry.getStatus() != Status.GONE) {
-
-                entityManager.refresh(entity, LockModeType.PESSIMISTIC_WRITE);
-            }
-            else {
-                entity = null; // It's not in the DB yet/anymore. Nothing to lock or refresh here.
-            }
-        }
-
-        return entity;
+    protected E lockAndLoad(Class<E> entityClass, Serializable id) {
+        return this.currentSession()
+            .byId(entityClass)
+            .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
+            .load(id);
     }
 
     /**
      * Loads the entities represented by the given IDs with a pessimistic write lock. If no
      * entities were found with the given IDs, this method returns an empty collection.
+     * <p></p>
+     * <strong>Note:</strong> There is no guarantee that the entities returned by this method will
+     * be loaded from the database at the time it is called. Due to various caching mechanisms, it's
+     * possible that an existing entity will be returned in its current state, including any
+     * pending, uncommitted changes or operations. As such, the only guarantees this method
+     * provides is that if a non-null value is returned, it will be a locked instance of the entity.
+     * Any desired refresh or resynchronization behavior must be done by the caller after this
+     * method returns.
      *
      * @param ids
      *  A collection of entity IDs to use to load and lock the represented entities
@@ -1088,8 +983,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  A collection of locked entities represented by the given IDs
      */
-    public Collection<E> lockAndLoadByIds(Iterable<? extends Serializable> ids) {
-        return this.lockAndLoadByIds(this.entityType, ids);
+    public Collection<E> lockAndLoad(Iterable<? extends Serializable> ids) {
+        return this.lockAndLoad(this.entityType, ids);
     }
 
     /**
@@ -1099,13 +994,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * is loaded for every ID provided. It is possible for the output collection to be smaller than
      * the provided set of IDs.
      * <p></p>
-     * Depending on the session state when this method is called, this method may perform a refresh
-     * on each entity individually rather than performing a bulk lookup. This is due to a current
-     * limitation in Hibernate that forces use of the L1 cache when executing a query. To avoid
-     * this bottleneck, before calling this method, the caller should either evict the target
-     * entities from the session -- using session.evict or session.clear -- or use this method to
-     * perform the initial lookup straight away. Entities which are not already in the session
-     * cache will be fetched and locked in bulk, rather than refreshed and locked individually.
+     * <strong>Note:</strong> There is no guarantee that the entities returned by this method will
+     * be loaded from the database at the time it is called. Due to various caching mechanisms, it's
+     * possible that an existing entity will be returned in its current state, including any
+     * pending, uncommitted changes or operations. As such, the only guarantees this method
+     * provides is that if a non-null value is returned, it will be a locked instance of the entity.
+     * Any desired refresh or resynchronization behavior must be done by the caller after this
+     * method returns.
      *
      * @param entityClass
      *  The class representing the type of the entity to load (i.e. Pool.class or Product.class)
@@ -1116,88 +1011,23 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  A collection of locked entities matching the given values
      */
-    protected Collection<E> lockAndLoadByIds(Class<E> entityClass, Iterable<? extends Serializable> ids) {
-        // The lockAndLoadById(s) methods work in two separate stages. The first stage determines
-        // whether or not an entity associated with a given ID is present in Hibernate's L1 cache.
-        // If it is, we need to fetch it from the cache and perform an explicit refresh operation
-        // for that entity. Otherwise, if it is not present, we can do a normal(ish) query to fetch
-        // it, and any other non-present entities.
-        //
-        // Unfortunately, there isn't a single, concise method for performing such a lookup.
-        // Instead, we need to check with the persistence context and determine whether or not it
-        // has an entity associated with a given entity key, which we generate using the session
-        // and entity persister. It's convoluted, but necessary to get consistently correct
-        // behavior from these methods.
-        List<E> result = new ArrayList<>();
-
-        if (ids != null && ids.iterator().hasNext()) {
-            EntityManager entityManager = this.getEntityManager();
-            SessionImpl session = (SessionImpl) this.currentSession();
-            ClassMetadata metadata = session.getFactory().getClassMetadata(entityClass);
-
-            if (metadata == null || !metadata.hasIdentifierProperty() || !metadata.isMutable()) {
-                throw new UnsupportedOperationException(
-                    "lockAndLoad only supports mutable entities with database identifiers");
-            }
-
-            EntityPersister persister = session.getFactory().getEntityPersister(metadata.getEntityName());
-            PersistenceContext context = session.getPersistenceContext();
-
-            SortedSet<Serializable> idSet = new TreeSet<>();
-            SortedMap<Serializable, E> entitySet = new TreeMap<>();
-
-            // Step through the collection of IDs and figure out which entities we have to refresh,
-            // and which we need to lookup.
-            for (Serializable id : ids) {
-                // Make sure we don't doubly load/lock anything
-                if (id != null && !idSet.contains(id) && !entitySet.containsKey(id)) {
-                    EntityKey key = session.generateEntityKey(id, persister);
-                    E entity = (E) context.getEntity(key);
-
-                    if (entity != null) {
-                        EntityEntry entry = context.getEntry(entity);
-
-                        // Make sure the entry hasn't been deleted or otherwise removed.
-                        if (entry.isExistsInDatabase() && entry.getStatus() != Status.DELETED &&
-                            entry.getStatus() != Status.GONE) {
-
-                            entitySet.put(id, entity);
-                        }
-                    }
-                    else {
-                        idSet.add(id);
-                    }
-                }
-            }
-
-            // First address the slow (and hopefully smaller) part of the lookup and refresh the
-            // entities that exist
-
-            // TODO: Maybe add a debug warning here to call out situations where our existing
-            // entity size is larger than our absent entity size. Those are areas where we may be
-            // reloading entities unnecessarily and could be optimized to avoid doing extraneous
-            // work.
-            if (entitySet.size() > 0) {
-                for (E entity : entitySet.values()) {
-                    entityManager.refresh(entity, LockModeType.PESSIMISTIC_WRITE);
-                    result.add(entity);
-                }
-            }
-
-            // Fetch the remaining entities from the DB
-            if (idSet.size() > 0) {
-                result.addAll(((Session) session)
-                    .byMultipleIds(this.entityType())
-                    .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
-                    .with(CacheMode.REFRESH)
-                    .enableSessionCheck(false)
-                    .enableOrderedReturn(false)
-                    .multiLoad(new ArrayList(idSet)));
-            }
+    protected Collection<E> lockAndLoad(Class<E> entityClass, Iterable<? extends Serializable> ids) {
+        // Sort and de-duplicate the provided collection of IDs so we have a deterministic locking
+        // order for the entities (helps avoid deadlock)
+        SortedSet<Serializable> idSet = new TreeSet<>();
+        for (Serializable id : ids) {
+            idSet.add(id);
         }
 
-        // Should we be returning a view of the list, rather than the fully mutable list here?
-        return result;
+        // Fetch the entities from the DB...
+        if (idSet.size() > 0) {
+            return this.currentSession()
+                .byMultipleIds(entityClass)
+                .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
+                .multiLoad(new ArrayList(idSet));
+        }
+
+        return new ArrayList<E>();
     }
 
     /**

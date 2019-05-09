@@ -247,7 +247,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void handleException() {
         // the real thing we want to handle
-        when(ownerCurator.lockAndLoadById(any())).thenThrow(new NullPointerException());
+        when(ownerCurator.lockAndLoad(nullable(String.class))).thenThrow(new NullPointerException());
 
         JobExecutionException ex = assertThrows(JobExecutionException.class,
             () -> undoImportsJob.execute(jobContext));
@@ -259,7 +259,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void refireOnWrappedSQLException() {
         RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
-        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
+        when(ownerCurator.lockAndLoad(nullable(String.class))).thenThrow(e);
 
         JobExecutionException ex = assertThrows(JobExecutionException.class,
             () -> undoImportsJob.execute(jobContext));
@@ -272,7 +272,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     public void refireOnMultiLayerWrappedSQLException() {
         RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
         RuntimeException e2 = new RuntimeException("trouble!", e);
-        when(ownerCurator.lockAndLoadById(any())).thenThrow(e2);
+        when(ownerCurator.lockAndLoad(nullable(String.class))).thenThrow(e2);
         JobExecutionException ex = assertThrows(JobExecutionException.class,
             () -> undoImportsJob.execute(jobContext));
         assertTrue(ex.refireImmediately());
@@ -281,7 +281,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void noRefireOnRegularRuntimeException() {
         RuntimeException e = new RuntimeException("uh oh", new NullPointerException());
-        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
+        when(ownerCurator.lockAndLoad(nullable(String.class))).thenThrow(e);
         JobExecutionException ex = assertThrows(JobExecutionException.class,
             () -> undoImportsJob.execute(jobContext));
         assertFalse(ex.refireImmediately());
@@ -291,7 +291,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     public void shouldNotRefireOnGenericPersistenceException() {
         NullPointerException cause = new NullPointerException();
         RuntimeException e = new PersistenceException("uh oh", cause);
-        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
+        when(ownerCurator.lockAndLoad(nullable(String.class))).thenThrow(e);
 
         JobExecutionException ex = assertThrows(JobExecutionException.class,
             () -> undoImportsJob.execute(jobContext));
@@ -301,7 +301,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void shouldRefireOnLockTimeoutException() {
         LockTimeoutException e = new LockTimeoutException("trouble!");
-        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
+        when(ownerCurator.lockAndLoad(nullable(String.class))).thenThrow(e);
 
         JobExecutionException ex = assertThrows(JobExecutionException.class,
             () -> undoImportsJob.execute(jobContext));
@@ -311,7 +311,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void shouldRefireOnOptimisticLockException() {
         OptimisticLockException e = new OptimisticLockException("trouble!");
-        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
+        when(ownerCurator.lockAndLoad(nullable(String.class))).thenThrow(e);
 
         JobExecutionException ex = assertThrows(JobExecutionException.class,
             () -> undoImportsJob.execute(jobContext));
@@ -321,7 +321,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void shouldRefireOnPessimisticLockException() {
         PessimisticLockException e = new PessimisticLockException("trouble!");
-        when(ownerCurator.lockAndLoadById(any())).thenThrow(e);
+        when(ownerCurator.lockAndLoad(nullable(String.class))).thenThrow(e);
 
         JobExecutionException ex = assertThrows(JobExecutionException.class,
             () -> undoImportsJob.execute(jobContext));
