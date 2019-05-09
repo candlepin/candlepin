@@ -112,7 +112,7 @@ public class OwnerManager {
         log.info("Cleaning up owner: {}", owner);
 
         Collection<String> consumerIds = this.ownerCurator.getConsumerIds(owner).list();
-        Collection<Consumer> consumers = this.consumerCurator.lockAndLoadByIds(consumerIds);
+        Collection<Consumer> consumers = this.consumerCurator.lockAndLoad(consumerIds);
         consumers.addAll(consumerCurator.listByRecipientOwner(owner).list());
 
         for (Consumer consumer : consumers) {
@@ -224,15 +224,12 @@ public class OwnerManager {
         }
 
         // Lock the owner
-        Owner locked = ownerCurator.lockAndLoad(owner);
-        if (locked == null) {
-            throw new IllegalStateException("Unable to obtain exclusive lock on owner: " + owner);
-        }
+        this.ownerCurator.lock(owner);
 
         // Fetch the upstream list and mode
-        String upstreamList = adapter.getContentAccessModeList(locked.getKey());
-        String upstreamMode = adapter.getContentAccessMode(locked.getKey());
-        String currentMode = locked.getContentAccessMode();
+        String upstreamList = adapter.getContentAccessModeList(owner.getKey());
+        String upstreamMode = adapter.getContentAccessMode(owner.getKey());
+        String currentMode = owner.getContentAccessMode();
 
         // This shouldn't happen, but in the event our upstream source is having issues, let's
         // not put ourselves in a bad state as well.
@@ -268,18 +265,18 @@ public class OwnerManager {
         }
 
         // Set new values
-        locked.setContentAccessModeList(upstreamList);
+        owner.setContentAccessModeList(upstreamList);
 
         // If the content access mode changed, we'll need to update it and refresh the access certs
         if (!StringUtils.isEmpty(currentMode) ? !currentMode.equals(upstreamMode) :
             !StringUtils.isEmpty(upstreamMode)) {
 
-            locked.setContentAccessMode(upstreamMode);
+            owner.setContentAccessMode(upstreamMode);
 
-            ownerCurator.merge(locked);
+            ownerCurator.merge(owner);
             ownerCurator.flush();
 
-            this.refreshOwnerForContentAccess(locked);
+            this.refreshOwnerForContentAccess(owner);
         }
     }
 
@@ -292,18 +289,15 @@ public class OwnerManager {
     @Transactional
     public void refreshOwnerForContentAccess(Owner owner) {
         // we need to update the owner's consumers if the content access mode has changed
-        Owner locked = ownerCurator.lockAndLoad(owner);
-        if (locked == null) {
-            throw new IllegalStateException("Unable to obtain exclusive lock for owner: " + owner);
-        }
+        this.ownerCurator.lock(owner);
 
-        String cam = locked.getContentAccessMode();
+        String cam = owner.getContentAccessMode();
         if (ContentAccessCertServiceAdapter.ENTITLEMENT_ACCESS_MODE.equals(cam)) {
-            contentAccessCertCurator.deleteForOwner(locked);
+            contentAccessCertCurator.deleteForOwner(owner);
         }
 
         // removed cached versions of content access cert data
-        ownerEnvContentAccessCurator.removeAllForOwner(locked.getId());
+        ownerEnvContentAccessCurator.removeAllForOwner(owner.getId());
         ownerCurator.flush();
     }
 
