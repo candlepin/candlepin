@@ -549,6 +549,7 @@ public class CandlepinPoolManager implements PoolManager {
         Set<String> existingUndeletedPoolIds = new HashSet<>();
         Set<Pool> poolsToDelete = new HashSet<>();
         Set<Pool> poolsToRegenEnts = new HashSet<>();
+        List<Pool> poolsQtyUpdated = new LinkedList<>();
         Set<String> entitlementsToRegen = new HashSet<>();
 
         // Get our list of pool IDs so we can check which of them still exist in the DB...
@@ -584,13 +585,7 @@ public class CandlepinPoolManager implements PoolManager {
             // quantity has changed. delete any excess entitlements from pool
             // the quantity has not yet been expressed on the pool itself
             if (updatedPool.getQuantityChanged()) {
-                Set<Pool> deletedPools = revokeEntitlementsFromOverflowingPools(Collections.singletonList
-                    (existingPool));
-                if (deletedPools != null) {
-                    for (Pool pool : deletedPools) {
-                        existingUndeletedPoolIds.remove(pool.getId());
-                    }
-                }
+                poolsQtyUpdated.add(existingPool);
             }
 
             // dates changed. regenerate all entitlement certificates
@@ -614,6 +609,11 @@ public class CandlepinPoolManager implements PoolManager {
         // Flush our merged changes
         if (flush) {
             this.poolCurator.flush();
+        }
+
+        // Check if we need to execute the revocation plan
+        if (poolsQtyUpdated.size() > 0) {
+            this.revokeEntitlementsFromOverflowingPools(poolsQtyUpdated);
         }
 
         // Fetch entitlement IDs for updated pools...
@@ -1218,14 +1218,11 @@ public class CandlepinPoolManager implements PoolManager {
     public List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host, Date entitleDate,
         Collection<String> possiblePools) throws EntitlementRefusedException {
 
-        Consumer locked = consumerCurator.lockAndLoad(host);
-        if (locked == null) {
-            throw new IllegalStateException("Unable to obtain exclusive lock on host: " + host);
-        }
+        this.consumerCurator.lock(host);
 
         List<Entitlement> entitlements = new LinkedList<>();
-        if (!locked.getOwnerId().equals(guest.getOwnerId())) {
-            log.debug("Host {} and guest {} have different owners", locked.getUuid(), guest.getUuid());
+        if (!host.getOwnerId().equals(guest.getOwnerId())) {
+            log.debug("Host {} and guest {} have different owners", host.getUuid(), guest.getUuid());
             return entitlements;
         }
         // Use the current date if one wasn't provided:
@@ -1233,16 +1230,16 @@ public class CandlepinPoolManager implements PoolManager {
             entitleDate = new Date();
         }
 
-        List<PoolQuantity> bestPools = getBestPoolsForHost(guest, locked, entitleDate, locked.getOwnerId(),
+        List<PoolQuantity> bestPools = getBestPoolsForHost(guest, host, entitleDate, host.getOwnerId(),
             null, possiblePools);
 
         if (bestPools == null) {
-            log.info("No entitlements for host: {}", locked.getUuid());
+            log.info("No entitlements for host: {}", host.getUuid());
             return null;
         }
 
         // now make the entitlements
-        return entitleByPools(locked, convertToMap(bestPools));
+        return entitleByPools(host, convertToMap(bestPools));
     }
 
     /**
@@ -1673,10 +1670,8 @@ public class CandlepinPoolManager implements PoolManager {
         // before starting this process.
         log.debug("Updating entitlement, Locking pool: {}", entitlement.getPool().getId());
 
-        Pool pool = poolCurator.lockAndLoad(entitlement.getPool());
-        if (pool == null) {
-            throw new RuntimeException("Unable to lock pool for entitlement: " + entitlement);
-        }
+        Pool pool = this.poolCurator.lock(entitlement.getPool());
+        this.poolCurator.refresh(pool);
 
         log.debug("Locked pool: {} consumed: {}", pool, pool.getConsumed());
 
@@ -1690,15 +1685,11 @@ public class CandlepinPoolManager implements PoolManager {
             throw new EntitlementRefusedException(errorMap);
         }
 
-        /*
-         * Grab an exclusive lock on the consumer to prevent deadlock.
-         */
-        Consumer locked = consumerCurator.lockAndLoad(consumer);
-        if (locked == null) {
-            throw new IllegalStateException("Unable to obtain exclusive lock on consumer: " + consumer);
-        }
 
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(locked);
+        // Grab an exclusive lock on the consumer to prevent deadlock.
+        this.consumerCurator.lock(consumer);
+
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         // Persist the entitlement after it has been updated.
         log.info("Processing entitlement and persisting.");
@@ -1710,22 +1701,22 @@ public class CandlepinPoolManager implements PoolManager {
             pool.setExported(pool.getExported() + change);
         }
         poolCurator.merge(pool);
-        locked.setEntitlementCount(locked.getEntitlementCount() + change);
+        consumer.setEntitlementCount(consumer.getEntitlementCount() + change);
 
         Map<String, Entitlement> entMap = new HashMap<>();
         entMap.put(pool.getId(), entitlement);
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, change));
 
-        Owner owner = ownerCurator.get(locked.getOwnerId());
+        Owner owner = ownerCurator.get(consumer.getOwnerId());
 
         // the only thing we do here is decrement bonus pool quantity
         PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(this,
-            locked, owner, entMap, new ArrayList<>(), true, poolQuantityMap);
+            consumer, owner, entMap, new ArrayList<>(), true, poolQuantityMap);
         poolOperationCallback.apply(this);
 
         // we might have changed the bonus pool quantities, revoke ents if needed.
-        checkBonusPoolQuantities(locked.getOwnerId(), entMap);
+        checkBonusPoolQuantities(consumer.getOwnerId(), entMap);
 
         this.entitlementCurator.markEntitlementsDirty(Arrays.asList(entitlement.getId()));
 
@@ -1735,10 +1726,10 @@ public class CandlepinPoolManager implements PoolManager {
          * all consumer's entitlement count are updated though, so we need to update irrespective
          * of the consumer type.
          */
-        complianceRules.getStatus(locked, null, false, false);
+        complianceRules.getStatus(consumer, null, false, false);
         // Note: a quantity change should *not* need a system purpose compliance recalculation. if that is
         // not true any more, we should update that here.
-        consumerCurator.update(locked);
+        consumerCurator.update(consumer);
         poolCurator.flush();
 
         return entitlement;
@@ -1906,13 +1897,9 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        // Impl note: this will refresh pools backed by the DB, but not those newly created or deleted. Since
-        // we're operating on a list of existing entities, not expecting to pull from the DB and don't care
-        // about anything that was deleted, we can safely ignore the output here and continue working with
-        // the existing list.
-        // TODO: This is dangerous (thanks to Hibernate quirks)! We should update this to use explicit locks
-        // and refreshes on entities where we know the state.
-        poolCurator.lockAndLoad(poolsToLock);
+        this.poolCurator.lock(poolsToLock);
+        this.poolCurator.refresh(poolsToLock);
+
         log.info("Batch revoking {} entitlements", entsToRevoke.size());
         entsToRevoke = new ArrayList<>(entsToRevoke);
 
@@ -2225,7 +2212,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Lock pools we're going to delete (also, fetch them for event generation/slow deletes)
-        pools = this.poolCurator.lockAndLoadByIds(poolIds);
+        pools = this.poolCurator.lockAndLoad(poolIds);
 
         if (!pools.isEmpty()) {
             log.info("Locked {} pools for deletion...", pools.size());
@@ -2443,13 +2430,9 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Override
     public Pool setPoolQuantity(Pool pool, long set) {
-        Pool locked = poolCurator.lockAndLoad(pool);
-        if (locked == null) {
-            throw new IllegalStateException("Unable to obtain exclusive lock on pool: " + pool);
-        }
-
-        locked.setQuantity(set);
-        return poolCurator.merge(locked);
+        this.poolCurator.lock(pool);
+        pool.setQuantity(set);
+        return poolCurator.merge(pool);
     }
 
     /**
@@ -2459,7 +2442,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public void setPoolQuantity(Map<Pool, Long> poolQuantities) {
         if (poolQuantities != null) {
-            poolCurator.lockAndLoad(poolQuantities.keySet());
+            poolCurator.lock(poolQuantities.keySet());
             for (Entry<Pool, Long> entry : poolQuantities.entrySet()) {
                 entry.getKey().setQuantity(entry.getValue());
             }

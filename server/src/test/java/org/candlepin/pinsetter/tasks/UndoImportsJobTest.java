@@ -250,7 +250,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void handleException() throws JobExecutionException {
         // the real thing we want to handle
-        doThrow(new NullPointerException()).when(this.ownerCurator).lockAndLoadById(anyString());
+        doThrow(new NullPointerException()).when(this.ownerCurator).lockAndLoad(anyString());
 
         try {
             this.undoImportsJob.execute(this.jobContext);
@@ -266,7 +266,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void refireOnWrappedSQLException() throws JobExecutionException {
         RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
-        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+        doThrow(e).when(this.ownerCurator).lockAndLoad(anyString());
 
         try {
             this.undoImportsJob.execute(this.jobContext);
@@ -283,7 +283,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     public void refireOnMultiLayerWrappedSQLException() throws JobExecutionException {
         RuntimeException e = new RuntimeException("uh oh", new SQLException("not good"));
         RuntimeException e2 = new RuntimeException("trouble!", e);
-        doThrow(e2).when(this.ownerCurator).lockAndLoadById(anyString());
+        doThrow(e2).when(this.ownerCurator).lockAndLoad(anyString());
 
         try {
             this.undoImportsJob.execute(this.jobContext);
@@ -297,7 +297,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Test
     public void noRefireOnRegularRuntimeException() throws JobExecutionException {
         RuntimeException e = new RuntimeException("uh oh", new NullPointerException());
-        doThrow(e).when(this.ownerCurator).lockAndLoadById(anyString());
+        doThrow(e).when(this.ownerCurator).lockAndLoad(anyString());
 
         try {
             this.undoImportsJob.execute(this.jobContext);
