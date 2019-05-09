@@ -17,6 +17,8 @@ package org.candlepin.dto;
 import org.candlepin.audit.Event;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyTranslator;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.v1.AsyncJobStatusTranslator;
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.BrandingTranslator;
 import org.candlepin.dto.api.v1.CapabilityDTO;
@@ -81,6 +83,7 @@ import org.candlepin.dto.shim.ContentDTOTranslator;
 import org.candlepin.dto.shim.ContentDataTranslator;
 import org.candlepin.dto.shim.ProductDTOTranslator;
 import org.candlepin.dto.shim.ProductDataTranslator;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Certificate;
@@ -140,6 +143,8 @@ public class StandardTranslator extends SimpleModelTranslator {
         /////////////////////////////////////////////
         this.registerTranslator(
             new ActivationKeyTranslator(), ActivationKey.class, ActivationKeyDTO.class);
+        this.registerTranslator(
+            new AsyncJobStatusTranslator(), AsyncJobStatus.class, AsyncJobStatusDTO.class);
         this.registerTranslator(
             new BrandingTranslator(), Branding.class, BrandingDTO.class);
         this.registerTranslator(

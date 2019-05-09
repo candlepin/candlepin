@@ -130,11 +130,11 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @Column(name = "value")
     private Map<String, String> metadata;
 
-    @Column(name = "previous_state")
-    private JobState previousState;
-
     @NotNull
     private JobState state;
+
+    @Column(name = "previous_state")
+    private JobState previousState;
 
     // @ElementCollection(fetch = FetchType.LAZY)
     // @CollectionTable(name = "cp_async_job_constraints", joinColumns = @JoinColumn(name = "job_id"))
