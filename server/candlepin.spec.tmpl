@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.4.15
+Version: 2.4.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,11 @@ fi
 
 #raw
 %changelog
+* Thu May 09 2019 Kevin Howell <khowell@redhat.com> 2.4.16-1
+- 1704720: Synchronize java.util.Date serializations (nmoumoul@redhat.com)
+- 1679287: Removed AHC.lockAndLoadById(s) to address quirks with refresh
+  (crog@redhat.com)
+
 * Wed Apr 10 2019 Kevin Howell <khowell@redhat.com> 2.4.15-1
 - 1698563: CVE-2019-3891 Do not print database credentials in cpdb
   (khowell@redhat.com)
