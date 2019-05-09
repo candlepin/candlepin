@@ -278,7 +278,10 @@ else
 fi
 
 # Make sure we update the ruby bundle:
-bundle install --without=proton
+if [ ! -f ./gradlew ]; then
+    bundle install --without=proton
+fi
+
 mkdir -p /var/log/candlepin
 
 # Setup our tee pipe
