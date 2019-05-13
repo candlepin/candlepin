@@ -14,15 +14,11 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
-import org.candlepin.model.EventCurator;
 
 import com.google.inject.Inject;
 
 import org.jboss.resteasy.plugins.providers.atom.Feed;
-
-import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -40,22 +36,30 @@ import io.swagger.annotations.Authorization;
 @Api(value = "atom", authorizations = { @Authorization("basic") })
 public class AtomFeedResource {
 
-    private static final int ATOM_FEED_LIMIT = 1000;
-
-    private EventCurator eventCurator;
     private EventAdapter adapter;
     @Inject
-    public AtomFeedResource(EventCurator eventCurator, EventAdapter adapter) {
-        this.eventCurator = eventCurator;
+    public AtomFeedResource(EventAdapter adapter) {
         this.adapter = adapter;
     }
 
-    @ApiOperation(notes = "Retrieves an Event Atom Feed", value = "getFeed")
+    /**
+     * Retrieves an Event Atom Feed.
+     *
+     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns
+     * a feed without any entries, and will be removed on the next major release.
+     *
+     * @return an empty Atom Feed
+     */
+    @Deprecated
+    @ApiOperation(
+        notes = "Retrieves an Event Atom Feed. DEPRECATED: Event persistence/retrieval is " +
+        "being phased out. This endpoint currently returns a feed without any entries, and will be " +
+        "removed on the next major release.",
+        value = "getFeed")
     @GET
     @Produces({"application/atom+xml", MediaType.APPLICATION_JSON})
     public Feed getFeed() {
-        List<Event> events = eventCurator.listMostRecent(ATOM_FEED_LIMIT).list();
-        Feed feed = this.adapter.toFeed(events, "/atom");
+        Feed feed = this.adapter.toFeed(null, "/atom");
         feed.setTitle("Event Feed");
         return feed;
     }

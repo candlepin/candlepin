@@ -50,7 +50,6 @@
         <addresses>
             <address name="event.default">
                 <multicast>
-                    <queue name="event.org.candlepin.audit.DatabaseListener" />
                     <queue name="event.org.candlepin.audit.LoggingListener" />
                     <queue name="event.org.candlepin.audit.ActivationListener" />
                 </multicast>

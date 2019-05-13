@@ -17,40 +17,25 @@ package org.candlepin.audit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.model.Persisted;
 import org.candlepin.util.Util;
 
-import org.hibernate.annotations.GenericGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * Event - Base class for Candlepin events. Serves as both our semi-permanent
- * audit history in the database, as well as an integral part of the event
- * queue.
+ * Event - Base class for Candlepin events. Serves as an integral part of the event queue.
  */
-@Entity
-@Table(name = Event.DB_TABLE)
 @XmlRootElement(namespace = "http://fedorahosted.org/candlepin/Event")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class Event implements Persisted {
+public class Event {
 
     private static final Logger log = LoggerFactory.getLogger(Event.class);
 
@@ -82,70 +67,45 @@ public class Event implements Persisted {
     }
 
     // Uniquely identifies the event:
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
     @NotNull
     private String id;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
     @NotNull
     private Type type;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
     @NotNull
     private Target target;
 
     // This should be there, but may not be
     // moo
-    @Column(nullable = true)
-    @Size(max = 255)
     private String targetName;
 
     // String representation of the principal. We probably should not be
     // reconstructing
     // any stored principal object.
-    @Column(nullable = false, name = "principal")
-    @Size(max = 255)
     @NotNull
     private String principalStore;
 
-    @Column(nullable = false)
     @NotNull
     private Date timestamp;
 
-    @Column(nullable = true)
-    @Size(max = 255)
     private String entityId;
 
-    @Column(nullable = true)
-    @Size(max = 255)
     private String ownerId;
 
-    @Column(name = "consumer_uuid", nullable = true)
-    @Size(max = 255)
     private String consumerUuid;
 
     // Generic id field in case a cross reference is needed to some other entity
     // Use with reference type
-    @Column(nullable = true)
-    @Size(max = 255)
     private String referenceId;
 
     // Classifies Generic id field in case a cross reference is needed to some
     // other entity
     // Use with reference id
-    @Column(nullable = true)
-    @Enumerated(EnumType.STRING)
     private ReferenceType referenceType;
 
-    @Transient
     private String eventData;
 
-    @Transient
     private String messageText;
 
     public Event() {
@@ -179,7 +139,6 @@ public class Event implements Persisted {
         this.timestamp = new Date();
     }
 
-    @Override
     public String getId() {
         return id;
     }
