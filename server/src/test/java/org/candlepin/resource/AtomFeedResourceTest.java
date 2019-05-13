@@ -14,10 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,7 +30,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.EventCurator;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -51,7 +48,6 @@ import java.util.List;
  */
 public class AtomFeedResourceTest {
 
-    private EventCurator ec;
     private EventAdapter ea;
     private AtomFeedResource afr;
     private Injector injector;
@@ -66,9 +62,8 @@ public class AtomFeedResourceTest {
             new TestingModules.ServletEnvironmentModule()
         );
         i18n = injector.getInstance(I18n.class);
-        ec = mock(EventCurator.class);
         ea = new EventAdapterImpl(new ConfigForTesting(), i18n);
-        afr = new AtomFeedResource(ec, ea);
+        afr = new AtomFeedResource(ea);
     }
 
     @Test
@@ -76,17 +71,15 @@ public class AtomFeedResourceTest {
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         List<Event> events = getEvents(10);
         when(cqmock.list()).thenReturn(events);
-        when(ec.listMostRecent(eq(1000))).thenReturn(cqmock);
         Feed f = afr.getFeed();
         assertNotNull(f);
-        assertEquals(10, f.getEntries().size());
+        assertTrue(f.getEntries().isEmpty());
     }
 
     @Test
     public void getEmptyFeed() {
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(new ArrayList<Event>());
-        when(ec.listMostRecent(eq(1000))).thenReturn(cqmock);
         Feed f = afr.getFeed();
         assertNotNull(f);
         assertTrue(f.getEntries().isEmpty());

@@ -75,7 +75,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         setupPrincipal(principal);
 
         or = new OwnerResource(
-            ownerCurator, productCurator, null, consumerCurator, i18n, null, null, null,
+            ownerCurator, productCurator, null, consumerCurator, i18n, null, null,
             null, null, poolManager, null, null,
             null, null, consumerTypeCurator, entitlementCertificateCurator, entitlementCurator,
             ueberCertCurator, ueberCertGenerator, null,  null, contentOverrideValidator,

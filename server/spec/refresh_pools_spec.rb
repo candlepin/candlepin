@@ -65,7 +65,9 @@ describe 'Refresh Pools' do
 
     events = @cp.list_owner_events(owner['key'])
     pool_created_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'CREATED'}
-    pool_created_events.size.should eq(6)
+
+    # All event retrieval endpoints are deprecated, and should be returning an empty list of events:
+    pool_created_events.size.should eq(0)
   end
 
   it 'detects changes in provided products' do
