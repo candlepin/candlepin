@@ -45,7 +45,6 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
-import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
@@ -64,7 +63,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.EventCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
@@ -178,8 +176,6 @@ public class OwnerResource {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
 
-    private static final int FEED_LIMIT = 1000;
-
     private OwnerCurator ownerCurator;
     private ProductCurator productCurator;
     private OwnerInfoCurator ownerInfoCurator;
@@ -190,7 +186,6 @@ public class OwnerResource {
     private EventSink sink;
     private EventFactory eventFactory;
     private EventAdapter eventAdapter;
-    private EventCurator eventCurator;
     private ManifestManager manifestManager;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
@@ -219,7 +214,6 @@ public class OwnerResource {
         I18n i18n,
         EventSink sink,
         EventFactory eventFactory,
-        EventCurator eventCurator,
         EventAdapter eventAdapter,
         ManifestManager manifestManager,
         PoolManager poolManager,
@@ -251,7 +245,6 @@ public class OwnerResource {
         this.i18n = i18n;
         this.sink = sink;
         this.eventFactory = eventFactory;
-        this.eventCurator = eventCurator;
         this.exportCurator = exportCurator;
         this.importRecordCurator = importRecordCurator;
         this.poolManager = poolManager;
@@ -1538,20 +1531,28 @@ public class OwnerResource {
     /**
      * Retrieves an Event
      *
+     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns a feed
+     * without any entries, and will be removed on the next major release.
+     *
      * @return a Feed object
      * @httpcode 404
      * @httpcode 200
      */
+    @Deprecated
+    @ApiOperation(
+        notes = "Retrieves an Event Atom Feed for an owner. DEPRECATED: Event persistence/retrieval is " +
+        "being phased out. This endpoint currently returns a feed without any entries, and will be " +
+        "removed on the next major release.",
+        value = "Get Atom Feed")
     @GET
     @Produces("application/atom+xml")
     @Path("{owner_key}/atom")
-    @ApiOperation(notes = "Retrieves an Event Atom Feed for an owner", value = "Get Atom Feed")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public Feed getOwnerAtomFeed(@PathParam("owner_key")
         @Verify(Owner.class) String ownerKey) {
         Owner o = findOwnerByKey(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
-        Feed feed = this.eventAdapter.toFeed(this.eventCurator.listMostRecent(FEED_LIMIT, o).list(), path);
+        Feed feed = this.eventAdapter.toFeed(null, path);
         feed.setTitle("Event feed for owner " + o.getDisplayName());
         return feed;
     }
@@ -1559,31 +1560,26 @@ public class OwnerResource {
     /**
      * Retrieves a list of Events for an Owner
      *
+     * @deprecated This endpoint currently returns an empty list of events, and will be removed
+     * on the next major release.
+     *
      * @return a list of Event objects
      * @httpcode 404
      * @httpcode 200
      */
+    @Deprecated
+    @ApiOperation(
+        notes = "Retrieves a list of Events for an Owner. DEPRECATED: Event persistence/retrieval is being " +
+        "phased out. This endpoint currently returns an empty list of events, and will be removed " +
+        "on the next major release.",
+        value = "Get Events")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/events")
-    @ApiOperation(notes = "Retrieves a list of Events for an Owner", value = "Get Events")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public List<EventDTO> getEvents(
+    public List<Event> getEvents(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        Owner o = findOwnerByKey(ownerKey);
-
-        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o).list();
-
-        List<EventDTO> eventDTOs = null;
-        if (events != null) {
-            eventAdapter.addMessageText(events);
-
-            eventDTOs = new ArrayList<>();
-            for (Event event : events) {
-                eventDTOs.add(this.translator.translate(event, EventDTO.class));
-            }
-        }
-        return eventDTOs;
+        return Collections.emptyList();
     }
 
     /**
