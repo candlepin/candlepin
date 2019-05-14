@@ -17,9 +17,6 @@ package org.candlepin.config;
 
 import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
-// TODO: Remove this, probably
-import org.candlepin.async.temp.TestJob1;
-
 import org.candlepin.common.config.Configuration;
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
@@ -38,6 +35,8 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+
+
 
 /**
  * Defines a map of default properties used to prepopulate the {@link Configuration}.
@@ -455,18 +454,6 @@ public class ConfigProperties {
 
             // Async Job Defaults
             this.put(ASYNC_JOBS_THREADS, "10");
-
-            // TODO: Find a better way to load job classes
-            String[] allowed = new String[] {
-                TestJob1.getJobKey()
-            };
-
-
-
-
-
-
-
         }
     };
 

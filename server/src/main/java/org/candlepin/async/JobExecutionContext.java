@@ -22,11 +22,14 @@ package org.candlepin.async;
  */
 public interface JobExecutionContext {
 
-    // TODO: maybe make a custom subclass of map that provides some auto-casting fetch methods?
+    /**
+     * Fetches the arguments for this execution of the job
+     *
+     * @return
+     *  a JobArguments instance with the arguments for this execution of the job
+     */
+    JobArguments getJobArguments();
 
-    JobDataMap getJobData();
-
-
-    // Add other stuff here
+    // TODO: Add other stuff here as necessary
 
 }

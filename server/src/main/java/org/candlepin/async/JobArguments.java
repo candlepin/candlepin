@@ -14,68 +14,79 @@
  */
 package org.candlepin.async;
 
-import java.util.Collection;
-import java.util.Iterator;
+import org.candlepin.util.ObjectMapperFactory;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
 
 
 /**
- * The JobDataMap is a typed HashMap that provides utility methods for fetching values as various
- * datatypes.
+ * The JobArguments is a map-like view of the arguments provided to the job during construction.
+ * Unlike a typical map, the types of the values must be known to properly fetch them.
  */
-public class JobDataMap implements Map<String, Object> {
+@SuppressWarnings("checkstyle:JavadocMethodMain")
+public class JobArguments {
+    private static ObjectMapper mapper = ObjectMapperFactory.getObjectMapper();
 
-    final Map<String, Object> map;
+    @JsonProperty("data")
+    private Map<String, String> data;
 
     /**
-     * Creates a new JobDataMap instance backed by the provided map.
+     * Creates a new serialized map using the specified map as a data store.
      *
      * @param map
-     *  The map to use as the backing map
-     *
-     * @throws IllegalArgumentException
-     *  if the provided map is null
+     *  the map to use as the data store for this map
      */
-    public JobDataMap(Map<String, Object> map) {
+    @JsonCreator
+    public JobArguments(@JsonProperty("data") Map<String, String> map) {
         if (map == null) {
             throw new IllegalArgumentException("map is null");
         }
 
-        this.map = map;
+        this.data = map;
     }
 
     /**
-     * {@inheritDoc}
+     * Serializes the given object into a JSON string using the JobArgument's serializer.
+     *
+     * @param value
+     *  the value to serialize
+     *
+     * @throws ArgumentConversionException
+     *  if serialization of the specified value fails for any reason
+     *
+     * @return
+     *  the JSON serialized value
      */
-    @Override
-    public void clear() {
-        this.map.clear();
+    public static String serialize(Object value) {
+        try {
+            return value != null ? mapper.writeValueAsString(value) : null;
+        }
+        catch (Exception e) {
+            Class type = value != null ? value.getClass() : null;
+            String errmsg = String.format("Unable to serialize value: %s (%s)", value, type);
+
+            throw new ArgumentConversionException(errmsg, e);
+        }
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if the given key is present in the arguments map.
+     *
+     * @param key
+     *  the key to check
+     *
+     * @return
+     *  true if the key is present in the arguments map; false otherwise
      */
-    @Override
-    public boolean containsKey(Object key) {
-        return this.map.containsKey(key);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean containsValue(Object value) {
-        return this.map.containsValue(value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Set<Map.Entry<String, Object>> entrySet() {
-        return this.map.entrySet();
+    public boolean containsKey(String key) {
+        return this.data.containsKey(key);
     }
 
     /**
@@ -83,15 +94,7 @@ public class JobDataMap implements Map<String, Object> {
      */
     @Override
     public boolean equals(Object obj) {
-        return this.map.equals(obj);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object get(Object key) {
-        return this.map.get(key);
+        return obj instanceof JobArguments && this.data.equals(((JobArguments) obj).data);
     }
 
     /**
@@ -99,63 +102,38 @@ public class JobDataMap implements Map<String, Object> {
      */
     @Override
     public int hashCode() {
-        return this.map.hashCode();
+        return this.data.hashCode();
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if the arguments map is empty
+     *
+     * @return
+     *  true if the arguments map is empty; false otherwise
      */
-    @Override
     public boolean isEmpty() {
-        return this.map.isEmpty();
+        return this.data.isEmpty();
     }
 
     /**
-     * {@inheritDoc}
+     * Fetches the set of keys currently set in the arguments map. If the argument map does not
+     * contain any arguments, this method returns an empty set.
+     *
+     * @return
+     *  the set of keys currently set in the arguments map
      */
-    @Override
     public Set<String> keySet() {
-        return this.map.keySet();
+        return this.data.keySet();
     }
 
     /**
-     * {@inheritDoc}
+     * Fetches the size of the arguments map
+     *
+     * @return
+     *  the number of arguments in the arguments map
      */
-    @Override
-    public Object put(String key, Object value) {
-        return this.map.put(key, value);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void putAll(Map<? extends String, ? extends Object> map) {
-        this.map.putAll(map);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object remove(Object key) {
-        return this.map.remove(key);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public int size() {
-        return this.map.size();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<Object> values() {
-        return this.map.values();
+        return this.data.size();
     }
 
     /**
@@ -163,27 +141,75 @@ public class JobDataMap implements Map<String, Object> {
      */
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder(this.getClass().getName());
-
-        builder.append(" {");
-        Iterator<Map.Entry<String, Object>> iterator = this.map.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, Object> entry = iterator.next();
-
-            builder.append(entry.getKey());
-            builder.append('=');
-            builder.append(entry.getValue());
-
-            if (iterator.hasNext()) {
-                builder.append(", ");
-            }
-        }
-        builder.append('}');
-
-        return builder.toString();
+        return String.format("JobArguments [size: %d, keys: (%s)]",
+            this.size(), String.join(", ", this.keySet()));
     }
 
     // Utility methods
+
+    /**
+     * Fetches the raw, serialized value associated with the specified key.
+     *
+     * @param key
+     *  the key for which to fetch the associated serialized value
+     *
+     * @return
+     *  the serialized value associated with the specified key, or null if the key is not currently
+     *  associated with a value
+     */
+    public String getSerializedValue(String key) {
+        return this.data.get(key);
+    }
+
+    /**
+     * Fetches the value associated with the specified key, deserialized as the given type. If the
+     * key is not currently associated with any value, this method returns the given default value.
+     *
+     * @param key
+     *  the key for which to fetch the associated value
+     *
+     * @param type
+     *  the type to use to deserialize the the value
+     *
+     * @param defaultValue
+     *  the value to return if the key is not currently associated with a value
+     *
+     * @return
+     *  the deserialized value associated with the specified key, or the given default value if the
+     *  key is not currently associated with a value
+     */
+    public <T> T getAs(String key, Class<T> type, T defaultValue) {
+        if (this.containsKey(key)) {
+            try {
+                String json = this.data.get(key);
+                return json != null ? mapper.readValue(json, type) : null;
+            }
+            catch (IOException e) {
+                String errmsg = String.format("Unable to deserialize key \"%s\" as type: %s", key, type);
+                throw new ArgumentConversionException(errmsg, e);
+            }
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * Fetches the value associated with the specified key, deserialized as the given type. If the
+     * key is not currently associated with any value, this method returns null.
+     *
+     * @param key
+     *  the key for which to fetch the associated value
+     *
+     * @param type
+     *  the type to use to deserialize the the value
+     *
+     * @return
+     *  the deserialized value associated with the specified key, or null if the key is not
+     *  currently associated with a value
+     */
+    public <T> T getAs(String key, Class<T> type) {
+        return this.getAs(key, type, null);
+    }
 
     /**
      * Fetches the value associated with the specified key, cast to a boolean value. If the key
@@ -203,7 +229,7 @@ public class JobDataMap implements Map<String, Object> {
      *  key does not exist
      */
     public Boolean getAsBoolean(String key, Boolean defaultValue) {
-        return this.containsKey(key) ? (Boolean) this.get(key) : defaultValue;
+        return this.getAs(key, Boolean.class, defaultValue);
     }
 
     /**
@@ -221,7 +247,7 @@ public class JobDataMap implements Map<String, Object> {
      *  not exist
      */
     public Boolean getAsBoolean(String key) {
-        return this.getAsBoolean(key, null);
+        return this.getAs(key, Boolean.class, null);
     }
 
     /**
@@ -242,7 +268,7 @@ public class JobDataMap implements Map<String, Object> {
      *  key does not exist
      */
     public Integer getAsInteger(String key, Integer defaultValue) {
-        return this.containsKey(key) ? (Integer) this.get(key) : defaultValue;
+        return this.getAs(key, Integer.class, defaultValue);
     }
 
     /**
@@ -260,7 +286,7 @@ public class JobDataMap implements Map<String, Object> {
      *  not exist
      */
     public Integer getAsInteger(String key) {
-        return this.getAsInteger(key, null);
+        return this.getAs(key, Integer.class, null);
     }
 
     /**
@@ -278,7 +304,7 @@ public class JobDataMap implements Map<String, Object> {
      *  key does not exist
      */
     public Long getAsLong(String key, Long defaultValue) {
-        return this.containsKey(key) ? (Long) this.get(key) : defaultValue;
+        return this.getAs(key, Long.class, defaultValue);
     }
 
     /**
@@ -293,7 +319,7 @@ public class JobDataMap implements Map<String, Object> {
      *  exist
      */
     public Long getAsLong(String key) {
-        return this.getAsLong(key, null);
+        return this.getAs(key, Long.class, null);
     }
 
     /**
@@ -311,7 +337,7 @@ public class JobDataMap implements Map<String, Object> {
      *  if the key does not exist
      */
     public Float getAsFloat(String key, Float defaultValue) {
-        return this.containsKey(key) ? (Float) this.get(key) : defaultValue;
+        return this.getAs(key, Float.class, defaultValue);
     }
 
     /**
@@ -326,7 +352,7 @@ public class JobDataMap implements Map<String, Object> {
      *  does not exist
      */
     public Float getAsFloat(String key) {
-        return this.getAsFloat(key, null);
+        return this.getAs(key, Float.class, null);
     }
 
     /**
@@ -344,7 +370,7 @@ public class JobDataMap implements Map<String, Object> {
      *  if the key does not exist
      */
     public Double getAsDouble(String key, Double defaultValue) {
-        return this.containsKey(key) ? (Double) this.get(key) : defaultValue;
+        return this.getAs(key, Double.class, defaultValue);
     }
 
     /**
@@ -359,7 +385,7 @@ public class JobDataMap implements Map<String, Object> {
      *  does not exist
      */
     public Double getAsDouble(String key) {
-        return this.getAsDouble(key, null);
+        return this.getAs(key, Double.class, null);
     }
 
     /**
@@ -377,7 +403,7 @@ public class JobDataMap implements Map<String, Object> {
      *  key does not exist
      */
     public String getAsString(String key, String defaultValue) {
-        return this.containsKey(key) ? (String) this.get(key) : defaultValue;
+        return this.getAs(key, String.class, defaultValue);
     }
 
     /**
@@ -392,7 +418,6 @@ public class JobDataMap implements Map<String, Object> {
      *  exist
      */
     public String getAsString(String key) {
-        return this.getAsString(key, null);
+        return this.getAs(key, String.class, null);
     }
-
 }

@@ -14,26 +14,23 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobExecutionContext;
-import org.candlepin.async.JobDataMap;
+import org.candlepin.hibernate.AbstractJsonConverter;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
 
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
+import javax.persistence.Convert;
+import javax.persistence.Converter;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -53,7 +50,13 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_async_jobs";
-    public static final String PRINCIPAL_KEY = "principal_key";
+
+    // Various keys used to store job context in the job data map
+    private static final String PRINCIPAL_KEY = "context_principal";
+    private static final String METADATA_KEY = "job_metadata";
+    private static final String ARGUMENTS_KEY = "job_arguments";
+    private static final String RESULT_KEY = "job_result";
+    private static final String RESULT_CLASS_KEY = "job_result_class";
 
     /** Enum of job states; terminal states represent states at which the job will no longer change */
     public enum JobState {
@@ -101,6 +104,28 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         }
     }
 
+    /**
+     * A simple container object to collect all of the data to be stored in as a serialized field
+     */
+    @SuppressWarnings("checkstyle:VisibilityModifier")
+    private static class SerializedJobData {
+        public Map<String, String> metadata;
+        public JobArguments arguments;
+        public Object result;
+    }
+
+    /**
+     * JSON converter class for the SerializedJobData type.
+     */
+    @Converter
+    public static class JobDataJsonConverter extends AbstractJsonConverter<SerializedJobData> {
+        public JobDataJsonConverter() {
+            super(SerializedJobData.class);
+        }
+    }
+
+
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -124,11 +149,11 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @Column(name = "log_execution_details")
     private boolean logExecutionDetails;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "cp_async_job_metadata", joinColumns = @JoinColumn(name = "job_id"))
-    @MapKeyColumn(name = "\"key\"")
-    @Column(name = "\"value\"")
-    private Map<String, String> metadata;
+    // @ElementCollection(fetch = FetchType.EAGER)
+    // @CollectionTable(name = "cp_async_job_metadata", joinColumns = @JoinColumn(name = "job_id"))
+    // @MapKeyColumn(name = "\"key\"")
+    // @Column(name = "\"value\"")
+    // private Map<String, String> metadata;
 
     @NotNull
     private JobState state;
@@ -152,12 +177,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     private Date endTime;
 
     @Column(name = "job_data")
-    @Type(type = "org.candlepin.hibernate.JsonSerializedDataType")
-    private Object jobData;
-
-    @Column(name = "job_result")
-    @Type(type = "org.candlepin.hibernate.JsonSerializedDataType")
-    private Object jobResult;
+    @Convert(converter = JobDataJsonConverter.class)
+    private SerializedJobData jobData;
 
 
 
@@ -172,6 +193,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         this.maxAttempts = 1;
 
         this.logExecutionDetails = true;
+
+        this.jobData = new SerializedJobData();
     }
 
     /**
@@ -450,8 +473,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      *  the job's metadata as a map
      */
     public Map<String, String> getMetadata() {
-        return this.metadata != null ?
-            Collections.unmodifiableMap(this.metadata) :
+        return this.jobData.metadata != null ?
+            Collections.unmodifiableMap(this.jobData.metadata) :
             Collections.emptyMap();
     }
 
@@ -466,12 +489,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      *  this job status instance
      */
     public AsyncJobStatus setMetadata(Map<String, String> metadata) {
-        this.metadata = new HashMap<>();
-
-        if (metadata != null) {
-            this.metadata.putAll(metadata);
-        }
-
+        this.jobData.metadata = metadata != null ? new HashMap<>(metadata) : null;
         return this;
     }
 
@@ -492,11 +510,11 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
             throw new IllegalArgumentException("key is null");
         }
 
-        if (this.metadata == null) {
-            this.metadata = new HashMap<>();
+        if (this.jobData.metadata == null) {
+            this.jobData.metadata = new HashMap<>();
         }
 
-        this.metadata.put(key, value);
+        this.jobData.metadata.put(key, value);
         return this;
     }
 
@@ -654,54 +672,51 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     }
 
     /**
-     * Fetches the job data for this job. The map returned by this method is immutable. If the
-     * job does not contain any job data, this method returns an empty map.
+     * Fetches the runtime arguments for this job
      *
      * @return
-     *  the job's runtime data as a map
+     *  the runtime arguments for this job
      */
-    public JobDataMap getJobData() {
-        return new JobDataMap(this.jobData != null ?
-            Collections.unmodifiableMap((Map<String, Object>) this.jobData) :
-            Collections.emptyMap());
+    public JobArguments getJobArguments() {
+        return this.jobData.arguments;
     }
 
     /**
-     * Sets the job data for this job.
+     * Sets the arguments this job will receive at runtime
      *
-     * @param jobData
-     *  The data to provide to the job during runtime
+     * @param arguments
+     *  The arguments to provide to the job at runtime
      *
      * @return
      *  this job status instance
      */
-    public AsyncJobStatus setJobData(Map<String, Object> jobData) {
-        this.jobData = jobData;
+    public AsyncJobStatus setJobArguments(JobArguments arguments) {
+        this.jobData.arguments = arguments;
         return this;
     }
 
     /**
-     * Fetches the result from the job's most recent run attempt. If the job has not yet been run,
+     * Fetches the result from the job's most recent execution. If the job has not yet been run,
      * or the job does not produce any output, this method returns null.
      *
      * @return
-     *  the output of this job's most recent run attempt, or null if the job has not yet been run
+     *  the output/result of the job's most recent execution, or null if no result is available
      */
     public Object getJobResult() {
-        return this.jobResult;
+        return this.jobData.result;
     }
 
     /**
-     * Sets the job data for this job.
+     * Sets the result of the last execution of this job.
      *
-     * @param resultData
+     * @param result
      *  The output from the job
      *
      * @return
      *  this job status instance
      */
-    public AsyncJobStatus setJobResult(Object resultData) {
-        this.jobResult = resultData;
+    public AsyncJobStatus setJobResult(Object result) {
+        this.jobData.result = result;
         return this;
     }
 

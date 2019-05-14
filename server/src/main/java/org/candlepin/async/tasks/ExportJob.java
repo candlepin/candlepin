@@ -16,13 +16,13 @@ package org.candlepin.async.tasks;
 
 import com.google.inject.Inject;
 import org.candlepin.async.AsyncJob;
+import org.candlepin.async.ArgumentConversionException;
+import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
-import org.candlepin.async.JobDataMap;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.async.JobConstraints;
-import org.candlepin.async.JobManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
@@ -45,15 +45,15 @@ import java.util.Map;
 public class ExportJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(ExportJob.class);
 
+    public static final String JOB_KEY = "EXPORT_JOB";
+    public static final String JOB_NAME = "export_manifest";
+
     protected static final String OWNER_KEY = "org";
     protected static final String CONSUMER_KEY = "consumer_uuid";
     protected static final String CDN_LABEL = "cdn_label";
     protected static final String WEBAPP_PREFIX = "webapp_prefix";
     protected static final String API_URL = "api_url";
     protected static final String EXTENSION_DATA = "extension_data";
-
-    private static final String JOB_KEY = "EXPORT_JOB";
-    private static final String JOB_NAME = "export_manifest";
 
     /**
      * Job configuration object for the export job
@@ -164,37 +164,27 @@ public class ExportJob implements AsyncJob {
         public void validate() throws JobConfigValidationException {
             super.validate();
 
-            Map<String, Object> arguments = this.getJobArguments();
+            try {
+                JobArguments arguments = this.getJobArguments();
 
-            Object consumerUuid = arguments.get(CONSUMER_KEY);
-            Object cdnLabel = arguments.get(CDN_LABEL);
+                String consumerUuid = arguments.getAsString(CONSUMER_KEY);
+                String cdnLabel = arguments.getAsString(CDN_LABEL);
 
-            if (!(consumerUuid instanceof String) || ((String) consumerUuid).isEmpty()) {
-                String errmsg = "consumer has not been set, or the provided consumer lacks a UUID";
-                throw new JobConfigValidationException(errmsg);
+                if (!(consumerUuid instanceof String) || ((String) consumerUuid).isEmpty()) {
+                    String errmsg = "consumer has not been set, or the provided consumer lacks a UUID";
+                    throw new JobConfigValidationException(errmsg);
+                }
+
+                if (!(cdnLabel instanceof String) || ((String) cdnLabel).isEmpty()) {
+                    String errmsg = "CDN label has not been set, or the provided label is empty";
+                    throw new JobConfigValidationException(errmsg);
+                }
             }
-
-            if (!(cdnLabel instanceof String) || ((String) cdnLabel).isEmpty()) {
-                String errmsg = "CDN label has not been set, or the provided label is empty";
-                throw new JobConfigValidationException(errmsg);
+            catch (ArgumentConversionException e) {
+                String errmsg = "One or more required arguments are of the wrong type";
+                throw new JobConfigValidationException(errmsg, e);
             }
         }
-    }
-
-
-    // Register the job with the JobManager
-    static {
-        JobManager.registerJob(JOB_KEY, ExportJob.class);
-    }
-
-    // NOTE: In order the get the above static block to run when candlepin is initialized,
-    //       we need to wrap the static key access in this method. When 'static final'
-    //       is used, the static block isn't run due to the way java processes them.
-    //
-    //       'public static String' can be used but checkstyle warns against this.
-    // TODO Are we Ok with this?
-    public static String getJobKey() {
-        return JOB_KEY;
     }
 
     private ManifestManager manifestManager;
@@ -205,13 +195,14 @@ public class ExportJob implements AsyncJob {
     }
 
     @Override
-    public Object execute(final JobExecutionContext jdata) throws JobExecutionException {
-        final JobDataMap map = jdata.getJobData();
-        final String consumerUuid = map.getAsString(CONSUMER_KEY);
-        final String cdnLabel = map.getAsString(CDN_LABEL);
-        final String webAppPrefix = map.getAsString(WEBAPP_PREFIX);
-        final String apiUrl = map.getAsString(API_URL);
-        final Map<String, String> extensionData = (Map<String, String>) map.get(EXTENSION_DATA);
+    public Object execute(JobExecutionContext context) throws JobExecutionException {
+        JobArguments args = context.getJobArguments();
+
+        final String consumerUuid = args.getAsString(CONSUMER_KEY);
+        final String cdnLabel = args.getAsString(CDN_LABEL);
+        final String webAppPrefix = args.getAsString(WEBAPP_PREFIX);
+        final String apiUrl = args.getAsString(API_URL);
+        final Map<String, String> extensionData = (Map<String, String>) args.getAs(EXTENSION_DATA, Map.class);
 
         log.info("Starting async export for {}", consumerUuid);
         try {
