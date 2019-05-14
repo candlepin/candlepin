@@ -28,7 +28,9 @@ import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import org.candlepin.async.JobMessageDispatcher;
+import org.candlepin.async.JobManager;
 import org.candlepin.async.impl.ArtemisJobMessageDispatcher;
+import org.candlepin.async.tasks.ExportJob;
 import org.candlepin.async.temp.AsyncJobResource;
 import org.candlepin.async.temp.TestJob1;
 import org.candlepin.audit.AMQPBusPublisher;
@@ -411,6 +413,9 @@ public class CandlepinModule extends AbstractModule {
     private void configureAsyncJobs() {
         bind(JobMessageDispatcher.class).to(ArtemisJobMessageDispatcher.class);
         bind(SchedulerFactory.class).to(StdSchedulerFactory.class);
+
+        JobManager.registerJob(TestJob1.JOB_KEY, TestJob1.class);
+        JobManager.registerJob(ExportJob.JOB_KEY, ExportJob.class);
     }
 
     private void configurePinsetter() {

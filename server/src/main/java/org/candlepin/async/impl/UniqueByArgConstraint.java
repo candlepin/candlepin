@@ -14,8 +14,8 @@
  */
 package org.candlepin.async.impl;
 
+import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConstraint;
-import org.candlepin.async.JobDataMap;
 import org.candlepin.model.AsyncJobStatus;
 
 
@@ -59,15 +59,15 @@ public class UniqueByArgConstraint implements JobConstraint {
         }
 
         String iJobKey = inbound.getJobKey();
-        JobDataMap iJobData = inbound.getJobData();
+        JobArguments iArgs = inbound.getJobArguments();
 
         String eJobKey = existing.getJobKey();
-        JobDataMap eJobData = existing.getJobData();
+        JobArguments eArgs = existing.getJobArguments();
 
         if (iJobKey != null ? iJobKey.equals(eJobKey) : eJobKey == null) {
-            if (iJobData.containsKey(this.param) && eJobData.containsKey(this.param)) {
-                Object iValue = iJobData.get(this.param);
-                Object eValue = eJobData.get(this.param);
+            if (iArgs.containsKey(this.param) && eArgs.containsKey(this.param)) {
+                String iValue = iArgs.getSerializedValue(this.param);
+                String eValue = eArgs.getSerializedValue(this.param);
 
                 return iValue != null ? iValue.equals(eValue) : eValue == null;
             }
