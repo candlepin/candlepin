@@ -214,6 +214,18 @@ public class JobManagerTest {
             this.dispatcher, this.principalProvider, this.requestScope, this.injector);
     }
 
+    private JobArguments buildJobArguments(Map<String, Object> args) {
+        Map<String, String> serialized = new HashMap<>();
+
+        if (args != null) {
+            for (Map.Entry<String, Object> entry : args.entrySet()) {
+                serialized.put(entry.getKey(), JobArguments.serialize(entry.getValue()));
+            }
+        }
+
+        return new JobArguments(serialized);
+    }
+
     @Test
     public void jobShouldFailWhenJobStatusIsNotFound() throws JobException {
         doReturn(null).when(jobCurator).get(anyString());
@@ -990,12 +1002,12 @@ public class JobManagerTest {
         AsyncJobStatus ejob1 = spy(new AsyncJobStatus()
             .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED)
-            .setJobData(ejobData1));
+            .setJobArguments(this.buildJobArguments(ejobData1)));
 
         AsyncJobStatus ejob2 = spy(new AsyncJobStatus()
             .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED)
-            .setJobData(ejobData2));
+            .setJobArguments(this.buildJobArguments(ejobData2)));
 
         JobConfig builder = JobConfig.forJob(JOB_KEY)
             .addConstraint(JobConstraints.uniqueByArgument("arg1"))
@@ -1021,12 +1033,12 @@ public class JobManagerTest {
         AsyncJobStatus ejob1 = spy(new AsyncJobStatus()
             .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED)
-            .setJobData(ejobData1));
+            .setJobArguments(this.buildJobArguments(ejobData1)));
 
         AsyncJobStatus ejob2 = spy(new AsyncJobStatus()
             .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED)
-            .setJobData(ejobData2));
+            .setJobArguments(this.buildJobArguments(ejobData2)));
 
         JobConfig builder = JobConfig.forJob(JOB_KEY)
             .addConstraint(JobConstraints.uniqueByArgument("arg1"))

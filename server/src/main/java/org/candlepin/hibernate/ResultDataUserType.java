@@ -14,18 +14,14 @@
  */
 package org.candlepin.hibernate;
 
+import org.candlepin.util.ObjectMapperFactory;
+
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -48,6 +44,8 @@ import java.sql.Types;
 import java.util.Objects;
 import java.util.Properties;
 
+
+
 /**
  * ResultDataUserType handles writing objects that are job results to the resultData column in cp_job.
  * Initially Candlepin stored serialized Java objects into this column, but later revisions stored JSON
@@ -63,29 +61,9 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
     private static final Logger log = LoggerFactory.getLogger(ResultDataUserType.class);
     public static final String JSON_CLASS = "jsonClass";
 
-    private static ObjectMapper mapper = configureObjectMapper();
+    private static ObjectMapper mapper = ObjectMapperFactory.getObjectMapper();
+
     private Class<?> jsonClass;
-
-    private static ObjectMapper configureObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-
-        Hibernate5Module hbm = new Hibernate5Module();
-        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
-        mapper.registerModule(hbm);
-
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-
-        // We're not going to want any of the JSON filters like DynamicPropertyFilter that we apply elsewhere
-        filterProvider.setFailOnUnknownId(false);
-        mapper.setFilterProvider(filterProvider);
-
-        return mapper;
-    }
 
     @Override
     public int[] sqlTypes() {
@@ -111,6 +89,7 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
     public Object nullSafeGet(ResultSet rs, String[] names,
         SharedSessionContractImplementor session, Object owner)
         throws HibernateException, SQLException {
+
         byte[] data = StandardBasicTypes.BINARY.nullSafeGet(rs, names[0], session);
         return deserialize(data);
     }
@@ -119,6 +98,7 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
     public void nullSafeSet(PreparedStatement st, Object value, int index,
         SharedSessionContractImplementor session)
         throws HibernateException, SQLException {
+
         StandardBasicTypes.BINARY.nullSafeSet(st, serializeJson(value), index, session);
     }
 
@@ -155,7 +135,7 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
                 return (T) mapper.readValue(parser, jsonClass);
             }
             catch (JsonMappingException e) {
-                log.warn("Could not deserialize into " + jsonClass.getName() + ". Trying Object.", e);
+                log.warn("Could not deserialize into {}. Trying Object.", jsonClass.getName(), e);
                 return (T) mapper.readValue(parser, Object.class);
             }
         }
@@ -174,12 +154,14 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
 
     private byte[] serializeJson(Object value) {
         byte[] data;
+
         if (value == null) {
             data = null;
         }
         else {
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 JsonGenerator generator = mapper.getFactory().createGenerator(baos, JsonEncoding.UTF8)) {
+
                 mapper.writeValue(generator, value);
                 data = baos.toByteArray();
             }
@@ -187,12 +169,14 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
                 throw new RuntimeException(ioe);
             }
         }
+
         return data;
     }
 
     private byte[] serializeJava(Object value) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+
             oos.writeObject(value);
             return baos.toByteArray();
         }
@@ -265,7 +249,9 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
             }
         }
         catch (Throwable ignore) {
+            // Intentionally left empty
         }
+
         return Class.forName(name, true, caller.getClassLoader());
     }
 }

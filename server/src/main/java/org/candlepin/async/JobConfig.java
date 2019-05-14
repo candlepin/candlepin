@@ -28,12 +28,11 @@ import java.util.Set;
  * JobManager to queue a new instance of that job.
  */
 public class JobConfig {
-
     private String key;
     private String name;
     private String group;
     private Map<String, String> metadata;
-    private Map<String, Object> arguments;
+    private Map<String, String> arguments;
     private Set<JobConstraint> constraints;
     private int retries;
     private String logLevel;
@@ -176,7 +175,7 @@ public class JobConfig {
             throw new IllegalArgumentException("arg is null");
         }
 
-        this.arguments.put(arg, value);
+        this.arguments.put(arg, JobArguments.serialize(value));
         return this;
     }
 
@@ -189,8 +188,8 @@ public class JobConfig {
      * @return
      *  a map of arguments to pass to the job at execution time
      */
-    public Map<String, Object> getJobArguments() {
-        return Collections.unmodifiableMap(this.arguments);
+    public JobArguments getJobArguments() {
+        return new JobArguments(this.arguments != null ? this.arguments : Collections.emptyMap());
     }
 
     /**
