@@ -1151,7 +1151,11 @@ class Candlepin
     end
 
     key['autoAttach'] = autobind
-    return post("/owners/#{owner_key}/activation_keys", {}, key)
+    return new_activation_key(owner_key, key)
+  end
+
+  def new_activation_key(owner_key, data)
+    return post("/owners/#{owner_key}/activation_keys", {}, data)
   end
 
   def get_activation_key(key_id)
