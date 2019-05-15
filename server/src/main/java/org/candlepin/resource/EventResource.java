@@ -15,18 +15,13 @@
 package org.candlepin.resource;
 
 import org.candlepin.audit.Event;
-import org.candlepin.audit.EventAdapter;
-import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.EventDTO;
-import org.candlepin.model.EventCurator;
 
 import com.google.inject.Inject;
 
+import org.candlepin.common.exceptions.NotFoundException;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -48,57 +43,57 @@ import io.swagger.annotations.Authorization;
 @Api(value = "events", authorizations = { @Authorization("basic") })
 public class EventResource {
 
-    private EventCurator eventCurator;
     private I18n i18n;
-    private EventAdapter eventAdapter;
-    private ModelTranslator translator;
 
     @Inject
-    public EventResource(EventCurator eventCurator, I18n i18n, EventAdapter eventAdapter,
-        ModelTranslator translator) {
-
-        this.eventCurator = eventCurator;
+    public EventResource(I18n i18n) {
         this.i18n = i18n;
-        this.eventAdapter = eventAdapter;
-        this.translator = translator;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Events", value = "listEvents")
+    /**
+     * Retrieves a list of Events.
+     *
+     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns an
+     * empty list of events, and will be completely removed on the next major release.
+     *
+     * @return an empty list
+     */
+    @Deprecated
+    @ApiOperation(
+        notes = "Retrieves a list of Events. DEPRECATED: Event persistence/retrieval is being phased out. " +
+        "This endpoint currently returns an empty list of events, and will be completely removed " +
+        "on the next major release.",
+        value = "listEvents")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<EventDTO> listEvents() {
-        List<Event> events = eventCurator.listAll().list();
-
-        List<EventDTO> eventDTOs = null;
-        if (events != null) {
-            eventAdapter.addMessageText(events);
-
-            eventDTOs = new ArrayList<>();
-            for (Event event : events) {
-                eventDTOs.add(this.translator.translate(event, EventDTO.class));
-            }
-        }
-
-        return eventDTOs;
+    public List<Event> listEvents() {
+        return Collections.emptyList();
     }
 
-    @ApiOperation(notes = "Retrieves a single Event", value = "getEvent")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
+    /**
+     * Retrieves a single Event.
+     *
+     * @param uuid an event uuid
+     *
+     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently always
+     * returns a 404 code, and will be removed on the next major release.
+     *
+     * @return Will not return anything. Instead, throws a {@link NotFoundException}
+     */
+    @Deprecated
+    @ApiOperation(
+        notes = "Retrieves a single Event. DEPRECATED: Event persistence/retrieval is being phased out. " +
+        "This endpoint currently always returns a 400 code, and will be removed " +
+        "on the next major release.",
+        value = "getEvent")
+    @ApiResponses({ @ApiResponse(
+        code = 404,
+        message = "This API endpoint is deprecated, and will be removed on the next major release") })
     @GET
     @Path("{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
-    public EventDTO getEvent(@PathParam("uuid") String uuid) {
-        Event toReturn = eventCurator.get(uuid);
-
-        if (toReturn != null) {
-            List<Event> events = new LinkedList<>();
-
-            events.add(toReturn);
-            eventAdapter.addMessageText(events);
-
-            return this.translator.translate(toReturn, EventDTO.class);
-        }
-
-        throw new NotFoundException(i18n.tr("Event with ID \"{0}\" could not be found.", uuid));
+    public Event getEvent(@PathParam("uuid") String uuid) {
+        throw new NotFoundException(i18n.tr("This API endpoint is deprecated, and will be" +
+            " removed on the next major release.", uuid));
     }
 }

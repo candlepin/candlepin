@@ -298,7 +298,7 @@ public class GuestIdResourceTest {
      */
     private class ConsumerResourceForTesting extends ConsumerResource {
         public ConsumerResourceForTesting() {
-            super(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            super(null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null,
                 null, null, null, null, consumerEnricher, null, modelTranslator);
