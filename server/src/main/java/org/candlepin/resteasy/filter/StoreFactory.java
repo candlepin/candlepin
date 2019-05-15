@@ -16,6 +16,8 @@ package org.candlepin.resteasy.filter;
 
 import com.google.inject.Injector;
 import org.candlepin.common.exceptions.GoneException;
+import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -64,6 +66,7 @@ public class StoreFactory {
         storeMap.put(ActivationKey.class, new ActivationKeyStore());
         storeMap.put(Product.class, new ProductStore());
         storeMap.put(JobStatus.class, new JobStatusStore());
+        storeMap.put(AsyncJobStatus.class, new AsyncJobStatusStore());
 
         for (EntityStore<? extends Persisted> store : storeMap.values()) {
             injector.injectMembers(store);
@@ -250,6 +253,25 @@ public class StoreFactory {
 
         @Override
         public Owner getOwner(JobStatus entity) {
+            return null;
+        }
+    }
+
+    private class AsyncJobStatusStore implements EntityStore<AsyncJobStatus> {
+        @Inject private AsyncJobStatusCurator jobCurator;
+
+        @Override
+        public AsyncJobStatus lookup(String jobId) {
+            return jobCurator.get(jobId);
+        }
+
+        @Override
+        public List<AsyncJobStatus> lookup(Collection<String> jobIds) {
+            return jobCurator.listAllByIds(jobIds).list();
+        }
+
+        @Override
+        public Owner getOwner(AsyncJobStatus entity) {
             return null;
         }
     }

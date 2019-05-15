@@ -18,6 +18,7 @@ import static org.candlepin.test.TestUtil.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
@@ -102,6 +103,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Inject private CertificateSerialCurator serialCurator;
     @Inject private ConsumerEnricher consumerEnricher;
     @Inject protected ModelTranslator modelTranslator;
+    @Inject protected JobManager jobManager;
 
     private ConsumerType standardSystemType;
     private ConsumerTypeDTO standardSystemTypeDTO;
@@ -600,7 +602,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, null, null, null, null, null, this.poolManager, null, null, null, null,
             null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
-            null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator);
+            null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator,
+            this.jobManager);
 
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId().toString(), null, 1, null,
             null, false, null, null);

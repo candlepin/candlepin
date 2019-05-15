@@ -14,12 +14,15 @@
  */
 package org.candlepin.async.temp;
 
+import org.candlepin.auth.Verify;
 import com.google.inject.Inject;
 import io.swagger.annotations.ApiOperation;
-import org.candlepin.async.JobBuilder;
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.OwnerCurator;
@@ -75,13 +78,14 @@ public class AsyncJobResource {
     @Path("test")
     @ApiOperation(notes = "A simple test resource that will kick off TestJob1 via the async job framework",
         value = "Run TestJob1")
-    public AsyncJobStatus forceFailure(
+    public AsyncJobStatusDTO forceFailure(
         @QueryParam("fail") @DefaultValue("false") Boolean forceFailure,
         @QueryParam("sleep") @DefaultValue("false") Boolean sleep,
         @QueryParam("persist") @DefaultValue("false") Boolean persist,
         @QueryParam("log_exec") @DefaultValue("true") Boolean logExec,
         @QueryParam("log_level") @DefaultValue("INFO") String logLevel,
-        @QueryParam("retries") @DefaultValue("0") Integer retries) {
+        @QueryParam("retries") @DefaultValue("0") Integer retries)
+        throws JobException {
 
         log.trace("TRACE MESSAGE");
         log.debug("DEBUG MESSAGE");
@@ -89,7 +93,7 @@ public class AsyncJobResource {
         log.warn("WARN MESSAGE");
         log.error("ERROR MESSAGE");
 
-        return jobManager.queueJob(new JobBuilder()
+        AsyncJobStatus status = jobManager.queueJob(new JobConfig()
             .setJobKey("TEST_JOB1")
             .setJobGroup("async")
             .setJobName("Test Job 1")
@@ -104,14 +108,18 @@ public class AsyncJobResource {
             .setJobArgument("sleep", sleep)
             .setJobArgument("persist", persist)
         );
+
+        return this.translator.translate(status, AsyncJobStatusDTO.class);
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{job_id}")
     @ApiOperation(notes = "Fetches the job info for a given job ID", value = "")
-    public AsyncJobStatus get(@PathParam("job_id") String jobId) {
-        return this.jobCurator.get(jobId);
+    public AsyncJobStatusDTO get(@PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
+        AsyncJobStatus status = this.jobCurator.get(jobId);
+
+        return this.translator.translate(status, AsyncJobStatusDTO.class);
     }
 
 }

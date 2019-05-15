@@ -15,6 +15,7 @@
 package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.AttachPermission;
+import org.candlepin.auth.permissions.AsyncJobStatusPermission;
 import org.candlepin.auth.permissions.JobStatusPermission;
 import org.candlepin.auth.permissions.ConsumerEntitlementPermission;
 import org.candlepin.auth.permissions.ConsumerOrgHypervisorPermission;
@@ -54,6 +55,7 @@ public class ConsumerPrincipal extends Principal {
 
         // Allow consumers to check the status of their own jobs.
         addPermission(new JobStatusPermission(getData(), Arrays.asList(owner.getKey())));
+        addPermission(new AsyncJobStatusPermission(getData()));
     }
 
     public Consumer getConsumer() {

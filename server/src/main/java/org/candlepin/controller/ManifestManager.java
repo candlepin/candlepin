@@ -25,6 +25,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.tasks.ExportJob;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -39,7 +42,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
-import org.candlepin.pinsetter.tasks.ExportJob;
 import org.candlepin.pinsetter.tasks.ImportJob;
 import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.tasks.ManifestCleanerJob;
@@ -116,12 +118,19 @@ public class ManifestManager {
      *                      a new export of the target consumer.
      * @return the details of the async export job.
      */
-    public JobDetail generateManifestAsync(String consumerUuid, Owner owner, String cdnLabel,
+    public JobConfig generateManifestAsync(String consumerUuid, Owner owner, String cdnLabel,
         String webUrl, String apiUrl, Map<String, String> extensionData) {
 
         log.info("Scheduling Async Export for consumer {}", consumerUuid);
         Consumer consumer = validateConsumerForExport(consumerUuid, cdnLabel);
-        return ExportJob.scheduleExport(consumer, owner, cdnLabel, webUrl, apiUrl, extensionData);
+
+        return ExportJob.createJobConfig()
+            .setConsumer(consumer)
+            .setOwner(owner)
+            .setCdnLabel(cdnLabel)
+            .setWebAppPrefix(webUrl)
+            .setApiUrl(apiUrl)
+            .setExtensionData(extensionData);
     }
 
     /**

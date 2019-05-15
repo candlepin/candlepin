@@ -14,6 +14,9 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -44,6 +47,7 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.CapabilityDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
@@ -55,6 +59,7 @@ import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
@@ -222,6 +227,7 @@ public class ConsumerResource {
     private ConsumerEnricher consumerEnricher;
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
+    private JobManager jobManager;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
@@ -249,7 +255,8 @@ public class ConsumerResource {
         ConsumerTypeValidator consumerTypeValidator,
         ConsumerEnricher consumerEnricher,
         Provider<GuestMigration> migrationProvider,
-        ModelTranslator translator) {
+        ModelTranslator translator,
+        JobManager jobManager) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -289,6 +296,7 @@ public class ConsumerResource {
         this.consumerEnricher = consumerEnricher;
         this.migrationProvider = migrationProvider;
         this.translator = translator;
+        this.jobManager = jobManager;
     }
 
     /**
@@ -2378,7 +2386,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/export/async")
-    public JobDetail exportDataAsync(
+    public AsyncJobStatusDTO exportDataAsync(
         @Context HttpServletResponse response,
         @PathParam("consumer_uuid") @Verify(Consumer.class)
         @ApiParam(value = "The UUID of the target consumer", required = true) String consumerUuid,
@@ -2394,15 +2402,18 @@ public class ConsumerResource {
         @QueryParam("ext")
         @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
         required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
-        List<KeyValueParameter> extensionArgs) {
+        List<KeyValueParameter> extensionArgs) throws JobException {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
-        return manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel, webAppPrefix,
-            apiUrl, getExtensionParamMap(extensionArgs));
+        JobConfig config = manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel,
+            webAppPrefix, apiUrl, getExtensionParamMap(extensionArgs));
+
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /**

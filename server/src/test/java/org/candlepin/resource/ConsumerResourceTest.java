@@ -18,6 +18,7 @@ import static org.candlepin.test.TestUtil.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
@@ -163,6 +164,7 @@ public class ConsumerResourceTest {
     @Mock private CdnCurator mockCdnCurator;
     @Mock private UserServiceAdapter userServiceAdapter;
     @Mock private DeletedConsumerCurator mockDeletedConsumerCurator;
+    @Mock private JobManager mockJobManager;
 
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
@@ -221,7 +223,8 @@ public class ConsumerResourceTest {
             new ConsumerTypeValidator(mockConsumerTypeCurator, i18n),
             consumerEnricher,
             migrationProvider,
-            translator);
+            translator,
+            mockJobManager);
 
         mockedConsumerResource = Mockito.spy(consumerResource);
     }
@@ -382,7 +385,8 @@ public class ConsumerResourceTest {
             mockEntitlementCertServiceAdapter, null, null, null, null, null,
             poolManager, null, null, null, null, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
-            null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);
+            null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator,
+            this.mockJobManager);
 
         assertThrows(RuntimeException.class, () ->
             consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), "9999", false)
@@ -784,7 +788,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testAsyncExport() {
+    public void testAsyncExport() throws Exception {
         List<KeyValueParameter> extParams = new ArrayList<>();
         Owner owner = this.createOwner();
         owner.setId(TestUtil.randomString());

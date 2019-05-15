@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -122,6 +123,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private Principal principal;
+    @Mock private JobManager jobManager;
     private ModelTranslator translator;
 
     private I18n i18n;
@@ -150,7 +152,7 @@ public class ConsumerResourceUpdateTest {
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, null, this.consumerBindUtil,
             null, null, new FactValidator(config, this.i18nProvider),
-            null, consumerEnricher, migrationProvider, this.translator);
+            null, consumerEnricher, migrationProvider, this.translator, this.jobManager);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
