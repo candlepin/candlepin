@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -128,6 +129,7 @@ public class ConsumerResourceCreationTest {
     @Mock protected ConsumerBindUtil consumerBindUtil;
     @Mock protected ConsumerEnricher consumerEnricher;
     @Mock protected EnvironmentCurator environmentCurator;
+    @Mock protected JobManager jobManager;
 
     protected ModelTranslator modelTranslator;
 
@@ -161,7 +163,7 @@ public class ConsumerResourceCreationTest {
             null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
             this.systemPurposeComplianceRules, this.deletedConsumerCurator, null, null, this.config, null,
             null, null, this.consumerBindUtil, null, null, new FactValidator(this.config, this.i18nProvider),
-            null, consumerEnricher, migrationProvider, modelTranslator);
+            null, consumerEnricher, migrationProvider, modelTranslator, jobManager);
 
         this.system = this.initConsumerType();
         this.mockConsumerType(this.system);

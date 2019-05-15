@@ -16,7 +16,8 @@ package org.candlepin.async.tasks;
 
 import com.google.inject.Inject;
 import org.candlepin.async.AsyncJob;
-import org.candlepin.async.JobBuilder;
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobDataMap;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
@@ -26,7 +27,6 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.sync.ExportResult;
-import org.candlepin.util.Util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +43,7 @@ import java.util.Map;
  * @see ExportResult
  */
 public class ExportJob implements AsyncJob {
+    private static Logger log = LoggerFactory.getLogger(ExportJob.class);
 
     protected static final String OWNER_KEY = "org";
     protected static final String CONSUMER_KEY = "consumer_uuid";
@@ -52,6 +53,134 @@ public class ExportJob implements AsyncJob {
     protected static final String EXTENSION_DATA = "extension_data";
 
     private static final String JOB_KEY = "EXPORT_JOB";
+    private static final String JOB_NAME = "export_manifest";
+
+    /**
+     * Job configuration object for the export job
+     */
+    public static class ExportJobConfig extends JobConfig {
+        public ExportJobConfig() {
+            this.setJobKey(JOB_KEY)
+                .setJobName(JOB_NAME)
+                .addConstraint(JobConstraints.uniqueByArgument(CONSUMER_KEY));
+        }
+
+        /**
+         * Sets the consumer for this export job. The consumer must be
+         *
+         * @param consumer
+         *  the consumer to set for this job
+         *
+         * @return
+         *  a reference to this job config
+         */
+        public ExportJobConfig setConsumer(Consumer consumer) {
+            if (consumer == null) {
+                throw new IllegalArgumentException("consumer is null");
+            }
+
+            this.setJobArgument(CONSUMER_KEY, consumer.getUuid());
+            return this;
+        }
+
+        /**
+         * Sets the owner for this export job. The owner is not required, but provides the org
+         * context in which the job will be executed.
+         *
+         * @param owner
+         *  the owner to set for this job
+         *
+         * @return
+         *  a reference to this job config
+         */
+        public ExportJobConfig setOwner(Owner owner) {
+            if (owner == null) {
+                throw new IllegalArgumentException("owner is null");
+            }
+
+            this.setJobMetadata(OWNER_KEY, owner.getKey())
+                .setLogLevel(owner.getLogLevel());
+
+            return this;
+        }
+
+        /**
+         * Sets the CDN label for this export job. The CDN label is required by the export job.
+         *
+         * @param label
+         *  the label to set for this job
+         *
+         * @return
+         *  a reference to this job config
+         */
+        public ExportJobConfig setCdnLabel(String label) {
+            this.setJobArgument(CDN_LABEL, label);
+            return this;
+        }
+
+        /**
+         * Sets the web app prefix for this export job.
+         *
+         * @param prefix
+         *  the web app prefix to set for this job
+         *
+         * @return
+         *  a reference to this job config
+         */
+        public ExportJobConfig setWebAppPrefix(String prefix) {
+            this.setJobArgument(WEBAPP_PREFIX, prefix);
+            return this;
+        }
+
+        /**
+         * Sets the api url for this export job.
+         *
+         * @param url
+         *  the api url to set for this job
+         *
+         * @return
+         *  a reference to this job config
+         */
+        public ExportJobConfig setApiUrl(String url) {
+            this.setJobArgument(API_URL, url);
+            return this;
+        }
+
+        /**
+         * Sets the extension data for this export job.
+         *
+         * @param extData
+         *  the extension data to set for this job
+         *
+         * @return
+         *  a reference to this job config
+         */
+        public ExportJobConfig setExtensionData(Map<String, String> extData) {
+            this.setJobArgument(EXTENSION_DATA, extData);
+            return this;
+        }
+
+        @Override
+        public void validate() throws JobConfigValidationException {
+            super.validate();
+
+            Map<String, Object> arguments = this.getJobArguments();
+
+            Object consumerUuid = arguments.get(CONSUMER_KEY);
+            Object cdnLabel = arguments.get(CDN_LABEL);
+
+            if (!(consumerUuid instanceof String) || ((String) consumerUuid).isEmpty()) {
+                String errmsg = "consumer has not been set, or the provided consumer lacks a UUID";
+                throw new JobConfigValidationException(errmsg);
+            }
+
+            if (!(cdnLabel instanceof String) || ((String) cdnLabel).isEmpty()) {
+                String errmsg = "CDN label has not been set, or the provided label is empty";
+                throw new JobConfigValidationException(errmsg);
+            }
+        }
+    }
+
 
     // Register the job with the JobManager
     static {
@@ -67,8 +196,6 @@ public class ExportJob implements AsyncJob {
     public static String getJobKey() {
         return JOB_KEY;
     }
-
-    private static Logger log = LoggerFactory.getLogger(ExportJob.class);
 
     private ManifestManager manifestManager;
 
@@ -99,31 +226,13 @@ public class ExportJob implements AsyncJob {
     }
 
     /**
-     * Schedules the generation of a consumer export. This job starts immediately.
+     * Creates a JobConfig configured to execute the export job. Callers may further manipulate
+     * the JobConfig as necessary before queuing it.
      *
-     * @param consumer the target consumer
-     * @param cdnLabel the cdn label
-     * @param webAppPrefix the web app prefix
-     * @param apiUrl the api url
-     * @return a JobDetail representing the job to be started.
+     * @return
+     *  a JobConfig instance configured to execute the export job
      */
-    public static JobBuilder scheduleExport(
-        final Consumer consumer,
-        final Owner owner,
-        final String cdnLabel,
-        final String webAppPrefix,
-        final String apiUrl,
-        final Map<String, String> extensionData
-    ) {
-        return JobBuilder.forJob(JOB_KEY)
-            .setJobName("export-" + Util.generateUUID())
-            .setJobArgument(CONSUMER_KEY, consumer.getUuid())
-            .setJobArgument(CDN_LABEL, cdnLabel)
-            .setJobArgument(WEBAPP_PREFIX, webAppPrefix)
-            .setJobArgument(API_URL, apiUrl)
-            .setJobArgument(EXTENSION_DATA, extensionData)
-            .setJobMetadata(OWNER_KEY, owner.getKey())
-            .setLogLevel(owner.getLogLevel())
-            .addConstraint(JobConstraints.uniqueByArgument(CONSUMER_KEY));
+    public static ExportJobConfig createJobConfig() {
+        return new ExportJobConfig();
     }
 }

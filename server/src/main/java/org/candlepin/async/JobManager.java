@@ -16,8 +16,8 @@ package org.candlepin.async;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
-import org.candlepin.auth.PrincipalData;
-import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.JobPrincipal;
+import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.config.ConfigProperties;
@@ -32,8 +32,6 @@ import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.util.Util;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
@@ -58,7 +56,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.util.Collections;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -85,9 +82,6 @@ public class JobManager implements ModeChangeListener {
 
     private static final String QRTZ_GROUP_CONFIG = "cp_async_config";
     private static final String QRTZ_GROUP_MANUAL = "cp_async_manual";
-
-    // Temporary constant for the principal key; used to store the principal in the job data
-    public static final String PRINCIPAL_KEY = "principal_key";
 
     /** Stores our mapping of job keys to job classes */
     private static final Map<String, Class<? extends AsyncJob>> JOB_KEY_MAP = new HashMap<>();
@@ -146,8 +140,14 @@ public class JobManager implements ModeChangeListener {
         public void execute(org.quartz.JobExecutionContext context) throws org.quartz.JobExecutionException {
             String name = context.getJobDetail().getKey().getName();
 
-            log.trace("Queuing job: {}", name);
-            this.manager.queueJob(JobBuilder.forJob(name));
+            try {
+                log.trace("Queuing job: {}", name);
+                this.manager.queueJob(JobConfig.forJob(name));
+            }
+            catch (JobException e) {
+                String errmsg = String.format("Unable to queue scheduled job: %s", name);
+                throw new org.quartz.JobExecutionException(errmsg, e);
+            }
         }
     }
 
@@ -628,7 +628,7 @@ public class JobManager implements ModeChangeListener {
      * a managed entity and will need to be manually persisted by the caller.
      *
      * @param builder
-     *  The JobBuilder to use to build the job status
+     *  The JobConfig to use to build the job status
      *
      * @throws IllegalArgumentException
      *  if detail is null
@@ -636,7 +636,7 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the newly constructed, unmanaged AsyncJobStatus instance
      */
-    private AsyncJobStatus buildJobStatus(JobBuilder builder) {
+    private AsyncJobStatus buildJobStatus(JobConfig builder) {
         if (builder == null) {
             throw new IllegalArgumentException("job builder is null");
         }
@@ -650,7 +650,6 @@ public class JobManager implements ModeChangeListener {
         // Add environment-specific metadata...
         job.setOrigin(Util.getHostname());
         Principal principal = this.principalProvider.get();
-        builder.setJobArgument("principal", principal);
         job.setPrincipal(principal != null ? principal.getName() : null);
 
         // Metadata and Logging configuration...
@@ -666,20 +665,7 @@ public class JobManager implements ModeChangeListener {
 
         // Retry and runtime configuration...
         job.setMaxAttempts(builder.getRetryCount() + 1);
-        Map<String, Object> jobArguments = new HashMap<>(builder.getJobArguments());
-
-        // TODO: Find better way to pass principal to the execution thread.
-        if (principal != null) {
-            try {
-                String toJson = Util.toJson(new PrincipalData(principal.getType(), principal.getName()));
-                jobArguments.put(PRINCIPAL_KEY, toJson);
-            }
-            catch (JsonProcessingException e) {
-                log.error("Could not parse the principal data");
-            }
-        }
-
-        job.setJobData(Collections.unmodifiableMap(jobArguments));
+        job.setJobData(builder.getJobArguments());
 
         return job;
     }
@@ -694,33 +680,32 @@ public class JobManager implements ModeChangeListener {
      * in the queue or currently executing, a new job will not be queued and the existing job's
      * job status will be returned instead.
      *
-     * @param builder
-     *  A JobBuilder instance representing the configuration of the job to queue
+     * @param config
+     *  A JobConfig instance representing the configuration of the job to queue
      *
      * @return
      *  an AsyncJobStatus instance representing the queued job's status, or the status of the
      *  existing job if it already exists
      */
-    public synchronized AsyncJobStatus queueJob(JobBuilder builder) {
+    public synchronized AsyncJobStatus queueJob(JobConfig config) throws JobException {
         // TODO: Check manager state
 
-        if (builder == null) {
-            throw new IllegalArgumentException("job builder is null");
+        if (config == null) {
+            throw new IllegalArgumentException("job config is null");
         }
 
-        // TODO:
-        // Validate builder state
+        config.validate();
 
         // TODO:
         // Don't allow queueing jobs which are disabled? Should that be disabled entirely or not
         // runnable by this node?
 
-        AsyncJobStatus status = this.buildJobStatus(builder);
+        AsyncJobStatus status = this.buildJobStatus(config);
         status.setState(JobState.CREATED);
 
         try {
             // Check if the queueing is blocked by constraints
-            Collection<JobConstraint> constraints = builder.getConstraints();
+            Collection<JobConstraint> constraints = config.getConstraints();
             Set<AsyncJobStatus> blockingJobs = new HashSet<>();
 
             if (constraints != null && !constraints.isEmpty()) {
@@ -869,10 +854,8 @@ public class JobManager implements ModeChangeListener {
 
         try {
             uow.begin();
-            setupLogging(status);
-
-            // TODO: fix this
-            setupPrincipal(status.getJobData());
+            this.setupLogging(status);
+            this.setupPrincipal(status);
 
             final AsyncJob job = injector.getInstance(jobClass);
 
@@ -1106,17 +1089,17 @@ public class JobManager implements ModeChangeListener {
         return status;
     }
 
-    private void setupPrincipal(final JobDataMap jobData) {
-        // TODO remove this guard check once we have better way to share the principal
-        if (!jobData.containsKey("principal")) {
-            log.warn("Principal data are missing from the job data!");
-            return;
-        }
-        final String principalJson = jobData.getAsString(PRINCIPAL_KEY);
-        final PrincipalData principal = Util.fromJson(principalJson, PrincipalData.class);
-        ResteasyProviderFactory.pushContext(
-            Principal.class,
-            new UserPrincipal(principal.getName(), Collections.emptyList(), false));
+    /**
+     * Configures and injects the principal to be used during the execution of the specified job.
+     *
+     * @param status
+     *  the job status to use to configure the principal
+     */
+    private void setupPrincipal(AsyncJobStatus status) {
+        String name = status.getPrincipal();
+        Principal principal = name != null ? new JobPrincipal(name) : new SystemPrincipal();
+
+        ResteasyProviderFactory.pushContext(Principal.class, principal);
     }
 
     /**

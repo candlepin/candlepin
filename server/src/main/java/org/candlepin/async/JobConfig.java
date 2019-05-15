@@ -24,9 +24,10 @@ import java.util.Set;
 
 
 /**
- * The JobManager manages the queueing, execution and general bookkeeping on jobs
+ * The JobConfig object collects the configuration for a job, which can be provided to the
+ * JobManager to queue a new instance of that job.
  */
-public class JobBuilder {
+public class JobConfig {
 
     private String key;
     private String name;
@@ -39,9 +40,9 @@ public class JobBuilder {
     private boolean logExecutionDetails;
 
     /**
-     * Creates an empty JobBuilder
+     * Creates an empty JobConfig
      */
-    public JobBuilder() {
+    public JobConfig() {
         this.metadata = new HashMap<>();
         this.arguments = new HashMap<>();
         this.constraints = new HashSet<>();
@@ -51,18 +52,18 @@ public class JobBuilder {
     }
 
     /**
-     * Creates a new JobBuilder for the specified asyncronous job task.
+     * Creates a new JobConfig for the specified asyncronous job task.
      *
      * @param jobKey
      *  The key representing the job class to handle execution of this job
      *
      * @return
-     *  a new JobBuilder instance for the specified job class
+     *  a new JobConfig instance for the specified job class
      */
-    public static JobBuilder forJob(String jobKey) {
-        JobBuilder builder = new JobBuilder();
+    public static JobConfig forJob(String jobKey) {
+        JobConfig config = new JobConfig();
 
-        return builder.setJobKey(jobKey);
+        return config.setJobKey(jobKey);
     }
 
     /**
@@ -77,9 +78,9 @@ public class JobBuilder {
      *  if jobKey is null or empty
      *
      * @return
-     *  this JobBuilder instance
+     *  this JobConfig instance
      */
-    public JobBuilder setJobKey(String jobKey) {
+    public JobConfig setJobKey(String jobKey) {
         if (jobKey == null || jobKey.isEmpty()) {
             throw new IllegalArgumentException("jobKey is null or empty");
         }
@@ -109,9 +110,9 @@ public class JobBuilder {
      *  if the job name is null or empty
      *
      * @return
-     *  this JobBuilder instance
+     *  this JobConfig instance
      */
-    public JobBuilder setJobName(String jobName) {
+    public JobConfig setJobName(String jobName) {
         if (jobName == null || jobName.isEmpty()) {
             throw new IllegalArgumentException("jobName is null or empty");
         }
@@ -138,9 +139,9 @@ public class JobBuilder {
      *  The name of the group to set for this job
      *
      * @return
-     *  this JobBuilder instance
+     *  this JobConfig instance
      */
-    public JobBuilder setJobGroup(String jobGroup) {
+    public JobConfig setJobGroup(String jobGroup) {
         this.group = jobGroup != null && !jobGroup.isEmpty() ? jobGroup : null;
         return this;
     }
@@ -168,9 +169,9 @@ public class JobBuilder {
      *  The value of the argument
      *
      * @return
-     *  this JobBuilder instance
+     *  this JobConfig instance
      */
-    public JobBuilder setJobArgument(String arg, Object value) {
+    public JobConfig setJobArgument(String arg, Object value) {
         if (arg == null) {
             throw new IllegalArgumentException("arg is null");
         }
@@ -182,7 +183,7 @@ public class JobBuilder {
     /**
      * Fetches the arguments set for this job. If no arguments have been set for this job,
      * this method returns an empty map. Note that the map returned by this method cannot be
-     * modified directly, though changes made to the arguments by this builder will be reflected
+     * modified directly, though changes made to the arguments by this config will be reflected
      * in the returned map.
      *
      * @return
@@ -193,16 +194,16 @@ public class JobBuilder {
     }
 
     /**
-     * Adds a queuing constraint to this job builder. If the constraint has already been added, it
+     * Adds a queuing constraint to this job config. If the constraint has already been added, it
      * will not be added again.
      *
      * @param constraint
      *  the queuing constraint to add to this job
      *
      * @return
-     *  this JobBuilder instance
+     *  this JobConfig instance
      */
-    public JobBuilder addConstraint(JobConstraint constraint) {
+    public JobConfig addConstraint(JobConstraint constraint) {
         if (constraint == null) {
             throw new IllegalArgumentException("constraint is null");
         }
@@ -230,9 +231,9 @@ public class JobBuilder {
      *  The number of times the job should be retried on failure
      *
      * @return
-     *  this JobBuilder instance
+     *  this JobConfig instance
      */
-    public JobBuilder setRetryCount(int count) {
+    public JobConfig setRetryCount(int count) {
         this.retries = Math.max(0, count);
         return this;
     }
@@ -266,9 +267,9 @@ public class JobBuilder {
      *  the log level to set for this job, or null to clear it
      *
      * @return
-     *  this JobBuilder instance
+     *  this JobConfig instance
      */
-    public JobBuilder setLogLevel(String logLevel) {
+    public JobConfig setLogLevel(String logLevel) {
         this.logLevel = logLevel != null && !logLevel.isEmpty() ? logLevel : null;
         return this;
     }
@@ -292,9 +293,9 @@ public class JobBuilder {
      *  true to enable logging of execution details; false to disable it
      *
      * @return
-     *  this JobBuilder instance
+     *  this JobConfig instance
      */
-    public JobBuilder logExecutionDetails(boolean enabled) {
+    public JobConfig logExecutionDetails(boolean enabled) {
         this.logExecutionDetails = enabled;
         return this;
     }
@@ -309,9 +310,9 @@ public class JobBuilder {
      *  The value of the metadata entry
      *
      * @return
-     *  this JobBuilder instance
+     *  this JobConfig instance
      */
-    public JobBuilder setJobMetadata(String key, String value) {
+    public JobConfig setJobMetadata(String key, String value) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
         }
@@ -331,27 +332,20 @@ public class JobBuilder {
         return Collections.unmodifiableMap(this.metadata);
     }
 
+    /**
+     * Validates whether or not this config is valid. By default, only the job key is required to
+     * be a valid job configuration, but subclasses may have more specific requirements.
+     *
+     * @throws JobConfigValidationException
+     *  if this config is incomplete or contains invalid values needed for the job to be queued and
+     *  executed
+     */
+    public void validate() throws JobConfigValidationException {
+        String key = this.getJobKey();
+        if (key == null || key.isEmpty()) {
+            throw new JobConfigValidationException("Job key is null or empty");
+        }
+    }
 
-    // TODO:
-    // Add stuff for setting job metadata, if it turns out we actually need that. A lot of the metadata
-    // we would care about comes from the environment (principal, time of scheduling, request IDs, etc.),
-    // so we probably won't need to set it explicitly, unless we're rescheduling. But even in such a case,
-    // we won't be using a JobBuilder to do the rescheduling.
-
-    // One thing we may want to consider is adding a metadata for everything we want logged, and just
-    // dump all of the fields in the log line for any job that has it. Would be an easy, generic way
-    // to add logging info to the jobs in a way that's not unique to any particular job.
-
-    //      JobBuilder builder = new JobBuilder()
-    //          .forTask(runnable job class or key here)
-    //          .setName("my_task")
-    //          .setTaskArgument("key", "value")
-    //          .setTaskArgument("key2", "value2")
-    //          .addUniqueRestriction("owner", owner_id_here)
-    //          .addUniqueRestriction("product", product_id_here)
-    //          .addTaskMetadata("correlation_id", cid)
-    //          .setRetryCount(3)
-    //
-    //      jobManager.queueJob(builder);
 
 }
