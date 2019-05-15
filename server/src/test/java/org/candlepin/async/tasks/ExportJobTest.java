@@ -14,7 +14,11 @@
  */
 package org.candlepin.async.tasks;
 
-import org.candlepin.async.JobBuilder;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobDataMap;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.ManifestManager;
@@ -32,89 +36,201 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+
 
 @RunWith(MockitoJUnitRunner.class)
 public class ExportJobTest extends BaseJobTest {
 
-    private static final String CDN_LABEL = "cdn-label";
-    private static final String WEBAPP_PREFIX = "webapp-prefix";
-    private static final String API_URL = "url";
-
     @Mock
     private ManifestManager manifestManager;
-    @Mock
-    private JobExecutionContext ctx;
+
     private ExportJob job;
 
     @Before
     public void setupTest() {
         super.init();
+
         job = new ExportJob(manifestManager);
         injector.injectMembers(job);
     }
 
-    @Test
-    public void checkJobBuilder() {
-        String logLevel = "test_level";
+    private Owner createTestOwner(String key, String logLevel) {
+        Owner owner = TestUtil.createOwner();
 
-        final Owner owner = TestUtil.createOwner();
         owner.setId(TestUtil.randomString());
-        owner.setKey("test_key");
+        owner.setKey(key);
         owner.setLogLevel(logLevel);
-        final Consumer distributor = TestUtil.createDistributor(owner);
 
-        final Map<String, String> extData = new HashMap<>();
-        extData.put("version", "sat-6.2");
+        return owner;
+    }
 
-        final JobBuilder builder = ExportJob.scheduleExport(
-            distributor, owner, CDN_LABEL, WEBAPP_PREFIX, API_URL, extData);
+    @Test
+    public void testJobConfigSetConsumer() {
+        Owner owner = this.createTestOwner("owner_key", "log_level");
+        Consumer consumer = TestUtil.createDistributor(owner);
 
-        final Map<String, Object> dataMap = builder.getJobArguments();
-        assertEquals(dataMap.get(ExportJob.CONSUMER_KEY), distributor.getUuid());
-        assertEquals(dataMap.get(ExportJob.CDN_LABEL), CDN_LABEL);
-        assertEquals(dataMap.get(ExportJob.WEBAPP_PREFIX), WEBAPP_PREFIX);
-        assertEquals(dataMap.get(ExportJob.API_URL), API_URL);
-        assertEquals(dataMap.get(ExportJob.EXTENSION_DATA), extData);
+        JobConfig config = ExportJob.createJobConfig()
+            .setConsumer(consumer);
 
-        Map<String, String> metadata = builder.getJobMetadata();
+        Map<String, Object> args = config.getJobArguments();
+
+        assertTrue(args.containsKey(ExportJob.CONSUMER_KEY));
+        assertEquals(consumer.getUuid(), args.get(ExportJob.CONSUMER_KEY));
+    }
+
+    @Test
+    public void testJobConfigSetOwner() {
+        Owner owner = this.createTestOwner("owner_key", "log_level");
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setOwner(owner);
+
+        Map<String, String> metadata = config.getJobMetadata();
+
+        assertTrue(metadata.containsKey(ExportJob.OWNER_KEY));
         assertEquals(owner.getKey(), metadata.get(ExportJob.OWNER_KEY));
+        assertEquals(owner.getLogLevel(), config.getLogLevel());
+    }
 
-        assertEquals(logLevel, builder.getLogLevel());
+    @Test
+    public void testJobConfigSetCdnLabel() {
+        String label = "test_label";
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setCdnLabel(label);
+
+        Map<String, Object> args = config.getJobArguments();
+
+        assertTrue(args.containsKey(ExportJob.CDN_LABEL));
+        assertEquals(label, args.get(ExportJob.CDN_LABEL));
+    }
+
+    @Test
+    public void testJobConfigSetWebAppPrefix() {
+        String prefix = "test_prefix";
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setWebAppPrefix(prefix);
+
+        Map<String, Object> args = config.getJobArguments();
+
+        assertTrue(args.containsKey(ExportJob.WEBAPP_PREFIX));
+        assertEquals(prefix, args.get(ExportJob.WEBAPP_PREFIX));
+    }
+
+    @Test
+    public void testJobConfigSetApiUrl() {
+        String url = "test_url";
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setApiUrl(url);
+
+        Map<String, Object> args = config.getJobArguments();
+
+        assertTrue(args.containsKey(ExportJob.API_URL));
+        assertEquals(url, args.get(ExportJob.API_URL));
+    }
+
+    @Test
+    public void testJobConfigSetExtensionData() {
+        Map<String, String> data = new HashMap<>();
+        data.put("key-1", "val-1");
+        data.put("key-2", "val-2");
+        data.put("key-3", "val-3");
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setExtensionData(data);
+
+        Map<String, Object> args = config.getJobArguments();
+
+        assertTrue(args.containsKey(ExportJob.EXTENSION_DATA));
+        assertEquals(data, args.get(ExportJob.EXTENSION_DATA));
+    }
+
+    @Test
+    public void testValidate() throws JobConfigValidationException {
+        Owner owner = this.createTestOwner("owner_key", "log_level");
+        Consumer consumer = TestUtil.createDistributor(owner);
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setConsumer(consumer)
+            .setCdnLabel("test_label");
+
+        config.validate();
+    }
+
+    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
+    // with master
+    @Test
+    public void testValidateNoConsumer() {
+        Owner owner = this.createTestOwner("owner_key", "log_level");
+        Consumer consumer = TestUtil.createDistributor(owner);
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setCdnLabel("test_label");
+
+        try {
+            config.validate();
+            fail("an expected exception was not thrown");
+        }
+        catch (JobConfigValidationException e) {
+            // Pass!
+        }
+    }
+
+    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
+    // with master
+    @Test
+    public void testValidateNoLabel() {
+        Owner owner = this.createTestOwner("owner_key", "log_level");
+        Consumer consumer = TestUtil.createDistributor(owner);
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setConsumer(consumer);
+
+        try {
+            config.validate();
+            fail("an expected exception was not thrown");
+        }
+        catch (JobConfigValidationException e) {
+            // Pass!
+        }
     }
 
     @Test
     public void ensureJobSuccess() throws Exception {
-        final Owner owner = TestUtil.createOwner();
-        owner.setId(TestUtil.randomString());
-        final Consumer distributor = TestUtil.createDistributor(owner);
-        final String manifestId = "1234";
-        final Map<String, String> extData = new HashMap<>();
-        final ExportResult result = new ExportResult(distributor.getUuid(), manifestId);
-        doReturn(result).when(manifestManager).generateAndStoreManifest(
-            eq(distributor.getUuid()),
-            eq(CDN_LABEL),
-            eq(WEBAPP_PREFIX),
-            eq(API_URL),
-            eq(extData));
-        final JobBuilder detail = ExportJob.scheduleExport(
-            distributor, owner, CDN_LABEL, WEBAPP_PREFIX, API_URL, extData);
-        when(ctx.getJobData()).thenReturn(new JobDataMap(detail.getJobArguments()));
+        Owner owner = this.createTestOwner("owner_key", "log_level");
+        Consumer distributor = TestUtil.createDistributor(owner);
 
-        final Object actualResult = job.execute(ctx);
+        String manifestId = "1234";
+        String cdnLabel = "test_label";
+        String appPrefix = "test_prefix";
+        String apiUrl = "test_url";
+
+        Map<String, String> extData = new HashMap<>();
+        extData.put("key-1", "val-1");
+        extData.put("key-2", "val-2");
+        extData.put("key-3", "val-3");
+
+        ExportResult result = new ExportResult(distributor.getUuid(), manifestId);
+
+        doReturn(result).when(manifestManager).generateAndStoreManifest(
+            eq(distributor.getUuid()), eq(cdnLabel), eq(appPrefix), eq(apiUrl), eq(extData));
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setConsumer(distributor)
+            .setOwner(owner)
+            .setCdnLabel(cdnLabel)
+            .setWebAppPrefix(appPrefix)
+            .setApiUrl(apiUrl)
+            .setExtensionData(extData);
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        doReturn(new JobDataMap(config.getJobArguments())).when(context).getJobData();
+
+        Object actualResult = this.job.execute(context);
 
         assertEquals(result, actualResult);
-        verify(manifestManager).generateAndStoreManifest(
-            eq(distributor.getUuid()),
-            eq(CDN_LABEL),
-            eq(WEBAPP_PREFIX),
-            eq(API_URL),
-            eq(extData));
-
     }
 
 }

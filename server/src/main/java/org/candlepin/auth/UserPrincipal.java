@@ -14,6 +14,7 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.auth.permissions.AsyncJobStatusPermission;
 import org.candlepin.auth.permissions.JobStatusPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UserUserPermission;
@@ -49,6 +50,7 @@ public class UserPrincipal extends Principal {
 
         // Allow users to check the status of their own jobs.
         addPermission(new JobStatusPermission(getData(), getOwnerKeys()));
+        addPermission(new AsyncJobStatusPermission(getData()));
     }
 
     public String getUsername() {

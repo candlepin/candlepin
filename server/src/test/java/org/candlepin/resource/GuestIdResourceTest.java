@@ -20,6 +20,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
@@ -85,6 +86,7 @@ public class GuestIdResourceTest {
     @Mock private ServiceLevelValidator mockedServiceLevelValidator;
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private EnvironmentCurator environmentCurator;
+    @Mock private JobManager jobManager;
 
     private GuestIdResource guestIdResource;
 
@@ -300,8 +302,7 @@ public class GuestIdResourceTest {
         public ConsumerResourceForTesting() {
             super(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null,
-                null, null, null, null, consumerEnricher, null, modelTranslator);
+                null, null, null, null, null, consumerEnricher, null, modelTranslator, jobManager);
         }
 
         public void checkForMigration(Consumer host, Consumer guest) {

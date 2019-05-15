@@ -980,7 +980,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testJobIsQueuedIfConstraintsPass() {
+    public void testJobIsQueuedIfConstraintsPass() throws Exception {
         Map<String, Object> ejobData1 = new HashMap<>();
         ejobData1.put("arg1", "val1");
 
@@ -997,7 +997,7 @@ public class JobManagerTest {
             .setState(JobState.QUEUED)
             .setJobData(ejobData2));
 
-        JobBuilder builder = JobBuilder.forJob(JOB_KEY)
+        JobConfig builder = JobConfig.forJob(JOB_KEY)
             .addConstraint(JobConstraints.uniqueByArgument("arg1"))
             .setJobArgument("arg1", "val3");
 
@@ -1011,7 +1011,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testJobDoesNotQueueIfConstraintFails() {
+    public void testJobDoesNotQueueIfConstraintFails() throws Exception {
         Map<String, Object> ejobData1 = new HashMap<>();
         ejobData1.put("arg1", "val1");
 
@@ -1028,7 +1028,7 @@ public class JobManagerTest {
             .setState(JobState.QUEUED)
             .setJobData(ejobData2));
 
-        JobBuilder builder = JobBuilder.forJob(JOB_KEY)
+        JobConfig builder = JobConfig.forJob(JOB_KEY)
             .addConstraint(JobConstraints.uniqueByArgument("arg1"))
             .setJobArgument("arg1", "val2");
 
