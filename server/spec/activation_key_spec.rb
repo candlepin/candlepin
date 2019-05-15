@@ -154,6 +154,14 @@ describe 'Activation Keys' do
     overrides.length.should == 0
   end
 
+  it 'should allow nil contentOverrides' do
+    name = random_string('key4')
+    data = {:name => name, :contentOverrides => nil}
+    activation_key = @cp.new_activation_key(@owner['key'], data)
+
+    activation_key['name'].should eq(name)
+  end
+
   it 'should verify override name is valid' do
     # name label is invalid to override
     override = {"name" => "label", "value" => "somval", "contentLabel" => "somelabel"}
@@ -334,4 +342,5 @@ describe 'Activation Keys' do
       processed.push(key['id'])
     end
   end
+
 end
