@@ -138,7 +138,7 @@ public class HypervisorResourceTest {
 
         this.consumerResource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
-            this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
+            this.idCertService, null, this.i18n, this.sink, this.eventFactory, null,
             this.userService, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules, this.systemPurposeComplianceRules,
             this.deletedConsumerCurator, null, null, config,

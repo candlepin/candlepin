@@ -52,13 +52,11 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
 
-
 /**
  * ConsumerCuratorTest JUnit tests for Consumer database code
  */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
-    @SuppressWarnings("checkstyle:visibilitymodifier")
     @Inject private Configuration config;
     @Inject private DeletedConsumerCurator dcc;
     @Inject private EntityManager em;
@@ -904,6 +902,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         assertEquals(consumer.getLastCheckin().getTime(), dt.getTime());
     }
+
     @Test
     public void updatelastCheckin() throws Exception {
         Date date = new Date();
@@ -1355,6 +1354,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(consumer1, hypervisorMap.get(hypervisorId1));
         assertEquals(consumer2, hypervisorMap.get(hypervisorId2));
     }
+
     @Test
     public void testGetHypervisorsBulk() {
         String hypervisorid = "hypervisor";

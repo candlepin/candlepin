@@ -69,8 +69,8 @@ describe 'Consumer Facts' do
     sleep 1
 
     events = @consumer_api.list_consumer_events(@consumer.uuid)
-    # Look for a consumer modified event:
-    events.find { |e| e['type'] == 'MODIFIED' and e['target'] == 'CONSUMER' }.should_not be_nil
+    # All event retrieval endpoints are deprecated, and should be returning an empty list of events:
+    events.size.should eq(0)
   end
 
   it 'does not emit an event when facts do not change' do
@@ -80,8 +80,8 @@ describe 'Consumer Facts' do
     }
     @consumer_api.update_consumer({:facts => updated_facts})
     events = @consumer_api.list_consumer_events(@consumer.uuid)
-    # No consumer modified event should exist as facts did not change:
-    events.find { |e| e['type'] == 'MODIFIED' and e['target'] == 'CONSUMER' }.should be_nil
+    # All event retrieval endpoints are deprecated, and should be returning an empty list of events:
+    events.size.should eq(0)
   end
 
   it 'updates consumer updated date when facts are updated' do

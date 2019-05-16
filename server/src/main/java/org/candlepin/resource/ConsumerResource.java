@@ -50,7 +50,6 @@ import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
-import org.candlepin.dto.api.v1.EventDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
@@ -81,7 +80,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.EventCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.IdentityCertificate;
@@ -189,7 +187,6 @@ public class ConsumerResource {
     private Pattern consumerPersonNamePattern;
 
     private static Logger log = LoggerFactory.getLogger(ConsumerResource.class);
-    private static final int FEED_LIMIT = 1000;
 
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
@@ -204,7 +201,6 @@ public class ConsumerResource {
     private I18n i18n;
     private EventSink sink;
     private EventFactory eventFactory;
-    private EventCurator eventCurator;
     private EventAdapter eventAdapter;
     private PoolManager poolManager;
     private ConsumerRules consumerRules;
@@ -237,7 +233,7 @@ public class ConsumerResource {
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter, I18n i18n,
-        EventSink sink, EventFactory eventFactory, EventCurator eventCurator,
+        EventSink sink, EventFactory eventFactory,
         EventAdapter eventAdapter, UserServiceAdapter userService, PoolManager poolManager,
         ConsumerRules consumerRules, OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator, Entitler entitler,
@@ -266,7 +262,6 @@ public class ConsumerResource {
         this.i18n = i18n;
         this.sink = sink;
         this.eventFactory = eventFactory;
-        this.eventCurator = eventCurator;
         this.userService = userService;
         this.poolManager = poolManager;
         this.consumerRules = consumerRules;
@@ -2228,29 +2223,45 @@ public class ConsumerResource {
         }
     }
 
-    @ApiOperation(notes = "Retrieves a list of Consumer Events", value = "getConsumerEvents")
+    /**
+     * Retrieves a list of Consumer Events.
+     *
+     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns an empty
+     * list of events, and will be removed on the next major release.
+     *
+     * @param consumerUuid a consumer uuid
+     * @return an empty list
+     */
+    @Deprecated
+    @ApiOperation(
+        notes = "Retrieves a list of Consumer Events. DEPRECATED: Event persistence/retrieval is being " +
+        "phased out. This endpoint currently returns an empty list of events, and will be removed on the " +
+        "next major release.",
+        value = "getConsumerEvents")
     @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/events")
-    public List<EventDTO> getConsumerEvents(
+    public List<Event> getConsumerEvents(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, consumer).list();
-
-        List<EventDTO> eventDTOs = null;
-        if (events != null) {
-            eventAdapter.addMessageText(events);
-
-            eventDTOs = new ArrayList<>();
-            for (Event event : events) {
-                eventDTOs.add(this.translator.translate(event, EventDTO.class));
-            }
-        }
-        return eventDTOs;
+        return Collections.emptyList();
     }
 
-    @ApiOperation(notes = "Retrieves and Event Atom Feed for a Consumer", value = "getConsumerAtomFeed")
+    /**
+     * Retrieves and Event Atom Feed for a Consumer.
+     *
+     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns a feed
+     * without any entries, and will be removed on the next major release.
+     *
+     * @param consumerUuid a consumer uuid
+     * @return an empty list
+     */
+    @Deprecated
+    @ApiOperation(
+        notes = "Retrieves and Event Atom Feed for a Consumer. DEPRECATED: Event persistence/retrieval is " +
+        "being phased out. This endpoint currently returns a feed without any entries, and will be " +
+        "removed on the next major release.",
+        value = "getConsumerAtomFeed")
     @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces("application/atom+xml")
@@ -2259,8 +2270,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         String path = String.format("/consumers/%s/atom", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        Feed feed = this.eventAdapter.toFeed(
-            this.eventCurator.listMostRecent(FEED_LIMIT, consumer).list(), path);
+        Feed feed = this.eventAdapter.toFeed(null, path);
         feed.setTitle("Event feed for consumer " + consumer.getUuid());
         return feed;
     }

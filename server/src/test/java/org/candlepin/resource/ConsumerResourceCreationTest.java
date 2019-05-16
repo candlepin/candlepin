@@ -157,7 +157,7 @@ public class ConsumerResourceCreationTest {
         this.config = initConfig();
         this.resource = new ConsumerResource(
             this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService, this.ownerService,
-            null, this.idCertService, null, this.i18n, this.sink, null, null, null, this.userService, null,
+            null, this.idCertService, null, this.i18n, this.sink, null, null, this.userService, null,
             null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
             this.systemPurposeComplianceRules, this.deletedConsumerCurator, null, null, this.config, null,
             null, null, this.consumerBindUtil, null, null, new FactValidator(this.config, this.i18nProvider),

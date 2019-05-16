@@ -199,7 +199,6 @@ public class ConsumerResourceTest {
             mockSink,
             eventFactory,
             null,
-            null,
             userServiceAdapter,
             mockPoolManager,
             null,
@@ -380,7 +379,7 @@ public class ConsumerResourceTest {
         );
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
-            mockEntitlementCertServiceAdapter, null, null, null, null, null, null,
+            mockEntitlementCertServiceAdapter, null, null, null, null, null,
             poolManager, null, null, null, null, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator);

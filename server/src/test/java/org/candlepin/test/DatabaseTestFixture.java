@@ -50,7 +50,6 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.EventCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.JobCurator;
@@ -139,7 +138,6 @@ public class DatabaseTestFixture {
     @Inject protected EntitlementCertificateCurator entitlementCertificateCurator;
     @Inject protected EnvironmentCurator environmentCurator;
     @Inject protected EnvironmentContentCurator environmentContentCurator;
-    @Inject protected EventCurator eventCurator;
     @Inject protected IdentityCertificateCurator identityCertificateCurator;
     @Inject protected ImportRecordCurator importRecordCurator;
     @Inject protected JobCurator jobCurator;

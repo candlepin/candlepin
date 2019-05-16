@@ -30,9 +30,8 @@ public class DatabaseConfigFactory {
     public static final String QUERY_PARAMETER_LIMIT = "db.config.query.parameter.limit";
 
     public static final Map<String, String> POSTGRESQL_CONFIG = ImmutableMap.of(
-        // The effective limit is Short.MAX_VALUE since that's what's used in the JDBC driver (32768 - 1)
-        // See http://stackoverflow.com/questions/1009706/
-        IN_OPERATOR_BLOCK_SIZE, String.valueOf(Short.MAX_VALUE),
+        // Based on testing with the hypervisor check in process, and going a bit conservative
+        IN_OPERATOR_BLOCK_SIZE, "15000",
         CASE_OPERATOR_BLOCK_SIZE, "100",
         BATCH_BLOCK_SIZE, "500",
         QUERY_PARAMETER_LIMIT, "32000"

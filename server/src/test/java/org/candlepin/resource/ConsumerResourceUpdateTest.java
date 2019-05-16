@@ -144,7 +144,7 @@ public class ConsumerResourceUpdateTest {
             this.ownerCurator);
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
-            this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
+            this.idCertService, null, this.i18n, this.sink, this.eventFactory, null,
             this.userService, poolManager, null, ownerCurator,
             this.activationKeyCurator, this.entitler, this.complianceRules, this.systemPurposeComplianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,

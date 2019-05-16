@@ -241,15 +241,14 @@ describe 'Pool Resource' do
       @cp.delete_pool(pool['id'])
     end
 
-    pools = @cp.list_pools
-
+    # All event retrieval endpoints are deprecated, and should be returning an empty list of events:
     events = @cp.list_owner_events(owner['key'])
     pool_created_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'CREATED' }
-    pool_created_events.size.should eq(6)
+    pool_created_events.size.should eq(0)
     pool_deleted_events = events.find_all { |event| event['target'] == 'POOL' && event['type'] == 'DELETED' }
-    pool_deleted_events.size.should eq(6)
+    pool_deleted_events.size.should eq(0)
     ent_created_events = events.find_all { |event| event['target'] == 'ENTITLEMENT' && event['type'] == 'CREATED' }
-    ent_created_events.size.should eq(6)
+    ent_created_events.size.should eq(0)
     ent_deleted_events = events.find_all { |event| event['target'] == 'ENTITLEMENT' && event['type'] == 'DELETED' }
     ent_deleted_events.size.should eq(0)
   end

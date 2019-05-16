@@ -129,7 +129,9 @@ describe 'Consumer Resource' do
     atom = @consumer1.list_consumer_events_atom(@consumer1.uuid)
     doc = REXML::Document.new(atom)
     events = REXML::XPath.match(doc, "//*[local-name()='event'][type = 'CREATED' and target ='CONSUMER']")
-    events.length.should be >= 1
+
+    # All atom feed endpoints are deprecated, and should be returning a feed without any events:
+    events.length.should be == 0
 
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {
@@ -139,11 +141,9 @@ describe 'Consumer Resource' do
 
   it "should expose a consumer's events" do
     events = @consumer1.list_consumer_events(@consumer1.uuid)
-    events.size.should be > 0
 
-    # Events are sorted in order of descending timestamp, so the first
-    # event should be consumer created:
-    expect(events.find { |event| event['target'] == 'CONSUMER' && event['type'] == 'CREATED' && event['principal']['name'] == @username1}).to_not be_nil
+    # All event retrieval endpoints are deprecated, and should be returning an empty list of events:
+    events.size.should be == 0
 
     # Consumer 2 should not be able to see consumer 1's feed:
     lambda {
