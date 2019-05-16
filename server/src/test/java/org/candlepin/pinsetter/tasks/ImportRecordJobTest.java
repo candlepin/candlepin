@@ -14,6 +14,7 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.model.ImportRecord;
@@ -22,8 +23,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.quartz.JobExecutionContext;
 
@@ -71,7 +71,7 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
 
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
 
-        Assert.assertEquals(10, records.size());
+        assertEquals(10, records.size());
     }
 
     @Test
@@ -91,7 +91,7 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
 
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
 
-        Assert.assertEquals(7, records.size());
+        assertEquals(7, records.size());
     }
 
     @Test
@@ -118,8 +118,8 @@ public class ImportRecordJobTest extends DatabaseTestFixture {
         JobExecutionContext context = mock(JobExecutionContext.class);
         this.job.execute(context);
 
-        Assert.assertEquals(10, importRecordCurator.findRecords(owner1).list().size());
-        Assert.assertEquals(4, importRecordCurator.findRecords(owner2).list().size());
+        assertEquals(10, importRecordCurator.findRecords(owner1).list().size());
+        assertEquals(4, importRecordCurator.findRecords(owner2).list().size());
     }
 
 }

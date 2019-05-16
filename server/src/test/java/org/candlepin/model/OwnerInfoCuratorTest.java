@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -25,8 +25,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,7 +43,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     private Owner owner;
     private Pool pool1;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = this.createOwner();
 

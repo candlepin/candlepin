@@ -14,20 +14,19 @@
  */
 package org.candlepin.pinsetter.core;
 
+import static org.mockito.Mockito.*;
+
 import org.candlepin.controller.ModeManager;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 
 import java.util.Date;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Created by wpoteat on 7/13/17.
@@ -52,7 +51,7 @@ public class PinsetterTriggerListenerTest {
         when(trigger.mayFireAgain()).thenReturn(true);
         when(trigger.getJobKey()).thenReturn(jobKey);
         when(trigger.getNextFireTime()).thenReturn(new Date());
-        when(jobCurator.get(Matchers.anyString())).thenReturn(jobStatus);
+        when(jobCurator.get(anyString())).thenReturn(jobStatus);
 
         ptl.triggerMisfired(trigger);
         assert (jobStatus.getResult().startsWith("Will reattempt job at or after"));
@@ -68,7 +67,7 @@ public class PinsetterTriggerListenerTest {
         JobKey jobKey = new JobKey("mockName");
         when(trigger.mayFireAgain()).thenReturn(false);
         when(trigger.getJobKey()).thenReturn(jobKey);
-        when(jobCurator.get(Matchers.anyString())).thenReturn(jobStatus);
+        when(jobCurator.get(anyString())).thenReturn(jobStatus);
 
         ptl.triggerMisfired(trigger);
         assert (jobStatus.getResult().startsWith("Failed run. Will not attempt again."));

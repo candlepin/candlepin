@@ -14,21 +14,8 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-import java.io.File;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletResponse;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -57,17 +44,33 @@ import org.candlepin.sync.file.ManifestFile;
 import org.candlepin.sync.file.ManifestFileService;
 import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-@RunWith(MockitoJUnitRunner.class)
+import java.io.File;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ManifestManagerTest {
 
     @Mock private ManifestFileService fileService;
@@ -86,7 +89,7 @@ public class ManifestManagerTest {
 
     private ManifestManager manager;
 
-    @Before
+    @BeforeEach
     public void setupTest() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         manager = new ManifestManager(fileService, exporter, importer, consumerCurator, consumerTypeCurator,
@@ -180,7 +183,7 @@ public class ManifestManagerTest {
         when(principalProvider.get()).thenReturn(principal);
 
         ManifestFile manifest = mock(ManifestFile.class);
-        when(fileService.store(eq(ManifestFileType.EXPORT), any(File.class),
+        when(fileService.store(eq(ManifestFileType.EXPORT), nullable(File.class),
             eq(principal.getName()), any(String.class))).thenReturn(manifest);
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.getByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
@@ -241,7 +244,7 @@ public class ManifestManagerTest {
         String exportId = "export-id";
         ManifestFile manifest = mock(ManifestFile.class);
         when(manifest.getId()).thenReturn(exportId);
-        when(fileService.store(eq(ManifestFileType.EXPORT), any(File.class),
+        when(fileService.store(eq(ManifestFileType.EXPORT), nullable(File.class),
             eq(principal.getName()), any(String.class))).thenReturn(manifest);
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
         when(cdnCurator.getByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
@@ -323,7 +326,7 @@ public class ManifestManagerTest {
         verify(fileService).delete(fileId);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testImportStoredManifestThrowsBadRequestWhenManifestNotFound() throws Exception {
         Owner owner = TestUtil.createOwner();
         String fileId = "1234";
@@ -331,7 +334,9 @@ public class ManifestManagerTest {
         ConflictOverrides overrides = new ConflictOverrides(Conflict.DISTRIBUTOR_CONFLICT);
 
         when(fileService.get(eq(fileId))).thenReturn(null);
-        manager.importStoredManifest(owner, fileId, overrides, filename);
+        assertThrows(BadRequestException.class, () ->
+            manager.importStoredManifest(owner, fileId, overrides, filename)
+        );
     }
 
     @Test
@@ -381,7 +386,7 @@ public class ManifestManagerTest {
         verify(responseOutputStream).flush();
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testWriteStoredExportToResponseFailsWhenManifestFileNotFound() throws Exception {
         HttpServletResponse response = mock(HttpServletResponse.class);
         Consumer exportedConsumer = this.createMockConsumer(true);
@@ -391,10 +396,12 @@ public class ManifestManagerTest {
         when(manifest.getTargetId()).thenReturn(exportedConsumer.getUuid());
 
         when(fileService.get(eq(manifestId))).thenReturn(null);
-        manager.writeStoredExportToResponse(manifestId, exportedConsumer.getUuid(), response);
+        assertThrows(NotFoundException.class, () ->
+            manager.writeStoredExportToResponse(manifestId, exportedConsumer.getUuid(), response)
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testWriteStoredExportToResponseFailsWhenConsumerIdDoesntMatchManifest() throws Exception {
         HttpServletResponse response = mock(HttpServletResponse.class);
         Consumer exportedConsumer = this.createMockConsumer(true);
@@ -407,7 +414,9 @@ public class ManifestManagerTest {
         when(manifest.getTargetId()).thenReturn("another-consumer-uuid");
         when(fileService.get(eq(manifestId))).thenReturn(manifest);
 
-        manager.writeStoredExportToResponse(manifestId, exportedConsumer.getUuid(), response);
+        assertThrows(BadRequestException.class, () ->
+            manager.writeStoredExportToResponse(manifestId, exportedConsumer.getUuid(), response)
+        );
     }
 
     @Test

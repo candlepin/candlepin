@@ -16,8 +16,7 @@ package org.candlepin.policy.js.quantity;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;

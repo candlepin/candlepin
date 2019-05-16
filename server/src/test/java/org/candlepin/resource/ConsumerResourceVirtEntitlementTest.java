@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -40,8 +40,8 @@ import org.candlepin.util.Util;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +76,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         return new ConsumerResourceVirtEntitlementModule();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         List<SubscriptionDTO> subscriptions = new ArrayList<>();
         subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);

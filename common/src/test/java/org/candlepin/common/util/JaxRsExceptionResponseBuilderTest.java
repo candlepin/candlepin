@@ -14,7 +14,7 @@
  */
 package org.candlepin.common.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.exceptions.CandlepinParameterParseException;
 import org.candlepin.common.exceptions.ExceptionMessage;
@@ -23,10 +23,10 @@ import org.candlepin.common.exceptions.mappers.TestExceptionMapperBase.MapperTes
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.ws.rs.core.Response;
 
@@ -34,11 +34,11 @@ import javax.ws.rs.core.Response;
 /**
  * Test of JaxRsExceptionResponseBuilder
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class JaxRsExceptionResponseBuilderTest {
     private JaxRsExceptionResponseBuilder exceptionBuilder;
 
-    @Before
+    @BeforeEach
     public void injector() {
         MapperTestModule mtm = new MapperTestModule(JaxRsExceptionResponseBuilder.class);
         Injector injector = Guice.createInjector(mtm);
@@ -56,12 +56,13 @@ public class JaxRsExceptionResponseBuilderTest {
         assertTrue(e.getDisplayMessage().contains("strVal"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void failsFastIfNonHandeableGetResponseCalled() {
         Exception ex = new RuntimeException();
         assertFalse(exceptionBuilder.canHandle(ex));
         //the following should throw IllegalArgumentException
-        exceptionBuilder.getResponse(ex);
+
+        assertThrows(IllegalArgumentException.class, () -> exceptionBuilder.getResponse(ex));
     }
 
     @Test

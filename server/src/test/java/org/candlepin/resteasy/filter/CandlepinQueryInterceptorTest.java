@@ -14,48 +14,39 @@
  */
 package org.candlepin.resteasy.filter;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Provider;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.SessionWrapper;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Provider;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
 
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-
-@RunWith(JUnitParamsRunner.class)
 public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
 
     private JsonProvider mockJsonProvider;
@@ -66,6 +57,7 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
     private Provider<EntityManager> emProvider;
     private Session session;
 
+    @BeforeEach
     @Override
     public void init() throws Exception {
         super.init();
@@ -136,8 +128,8 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
         verify(this.mockJsonGenerator, times(1)).writeEndArray();
     }
 
-    private Object[][] paramsForPaginatedContentTest() {
-        return new Object[][] {
+    private static Stream<Object[]> paramsForPaginatedContentTest() {
+        return Stream.of(
             new Object[] { 1, 5, "key", PageRequest.Order.ASCENDING },
             new Object[] { 1, 5, "key", PageRequest.Order.DESCENDING },
             new Object[] { 1, 1, "key", PageRequest.Order.ASCENDING },
@@ -145,12 +137,12 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
             new Object[] { 2, 2, "key", PageRequest.Order.ASCENDING },
             new Object[] { 2, 2, "key", PageRequest.Order.DESCENDING },
             new Object[] { 5, 10, "key", PageRequest.Order.ASCENDING },
-            new Object[] { 5, 10, "key", PageRequest.Order.DESCENDING },
-        };
+            new Object[] { 5, 10, "key", PageRequest.Order.DESCENDING }
+        );
     }
 
-    @Test
-    @Parameters(method = "paramsForPaginatedContentTest")
+    @ParameterizedTest
+    @MethodSource("paramsForPaginatedContentTest")
     public void testWritePaginatedCandlepinQueryContents(int page, int perPage, String sortBy,
         PageRequest.Order order) throws IOException {
 

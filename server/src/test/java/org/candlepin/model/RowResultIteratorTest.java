@@ -14,16 +14,15 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
-import org.hibernate.Query;
-
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +34,7 @@ public class RowResultIteratorTest extends DatabaseTestFixture {
 
     private Session session;
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.session = (Session) this.getEntityManager().getDelegate();
     }
@@ -97,34 +96,26 @@ public class RowResultIteratorTest extends DatabaseTestFixture {
         }
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void testNextWithoutElements() {
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
         RowResultIterator iterator = new RowResultIterator(query.scroll(ScrollMode.FORWARD_ONLY));
 
-        try {
-            iterator.next(); // Kaboom
-        }
-        finally {
-            iterator.close();
-        }
+        assertThrows(NoSuchElementException.class, () -> iterator.next()); // Kaboom
+        iterator.close();
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testRemoveAlwaysFails() {
         this.createOwner();
         Query query = this.session.createQuery("SELECT o FROM Owner o");
 
         RowResultIterator iterator = new RowResultIterator(query.scroll(ScrollMode.FORWARD_ONLY));
 
-        try {
-            iterator.next();
-            iterator.remove();
-        }
-        finally {
-            iterator.close();
-        }
+        iterator.next();
+        assertThrows(UnsupportedOperationException.class, () -> iterator.remove());
+        iterator.close();
     }
 
 }

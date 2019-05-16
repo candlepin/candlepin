@@ -14,9 +14,9 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.core.Response;

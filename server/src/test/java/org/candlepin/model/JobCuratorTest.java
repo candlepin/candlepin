@@ -14,9 +14,9 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
@@ -33,7 +33,7 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -127,9 +127,9 @@ public class JobCuratorTest extends DatabaseTestFixture {
         assertEquals("test-csid", job.getCorrelationId());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void cancelNonExistentJob() {
-        curator.cancel("dont_exist");
+        assertThrows(NotFoundException.class, () -> curator.cancel("dont_exist"));
     }
 
     @Test
@@ -413,14 +413,18 @@ public class JobCuratorTest extends DatabaseTestFixture {
         assertEquals(job, jobs.get(0));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void findNumRunningByClassAndTargetThrowsIllegalArguementExceptionWithNullJobClass() {
-        curator.findNumRunningByClassAndTarget("TEST", null);
+        assertThrows(IllegalArgumentException.class, () ->
+            curator.findNumRunningByClassAndTarget("TEST", null)
+        );
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void getByClassAndTargetThrowsIllegalArguementExceptionWithNullJobClass() {
-        curator.getByClassAndTarget("TEST", null);
+        assertThrows(IllegalArgumentException.class, () ->
+            curator.getByClassAndTarget("TEST", null)
+        );
     }
 
     private JobStatusBuilder newJobStatus() {

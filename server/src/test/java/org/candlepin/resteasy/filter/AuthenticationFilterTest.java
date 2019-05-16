@@ -14,13 +14,8 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
@@ -45,11 +40,13 @@ import org.jboss.resteasy.core.interception.PostMatchContainerRequestContext;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.lang.reflect.Method;
 
@@ -61,7 +58,8 @@ import javax.ws.rs.container.ResourceInfo;
 /**
  * AuthInterceptorTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class AuthenticationFilterTest extends DatabaseTestFixture {
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Injector injector;
@@ -80,7 +78,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         return new AuthInterceptorTestModule();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Class clazz = FakeResource.class;
         when(mockInfo.getResourceClass()).thenReturn(clazz);
@@ -112,39 +110,32 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         return new PostMatchContainerRequestContext(mockReq, invoker);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void noSecurityHoleNoPrincipalNoSsl() throws Exception {
         when(mockHttpServletRequest.isSecure()).thenReturn(false);
         Method method = FakeResource.class.getMethod("someMethod", String.class);
         mockResourceMethod(method);
 
-        interceptor.filter(getContext());
+        assertThrows(BadRequestException.class, () -> interceptor.filter(getContext()));
     }
 
-    @Test(expected = NotAuthorizedException.class)
+    @Test
     public void noSecurityHoleNoPrincipalNoSslButOverridenByConfig() throws Exception {
         config.setProperty(ConfigProperties.AUTH_OVER_HTTP, "true");
-        try {
-            when(mockHttpServletRequest.isSecure()).thenReturn(false);
-            Method method = FakeResource.class.getMethod("someMethod", String.class);
-            mockResourceMethod(method);
-            interceptor.filter(getContext());
-        }
-        finally {
-            /**
-             * Revert default settings
-             */
-            config.setProperty(ConfigProperties.AUTH_OVER_HTTP, "false");
-        }
+        when(mockHttpServletRequest.isSecure()).thenReturn(false);
+        Method method = FakeResource.class.getMethod("someMethod", String.class);
+        mockResourceMethod(method);
+        assertThrows(NotAuthorizedException.class, () -> interceptor.filter(getContext()));
+        // Revert default settings
+        config.setProperty(ConfigProperties.AUTH_OVER_HTTP, "false");
     }
 
-    @Test(expected = NotAuthorizedException.class)
+    @Test
     public void noSecurityHoleNoPrincipal() throws Exception {
         when(mockHttpServletRequest.isSecure()).thenReturn(true);
         Method method = FakeResource.class.getMethod("someMethod", String.class);
         mockResourceMethod(method);
-
-        interceptor.filter(getContext());
+        assertThrows(NotAuthorizedException.class, () -> interceptor.filter(getContext()));
     }
 
     @Test

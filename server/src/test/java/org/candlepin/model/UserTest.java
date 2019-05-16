@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 

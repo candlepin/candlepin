@@ -14,15 +14,15 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
@@ -39,7 +39,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
 
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = createOwner();
         ownerCurator.create(owner);
@@ -62,7 +62,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         activationKeyCurator.create(key);
         ownerCurator.refresh(owner);
         assertNotNull(owner.getActivationKeys());
-        assertTrue("The count of keys should be 1", owner.getActivationKeys().size() == 1);
+        assertEquals(1, owner.getActivationKeys().size());
     }
 
     @Test
@@ -77,7 +77,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         activationKeyCurator.refresh(key);
         assertNotNull(poolCurator.getActivationKeysForPool(pool));
         assertNotNull(key.getPools());
-        assertTrue("The count of pools should be 1", key.getPools().size() == 1);
+        assertEquals(1, key.getPools().size());
         assertEquals(new Long(5), key.getPools().iterator().next().getQuantity());
     }
 
@@ -93,8 +93,8 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         activationKeyCurator.refresh(key);
         assertNotNull(poolCurator.getActivationKeysForPool(pool));
         assertNotNull(key.getPools());
-        assertTrue("The count of pools should be 1", key.getPools().size() == 1);
-        assertEquals(null, key.getPools().iterator().next().getQuantity());
+        assertEquals(1, key.getPools().size());
+        assertNull(key.getPools().iterator().next().getQuantity());
     }
 
     @Test

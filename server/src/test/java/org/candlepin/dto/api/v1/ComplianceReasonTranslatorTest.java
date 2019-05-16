@@ -20,10 +20,6 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +28,6 @@ import java.util.Map;
 /**
  * Test suite for the ComplianceReasonTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ComplianceReasonTranslatorTest extends
     AbstractTranslatorTest<ComplianceReason, ComplianceReasonDTO, ComplianceReasonTranslator> {
 

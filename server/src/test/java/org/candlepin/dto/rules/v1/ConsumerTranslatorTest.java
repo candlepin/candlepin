@@ -15,7 +15,6 @@
 package org.candlepin.dto.rules.v1;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.dto.AbstractTranslatorTest;
@@ -28,10 +27,6 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,7 +35,6 @@ import java.util.Set;
 /**
  * Test suite for the ConsumerTranslator (Rules framework) class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ConsumerTranslatorTest extends
     AbstractTranslatorTest<Consumer, ConsumerDTO, ConsumerTranslator> {
 

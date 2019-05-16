@@ -141,7 +141,6 @@ dependencies {
     runtimeOnly "org.mariadb.jdbc:mariadb-java-client:2.3.0"
 
     testImplementation libraries.core_testing
-    testImplementation libraries.jukito
     testImplementation libraries.liquibase_slf4j
     testImplementation libraries.jmock
 

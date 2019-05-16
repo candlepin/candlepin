@@ -15,7 +15,6 @@
 package org.candlepin.sync;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;

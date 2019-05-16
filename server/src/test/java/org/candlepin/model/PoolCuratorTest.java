@@ -14,8 +14,9 @@
  */
 package org.candlepin.model;
 
+import static org.hamcrest.MatcherAssert.*;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.common.paging.Page;
@@ -30,12 +31,12 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +50,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -57,7 +59,8 @@ import javax.inject.Inject;
 /**
  * Test suite for the PoolCurator object
  */
-@RunWith(JUnitParamsRunner.class)
+// Allow for a non-static MethodSource
+@TestInstance(Lifecycle.PER_CLASS)
 public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Inject private CandlepinPoolManager poolManager;
@@ -71,7 +74,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     private Pool pool;
     private Consumer consumer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = createOwner();
         ownerCurator.create(owner);
@@ -1817,7 +1820,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
-        assertFalse("entitlement should not be dirty initially", entitlement.isDirty());
+        assertFalse(entitlement.isDirty(), "entitlement should not be dirty initially");
 
         poolCurator.create(pool);
         entitlementCurator.create(entitlement);
@@ -1825,7 +1828,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         entitlementCurator.refresh(entitlement);
 
-        assertTrue("entitlement should be be marked dirty", entitlement.isDirty());
+        assertTrue(entitlement.isDirty(), "entitlement should be be marked dirty");
     }
 
     @Test
@@ -1844,7 +1847,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
-        assertFalse("entitlement should not be dirty initially", entitlement.isDirty());
+        assertFalse(entitlement.isDirty(), "entitlement should not be dirty initially");
 
         poolCurator.create(pool);
         entitlementCurator.create(entitlement);
@@ -1852,7 +1855,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         entitlementCurator.refresh(entitlement);
 
-        assertTrue("entitlement should be be marked dirty", entitlement.isDirty());
+        assertTrue(entitlement.isDirty(), "entitlement should be be marked dirty");
     }
 
     @Test
@@ -1871,12 +1874,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
-        assertFalse("entitlement should not be dirty initially", entitlement.isDirty());
+        assertFalse(entitlement.isDirty(), "entitlement should not be dirty initially");
 
         entitlementCurator.create(entitlement);
         poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, Collections.singleton(product.getId()));
         entitlementCurator.refresh(entitlement);
-        assertTrue("entitlement should be marked dirty", entitlement.isDirty());
+        assertTrue(entitlement.isDirty(), "entitlement should be marked dirty");
     }
 
     @Test
@@ -2161,11 +2164,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(expectedPoolProductMap, actualPoolProductMap);
     }
 
-    protected Object[][] getPoolSetSizes() {
+    protected Stream<Object[]> getPoolSetSizes() {
         int inBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
         int halfBlockSize = inBlockSize / 2;
 
-        return new Object[][] {
+        return Stream.of(
             new Object[] { 0 },
             new Object[] { 1 },
             new Object[] { 10 },
@@ -2185,12 +2188,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             new Object[] { 3 * inBlockSize },
             new Object[] { 3 * inBlockSize + 1 },
             new Object[] { 3 * inBlockSize + 10 },
-            new Object[] { 3 * inBlockSize + halfBlockSize },
-        };
+            new Object[] { 3 * inBlockSize + halfBlockSize }
+        );
     }
 
-    //@Test
-    @Parameters(method = "getPoolSetSizes")
+    @ParameterizedTest
+    @MethodSource("getPoolSetSizes")
     public void testFetchingPoolProvidedProductIdsWithVaryingPoolSetSizes(int poolsToCreate) {
         Owner owner = this.createOwner();
 

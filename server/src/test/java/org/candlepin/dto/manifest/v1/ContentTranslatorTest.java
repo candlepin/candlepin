@@ -14,15 +14,11 @@
  */
 package org.candlepin.dto.manifest.v1;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Content;
-
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-
-import org.junit.runner.RunWith;
 
 import java.util.Arrays;
 
@@ -31,7 +27,6 @@ import java.util.Arrays;
 /**
  * Test suite for the ContentTranslator (manifest import/export) class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ContentTranslatorTest extends
     AbstractTranslatorTest<Content, ContentDTO, ContentTranslator> {
 

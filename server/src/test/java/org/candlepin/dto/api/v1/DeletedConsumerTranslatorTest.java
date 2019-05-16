@@ -14,19 +14,15 @@
  */
 package org.candlepin.dto.api.v1;
 
-import junitparams.JUnitParamsRunner;
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.DeletedConsumer;
-import org.junit.runner.RunWith;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * Test suite for the DeletedConsumerTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class DeletedConsumerTranslatorTest extends
     AbstractTranslatorTest<DeletedConsumer, DeletedConsumerDTO, DeletedConsumerTranslator> {
 

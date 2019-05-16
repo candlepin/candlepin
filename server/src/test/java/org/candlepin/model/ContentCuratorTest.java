@@ -17,7 +17,7 @@ package org.candlepin.model;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import java.util.HashSet;
 
@@ -35,7 +35,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
     /* FIXME: Add Arches here */
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.owner = new Owner("Example-Corporation");
         ownerCurator.create(owner);

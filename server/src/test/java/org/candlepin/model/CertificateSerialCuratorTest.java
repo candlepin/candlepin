@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -284,9 +284,11 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         assertTrue(uncollected.containsAll(expected));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testGetExpiredRevokedCertSerialsWithNullDateThrowsException() {
-        this.certSerialCurator.getExpiredRevokedCertSerials(null);
+        assertThrows(IllegalArgumentException.class, () ->
+            this.certSerialCurator.getExpiredRevokedCertSerials(null)
+        );
     }
 
     @Test

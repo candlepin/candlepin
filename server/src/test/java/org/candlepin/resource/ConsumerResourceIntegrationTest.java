@@ -14,8 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.test.TestUtil.createConsumerDTO;
-import static org.junit.Assert.*;
+import static org.candlepin.test.TestUtil.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
@@ -65,16 +65,16 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.util.Providers;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -125,7 +125,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         return new ProductCertCreationModule();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
         standardSystemTypeDTO = modelTranslator.translate(standardSystemType, ConsumerTypeDTO.class);
@@ -159,7 +159,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         // cleanup the temp exports
         TestUtil.cleanupDir("/tmp", "export");
@@ -233,7 +233,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testCreateConsumerWithUUID() {
         String uuid = "Jar Jar Binks";
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
@@ -250,7 +250,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
-        assertEquals("The Uuids do not match", uuid, submitted.getUuid());
+        assertEquals(uuid, submitted.getUuid());
 
         // The second post should fail because of constraint failures
         ConsumerDTO anotherToSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
@@ -258,7 +258,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         anotherToSubmit.setUuid(uuid);
         anotherToSubmit.setFact(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
-        consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null, true);
+        assertThrows(BadRequestException.class, () ->
+            consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null, true)
+        );
     }
 
     public void testDeleteResource() {
@@ -271,7 +273,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testUsername() throws IOException, GeneralSecurityException {
-
         // not setting the username here - this should be set by
         // examining the user principal
         ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
@@ -364,7 +365,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testCannotGetAnotherConsumersCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
@@ -379,7 +380,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+        assertThrows(NotFoundException.class, () ->
+            consumerResource.getEntitlementCertificates(consumer.getUuid(), null)
+        );
     }
 
     @Test
@@ -396,7 +399,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(3, consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void canNotDeleteConsumerOtherThanSelf() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
@@ -404,7 +407,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        consumerResource.deleteConsumer(consumer.getUuid(), principal);
+        assertThrows(NotFoundException.class, () ->
+            consumerResource.deleteConsumer(consumer.getUuid(), principal)
+        );
     }
 
     @Test
@@ -429,7 +434,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             consumer.getUuid(), null).size());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testCannotGetAnotherOwnersConsumersCerts() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
@@ -440,18 +445,22 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(evilOwner, Access.ALL);
         securityInterceptor.enable();
 
-        consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
+        assertThrows(NotFoundException.class, () ->
+            consumerResource.getEntitlementCertificates(consumer.getUuid(), null)
+        );
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void testConsumerCannotListAllConsumers() {
         setupPrincipal(new ConsumerPrincipal(consumer, owner));
         securityInterceptor.enable();
 
-        consumerResource.list(null, null, null, new ArrayList<>(), null, null, null);
+        assertThrows(ForbiddenException.class, () ->
+            consumerResource.list(null, null, null, new ArrayList<>(), null, null, null)
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testConsumerCannotListWithUuidsAndOtherParameters() {
         Consumer consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
@@ -460,8 +469,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         List<String> uuidList = new ArrayList<>();
         uuidList.add(consumer.getUuid());
-        consumerResource.list("username", toSet("typeLabel"), owner.getKey(), uuidList,
-            null, null, new PageRequest());
+        assertThrows(BadRequestException.class, () -> consumerResource.list("username", toSet("typeLabel"),
+            owner.getKey(), uuidList, null, null, new PageRequest())
+        );
     }
 
     @Test
@@ -480,7 +490,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void consumerShouldNotSeeAnotherConsumersEntitlements() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
@@ -495,11 +505,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(evilConsumer, owner));
         securityInterceptor.enable();
 
-        consumerResource.listEntitlements(consumer.getUuid(), null, true,
-            "", new ArrayList<>(), null);
+        assertThrows(NotFoundException.class, () -> consumerResource.listEntitlements(consumer.getUuid(),
+            null, true, "", new ArrayList<>(), null)
+        );
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void ownerShouldNotSeeOtherOwnerEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId().toString(),
             null, 1, null, null, false, null, null);
@@ -514,8 +525,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         setupPrincipal(evilOwner, Access.ALL);
 
-        consumerResource.listEntitlements(consumer.getUuid(), null, true,
-            "", new ArrayList<>(), null);
+        assertThrows(NotFoundException.class, () -> consumerResource.listEntitlements(consumer.getUuid(),
+            null, true, "", new ArrayList<>(), null)
+        );
     }
 
     @Test
@@ -562,13 +574,16 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(username, personal.getName());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void onlyOnePersonalConsumer() {
         ConsumerDTO personal = createConsumerDTO(personTypeDTO, ownerDTO);
         consumerResource.create(personal, principal, null, null, null, true);
 
         personal = createConsumerDTO(personTypeDTO, ownerDTO);
-        consumerResource.create(personal, principal, null, null, null, true);
+        ConsumerDTO finalPersonal = personal;
+        assertThrows(BadRequestException.class, () ->
+            consumerResource.create(finalPersonal, principal, null, null, null, true)
+        );
     }
 
     /**
@@ -605,9 +620,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertFalse(entCertBefore.equals(entCertAfter));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testInvalidProductId() {
-        consumerResource.bind(consumer.getUuid(), "JarjarBinks", null, null, null, null, false, null, null);
+        assertThrows(BadRequestException.class, () -> consumerResource.bind(consumer.getUuid(), "JarjarBinks",
+            null, null, null, null, false, null, null)
+        );
     }
 
     private static class ProductCertCreationModule extends AbstractModule {

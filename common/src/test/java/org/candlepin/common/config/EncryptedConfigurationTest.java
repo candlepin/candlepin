@@ -14,20 +14,20 @@
  */
 package org.candlepin.common.config;
 
-import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
-import static org.junit.Assert.assertEquals;
+import static org.candlepin.common.config.ConfigurationPrefixes.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.hamcrest.core.IsInstanceOf;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.Properties;
 
 import javax.crypto.BadPaddingException;
@@ -39,19 +39,11 @@ public class EncryptedConfigurationTest {
     private String plainPassword = "testpassword";
     private String encPasswordAsStored = "$1$8dg00oV+ZhN74tvxG+kAhw==";
 
-    @SuppressWarnings("visibilitymodifier")
-    @Rule
-    public TemporaryFolder temp = new TemporaryFolder();
-
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @Rule
-    public ExpectedException ex = ExpectedException.none();
-
     private Properties props;
     private final String key1 = JPA_CONFIG_PREFIX + "hibernate.connection.password";
     private final String key2 = JPA_CONFIG_PREFIX + "x";
 
-    @Before
+    @BeforeEach
     public void init() {
         props = new Properties();
         props.setProperty(key1, encPasswordAsStored);
@@ -59,8 +51,8 @@ public class EncryptedConfigurationTest {
     }
 
     @Test
-    public void testDecrypt() throws Exception {
-        File passphraseFile = temp.newFile("passphrase.txt");
+    public void testDecrypt(@TempDir Path temp) throws Exception {
+        File passphraseFile = temp.resolve("passphrase.txt").toFile();
         Writer w = new FileWriter(passphraseFile);
         w.write(passphrase);
         w.close();
@@ -93,21 +85,19 @@ public class EncryptedConfigurationTest {
 
     @Test
     public void testDecryptWithBadPassphraseFile() throws Exception {
-        ex.expect(ConfigurationException.class);
-        ex.expectCause(IsInstanceOf.<Throwable>instanceOf(FileNotFoundException.class));
-
         props.setProperty("passphrase_file", "/does/not/exist");
 
         EncryptedConfiguration c = new EncryptedConfiguration(props);
-        c.use("passphrase_file").toDecrypt(key1, key2);
+
+        Throwable t = assertThrows(ConfigurationException.class,
+            () -> c.use("passphrase_file").toDecrypt(key1, key2));
+
+        assertThat(t.getCause(), IsInstanceOf.instanceOf(FileNotFoundException.class));
     }
 
     @Test
-    public void testDecryptWithWrongPassphrase() throws Exception {
-        ex.expect(ConfigurationException.class);
-        ex.expectCause(IsInstanceOf.<Throwable>instanceOf(BadPaddingException.class));
-
-        File passphraseFile = temp.newFile("passphrase.txt");
+    public void testDecryptWithWrongPassphrase(@TempDir Path temp) throws Exception {
+        File passphraseFile = temp.resolve("passphrase.txt").toFile();
         Writer w = new FileWriter(passphraseFile);
         w.write("wrong");
         w.close();
@@ -115,14 +105,16 @@ public class EncryptedConfigurationTest {
         props.setProperty("passphrase_file", passphraseFile.getAbsolutePath());
 
         EncryptedConfiguration c = new EncryptedConfiguration(props);
-        c.use("passphrase_file").toDecrypt(key1, key2);
+        Throwable t = assertThrows(ConfigurationException.class,
+            () -> c.use("passphrase_file").toDecrypt(key1, key2));
+        assertThat(t.getCause(), IsInstanceOf.instanceOf(BadPaddingException.class));
     }
 
     @Test
-    public void testUnusualPassword() throws Exception {
-        String expected = "Hello\nWorld\n";
-        File passphraseFile = temp.newFile("passphrase.txt");
+    public void testUnusualPassword(@TempDir Path temp) throws Exception {
+        File passphraseFile = temp.resolve("passphrase.txt").toFile();
         Writer w = new FileWriter(passphraseFile);
+        String expected = "Hello\nWorld\n";
         w.write(expected);
         w.close();
 

@@ -16,7 +16,6 @@ package org.candlepin.service.impl;
 
 import static org.junit.Assert.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
@@ -82,7 +81,7 @@ public class DefaultProductServiceAdapterTest {
         CandlepinQuery<Product> ccmock = mock(CandlepinQuery.class);
         ResultIterator<Product> iterator = mock(ResultIterator.class);
 
-        when(opc.getProductsByIdsUsingOwnerKey(any(String.class), anyCollection())).thenReturn(ccmock);
+        when(opc.getProductsByIdsUsingOwnerKey(nullable(String.class), anyCollection())).thenReturn(ccmock);
         when(ccmock.iterate(anyInt(), anyBoolean())).thenReturn(iterator);
 
         ids.add(someid);

@@ -20,14 +20,9 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.HypervisorId;
 
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
-
 /**
  * Test suite for the HypervisorIdTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class HypervisorIdTranslatorTest extends
     AbstractTranslatorTest<HypervisorId, HypervisorIdDTO, HypervisorIdTranslator> {
 

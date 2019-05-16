@@ -16,7 +16,6 @@ package org.candlepin.controller;
 
 import static org.junit.Assert.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
@@ -593,7 +592,7 @@ public class EntitlerTest {
         devSystem.setFact("dev_sku", p.getId());
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(eq(owner.getKey()), any(List.class))).thenReturn(devProdDTOs);
 
         this.mockProducts(owner, p);
@@ -682,7 +681,7 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(String.class), any(List.class))).thenReturn(devProdDTOs);
         when(ownerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
         when(ownerProductCurator.getProductById(eq(owner), eq(ip.getId()))).thenReturn(ip);
@@ -722,7 +721,7 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip2));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), any(Date.class))).thenReturn(true);
+        when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
         when(productAdapter.getProductsByIds(any(String.class), any(List.class))).thenReturn(devProdDTOs);
 
         this.mockProducts(owner, p, ip1, ip2);

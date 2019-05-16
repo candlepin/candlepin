@@ -14,12 +14,12 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 
@@ -27,8 +27,6 @@ import org.junit.Test;
  * Test suite for the ConsumerTypeCurator
  */
 public class ConsumerTypeCuratorTest extends DatabaseTestFixture {
-
-
     @Test
     public void testGetConsumerType() {
         ConsumerType ctype = this.createConsumerType();
@@ -40,27 +38,27 @@ public class ConsumerTypeCuratorTest extends DatabaseTestFixture {
         assertSame(ctype, test);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testGetConsumerTypeRequiresConsumer() {
-        this.consumerTypeCurator.getConsumerType(null);
+        assertThrows(IllegalArgumentException.class, () -> consumerTypeCurator.getConsumerType(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testGetConsumerTypeRequiresConsumerWithType() {
         ConsumerType ctype = this.createConsumerType();
         Consumer consumer = new Consumer();
 
-        this.consumerTypeCurator.getConsumerType(consumer);
+        assertThrows(IllegalArgumentException.class, () -> consumerTypeCurator.getConsumerType(consumer));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGetConsumerTypeExpectsValidConsumerTypeId() {
         ConsumerType ctype = this.createConsumerType();
         Consumer consumer = new Consumer();
 
         consumer.setTypeId("bad-type-id");
 
-        this.consumerTypeCurator.getConsumerType(consumer);
+        assertThrows(IllegalStateException.class, () -> consumerTypeCurator.getConsumerType(consumer));
     }
 
     @Test
@@ -115,23 +113,23 @@ public class ConsumerTypeCuratorTest extends DatabaseTestFixture {
         assertEquals(cte.isManifest(), test.isManifest());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testgetByLabelWithNullLabel() {
-        this.consumerTypeCurator.getByLabel(null);
+        assertThrows(IllegalArgumentException.class, () -> consumerTypeCurator.getByLabel(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testgetByLabelWithNullLabelAndCreation() {
-        this.consumerTypeCurator.getByLabel(null, true);
+        assertThrows(IllegalArgumentException.class, () -> consumerTypeCurator.getByLabel(null, true));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testgetByLabelWithEmptyLabel() {
-        this.consumerTypeCurator.getByLabel("");
+        assertThrows(IllegalArgumentException.class, () -> consumerTypeCurator.getByLabel(""));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testgetByLabelWithEmptyLabelAndCreation() {
-        this.consumerTypeCurator.getByLabel("", true);
+        assertThrows(IllegalArgumentException.class, () -> consumerTypeCurator.getByLabel("", true));
     }
 }

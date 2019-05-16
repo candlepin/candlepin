@@ -14,19 +14,19 @@
  */
 package org.candlepin.common.resteasy.filter;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.jackson.DynamicFilterData;
 
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -37,7 +37,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 /**
  * DynamicJsonFilterTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DynamicJsonFilterTest {
 
     @Mock private MockHttpRequest mockReq;
@@ -45,13 +45,13 @@ public class DynamicJsonFilterTest {
 
     private DynamicJsonFilter interceptor;
 
-    @Before
+    @BeforeEach
     public void init() {
         this.interceptor = new DynamicJsonFilter();
         ResteasyProviderFactory.popContextData(DynamicFilterData.class);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         ResteasyProviderFactory.clearContextData();
     }

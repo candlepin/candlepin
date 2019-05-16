@@ -14,13 +14,7 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.bind.PoolOperationCallback;
@@ -35,6 +29,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -204,7 +199,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         @SuppressWarnings("unchecked")
         Set<String> subscriptionIds = captor.getValue();
         assertEquals(2, subscriptionIds.size());
-        assertThat(subscriptionIds, hasItems("subId", "subId2"));
+        assertThat(subscriptionIds, Matchers.hasItems("subId", "subId2"));
         assertEquals(2, poolOperationCallback.getPoolUpdates().size());
 
         Map<Pool, Long> poolUpdate = poolOperationCallback.getPoolUpdates();

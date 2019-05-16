@@ -14,8 +14,7 @@
  */
 package org.candlepin.common.resteasy.filter;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
@@ -27,11 +26,12 @@ import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -42,6 +42,7 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 
+@ExtendWith(MockitoExtension.class)
 public class LinkHeaderResponseFilterTest {
 
     @Mock private Configuration config;
@@ -72,18 +73,14 @@ public class LinkHeaderResponseFilterTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
         this.apiUrlPrefixKey = "test_prefix_key";
-
-        when(mockServletContext.getContextPath()).thenReturn("/candlepin");
         ResteasyProviderFactory.pushContext(ServletContext.class, mockServletContext);
-
         interceptor = new LinkHeaderResponseFilter(config, apiUrlPrefixKey);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         ResteasyProviderFactory.clearContextData();
     }
@@ -114,6 +111,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testBuildBaseUrlWithConfigDefault() throws Exception {
+        when(mockServletContext.getContextPath()).thenReturn("/candlepin");
         mockReq = MockHttpRequest.get("https://example.com/candlepin/resource");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
@@ -126,6 +124,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testBuildBaseUrlWithNoSchemeProvided() throws Exception {
+        when(mockServletContext.getContextPath()).thenReturn("/candlepin");
         when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(true);
         when(config.getString(eq(this.apiUrlPrefixKey))).thenReturn(
             "localhost:8443/candlepin");
@@ -334,7 +333,6 @@ public class LinkHeaderResponseFilterTest {
         when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(false);
 
         MultivaluedMap<String, Object> map = new MultivaluedMapImpl<>();
-        when(response.getMetadata()).thenReturn(map);
 
         ResteasyProviderFactory.pushContext(Page.class, page);
 

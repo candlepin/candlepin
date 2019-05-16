@@ -14,15 +14,16 @@
  */
 package org.candlepin.common.filter;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -37,13 +38,13 @@ import javax.ws.rs.core.MediaType;
 /**
  * TeeHttpServletResponseTest
  */
+@ExtendWith(MockitoExtension.class)
 public class TeeHttpServletResponseTest {
 
     @Mock private HttpServletResponse resp;
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
-        MockitoAnnotations.initMocks(this);
         final StringWriter sw = new StringWriter();
         when(resp.getOutputStream()).thenReturn(new ServletOutputStream() {
             public void write(int b) throws IOException {
@@ -72,10 +73,10 @@ public class TeeHttpServletResponseTest {
         for (String type : types.keySet()) {
             when(resp.getContentType()).thenReturn(type);
             if (types.get(type)) {
-                assertEquals(type + " failed!", "this is my body", tee.getBody());
+                assertEquals("this is my body", tee.getBody());
             }
             else {
-                assertEquals(type + " failed!", Util.toBase64("this is my body".getBytes()),
+                assertEquals(Util.toBase64("this is my body".getBytes()),
                     tee.getBody());
             }
         }

@@ -14,15 +14,12 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
-
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * ProductCertificateCuratorTest
@@ -30,7 +27,7 @@ import org.junit.Test;
 public class ProductCertificateCuratorTest extends DatabaseTestFixture {
     private Product product;
 
-    @Before
+    @BeforeEach
     @Override
     public void init() throws Exception {
         super.init();

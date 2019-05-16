@@ -14,7 +14,6 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 import static org.quartz.JobBuilder.newJob;
 

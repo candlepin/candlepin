@@ -14,15 +14,13 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -40,7 +38,7 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
     private Owner owner;
     private ConsumerType ct;
 
-    @Before
+    @BeforeEach
     @Override
     public void init() throws Exception {
         super.init();

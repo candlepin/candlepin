@@ -14,14 +14,13 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.List;
@@ -38,7 +37,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
     private Date oneResultDate;
 
 
-    @Before
+    @BeforeEach
     @Override
     public void init() throws Exception {
         super.init();

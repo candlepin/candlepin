@@ -18,19 +18,14 @@ import static org.junit.Assert.*;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ConsumerContentOverride;
-
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
+import org.candlepin.model.ContentOverride;
 
 
 
 /**
  * Test suite for the ContentOverrideTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ContentOverrideTranslatorTest extends
     AbstractTranslatorTest<ContentOverride, ContentOverrideDTO, ContentOverrideTranslator> {
 

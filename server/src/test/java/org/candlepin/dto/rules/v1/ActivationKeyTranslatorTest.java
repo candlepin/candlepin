@@ -14,29 +14,22 @@
  */
 package org.candlepin.dto.rules.v1;
 
+import static org.junit.Assert.*;
 
-import junitparams.JUnitParamsRunner;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
-import org.junit.runner.RunWith;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
 /**
  * Test suite for the ActivationKeyTranslator class for Rules
  */
-@RunWith(JUnitParamsRunner.class)
 public class ActivationKeyTranslatorTest extends
     AbstractTranslatorTest<ActivationKey, ActivationKeyDTO, ActivationKeyTranslator> {
 

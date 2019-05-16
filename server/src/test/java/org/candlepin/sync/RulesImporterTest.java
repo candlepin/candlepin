@@ -14,7 +14,6 @@
  */
 package org.candlepin.sync;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
@@ -23,12 +22,13 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -38,7 +38,8 @@ import javax.inject.Inject;
 /**
  * RulesImporterTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class RulesImporterTest extends DatabaseTestFixture {
     @Inject private EventSink sink;
 
@@ -46,7 +47,7 @@ public class RulesImporterTest extends DatabaseTestFixture {
     @Mock private JsRunnerProvider jsProvider;
     private RulesImporter importer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         importer = new RulesImporter(curator, sink, jsProvider);
     }
@@ -86,17 +87,4 @@ public class RulesImporterTest extends DatabaseTestFixture {
         importer.importObject(new StringReader("//Version: 3.0"));
         verify(curator, never()).update(any(Rules.class));
     }
-
-    static class RulesMatcher extends ArgumentMatcher<Rules> {
-        private String rule;
-
-        public RulesMatcher(String rule) {
-            this.rule = rule;
-        }
-
-        public boolean matches(Object rules) {
-            return ((Rules) rules).getRules().equals(rule);
-        }
-    }
-
 }

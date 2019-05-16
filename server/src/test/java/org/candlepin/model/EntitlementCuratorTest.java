@@ -14,14 +14,8 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
@@ -30,7 +24,8 @@ import org.candlepin.test.TestUtil;
 
 import org.hamcrest.Matchers;
 import org.hibernate.Hibernate;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Arrays;
@@ -70,6 +65,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Product providedProduct2;
     private Product testProduct;
 
+    @BeforeEach
     @Override
     public void init() throws Exception {
         super.init();
@@ -413,7 +409,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void listByConsumerExpired() {
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer);
-        assertEquals("Setup should add 2 entitlements:", 2, ents.size());
+        assertEquals(2, ents.size(), "Setup should add 2 entitlements:");
 
         Product product = TestUtil.createProduct();
         productCurator.create(product);
@@ -428,7 +424,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         }
 
         ents = entitlementCurator.listByConsumer(consumer);
-        assertEquals("adding expired entitlements should not change results:", 2, ents.size());
+        assertEquals(2, ents.size(), "adding expired entitlements should not change results:");
     }
 
     @Test
@@ -437,12 +433,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter(Product.Attributes.VARIANT, "Starter Pack");
 
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
-        assertEquals("should match only one out of two entitlements:", 1, ents.size());
+        assertEquals(1, ents.size(), "should match only one out of two entitlements:");
 
         Product p = ents.get(0).getPool().getProduct();
-        assertTrue("Did not find ent by product attribute 'variant'",
-            p.hasAttribute(Product.Attributes.VARIANT));
-        assertEquals(p.getAttributeValue(Product.Attributes.VARIANT), "Starter Pack");
+        assertTrue(p.hasAttribute(Product.Attributes.VARIANT),
+            "Did not find ent by product attribute 'variant'");
+        assertEquals("Starter Pack", p.getAttributeValue(Product.Attributes.VARIANT));
     }
 
     @Test
@@ -451,7 +447,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         filters.addMatchesFilter(testProduct.getName());
 
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
-        assertEquals("should match only one out of two entitlements:", 1, ents.size());
+        assertEquals(1, ents.size(), "should match only one out of two entitlements:");
         assertEquals(ents.get(0).getPool().getName(), testProduct.getName());
     }
 
@@ -461,10 +457,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter("pool_attr_1", "attr1");
 
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer, filters);
-        assertEquals("should match only one out of two entitlements:", 1, ents.size());
+        assertEquals(1, ents.size(), "should match only one out of two entitlements:");
 
         Pool p = ents.get(0).getPool();
-        assertTrue("Did not find ent by pool attribute 'pool_attr_1'", p.hasAttribute("pool_attr_1"));
+        assertTrue(p.hasAttribute("pool_attr_1"), "Did not find ent by pool attribute 'pool_attr_1'");
         assertEquals(p.getAttributeValue("pool_attr_1"), "attr1");
     }
 
@@ -475,7 +471,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         Page<List<Entitlement>> entitlementPages = entitlementCurator.listByOwner(owner, null, filters, req);
         List<Entitlement> entitlements = entitlementPages.getPageData();
-        assertEquals("should return all the entitlements:", 2, entitlements.size());
+        assertEquals(2, entitlements.size(), "should return all the entitlements:");
     }
 
     @Test
@@ -485,7 +481,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         Page<List<Entitlement>> entitlementPages = entitlementCurator.listByOwner(owner, null, filters, req);
         List<Entitlement> entitlements = entitlementPages.getPageData();
-        assertEquals("should return only single entitlement per page:", 1, entitlements.size());
+        assertEquals(1, entitlements.size(), "should return only single entitlement per page:");
     }
 
     /*
@@ -500,10 +496,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         filters.addAttributeFilter("pool_attr_1", "attr1");
         Page<List<Entitlement>> entitlementPages = entitlementCurator.listByOwner(owner, null, filters, req);
         List<Entitlement> entitlements = entitlementPages.getPageData();
-        assertEquals("should match only one out of two entitlements:", 1, entitlements.size());
+        assertEquals(1, entitlements.size(), "should match only one out of two entitlements:");
 
         Pool p = entitlements.get(0).getPool();
-        assertTrue("Did not find ent by pool attribute 'pool_attr_1'", p.hasAttribute("pool_attr_1"));
+        assertTrue(p.hasAttribute("pool_attr_1"), "Did not find ent by pool attribute 'pool_attr_1'");
         assertEquals(p.getAttributeValue("pool_attr_1"), "attr1");
     }
 

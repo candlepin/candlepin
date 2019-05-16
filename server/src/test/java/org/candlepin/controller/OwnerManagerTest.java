@@ -14,7 +14,6 @@
  */
 package org.candlepin.controller;
 
-import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.model.ConsumerCurator;

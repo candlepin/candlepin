@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -27,8 +27,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
@@ -48,12 +48,11 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     private Product product;
     private Consumer consumer;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = this.createOwner();
 
         product = this.createProduct(owner);
-
 
         ConsumerType ctype = new ConsumerType("system");
         ctype = this.consumerTypeCurator.create(ctype);
@@ -88,7 +87,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         assertFalse(poolCurator.get(consumerPool.getId()).entitlementsAvailable(1));
     }
 
-    @Test(expected = EntitlementRefusedException.class)
+    @Test
     public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit() throws Exception {
         Long numAvailEntitlements = 1L;
 
@@ -105,7 +104,9 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         List<Entitlement> e1 = poolManager.entitleByPools(consumer, poolQuantities);
         assertEquals(1, e1.size());
         poolQuantities.put(consumerPool.getId(), 1);
-        anotherEntitler.entitleByPools(consumer, poolQuantities);
+        assertThrows(EntitlementRefusedException.class, () ->
+            anotherEntitler.entitleByPools(consumer, poolQuantities)
+        );
     }
 
     @Override

@@ -15,7 +15,6 @@
 package org.candlepin.resteasy.filter;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Verify;

@@ -16,16 +16,17 @@ package org.candlepin.dto;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.util.Util;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -34,13 +35,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-
+import java.util.stream.Stream;
 
 /**
  * Base test suite for the CandlepinDTO subclasses
  */
-@RunWith(JUnitParamsRunner.class)
+// Ordinarily methodSources are static, but ours relies on pulling values from an instance, so we need this
+// special annotation
+@TestInstance(Lifecycle.PER_CLASS)
 public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
     protected static Logger log = LoggerFactory.getLogger(AbstractDTOTest.class);
 
@@ -128,8 +130,8 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         }
     }
 
-    public Object[] getFieldNames() {
-        return this.fields.keySet().toArray();
+    public Stream<Object> getFieldNames() {
+        return Stream.of(this.fields.keySet().toArray());
     }
 
     /**
@@ -167,8 +169,8 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
      */
     protected abstract Object getOutputValueForAccessor(String field, Object input);
 
-    @Test
-    @Parameters(method = "getFieldNames")
+    @ParameterizedTest
+    @MethodSource("getFieldNames")
     public void testAccessorsAndMutators(String field) throws Exception {
         Method[] methods = this.fields.get(field);
 
@@ -221,8 +223,8 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         }
     }
 
-    @Test
-    @Parameters(method = "getFieldNames")
+    @ParameterizedTest
+    @MethodSource("getFieldNames")
     public void testEqualsForIndividualFields(String field) throws Exception {
         Method[] methods = this.fields.get(field);
 
@@ -263,8 +265,8 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         assertTrue(dtoA.equals(dtoB));
     }
 
-    @Test
-    @Parameters(method = "getFieldNames")
+    @ParameterizedTest
+    @MethodSource("getFieldNames")
     public void testHashCodeForIndividualFields(String field) throws Exception {
         Method[] methods = this.fields.get(field);
 
@@ -307,8 +309,8 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         assertEquals(dtoA.hashCode(), dtoB.hashCode());
     }
 
-    @Test
-    @Parameters(method = "getFieldNames")
+    @ParameterizedTest
+    @MethodSource("getFieldNames")
     public void testPopulateForIndividualFields(String field) throws Exception {
         Method[] methods = this.fields.get(field);
 
@@ -347,10 +349,10 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         assertEquals(dtoA, dtoB);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testPopulateWithNullSource() {
         T dto = this.getDTOInstance();
-        dto.populate(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.populate(null));
     }
 
     @Test
@@ -361,8 +363,8 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         assertEquals(dto, copy);
     }
 
-    @Test
-    @Parameters(method = "getFieldNames")
+    @ParameterizedTest
+    @MethodSource("getFieldNames")
     public void testCloneForIndividualFields(String field) throws Exception {
         Method[] methods = this.fields.get(field);
         T dto = this.getDTOInstance();
@@ -411,8 +413,8 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         assertEquals(dto, copy);
     }
 
-    @Test
-    @Parameters(method = "getFieldNames")
+    @ParameterizedTest
+    @MethodSource("getFieldNames")
     public void testCopyConstructorForIndividualFields(String field) throws Exception {
         // Skip this test if we don't have a copy constructor to test
         assumeTrue(this.copyConstructor != null);
@@ -477,7 +479,6 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
             else {
                 assertEquals(expected, actual);
             }
-
         }
     }
 }

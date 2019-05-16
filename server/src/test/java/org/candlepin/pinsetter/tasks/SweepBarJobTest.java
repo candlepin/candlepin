@@ -21,13 +21,13 @@ import org.candlepin.pinsetter.core.PinsetterKernel;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -35,6 +35,8 @@ import java.util.Set;
  * SweepBarJobTest
  */
 public class SweepBarJobTest extends BaseJobTest {
+
+    public static final String TEST_KEY = "test key";
     private SweepBarJob sweepBarJob;
     @Mock private JobCurator j;
     @Mock private PinsetterKernel pk;
@@ -47,7 +49,7 @@ public class SweepBarJobTest extends BaseJobTest {
         sweepBarJob = new SweepBarJob(j, pk);
         injector.injectMembers(sweepBarJob);
         Set<JobKey> mockJK = new HashSet<>();
-        JobKey jk = new JobKey("test key");
+        JobKey jk = new JobKey(TEST_KEY);
         mockJK.add(jk);
         when(pk.getSingleJobKeys()).thenReturn(mockJK);
     }
@@ -55,6 +57,8 @@ public class SweepBarJobTest extends BaseJobTest {
     @Test
     public void testSweepBarJob() throws Exception {
         sweepBarJob.execute(ctx);
-        verify(j, atLeastOnce()).cancelOrphanedJobs(Matchers.anyListOf(String.class));
+        Collection<String> expected = new HashSet<>();
+        expected.add(TEST_KEY);
+        verify(j, atLeastOnce()).cancelOrphanedJobs(eq(expected));
     }
 }

@@ -15,22 +15,15 @@
 package org.candlepin.common.config;
 
 import static org.candlepin.common.config.PropertyConverter.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
-
 public class PropertyConverterTest {
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @Rule
-    public ExpectedException ex = ExpectedException.none();
-
     private Object BAD_COMPARISON = new Object();
     private String expectedMessage(Object value, Class<?> clazz) {
         return String.format(PropertyConverter.ERROR_MESSAGE, value, clazz.getName());
@@ -53,9 +46,8 @@ public class PropertyConverterTest {
 
     @Test
     public void testFailToBoolean() {
-        ex.expect(ConversionException.class);
-        ex.expectMessage(expectedMessage(BAD_COMPARISON, Boolean.class));
-        toBoolean(BAD_COMPARISON);
+        Throwable t = assertThrows(ConversionException.class, () -> toBoolean(BAD_COMPARISON));
+        assertEquals(expectedMessage(BAD_COMPARISON, Boolean.class), t.getMessage());
     }
 
     @Test
@@ -68,9 +60,8 @@ public class PropertyConverterTest {
 
     @Test
     public void testFailToInteger() {
-        ex.expect(ConversionException.class);
-        ex.expectMessage(expectedMessage(BAD_COMPARISON, Integer.class));
-        toInteger(BAD_COMPARISON);
+        Throwable t = assertThrows(ConversionException.class, () -> toInteger(BAD_COMPARISON));
+        assertEquals(expectedMessage(BAD_COMPARISON, Integer.class), t.getMessage());
     }
 
     @Test
@@ -84,9 +75,8 @@ public class PropertyConverterTest {
 
     @Test
     public void testFailToLong() {
-        ex.expect(ConversionException.class);
-        ex.expectMessage(expectedMessage(BAD_COMPARISON, Long.class));
-        toLong(BAD_COMPARISON);
+        Throwable t = assertThrows(ConversionException.class, () -> toLong(BAD_COMPARISON));
+        assertEquals(expectedMessage(BAD_COMPARISON, Long.class), t.getMessage());
     }
 
     @Test
@@ -97,9 +87,8 @@ public class PropertyConverterTest {
 
     @Test
     public void testFailToList() {
-        ex.expect(ConversionException.class);
-        ex.expectMessage(expectedMessage(BAD_COMPARISON, List.class));
-        toList(BAD_COMPARISON);
+        Throwable t = assertThrows(ConversionException.class, () -> toList(BAD_COMPARISON));
+        assertEquals(expectedMessage(BAD_COMPARISON, List.class), t.getMessage());
     }
 
     @Test
@@ -112,8 +101,7 @@ public class PropertyConverterTest {
 
     @Test
     public void testFailToBigInteger() {
-        ex.expect(ConversionException.class);
-        ex.expectMessage(expectedMessage(BAD_COMPARISON, BigInteger.class));
-        toBigInteger(BAD_COMPARISON);
+        Throwable t = assertThrows(ConversionException.class, () -> toBigInteger(BAD_COMPARISON));
+        assertEquals(expectedMessage(BAD_COMPARISON, BigInteger.class), t.getMessage());
     }
 }

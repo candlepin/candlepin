@@ -14,21 +14,20 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -36,11 +35,10 @@ import javax.inject.Inject;
 /**
  * ProductTest
  */
-@RunWith(JUnitParamsRunner.class)
 public class ProductTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
 
-    protected Object[][] getValuesForEqualityAndReplication() {
+    protected static Stream<Object[]> getValuesForEqualityAndReplication() {
         Map<String, String> attributes1 = new HashMap<>();
         attributes1.put("a1", "v1");
         attributes1.put("a2", "v2");
@@ -76,16 +74,16 @@ public class ProductTest extends DatabaseTestFixture {
             new ProductContent(null, content[5], true)
         );
 
-        return new Object[][] {
+        return Stream.of(
             new Object[] { "Id", "test_value", "alt_value" },
             new Object[] { "Name", "test_value", "alt_value" },
             new Object[] { "Multiplier", 1234L, 4567L },
             new Object[] { "Attributes", attributes1, attributes2 },
             new Object[] { "ProductContent", productContent1, productContent2 },
-            new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
+            new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") }
             // new Object[] { "Href", "test_value", null },
             // new Object[] { "Locked", Boolean.TRUE, false }
-        };
+        );
     }
 
     protected Method[] getAccessorAndMutator(String methodSuffix, Class mutatorInputClass)
@@ -134,8 +132,8 @@ public class ProductTest extends DatabaseTestFixture {
         assertTrue(rhs.equals(lhs));
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testEquality(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];
@@ -171,8 +169,8 @@ public class ProductTest extends DatabaseTestFixture {
         assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
     }
 
-    @Test
-    @Parameters(method = "getValuesForEqualityAndReplication")
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
     public void testEntityVersion(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
         Method accessor = methods[0];

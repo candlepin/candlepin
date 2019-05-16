@@ -14,13 +14,8 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.AdditionalAnswers.*;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -31,9 +26,10 @@ import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -43,13 +39,12 @@ import java.util.Date;
 /**
  * ProductManagerTest
  */
-@RunWith(JUnitParamsRunner.class)
 public class ProductManagerTest extends DatabaseTestFixture {
 
     private EntitlementCertificateGenerator mockEntCertGenerator;
     private ProductManager productManager;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
 
@@ -69,7 +64,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testCreateProductThatAlreadyExists() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
 
@@ -79,7 +74,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertNotNull(output);
         assertEquals(output, this.ownerProductCurator.getProductById(owner, dto.getId()));
 
-        this.productManager.createProduct(dto, owner);
+        assertThrows(IllegalStateException.class, () -> this.productManager.createProduct(dto, owner));
     }
 
     @Test
@@ -113,8 +108,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testUpdateProduct(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = this.createProduct("p1", "prod1", owner);
@@ -142,8 +137,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testUpdateProductConvergeWithExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
@@ -173,8 +168,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testUpdateProductDivergeFromExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
@@ -201,7 +196,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testUpdateProductThatDoesntExist() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = TestUtil.createProduct("p1", "new_name");
@@ -209,7 +204,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
 
-        this.productManager.updateProduct(update, owner, false);
+        assertThrows(IllegalStateException.class,
+            () -> this.productManager.updateProduct(update, owner, false));
     }
 
     @Test
@@ -248,17 +244,17 @@ public class ProductManagerTest extends DatabaseTestFixture {
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testRemoveProductThatDoesntExist() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = TestUtil.createProduct("p1", "prod1");
 
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
 
-        this.productManager.removeProduct(owner, product);
+        assertThrows(IllegalStateException.class, () -> this.productManager.removeProduct(owner, product));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testRemoveProductWithSubscriptions() {
         long now = System.currentTimeMillis();
 
@@ -266,11 +262,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product = this.createProduct("p1", "prod1", owner);
         Pool pool = this.createPool(owner, product, 1L, new Date(now - 86400), new Date(now + 86400));
 
-        this.productManager.removeProduct(owner, product);
+        assertThrows(IllegalStateException.class, () -> this.productManager.removeProduct(owner, product));
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testRemoveProductContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = TestUtil.createProduct("p1", "prod1");
@@ -306,8 +302,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testRemoveContentFromSharedProduct(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
@@ -343,7 +339,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testRemoveContentFromProductForBadOwner() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner");
@@ -359,7 +355,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         boolean removed = pdto.removeContent(content.getId());
         assertTrue(removed);
 
-        Product output = this.productManager.updateProduct(pdto, owner2, false);
+        assertThrows(IllegalStateException.class,
+            () -> this.productManager.updateProduct(pdto, owner2, false));
     }
 
     @Test
@@ -381,8 +378,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testAddContentToSharedProduct(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");

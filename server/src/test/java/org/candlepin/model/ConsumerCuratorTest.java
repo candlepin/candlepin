@@ -14,15 +14,10 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -35,10 +30,8 @@ import org.candlepin.util.FactValidator;
 import org.candlepin.util.PropertyValidationException;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
@@ -64,10 +57,7 @@ import javax.persistence.EntityManager;
  */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @Rule
-    public ExpectedException ex = ExpectedException.none();
-
+    @Inject private Configuration config;
     @Inject private DeletedConsumerCurator dcc;
     @Inject private EntityManager em;
 
@@ -79,7 +69,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     private List<String> subscriptionIds;
     private List<String> contracts;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
@@ -623,7 +613,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(consumer);
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
-        assertTrue(guests.size() == 2);
+        assertEquals(2, guests.size());
     }
 
     @Test
@@ -639,7 +629,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(host);
 
         List<Consumer> guests = consumerCurator.getGuests(host);
-        assertTrue(guests.size() == 1);
+        assertEquals(1, guests.size());
     }
 
     @Test
@@ -658,7 +648,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(host);
 
         List<Consumer> guests = consumerCurator.getGuests(host);
-        assertTrue(guests.size() == 0);
+        assertEquals(0, guests.size());
     }
 
     @Test
@@ -670,7 +660,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.update(consumer);
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
-        assertTrue(guests.size() == 0);
+        assertEquals(0, guests.size());
     }
 
     @Test
@@ -705,8 +695,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         List<Consumer> guests1 = consumerCurator.getGuests(hConsumer1);
         List<Consumer> guests2 = consumerCurator.getGuests(hConsumer2);
-        assertTrue("Expected " + hGuest1.getUpdated() + " to be before " + hGuest2.getUpdated(),
-            hGuest1.getUpdated().before(hGuest2.getUpdated()));
+
+        assertTrue(hGuest1.getUpdated().before(hGuest2.getUpdated()),
+            "Expected " + hGuest1.getUpdated() + " to be before " + hGuest2.getUpdated());
         assertEquals(0, guests1.size());
         assertEquals(1, guests2.size());
         assertEquals("guestConsumer2", guests2.get(0).getName());
@@ -715,7 +706,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void noHostRegistered() {
         Consumer host = consumerCurator.getHost("system-uuid-for-guest", owner.getId());
-        assertTrue(host == null);
+        assertNull(host);
     }
 
     @Test
@@ -897,7 +888,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer = consumerCurator.create(consumer);
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
-        assertTrue(guests.size() == 0);
+        assertEquals(0, guests.size());
     }
 
     @Test
@@ -977,27 +968,27 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(factConsumer.getFact("system.multiplier"), "-2");
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testConsumerFactsVerifyBadInt() {
         Map<String, String> facts = new HashMap<>();
         facts.put("system.count", "zzz");
         facts.put("system.multiplier", "-2");
 
         factConsumer.setFacts(facts);
-        factConsumer = consumerCurator.create(factConsumer);
+        assertThrows(PropertyValidationException.class, () -> consumerCurator.create(factConsumer));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testConsumerFactsVerifyBadPositive() {
         Map<String, String> facts = new HashMap<>();
         facts.put("system.count", "-2");
         facts.put("system.multiplier", "-2");
 
         factConsumer.setFacts(facts);
-        factConsumer = consumerCurator.create(factConsumer);
+        assertThrows(PropertyValidationException.class, () -> consumerCurator.create(factConsumer));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testConsumerFactsVerifyBadUpdateValue() {
         Map<String, String> facts = new HashMap<>();
         facts.put("system.count", "3");
@@ -1010,7 +1001,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(factConsumer.getFact("system.multiplier"), "-2");
 
         factConsumer.setFact("system.count", "sss");
-        factConsumer = consumerCurator.update(factConsumer);
+        assertThrows(PropertyValidationException.class, () -> consumerCurator.update(factConsumer));
     }
 
     @Test
@@ -1205,7 +1196,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testDoesConsumerExistNo() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer.setUuid("1");
-        consumer = consumerCurator.create(consumer);
+        consumerCurator.create(consumer);
         boolean result = consumerCurator.doesConsumerExist("unknown");
         assertFalse(result);
     }
@@ -1214,7 +1205,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testDoesConsumerExistYes() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer.setUuid("1");
-        consumer = consumerCurator.create(consumer);
+        consumerCurator.create(consumer);
         boolean result = consumerCurator.doesConsumerExist("1");
         assertTrue(result);
     }
@@ -1245,10 +1236,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(result, consumer);
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testVerifyAndLookupConsumerDoesntMatch() {
-        Consumer result = consumerCurator.verifyAndLookupConsumer("1");
-        assertNull(result);
+        assertThrows(NotFoundException.class, () ->
+            consumerCurator.verifyAndLookupConsumer("1")
+        );
     }
 
     @Test
@@ -1284,7 +1276,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         HypervisorId hypervisorId = new HypervisorId(hypervisorid);
         hypervisorId.setOwner(owner);
         consumer.setHypervisorId(hypervisorId);
-        consumer = consumerCurator.create(consumer);
+        consumerCurator.create(consumer);
         Consumer result = consumerCurator.getHypervisor(hypervisorid, otherOwner);
         assertNull(result);
     }
@@ -1403,7 +1395,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         HypervisorId hypervisorId = new HypervisorId(hypervisorid);
         hypervisorId.setOwner(owner);
         consumer.setHypervisorId(hypervisorId);
-        consumer = consumerCurator.create(consumer);
+        consumerCurator.create(consumer);
         List<Consumer> results = consumerCurator
             .getHypervisorsBulk(new LinkedList<>(), owner.getId())
             .list();
@@ -1423,9 +1415,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         HypervisorId hypervisorId2 = new HypervisorId("hypervisortwo");
         hypervisorId2.setOwner(owner);
         consumer2.setHypervisorId(hypervisorId2);
-        consumer2 = consumerCurator.create(consumer2);
+        consumerCurator.create(consumer2);
         Consumer nonHypervisor = new Consumer("testConsumer3", "testUser3", owner, ct);
-        nonHypervisor = consumerCurator.create(nonHypervisor);
+        consumerCurator.create(nonHypervisor);
         List<Consumer> results = consumerCurator.getHypervisorsForOwner(owner.getId()).list();
         assertEquals(1, results.size());
         assertEquals(consumer, results.get(0));
@@ -1508,23 +1500,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void countShouldThrowExceptionIfOwnerKeyIsNull() throws Exception {
-        ex.expect(IllegalArgumentException.class);
-        ex.expectMessage("Owner key can't be null or empty");
-
         String ownerKey = null;
-        consumerCurator.countConsumers(ownerKey, typeLabels, skus,
-            subscriptionIds, contracts);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+            consumerCurator.countConsumers(ownerKey, typeLabels, skus, subscriptionIds, contracts)
+        );
+        assertEquals("Owner key can't be null or empty", ex.getMessage());
     }
 
     @Test
     public void countShouldThrowExceptionIfOwnerKeyIsEmpty() throws Exception {
-        ex.expect(IllegalArgumentException.class);
-        ex.expectMessage("Owner key can't be null or empty");
-
         String ownerKey = "";
 
-        consumerCurator.countConsumers(ownerKey, typeLabels, skus,
-            subscriptionIds, contracts);
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+            consumerCurator.countConsumers(ownerKey, typeLabels, skus, subscriptionIds, contracts)
+        );
+        assertEquals("Owner key can't be null or empty", ex.getMessage());
     }
 
     @Test

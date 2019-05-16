@@ -14,13 +14,12 @@
  */
 package org.candlepin.common.config;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.hamcrest.core.IsInstanceOf;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -41,14 +40,10 @@ public class PropertiesFileConfigurationTest {
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private static final Charset ASCII = Charset.forName("US-ASCII");
 
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @Rule
-    public ExpectedException ex = ExpectedException.none();
-
     private ClassLoader cl;
     private PropertiesFileConfiguration config;
 
-    @Before
+    @BeforeEach
     public void init() {
         cl = this.getClass().getClassLoader();
         config = new PropertiesFileConfiguration();
@@ -113,8 +108,9 @@ public class PropertiesFileConfigurationTest {
 
     @Test
     public void testEmptyReader() throws Exception {
-        ex.expect(ConfigurationException.class);
-        ex.expectCause(IsInstanceOf.<Throwable>instanceOf(FileNotFoundException.class));
-        config.load(new File("/does/not/exist"));
+        Throwable t = assertThrows(ConfigurationException.class,
+            () -> config.load(new File("/does/not/exist")));
+
+        assertThat(t.getCause(), IsInstanceOf.instanceOf(FileNotFoundException.class));
     }
 }

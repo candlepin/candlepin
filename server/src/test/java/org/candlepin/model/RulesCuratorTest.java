@@ -14,12 +14,11 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 
@@ -86,15 +85,4 @@ public class RulesCuratorTest extends DatabaseTestFixture {
         Rules updateRules = rulesCurator.getRules();
         assertEquals(rules.getRules(), updateRules.getRules());
     }
-
-    @Test
-    public void uploadMultipleRules() {
-        Rules rules = new Rules("// Version: 5.1000\n// rules1 ");
-        rulesCurator.update(rules);
-        Rules rules2 = new Rules("// Version: 5.1001\n// rules2 ");
-        rulesCurator.update(rules2);
-        Rules updateRules = rulesCurator.getRules();
-        assertEquals(rules2.getRules(), updateRules.getRules());
-    }
-
 }

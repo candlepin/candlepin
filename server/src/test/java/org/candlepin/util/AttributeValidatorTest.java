@@ -14,18 +14,17 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -38,7 +37,6 @@ import javax.inject.Provider;
 /**
  * Test suite for the AttributeValidator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class AttributeValidatorTest {
 
     private static I18n i18n = I18nFactory.getI18n(AttributeValidatorTest.class, Locale.US,
@@ -47,13 +45,13 @@ public class AttributeValidatorTest {
 
     private Configuration config;
 
-    @Before
+    @BeforeEach
     public void init() {
         this.config = new CandlepinCommonTestConfig();
     }
 
-    @Test(expected = PropertyValidationException.class)
-    @Parameters({"true", "false", "1", "0", "-1", "string value"})
+    @ParameterizedTest
+    @ValueSource(strings = {"true", "false", "1", "0", "-1", "string value"})
     public void testLongAttributeKeyFailure(String value) {
         StringBuilder builder = new StringBuilder(AttributeValidator.ATTRIBUTE_MAX_LENGTH + 2);
         for (int i = 0; i < AttributeValidator.ATTRIBUTE_MAX_LENGTH + 1; ++i) {
@@ -61,10 +59,10 @@ public class AttributeValidatorTest {
         }
 
         AttributeValidator validator = new AttributeValidator(this.config, i18nProvider);
-        validator.validate(builder.toString(), value);
+        assertThrows(PropertyValidationException.class, () -> validator.validate(builder.toString(), value));
     }
 
-    @Test(expected = PropertyValidationException.class)
+    @Test
     public void testLongAttributeValueFailure() {
         StringBuilder builder = new StringBuilder(AttributeValidator.ATTRIBUTE_MAX_LENGTH + 2);
         for (int i = 0; i < AttributeValidator.ATTRIBUTE_MAX_LENGTH + 1; ++i) {
@@ -72,11 +70,11 @@ public class AttributeValidatorTest {
         }
 
         AttributeValidator validator = new AttributeValidator(this.config, i18nProvider);
-        validator.validate("key", builder.toString());
+        assertThrows(PropertyValidationException.class, () -> validator.validate("key", builder.toString()));
     }
 
-    @Test
-    @Parameters({
+    @ParameterizedTest
+    @CsvSource({
         "testattrib, testvalue, true",
         "testattrib, yes, true",
         "testattrib, no, true",

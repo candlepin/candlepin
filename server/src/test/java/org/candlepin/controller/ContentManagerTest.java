@@ -14,13 +14,8 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.AdditionalAnswers.*;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.model.Content;
@@ -29,25 +24,24 @@ import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
-
 
 
 /**
  * ContentManagerTest
  */
-@RunWith(JUnitParamsRunner.class)
 public class ContentManagerTest extends DatabaseTestFixture {
 
     private ContentManager contentManager;
     private EntitlementCertificateGenerator mockEntCertGenerator;
     private ProductManager productManager;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
 
@@ -75,7 +69,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertEquals(output, this.ownerContentCurator.getContentById(owner, dto.getId()));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testCreateContentThatAlreadyExists() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
 
@@ -91,7 +85,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertEquals(output, this.ownerContentCurator.getContentById(owner, dto.getId()));
 
         // This should fail, since it already exists
-        this.contentManager.createContent(dto, owner);
+        assertThrows(IllegalStateException.class, () -> this.contentManager.createContent(dto, owner));
     }
 
     @Test
@@ -129,8 +123,8 @@ public class ContentManagerTest extends DatabaseTestFixture {
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testUpdateContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Product product = new Product("p1", "product-1");
@@ -164,8 +158,8 @@ public class ContentManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testUpdateContentConvergeWithExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
@@ -198,8 +192,8 @@ public class ContentManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testUpdateContentDivergeFromExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
@@ -229,7 +223,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testUpdateContentThatDoesntExist() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Content content = TestUtil.createContent("c1", "content-1");
@@ -237,11 +231,12 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 
-        this.contentManager.updateContent(update, owner, false);
+        assertThrows(IllegalStateException.class,
+            () -> this.contentManager.updateContent(update, owner, false));
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testRemoveContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
         Content content = this.createContent("c1", "content-1", owner);
@@ -273,8 +268,8 @@ public class ContentManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test
-    @Parameters({"false", "true"})
+    @ParameterizedTest
+    @ValueSource(strings = {"false", "true"})
     public void testRemoveContentDivergeFromExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
@@ -308,14 +303,15 @@ public class ContentManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testRemoveContentThatDoesntExist() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Content content = TestUtil.createContent("c1", "content-1");
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 
-        this.contentManager.removeContent(owner, content, true);
+        assertThrows(IllegalStateException.class,
+            () -> this.contentManager.removeContent(owner, content, true));
     }
 
 

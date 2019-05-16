@@ -14,24 +14,19 @@
  */
 package org.candlepin.dto.manifest.v1;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.UpstreamConsumer;
 
-import static org.junit.Assert.*;
-
-import junitparams.JUnitParamsRunner;
-
-import org.junit.runner.RunWith;
-
 
 
 /**
  * Test suite for the UpstreamConsumerTranslator (manifest import/export) class
  */
-@RunWith(JUnitParamsRunner.class)
 public class UpstreamConsumerTranslatorTest extends
     AbstractTranslatorTest<UpstreamConsumer, UpstreamConsumerDTO, UpstreamConsumerTranslator> {
 

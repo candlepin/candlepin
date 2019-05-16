@@ -20,16 +20,11 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.ConsumerInstalledProduct;
 
-import org.junit.runner.RunWith;
-
-import junitparams.JUnitParamsRunner;
-
 import java.util.Date;
 
 /**
  * Test suite for the ConsumerInstalledProductTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class ConsumerInstalledProductTranslatorTest extends
     AbstractTranslatorTest<ConsumerInstalledProduct, ConsumerInstalledProductDTO,
     ConsumerInstalledProductTranslator> {

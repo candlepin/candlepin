@@ -15,9 +15,6 @@
 package org.candlepin.resource;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
@@ -340,7 +337,7 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(consumer.getUuid(), incoming, principal);
         verify(sink).queueEvent((Event) any());
-        verify(complianceRules).getStatus(eq(consumer), any(Date.class),
+        verify(complianceRules).getStatus(eq(consumer), nullable(Date.class),
             any(Boolean.class), any(Boolean.class));
     }
 

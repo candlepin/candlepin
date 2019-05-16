@@ -14,14 +14,14 @@
  */
 package org.candlepin.pinsetter.core;
 
-import static org.junit.Assert.*;
-import static org.quartz.CronScheduleBuilder.cronSchedule;
-import static org.quartz.JobBuilder.newJob;
-import static org.quartz.TriggerBuilder.newTrigger;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.quartz.CronScheduleBuilder.*;
+import static org.quartz.JobBuilder.*;
+import static org.quartz.TriggerBuilder.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;

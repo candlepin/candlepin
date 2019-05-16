@@ -14,16 +14,14 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.activationkeys.ActivationKey;
-
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -306,20 +304,24 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testMapProductToOwnerUnmappedOwner() {
         Owner owner = new Owner("unmapped");
         Product product = this.createProduct();
 
-        this.ownerProductCurator.mapProductToOwner(product, owner);
+        assertThrows(IllegalStateException.class, () ->
+            this.ownerProductCurator.mapProductToOwner(product, owner)
+        );
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testMapProductToOwnerUnmappedProduct() {
         Owner owner = this.createOwner();
         Product product = TestUtil.createProduct();
 
-        this.ownerProductCurator.mapProductToOwner(product, owner);
+        assertThrows(IllegalStateException.class, () ->
+            this.ownerProductCurator.mapProductToOwner(product, owner)
+        );
     }
 
     @Test

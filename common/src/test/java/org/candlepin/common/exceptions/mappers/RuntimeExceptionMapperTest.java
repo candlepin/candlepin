@@ -14,7 +14,7 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.CandlepinException;
@@ -25,9 +25,9 @@ import org.candlepin.common.util.VersionUtil;
 import org.jboss.resteasy.spi.BadRequestException;
 import org.jboss.resteasy.spi.DefaultOptionsMethodException;
 import org.jboss.resteasy.util.HttpHeaderNames;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +45,7 @@ import javax.ws.rs.core.Response.Status;
  */
 public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException, URISyntaxException {
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("version.properties").toURI()));
@@ -70,7 +70,7 @@ public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
         verifyMessage(r, rtmsg("test exception"));
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void defaultOptionsException() {
         Response forex = mock(Response.class);

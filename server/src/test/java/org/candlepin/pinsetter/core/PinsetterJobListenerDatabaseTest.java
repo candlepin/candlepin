@@ -14,16 +14,16 @@
  */
 package org.candlepin.pinsetter.core;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.quartz.JobKey.jobKey;
+import static org.quartz.JobKey.*;
 
 import org.candlepin.TestingModules;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.TestPrincipalProvider;
-import org.candlepin.junit.CandlepinLiquibaseResource;
+import org.candlepin.junit.LiquibaseExtension;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
@@ -32,10 +32,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -50,17 +49,13 @@ import javax.inject.Inject;
  * test the PinsetterJobListener for database type failures not seen during
  * mock testing.
  */
+@ExtendWith(LiquibaseExtension.class)
 public class PinsetterJobListenerDatabaseTest {
     @Inject private PinsetterJobListener listener;
     @Inject private JobCurator curator;
     private Configuration config;
 
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @ClassRule
-    @Rule
-    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
-
-    @Before
+    @BeforeEach
     public void init() {
         config = mock(Configuration.class);
         Injector injector = Guice.createInjector(

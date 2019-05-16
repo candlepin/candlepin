@@ -14,7 +14,9 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import com.google.inject.persist.UnitOfWork;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
@@ -22,6 +24,9 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+
+import com.google.inject.persist.UnitOfWork;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -29,23 +34,12 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import java.sql.SQLException;
+
 import javax.persistence.LockTimeoutException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import javax.persistence.PessimisticLockException;
-import java.sql.SQLException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * RefreshPoolsJobTest

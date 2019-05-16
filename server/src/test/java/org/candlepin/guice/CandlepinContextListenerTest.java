@@ -14,9 +14,7 @@
  */
 package org.candlepin.guice;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingModules;
@@ -29,7 +27,7 @@ import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.junit.CandlepinLiquibaseResource;
+import org.candlepin.junit.LiquibaseExtension;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 import com.google.inject.AbstractModule;
@@ -40,10 +38,9 @@ import com.google.inject.Stage;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -59,6 +56,7 @@ import javax.servlet.ServletContextEvent;
 /**
  * CandlepinContextListenerTest
  */
+@ExtendWith(LiquibaseExtension.class)
 public class CandlepinContextListenerTest {
     private Configuration config;
     private CandlepinContextListener listener;
@@ -72,12 +70,7 @@ public class CandlepinContextListenerTest {
     private VerifyConfigRead configRead;
     private QpidQmf qmf;
 
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @ClassRule
-    @Rule
-    public static CandlepinLiquibaseResource liquibase = new CandlepinLiquibaseResource();
-
-    @Before
+    @BeforeEach
     public void init() {
         config = mock(Configuration.class);
 
@@ -142,7 +135,7 @@ public class CandlepinContextListenerTest {
         testSet.add("cores");
         testSet.add("ram");
 
-        when(config.getSet(eq(ConfigProperties.HIDDEN_CAPABILITIES), any(Set.class))).thenReturn(testSet);
+        when(config.getSet(eq(ConfigProperties.HIDDEN_CAPABILITIES), isNull())).thenReturn(testSet);
         prepareForInitialization();
         listener.contextInitialized(evt);
 
@@ -199,7 +192,7 @@ public class CandlepinContextListenerTest {
         verify(buspublisher).close();
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void tharSheBlows() {
         listener = new CandlepinContextListener() {
             protected List<Module> getModules(ServletContext context) {
@@ -213,7 +206,7 @@ public class CandlepinContextListenerTest {
             }
         };
         prepareForInitialization();
-        listener.contextInitialized(evt);
+        assertThrows(RuntimeException.class, () -> listener.contextInitialized(evt));
     }
 
     @Test

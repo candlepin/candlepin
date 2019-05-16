@@ -14,20 +14,21 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.candlepin.sync.file.ManifestFileType;
+import org.candlepin.test.DatabaseTestFixture;
+
+import com.google.inject.Inject;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Calendar;
-
-import org.candlepin.sync.file.ManifestFileType;
-import org.candlepin.test.DatabaseTestFixture;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.google.inject.Inject;
 
 public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
 
@@ -35,7 +36,7 @@ public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
     private File tempFile;
     private ManifestFileRecord record;
 
-    @Before
+    @BeforeEach
     public void setupTest() throws Exception {
         Path temp = Files.createTempFile("test-manifest", ".zip");
         tempFile = temp.toFile();
@@ -43,7 +44,7 @@ public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
             "principalId", "ownerId");
     }
 
-    @After
+    @AfterEach
     public void tearDownTest() {
         tempFile.delete();
     }

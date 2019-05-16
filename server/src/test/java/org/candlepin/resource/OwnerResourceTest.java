@@ -14,10 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventFactory;
@@ -86,16 +83,13 @@ import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 
-import org.hamcrest.core.IsEqual;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
@@ -145,11 +139,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private List<String> subscriptionIds;
     private List<String> contracts;
 
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @Rule
-    public ExpectedException ex = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setUp() {
         owner = ownerCurator.create(new Owner(OWNER_NAME));
         owners = new ArrayList<>();
@@ -288,7 +278,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         poolManager.getRefresher(subAdapter, ownerAdapter).add(owner).run();
-        assertNull("Pool not having subscription should have been deleted", poolCurator.get(poolId));
+        assertNull(poolCurator.get(poolId));
     }
 
     @Test
@@ -376,8 +366,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         poolManager.getRefresher(subAdapter, ownerAdapter).add(owner).run();
 
-        assertNull("Original Master Pool should be gone", poolCurator.get(masterId));
-        assertNotNull("Bonus Pool should be the same", poolCurator.get(bonusId));
+        assertNull(poolCurator.get(masterId), "Original Master Pool should be gone");
+        assertNotNull(poolCurator.get(bonusId), "Bonus Pool should be the same");
         // master pool should have been recreated
         pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
@@ -436,8 +426,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         poolManager.getRefresher(subAdapter, ownerAdapter).add(owner).run();
 
-        assertNull("Original bonus pool should be gone", poolCurator.get(bonusId));
-        assertNotNull("Master pool should be the same", poolCurator.get(masterId));
+        assertNull(poolCurator.get(bonusId), "Original bonus pool should be gone");
+        assertNotNull(poolCurator.get(masterId), "Master pool should be the same");
         // master pool should have been recreated
         pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
@@ -484,14 +474,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void testConsumerRoleCannotGetOwner() {
         Consumer c = createConsumer(owner);
         setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
-        ownerResource.getOwner(owner.getKey());
+        assertThrows(ForbiddenException.class, () -> ownerResource.getOwner(owner.getKey()));
     }
 
     @Test
@@ -630,7 +620,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(model.getQuantity(), dto.getQuantity());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void ownerAdminCannotAccessAnotherOwnersPools() {
         Owner evilOwner = new Owner("evilowner");
         ownerCurator.create(evilOwner);
@@ -645,24 +635,28 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         // Filtering should just cause this to return no results:
-        ownerResource.listPools(owner.getKey(), null, null, null, null, true, null,
-            null, new ArrayList<>(), false, false, null, null, principal, null);
+        assertThrows(NotFoundException.class, () ->
+            ownerResource.listPools(owner.getKey(), null, null, null, null, true, null,
+            null, new ArrayList<>(), false, false, null, null, principal, null)
+        );
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void testOwnerAdminCannotListAllOwners() {
         setupPrincipal(owner, Access.ALL);
 
         securityInterceptor.enable();
 
-        ownerResource.list(null);
+        assertThrows(ForbiddenException.class, () -> ownerResource.list(null));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void testOwnerAdminCannotDelete() {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
-        ownerResource.deleteOwner(owner.getKey(), true, false);
+        assertThrows(ForbiddenException.class, () ->
+            ownerResource.deleteOwner(owner.getKey(), true, false)
+        );
     }
 
     @Test
@@ -677,7 +671,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void ownerCannotAccessAnotherOwnersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
@@ -686,37 +680,29 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.getOwnerAtomFeed(owner.getKey());
+        assertThrows(NotFoundException.class, () -> ownerResource.getOwnerAtomFeed(owner.getKey()));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void testConsumerRoleCannotAccessOwnerAtomFeed() {
         Consumer c = createConsumer(owner);
         setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
 
-        ownerResource.getOwnerAtomFeed(owner.getKey());
+        assertThrows(ForbiddenException.class, () -> ownerResource.getOwnerAtomFeed(owner.getKey()));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void consumerCannotListAllConsumersInOwner() {
         Consumer c = createConsumer(owner);
         setupPrincipal(new ConsumerPrincipal(c, owner));
 
         securityInterceptor.enable();
-
-        ownerResource.listConsumers(
-            owner.getKey(),
-            null,
-            null,
-            new ArrayList<>(),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null);
+        assertThrows(ForbiddenException.class, () ->
+            ownerResource.listConsumers(owner.getKey(), null, null, new ArrayList<>(), null, null, null,
+            null, null, null)
+        );
     }
 
     @Test
@@ -771,22 +757,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
      */
     @Test
     public void failWhenListingByBadConsumerType() {
-        ex.expect(BadRequestException.class);
-        ex.expectMessage(IsEqual.<String>equalTo("No such unit type(s): unknown"));
-
         Set<String> types = new HashSet<>();
         types.add("unknown");
-        ownerResource.listConsumers(
-            owner.getKey(),
-            null,
-            types,
-            new ArrayList<>(),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null);
+
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+            ownerResource.listConsumers(owner.getKey(), null, types, new ArrayList<>(), null,
+            null, null, null, null, null)
+        );
+        assertEquals("No such unit type(s): unknown", ex.getMessage());
     }
 
     @Test
@@ -811,37 +789,38 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     //copied from consumerCannotListAllConsumersInOwner
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void consumerCannotCountAllConsumersInOwner() {
         Consumer c = createConsumer(owner);
         setupPrincipal(new ConsumerPrincipal(c, owner));
         securityInterceptor.enable();
 
-        ownerResource.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
+        assertThrows(ForbiddenException.class, () ->
+            ownerResource.countConsumers(owner.getKey(), typeLabels, skus, subscriptionIds, contracts)
+        );
     }
 
     //copied from failWhenListingByBadConsumerType
     @Test
     public void failWhenCountingByBadConsumerType() {
-        ex.expect(BadRequestException.class);
-        ex.expectMessage(IsEqual.<String>equalTo("No such unit type(s): unknown"));
-
         Set<String> types = new HashSet<>();
         types.add("unknown");
 
-        ownerResource.countConsumers(owner.getKey(), types,
-            skus, subscriptionIds, contracts);
+        BadRequestException ex = assertThrows(BadRequestException.class, () ->
+            ownerResource.countConsumers(owner.getKey(), types, skus, subscriptionIds, contracts)
+        );
+        assertEquals("No such unit type(s): unknown", ex.getMessage());
     }
 
     @Test
     public void countShouldThrowExceptionIfUnknownOwner() throws Exception {
         String key = "unknown";
-        ex.expect(NotFoundException.class);
-        ex.expectMessage(i18n.tr("Owner with key \"{0}\" was not found", key));
         createConsumer(owner);
 
-        ownerResource.countConsumers(key, typeLabels, skus, subscriptionIds, contracts);
+        NotFoundException ex = assertThrows(NotFoundException.class, () ->
+            ownerResource.countConsumers(key, typeLabels, skus, subscriptionIds, contracts)
+        );
+        assertEquals(i18n.tr("Owner with key \"{0}\" was not found", key), ex.getMessage());
     }
 
     @Test
@@ -863,7 +842,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(returnedPool.getCalculatedAttributes());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testConsumerListPoolsCannotAccessOtherConsumer() {
         Product p = this.createProduct(owner);
         Pool pool1 = TestUtil.createPool(owner, p);
@@ -876,9 +855,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
-        ownerResource.listPools(owner.getKey(), c.getUuid(), null, p.getUuid(),  null, true, null, null,
-            new ArrayList<>(), false, false, null, null,
-            setupPrincipal(owner2, Access.NONE), null);
+        assertThrows(NotFoundException.class, () -> ownerResource.listPools(
+            owner.getKey(), c.getUuid(), null, p.getUuid(),  null, true, null, null,
+            new ArrayList<>(), false, false, null, null, setupPrincipal(owner2, Access.NONE), null)
+        );
     }
 
     @Test
@@ -940,7 +920,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(2, keys.size());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testActivationKeyRequiresName() {
         OwnerCurator oc = mock(OwnerCurator.class);
         ProductCurator pc = mock(ProductCurator.class);
@@ -952,10 +932,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, this.modelTranslator);
         when(oc.getByKey(anyString())).thenReturn(o);
         ActivationKeyDTO key = new ActivationKeyDTO();
-        key = ownerres.createActivationKey(owner.getKey(), key);
+        assertThrows(BadRequestException.class, () ->
+            ownerres.createActivationKey(owner.getKey(), key)
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testActivationKeyTooLongRelease() {
         OwnerCurator oc = mock(OwnerCurator.class);
         ProductCurator pc = mock(ProductCurator.class);
@@ -969,7 +951,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ActivationKeyDTO key = new ActivationKeyDTO();
         key.setReleaseVersion(TestUtil.getStringOfSize(256));
 
-        key = ownerres.createActivationKey(owner.getKey(), key);
+        assertThrows(BadRequestException.class, () ->
+            ownerres.createActivationKey(owner.getKey(), key)
+        );
     }
 
     private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2) throws ParseException {
@@ -1065,7 +1049,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(pout.getId(), owner.getParentOwner().getId());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void ownerWithInvalidParentIdCannotBeCreated() {
         OwnerDTO child = new OwnerDTO();
         child.setKey("child");
@@ -1077,11 +1061,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         child.setParentOwner(parent);
 
-        this.ownerResource.createOwner(child);
-        throw new RuntimeException("OwnerResource should have thrown NotFoundException");
+        assertThrows(NotFoundException.class, () -> this.ownerResource.createOwner(child));
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void ownerWithInvalidParentKeyCannotBeCreated() {
         OwnerDTO child = new OwnerDTO();
         child.setKey("child");
@@ -1093,11 +1076,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         child.setParentOwner(parent);
 
-        this.ownerResource.createOwner(child);
-        throw new RuntimeException("OwnerResource should have thrown NotFoundException");
+        assertThrows(NotFoundException.class, () -> this.ownerResource.createOwner(child));
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void ownerWithInvalidParentWhoseIdAndKeyIsNullCannotBeCreated() {
         OwnerDTO child = new OwnerDTO();
         child.setKey("child");
@@ -1108,8 +1090,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         child.setParentOwner(parent);
 
-        this.ownerResource.createOwner(child);
-        throw new RuntimeException("OwnerResource should have thrown NotFoundException");
+        assertThrows(NotFoundException.class, () -> this.ownerResource.createOwner(child));
     }
 
     @Test
@@ -1121,17 +1102,20 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerResource.deleteOwner(owner.getKey(), false, false);
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void undoImportforOwnerWithNoImports() {
         OwnerDTO dto = new OwnerDTO();
         dto.setKey("owner-with-no-imports");
         dto.setDisplayName("foo");
 
         dto = ownerResource.createOwner(dto);
-        ownerResource.undoImports(dto.getKey(), new UserPrincipal("JarjarBinks", null, true));
+        OwnerDTO finalDto = dto;
+        assertThrows(NotFoundException.class, () ->
+            ownerResource.undoImports(finalDto.getKey(), new UserPrincipal("JarjarBinks", null, true))
+        );
     }
 
-    @Test(expected = ConflictException.class)
+    @Test
     public void testConflictOnDelete() {
         Owner o = mock(Owner.class);
         OwnerCurator oc = mock(OwnerCurator.class);
@@ -1148,10 +1132,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ConstraintViolationException ce = new ConstraintViolationException(null, null, null);
         PersistenceException pe = new PersistenceException(ce);
         Mockito.doThrow(pe).when(ownerManager).cleanupAndDelete(eq(o), eq(true));
-        or.deleteOwner("testOwner", true, true);
+        assertThrows(ConflictException.class, () -> or.deleteOwner("testOwner", true, true));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testActivationKeyNameUnique() {
         ActivationKeyDTO ak = mock(ActivationKeyDTO.class);
         ActivationKey akOld = mock(ActivationKey.class);
@@ -1170,7 +1154,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, null, contentOverrideValidator, null, null, null, null, null,
             null, this.modelTranslator);
 
-        ownerres.createActivationKey("testOwner", ak);
+        assertThrows(BadRequestException.class, () -> ownerres.createActivationKey("testOwner", ak));
     }
 
     @Test
@@ -1446,11 +1430,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull(owner.getLogLevel());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testSetBadLogLevel() {
         Owner owner = new Owner("Test Owner", "test");
         ownerCurator.create(owner);
-        ownerResource.setLogLevel(owner.getKey(), "THISLEVELISBAD");
+        assertThrows(BadRequestException.class, () ->
+            ownerResource.setLogLevel(owner.getKey(), "THISLEVELISBAD")
+        );
     }
 
     private KeyValueParameter createKeyValueParam(String key, String val) throws Exception {
@@ -1563,7 +1549,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, pools.size());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void cantUpdateBonusPool() {
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
@@ -1584,7 +1570,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(bonusPool);
 
         poolDto = this.modelTranslator.translate(bonusPool, PoolDTO.class);
-        ownerResource.updatePool(owner.getKey(), poolDto);
+        PoolDTO finalPoolDto = poolDto;
+        assertThrows(BadRequestException.class, () ->
+            ownerResource.updatePool(owner.getKey(), finalPoolDto)
+        );
     }
 
     @Test
@@ -1633,7 +1622,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(e.getId(), result.get(0).getId());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void getEntitlementsForNonExistantOwner() {
         PageRequest req = new PageRequest();
         req.setPage(1);
@@ -1646,7 +1635,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, null, null, null, null, null, null, null, null,
             null, this.modelTranslator);
 
-        ownerres.ownerEntitlements("Taylor Swift", null, null, null, req);
+        assertThrows(NotFoundException.class, () ->
+            ownerres.ownerEntitlements("Taylor Swift", null, null, null, req)
+        );
     }
 
     @Test

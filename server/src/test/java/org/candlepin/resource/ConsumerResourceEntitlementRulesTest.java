@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -28,15 +30,14 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 
@@ -49,7 +50,6 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     @Inject private PoolCurator poolCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private DateSourceForTesting dateSource;
     @Inject private ConsumerResource consumerResource;
 
     private ConsumerType standardSystemType;
@@ -59,9 +59,9 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
 
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
+        standardSystemType = consumerTypeCurator.create(new ConsumerType("system"));
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerCurator.create(owner);
 
@@ -71,11 +71,11 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         product = this.createProduct(owner);
 
         pool = createPool(owner, product, 10L,
-            TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+            TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2029, 12, 31));
         poolCurator.create(pool);
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void testMaxMembership() {
         // 10 entitlements available, lets try to entitle 11 consumers.
         for (int i = 0; i < pool.getQuantity(); i++) {
@@ -88,13 +88,17 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         // Now for the 11th:
         Consumer c = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(c);
-        consumerResource.bind(c.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
+        assertThrows(ForbiddenException.class, () ->
+            consumerResource.bind(c.getUuid(), pool.getId(), null, 1, null, null, false, null, null)
+        );
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
-        consumerResource.bind(consumer.getUuid(), pool.getId(), null, null, null, null, false, null, null);
+        assertThrows(ForbiddenException.class, () -> consumerResource.bind(consumer.getUuid(), pool.getId(),
+            null, null, null, null, false, null, null)
+        );
     }
 
     @Override

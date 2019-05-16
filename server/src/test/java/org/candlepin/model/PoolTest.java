@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import static org.junit.Assert.*;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -28,11 +27,12 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -82,7 +82,7 @@ public class PoolTest extends DatabaseTestFixture {
     private Consumer consumer;
     private Subscription subscription;
 
-    @Before
+    @BeforeEach
     public void createObjects() {
         this.mapper = new ObjectMapper();
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();

@@ -14,9 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
@@ -31,11 +30,13 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,7 +52,8 @@ import javax.ws.rs.core.UriInfo;
 /**
  * ConsumerContentOverrideResourceTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @SuppressWarnings("checkstyle:indentation")
 public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
@@ -64,7 +66,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     private ContentOverrideValidator validator;
     private ConsumerContentOverrideResource resource;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.owner = this.createOwner();
         this.consumer = this.createConsumer(owner);
@@ -304,7 +306,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         this.compareOverrideDTOs(overrides, actual);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithNullLabel() {
         ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
@@ -316,12 +318,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            this.resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithEmptyLabel() {
         ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
@@ -333,12 +335,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            this.resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithLongLabel() {
         ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
@@ -350,12 +352,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            this.resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithNullName() {
         ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
@@ -367,12 +369,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            this.resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithEmptyName() {
         ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
@@ -384,12 +386,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            this.resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithLongName() {
         ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
@@ -401,12 +403,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            this.resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithNullValue() {
         ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
@@ -418,12 +420,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            this.resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithEmptyValue() {
         ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
@@ -435,12 +437,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            this.resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testAddOverrideFailsValidationWithLongValue() {
         ConsumerDTO kdto = this.modelTranslator.translate(this.consumer, ConsumerDTO.class);
 
@@ -452,8 +454,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        assertThrows(BadRequestException.class, () ->
+            this.resource.addContentOverrides(context, principal, overrides).list()
+        );
     }
 }

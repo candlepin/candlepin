@@ -14,11 +14,8 @@
  */
 package org.candlepin.resource;
 
-
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
@@ -31,15 +28,14 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -60,7 +56,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
     private OwnerProductResource ownerProductResource;
 
-    @Before
+    @BeforeEach
     public void setup() {
         this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
             this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
@@ -77,17 +73,6 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         dto.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
 
         return dto;
-    }
-
-    private Product buildTestProduct() {
-        Product entity = TestUtil.createProduct("test_product");
-
-        entity.setAttribute(Product.Attributes.VERSION, "1.0");
-        entity.setAttribute(Product.Attributes.VARIANT, "server");
-        entity.setAttribute(Product.Attributes.TYPE, "SVC");
-        entity.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
-
-        return entity;
     }
 
     @Test
@@ -142,7 +127,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         assertEquals("bute", result.getAttributeValue("attri"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testUpdateProductIdMismatch() {
         Owner owner = this.createOwner("Update-Product-Owner");
         ProductDTO pdto = this.buildTestProductDTO();
@@ -150,10 +135,12 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductDTO product = this.ownerProductResource.createProduct(owner.getKey(), pdto);
         ProductDTO update = this.buildTestProductDTO();
         update.setId("TaylorSwift");
-        ProductDTO result = this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update);
+        assertThrows(BadRequestException.class, () ->
+            this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update)
+        );
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void testDeleteProductWithSubscriptions() {
         OwnerCurator oc = mock(OwnerCurator.class);
         OwnerProductCurator opc = mock(OwnerProductCurator.class);
@@ -174,10 +161,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         subs.add(s);
         when(pc.productHasSubscriptions(eq(o), eq(p))).thenReturn(true);
 
-        pr.deleteProduct("owner", "10");
+        assertThrows(BadRequestException.class, () -> pr.deleteProduct("owner", "10"));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void testUpdateLockedProductFails() {
         Owner owner = this.createOwner("test_owner");
         Product product = this.createProduct("test_product", "test_product", owner);
@@ -187,21 +174,17 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, pdto.getId()));
 
-        try {
-            this.ownerProductResource.updateProduct(owner.getKey(), pdto.getId(), pdto);
-        }
-        catch (ForbiddenException e) {
-            Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
-            ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerProductResource.updateProduct(owner.getKey(), pdto.getId(), pdto)
+        );
+        Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
+        ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
-            assertNotNull(entity);
-            assertNotEquals(expected, pdto);
-
-            throw e;
-        }
+        assertNotNull(entity);
+        assertNotEquals(expected, pdto);
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void testDeleteLockedProductFails() {
         Owner owner = this.createOwner("test_owner");
         Product product = this.createProduct("test_product", "test_product", owner);
@@ -210,14 +193,10 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
 
-        try {
-            this.ownerProductResource.deleteProduct(owner.getKey(), product.getId());
-        }
-        catch (ForbiddenException e) {
-            assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
-
-            throw e;
-        }
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerProductResource.deleteProduct(owner.getKey(), product.getId())
+        );
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
     }
 
     @Test
@@ -253,13 +232,15 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         assertEquals(cert1, expected);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void requiresNumericIdForProductCertificates() {
         Owner owner = this.createOwner("Example-Corporation");
 
         Product entity = this.createProduct("MCT123", "AwesomeOS", owner);
         securityInterceptor.enable();
 
-        ownerProductResource.getProductCertificate(owner.getKey(), entity.getId());
+        assertThrows(BadRequestException.class, () ->
+            ownerProductResource.getProductCertificate(owner.getKey(), entity.getId())
+        );
     }
 }

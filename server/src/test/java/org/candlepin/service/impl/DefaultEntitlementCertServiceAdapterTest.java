@@ -14,15 +14,9 @@
  */
 package org.candlepin.service.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.argThat;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.name.Named;
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.CertificateSerial;
@@ -62,22 +56,23 @@ import org.candlepin.util.X509V3ExtensionUtil.HuffNode;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.name.Named;
 
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -85,9 +80,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.CertificateExpiredException;
@@ -111,12 +104,9 @@ import javax.inject.Inject;
  * DefaultEntitlementCertServiceAdapter
  */
 @SuppressWarnings("unchecked")
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class DefaultEntitlementCertServiceAdapterTest {
-
-    @SuppressWarnings("checkstyle:visibilitymodifier")
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     private static final String CONTENT_LABEL = "label";
     private static final String CONTENT_ID = "1234";
@@ -161,11 +151,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Product product;
     private Product largeContentProduct;
     private Subscription subscription;
-    private Subscription largeContentSubscription;
     private Entitlement entitlement;
     private Entitlement largeContentEntitlement;
     private Pool pool;
-    private Pool largeContentPool;
     private Content content;
     private Content kickstartContent;
     private Content fileContent;
@@ -191,26 +179,19 @@ public class DefaultEntitlementCertServiceAdapterTest {
         JSSProviderLoader.addProvider();
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void keyPair() throws Exception {
         ClassLoader cl = DefaultEntitlementCertServiceAdapterTest.class.getClassLoader();
         InputStream keyStream = cl.getResourceAsStream("test.key");
 
-        PEMParser reader = null;
         keyPair = null;
-        try {
-            reader = new PEMParser(new InputStreamReader(keyStream));
-            keyPair = new JcaPEMKeyConverter()
-                .getKeyPair((PEMKeyPair) reader.readObject());
-        }
-        finally {
-            if (reader != null) {
-                reader.close();
-            }
+        assert keyStream != null;
+        try (PEMParser reader = new PEMParser(new InputStreamReader(keyStream))) {
+            keyPair = new JcaPEMKeyConverter().getKeyPair((PEMKeyPair) reader.readObject());
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
@@ -287,7 +268,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         subscription.setId("1");
         subscription.setQuantity(1L);
 
-        largeContentSubscription = TestUtil.createSubscription(null, largeContentProduct, new HashSet<>());
+        Subscription largeContentSubscription = TestUtil
+            .createSubscription(null, largeContentProduct, new HashSet<>());
         largeContentSubscription.setId("2");
         largeContentSubscription.setQuantity(1L);
 
@@ -300,7 +282,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         pool.setProduct(product);
         pool.setStartDate(subscription.getStartDate());
         pool.setEndDate(subscription.getEndDate());
-        largeContentPool = new Pool();
+        Pool largeContentPool = new Pool();
         largeContentPool.setProduct(largeContentProduct);
 
         ConsumerType type = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
@@ -338,7 +320,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Content createContent(String name, String id, String label, String type, String vendor,
         String url, String gpgUrl, String arches) {
 
-        Owner owner = TestUtil.createOwner("Example-Corporation");
+        TestUtil.createOwner("Example-Corporation");
         Content content = TestUtil.createContent(id, name);
 
         content.setUuid(id + "_uuid");
@@ -361,29 +343,26 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
             when(this.mockEnvironmentCurator.get(eq(environment.getId()))).thenReturn(environment);
 
-            doAnswer(new Answer<Environment>() {
-                @Override
-                public Environment answer(InvocationOnMock invocation) throws Throwable {
-                    Object[] args = invocation.getArguments();
-                    Consumer consumer = (Consumer) args[0];
-                    EnvironmentCurator curator = (EnvironmentCurator) invocation.getMock();
-                    Environment environment = null;
+            doAnswer((Answer<Environment>) invocation -> {
+                Object[] args = invocation.getArguments();
+                Consumer consumer = (Consumer) args[0];
+                EnvironmentCurator curator = (EnvironmentCurator) invocation.getMock();
+                Environment environment1 = null;
 
-                    if (consumer == null) {
-                        throw new IllegalArgumentException("consumer is null");
-                    }
-
-                    if (consumer.getEnvironmentId() != null) {
-                        environment = curator.get(consumer.getEnvironmentId());
-
-                        if (environment == null) {
-                            throw new IllegalStateException("No such environment: " +
-                                consumer.getEnvironmentId());
-                        }
-                    }
-
-                    return environment;
+                if (consumer == null) {
+                    throw new IllegalArgumentException("consumer is null");
                 }
+
+                if (consumer.getEnvironmentId() != null) {
+                    environment1 = curator.get(consumer.getEnvironmentId());
+
+                    if (environment1 == null) {
+                        throw new IllegalStateException("No such environment: " +
+                            consumer.getEnvironmentId());
+                    }
+                }
+
+                return environment1;
             }).when(this.mockEnvironmentCurator).getConsumerEnvironment(any(Consumer.class));
         }
 
@@ -414,9 +393,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Date oneHourBeforeSevenDays = new Date(now.getTime() + 167 * 60 * 60 * 1000);
 
         result.checkValidity(oneHourBeforeSevenDays);
-
-        thrown.expect(CertificateExpiredException.class);
-        result.checkValidity(oneHourAfterSevenDays);
+        assertThrows(CertificateExpiredException.class, () -> result.checkValidity(oneHourAfterSevenDays));
     }
 
     @Test
@@ -440,7 +417,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
         // cert does not capture the milliseconds. truncating.
-        assertTrue(result.getNotBefore().getTime() == pool.getStartDate().getTime() / 1000 * 1000);
+        assertEquals(result.getNotBefore().getTime(), pool.getStartDate().getTime() / 1000 * 1000);
         // pool start date is less than an hour ago, so an hour gets used
         cal.add(Calendar.MINUTE, 90);
         pool.setStartDate(cal.getTime());
@@ -450,8 +427,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue(result.getNotBefore().getTime() < pool.getStartDate().getTime() / 1000 * 1000);
     }
 
-    @Test(expected = CertificateSizeException.class)
-    public void tooManyContentSetsAcrossMultipleProducts() throws Exception {
+    @Test
+    public void tooManyContentSetsAcrossMultipleProducts() {
         Set<Product> providedProducts = new HashSet<>();
 
         Product pp1 = new Product("12346", "Provided 1", "variant", "version", ARCH_LABEL, "SVC");
@@ -470,10 +447,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // TODO: Is this even needed anymore?
         // subscription.setProvidedProducts(providedProducts);
-
-        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
-            product, providedProducts, getProductModels(product, providedProducts, "prefix", entitlement),
-            new BigInteger("1234"), keyPair, true);
+        List<org.candlepin.model.dto.Product> productModels = getProductModels(product, providedProducts,
+            "prefix", entitlement);
+        assertThrows(CertificateSizeException.class, () ->  certServiceAdapter.createX509Certificate(consumer,
+            owner, pool, entitlement, product, providedProducts, productModels,
+            new BigInteger("1234"), keyPair, true)
+        );
     }
 
     private Set<Content> generateContent(int numberToGenerate, String prefix) {
@@ -491,18 +470,18 @@ public class DefaultEntitlementCertServiceAdapterTest {
         return productContent;
     }
 
-    @Test(expected = CertificateSizeException.class)
-    public void tooManyContentSets() throws Exception {
+    @Test
+    public void tooManyContentSets() {
         Set<Content> productContent = generateContent(X509ExtensionUtil.V1_CONTENT_LIMIT + 1, "TestContent");
 
         product.setProductContent(null);
         for (Content content : productContent) {
             product.addContent(content, false);
         }
-
-        certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
-            product, new HashSet<>(), getProductModels(product, new HashSet<>(),
-            "prefix", entitlement), new BigInteger("1234"), keyPair, true);
+        assertThrows(CertificateSizeException.class, () -> certServiceAdapter.createX509Certificate(consumer,
+            owner, pool, entitlement, product, new HashSet<>(), getProductModels(product, new HashSet<>(),
+            "prefix", entitlement), new BigInteger("1234"), keyPair, true)
+        );
     }
 
     @Test
@@ -553,7 +532,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
             contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
-        assertTrue(encodedContent.containsKey(REQUIRED_TAGS.toString()));
+        assertTrue(encodedContent.containsKey(REQUIRED_TAGS));
 
         // Nullify this, and make sure it's not there.
         content.setRequiredTags(null);
@@ -561,7 +540,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product.getProductContent(), "", new HashMap<>(), entitlement.getConsumer(), product);
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
-        assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
+        assertFalse(encodedContent.containsKey(REQUIRED_TAGS));
 
         // Empty string, and make sure it's not there.
         content.setRequiredTags("");
@@ -569,7 +548,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product.getProductContent(), "", new HashMap<>(), entitlement.getConsumer(), product);
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
-        assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
+        assertFalse(encodedContent.containsKey(REQUIRED_TAGS));
     }
 
     @Test
@@ -583,7 +562,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl("/somePrefix" + CONTENT_URL, CONTENT_ID)),
             any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
-            any(BigInteger.class), any(String.class));
+            any(BigInteger.class), nullable(String.class));
     }
 
     @Test
@@ -604,7 +583,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class), argThat(
             new ListContainsContentUrl("/someorg/Awesome+Environment+%231" + CONTENT_URL, CONTENT_ID)),
             any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
-            any(BigInteger.class), any(String.class));
+            any(BigInteger.class), nullable(String.class));
     }
 
     @Test
@@ -625,7 +604,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class), argThat(
             new ListContainsContentUrl("/some+org/Awesome+Environment+%231" + CONTENT_URL, CONTENT_ID)),
             any(Set.class), any(Date.class), any(Date.class),
-            any(KeyPair.class), any(BigInteger.class), any(String.class));
+            any(KeyPair.class), any(BigInteger.class), nullable(String.class));
     }
 
     @Test
@@ -640,7 +619,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl("/someorg/$env" + CONTENT_URL, CONTENT_ID)),
             any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
-            any(BigInteger.class), any(String.class));
+            any(BigInteger.class), nullable(String.class));
     }
 
     @Test
@@ -655,7 +634,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
             any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
-            any(BigInteger.class), any(String.class));
+            any(BigInteger.class), nullable(String.class));
     }
 
     @Test
@@ -669,7 +648,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
             any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
-            any(BigInteger.class), any(String.class));
+            any(BigInteger.class), nullable(String.class));
     }
 
     @Test
@@ -682,9 +661,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new BigInteger("1234"), keyPair, true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
-            any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
-            any(BigInteger.class), any(String.class));
+            argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)), any(Set.class), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class), nullable(String.class));
     }
 
     @Test
@@ -703,9 +681,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             "differentlabel", CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
             CONTENT_GPG_URL, ARCH_LABEL);
         modContent.setLabel("mod content");
-        Set<String> modifiedProductIds = new HashSet<>(
-            Arrays.asList(new String[] { "product1", "product2" })
-        );
+        Set<String> modifiedProductIds = new HashSet<>(Arrays.asList("product1", "product2"));
         modContent.setModifiedProductIds(modifiedProductIds);
 
         modProduct.addContent(normalContent, false);
@@ -751,7 +727,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentExtensions()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
     }
 
     @Test
@@ -766,7 +742,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsEntitlementExtensions()), any(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
     }
 
     @Test
@@ -779,7 +755,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsProvidesManagement("0")), any(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
     }
 
     @Test
@@ -794,7 +770,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsProvidesManagement("1")), any(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
     }
 
     @Test
@@ -809,7 +785,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsStackingId("3456")), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
     }
     @Test
     public void virtOnlyByAttribute() throws Exception {
@@ -824,7 +800,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsVirtOnlyKey("1")), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
     }
 
     @Test
@@ -839,7 +815,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsOrderNumberKey("this_order")), any(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
     }
 
     @Test
@@ -856,12 +832,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsSupportLevel("Premium")), any(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsSupportType("Level 3")), any(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
     }
 
     protected DefaultEntitlementCertServiceAdapter initCertServiceAdapter() {
@@ -899,12 +875,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListDoesNotContainSupportLevel()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListDoesNotContainSupportType()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            any(String.class));
+            nullable(String.class));
     }
 
     @Test
@@ -918,8 +894,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
         verify(mockV3extensionUtil).getExtensions();
-        verify(mockV3extensionUtil).getByteExtensions(eq(product),
-            any(List.class), any(String.class), any(Map.class));
+        verify(mockV3extensionUtil).getByteExtensions(eq(product), any(List.class),
+            nullable(String.class), any(Map.class));
         verifyZeroInteractions(mockExtensionUtil);
     }
 
@@ -944,8 +920,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             getProductModels(product, new HashSet<>(), "prefix", entitlement),
             new BigInteger("1234"), keyPair, true);
         verify(mockV3extensionUtil).getExtensions();
-        verify(mockV3extensionUtil).getByteExtensions(eq(product), any(List.class),
-            any(String.class), any(Map.class));
+        verify(mockV3extensionUtil).getByteExtensions(eq(product), any(List.class), nullable(String.class),
+            any(Map.class));
         verifyZeroInteractions(mockExtensionUtil);
     }
 
@@ -990,7 +966,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new BigInteger("1234"), keyPair, true);
         verify(mockV3extensionUtil).getExtensions();
         verify(mockV3extensionUtil).getByteExtensions(eq(product), any(List.class),
-            any(String.class), any(Map.class));
+            nullable(String.class), any(Map.class));
         verifyZeroInteractions(mockExtensionUtil);
     }
 
@@ -1018,8 +994,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product.getId() + "." + "5");
     }
 
-    private Boolean extMapProductBrandTypeMatches(Product product, Map<String,
-        String> extMap, String brandType) {
+    private Boolean extMapProductBrandTypeMatches(Product product, Map<String, String> extMap,
+        String brandType) {
         String brandTypeOid = "1.3.6.1.4.1.2312.9.1." +
             product.getId() + "." + "5";
         String extBrandType = extMap.get(brandTypeOid);
@@ -1028,8 +1004,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV1Extensions() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV1Extensions() {
         Set<Product> products = new HashSet<>();
 
         products.add(product);
@@ -1050,8 +1025,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsBrandedProduct() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV1ExtensionsBrandedProduct() {
         Set<Product> products = new HashSet<>();
 
         product.setAttribute(Product.Attributes.BRANDING_TYPE, "os");
@@ -1070,8 +1044,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsNoCompatibleArch() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV1ExtensionsNoCompatibleArch() {
         Set<Product> products = new HashSet<>();
 
         // product with no compatible content, but marked as 'ALL' arch
@@ -1104,8 +1077,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsKickstartContent() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV1ExtensionsKickstartContent() {
         Set<Product> products = new HashSet<>();
 
         // product with a kickstart content
@@ -1138,8 +1110,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsFileContent() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV1ExtensionsFileContent() {
         Set<Product> products = new HashSet<>();
 
         // product with a kickstart content
@@ -1173,8 +1144,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
 
     @Test
-    public void testPrepareV1ExtensionsFileUnknownContentType() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV1ExtensionsFileUnknownContentType() {
         Set<Product> products = new HashSet<>();
 
         // product with a kickstart content
@@ -1209,8 +1179,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV1ExtensionsKnownAndUnknownContentTypes() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV1ExtensionsKnownAndUnknownContentTypes() {
         Set<Product> products = new HashSet<>();
 
         // product with a kickstart content
@@ -1262,16 +1231,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private List<org.candlepin.model.dto.Product> getProductModels(Product sku, Set<Product> providedProducts,
         String prefix, Entitlement e) {
 
-        List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(
+        return v3extensionUtil.createProducts(
             sku, providedProducts, prefix, new HashMap<>(),
             e.getConsumer(), e.getPool());
-
-        return productModels;
     }
 
     @Test
-    public void testPrepareV3EntitlementData() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV3EntitlementData() throws IOException {
         Set<Product> products = new HashSet<>();
         products.add(product);
         consumer.setFact("system.certificate_version", "3.3");
@@ -1307,7 +1273,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
                 consumer, pool, entitlement.getQuantity());
-        String stringValue = "";
+        String stringValue;
         try {
             stringValue = processPayload(payload);
         }
@@ -1335,14 +1301,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertEquals(service.get("type"), "stype");
         Map<String, Object> order = (Map<String, Object>) data.get("order");
         assertEquals(order.get("number"), pool.getOrderNumber());
-        assertTrue(((Integer) order.get("quantity")).intValue() == subscription.getQuantity());
+        assertEquals(((Integer) order.get("quantity")).intValue(), (long) subscription.getQuantity());
         assertNotNull(order.get("start"));
         assertNotNull(order.get("end"));
 //        assertEquals(order.get("contract"), subscription.getContractNumber());
 //        assertEquals(order.get("account"), subscription.getAccountNumber());
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
-        List<Map<String, Object>> contents = null;
+        List<Map<String, Object>> contents;
         for (Map<String, Object> prod : prods) {
             assertEquals(prod.get("id"), product.getId());
             assertEquals(prod.get("name"), product.getName());
@@ -1408,8 +1374,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV3EntitlementDataNoConsumerArch() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV3EntitlementDataNoConsumerArch() throws IOException {
         Set<Product> products = new HashSet<>();
         products.add(product);
 
@@ -1424,7 +1389,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
                 consumer, pool, entitlement.getQuantity());
-        String stringValue = "";
+        String stringValue;
         try {
             stringValue = processPayload(payload);
         }
@@ -1434,7 +1399,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue , Map.class);
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
-        List<Map<String, Object>> contents = null;
+        List<Map<String, Object>> contents;
         for (Map<String, Object> prod : prods) {
             String arch = product.hasAttribute(Product.Attributes.ARCHITECTURE) ?
                 product.getAttributeValue(Product.Attributes.ARCHITECTURE) : "";
@@ -1459,8 +1424,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV3EntitlementDataNoContentArch() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV3EntitlementDataNoContentArch() throws IOException {
         Set<Product> products = new HashSet<>();
 
         // our content with no arch should inherit this arch
@@ -1485,7 +1449,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
                 consumer, pool, entitlement.getQuantity());
-        String stringValue = "";
+        String stringValue;
         try {
             stringValue = processPayload(payload);
         }
@@ -1497,7 +1461,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             Util.fromJson(stringValue , Map.class);
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
-        List<Map<String, Object>> contents = null;
+        List<Map<String, Object>> contents;
         for (Map<String, Object> prod : prods) {
 
             String arch = product.hasAttribute(Product.Attributes.ARCHITECTURE) ?
@@ -1522,8 +1486,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV3EntitlementDataNoCompatibleArch() throws IOException,
-        GeneralSecurityException {
+    public void testPrepareV3EntitlementDataNoCompatibleArch() throws IOException {
         Set<Product> products = new HashSet<>();
 
         // product with no compatible content, but marked as 'ALL' arch
@@ -1554,7 +1517,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
                 consumer, pool, entitlement.getQuantity());
-        String stringValue = "";
+        String stringValue;
         try {
             stringValue = processPayload(payload);
         }
@@ -1566,7 +1529,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             Util.fromJson(stringValue , Map.class);
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
-        List<Map<String, Object>> contents = null;
+        List<Map<String, Object>> contents;
         for (Map<String, Object> prod : prods) {
 
             String arch = wrongArchProduct.hasAttribute(Product.Attributes.ARCHITECTURE) ?
@@ -1608,7 +1571,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
                 consumer, pool, entitlement.getQuantity());
-        String stringValue = "";
+        String stringValue;
         try {
             stringValue = processPayload(payload);
         }
@@ -1657,7 +1620,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
                 consumer, pool, entitlement.getQuantity());
-        String stringValue = "";
+        String stringValue;
         try {
             stringValue = processPayload(payload);
         }
@@ -1677,6 +1640,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
 
+        when(mockedPKI.createX509Certificate(any(String.class), any(Set.class), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            nullable(String.class)))
+            .thenReturn(mock(X509Certificate.class));
         when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());
         when(mockedPKI.getPemEncoded(any(PrivateKey.class))).thenReturn("".getBytes());
 
@@ -1712,7 +1679,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
-        List<String> contentSetList = new ArrayList<>();
+        List<String> contentSetList;
         try {
             contentSetList = v3extensionUtil.hydrateContentPackage(
                 byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
@@ -1756,7 +1723,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
-        List<String> contentSetList = new ArrayList<>();
+        List<String> contentSetList;
         try {
             contentSetList = v3extensionUtil.hydrateContentPackage(
                 byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
@@ -1794,7 +1761,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
-        List<String> contentSetList = new ArrayList<>();
+        List<String> contentSetList;
         try {
             contentSetList = v3extensionUtil.hydrateContentPackage(
                 byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
@@ -1833,7 +1800,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
-        List<String> contentSetList = new ArrayList<>();
+        List<String> contentSetList;
         try {
             contentSetList = v3extensionUtil.hydrateContentPackage(
                 byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
@@ -1876,7 +1843,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
-        List<String> contentSetList = new ArrayList<>();
+        List<String> contentSetList;
         try {
             contentSetList = v3extensionUtil.hydrateContentPackage(
                 byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
@@ -1986,7 +1953,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testPathDictionary() throws IOException {
         List<org.candlepin.model.dto.Content> contentList = new ArrayList<>();
-        org.candlepin.model.dto.Content cont = null;
+        org.candlepin.model.dto.Content cont;
 
         for (int i = 0; i < 20; i++) {
             cont = new org.candlepin.model.dto.Content();
@@ -2037,8 +2004,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    private String processPayload(byte[] payload)
-        throws IOException, UnsupportedEncodingException {
+    private String processPayload(byte[] payload) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         InflaterOutputStream ios = new InflaterOutputStream(baos);
         ios.write(payload);
@@ -2084,21 +2050,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
             encodedContent.containsKey(CONTENT_NAME);
     }
 
-    class ListContainsContentExtensions extends
-        ArgumentMatcher<Set<X509ExtensionWrapper>> {
+    class ListContainsContentExtensions implements ArgumentMatcher<Set<X509ExtensionWrapper>> {
 
-        public boolean matches(Object list) {
-            return isEncodedContentValid((Set) list);
+        @Override
+        public boolean matches(Set<X509ExtensionWrapper> argument) {
+            return isEncodedContentValid(argument);
         }
     }
 
-    static class ListContainsEntitlementExtensions extends
-        ArgumentMatcher<Set<X509ExtensionWrapper>> {
+    static class ListContainsEntitlementExtensions implements ArgumentMatcher<Set<X509ExtensionWrapper>> {
 
-        public boolean matches(Object list) {
+        public boolean matches(Set<X509ExtensionWrapper> argument) {
             Map<String, X509ExtensionWrapper> encodedContent = new HashMap<>();
 
-            for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
+            for (X509ExtensionWrapper ext : argument) {
                 encodedContent.put(ext.getOid(), ext);
             }
 
@@ -2109,8 +2074,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    abstract static class OidMatcher extends
-        ArgumentMatcher<Set<X509ExtensionWrapper>> {
+    static class OidMatcher implements ArgumentMatcher<Set<X509ExtensionWrapper>> {
 
         protected String value;
         protected String oid;
@@ -2120,10 +2084,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
             this.oid = oid;
         }
 
-        public boolean matches(Object list) {
+        public boolean matches(Set<X509ExtensionWrapper> argument) {
             Map<String, X509ExtensionWrapper> encodedContent = new HashMap<>();
 
-            for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
+            for (X509ExtensionWrapper ext : argument) {
                 encodedContent.put(ext.getOid(), ext);
             }
 
@@ -2132,87 +2096,75 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     static class ListContainsProvidesManagement extends OidMatcher {
-
         public ListContainsProvidesManagement(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.14");
         }
     }
 
     static class ListContainsSupportLevel extends OidMatcher {
-
         public ListContainsSupportLevel(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.15");
         }
     }
 
     static class ListContainsSupportType extends OidMatcher {
-
         public ListContainsSupportType(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.16");
         }
     }
 
     static class ListContainsStackingId extends OidMatcher {
-
         public ListContainsStackingId(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.17");
         }
     }
     static class ListContainsVirtOnlyKey extends OidMatcher {
-
         public ListContainsVirtOnlyKey(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.18");
         }
     }
     static class ListContainsOrderNumberKey extends OidMatcher {
-
         public ListContainsOrderNumberKey(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.2");
         }
     }
 
     static class ListContainsContentUrl extends OidMatcher {
-
         public ListContainsContentUrl(String value, String contentID) {
             super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".1.6");
         }
     }
 
     static class ListContainsContentTypeYum extends OidMatcher {
-
         public ListContainsContentTypeYum(String value, String contentID) {
             super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".1");
         }
     }
 
     static class ListContainsContentTypeFile extends OidMatcher {
-
         public ListContainsContentTypeFile(String value, String contentID) {
             super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".2");
         }
     }
 
     static class ListContainsContentTypeKickstart extends OidMatcher {
-
         public ListContainsContentTypeKickstart(String value, String contentID) {
             super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".3");
         }
     }
 
-
-    abstract static class OidAbsentMatcher extends
-        ArgumentMatcher<Set<X509ExtensionWrapper>> {
-
+    static class OidAbsentMatcher implements ArgumentMatcher<Set<X509ExtensionWrapper>> {
         protected String oid;
 
         public OidAbsentMatcher(String oid) {
             this.oid = oid;
         }
 
-        public boolean matches(Object list) {
+        @Override
+        public boolean matches(Set<X509ExtensionWrapper> argument) {
             Map<String, X509ExtensionWrapper> encodedContent = new HashMap<>();
 
-            for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
+            for (X509ExtensionWrapper ext : argument) {
                 encodedContent.put(ext.getOid(), ext);
             }
 
@@ -2221,14 +2173,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     static class ListDoesNotContainSupportLevel extends OidAbsentMatcher {
-
         public ListDoesNotContainSupportLevel() {
             super("1.3.6.1.4.1.2312.9.4.15");
         }
     }
 
     static class ListDoesNotContainSupportType extends OidAbsentMatcher {
-
         public ListDoesNotContainSupportType() {
             super("1.3.6.1.4.1.2312.9.4.16");
         }
