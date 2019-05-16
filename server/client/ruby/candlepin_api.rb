@@ -80,7 +80,7 @@ class Candlepin
               content_tags=[], created_date=nil, last_checkin_date=nil,
               annotations=nil, recipient_owner_key=nil, user_agent=nil,
               entitlement_count=0, id_cert=nil, serviceLevel=nil, role=nil, usage=nil,
-              addOns=[])
+              addOns=[], reporter_id=nil)
 
     consumer = {
       :type => {:label => type},
@@ -94,6 +94,7 @@ class Candlepin
     consumer[:capabilities] = capabilities.collect { |name| {'name' => name} } if capabilities
     consumer[:uuid] = uuid if not uuid.nil?
     consumer[:hypervisorId] = {:hypervisorId => hypervisor_id} if hypervisor_id
+    consumer[:hypervisorId][:reporterId] = reporter_id if reporter_id
     consumer[:created] = created_date if created_date
     consumer[:lastCheckin] = last_checkin_date if last_checkin_date
     consumer[:annotations] = annotations if annotations
@@ -127,7 +128,7 @@ class Candlepin
   def hypervisor_check_in(owner, host_guest_mapping={}, create_missing=nil)
     path = get_path("hypervisors")
     params = {
-      :owner => owner
+        :owner => owner
     }
 
     params[:create_missing] = create_missing unless create_missing.nil?
@@ -143,6 +144,14 @@ class Candlepin
     params[:reporter_id] = reporter_id unless reporter_id.nil?
 
     return post_text(path, params, json_data, 'json')
+  end
+
+  def hypervisor_heartbeat_update(owner, reporter_id=nil)
+    path = get_path("hypervisors") + "/#{owner}/heartbeat"
+    params = {}
+    params[:reporter_id] = reporter_id unless reporter_id.nil?
+
+    return put_empty(path, params, accept='application/json')
   end
 
   def hypervisor_update_file(owner, json_file, create_missing=nil, reporter_id=nil)
@@ -1575,6 +1584,21 @@ class Candlepin
     # execute
     puts ("PUT #{euri} #{data}") if @verbose
     response = get_client(uri, Net::HTTP::Put, :put)[euri].put(data, :content_type => :json, :accept => :json)
+
+    return JSON.parse(response.body) unless response.body.empty?
+  end
+
+  def put_empty(uri, params={}, data=nil, accept='application/json')
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # execute
+    puts ("PUT #{euri} #{data} #{accept}") if @verbose
+    response = get_client(euri, Net::HTTP::Put, :put)[euri].put(data, :accept => accept, :content_length => 0)
 
     return JSON.parse(response.body) unless response.body.empty?
   end

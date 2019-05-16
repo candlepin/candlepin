@@ -14,10 +14,15 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -54,7 +59,6 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
 
-
 /**
  * ConsumerCuratorTest JUnit tests for Consumer database code
  */
@@ -64,7 +68,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Rule
     public ExpectedException ex = ExpectedException.none();
 
-    @Inject private Configuration config;
     @Inject private DeletedConsumerCurator dcc;
     @Inject private EntityManager em;
 
@@ -908,6 +911,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         assertEquals(consumer.getLastCheckin().getTime(), dt.getTime());
     }
+
     @Test
     public void updatelastCheckin() throws Exception {
         Date date = new Date();
@@ -1358,6 +1362,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(consumer1, hypervisorMap.get(hypervisorId1));
         assertEquals(consumer2, hypervisorMap.get(hypervisorId2));
     }
+
     @Test
     public void testGetHypervisorsBulk() {
         String hypervisorid = "hypervisor";
