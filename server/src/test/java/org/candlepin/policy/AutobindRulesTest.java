@@ -3264,6 +3264,212 @@ public class AutobindRulesTest {
         assertEquals(0, bestPools.size());
     }
 
+    /*
+     * Tests that during auto-attach, Role values between what the consumer specified and pool attributes
+     * are compared case insensitively.
+     */
+    @Test
+    public void selectBestPoolsMatchesRoleValueCaseInsensitively() {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("rHeL sErVeR");
+
+        // No consumer satisfied syspurpose attributes
+
+        // Candidate pools:
+        Product prod1 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+        List<Pool> pools = new ArrayList<>();
+        pools.add(p1);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(p1, 1)));
+    }
+
+    /*
+     * Tests that during auto-attach, Addon values between what the consumer specified and pool attributes
+     * are compared case insensitively.
+     */
+    @Test
+    public void selectBestPoolsMatchesAddonValueCaseInsensitively() {
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("rHeL EuS");
+        consumer.setAddOns(addons);
+
+        // No consumer satisfied syspurpose attributes
+
+        // Candidate pools:
+        Product prod1 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+        List<Pool> pools = new ArrayList<>();
+        pools.add(p1);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(p1, 1)));
+    }
+
+    /*
+     * Tests that during auto-attach, Usage values between what the consumer specified and pool attributes
+     * are compared case insensitively.
+     */
+    @Test
+    public void selectBestPoolsMatchesUsageValueCaseInsensitively() {
+        Product product69 = new Product();
+        product69.setId("prod-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setUsage("dEvElOpMeNt");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // No consumer satisfied syspurpose attributes
+
+        // Candidate pools:
+        Product prod1 = createSysPurposeProduct(null, null, null, null, "RandomUsage");
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+        p1.addProvidedProduct(product69);
+
+        Product prod2 = createSysPurposeProduct(null, null, null, "RandomSLA", "Development");
+        Pool p2 = TestUtil.createPool(owner, prod2);
+        p2.setId("p2");
+        p2.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(p1);
+        pools.add(p2);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ "prod-69" }, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+
+        // We expect p2 to be attached because of the usage match (even if case-insensitive,
+        // and despite having an SLA that the consumer did not specify).
+        assertTrue(bestPools.contains(new PoolQuantity(p2, 1)));
+    }
+
+    /*
+     * Tests that during auto-attach, SLA values between what the consumer specified and pool attributes
+     * are compared case insensitively.
+     */
+    @Test
+    public void selectBestPoolsMatchesSLAValueCaseInsensitively() {
+        Product product69 = new Product();
+        product69.setId("prod-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setServiceLevel("pReMiUm");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // No consumer satisfied syspurpose attributes
+
+        // Candidate pools:
+        Product prod1 = createSysPurposeProduct(null, null, null, "RandomSLA", null);
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+        p1.addProvidedProduct(product69);
+
+        Product prod2 = createSysPurposeProduct(null, null, null, "Premium", "RandomUsage");
+        Pool p2 = TestUtil.createPool(owner, prod2);
+        p2.setId("p2");
+        p2.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(p1);
+        pools.add(p2);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ "prod-69" }, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+
+        // We expect p2 to be attached because of the SLA match (even if case-insensitive,
+        // and despite having a usage that the consumer did not specify).
+        assertTrue(bestPools.contains(new PoolQuantity(p2, 1)));
+    }
+
+    /*
+     * Tests that during auto-attach, role values between what the consumer specified and what the pool
+     * has, and what a consumer's compliant role value is, are compared case insensitively.
+     */
+    @Test
+    public void selectBestPoolsMatchesCompliantRoleValueCaseInsensitively() {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL SERVER");
+
+        // Consumer satisfied syspurpose attributes:
+        Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RheL ServeR",
+            null, null, null);
+        Pool poolThatSatisfiesRole = new Pool();
+        poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
+        Entitlement entitlementThatSatisfiesRole = new Entitlement();
+        entitlementThatSatisfiesRole.setPool(poolThatSatisfiesRole);
+        compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
+
+        // Candidate pools:
+        Product prod1 = createSysPurposeProduct(null, "RHEL SERVER", null, null, null);
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(p1);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{}, pools, compliance, null, new HashSet<>(), false);
+
+        // We expect no pool to be attached since the specified role that is provided by p1 is already
+        // compliant (even though it is a case-insensitive match).
+        assertEquals(0, bestPools.size());
+    }
+
+    /*
+     * Tests that during auto-attach, addon values between what the consumer specified and what the pool
+     * has, and what a consumer's compliant addon value is, are compared case insensitively.
+     */
+    @Test
+    public void selectBestPoolsMatchesCompliantAddonValueCaseInsensitively() {
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("RHEL EUS");
+        consumer.setAddOns(addons);
+
+        // Consumer satisfied syspurpose attributes:
+        Product productWithAddonSatisfied = createSysPurposeProduct("compliant-product1", null,
+            "RheL eUs", null, null);
+        Pool poolThatSatisfiesAddon = new Pool();
+        poolThatSatisfiesAddon.setProduct(productWithAddonSatisfied);
+        Entitlement entitlementThatSatisfiesAddon = new Entitlement();
+        entitlementThatSatisfiesAddon.setPool(poolThatSatisfiesAddon);
+        compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesAddon);
+
+        // Candidate pools:
+        Product prod1 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(p1);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{}, pools, compliance, null, new HashSet<>(), false);
+
+        // We expect no pool to be attached since the specified addon that is provided by p1 is already
+        // compliant (even though it is a case-insensitive match).
+        assertEquals(0, bestPools.size());
+    }
+
     @Test
     public void testFindBestWillNotCompleteAPartialStackFromAnotherId() {
         consumer.setFact("cpu.cpu_socket(s)", "8");

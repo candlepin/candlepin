@@ -1,4 +1,4 @@
-// Version: 5.36
+// Version: 5.37
 
 /*
  * Default Candlepin rule set.
@@ -311,6 +311,9 @@ function createPool(pool) {
                 poolSet = [this.getProductAttribute(attribute)];
             }
         }
+        for (var i = 0 ; i < poolSet.length; i++) {
+            poolSet[i] = poolSet[i].toLowerCase();
+        }
         return poolSet;
     };
 
@@ -414,6 +417,12 @@ function createConsumer(consumer, compliance) {
             consumer_specified = [this.serviceLevel];
         }
 
+        if (attribute !== 'products') {
+            for (var i = 0 ; i < consumer_specified.length; i++) {
+                consumer_specified[i] = consumer_specified[i].toLowerCase();
+            }
+        }
+
         return consumer_specified;
     };
 
@@ -448,6 +457,9 @@ function createConsumer(consumer, compliance) {
                 });
             });
         });
+        for (var i = 0 ; i < attr_list.length; i++) {
+            attr_list[i] = attr_list[i].toLowerCase();
+        }
         return attr_list;
     };
 
@@ -2551,7 +2563,13 @@ var Autobind = {
                 var common_addons = [];
                 for (var i = 0; i < group_addons.length; i++) {
                     var group_addon = group_addons[i];
-                    if (contains(addons, group_addon)) {
+                    var is_common_addon = false;
+                    for (var j = 0; j < addons.length; j++) {
+                        if (Utils.equalsIgnoreCase(addons[j], group_addon)) {
+                            is_common_addon = true;
+                        }
+                    }
+                    if (is_common_addon) {
                         common_addons.push(group_addon);
                     }
                 }
@@ -2568,7 +2586,7 @@ var Autobind = {
                 var group_roles = this.get_roles();
                 for (var i = 0; i < group_roles.length; i++) {
                     var group_role = group_roles[i];
-                    if (group_role === role) {
+                    if (Utils.equalsIgnoreCase(group_role, role)) {
                         return role;
                     }
                 }
@@ -3053,14 +3071,15 @@ var Autobind = {
         for (var i = 0; i < attached_ents.length; i++) {
             attached_pools.push(attached_ents[i].pool);
         }
-        if (contains(get_role_pools(attached_pools), role)) {
-            return "";
-        }
-        else {
-            return role;
-        }
-    },
 
+        var attached_roles = get_role_pools(attached_pools);
+        for (var j = 0; j < attached_roles.length; j++) {
+            if (Utils.equalsIgnoreCase(attached_roles[j], role)) {
+                return "";
+            }
+        }
+        return role;
+    },
 
     get_remaining_addons: function (addons, attached_ents) {
         if (addons === null) {
@@ -3076,7 +3095,13 @@ var Autobind = {
         }
         var attached_addons = get_addons_pools(attached_pools);
         for (var i = 0; i < addons.length; i++) {
-            if (!contains(attached_addons, addons[i])) {
+            var contains_addon = false;
+            for (var j = 0; j < attached_addons.length; j++) {
+                if (Utils.equalsIgnoreCase(attached_addons[j], addons[i])) {
+                    contains_addon = true;
+                }
+            }
+            if (!contains_addon) {
                 remaining_addons.push(addons[i]);
             }
         }

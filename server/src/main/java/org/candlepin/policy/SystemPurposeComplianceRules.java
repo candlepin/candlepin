@@ -20,9 +20,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Product;
-import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
 
 import com.google.inject.Inject;
@@ -52,20 +50,15 @@ import java.util.stream.Stream;
 public class SystemPurposeComplianceRules {
     private static Logger log = LoggerFactory.getLogger(SystemPurposeComplianceRules.class);
 
-    private EntitlementCurator entCurator;
-    private StatusReasonMessageGenerator generator;
     private EventSink eventSink;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private I18n i18n;
 
     @Inject
-    public SystemPurposeComplianceRules(EntitlementCurator entCurator,
-        StatusReasonMessageGenerator generator, EventSink eventSink, ConsumerCurator consumerCurator,
+    public SystemPurposeComplianceRules(EventSink eventSink, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, I18n i18n) {
 
-        this.entCurator = entCurator;
-        this.generator = generator;
         this.eventSink = eventSink;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -167,9 +160,13 @@ public class SystemPurposeComplianceRules {
                 if (StringUtils.isNotEmpty(unsatisfedRole) &&
                     product.hasAttribute(Product.Attributes.ROLES)) {
                     List<String> roles =
-                        Arrays.asList(product.getAttributeValue(Product.Attributes.ROLES).split("\\s*,\\s*"));
-                    if (roles.contains(consumer.getRole())) {
-                        status.addCompliantRole(consumer.getRole(), entitlement);
+                        Arrays.asList(product.getAttributeValue(Product.Attributes.ROLES)
+                        .trim().split("\\s*,\\s*"));
+
+                    final String unsatisfedRoleFinalCopy = unsatisfedRole;
+                    if (roles.stream()
+                        .anyMatch(str -> str.equalsIgnoreCase(unsatisfedRoleFinalCopy.trim()))) {
+                        status.addCompliantRole(unsatisfedRole, entitlement);
                         unsatisfedRole = null;
                     }
                 }
@@ -179,9 +176,9 @@ public class SystemPurposeComplianceRules {
                     product.hasAttribute(Product.Attributes.ADDONS)) {
                     List<String> addOns =
                         Arrays.asList(product.getAttributeValue(Product.Attributes.ADDONS)
-                            .split("\\s*,\\s*"));
+                        .trim().split("\\s*,\\s*"));
                     for (String addOn: unsatisfiedAddons) {
-                        if (addOns.stream().anyMatch(str -> str.trim().equals(addOn))) {
+                        if (addOns.stream().anyMatch(str -> str.equalsIgnoreCase(addOn.trim()))) {
                             status.addCompliantAddOn(addOn, entitlement);
                             addonsFound.add(addOn);
                         }
