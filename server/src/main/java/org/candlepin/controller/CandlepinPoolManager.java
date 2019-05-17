@@ -1573,11 +1573,13 @@ public class CandlepinPoolManager implements PoolManager {
                 if (!providesProduct) {
                     Set<String> consumerAddOns = consumer.getAddOns() != null ?
                         consumer.getAddOns() : new HashSet<>();
-                    String[] prodAddOns = pool.getProductAttributeValue(Product.Attributes.ADDONS) != null ?
-                        pool.getProductAttributeValue(Product.Attributes.ADDONS).split("\\s*,\\s*") :
-                        new String[]{};
-                    for (String addon : prodAddOns) {
-                        if (consumerAddOns.contains(addon)) {
+                    List<String> prodAddOns =
+                        pool.getProductAttributeValue(Product.Attributes.ADDONS) != null ?
+                        Arrays.asList(pool.getProductAttributeValue(Product.Attributes.ADDONS)
+                        .trim().split("\\s*,\\s*")) : Collections.emptyList();
+
+                    for (String consumerAddOn: consumerAddOns) {
+                        if (prodAddOns.stream().anyMatch(str -> str.equalsIgnoreCase(consumerAddOn.trim()))) {
                             matchesAddOns = true;
                             break;
                         }
