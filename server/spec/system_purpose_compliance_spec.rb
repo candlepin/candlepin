@@ -33,6 +33,46 @@ describe 'System purpose compliance' do
       status.reasons.include?("unsatisfied role: unsatisfied-role").should == true
   end
 
+  it 'should be mismatched after updating with unsatisfied information' do
+    product = create_product(random_string('product'),
+                             random_string('product'),
+                             {:attributes => {
+                                 :name => 'my_name',
+                                 :roles => 'Red Hat Enterprise Linux Workstation',
+                                 :service_type => 'Standard',
+                                 :support_level => 'Standard',
+                                 :subtype => 'Standard',
+                                 :usage => 'Production',
+                             }, :owner => @owner2['key']})
+    p = create_pool_and_subscription(@owner2['key'], product.id, nil, nil, nil, nil, nil)
+
+    consumer = @user2.register(
+        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil)#, 'Premium', 'Server', 'Production', [])
+
+    @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+
+    consumer = @user2.get_consumer(consumer['uuid'])
+    consumer.systemPurposeStatus.should == 'not specified'
+
+    update_args = {
+        :uuid => consumer['uuid'],
+        :serviceLevel => 'Premium',
+        :role => 'Server',
+        :usage => 'Production',
+        :addOns => []
+    }
+
+    @user2.update_consumer(update_args)
+
+    consumer = @user2.get_consumer(consumer['uuid'])
+    consumer.systemPurposeStatus.should == 'mismatched'
+
+    status = @user2.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'mismatched'
+  end
+
+
   it 'should change to matched after satisfying role' do
       product = create_product(random_string('product'),
                               random_string('product'),
