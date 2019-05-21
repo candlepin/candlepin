@@ -1,4 +1,6 @@
 # vi: set ft=ruby:
+Encoding.default_external = Encoding::UTF_8
+Encoding.default_internal = Encoding::UTF_8
 
 ### Repositories
 repositories.remote << "http://awood.fedorapeople.org/ivy/candlepin/"
