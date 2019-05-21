@@ -62,6 +62,9 @@ running the `buildr eclipse` task.  The template is located at
 path to `checks.xml` and drop the result into `.checkstyle` in your Eclipse
 project directory.
 
+## Unit Tests
+* `./gradlew tasks` runs Unit tests
+
 ## Spec Tests
 * `./gradlew rspec` runs RSpec tests serially
 * `./gradlew rspec --spec <my_spec_name> -- test 'my_test_name'` 
