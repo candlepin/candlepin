@@ -2028,7 +2028,7 @@ public class ConsumerResource {
         if (owner.isAutobindDisabled()) {
             String caMessage = owner.isContentAccessEnabled() ?
                 " because of the content access mode setting" : "";
-            throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. It is disabled for org 'admin'" + caMessage + "."));
+            throw new BadRequestException(i18n.tr("Owner has autobind disabled" + caMessage + "."));
         }
 
         List<PoolQuantity> dryRunPools = new ArrayList<>();
