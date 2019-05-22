@@ -2026,9 +2026,18 @@ public class ConsumerResource {
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
         if (owner.isAutobindDisabled()) {
-            String caMessage = owner.isContentAccessEnabled() ?
-                " because of the content access mode setting" : "";
-            throw new BadRequestException(i18n.tr("Owner has autobind disabled" + caMessage + "."));
+            String message = "";
+
+            if (owner.isContentAccessEnabled()) {
+                message = (i18n.tr("Organization \"{0}\" has auto-attach disabled because " +
+                                "of the content access mode setting.", owner.getKey()));
+
+            }
+            else {
+                message = (i18n.tr("Organization \"{0}\" has auto-attach disabled.", owner.getKey()));
+            }
+            throw new BadRequestException(message);
+
         }
 
         List<PoolQuantity> dryRunPools = new ArrayList<>();
