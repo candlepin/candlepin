@@ -779,7 +779,7 @@ public class ConsumerResourceTest {
             fail("Should have thrown a BadRequestException.");
         }
         catch (BadRequestException e) {
-            assertEquals("Owner has autobind disabled.", e.getMessage());
+            assertEquals("Ignoring request to auto-attach. It is disabled for org 'admin'.", e.getMessage());
         }
     }
 
