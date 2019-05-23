@@ -156,6 +156,9 @@ task pom {
     doLast {
         // Exclude all transitive dependencies
         configurations.all*.exclude module: "*"
+        conf2ScopeMappings.addMapping(MavenPlugin.COMPILE_PRIORITY + 1, configurations.compileOnly, 'provided')
+        conf2ScopeMappings.addMapping(MavenPlugin.COMPILE_PRIORITY + 1, configurations.runtimeOnly, 'runtime')
+        conf2ScopeMappings.addMapping(MavenPlugin.COMPILE_PRIORITY + 1, configurations.implementation, 'compile')
 
         pom {
             project {

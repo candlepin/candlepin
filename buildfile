@@ -289,7 +289,7 @@ define "candlepin" do
     pom.name = "Candlepin Common"
     pom.description = "Common code for Candlepin"
 
-    project.version = spec_version('candlepin-common.spec.tmpl')
+    project.version = spec_version('../server/candlepin.spec.tmpl')
 
     eclipse.natures :java
 

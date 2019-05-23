@@ -54,6 +54,21 @@ public class SpecVersion implements Plugin<Project> {
             );
 
             if (specFile[0] == null) {
+                Files.walkFileTree(project.getProjectDir().toPath().resolveSibling("server"),
+                    Collections.emptySet(), 1,
+                    new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                            if (pathMatcher.matches(file.getFileName())) {
+                                specFile[0] = file;
+                                return FileVisitResult.TERMINATE;
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+                    }
+                );
+            }
+            if (specFile[0] == null) {
                 throw new IOException("Could not file spec file in " + project.getProjectDir());
             }
 
