@@ -20,6 +20,7 @@ import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -47,6 +48,7 @@ public class ActiveEntitlementJob extends KingpinJob {
     }
 
     @Override
+    @Transactional
     public void toExecute(JobExecutionContext ctx) throws JobExecutionException {
         // not uuids
         List<String> ids = consumerCurator.getConsumerIdsWithStartedEnts();
