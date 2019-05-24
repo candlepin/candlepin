@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.7.0
+Version: 2.7.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,47 @@ fi
 
 #raw
 %changelog
+* Fri May 24 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.1-1
+- Fix pom generation to fix builds (khowell@redhat.com)
+- 1664481: match syspurpose attributes case insensitively (nmoumoul@redhat.com)
+- 1709723: last check-in date is not updated for hypervisors reported by virt-
+  who (ojanus@redhat.com)
+- 1461188: Creating an ActivationKey with "contentOverrides": null results in a
+  400 status[ENT-1130] (ojanus@redhat.com)
+- 1698614: Stop event persistence & deprecate event APIs (nmoumoul@redhat.com)
+- 1694809: Reduce in operator block size (wpoteat@redhat.com)
+- Converted server tests to run under JUnit 5. (awood@redhat.com)
+- Eliminate troublesome unit test. (awood@redhat.com)
+- Allow tests to run under Maven. (awood@redhat.com)
+- Run common tests under JUnit 5. (awood@redhat.com)
+- Run under JUnit 5. (awood@redhat.com)
+- Remove all usage of Jukito. (awood@redhat.com)
+- 1644707: Removed AHC.lockAndLoadById(s) to address quirks with refresh
+  (crog@redhat.com)
+- 1698528: Syspurpose support on activation keys (wpoteat@redhat.com)
+- Remove "compile" dependencies and replace with "implementation".
+  (awood@redhat.com)
+- Gradle improvements. (awood@redhat.com)
+- Bring Gradle generated WAR in-line with Buildr WAR. (awood@redhat.com)
+- Added dummy product and content for Debian, renamed some products.
+  (jhnidek@redhat.com)
+- Fix build irregularities (awood@redhat.com)
+- Refactoring, more chaching of product certs, more dummy packages
+  (jhnidek@redhat.com)
+- Fix ambiguous logging call. (awood@redhat.com)
+- Do not share one content with several products. (jhnidek@redhat.com)
+- Gradle generate pom.xml [ENT-1215] (ojanus@redhat.com)
+- Fix Checkstyle issue (ojanus@redhat.com)
+- Move the rspec custom task to buildSrc (bcourt@redhat.com)
+- Add release value for status resource from spec file (bcourt@redhat.com)
+- Add release value for status resource from spec file (bcourt@redhat.com)
+- Add gradle support for deploy script. (bcourt@redhat.com)
+- Add support for running rspec tests via Gradle (#2145) (bcourt@redhat.com)
+- Make hostedtest rest endpoint filtering controllable. (bcourt@redhat.com)
+- Add Gettext & msgfmt & update to junit 5 with legacy engine
+  (bcourt@redhat.com)
+- Initial commit for supporting build using Gradle (bcourt@redhat.com)
+
 * Mon Apr 22 2019 Kevin Howell <khowell@redhat.com> 2.7.0-1
 - Initial tag on 2.7 series (khowell@redhat.com)
 
