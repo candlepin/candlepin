@@ -53,6 +53,21 @@ module CandlepinMethods
     end
   end
 
+  def wait_for_async_job(job_id, timeout_seconds)
+    states = ['COMPLETED', 'FAILED', 'CANCELED', 'ABORTED']
+    wait_interval = 2 # seconds
+    total_taken = 0
+    while total_taken < timeout_seconds
+      sleep wait_interval
+      total_taken += wait_interval
+      status = @cp.get_async_job(job_id)
+      if states.include? status['state']
+        return status
+      end
+    end
+  end
+
+
   def create_product(id=nil, name=nil, params={})
     # If owner given in params, use it, if not, try to find @owner, if neither
     # is set error out.
@@ -664,12 +679,13 @@ class AsyncStandardExporter < StandardExporter
   def do_export(client, dest_dir, opts={}, uuid=nil)
     job = client.export_consumer_async(opts, uuid)
     # Wait a little longer here as export can take a bit of time
-    wait_for_job(job["id"], 60)
-    status = client.get_job(job["id"], true)
+    wait_for_async_job(job["id"], 60)
+    status = client.get_async_job(job["id"], true)
     if status["state"] == "FAILED"
       raise AsyncExportFailure.new(status)
     end
-    result = status["resultData"]
+
+    result = status["result"]
     client.download_consumer_export(result["exportedConsumer"], result["exportId"], dest_dir)
   end
 end

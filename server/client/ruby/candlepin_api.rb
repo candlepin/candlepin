@@ -1330,6 +1330,14 @@ class Candlepin
     return get(url, params)
   end
 
+  def get_async_job(job_id, result_data=false)
+    url = "/async/#{job_id}"
+    params = {}
+    params[:result_data] = true if result_data
+
+    return get(url, params)
+  end
+
   def cancel_job(job_id)
     delete "/jobs/#{job_id}"
   end

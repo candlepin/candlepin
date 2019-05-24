@@ -126,8 +126,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "cp_async_job_metadata", joinColumns = @JoinColumn(name = "job_id"))
-    @MapKeyColumn(name = "key")
-    @Column(name = "value")
+    @MapKeyColumn(name = "\"key\"")
+    @Column(name = "\"value\"")
     private Map<String, String> metadata;
 
     @NotNull
