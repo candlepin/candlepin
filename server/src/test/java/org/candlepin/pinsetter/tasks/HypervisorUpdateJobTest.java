@@ -14,10 +14,20 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.auth.Principal;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
@@ -35,15 +45,14 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
-import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.resource.ConsumerResource;
-import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.impl.HypervisorUpdateAction;
 
-import com.google.inject.util.Providers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -56,8 +65,6 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Locale;
 import java.util.Set;
-
-import javax.inject.Provider;
 
 /**
  * HypervisorUpdateJobTest
@@ -76,13 +83,12 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     private EnvironmentCurator environmentCurator;
     private I18n i18n;
     private SubscriptionServiceAdapter subAdapter;
-    private ComplianceRules complianceRules;
+    private HypervisorUpdateAction hypervisorUpdateAction;
 
-    private Provider<GuestMigration> migrationProvider;
-    private GuestMigration testMigration;
     private ModelTranslator translator;
 
-    @Before
+
+    @BeforeEach
     public void init() {
         super.init();
         i18n = I18nFactory.getI18n(
@@ -97,7 +103,6 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         consumerResource = mock(ConsumerResource.class);
         consumerTypeCurator = mock(ConsumerTypeCurator.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
-        complianceRules = mock(ComplianceRules.class);
         environmentCurator = mock(EnvironmentCurator.class);
         objectMapper = new ObjectMapper();
         when(owner.getId()).thenReturn("joe");
@@ -112,18 +117,18 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         when(owner.getKey()).thenReturn("joe");
         when(principal.getUsername()).thenReturn("joe user");
 
-        testMigration = new GuestMigration(consumerCurator);
-        migrationProvider = Providers.of(testMigration);
-
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
 
         hypervisorJson =
-                "{\"hypervisors\":" +
+            "{\"hypervisors\":" +
                 "[{" +
                 "\"name\" : \"hypervisor_999\"," +
                 "\"hypervisorId\" : {\"hypervisorId\":\"uuid_999\"}," +
                 "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]" +
                 "}]}";
+
+        hypervisorUpdateAction = new HypervisorUpdateAction(consumerCurator, consumerTypeCurator,
+            consumerResource, subAdapter, translator);
     }
 
     @Test
@@ -132,7 +137,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         assertNotNull(detail);
         assertEquals("joe", detail.getJobDataMap().get(JobStatus.TARGET_ID));
         assertEquals("joe user", ((Principal) detail.getJobDataMap().get("principal")).getUsername());
-        assertTrue(detail.getJobClass().equals(HypervisorUpdateJob.class));
+        assertEquals(detail.getJobClass(), HypervisorUpdateJob.class);
     }
 
     @Test
@@ -146,12 +151,11 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner),
             any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            consumerTypeCurator, consumerResource, i18n, subAdapter, complianceRules, translator,
-            objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerCurator).create(any(Consumer.class), eq(false));
+        verify(consumerCurator).saveAll(any(Set.class), eq(false), eq(false));
     }
 
     @Test
@@ -166,13 +170,14 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner),
             any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-            consumerResource, i18n, subAdapter, complianceRules, translator, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
-        ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
-        verify(consumerCurator).create(argument.capture(), eq(false));
-        assertEquals("createReporterId", argument.getValue().getHypervisorId().getReporterId());
+        ArgumentCaptor<Set<Consumer>> argument = ArgumentCaptor.forClass(Set.class);
+        verify(consumerCurator).saveAll(argument.capture(), eq(false), eq(false));
+        Consumer created = argument.getValue().stream().findFirst().orElse(null);
+        assertEquals("createReporterId", created.getHypervisorId().getReporterId());
     }
 
     @Test
@@ -193,12 +198,12 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-            consumerResource, i18n, subAdapter, complianceRules, translator, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
         verify(consumerResource).checkForFactsUpdate(any(Consumer.class), any(Consumer.class));
-        verify(consumerCurator).update(any(Consumer.class), eq(false));
+        verify(consumerCurator, times(2)).bulkUpdate(any(Set.class), eq(false));
     }
 
     @Test
@@ -220,8 +225,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-            consumerResource, i18n, subAdapter, complianceRules, translator, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
         assertEquals("updateReporterId", hypervisor.getHypervisorId().getReporterId());
@@ -255,16 +260,16 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-            consumerResource, i18n, subAdapter, complianceRules, translator, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
 
-        ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
-        verify(consumerCurator).update(consumerCaptor.capture(), eq(false));
+        ArgumentCaptor<Set<Consumer>> updateCaptor = ArgumentCaptor.forClass(Set.class);
+        verify(consumerCurator, times(2)).bulkUpdate(updateCaptor.capture(), eq(false));
 
-        Consumer argument = consumerCaptor.getValue();
-        assertEquals("expectedhypervisorid", argument.getHypervisorId().getHypervisorId());
+        Consumer updated = updateCaptor.getValue().stream().findFirst().orElse(null);
+        assertEquals("expectedhypervisorid", updated.getHypervisorId().getHypervisorId());
     }
 
     @Test
@@ -272,7 +277,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
 
         hypervisorJson =
-                "{\"hypervisors\":" +
+            "{\"hypervisors\":" +
                 "[{" +
                 "\"name\" : \"hypervisor_999\"," +
                 "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]" +
@@ -284,8 +289,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner),
             any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-            consumerResource, i18n, subAdapter, complianceRules, translator, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
         verify(consumerResource, never()).createConsumerFromDTO(any(ConsumerDTO.class),
@@ -299,7 +304,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
 
         hypervisorJson =
-                "{\"hypervisors\":" +
+            "{\"hypervisors\":" +
                 "[{" +
                 "\"hypervisorId\" : {\"hypervisorId\" : \"hypervisor_999\"}," +
                 "\"name\" : \"hypervisor_999\"," +
@@ -313,8 +318,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner), any(HypervisorUpdateJob.HypervisorList.class)))
             .thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
-            consumerResource, i18n, subAdapter, complianceRules, translator, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
     }
@@ -323,14 +328,12 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
      * Schedule the job to be executed later even if a similar job exists.
      */
     @Test
-    public void dontSkipIfExistsTest() throws JobExecutionException, SchedulerException {
-
+    public void dontSkipIfExistsTest() throws SchedulerException {
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobStatus preExistingJobStatus = new JobStatus();
         preExistingJobStatus.setState(JobState.WAITING);
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            consumerTypeCurator, consumerResource, i18n, subAdapter, complianceRules, translator,
-            objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         JobStatus newlyScheduledJobStatus = new JobStatus();
 
         JobCurator jobCurator = mock(JobCurator.class);
@@ -350,7 +353,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
      * Make sure only one test is running at a time.
      */
     @Test
-    public void monogamousJobTest() throws JobExecutionException, SchedulerException {
+    public void monogamousJobTest() {
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobStatus newJob = new JobStatus(detail);
         JobCurator jobCurator = mock(JobCurator.class);
@@ -361,7 +364,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     }
 
     @Test
-    public void ensureJobFailsWhenAutobindDisabledForTargetOwner() throws Exception {
+    public void ensureJobFailsWhenAutobindDisabledForTargetOwner() {
         // Disabled autobind
         when(owner.isAutobindDisabled()).thenReturn(true);
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
@@ -372,9 +375,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            consumerTypeCurator, consumerResource, i18n, subAdapter, complianceRules, translator,
-            objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
 
         try {
