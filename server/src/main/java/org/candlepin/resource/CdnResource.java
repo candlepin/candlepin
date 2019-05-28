@@ -78,7 +78,7 @@ public class CdnResource {
         return this.translator.translateQuery(curator.listAll(), CdnDTO.class);
     }
 
-    @ApiOperation(notes = "Removes a CDN", value = "delete")
+    @ApiOperation(notes = "Removes a CDN", value = "deleteCDN", nickname = "deleteCDN")
     @ApiResponses({ @ApiResponse(code =  400, message = ""), @ApiResponse(code =  404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)
@@ -91,7 +91,8 @@ public class CdnResource {
         }
     }
 
-    @ApiOperation(notes = "Creates a CDN @return a Cdn object", value = "create")
+    @ApiOperation(notes = "Creates a CDN @return a Cdn object", value = "createCDN",
+        nickname = "createCDN")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -114,7 +115,7 @@ public class CdnResource {
         return this.translator.translate(cdnManager.createCdn(cndToCreate), CdnDTO.class);
     }
 
-    @ApiOperation(notes = "Updates a CDN @return a Cdn object", value = "update")
+    @ApiOperation(notes = "Updates a CDN @return a Cdn object", value = "updateCDN", nickname = "updateCDN")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

@@ -817,7 +817,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "owners")
     @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", response = OwnerDTO.class,
-        responseContainer = "list")
+        responseContainer = "list", nickname = "listOwners")
     public CandlepinQuery<OwnerDTO> list(@QueryParam("key") String keyFilter) {
         CandlepinQuery<Owner> query = keyFilter != null ?
             this.ownerCurator.getByKeys(Arrays.asList(keyFilter)) :
@@ -853,7 +853,8 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(notes = "Retrieves a single Owner", value = "Get Owner")
+    @ApiOperation(notes = "Retrieves a single Owner", value = "Get Owner",
+        nickname = "getOwnerFromOwnerResource")
     @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
     public OwnerDTO getOwner(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
@@ -1412,7 +1413,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
     @SuppressWarnings("checkstyle:indentation")
-    @ApiOperation(notes = "Retrieves a list of Pools for an Owner", value = "List Pools")
+    @ApiOperation(notes = "Retrieves a list of Pools for an Owner", value = "List Pools",
+        nickname = "listOwnerPools")
     @ApiResponses({
         @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 400, message = "Invalid request")
@@ -1538,7 +1540,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
-    @ApiOperation(notes = "Retrieves a list of Subscriptions for an Owner", value = "List Subscriptions")
+    @ApiOperation(notes = "Retrieves a list of Subscriptions for an Owner", value = "List Subscriptions",
+        nickname = "getSubscriptionsForOwner")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
         Owner owner = this.findOwnerByKey(ownerKey);

@@ -282,7 +282,8 @@ public class EntitlementResource {
         return cert.getCert() + cert.getKey();
     }
 
-    @ApiOperation(notes = "Deletes an Entitlement", value = "unbind")
+    @ApiOperation(notes = "Deletes an Entitlement", value = "unbind",
+        nickname = "unbindEntitlement")
     @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)

@@ -159,7 +159,7 @@ public class OwnerContentResource {
     }
 
     @ApiOperation(notes = "Retrieves list of Content", value = "list", response = Content.class,
-        responseContainer = "list")
+        responseContainer = "list", nickname = "listOwnerContent")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<ContentDTO> listContent(
@@ -171,7 +171,8 @@ public class OwnerContentResource {
         return this.translator.translateQuery(query, ContentDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves a single Content", value = "getContent")
+    @ApiOperation(notes = "Retrieves a single Content", value = "getContent",
+        nickname = "getOwnerContent")
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -226,7 +227,7 @@ public class OwnerContentResource {
         return entity;
     }
 
-    @ApiOperation(notes = "Creates a Content", value = "createContent")
+    @ApiOperation(notes = "Creates a Content", value = "createContent", nickname = "createOwnerContent")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -241,7 +242,8 @@ public class OwnerContentResource {
         return this.translator.translate(entity, ContentDTO.class);
     }
 
-    @ApiOperation(notes = "Creates Contents in bulk", value = "createBatchContent")
+    @ApiOperation(notes = "Creates Contents in bulk", value = "createBatchContent",
+        nickname = "createBatchOwnerContent")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -262,7 +264,7 @@ public class OwnerContentResource {
         return result;
     }
 
-    @ApiOperation(notes = "Updates a Content", value = "updateContent")
+    @ApiOperation(notes = "Updates a Content", value = "updateContent", nickname = "updateOwnerContent")
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -284,7 +286,7 @@ public class OwnerContentResource {
         return this.translator.translate(existing, ContentDTO.class);
     }
 
-    @ApiOperation(notes = "Deletes a Content", value = "remove")
+    @ApiOperation(notes = "Deletes a Content", value = "remove", nickname = "removeOwnerContent")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")

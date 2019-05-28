@@ -114,7 +114,7 @@ public class UserResource {
         return user;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Users", value = "list")
+    @ApiOperation(notes = "Retrieves a list of Users", value = "list", nickname = "listUsers")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Stream<UserDTO> list() {

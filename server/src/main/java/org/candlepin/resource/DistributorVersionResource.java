@@ -139,7 +139,8 @@ public class DistributorVersionResource {
             this.translator.getStreamMapper(DistributorVersion.class, DistributorVersionDTO.class));
     }
 
-    @ApiOperation(notes = "Deletes a Distributor Version", value = "delete")
+    @ApiOperation(notes = "Deletes a Distributor Version", value = "deleteDistributorVersion",
+        nickname = "deleteDistributorVersion")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Produces(MediaType.WILDCARD)
@@ -152,7 +153,8 @@ public class DistributorVersionResource {
         }
     }
 
-    @ApiOperation(notes = "Creates a Distributor Version", value = "create")
+    @ApiOperation(notes = "Creates a Distributor Version", value = "createDistributorVersion",
+        nickname = "createDistributorVersion")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -170,7 +172,8 @@ public class DistributorVersionResource {
         return this.translator.translate(curator.create(toCreate), DistributorVersionDTO.class);
     }
 
-    @ApiOperation(notes = "Updates a Distributor Version", value = "update")
+    @ApiOperation(notes = "Updates a Distributor Version", value = "updateDistributorVersion",
+        nickname = "updateDistributorVersion")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

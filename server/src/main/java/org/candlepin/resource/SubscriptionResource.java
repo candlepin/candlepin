@@ -106,7 +106,8 @@ public class SubscriptionResource {
         throw new ResourceMovedException("pools/{pool_id}");
     }
 
-    @ApiOperation(notes = "Retrieves a Subscription Certificate As a PEM", value = "getSubCertAsPem")
+    @ApiOperation(notes = "Retrieves a Subscription Certificate As a PEM", value = "getSubCertAsPem",
+        nickname = "getSubscriptionCertificatePem")
     @DoNotUseJAXBProvider
     @GET
     @Path("{subscription_id}/cert")

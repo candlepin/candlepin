@@ -25,10 +25,10 @@ import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
-import javax.ws.rs.Path;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.Authorization;
+
+import javax.ws.rs.Path;
 
 
 

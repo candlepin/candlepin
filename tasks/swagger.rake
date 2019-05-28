@@ -6,7 +6,7 @@ module Swagger
 
   class << self
     def dependencies
-      Buildr.transitive('io.swagger:swagger-codegen-cli:jar:2.2.1')
+      Buildr.transitive('org.openapitools:openapi-generator-cli:jar:4.0.0')
     end
   end
 
@@ -23,7 +23,7 @@ module Swagger
     end
 
     def language
-      @language || "ruby"
+      @language || "jaxrs-resteasy"
     end
 
     def destination
@@ -105,10 +105,10 @@ module Swagger
 
           if File.exist?(project.path_to('swagger.json'))
             args = [
-              "io.swagger.codegen.SwaggerCodegen",
+              "org.openapitools.codegen.OpenAPIGenerator",
               "generate",
               "-i", project.path_to('swagger.json'),
-              "-l", swagger.language,
+              "-g", swagger.language,
               "-o", swagger.destination
             ]
 

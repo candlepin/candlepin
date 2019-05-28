@@ -81,7 +81,7 @@ public class ContentResource {
     }
 
     @ApiOperation(notes = "Retrieves list of Content", value = "list", response = ContentDTO.class,
-        responseContainer = "list")
+        responseContainer = "list", nickname = "listContent")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<ContentDTO> list() {
@@ -133,7 +133,7 @@ public class ContentResource {
             "Organization-agnostic content write operations are not supported."));
     }
 
-    @ApiOperation(notes = "Deletes a Content", value = "remove")
+    @ApiOperation(notes = "Deletes a Content", value = "remove", nickname = "removeContent")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")

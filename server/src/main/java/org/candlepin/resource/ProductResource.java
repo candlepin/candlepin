@@ -164,7 +164,8 @@ public class ProductResource {
      * @deprecated Use per-org version
      * @return Product
      */
-    @ApiOperation(notes = "Updates a Product @deprecated Use per-org version", value = "updateProduct")
+    @ApiOperation(notes = "Updates a Product @deprecated Use per-org version", value =
+        "productResourceUpdateProduct", nickname = "productResourceUpdateProduct")
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @PUT
     @Path("/{product_uuid}")
@@ -223,7 +224,7 @@ public class ProductResource {
      * @deprecated Use per-org version
      */
     @ApiOperation(notes = "Removes Content from a Product @deprecated Use per-org version",
-        value = "removeContent")
+        value = "removeContent", nickname = "removeContentFromProduct")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
@@ -270,7 +271,7 @@ public class ProductResource {
             this.ownerCurator.getOwnersWithProducts(productUuids), OwnerDTO.class);
     }
 
-    @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")
+    @ApiOperation(notes = "Refreshes Pools by Product", value = "productResourceRefreshPoolsForProduct")
     @PUT
     @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)

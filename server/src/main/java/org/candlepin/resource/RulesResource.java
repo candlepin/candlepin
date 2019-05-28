@@ -70,7 +70,7 @@ public class RulesResource {
         this.jsProvider = jsProvider;
     }
 
-    @ApiOperation(notes = "Uploads the Rules Returns a copy of the uploaded rules.", value = "upload")
+    @ApiOperation(notes = "Uploads the Rules Returns a copy of the uploaded rules.", value = "uploadRules")
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @POST
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
@@ -103,7 +103,7 @@ public class RulesResource {
         return rulesBuffer;
     }
 
-    @ApiOperation(notes = "Retrieves the Rules", value = "get")
+    @ApiOperation(notes = "Retrieves the Rules", value = "getRules", nickname = "getRules")
     @ApiResponses({ @ApiResponse(code = 503, message = "") })
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
@@ -122,7 +122,7 @@ public class RulesResource {
     }
 
     @ApiOperation(notes = "Removes the Rules  Deletes any uploaded rules, uses bundled rules instead",
-        value = "delete")
+        value = "deleteRules")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public void delete() {

@@ -2152,7 +2152,9 @@ public class ConsumerResource {
         return entitlementDTOs;
     }
 
-    @ApiOperation(notes = "Retrieves the Owner associated to a Consumer", value = "getOwner")
+    @ApiOperation(notes = "Retrieves the Owner associated to a Consumer", value = "consumerResourceGetOwner",
+        nickname = "consumerResourceGetOwner"
+    )
     @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)

@@ -385,7 +385,8 @@ public class EnvironmentResource {
         return e;
     }
 
-    @ApiOperation(notes = "Creates an Environment", value = "create")
+    @ApiOperation(notes = "Creates an Environment", value = "createEnvironment",
+        nickname = "createEnvironment")
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

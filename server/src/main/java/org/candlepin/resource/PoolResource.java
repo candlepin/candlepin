@@ -109,7 +109,8 @@ public class PoolResource {
      */
     @ApiOperation(
         notes = "Retrieves a list of Pools @deprecated Use the method on /owners",
-        value = "")
+        value = "",
+        nickname = "listPools")
     @ApiResponses({
         @ApiResponse(code = 400,
         message = "if both consumer(unit) and owner are given, or if a" +
@@ -345,7 +346,8 @@ public class PoolResource {
         return pool.getCertificate();
     }
 
-    @ApiOperation(notes = "Retrieves a Subscription Certificate As a PEM", value = "getSubCertAsPem")
+    @ApiOperation(notes = "Retrieves a Subscription Certificate As a PEM", value = "getSubCertAsPem",
+        nickname = "getPoolSubCertAsPem")
     @DoNotUseJAXBProvider
     @GET
     @Path("{pool_id}/cert")

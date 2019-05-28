@@ -99,8 +99,8 @@ public class ConsumerTypeResource {
         }
     }
 
-    @ApiOperation(notes = "Retrieves a list of Consumer Types", value = "list",
-        response = ConsumerTypeDTO.class, responseContainer = "list")
+    @ApiOperation(notes = "Retrieves a list of Consumer Types", value = "listConsumerType",
+        nickname = "listConsumerType", response = ConsumerTypeDTO.class, responseContainer = "list")
     @GET
     @Produces({ MediaType.APPLICATION_JSON })
     @Wrapped(element = "consumertypes")
@@ -124,7 +124,8 @@ public class ConsumerTypeResource {
         return this.translator.translate(type, ConsumerTypeDTO.class);
     }
 
-    @ApiOperation(notes = "Creates a Consumer Type", value = "create")
+    @ApiOperation(notes = "Creates a Consumer Type", value = "createConsumerType",
+        nickname = "createConsumerType")
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -144,7 +145,8 @@ public class ConsumerTypeResource {
         }
     }
 
-    @ApiOperation(notes = "Updates a Consumer Type", value = "update")
+    @ApiOperation(notes = "Updates a Consumer Type", value = "updateConsumerType",
+        nickname = "updateConsumerType")
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @PUT
     @Path("/{id}")
