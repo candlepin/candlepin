@@ -652,7 +652,7 @@ public class JobManager implements ModeChangeListener {
         Principal principal = this.principalProvider.get();
         job.setPrincipal(principal != null ? principal.getName() : null);
 
-        // Metadata and Logging configuration...
+        // Metadata and logging configuration...
         job.setMetadata(builder.getJobMetadata());
 
         String csid = MDC.get(LoggingFilter.CSID_KEY);
@@ -665,7 +665,7 @@ public class JobManager implements ModeChangeListener {
 
         // Retry and runtime configuration...
         job.setMaxAttempts(builder.getRetryCount() + 1);
-        job.setJobData(builder.getJobArguments());
+        job.setJobArguments(builder.getJobArguments());
 
         return job;
     }
@@ -776,7 +776,7 @@ public class JobManager implements ModeChangeListener {
             this.jobCurator.delete(status);
 
             status.setState(JobState.FAILED);
-            status.setJobResult(e);
+            status.setJobResult(e.toString());
         }
         catch (Exception e) {
             log.error("Unexpected exception occurred while queueing job: {}", status.getName(), e);
@@ -790,7 +790,7 @@ public class JobManager implements ModeChangeListener {
             // to deal with, probably.
 
             status.setState(JobState.FAILED);
-            status.setJobResult(e);
+            status.setJobResult(e.toString());
         }
 
         // Done!
@@ -823,7 +823,7 @@ public class JobManager implements ModeChangeListener {
         catch (JobMessageDispatchException e) {
             log.error("Job \"{}\" could not be queued; failed to dispatch job message", status.getName(), e);
 
-            this.updateJobStatus(status, JobState.FAILED, e);
+            this.updateJobStatus(status, JobState.FAILED, e.toString());
 
             throw e;
         }
@@ -908,6 +908,8 @@ public class JobManager implements ModeChangeListener {
         finally {
             uow.end();
             candlepinRequestScope.exit();
+
+            ResteasyProviderFactory.popContextData(Principal.class);
         }
     }
 
@@ -931,6 +933,19 @@ public class JobManager implements ModeChangeListener {
         if (logLevel != null && !logLevel.isEmpty()) {
             MDC.put("logLevel", logLevel);
         }
+    }
+
+    /**
+     * Configures and injects the principal to be used during the execution of the specified job.
+     *
+     * @param status
+     *  the job status to use to configure the principal
+     */
+    private void setupPrincipal(AsyncJobStatus status) {
+        String name = status.getPrincipal();
+        Principal principal = name != null ? new JobPrincipal(name) : new SystemPrincipal();
+
+        ResteasyProviderFactory.pushContext(Principal.class, principal);
     }
 
     /**
@@ -1053,8 +1068,8 @@ public class JobManager implements ModeChangeListener {
      * @param status
      *  an AsyncJobStatus instance representing the failed job
      *
-     * @param exception
-     *  the exception representing the failure that occurred
+     * @param throwable
+     *  the Throwable instance representing the failure that occurred
      *
      * @param retry
      *  whether or not the job should be retried
@@ -1062,7 +1077,7 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the updated AsyncJobStatus entity
      */
-    private AsyncJobStatus processJobFailure(AsyncJobStatus status, EventSink eventSink, Exception exception,
+    private AsyncJobStatus processJobFailure(AsyncJobStatus status, EventSink eventSink, Throwable throwable,
         boolean retry) throws JobStateManagementException, JobMessageDispatchException {
 
         // Set the end of the execution attempt
@@ -1071,35 +1086,25 @@ public class JobManager implements ModeChangeListener {
         // Rollback any unsent events
         eventSink.rollback();
 
+        // Only store the exception type and the message. Luckily for us, toString does exactly that.
+        String result = throwable != null ? throwable.toString() : null;
+
         if (retry) {
-            status = this.updateJobStatus(status, JobState.FAILED_WITH_RETRY, exception);
+            status = this.updateJobStatus(status, JobState.FAILED_WITH_RETRY, result);
 
             log.warn("Job \"{}\" failed in {}ms; retrying...",
-                status.getName(), this.getJobRuntime(status), exception);
+                status.getName(), this.getJobRuntime(status), throwable);
 
             this.postJobStatusMessage(status);
         }
         else {
-            status = this.updateJobStatus(status, JobState.FAILED, exception);
+            status = this.updateJobStatus(status, JobState.FAILED, result);
 
             log.error("Job \"{}\" failed in {}ms",
-                status.getName(), this.getJobRuntime(status), exception);
+                status.getName(), this.getJobRuntime(status), throwable);
         }
 
         return status;
-    }
-
-    /**
-     * Configures and injects the principal to be used during the execution of the specified job.
-     *
-     * @param status
-     *  the job status to use to configure the principal
-     */
-    private void setupPrincipal(AsyncJobStatus status) {
-        String name = status.getPrincipal();
-        Principal principal = name != null ? new JobPrincipal(name) : new SystemPrincipal();
-
-        ResteasyProviderFactory.pushContext(Principal.class, principal);
     }
 
     /**

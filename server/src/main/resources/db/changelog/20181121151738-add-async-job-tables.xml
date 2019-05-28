@@ -35,8 +35,8 @@
             <column name="log_level" type="varchar(32)"/>
             <column name="log_execution_details" type="boolean"/>
 
-            <column name="job_data" type="${blob.type}"/>
-            <column name="job_result" type="${blob.type}"/>
+            <column name="job_data" type="text"/>
+            <!-- <column name="job_result" type="text"/> -->
         </createTable>
     </changeSet>
 
@@ -63,7 +63,7 @@
             constraintName="cp_async_job_constraints_pk"
         />
     </changeSet>
--->
+
 
     <changeSet id="20181121151738-4" author="crog">
         <createTable tableName="cp_async_job_metadata">
@@ -87,5 +87,7 @@
             constraintName="cp_async_job_metadata_pk"
         />
     </changeSet>
+
+-->
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->

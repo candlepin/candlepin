@@ -15,6 +15,7 @@
 package org.candlepin.async.temp;
 
 import org.candlepin.async.AsyncJob;
+import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.async.JobManager;
@@ -35,9 +36,10 @@ import java.util.Collection;
  * async job framework before we start to implement real job implementations.
  */
 public class TestJob1 implements AsyncJob {
-
     private static Logger log = LoggerFactory.getLogger(TestJob1.class);
-    private static final String JOB_KEY = "TestJob1";
+
+    public static final String JOB_KEY = "TestJob1";
+
 
     private OwnerCurator ownerCurator;
 
@@ -63,8 +65,7 @@ public class TestJob1 implements AsyncJob {
     }
 
     @Override
-    public String execute(JobExecutionContext jdata) throws JobExecutionException {
-        // TODO Finish this implementation once we work on the bits that actually execute the job.
+    public String execute(JobExecutionContext context) throws JobExecutionException {
         log.info("TestJob1 has been started!");
 
         log.trace("this is a trace line");
@@ -73,13 +74,12 @@ public class TestJob1 implements AsyncJob {
         log.warn("this is a warning line");
         log.error("this is an error line");
 
-        log.info("FETCHING OWNER INFO!");
         Collection<Owner> owners = this.ownerCurator.listAll().list();
         log.info("OWNERS: {}", owners);
 
-
-        final boolean forceFailure = jdata.getJobData().getAsBoolean("force_failure", false);
-        final boolean sleep = jdata.getJobData().getAsBoolean("sleep", false);
+        JobArguments args = context.getJobArguments();
+        final boolean forceFailure = args.getAsBoolean("force_failure", false);
+        final boolean sleep = args.getAsBoolean("sleep", false);
 
         if (sleep) {
             sleep();

@@ -17,9 +17,9 @@ package org.candlepin.async.tasks;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
-import org.candlepin.async.JobDataMap;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
@@ -72,10 +72,10 @@ public class ExportJobTest extends BaseJobTest {
         JobConfig config = ExportJob.createJobConfig()
             .setConsumer(consumer);
 
-        Map<String, Object> args = config.getJobArguments();
+        JobArguments args = config.getJobArguments();
 
         assertTrue(args.containsKey(ExportJob.CONSUMER_KEY));
-        assertEquals(consumer.getUuid(), args.get(ExportJob.CONSUMER_KEY));
+        assertEquals(consumer.getUuid(), args.getAsString(ExportJob.CONSUMER_KEY));
     }
 
     @Test
@@ -99,10 +99,10 @@ public class ExportJobTest extends BaseJobTest {
         JobConfig config = ExportJob.createJobConfig()
             .setCdnLabel(label);
 
-        Map<String, Object> args = config.getJobArguments();
+        JobArguments args = config.getJobArguments();
 
         assertTrue(args.containsKey(ExportJob.CDN_LABEL));
-        assertEquals(label, args.get(ExportJob.CDN_LABEL));
+        assertEquals(label, args.getAsString(ExportJob.CDN_LABEL));
     }
 
     @Test
@@ -112,10 +112,10 @@ public class ExportJobTest extends BaseJobTest {
         JobConfig config = ExportJob.createJobConfig()
             .setWebAppPrefix(prefix);
 
-        Map<String, Object> args = config.getJobArguments();
+        JobArguments args = config.getJobArguments();
 
         assertTrue(args.containsKey(ExportJob.WEBAPP_PREFIX));
-        assertEquals(prefix, args.get(ExportJob.WEBAPP_PREFIX));
+        assertEquals(prefix, args.getAsString(ExportJob.WEBAPP_PREFIX));
     }
 
     @Test
@@ -125,10 +125,10 @@ public class ExportJobTest extends BaseJobTest {
         JobConfig config = ExportJob.createJobConfig()
             .setApiUrl(url);
 
-        Map<String, Object> args = config.getJobArguments();
+        JobArguments args = config.getJobArguments();
 
         assertTrue(args.containsKey(ExportJob.API_URL));
-        assertEquals(url, args.get(ExportJob.API_URL));
+        assertEquals(url, args.getAsString(ExportJob.API_URL));
     }
 
     @Test
@@ -141,10 +141,10 @@ public class ExportJobTest extends BaseJobTest {
         JobConfig config = ExportJob.createJobConfig()
             .setExtensionData(data);
 
-        Map<String, Object> args = config.getJobArguments();
+        JobArguments args = config.getJobArguments();
 
         assertTrue(args.containsKey(ExportJob.EXTENSION_DATA));
-        assertEquals(data, args.get(ExportJob.EXTENSION_DATA));
+        assertEquals(data, args.getAs(ExportJob.EXTENSION_DATA, Map.class));
     }
 
     @Test
@@ -226,7 +226,7 @@ public class ExportJobTest extends BaseJobTest {
             .setExtensionData(extData);
 
         JobExecutionContext context = mock(JobExecutionContext.class);
-        doReturn(new JobDataMap(config.getJobArguments())).when(context).getJobData();
+        doReturn(config.getJobArguments()).when(context).getJobArguments();
 
         Object actualResult = this.job.execute(context);
 
