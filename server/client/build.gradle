@@ -1,0 +1,51 @@
+// vim: set expandtab sts=4 sw=4 ai:
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.openapitools:openapi-generator-gradle-plugin:4.0.0-beta"
+    }
+}
+
+apply plugin: "org.openapi.generator"
+
+description = "Candlepin Client Library"
+
+// Don't run checkstyle on generated code
+checkstyle.sourceSets = []
+
+openApiGenerate {
+    inputSpec = "${projectDir}/swagger.json"
+    outputDir = "${buildDir}/generated"
+    configFile = "${projectDir}/candlepin-api-config.json"
+    generatorName = "java"
+    // TODO get a valid spec
+    validateSpec = false
+    // TODO version = "$version"
+}
+
+sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/main/java"]
+compileJava.dependsOn tasks.openApiGenerate
+
+ext.client = [
+    swagger_annotations_version: "1.5.21",
+    jackson_version: "2.8.11",
+    jackson_databind_version: "2.8.11.2",
+    threetenbp_version: "2.6.4",
+    resteasy_version: "3.1.3.Final",
+    junit_version: "4.12",
+]
+
+dependencies {
+    implementation "io.swagger:swagger-annotations:$client.swagger_annotations_version"
+    implementation "org.jboss.resteasy:resteasy-client:$client.resteasy_version"
+    implementation "org.jboss.resteasy:resteasy-multipart-provider:$client.resteasy_version"
+    implementation "org.jboss.resteasy:resteasy-jackson2-provider:$client.resteasy_version"
+    implementation "com.fasterxml.jackson.core:jackson-core:$client.jackson_version"
+    implementation "com.fasterxml.jackson.core:jackson-annotations:$client.jackson_version"
+    implementation "com.fasterxml.jackson.core:jackson-databind:$client.jackson_databind_version"
+    implementation "com.github.joschi.jackson:jackson-datatype-threetenbp:$client.threetenbp_version"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$client.jackson_version"
+}

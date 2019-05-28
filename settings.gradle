@@ -1,7 +1,9 @@
 rootProject.name = "candlepin-parent"
 include ":candlepin-common"
 include ":candlepin"
+include ":candlepin-client"
 include ":checks"
 project(":checks").projectDir = "$rootDir/checks" as File
 project(":candlepin-common").projectDir = "$rootDir/common" as File
 project(":candlepin").projectDir = "$rootDir/server" as File
+project(":candlepin-client").projectDir = "$rootDir/server/client" as File

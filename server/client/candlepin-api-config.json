@@ -1,0 +1,10 @@
+{
+  "modelPackage": "org.candlepin.client.model",
+  "apiPackage": "org.candlepin.client.resources",
+  "invokerPackage": "org.candlepin.client",
+  "groupId": "org.candlepin",
+  "artifactId": "candlepin-client",
+  "java8": true,
+  "library": "resteasy",
+  "dateLibrary": "java8"
+}
