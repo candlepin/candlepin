@@ -1,0 +1,172 @@
+#!/bin/bash
+#
+# Launch point for the docker container to run Candlepin deployment & test data loading/dumping.
+#
+# Starts supervisor to manage services, then cds to the included /candlepin clone and deploys candlepin which
+# should already have all the necessary dependencies built by the parent docker image.
+#
+# See usage below.
+
+# Exit on any error:
+set -e
+
+export HOME=/root
+
+export SUPERVISOR=1
+export AUTOCONF=1
+export FORCECERT=1
+
+trapex() {
+    target="$1"
+    shift
+
+    for sig in "$@"; do
+        trap "$target $sig" "$sig"
+        signals="$signals $sig"
+    done
+}
+
+# Be sure to run cleanup on any error, SIGINT, or SIGTERM
+trapex cleanup SIGINT SIGTERM ERR EXIT
+CLEANUP_RUN=0
+CLEAN_CP=0
+
+cleanup() {
+    if [ "$CLEANUP_RUN" == "0" ]; then
+        CLEANUP_RUN=1
+
+        # Remove our traps so we don't keep trying to call this
+        trap - $signals
+        trap "" ERR EXIT
+
+        # Run buildr clean in our target CP directory
+        if [ "$CLEAN_CP" == "1" ]; then
+            cd $CP_HOME
+            buildr clean
+        fi
+    fi
+}
+
+retry() {
+    local -r -i max_attempts="$1"; shift
+    local -r name="$1"; shift
+    local -r cmd="$@"
+    local -i attempt_num=1
+    echo -n "Waiting for $name to start..."
+    until ${cmd}
+    do
+        if (( attempt_num == max_attempts ))
+        then
+            echo "Attempt $attempt_num failed and there are no more attempts left!"
+            return 1
+        else
+            echo -n '.'
+            sleep $(( attempt_num++ ))
+        fi
+    done
+    echo
+}
+
+setup_database() {
+    retry 20 "postgres" pg_isready -h db
+}
+
+usage() {
+    cat <<HELP
+usage: cp-test [options]
+
+OPTIONS:
+  -d               deploy a live candlepin
+  -t               populate Candlepin database with test data (implies -d)
+  -g               perform a data dump (implies -t)
+  -p <project>     subproject to build (defaults to "server")
+  -j <version>     use a specific Java version instead of the auto-detected default
+  -v               enable verbose/debug output
+HELP
+}
+
+ARGV=("$@")
+while getopts ":dtp:vj:g" opt; do
+    case $opt in
+        d  ) DEPLOY="1";;
+        t  )
+            DEPLOY="1"
+            TESTDATA="1"
+            ;;
+        g  )
+            DEPLOY="1"
+            TESTDATA="1"
+            DUMP="1"
+            ;;
+        p  ) PROJECT="${OPTARG}";;
+        v  ) VERBOSE="1";;
+        j  ) JAVA_VERSION="${OPTARG}";;
+        ?  ) usage; exit;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+# Auto-detect JAVA_VERSION if necessary and set JAVA_HOME and update executable links
+# Note that alternatives doesn't update the JDK binaries properly, and doesn't order
+# versions predictably, so we'll just explicitly make the links ourself.
+if [ -z "$JAVA_VERSION" ]; then
+    JAVA_VERSION=$(java -version 2>&1 | head -1 | sed -r 's/^(java|openjdk) version \"([0-9]+\.[0-9]+\.[0-9]+).*\"/\2/')
+fi
+
+export JAVA_VERSION
+export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
+
+if [ -d "$JAVA_HOME" ]; then
+    ln -sf -t /usr/bin $JAVA_HOME/bin/*
+    echo "Using Java version: $JAVA_VERSION ($JAVA_HOME)"
+else
+    echo "Java home not found for version $JAVA_VERSION: $JAVA_HOME"
+    exit 1
+fi
+
+# Set our project to test
+PROJECT=${PROJECT:-server}
+
+# WARNING: control+c while this is running will take out supervisor as well.
+/usr/bin/supervisord -c /etc/supervisord.conf
+
+# Use the clone in the image and try to update it.
+echo "Using /candlepin."
+
+CP_HOME="/candlepin"
+cd $CP_HOME
+
+# Make sure we update the ruby bundle:
+bundle install
+mkdir -p /var/log/candlepin
+
+PROJECT_DIR="$CP_HOME/$PROJECT"
+cd $PROJECT_DIR
+
+if [ "$DEPLOY" == "1" ]; then
+    echo "Deploying candlepin..."
+    CLEAN_CP=1
+
+    DEPLOY_FLAGS="-g"
+
+    if [ "$TESTDATA" == "1" ]; then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -t"
+    fi
+
+    if [ "$VERBOSE" == "1" ]; then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
+    fi
+
+    setup_database
+
+    bin/deploy $DEPLOY_FLAGS
+    sleep 7
+
+    if [ "$DUMP" == "1" ]; then
+        echo "Performing a data dump..."
+        pg_dump -h db -U candlepin candlepin > /db-data/dump.sql
+    fi
+fi
+
+cleanup

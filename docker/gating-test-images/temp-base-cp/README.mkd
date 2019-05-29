@@ -1,0 +1,1 @@
+A base image that builds a centos environment with all necessary candlepin dependencies based on the current candlepin version in stage. This is used as a temp base image for other candlepin images, and is not itself supposed to be run as a container.

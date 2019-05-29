@@ -1,0 +1,2 @@
+An image based on the temp-base-cp image, which runs a centos container with a running Candlepin built from scratch based on the candlepin version running in stage.
+It is built and pushed to the internal docker registry by the build.sh script which is run periodically by Jenkins.

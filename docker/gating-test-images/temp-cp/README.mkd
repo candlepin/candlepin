@@ -1,0 +1,2 @@
+An image based on the temp-base-cp image, for a temporary Candlepin container used for deploying the version currently used by the stage environment,
+loading the database with the test data, and then performing a data dump.
