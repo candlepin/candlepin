@@ -1,0 +1,28 @@
+# Candlepin containers for gating tests
+This folder contains docker configurations for running Candlepin & Postgresql containers with preloaded test data.
+They are used for subscription-manager gating tests to be run against. The scripts here use docker stack, and podman, so docker-compose is not required to use this. The build script is supposed to be triggered automatically via jenkins [[1]](https://github.com/candlepin/candlepin-jobs).
+Note: The building/running scripts of these images are not configurable, because they are not supposed to be used as a development environment. 
+
+## Building
+The `build.sh` script is used for building a Candlepin image of the latest Candlepin version currently running in stage, and a corresponding postgresql image with preloaded test data.
+The images (`cp_latest_stage` & `cp_postgres`) are then pushed to the internal registry [[2]](https://registry-console.engineering.redhat.com/registry#/images/candlepin).
+It uses `docker` to build images & `docker stack` to run intermediate images.
+Note: You might need to run this with sudo.
+```bash
+./build.sh
+```
+
+## Running
+Downloads the `cp_latest_stage` & `cp_postgres` from the registry, and runs them.
+It uses `podman` instead of `docker`, and will create a pod in which both containers are part of, and has candlepin's 8443 port exposed to the host.
+Notes: This requires sudo to run. Also, creates an SELinux policy to avoid a denial when postgresql is trying to read the hosts file.
+```bash
+sudo ./run.sh
+```
+
+### Stopping the deployment
+If you would like to stop and remove the pod & its containers, you can run the following:
+Note: This requires sudo to run.
+```bash
+sudo podman pod rm -f cp_pod
+```

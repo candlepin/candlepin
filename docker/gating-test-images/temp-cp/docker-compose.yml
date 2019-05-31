@@ -1,0 +1,26 @@
+version: '3'
+services:
+  db:
+    # upgrade to 9.6 requires client version 9.4.1211
+    # https://stackoverflow.com/questions/38427585/postgresql-error-column-am-amcanorder-doesnt-exist
+    image: postgres:9.5.9
+    environment:
+      POSTGRES_USER: candlepin
+      POSTGRES_INITDB_ARGS: "--auth='ident' --auth='trust'"
+    ports:
+      - "5432:5432"
+    deploy:
+      restart_policy:
+        condition: none
+  candlepin:
+    image: temp_candlepin:latest
+    environment:
+      DBHOSTNAME: db
+    ports:
+      - "8443:8443"
+    deploy:
+      restart_policy:
+        condition: none
+    # mount the location of the data dump
+    volumes:
+      - ./sql:/db-data
