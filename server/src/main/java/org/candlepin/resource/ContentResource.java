@@ -104,7 +104,8 @@ public class ContentResource {
         return this.modelTranslator.translate(content, ContentDTO.class);
     }
 
-    @ApiOperation(notes = "Creates a Content", value = "createContent")
+    @ApiOperation(notes = "Creates a Content", value = "createContent", hidden = true)
+    @ApiResponse(code = 400, message = "This method is deprecated")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -113,7 +114,8 @@ public class ContentResource {
             "Organization-agnostic content write operations are not supported."));
     }
 
-    @ApiOperation(notes = "Creates Contents in bulk", value = "createBatchContent")
+    @ApiOperation(notes = "Creates Contents in bulk", value = "createBatchContent", hidden = true)
+    @ApiResponse(code = 400, message = "This method is deprecated")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -123,7 +125,8 @@ public class ContentResource {
             "Organization-agnostic content write operations are not supported."));
     }
 
-    @ApiOperation(notes = "Updates a Content", value = "updateContent")
+    @ApiOperation(notes = "Updates a Content", value = "updateContent", hidden = true)
+    @ApiResponse(code = 400, message = "This method is deprecated")
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -133,7 +136,8 @@ public class ContentResource {
             "Organization-agnostic content write operations are not supported."));
     }
 
-    @ApiOperation(notes = "Deletes a Content", value = "remove", nickname = "removeContent")
+    @ApiOperation(notes = "Deletes a Content", value = "remove", nickname = "removeContent", hidden = true)
+    @ApiResponse(code = 400, message = "This method is deprecated")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_uuid}")
