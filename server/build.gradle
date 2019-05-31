@@ -58,6 +58,24 @@ task generateConfig() {
     }
 }
 
+// task to generate candlepin-api jar that Hosted adapters build against
+// invoked as `./gradlew apiJar`
+task apiJar(type: Jar) {
+    archiveBaseName = 'candlepin-api'
+    from sourceSets.main.output
+    includes = [
+        'auth',
+        'config',
+        'jackson',
+        'model',
+        'pki',
+        'resteasy',
+        'service',
+        'util'
+    ].collect { "/org/candlepin/${it}/" }
+    duplicatesStrategy = 'exclude'
+}
+
 dependencies {
     annotationProcessor libraries.hibernate_validator_ap
 
