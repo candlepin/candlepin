@@ -195,23 +195,23 @@ describe 'Owner Product Resource' do
     # Override enabled to true:
     job = @cp.refresh_pools_for_product(owner1['key'], "p4")
     job.should_not be_nil
-    job['id'].should include("refresh_pools")
-    wait_for_job(job['id'], 15)
+    job['name'].should include("refresh_pools")
+    wait_for_async_job(job['id'], 15)
 
     job = @cp.refresh_pools_for_product(owner2['key'], "p5d")
     job.should_not be_nil
-    job['id'].should include("refresh_pools")
-    wait_for_job(job['id'], 15)
+    job['name'].should include("refresh_pools")
+    wait_for_async_job(job['id'], 15)
 
     job = @cp.refresh_pools_for_product(owner3['key'], "p1")
     job.should_not be_nil
-    job['id'].should include("refresh_pools")
-    wait_for_job(job['id'], 15)
+    job['name'].should include("refresh_pools")
+    wait_for_async_job(job['id'], 15)
 
     job = @cp.refresh_pools_for_product(owner3['key'], "p3")
     job.should_not be_nil
-    job['id'].should include("refresh_pools")
-    wait_for_job(job['id'], 15)
+    job['name'].should include("refresh_pools")
+    wait_for_async_job(job['id'], 15)
 
     lambda do
       @cp.refresh_pools_for_product(owner1['key'], "nope")
