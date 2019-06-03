@@ -66,7 +66,8 @@ public class ExportJob implements AsyncJob {
         }
 
         /**
-         * Sets the consumer for this export job. The consumer must be
+         * Sets the consumer for this export job. The consumer is required, and also provides the
+         * context in which the job will be executed.
          *
          * @param consumer
          *  the consumer to set for this job
@@ -170,12 +171,12 @@ public class ExportJob implements AsyncJob {
                 String consumerUuid = arguments.getAsString(CONSUMER_KEY);
                 String cdnLabel = arguments.getAsString(CDN_LABEL);
 
-                if (!(consumerUuid instanceof String) || ((String) consumerUuid).isEmpty()) {
+                if (consumerUuid == null || consumerUuid.isEmpty()) {
                     String errmsg = "consumer has not been set, or the provided consumer lacks a UUID";
                     throw new JobConfigValidationException(errmsg);
                 }
 
-                if (!(cdnLabel instanceof String) || ((String) cdnLabel).isEmpty()) {
+                if (cdnLabel == null || cdnLabel.isEmpty()) {
                     String errmsg = "CDN label has not been set, or the provided label is empty";
                     throw new JobConfigValidationException(errmsg);
                 }

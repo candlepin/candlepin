@@ -30,6 +30,9 @@ import java.util.Map;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
+import org.candlepin.async.JobArguments;
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -47,7 +50,6 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.sync.Exporter;
@@ -62,8 +64,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -278,16 +278,16 @@ public class ManifestManagerTest {
         when(fileService.store(ManifestFileType.IMPORT, file, principal.getName(),
             owner.getKey())).thenReturn(manifest);
 
-        JobDetail job = manager.importManifestAsync(owner, file, filename, overrides);
-        JobDataMap jobData = job.getJobDataMap();
-        assertEquals(owner.getKey(), jobData.get("owner_id"));
-        assertEquals(JobStatus.TargetType.OWNER, jobData.get("target_type"));
-        assertEquals(owner.getKey(), jobData.get("target_id"));
-        assertEquals(manifest.getId(), jobData.get("stored_manifest_file_id"));
-        assertEquals(filename, jobData.get("uploaded_file_name"));
+        JobConfig job = manager.importManifestAsync(owner, file, filename, overrides);
+        JobArguments jobArgs = job.getJobArguments();
+        assertEquals(ImportJob.JOB_KEY, job.getJobKey());
+        assertEquals(ImportJob.JOB_NAME, job.getJobName());
+        assertEquals(owner.getKey(), job.getJobMetadata().get("org"));
+        assertEquals(manifest.getId(), jobArgs.getAsString("stored_manifest_file_id"));
+        assertEquals(filename, jobArgs.getAsString("uploaded_file_name"));
 
         ConflictOverrides retrievedOverrides =
-            new ConflictOverrides((String[]) jobData.get("conflict_overrides"));
+            new ConflictOverrides(jobArgs.getAs("conflict_overrides", String[].class));
         assertTrue(retrievedOverrides.isForced(Conflict.DISTRIBUTOR_CONFLICT));
 
         verify(fileService).store(eq(ManifestFileType.IMPORT), eq(file), eq(principal.getName()),

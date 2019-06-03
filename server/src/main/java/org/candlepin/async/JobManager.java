@@ -1086,7 +1086,6 @@ public class JobManager implements ModeChangeListener {
         // Rollback any unsent events
         eventSink.rollback();
 
-        // Only store the exception type and the message. Luckily for us, toString does exactly that.
         String result = throwable != null ? throwable.toString() : null;
 
         if (retry) {
