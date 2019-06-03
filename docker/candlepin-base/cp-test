@@ -37,7 +37,7 @@ build_clean() {
 }
 build_lint() {
     if [ -f ./gradlew ]; then
-        ./gradlew checkstyleMain
+        ./gradlew checkstyleMain checkstyleTest
     else
         buildr lint
     fi
