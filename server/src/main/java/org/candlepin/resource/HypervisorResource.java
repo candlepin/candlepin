@@ -124,7 +124,7 @@ public class HypervisorResource {
         "to allow creation of new hypervisor consumers.  Most consumers do not have a" +
         " hypervisorId attribute, so that should be added manually when necessary by the " +
         "management environment. @deprecated Use the asynchronous method",
-        value = "hypervisorUpdate")
+        value = "hypervisorUpdate", hidden = true)
     @ApiResponses({ @ApiResponse(code = 202, message = "") })
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
