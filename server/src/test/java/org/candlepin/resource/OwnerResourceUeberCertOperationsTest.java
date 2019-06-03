@@ -21,8 +21,6 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.controller.ContentManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Role;
@@ -52,8 +50,6 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Inject private PermissionFactory permFactory;
     @Inject private ServiceLevelValidator serviceLevelValidator;
     @Inject private ContentOverrideValidator contentOverrideValidator;
-    @Inject private ProductManager productManager;
-    @Inject private ContentManager contentManager;
 
     private Owner owner;
     private OwnerResource or;
@@ -73,11 +69,11 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         setupPrincipal(principal);
 
         or = new OwnerResource(
-            ownerCurator, productCurator, null, consumerCurator, i18n, null, null,
-            null, null, poolManager, null, null,
-            null, null, consumerTypeCurator, entitlementCertificateCurator, entitlementCurator,
+            ownerCurator, null, consumerCurator, i18n, null, null, null,
+            null, poolManager, null, null,
+            null, null, entitlementCurator,
             ueberCertCurator, ueberCertGenerator, null,  null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, null, this.modelTranslator);
+            serviceLevelValidator, null, null, null, null, null, this.modelTranslator, this.jobManager);
     }
 
     @Test

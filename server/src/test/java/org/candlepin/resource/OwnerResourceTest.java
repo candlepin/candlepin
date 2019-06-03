@@ -17,6 +17,11 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.ImportJob;
+import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -37,6 +42,7 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.ImportRecordDTO;
@@ -47,12 +53,12 @@ import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
@@ -91,7 +97,6 @@ import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
@@ -923,13 +928,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyRequiresName() {
         OwnerCurator oc = mock(OwnerCurator.class);
-        ProductCurator pc = mock(ProductCurator.class);
         Owner o = new Owner();
         o.setKey("owner-key");
         OwnerResource ownerres = new OwnerResource(
-            oc, pc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null,
+            oc, null, null, i18n, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null,
-            null, null, this.modelTranslator);
+            null, null, this.modelTranslator, this.jobManager);
         when(oc.getByKey(anyString())).thenReturn(o);
         ActivationKeyDTO key = new ActivationKeyDTO();
         assertThrows(BadRequestException.class, () ->
@@ -940,13 +944,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyTooLongRelease() {
         OwnerCurator oc = mock(OwnerCurator.class);
-        ProductCurator pc = mock(ProductCurator.class);
         Owner o = new Owner();
         o.setKey("owner-key");
         OwnerResource ownerres = new OwnerResource(
-            oc, pc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null,
+            oc, null, null, null, i18n, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            null, this.modelTranslator);
+            null, this.modelTranslator, this.jobManager);
         when(oc.getByKey(anyString())).thenReturn(o);
         ActivationKeyDTO key = new ActivationKeyDTO();
         key.setReleaseVersion(TestUtil.getStringOfSize(256));
@@ -1119,14 +1122,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testConflictOnDelete() {
         Owner o = mock(Owner.class);
         OwnerCurator oc = mock(OwnerCurator.class);
-        ProductCurator pc = mock(ProductCurator.class);
         OwnerManager ownerManager = mock(OwnerManager.class);
         EventFactory eventFactory = mock(EventFactory.class);
         OwnerResource or = new OwnerResource(
-            oc, pc, null, null, i18n, null, eventFactory, null, null, poolManager, ownerManager,  null,
-            null, null, null, null, null, null, null, null, null, contentOverrideValidator,
+            oc, null, null, i18n, null, eventFactory, null, null, poolManager, ownerManager,  null,
+            null, null, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null, null,
-            this.modelTranslator);
+            this.modelTranslator, this.jobManager);
 
         when(oc.getByKey(eq("testOwner"))).thenReturn(o);
         ConstraintViolationException ce = new ConstraintViolationException(null, null, null);
@@ -1142,17 +1144,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Owner o = mock(Owner.class);
         OwnerCurator oc = mock(OwnerCurator.class);
-        ProductCurator pc = mock(ProductCurator.class);
 
         when(ak.getName()).thenReturn("testKey");
         when(akc.getByKeyName(eq(o), eq("testKey"))).thenReturn(akOld);
         when(oc.getByKey(eq("testOwner"))).thenReturn(o);
 
         OwnerResource ownerres = new OwnerResource(
-            oc, pc, akc, null, i18n, null, null, null, null, null, null, null, null,
+            oc, akc, null, i18n, null, null, null, null, null, null, null, null, null,
             null, null, null, null,
-            null, null, null, null, contentOverrideValidator, null, null, null, null, null,
-            null, this.modelTranslator);
+            null, contentOverrideValidator, null, null, null, null, null,
+            null, this.modelTranslator, this.jobManager);
 
         assertThrows(BadRequestException.class, () -> ownerres.createActivationKey("testOwner", ak));
     }
@@ -1287,11 +1288,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ManifestManager manifestManager = mock(ManifestManager.class);
         EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, productCurator, null, null, i18n, es, eventFactory,
-            null, manifestManager, null, null, null,
-            null, importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
+            ownerCurator, null, null, i18n, es, eventFactory, null,
+            manifestManager, null, null, null,
+            null, importRecordCurator, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null,
-            null, this.modelTranslator);
+            null, this.modelTranslator, this.jobManager);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1319,15 +1320,17 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testImportManifestAsyncSuccess() throws IOException, ImporterException {
+    public void testImportManifestAsyncSuccess() throws IOException, ImporterException, JobException {
         ManifestManager manifestManager = mock(ManifestManager.class);
         EventSink es = mock(EventSink.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
+        JobManager jm = mock(JobManager.class);
         OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, productCurator, null, null, i18n, es, eventFactory,
-            null, manifestManager, null, null, null,
-            null, importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
+            ownerCurator, null, null, i18n, es, eventFactory, null,
+            manifestManager, null, null, null,
+            null, importRecordCurator, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null,
-            null, this.modelTranslator);
+            null, this.modelTranslator, jm);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1338,18 +1341,27 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<String> contDis = new ArrayList<>();
         contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
         mm.put("Content-Disposition", contDis);
+        Owner owner = new Owner();
+        owner.setKey("random-owner-key");
 
-        JobDetail job = mock(JobDetail.class);
+        AsyncJobStatus asyncJobStatus = new AsyncJobStatus();
+        asyncJobStatus.setName(ImportJob.JOB_NAME);
+
+        JobConfig job = new JobConfig();
+        job.setJobName(ImportJob.JOB_NAME);
 
         when(input.getParts()).thenReturn(parts);
         when(part.getHeaders()).thenReturn(mm);
         when(part.getBody(any(GenericType.class))).thenReturn(archive);
         when(manifestManager.importManifestAsync(eq(owner), any(File.class), eq("test_file.zip"),
                 any(ConflictOverrides.class))).thenReturn(job);
+        when(oc.getByKey(any())).thenReturn(owner);
+        when(jm.queueJob(eq(job))).thenReturn(asyncJobStatus);
 
-        JobDetail response = thisOwnerResource.importManifestAsync(owner.getKey(), new String [] {}, input);
-        assertNotNull(response);
-        assertEquals(job, response);
+        AsyncJobStatusDTO dto =
+            thisOwnerResource.importManifestAsync(owner.getKey(), new String [] {}, input);
+        assertNotNull(dto);
+        assertEquals(job.getJobName(), dto.getName());
 
         verify(manifestManager, never()).importManifest(eq(owner), any(File.class), any(String.class),
             any(ConflictOverrides.class));
@@ -1360,11 +1372,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ManifestManager manifestManager = mock(ManifestManager.class);
         EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, productCurator, null, null, i18n, es, eventFactory,
-            null, manifestManager, null, null, null,
-            null, importRecordCurator, null, null, null, null, null, null, null, contentOverrideValidator,
+            ownerCurator, null, null, i18n, es, eventFactory, null,
+            manifestManager, null, null, null,
+            null, importRecordCurator, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null,
-            null, this.modelTranslator);
+            null, this.modelTranslator, this.jobManager);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1399,13 +1411,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void upstreamConsumers() {
         Principal p = mock(Principal.class);
         OwnerCurator oc = mock(OwnerCurator.class);
-        ProductCurator pc = mock(ProductCurator.class);
         UpstreamConsumer upstream = mock(UpstreamConsumer.class);
         Owner owner = mock(Owner.class);
         OwnerResource ownerres = new OwnerResource(
-            oc, pc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, contentOverrideValidator, serviceLevelValidator, null,
-            null, null, null, null, this.modelTranslator);
+            oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, contentOverrideValidator, serviceLevelValidator, null,
+            null, null, null, null, this.modelTranslator, this.jobManager);
 
         when(oc.getByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
@@ -1611,10 +1622,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         page.setPageData(entitlements);
 
         OwnerResource ownerres = new OwnerResource(
-            this.ownerCurator, this.productCurator, null, null, i18n, null, null,
-            null, null, null, null, null, null, null, null, null, this.entitlementCurator,
+            this.ownerCurator, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, this.entitlementCurator,
             null, null, null, null, null, null, null, null, null, null,
-            null, this.modelTranslator);
+            null, this.modelTranslator, this.jobManager);
 
         List<EntitlementDTO> result = ownerres.ownerEntitlements(owner.getKey(), null, null, null, req);
 
@@ -1629,11 +1640,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         req.setPerPage(10);
 
         OwnerCurator oc = mock(OwnerCurator.class);
-        ProductCurator pc = mock(ProductCurator.class);
         OwnerResource ownerres = new OwnerResource(
-            oc, pc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null,
-            null, this.modelTranslator);
+            oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null,
+            null, this.modelTranslator, this.jobManager);
 
         assertThrows(NotFoundException.class, () ->
             ownerres.ownerEntitlements("Taylor Swift", null, null, null, req)
@@ -1647,18 +1657,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UeberCertificate entCert = mock(UeberCertificate.class);
 
         OwnerCurator oc = mock(OwnerCurator.class);
-        ProductCurator pc = mock(ProductCurator.class);
         ConsumerCurator cc = mock(ConsumerCurator.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
         CandlepinPoolManager cpm = mock(CandlepinPoolManager.class);
-        EntitlementCertificateCurator ecc = mock(EntitlementCertificateCurator.class);
         UeberCertificateCurator uc = mock(UeberCertificateCurator.class);
         UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
 
         OwnerResource resource = new OwnerResource(
-            oc, pc, null, cc, i18n, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
+            oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
             uc, ucg, null, null, null, null, null, null, null, null,
-            null, this.modelTranslator);
+            null, this.modelTranslator, this.jobManager);
 
         when(oc.getByKey(eq("admin"))).thenReturn(owner);
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);
@@ -1679,14 +1687,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ConsumerCurator cc = mock(ConsumerCurator.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
         CandlepinPoolManager cpm = mock(CandlepinPoolManager.class);
-        EntitlementCertificateCurator ecc = mock(EntitlementCertificateCurator.class);
         UeberCertificateCurator uc = mock(UeberCertificateCurator.class);
         UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
 
         OwnerResource resource = new OwnerResource(
-            oc, pc, null, cc, i18n, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
+            oc, null, cc, i18n, null, null, null, null, cpm, null, null, null, null, ec,
             uc, ucg, null, null, null, null, null, null, null, null,
-            null, this.modelTranslator);
+            null, this.modelTranslator, this.jobManager);
 
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);
 
@@ -1702,9 +1709,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         OwnerProductCurator opc = mock(OwnerProductCurator.class);
 
-        OwnerResource resource = new OwnerResource(oc, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, opc, this.modelTranslator
+        OwnerResource resource = new OwnerResource(oc, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            opc, this.modelTranslator, this.jobManager
         );
 
         when(oc.getByKey(eq(owner.getKey()))).thenReturn(owner);
@@ -1747,9 +1754,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         ConsumerCurator cc = mock(ConsumerCurator.class);
 
-        OwnerResource resource = new OwnerResource(oc, null, null, cc, null, null, null, null, null,
+        OwnerResource resource = new OwnerResource(oc, null, cc, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            null, null, null, this.modelTranslator
+            this.modelTranslator, this.jobManager
         );
 
         when(oc.getByKey(eq(owner.getKey()))).thenReturn(owner);
