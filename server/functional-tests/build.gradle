@@ -1,0 +1,39 @@
+// vim: set expandtab sts=4 sw=4 ai:
+plugins {
+    id "org.springframework.boot" version "2.0.8.RELEASE"
+}
+
+description = "Candlepin Functional Tests"
+
+ext.functional = [
+    spring_version: "5.1.4.RELEASE",
+    spring_boot_version: "2.1.2.RELEASE",
+    resteasy_version: "3.1.3.Final",
+]
+
+bootJar {
+    mainClassName = "org.candlepin.functional.BootApplication"
+}
+
+dependencies {
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:$functional.spring_boot_version"
+
+    implementation project(":candlepin-client")
+
+    implementation libraries.core_testing
+    implementation libraries.qpid
+    implementation "org.junit.platform:junit-platform-runner:1.4.2"
+
+    implementation "org.springframework.boot:spring-boot-starter:$functional.spring_boot_version"
+    implementation "org.springframework.boot:spring-boot-test:$functional.spring_boot_version"
+    implementation "org.springframework:spring-beans:$functional.spring_version"
+    implementation "org.springframework:spring-context:$functional.spring_version"
+    implementation "org.springframework:spring-context-support:$functional.spring_version"
+    implementation "org.springframework:spring-test:$functional.spring_version"
+    implementation "org.jboss.resteasy:resteasy-client:$functional.resteasy_version"
+    testImplementation project(":candlepin")
+
+    testImplementation "org.codehaus.cargo:cargo-core-container-tomcat:1.7.4"
+    testImplementation "org.jboss.shrinkwrap:shrinkwrap-api:1.2.6"
+}
+

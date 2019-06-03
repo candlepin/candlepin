@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <contextName>candlepin-functional-tests</contextName>
+    <appender name="ConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{ISO8601} [thread=%thread] [%X{requestType}=%X{requestUuid}, org=%X{org}, csid=%X{csid}] %-5p %c - %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="org.candlepin" level="INFO"/>
+
+    <root level="WARN">
+        <appender-ref ref="ConsoleAppender" />
+    </root>
+</configuration>

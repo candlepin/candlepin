@@ -142,6 +142,13 @@ ext.libraries = [
         "org.hibernate.validator:hibernate-validator:6.0.7.Final",
         "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.7.Final",
     ],
+    qpid: [
+        "org.apache.qpid:qpid-common:0.32",
+        "org.apache.qpid:qpid-client:0.32",
+        "org.apache.mina:mina-core:1.0.1",
+        "org.apache.mina:mina-filter-ssl:1.0.1",
+        "geronimo-spec:geronimo-spec-jms:1.1-rc4",
+    ]
 ]
 
 allprojects {
