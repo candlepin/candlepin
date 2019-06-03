@@ -31,6 +31,7 @@ import org.candlepin.async.JobMessageDispatcher;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.impl.ArtemisJobMessageDispatcher;
 import org.candlepin.async.tasks.ExportJob;
+import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.async.temp.AsyncJobResource;
 import org.candlepin.async.temp.TestJob1;
 import org.candlepin.audit.AMQPBusPublisher;
@@ -424,6 +425,7 @@ public class CandlepinModule extends AbstractModule {
 
         JobManager.registerJob(TestJob1.JOB_KEY, TestJob1.class);
         JobManager.registerJob(ExportJob.JOB_KEY, ExportJob.class);
+        JobManager.registerJob(ImportJob.JOB_KEY, ImportJob.class);
     }
 
     private void configurePinsetter() {

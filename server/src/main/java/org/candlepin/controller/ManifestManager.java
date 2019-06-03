@@ -28,6 +28,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.tasks.ExportJob;
+import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -42,7 +43,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
-import org.candlepin.pinsetter.tasks.ImportJob;
 import org.candlepin.model.Owner;
 import org.candlepin.pinsetter.tasks.ManifestCleanerJob;
 import org.candlepin.service.ExportExtensionAdapter;
@@ -170,10 +170,14 @@ public class ManifestManager {
      * @return the {@link JobDetail} that represents the asynchronous import job to start.
      * @throws ManifestFileServiceException if the archive could not be stored.
      */
-    public JobDetail importManifestAsync(Owner owner, File archive, String uploadedFileName,
+    public JobConfig importManifestAsync(Owner owner, File archive, String uploadedFileName,
         ConflictOverrides overrides) throws ManifestFileServiceException {
         ManifestFile manifestRecordId = storeImport(archive, owner);
-        return ImportJob.scheduleImport(owner, manifestRecordId.getId(), uploadedFileName, overrides);
+        return ImportJob.createJobConfig()
+            .setOwner(owner)
+            .setStoredFileId(manifestRecordId.getId())
+            .setUploadedFileName(uploadedFileName)
+            .setConflictOverrides(overrides);
     }
 
     /**

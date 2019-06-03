@@ -14,6 +14,9 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -40,6 +43,7 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -50,13 +54,12 @@ import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
@@ -74,7 +77,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SystemPurposeAttributeType;
@@ -175,8 +177,9 @@ public class OwnerResource {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
 
+    private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
+
     private OwnerCurator ownerCurator;
-    private ProductCurator productCurator;
     private OwnerInfoCurator ownerInfoCurator;
     private ActivationKeyCurator activationKeyCurator;
     private OwnerServiceAdapter ownerService;
@@ -190,8 +193,6 @@ public class OwnerResource {
     private ImportRecordCurator importRecordCurator;
     private PoolManager poolManager;
     private OwnerManager ownerManager;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private EntitlementCertificateCurator entitlementCertCurator;
     private EntitlementCurator entitlementCurator;
     private UeberCertificateCurator ueberCertCurator;
     private UeberCertificateGenerator ueberCertGenerator;
@@ -204,11 +205,10 @@ public class OwnerResource {
     private ConsumerTypeValidator consumerTypeValidator;
     private OwnerProductCurator ownerProductCurator;
     private ModelTranslator translator;
-    private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
+    private JobManager jobManager;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
-        ProductCurator productCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
         I18n i18n,
@@ -221,8 +221,6 @@ public class OwnerResource {
         ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
-        ConsumerTypeCurator consumerTypeCurator,
-        EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
         UeberCertificateCurator ueberCertCurator,
         UeberCertificateGenerator ueberCertGenerator,
@@ -235,10 +233,10 @@ public class OwnerResource {
         ResolverUtil resolverUtil,
         ConsumerTypeValidator consumerTypeValidator,
         OwnerProductCurator ownerProductCurator,
-        ModelTranslator translator) {
+        ModelTranslator translator,
+        JobManager jobManager) {
 
         this.ownerCurator = ownerCurator;
-        this.productCurator = productCurator;
         this.ownerInfoCurator = ownerInfoCurator;
         this.activationKeyCurator = activationKeyCurator;
         this.consumerCurator = consumerCurator;
@@ -251,8 +249,6 @@ public class OwnerResource {
         this.manifestManager = manifestManager;
         this.ownerManager = ownerManager;
         this.eventAdapter = eventAdapter;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.entitlementCertCurator = entitlementCertCurator;
         this.entitlementCurator = entitlementCurator;
         this.ueberCertCurator = ueberCertCurator;
         this.ueberCertGenerator = ueberCertGenerator;
@@ -266,6 +262,7 @@ public class OwnerResource {
         this.consumerTypeValidator = consumerTypeValidator;
         this.ownerProductCurator = ownerProductCurator;
         this.translator = translator;
+        this.jobManager = jobManager;
     }
 
     /**
@@ -1946,10 +1943,10 @@ public class OwnerResource {
         @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 500, message = ""),
         @ApiResponse(code = 409, message = "")})
-    public JobDetail importManifestAsync(
+    public AsyncJobStatusDTO importManifestAsync(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") String[] overrideConflicts,
-        MultipartInput input) {
+        MultipartInput input) throws JobException {
 
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
         UploadMetadata fileData = new UploadMetadata();
@@ -1959,8 +1956,11 @@ public class OwnerResource {
             fileData = getArchiveFromResponse(input);
             String archivePath = fileData.getData().getAbsolutePath();
             log.info("Running async import of archive {} for owner {}", archivePath, owner.getDisplayName());
-            return manifestManager.importManifestAsync(owner, fileData.getData(),
+            JobConfig config =  manifestManager.importManifestAsync(owner, fileData.getData(),
                 fileData.getUploadedFilename(), overrides);
+
+            AsyncJobStatus job = this.jobManager.queueJob(config);
+            return this.translator.translate(job, AsyncJobStatusDTO.class);
         }
         catch (IOException e) {
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
