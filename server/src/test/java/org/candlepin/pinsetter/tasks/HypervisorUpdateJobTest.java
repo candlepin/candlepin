@@ -154,7 +154,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         when(consumerCurator.getHostConsumersMap(eq(owner),
-            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(new VirtConsumerMap());
+            anyListOf(Consumer.class))).thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(
             ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
@@ -173,7 +173,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         when(consumerCurator.getHostConsumersMap(eq(owner),
-            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(new VirtConsumerMap());
+            anyListOf(Consumer.class))).thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(
             ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
@@ -197,7 +197,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         VirtConsumerMap vcm = new VirtConsumerMap();
         vcm.add(hypervisorId, hypervisor);
         when(consumerCurator.getHostConsumersMap(eq(owner),
-            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+            anyListOf(Consumer.class))).thenReturn(vcm);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
@@ -223,7 +223,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         VirtConsumerMap vcm = new VirtConsumerMap();
         vcm.add(hypervisorId, hypervisor);
         when(consumerCurator.getHostConsumersMap(eq(owner),
-            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+            anyListOf(Consumer.class))).thenReturn(vcm);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal,
             "updateReporterId");
@@ -334,7 +334,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         when(consumerCurator.getHostConsumersMap(eq(owner),
-            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(new VirtConsumerMap());
+            anyListOf(Consumer.class))).thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(
             ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
@@ -362,7 +362,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
 
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(HypervisorUpdateJob.HypervisorList.class)))
+        when(consumerCurator.getHostConsumersMap(eq(owner), anyListOf(Consumer.class)))
             .thenReturn(new VirtConsumerMap());
 
         HypervisorUpdateJob job = new HypervisorUpdateJob(

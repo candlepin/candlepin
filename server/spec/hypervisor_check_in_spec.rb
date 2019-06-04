@@ -108,8 +108,7 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged: 0, Failed: 0'
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     hyp_consumer = @cp.get_consumer(result_data.created[0].uuid)
     hyp_consumer.facts['test_fact'].should == 'fact_value'
     should_add_consumer_to_created_when_new_host_id_and_no_guests_reported(result_data, host_name,
@@ -156,8 +155,7 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, ['g1'])
-    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged: 0, Failed: 0'
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     should_add_consumer_to_created_when_new_host_id_and_guests_were_reported(result_data, host_name)
   end
 
@@ -189,8 +187,7 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, ['g1'], false)
-    job_detail['result'].should == 'Created: 0, Updated: 0, Unchanged: 0, Failed: 1'
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     should_not_add_new_consumer_when_create_missing_is_false(result_data)
   end
 
@@ -216,8 +213,7 @@ describe 'Hypervisor Resource', :type => :virt do
     #because mysql
     sleep 2
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id,  ['g1', 'g2'])
-    job_detail['result'].should == 'Created: 0, Updated: 1, Unchanged: 0, Failed: 0'
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     should_add_consumer_to_updated_when_guest_ids_are_updated(result_data, old_check_in)
   end
 
@@ -250,8 +246,7 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should add consumer to unchanged when same guest ids are sent - async' do
     old_check_in = @cp.get_consumer(@host_uuid)
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, @expected_guest_ids)
-    job_detail['result'].should == 'Created: 0, Updated: 0, Unchanged: 1, Failed: 0'
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result_data, old_check_in)
   end
 
@@ -290,15 +285,14 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('host')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged: 0, Failed: 0'
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     result_data.created.size.should == 1
     created_consumer = @cp.get_consumer(result_data.created[0].uuid)
     created_consumer.name.should == host_name
 
     # Do the same update with [] and it should be considered unchanged.
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     should_add_consumer_to_unchanged_when_comparing_empty_guest_id_lists(result_data, host_name)
   end
 
@@ -361,7 +355,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
     # Host stops reporting guest:
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, [@uuid2])
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     should_not_revoke_guest_entitlements_when_guest_no_longer_registered(result_data)
   end
 
@@ -388,7 +382,7 @@ describe 'Hypervisor Resource', :type => :virt do
     @host_client.list_entitlements.length.should == 1
     # Host reports no guests.
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, [])
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     should_not_revoke_host_entitlements_when_guestId_list_is_empty(result_data)
   end
 
@@ -420,7 +414,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
     # Host stops reporting guest:
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, [])
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     should_not_revoke_host_and_guest_entitlements_when_guestId_list_is_empty(result_data)
   end
 
@@ -446,7 +440,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
   it 'should initialize guest ids to empty when creating new host - async' do
     job_detail = async_update_hypervisor(@owner, @consumer, random_string('name'), random_string('host'), [])
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     # Host consumer should have been created.
     result_data.created.size.should == 1
     @cp.get_guestids(result_data.created[0].uuid).should_not == nil
@@ -490,23 +484,23 @@ describe 'Hypervisor Resource', :type => :virt do
     first_guest_list = ["guest1", "guest2", "guest3"]
     second_guest_list = ["guest1", "guest2", "guest3", "guest4"]
     job_detail1 = async_update_hypervisor(owner1, consumer1, host_name, host_hyp_id, first_guest_list)
-    results1 = job_detail1['resultData']
+    results1 = job_detail1['result']
     job_detail2 = async_update_hypervisor(owner2, consumer2, host_name, host_hyp_id, first_guest_list)
-    results2 = job_detail2['resultData']
+    results2 = job_detail2['result']
     # Check in each org
     multiple_orgs_check_1(results1, results2)
     # Now check in each org again
     job_detail1 = async_update_hypervisor(owner1, consumer1, host_name, host_hyp_id, first_guest_list)
-    results1 = job_detail1['resultData']
+    results1 = job_detail1['result']
     job_detail2 = async_update_hypervisor(owner2, consumer2, host_name, host_hyp_id, first_guest_list)
-    results2 = job_detail2['resultData']
+    results2 = job_detail2['result']
     # Nothing should have changed
     multiple_orgs_check_2(results1, results2)
     # Send modified data for owner 1, but it shouldn't impact owner 2 at all
     job_detail1 = async_update_hypervisor(owner1, consumer1, host_name, host_hyp_id, second_guest_list)
-    results1 = job_detail1['resultData']
+    results1 = job_detail1['result']
     job_detail2 = async_update_hypervisor(owner2, consumer2, host_name, host_hyp_id, first_guest_list)
-    results2 = job_detail2['resultData']
+    results2 = job_detail2['result']
     # Now owner 1 should have an update, but owner two should remain the same
     multiple_orgs_check_3(results1, results2)
   end
@@ -559,16 +553,16 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, virtwho1, host_name, host_hyp_id, ['g1', 'g2'])
-    job_detail['resultData'].created.size.should == 1
+    job_detail['result'].created.size.should == 1
 
-    job_detail['resultData'].created[0].name.should == host_name
-    job_detail['resultData'].created[0].owner['key'].should == @owner['key']
+    job_detail['result'].created[0].name.should == host_name
+    job_detail['result'].created[0].owner['key'].should == @owner['key']
 
     job_detail = async_update_hypervisor(@owner, virtwho1, host_name, host_hyp_id, ['g1', 'g2'])
-    job_detail['resultData'].unchanged.size.should == 1
+    job_detail['result'].unchanged.size.should == 1
 
-    job_detail['resultData'].unchanged[0].name.should == host_name
-    job_detail['resultData'].unchanged[0].owner['key'].should == @owner['key']
+    job_detail['result'].unchanged[0].name.should == host_name
+    job_detail['result'].unchanged[0].owner['key'].should == @owner['key']
   end
 
   it 'should block virt-who if owner does not match identity cert' do
@@ -630,7 +624,7 @@ describe 'Hypervisor Resource', :type => :virt do
     result = async_update_hypervisor(@owner, virtwho, name, host_hyp_id, guests)
     result.should_not be_nil
     ['updated', 'created', 'unchanged', 'failedUpdate'].each do |key|
-      result['resultData'][key].should be_empty
+      result['result'][key].should be_empty
     end
   end
 
@@ -657,8 +651,8 @@ describe 'Hypervisor Resource', :type => :virt do
     hostguestmapping = get_host_guest_mapping(@expected_host_hyp_id, guests)
     result = async_update_hypervisor(@owner, virtwho, name, @expected_host_hyp_id, guests)
     result.should_not be_nil
-    expect(result['resultData']['updated'].length).to eq(1)
-    updated_consumer_uuid = result['resultData']['updated'][0].uuid
+    expect(result['result']['updated'].length).to eq(1)
+    updated_consumer_uuid = result['result']['updated'][0].uuid
     guestIds = @cp.get_guestids(updated_consumer_uuid)
     expect(guestIds.length).to eq(1)
     guest_id = guestIds[0]['guestId']
@@ -702,7 +696,7 @@ describe 'Hypervisor Resource', :type => :virt do
     new_guest_id = 'Guest3'
     updated_guest_ids = [@uuid2, new_guest_id]
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, updated_guest_ids, true, reporter_id)
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     update_guest_ids_test_check(result_data, updated_guest_ids, reporter_id)
   end
 
@@ -736,21 +730,21 @@ describe 'Hypervisor Resource', :type => :virt do
   def run_async_update(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil, facts=nil)
     host_mapping = get_async_host_guest_mapping(host_name, host_hyp_id, guests, facts)
     job_detail = JSON.parse(consumer.hypervisor_update(owner['key'], host_mapping, create, reporter_id))
-    wait_for_job(job_detail['id'], 60)
-    return @cp.get_job(job_detail['id'], true)
+    wait_for_async_job(job_detail['id'], 60)
+    return @cp.get_async_job(job_detail['id'], true)
   end
 
   def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil, facts=nil)
     job_detail = run_async_update(owner, consumer, host_name, host_hyp_id, guests, create, reporter_id, facts)
-    job_detail['state'].should == 'FINISHED'
+    job_detail['state'].should == 'COMPLETED'
     job_detail['result'].should_not be_nil
     return job_detail
   end
 
   def send_host_guest_mapping(owner, client, mapping, create=true, reporter_id=nil)
     job_detail = JSON.parse(client.hypervisor_update(owner['key'], mapping, create, reporter_id))
-    wait_for_job(job_detail['id'], 60)
-    return @cp.get_job(job_detail['id'], true)
+    wait_for_async_job(job_detail['id'], 60)
+    return @cp.get_async_job(job_detail['id'], true)
   end
 
   def create_virtwho_client(user)
@@ -911,7 +905,7 @@ describe 'Hypervisor Resource', :type => :virt do
     }
 
     job_detail = send_host_guest_mapping(owner, user, before_migration.to_json())
-    job_detail["state"].should == "FINISHED"
+    job_detail["state"].should == "COMPLETED"
 
     after_migration = {
         "hypervisors" => [
@@ -936,7 +930,7 @@ describe 'Hypervisor Resource', :type => :virt do
     }
 
     job_detail = send_host_guest_mapping(owner, user, after_migration.to_json())
-    job_detail["state"].should == "FINISHED"
+    job_detail["state"].should == "COMPLETED"
   end
 
   it 'should raise bad request exception if owner has autobind disabled' do
@@ -970,8 +964,9 @@ describe 'Hypervisor Resource', :type => :virt do
     host_name = random_string('name')
     job_detail = run_async_update(owner, consumer_cp, host_name, host_hyp_id, [])
 
+    puts job_detail
     job_detail['state'].should == 'FAILED'
-    job_detail['result'].should == "Could not update host/guest mapping. Auto-attach is disabled for owner #{owner['key']}."
+    job_detail['result'].should == "org.candlepin.async.JobExecutionException: Could not update host/guest mapping. Auto-attach is disabled for owner #{owner['key']}."
   end
 
   it 'Hypervisor Checkin should complete succesfully when a guest with host specific entitlement is migrated' do
@@ -1035,7 +1030,7 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = "test-uuid"
     guests = ['g1', 'g2']
     job_detail = async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests)
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     result_data.created.size.should == 1
     hypervisor_uuid = result_data.created[0].uuid
 
@@ -1075,7 +1070,7 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = "test-uuid"
     guests = ['g1', 'g2']
     job_detail = async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests)
-    result_data = job_detail['resultData']
+    result_data = job_detail['result']
     result_data.updated.size.should == 1
     hypervisor_uuid = result_data.updated[0].uuid
 
