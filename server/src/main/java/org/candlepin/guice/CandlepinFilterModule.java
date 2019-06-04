@@ -43,22 +43,33 @@ public class CandlepinFilterModule extends ServletModule {
         Map<String, String> loggingFilterConfig = new HashMap<>();
         loggingFilterConfig.put("header.name", "x-candlepin-request-uuid");
 
-
         String regex = ".*";
 
         /**
          * A negative lookeahead regex that makes sure that we can serve
          * static content at docs/
          */
-        if (config.getBoolean(ConfigProperties.SWAGGER_ENABLED)) {
-            regex = "^(?!/docs).*";
+        if (config.getBoolean(ConfigProperties.TOKENPAGE_ENABLED) &&
+            config.getBoolean(ConfigProperties.SWAGGER_ENABLED)) {
+            //No docs and no token
+            regex = "^(?!/docs|/token).*";
+            filterRegex(regex).through(CandlepinScopeFilter.class);
+            filterRegex(regex).through(CandlepinPersistFilter.class);
+            filterRegex(regex).through(LoggingFilter.class, loggingFilterConfig);
+            filterRegex(regex).through(EventFilter.class);
         }
-
-        filterRegex(regex).through(CandlepinScopeFilter.class);
-        filterRegex(regex).through(CandlepinPersistFilter.class);
-        filterRegex(regex).through(LoggingFilter.class, loggingFilterConfig);
-        filterRegex(regex).through(EventFilter.class);
-
+        else if (config.getBoolean(ConfigProperties.SWAGGER_ENABLED)) {
+            //No docs
+            regex = "^(?!/docs).*";
+            filterRegex(regex).through(CandlepinScopeFilter.class);
+            filterRegex(regex).through(CandlepinPersistFilter.class);
+            filterRegex(regex).through(LoggingFilter.class, loggingFilterConfig);
+            filterRegex(regex).through(EventFilter.class);
+        }
+        else if (config.getBoolean(ConfigProperties.TOKENPAGE_ENABLED)) {
+            //No token
+            regex = "^(?!/token).*";
+        }
         serveRegex(regex).with(HttpServletDispatcher.class);
     }
 }

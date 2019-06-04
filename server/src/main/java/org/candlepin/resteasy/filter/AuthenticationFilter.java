@@ -14,15 +14,17 @@
  */
 package org.candlepin.resteasy.filter;
 
+import org.candlepin.auth.KeycloakAdapterConfiguration;
+import org.candlepin.auth.KeycloakAuth;
 import org.candlepin.auth.AuthProvider;
-import org.candlepin.auth.BasicAuth;
-import org.candlepin.auth.NoAuthPrincipal;
-import org.candlepin.auth.OAuth;
-import org.candlepin.auth.Principal;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.auth.SSLAuth;
 import org.candlepin.auth.TrustedConsumerAuth;
+import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.TrustedUserAuth;
-import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.auth.BasicAuth;
+import org.candlepin.auth.OAuth;
+import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
@@ -70,15 +72,18 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private ConsumerCurator consumerCurator;
     private Injector injector;
     private Configuration config;
+    private KeycloakAdapterConfiguration keycloakAdapterConfiguration;
     private List<AuthProvider> providers = new ArrayList<>();
 
     @Inject
     public AuthenticationFilter(Configuration config,
         ConsumerCurator consumerCurator,
-        DeletedConsumerCurator deletedConsumerCurator, Injector injector) {
+        DeletedConsumerCurator deletedConsumerCurator, Injector injector,
+        KeycloakAdapterConfiguration keycloakAdapterConfiguration) {
         this.consumerCurator = consumerCurator;
         this.injector = injector;
         this.config = config;
+        this.keycloakAdapterConfiguration = keycloakAdapterConfiguration;
 
         setupAuthStrategies();
     }
@@ -91,6 +96,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     public void setupAuthStrategies() {
+        // use keycloak authentication
+        if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION, false) &&
+            keycloakAdapterConfiguration.getAdapterConfig() != null) {
+            providers.add(injector.getInstance(KeycloakAuth.class));
+        }
         // use oauth
         if (config.getBoolean(ConfigProperties.OAUTH_AUTHENTICATION)) {
             providers.add(injector.getInstance(OAuth.class));

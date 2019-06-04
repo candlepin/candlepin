@@ -1,0 +1,67 @@
+<!--
+  ~  Copyright (c) 2009 - ${YEAR} Red Hat, Inc.
+  ~  
+  ~  This software is licensed to you under the GNU General Public License,
+  ~  version 2 (GPLv2). There is NO WARRANTY for this software, express or
+  ~  implied, including the implied warranties of MERCHANTABILITY or FITNESS
+  ~  FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+  ~  along with this software; if not, see
+  ~  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+  ~  
+  ~  Red Hat trademarks are not licensed under GPLv2. No permission is
+  ~  granted to use or replicate Red Hat trademarks that are incorporated
+  ~  in this software or its documentation.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8"/>
+</head>
+<body>
+<script src="keycloak.js"></script>
+<script>
+        var status;
+        var xhttp = new XMLHttpRequest();
+        var host = window.location.hostname;
+        xhttp.open('GET', "https://" + host + ":8443/candlepin/status", true);
+        xhttp.onreadystatechange = function() {
+                var realm;
+                var authUrl;
+                var clientId;
+
+                if (xhttp.readyState == 4) {
+                        if (xhttp.status == 200) {
+                                var status = JSON.parse(xhttp.responseText);
+                                realm = status['keycloakRealm']
+                                authUrl = status['keycloakAuthUrl']
+                                clientId = status['keycloakResource']
+                        }
+                        var keycloak = Keycloak({
+                                url: authUrl,
+                                realm: realm,
+                                clientId: clientId
+                        });
+                        keycloak.init().success(function(authenticated) {
+                                if (!authenticated) {
+                                        keycloak.login();
+                                }
+                                else {
+                                        document.getElementById("printToken").innerHTML = keycloak.refreshToken;
+                                        document.cookie = "Keycloak_Token=Authorization: Bearer "+keycloak.token;
+                                }
+                        }).error(function() {
+                                alert('failed to initialize');
+                        });
+                }
+                else {
+                        console.log("Error", xhttp.statusText);
+                }
+        };
+        xhttp.send();
+
+</script>
+<h1> REFRESH TOKEN: </h1>
+<p id ="printToken" ></p>
+</body>
+</html>

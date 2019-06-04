@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.auth.KeycloakAdapterConfiguration;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.common.config.Configuration;
@@ -60,6 +61,7 @@ public class StatusResourceTest {
     @Mock private CandlepinCache candlepinCache;
     @Mock private StatusCache mockedStatusCache;
     @Mock private ModeManager modeManager;
+    @Mock private KeycloakAdapterConfiguration keycloakAdapterConfiguration;
 
     @Before
     public void setUp() {
@@ -84,7 +86,7 @@ public class StatusResourceTest {
         ps.println("version=${version}");
         ps.println("release=${release}");
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
-            modeManager);
+            modeManager, keycloakAdapterConfiguration);
         StatusDTO s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -99,7 +101,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("foo");
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
-            modeManager);
+            modeManager, keycloakAdapterConfiguration);
         StatusDTO s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -116,7 +118,7 @@ public class StatusResourceTest {
         ps.println("release=${release}");
         when(rulesCurator.getUpdatedFromDB()).thenThrow(new RuntimeException());
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
-            modeManager);
+            modeManager, keycloakAdapterConfiguration);
         StatusDTO s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -140,7 +142,7 @@ public class StatusResourceTest {
         ps.println("version=${version}");
         ps.println("release=${release}");
         StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
-            modeManager);
+            modeManager, keycloakAdapterConfiguration);
         StatusDTO s = sr.status();
         ps.close();
 

@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+
+import org.candlepin.auth.KeycloakAdapterConfiguration;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.common.auth.SecurityHole;
@@ -21,6 +23,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ModeManager;
+import org.candlepin.dto.api.v1.KeycloakStatusDTO;
 import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.CandlepinModeChange;
@@ -29,23 +32,18 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
-
+import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-
 
 /**
  * Status Resource
@@ -64,17 +62,20 @@ public class StatusResource {
      * The current git release
      */
     private String release = "Unknown";
-
     private boolean standalone = true;
-
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
     private ModeManager modeManager;
+    private String keycloakResource = null;
+    private String keycloakAuthUrl = null;
+    private String keycloakRealm = null;
+    private AdapterConfig adapterConfig;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
-        CandlepinCache candlepinCache, ModeManager modeManager) {
+        CandlepinCache candlepinCache, ModeManager modeManager,
+        KeycloakAdapterConfiguration keycloakAdapterConfiguration) {
         this.modeManager = modeManager;
         this.rulesCurator = rulesCurator;
         this.candlepinCache = candlepinCache;
@@ -84,6 +85,12 @@ public class StatusResource {
 
         if (config == null || !config.getBoolean(ConfigProperties.STANDALONE)) {
             standalone = false;
+        }
+        adapterConfig = keycloakAdapterConfiguration.getAdapterConfig();
+        if (adapterConfig != null) {
+            keycloakRealm = adapterConfig.getRealm();
+            keycloakAuthUrl = adapterConfig.getAuthServerUrl();
+            keycloakResource = adapterConfig.getResource();
         }
         this.jsProvider = jsProvider;
     }
@@ -149,19 +156,30 @@ public class StatusResource {
         CandlepinCapabilities caps = CandlepinCapabilities.getCapabilities();
 
         RulesSourceEnum rulesSource = jsProvider.getRulesSource();
+        StatusDTO status = null;
 
-        StatusDTO status = new StatusDTO()
-            .setResult(good)
-            .setVersion(version)
-            .setRelease(release)
-            .setStandalone(standalone)
-            .setRulesVersion(jsProvider.getRulesVersion())
-            .setRulesSource(rulesSource != null ? rulesSource.toString() : null)
-            .setMode(mode != null ? mode.toString() : null)
-            .setModeReason(modeChangeReason != null ? modeChangeReason.toString() : null)
-            .setModeChangeTime(modeChange.getChangeTime())
-            .setManagerCapabilities(caps)
-            .setTimeUTC(new Date());
+        if (adapterConfig != null) {
+            KeycloakStatusDTO keycloakstatus = new KeycloakStatusDTO()
+                .setKeycloakResource(keycloakResource)
+                .setKeycloakAuthUrl(keycloakAuthUrl)
+                .setKeycloakRealm(keycloakRealm);
+            status = keycloakstatus;
+        }
+        else {
+            status = new StatusDTO();
+        }
+
+        status.setResult(good)
+              .setVersion(version)
+              .setRelease(release)
+              .setStandalone(standalone)
+              .setRulesVersion(jsProvider.getRulesVersion())
+              .setRulesSource(rulesSource != null ? rulesSource.toString() : null)
+              .setMode(mode != null ? mode.toString() : null)
+              .setModeReason(modeChangeReason != null ? modeChangeReason.toString() : null)
+              .setModeChangeTime(modeChange.getChangeTime())
+              .setManagerCapabilities(caps)
+              .setTimeUTC(new Date());
 
         statusCache.setStatus(status);
 

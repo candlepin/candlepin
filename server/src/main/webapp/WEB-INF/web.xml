@@ -3,7 +3,6 @@
     version="2.4">
 
     <display-name>Candlepin</display-name>
-
     <filter>
         <filter-name>Guice Filter</filter-name>
         <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>
@@ -18,7 +17,6 @@
             org.candlepin.guice.CandlepinContextListener
         </listener-class>
     </listener>
-
     <context-param>
         <!--
             RestEasy tries to dynamically determine what to use for logging in its
