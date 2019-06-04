@@ -30,7 +30,9 @@ describe 'System purpose compliance' do
       status['status'].should == 'mismatched'
       status['nonCompliantRole'].should == 'unsatisfied-role'
       status.reasons.size.should == 1
-      status.reasons.include?("unsatisfied role: unsatisfied-role").should == true
+      status.reasons.include?(
+          'The requested role "unsatisfied-role" is not provided by a currently consumed subscription.'
+          ).should == true
   end
 
   it 'should be matched on a future date for a future entitlement' do
@@ -196,7 +198,9 @@ describe 'System purpose compliance' do
       status['status'].should == 'mismatched'
       status['nonCompliantUsage'].should == 'taylor'
       status.reasons.size.should == 1
-      status.reasons.include?("unsatisfied usage: taylor").should == true
+      status.reasons.include?(
+          'The requested usage preference "taylor" is not provided by a currently consumed subscription.'
+          ).should == true
   end
 
   it 'should change to matched after satisfying usage' do
@@ -227,8 +231,12 @@ describe 'System purpose compliance' do
       status['nonCompliantAddOns'].include?('addon1').should == true
       status['nonCompliantAddOns'].include?('addon2').should == true
       status.reasons.size.should == 2
-      status.reasons.include?("unsatisfied add on: addon1").should == true
-      status.reasons.include?("unsatisfied add on: addon2").should == true
+      status.reasons.include?(
+          'The requested add-on "addon1" is not provided by a currently consumed subscription.'
+          ).should == true
+      status.reasons.include?(
+          'The requested add-on "addon2" is not provided by a currently consumed subscription.'
+          ).should == true
   end
 
   it 'should change to matched after satisfying all addons' do
@@ -279,7 +287,9 @@ describe 'System purpose compliance' do
       status['status'].should == 'mismatched'
       status['nonCompliantSLA'].include?('mysla').should == true
       status.reasons.size.should == 1
-      status.reasons.include?('unsatisfied sla: mysla').should == true
+      status.reasons.include?(
+          'The service level preference "mysla" is not provided by a currently consumed subscription.'
+          ).should == true
 
       # should not change for another SLA
       product = create_product(random_string('product'),
@@ -293,7 +303,9 @@ describe 'System purpose compliance' do
       status['nonCompliantSLA'].include?('mysla').should == true
       puts status['nonCompliantSLA']
       status.reasons.size.should == 1
-      status['reasons'].include?('unsatisfied sla: mysla').should == true
+      status['reasons'].include?(
+          'The service level preference "mysla" is not provided by a currently consumed subscription.'
+          ).should == true
   end
 
   it 'should change to matched after satisfying sla' do
