@@ -14,6 +14,10 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.HypervisorUpdateJob;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
@@ -22,10 +26,12 @@ import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -36,14 +42,12 @@ import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
-import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
 import org.candlepin.resource.util.GuestMigration;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -93,12 +97,13 @@ public class HypervisorResource {
     private ModelTranslator translator;
     private GuestIdResource guestIdResource;
     private ConsumerType hypervisorType;
+    private JobManager jobManager;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, I18n i18n, OwnerCurator ownerCurator,
         Provider<GuestMigration> migrationProvider, ModelTranslator translator,
-        GuestIdResource guestIdResource) {
+        GuestIdResource guestIdResource, JobManager jobManager) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -107,6 +112,7 @@ public class HypervisorResource {
         this.migrationProvider = migrationProvider;
         this.translator = translator;
         this.guestIdResource = guestIdResource;
+        this.jobManager = jobManager;
 
         this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
@@ -269,11 +275,10 @@ public class HypervisorResource {
     @POST
     @Consumes(MediaType.TEXT_PLAIN)
     @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
     @Path("/{owner}")
     @UpdateConsumerCheckIn
     @SuppressWarnings("checkstyle:indentation")
-    public JobDetail hypervisorUpdateAsync(
+    public AsyncJobStatusDTO hypervisorUpdateAsync(
         String hypervisorJson, @Context Principal principal,
         @PathParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
@@ -283,7 +288,7 @@ public class HypervisorResource {
             "will result in failed entries in the resulting HypervisorCheckInResult")
 
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing,
-        @QueryParam("reporter_id") String reporterId) {
+        @QueryParam("reporter_id") String reporterId) throws JobException {
 
         if (hypervisorJson == null || hypervisorJson.isEmpty()) {
             log.debug("Host/Guest mapping provided during hypervisor update was null.");
@@ -294,7 +299,14 @@ public class HypervisorResource {
         log.info("Hypervisor update by principal: " + principal);
         Owner owner = this.getOwner(ownerKey);
 
-        return HypervisorUpdateJob.forOwner(owner, hypervisorJson, createMissing, principal, reporterId);
+        JobConfig config = HypervisorUpdateJob.createConfig()
+            .setOwner(owner)
+            .setData(hypervisorJson)
+            .setCreateMissing(createMissing)
+            .setPrincipal(principal)
+            .setReporter(reporterId);
+        AsyncJobStatus status = jobManager.queueJob(config);
+        return translator.translate(status, AsyncJobStatusDTO.class);
     }
 
     /*

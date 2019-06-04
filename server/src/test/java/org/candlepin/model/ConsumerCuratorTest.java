@@ -14,15 +14,20 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Product.Attributes;
-import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -1322,10 +1327,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer1.setHypervisorId(hypervisorId);
         consumer1 = consumerCurator.create(consumer1);
 
-        HypervisorUpdateJob.HypervisorList list = new HypervisorUpdateJob.HypervisorList();
-        list.setConsumers(Collections.singletonList(consumer1));
+        List<Consumer> hypervisors = Collections.singletonList(consumer1);
 
-        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, list);
+        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, hypervisors);
         assertEquals(1, hypervisorMap.size());
         assertEquals(consumer1, hypervisorMap.get(hypervisorId1));
     }
@@ -1350,10 +1354,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         HypervisorId hypervisorId1Obj = new HypervisorId(hypervisorId1);
         hypervisorId1Obj.setOwner(owner);
         consumer1.setHypervisorId(hypervisorId1Obj);
-        HypervisorUpdateJob.HypervisorList list = new HypervisorUpdateJob.HypervisorList();
-        list.setConsumers(Arrays.asList(consumer1, consumer2));
+        List<Consumer> hypervisors = Arrays.asList(consumer1, consumer2);
 
-        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, list);
+        VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, hypervisors);
         assertEquals(2, hypervisorMap.size());
         assertEquals(consumer1, hypervisorMap.get(hypervisorId1));
         assertEquals(consumer2, hypervisorMap.get(hypervisorId2));
