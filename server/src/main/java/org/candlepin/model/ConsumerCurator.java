@@ -17,7 +17,6 @@ package org.candlepin.model;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.pinsetter.tasks.HypervisorUpdateJob.HypervisorList;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
@@ -844,18 +843,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *
      * This is an unsecured query, manually limited to an owner by the parameter given.
      * @param owner Owner to limit results to.
-     * @param hypervisorList Collection of consumers with either hypervisor IDs or dmi.system.uuid fact
+     * @param hypervisors Collection of consumers with either hypervisor IDs or dmi.system.uuid fact
      *                       as reported by the virt fabric.
      *
      * @return VirtConsumerMap of hypervisor ID to it's consumer, or null if none exists.
      */
     @Transactional
-    public VirtConsumerMap getHostConsumersMap(Owner owner, HypervisorList hypervisorList) {
+    public VirtConsumerMap getHostConsumersMap(Owner owner, List<Consumer> hypervisors) {
         VirtConsumerMap hypervisorMap = new VirtConsumerMap();
 
         Map<String, HypervisorId> systemUuidHypervisorMap = new HashMap<>();
         List<String> remainingHypervisorIds = new LinkedList<>();
-        for (Consumer consumer : hypervisorList.getHypervisors()) {
+        for (Consumer consumer : hypervisors) {
             if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
                 systemUuidHypervisorMap.put(consumer.getFact(Consumer.Facts.SYSTEM_UUID),
                     consumer.getHypervisorId());
