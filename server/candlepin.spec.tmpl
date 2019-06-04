@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.15
+Version: 2.5.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,10 @@ fi
 
 #raw
 %changelog
+* Tue Jun 04 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.5.16-1
+- 1679289: Removed AHC.lockAndLoadById(s) to address quirks with refresh
+  (crog@redhat.com)
+
 * Wed Apr 10 2019 Kevin Howell <khowell@redhat.com> 2.5.15-1
 - 1698561: CVE-2019-3891 Do not print database credentials in cpdb
   (khowell@redhat.com)
