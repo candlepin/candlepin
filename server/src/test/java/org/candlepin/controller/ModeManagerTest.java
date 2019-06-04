@@ -79,7 +79,7 @@ public class ModeManagerTest {
     }
     @Test(expected = IllegalArgumentException.class)
     public void testEnterModeNeedsReason() {
-        modeManager.enterMode(Mode.NORMAL, null);
+        modeManager.enterMode(Mode.NORMAL);
     }
 
     @Test(expected = SuspendedException.class)

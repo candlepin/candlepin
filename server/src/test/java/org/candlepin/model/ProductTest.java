@@ -93,10 +93,10 @@ public class ProductTest extends DatabaseTestFixture {
         Method mutator = null;
 
         try {
-            accessor = Product.class.getDeclaredMethod("get" + methodSuffix, null);
+            accessor = Product.class.getDeclaredMethod("get" + methodSuffix);
         }
         catch (NoSuchMethodException e) {
-            accessor = Product.class.getDeclaredMethod("is" + methodSuffix, null);
+            accessor = Product.class.getDeclaredMethod("is" + methodSuffix);
         }
 
         try {
