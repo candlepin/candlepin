@@ -86,7 +86,10 @@ public class SystemPurposeComplianceStatus {
      */
     public void setNonCompliantRole(String nonCompliantRole) {
         this.nonCompliantRole = nonCompliantRole;
-        this.addReason("unsatisfied role: {0}", nonCompliantRole);
+        this.addReason(
+            "The requested role \"{0}\" is not provided by a currently consumed subscription.",
+            nonCompliantRole
+        );
     }
 
     /**
@@ -122,7 +125,10 @@ public class SystemPurposeComplianceStatus {
      */
     public void addNonCompliantAddOn(String nonCompliantAddOn) {
         this.nonCompliantAddOns.add(nonCompliantAddOn);
-        this.addReason("unsatisfied add on: {0}", nonCompliantAddOn);
+        this.addReason(
+            "The requested add-on \"{0}\" is not provided by a currently consumed subscription.",
+            nonCompliantAddOn
+        );
     }
 
     /**
@@ -172,7 +178,10 @@ public class SystemPurposeComplianceStatus {
      */
     public void setNonCompliantSLA(String sla) {
         nonCompliantSLA = sla;
-        this.addReason("unsatisfied sla: {0}", nonCompliantSLA);
+        this.addReason(
+            "The service level preference \"{0}\" is not provided by a currently consumed subscription.",
+            nonCompliantSLA
+        );
     }
 
     public String getNonCompliantSLA() {
@@ -185,7 +194,10 @@ public class SystemPurposeComplianceStatus {
      */
     public void setNonCompliantUsage(String usage) {
         nonCompliantUsage = usage;
-        this.addReason("unsatisfied usage: {0}", nonCompliantUsage);
+        this.addReason(
+            "The requested usage preference \"{0}\" is not provided by a currently consumed subscription.",
+            nonCompliantUsage
+        );
     }
 
     public String getNonCompliantUsage() {
