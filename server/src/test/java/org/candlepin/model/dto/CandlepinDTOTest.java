@@ -89,10 +89,10 @@ public class CandlepinDTOTest {
         Method mutator = null;
 
         try {
-            accessor = CandlepinDTO.class.getDeclaredMethod("get" + methodSuffix, null);
+            accessor = CandlepinDTO.class.getDeclaredMethod("get" + methodSuffix);
         }
         catch (NoSuchMethodException e) {
-            accessor = CandlepinDTO.class.getDeclaredMethod("is" + methodSuffix, null);
+            accessor = CandlepinDTO.class.getDeclaredMethod("is" + methodSuffix);
         }
 
         try {
@@ -163,7 +163,7 @@ public class CandlepinDTOTest {
 
         CandlepinDTO clone = (CandlepinDTO) base.clone();
 
-        assertEquals(accessor.invoke(base, null), accessor.invoke(clone, null));
+        assertEquals(accessor.invoke(base), accessor.invoke(clone));
         assertEquals(base, clone);
         assertEquals(base.hashCode(), clone.hashCode());
     }
@@ -184,7 +184,7 @@ public class CandlepinDTOTest {
         // Verify only the specified field was set
         for (Method method : CandlepinDTOImpl.class.getDeclaredMethods()) {
             if (method.getName().matches("^(get|is)\\w+")) {
-                Object output = method.invoke(base, null);
+                Object output = method.invoke(base);
 
                 if (method.getName().equals(accessor.getName())) {
                     if (value1 instanceof Collection) {
@@ -216,10 +216,10 @@ public class CandlepinDTOTest {
         Method mutator = null;
 
         try {
-            accessor = CandlepinDTO.class.getDeclaredMethod("get" + valueName, null);
+            accessor = CandlepinDTO.class.getDeclaredMethod("get" + valueName);
         }
         catch (NoSuchMethodException e) {
-            accessor = CandlepinDTO.class.getDeclaredMethod("is" + valueName, null);
+            accessor = CandlepinDTO.class.getDeclaredMethod("is" + valueName);
         }
 
         try {
@@ -247,7 +247,7 @@ public class CandlepinDTOTest {
         // Verify only the specified field was set
         for (Method method : CandlepinDTO.class.getDeclaredMethods()) {
             if (method.getName().matches("^(get|is)\\w+")) {
-                Object output = method.invoke(base, null);
+                Object output = method.invoke(base);
 
                 if (method.getName().equals(accessor.getName())) {
                     if (input instanceof Collection) {

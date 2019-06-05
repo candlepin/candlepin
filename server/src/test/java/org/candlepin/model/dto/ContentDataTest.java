@@ -372,10 +372,10 @@ public class ContentDataTest {
         Method mutator = null;
 
         try {
-            accessor = ContentData.class.getDeclaredMethod("get" + methodSuffix, null);
+            accessor = ContentData.class.getDeclaredMethod("get" + methodSuffix);
         }
         catch (NoSuchMethodException e) {
-            accessor = ContentData.class.getDeclaredMethod("is" + methodSuffix, null);
+            accessor = ContentData.class.getDeclaredMethod("is" + methodSuffix);
         }
 
         try {
@@ -446,7 +446,7 @@ public class ContentDataTest {
 
         ContentData clone = (ContentData) base.clone();
 
-        assertEquals(accessor.invoke(base, null), accessor.invoke(clone, null));
+        assertEquals(accessor.invoke(base), accessor.invoke(clone));
         assertEquals(base, clone);
         assertEquals(base.hashCode(), clone.hashCode());
     }
@@ -472,7 +472,7 @@ public class ContentDataTest {
                 // The getRequiredProductIds method is a special case that would require large architectural
                 // changes to these tests to handle properly. Basically, it's just another
 
-                Object output = method.invoke(base, null);
+                Object output = method.invoke(base);
 
                 if (method.getName().equals(accessor.getName())) {
                     if (value1 instanceof Collection) {
@@ -516,10 +516,10 @@ public class ContentDataTest {
         Method mutator = null;
 
         try {
-            accessor = ContentData.class.getDeclaredMethod("get" + valueName, null);
+            accessor = ContentData.class.getDeclaredMethod("get" + valueName);
         }
         catch (NoSuchMethodException e) {
-            accessor = ContentData.class.getDeclaredMethod("is" + valueName, null);
+            accessor = ContentData.class.getDeclaredMethod("is" + valueName);
         }
 
         try {
@@ -546,7 +546,7 @@ public class ContentDataTest {
         // Verify only the specified field was set
         for (Method method : ContentData.class.getDeclaredMethods()) {
             if (method.getName().matches("^(get|is)\\w+")) {
-                Object output = method.invoke(base, null);
+                Object output = method.invoke(base);
 
                 if (method.getName().equals(accessor.getName())) {
                     if (input instanceof Collection) {

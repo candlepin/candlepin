@@ -944,10 +944,10 @@ public class ProductDataTest {
         Method mutator = null;
 
         try {
-            accessor = ProductData.class.getDeclaredMethod("get" + methodSuffix, null);
+            accessor = ProductData.class.getDeclaredMethod("get" + methodSuffix);
         }
         catch (NoSuchMethodException e) {
-            accessor = ProductData.class.getDeclaredMethod("is" + methodSuffix, null);
+            accessor = ProductData.class.getDeclaredMethod("is" + methodSuffix);
         }
 
         try {
@@ -1040,11 +1040,11 @@ public class ProductDataTest {
 
         if (value1 instanceof Collection) {
             assertTrue(Util.collectionsAreEqual(
-                (Collection) accessor.invoke(base, null), (Collection) accessor.invoke(clone, null)
+                (Collection) accessor.invoke(base), (Collection) accessor.invoke(clone)
             ));
         }
         else {
-            assertEquals(accessor.invoke(base, null), accessor.invoke(clone, null));
+            assertEquals(accessor.invoke(base), accessor.invoke(clone));
         }
 
         assertEquals(base, clone);
@@ -1067,7 +1067,7 @@ public class ProductDataTest {
         // Verify only the specified field was set
         for (Method method : ProductData.class.getDeclaredMethods()) {
             if (method.getName().matches("^(get|is)\\w+") && method.getParameterTypes().length == 0) {
-                Object output = method.invoke(base, null);
+                Object output = method.invoke(base);
 
                 if (method.getName().equals(accessor.getName())) {
                     if (value1 instanceof Collection) {
@@ -1111,10 +1111,10 @@ public class ProductDataTest {
         Method mutator = null;
 
         try {
-            accessor = ProductData.class.getDeclaredMethod("get" + valueName, null);
+            accessor = ProductData.class.getDeclaredMethod("get" + valueName);
         }
         catch (NoSuchMethodException e) {
-            accessor = ProductData.class.getDeclaredMethod("is" + valueName, null);
+            accessor = ProductData.class.getDeclaredMethod("is" + valueName);
         }
 
         try {
@@ -1144,7 +1144,7 @@ public class ProductDataTest {
         // Verify only the specified field was set
         for (Method method : ProductData.class.getDeclaredMethods()) {
             if (method.getName().matches("^(get|is)\\w+") && method.getParameterTypes().length == 0) {
-                Object output = method.invoke(base, null);
+                Object output = method.invoke(base);
 
                 if (method.getName().equals(accessor.getName())) {
                     if (input instanceof Collection) {
