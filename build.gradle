@@ -4,7 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 // vim: set expandtab sts=4 sw=4 ai:
 
 plugins {
-    id "nebula.lint" version "10.1.2"
+    id "nebula.lint" version "11.5.0"
     id "checkstyle"
 }
 
