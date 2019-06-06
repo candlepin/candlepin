@@ -579,7 +579,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (poolIds != null && !poolIds.isEmpty()) {
             criteria = this.currentSession()
                 .createCriteria(Pool.class)
-                .add(CPRestrictions.in("id", poolIds));
+                .createAlias("product", "Product");
+            criteria.add(CPRestrictions.in("id", poolIds));
 
             return this.listByCriteria(criteria, pageRequest, postFilter);
         }

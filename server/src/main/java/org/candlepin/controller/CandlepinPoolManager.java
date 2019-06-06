@@ -1250,7 +1250,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @param guest whose products we want to provide
      * @param host to bind entitlements to
      * @param entitleDate
-     * @param owner
+     * @param ownerId
      * @param serviceLevelOverride
      * @return PoolQuantity list to attempt to attach
      * @throws EntitlementRefusedException if unable to bind

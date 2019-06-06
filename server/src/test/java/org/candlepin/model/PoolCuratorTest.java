@@ -23,6 +23,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.CandlepinPoolManager;
+
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
@@ -1462,6 +1463,78 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         List<Pool> results = poolCurator.listByFilter(filters);
 
         assertThat(results, Matchers.hasItems(p1Attributes, p2Attributes));
+    }
+
+
+    @Test
+    public void testGetPoolsOrderedByProductNameAscending() {
+
+        Owner owner1 = this.createOwner();
+        this.ownerCurator.create(owner1);
+
+        Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "xyz"));
+        p1.setSourceSubscription(new SourceSubscription("subscriptionId-phil", "master"));
+        Pool p2 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p2", "abc"));
+        p2.setSourceSubscription(new SourceSubscription("subscriptionId-ned", "master1"));
+        Pool p3 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p3", "lmn"));
+        p3.setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "master11"));
+        this.poolCurator.create(p3);
+        this.poolCurator.create(p1);
+        this.poolCurator.create(p2);
+        PageRequest req = new PageRequest();
+
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("Product.name");
+        Date activeOn = TestUtil.createDate(2019, 2, 2);
+
+
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(null, null, owner1.getId(),
+            null, null, activeOn, false, null, req, false, false, null);
+
+        List<Pool> pools = page.getPageData();
+        List<Pool> results = new ArrayList<>();
+        results.add(p2);
+        results.add(p3);
+        results.add(p1);
+        assertEquals(results, pools);
+
+    }
+
+    @Test
+    public void testGetPoolsOrderedByProductNameDescending() {
+
+        //Checking for Descending
+        Owner owner1 = this.createOwner();
+        this.ownerCurator.create(owner1);
+
+        Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "xyz"));
+        p1.setSourceSubscription(new SourceSubscription("subscriptionId-phil", "master"));
+        Pool p2 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p2", "abc"));
+        p2.setSourceSubscription(new SourceSubscription("subscriptionId-ned", "master1"));
+        Pool p3 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p3", "lmn"));
+        p3.setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "master11"));
+        this.poolCurator.create(p3);
+        this.poolCurator.create(p1);
+        this.poolCurator.create(p2);
+        PageRequest req1 = new PageRequest();
+        req1.setSortBy("Product.name");
+        req1.setOrder(PageRequest.Order.DESCENDING);
+
+        Date activeOn1 = TestUtil.createDate(2019, 2, 2);
+
+        Page<List<Pool>> page1 = poolManager.listAvailableEntitlementPools(null, null,  owner1.getId(),
+            null, null, activeOn1, false, null, req1, false, false, null);
+
+        List<Pool> pools1 = page1.getPageData();
+
+        List<Pool> results1 = new ArrayList<>();
+        results1.add(p1);
+        results1.add(p3);
+        results1.add(p2);
+
+        assertEquals(results1, pools1);
+
+
     }
 
     private List<Owner> setupDBForProductIdTests() {
