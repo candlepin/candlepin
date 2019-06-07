@@ -16,9 +16,7 @@ package org.candlepin.model;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -54,9 +52,7 @@ public class EntitlementCertificate extends RevocableCertificate<EntitlementCert
     private String id;
 
     @ManyToOne
-    @ForeignKey(name = "fk_cert_entitlement")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_cert_entitlement_fk_idx")
     @NotNull
     private Entitlement entitlement;
 

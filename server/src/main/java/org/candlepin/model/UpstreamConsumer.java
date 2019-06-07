@@ -19,7 +19,6 @@ import org.candlepin.common.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -72,7 +71,6 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    @ForeignKey(name = "fk_upstream_consumer_type")
     @NotNull
     private ConsumerType type;
 

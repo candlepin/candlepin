@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.service.model.RoleInfo;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.HashSet;
@@ -53,9 +52,6 @@ public class Role extends AbstractHibernateObject implements Linkable, RoleInfo 
     private String id;
 
     @ManyToMany(targetEntity = User.class)
-    @ForeignKey(
-        name = "fk_user_id",
-        inverseName = "fk_role_id")
     @JoinTable(
         name = "cp_role_users",
         joinColumns = @JoinColumn(name = "role_id"),

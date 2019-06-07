@@ -18,9 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.service.model.PermissionBlueprintInfo;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -59,16 +57,12 @@ public class PermissionBlueprint extends AbstractHibernateObject implements Perm
     private String id;
 
     @ManyToOne
-    @ForeignKey(name = "fk_permission_owner")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_permission_owner_fk_idx")
     @NotNull
     private Owner owner;
 
     @ManyToOne
-    @ForeignKey(name = "fk_permission_role")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_permission_role_fk_idx")
     @NotNull
     private Role role;
 

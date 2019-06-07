@@ -14,9 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.io.Serializable;
 
@@ -66,7 +64,6 @@ public class HypervisorId extends AbstractHibernateObject {
     private String id;
 
     @Column(name = "hypervisor_id", nullable = false)
-    @Index(name = "idx_hypervisor_id")
     @Size(max = 255)
     @NotNull
     private String hypervisorId;
@@ -76,16 +73,13 @@ public class HypervisorId extends AbstractHibernateObject {
     private String reporterId;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_hypervisor_consumer")
     @JoinColumn(nullable = false, unique = true)
     @XmlTransient
     @NotNull
     private Consumer consumer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_hypervisor_owner")
     @JoinColumn(nullable = false)
-    @Index(name = "idx_hypervisor_owner_fk")
     @XmlTransient
     @NotNull
     private Owner owner;

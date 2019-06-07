@@ -14,9 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.io.Serializable;
 
@@ -67,9 +65,7 @@ public class ConsumerCapability implements Serializable {
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_consumer_capability_consumer")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_consumer_capability_consumer_fk_idx")
     @NotNull
     private Consumer consumer;
 
