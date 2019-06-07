@@ -13,7 +13,7 @@ common:
 postgresql: &default
   static: &postgresql_static
     driver_class: "org.postgresql.Driver"
-    dialect: "org.hibernate.dialect.PostgreSQLDialect"
+    dialect: "org.hibernate.dialect.PostgreSQL92Dialect"
     quartz_driver: "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
   server:
     <<: *common_server
