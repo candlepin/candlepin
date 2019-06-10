@@ -645,6 +645,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return this.natIdLoader;
     }
 
+    @Transactional
     public Collection<E> saveAll(Collection<E> entities, boolean flush, boolean evict) {
         if (entities != null && !entities.isEmpty()) {
             try {
