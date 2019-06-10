@@ -74,7 +74,6 @@ public class RefreshPoolsJobTest extends BaseJobTest {
         when(owner.getDisplayName()).thenReturn("test owner");
         when(pm.getRefresher(eq(subAdapter), eq(ownerAdapter), eq(true))).thenReturn(refresher);
         when(refresher.add(eq(owner))).thenReturn(refresher);
-        when(refresher.setUnitOfWork(any(UnitOfWork.class))).thenReturn(refresher);
     }
 
     @Test

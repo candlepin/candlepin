@@ -20,7 +20,7 @@ describe 'Refresh Pools' do
     owner = create_owner random_string('test_owner')
 
     status = @cp.refresh_pools(owner['key'], true)
-    status.state.should eq('CREATED')
+    status.state.should eq('CREATED').or(eq('QUEUED'))
 
     # URI returned is valid - use post to clean up
     @cp.post(status.statusPath).state.should_not be_nil

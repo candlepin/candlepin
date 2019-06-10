@@ -559,7 +559,10 @@ class Candlepin
     return status if immediate
 
     # otherwise poll the server to make this call synchronous
-    finished_states = ['FINISHED', 'CANCELED', 'FAILED']
+
+    #TODO: This list includes both the old and new job framework states. Once all jobs have been ported,
+    # the 'FINISHED' state should be removed.
+    finished_states = ['COMPLETED', 'ABORTED', 'FINISHED', 'CANCELED', 'FAILED']
 
     # We toss this into a new array since async_call is sometimes used with endpoints which return multiple
     # job details

@@ -80,7 +80,6 @@ public class RefreshPoolsJob extends UniqueByEntityJob {
 
         // Assume that we verified the request in the resource layer:
         poolManager.getRefresher(this.subAdapter, this.ownerAdapter, lazy)
-            .setUnitOfWork(unitOfWork)
             .add(owner)
             .run();
 

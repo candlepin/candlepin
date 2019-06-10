@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -90,7 +91,6 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.ImportJob;
-import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.UndoImportsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
@@ -1626,10 +1626,10 @@ public class OwnerResource {
         "an on-site deployment is just a no-op.", value = "Update Subscription")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 202, message = "") })
-    public JobDetail refreshPools(
+    public AsyncJobStatusDTO refreshPools(
         @PathParam("owner_key") String ownerKey,
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner,
-        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) throws JobException {
 
         Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
@@ -1646,7 +1646,12 @@ public class OwnerResource {
             return null;
         }
 
-        return RefreshPoolsJob.forOwner(owner, lazyRegen);
+        JobConfig config = RefreshPoolsJob.createJobConfig()
+            .setOwner(owner)
+            .setLazyRegeneration(lazyRegen);
+
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /**

@@ -22,8 +22,6 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
-import com.google.inject.persist.UnitOfWork;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +44,6 @@ public class Refresher {
     private OwnerServiceAdapter ownerAdapter;
     private OwnerManager ownerManager;
     private boolean lazy;
-    private UnitOfWork uow;
     private static Logger log = LoggerFactory.getLogger(Refresher.class);
 
     private Map<String, Owner> owners = new HashMap<>();
@@ -60,11 +57,6 @@ public class Refresher {
         this.ownerAdapter = ownerAdapter;
         this.ownerManager = ownerManager;
         this.lazy = lazy;
-    }
-
-    public Refresher setUnitOfWork(UnitOfWork uow) {
-        this.uow = uow;
-        return this;
     }
 
     public Refresher add(Owner owner) {

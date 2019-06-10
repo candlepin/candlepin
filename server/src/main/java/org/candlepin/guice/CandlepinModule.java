@@ -33,6 +33,7 @@ import org.candlepin.async.impl.ArtemisJobMessageDispatcher;
 import org.candlepin.async.tasks.ExportJob;
 import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.async.tasks.RefreshPoolsForProductJob;
+import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.temp.AsyncJobResource;
 import org.candlepin.async.temp.TestJob1;
 import org.candlepin.audit.AMQPBusPublisher;
@@ -101,7 +102,6 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
 import org.candlepin.pinsetter.tasks.HypervisorHeartbeatUpdateJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
-import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
@@ -291,7 +291,6 @@ public class CandlepinModule extends AbstractModule {
         miscConfigurations();
 
         // Async Jobs
-        bind(RefreshPoolsJob.class);
         bind(EntitlerJob.class);
         requestStaticInjection(EntitlerJob.class);
         bind(HypervisorUpdateJob.class);
@@ -428,6 +427,7 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(ExportJob.JOB_KEY, ExportJob.class);
         JobManager.registerJob(ImportJob.JOB_KEY, ImportJob.class);
         JobManager.registerJob(RefreshPoolsForProductJob.JOB_KEY, RefreshPoolsForProductJob.class);
+        JobManager.registerJob(RefreshPoolsJob.JOB_KEY, RefreshPoolsJob.class);
     }
 
     private void configurePinsetter() {
