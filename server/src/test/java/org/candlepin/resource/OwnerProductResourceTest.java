@@ -15,7 +15,10 @@
 package org.candlepin.resource;
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,15 +34,14 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
-
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -64,7 +66,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     public void setup() {
         this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
             this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
-            this.productCurator, this.productManager, this.modelTranslator
+            this.productCurator, this.productManager, this.modelTranslator, this.jobManager
         );
     }
 
@@ -161,7 +163,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         OwnerProductResource pr = new OwnerProductResource(
-            config, i18n, oc, null, opc, null, pc, null, this.modelTranslator);
+            config, i18n, oc, null, opc, null, pc, null, this.modelTranslator, this.jobManager);
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
