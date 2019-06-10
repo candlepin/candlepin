@@ -105,7 +105,6 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         when(this.jobContext.getMergedJobDataMap()).thenReturn(this.jobDataMap);
         when(this.poolManager.getRefresher(eq(this.subAdapter), any(OwnerServiceAdapter.class), anyBoolean()))
             .thenReturn(this.refresher);
-        when(this.refresher.setUnitOfWork(any(UnitOfWork.class))).thenReturn(this.refresher);
         when(this.refresher.add(any(Owner.class))).thenReturn(this.refresher);
 
         this.undoImportsJob = new UndoImportsJob(

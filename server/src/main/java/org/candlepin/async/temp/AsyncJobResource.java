@@ -34,6 +34,7 @@ import org.xnap.commons.i18n.I18n;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -118,6 +119,23 @@ public class AsyncJobResource {
     @ApiOperation(notes = "Fetches the job info for a given job ID", value = "")
     public AsyncJobStatusDTO get(@PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
         AsyncJobStatus status = this.jobCurator.get(jobId);
+
+        return this.translator.translate(status, AsyncJobStatusDTO.class);
+    }
+
+    @ApiOperation(notes = "Retrieves a Job Status and Removes if finished",
+        value = "getStatusAndDeleteIfFinished")
+    @POST
+    @Path("/{job_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.WILDCARD)
+    public AsyncJobStatusDTO getStatusAndDeleteIfFinished(
+        @PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
+        AsyncJobStatus status = this.jobCurator.get(jobId);
+
+        if (status != null && status.getState() == AsyncJobStatus.JobState.COMPLETED) {
+            this.jobCurator.delete(status);
+        }
 
         return this.translator.translate(status, AsyncJobStatusDTO.class);
     }
