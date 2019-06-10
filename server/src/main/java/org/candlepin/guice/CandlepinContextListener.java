@@ -47,7 +47,7 @@ import com.google.inject.util.Modules;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -250,7 +250,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         // Default to Postgresql if jpa.config.hibernate.dialect is unset
         DatabaseConfigFactory.SupportedDatabase db = determinDatabaseConfiguration(systemConfig.getString
-            ("jpa.config.hibernate.dialect", PostgreSQLDialect.class.getName()));
+            ("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
         log.info("Running under {}", db.getLabel());
         Configuration databaseConfig = DatabaseConfigFactory.fetchConfig(db);
 
