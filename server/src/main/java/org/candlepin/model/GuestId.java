@@ -21,9 +21,7 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -80,10 +78,8 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
     private String guestIdLower;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_consumer_guests")
     @JoinColumn(nullable = false)
     @XmlTransient
-    @Index(name = "cp_consumerguest_consumer_fk_idx")
     @NotNull
     private Consumer consumer;
 

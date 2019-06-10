@@ -14,9 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Index;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -35,9 +32,7 @@ import javax.persistence.ManyToOne;
 public class ConsumerContentOverride extends ContentOverride<ConsumerContentOverride, Consumer> {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_consumer_content_consumer")
     @JoinColumn(nullable = true)
-    @Index(name = "cp_cnsmr_cntnt_cnsmr_fk_idx")
     private Consumer consumer;
 
     public ConsumerContentOverride() {

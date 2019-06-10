@@ -15,9 +15,7 @@
 package org.candlepin.model;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import java.util.Date;
 
@@ -85,10 +83,8 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
     private Date endDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @ForeignKey(name = "fk_consumer_installed_product")
     @JoinColumn(nullable = false)
     @XmlTransient
-    @Index(name = "cp_installedproduct_consumer_fk_idx")
     private Consumer consumer;
 
     public ConsumerInstalledProduct() {

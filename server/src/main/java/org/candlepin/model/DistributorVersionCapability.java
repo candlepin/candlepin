@@ -14,9 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -57,9 +55,7 @@ public class DistributorVersionCapability {
     private String name;
 
     @ManyToOne
-    @ForeignKey(name = "fk_dist_vrsn_cpblty")
     @JoinColumn(name = "dist_version_id", nullable = false)
-    @Index(name = "cp_capability_distver_fk_idx")
     private DistributorVersion distributorVersion;
 
     public DistributorVersionCapability() {
