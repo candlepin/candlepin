@@ -1388,11 +1388,16 @@ public class ConsumerResource {
                 existing.setHypervisorId(null);
             }
             else {
+                Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
+                if (isUsedByOwner(incomingId, owner)) {
+                    throw new BadRequestException(i18n.tr(
+                        "Problem updating unit {0}. Hypervisor id: {1} is already used.",
+                        incoming, incomingId.getHypervisorId()));
+                }
                 if (existingId != null) {
                     if (existingId.getHypervisorId() != null &&
                         !existingId.getHypervisorId().equals(incomingId.getHypervisorId())) {
                         existingId.setHypervisorId(incomingId.getHypervisorId());
-                        Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
                         existingId.setOwner(owner);
                     }
                     else {
@@ -1401,7 +1406,6 @@ public class ConsumerResource {
                 }
                 else {
                     // Safer to build a new clean HypervisorId object
-                    Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
                     HypervisorId hypervisorId = new HypervisorId(incomingId.getHypervisorId());
                     hypervisorId.setOwner(owner);
                     existing.setHypervisorId(hypervisorId);
@@ -1410,6 +1414,13 @@ public class ConsumerResource {
             return true;
         }
         return false;
+    }
+
+    private boolean isUsedByOwner(HypervisorIdDTO hypervisor, Owner owner) {
+        if (hypervisor == null) {
+            return false;
+        }
+        return consumerCurator.getHypervisor(hypervisor.getHypervisorId(), owner) != null;
     }
 
     /**

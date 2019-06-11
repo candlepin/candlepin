@@ -670,9 +670,13 @@ describe 'Consumer Resource' do
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['hypervisorId'].should == nil
 
-    lambda do
+    begin
       consumer_client.update_consumer({:hypervisorId => "hypervisor"})
-    end.should raise_exception(RestClient::BadRequest)
+      fail 'Should have failed!'
+    rescue RestClient::BadRequest => e
+      json = JSON.parse(e.http_body)
+      json.displayMessage.end_with?('Hypervisor id: hypervisor is already used.').should == true
+    end
   end
 
   it 'should allow a consumer to unset their hypervisorId' do
