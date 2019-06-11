@@ -15,19 +15,25 @@
 package org.candlepin.resource;
 
 import static org.junit.Assert.*;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.async.JobConfigValidationException;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.model.ContentCurator;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
@@ -36,14 +42,10 @@ import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -53,6 +55,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -63,7 +66,6 @@ import javax.inject.Inject;
  */
 public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private ProductCertificateCurator productCertificateCurator;
-    @Inject private ContentCurator contentCurator;
     @Inject private ProductResource productResource;
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
@@ -127,7 +129,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testDeleteProductWithSubscriptions() {
         ProductCurator pc = mock(ProductCurator.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pc, null, null, config, i18n, this.modelTranslator);
+        ProductResource pr = new ProductResource(pc, null, null, config, i18n, this.modelTranslator,
+            this.jobManager);
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
         // when(pc.getById(eq(o), eq("10"))).thenReturn(p);
@@ -236,125 +239,101 @@ public class ProductResourceTest extends DatabaseTestFixture {
         productResource.getProductOwners(new LinkedList<>());
     }
 
-    private void verifyRefreshPoolsJobs(JobDetail[] jobs, List<Owner> owners, boolean lazyRegen) {
-        for (JobDetail job : jobs) {
-            assertTrue(RefreshPoolsJob.class.isAssignableFrom(job.getJobClass()));
-
-            JobDataMap jdmap = job.getJobDataMap();
-
-            assertTrue(jdmap.containsKey(JobStatus.OWNER_ID));
-            assertTrue(jdmap.containsKey(JobStatus.TARGET_TYPE));
-            assertTrue(jdmap.containsKey(JobStatus.TARGET_ID));
-            assertTrue(jdmap.containsKey(RefreshPoolsJob.LAZY_REGEN));
-
-            assertEquals(JobStatus.TargetType.OWNER, jdmap.get(JobStatus.TARGET_TYPE));
-            assertEquals(jdmap.get(JobStatus.OWNER_ID), jdmap.get(JobStatus.TARGET_ID));
-            assertEquals(lazyRegen, jdmap.get(RefreshPoolsJob.LAZY_REGEN));
-
-            boolean found = false;
-            for (Owner owner : owners) {
-                if (owner.getKey().equals(jdmap.get(JobStatus.OWNER_ID))) {
-                    found = true;
-                    break;
-                }
-            }
-
-            assertTrue(found);
+    private void verifyRefreshPoolsJobsWhereQueued(List<AsyncJobStatusDTO> jobs) {
+        for (AsyncJobStatusDTO job : jobs) {
+            assertEquals(RefreshPoolsJob.JOB_NAME, job.getName());
+            assertEquals(AsyncJobStatus.JobState.FAILED.toString(), job.getState());
+            assertEquals(AsyncJobStatus.JobState.CREATED.toString(), job.getPreviousState());
+            assertEquals(Integer.valueOf(0), job.getAttempts());
+            assertEquals(Integer.valueOf(1), job.getMaxAttempts());
         }
     }
 
     @Test
-    public void testRefreshPoolsByProduct() {
+    public void testRefreshPoolsByProduct() throws JobException {
         Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
-            this.productCertificateCurator, config, this.i18n, this.modelTranslator);
+            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        this.setupDBForOwnerProdTests();
 
-        List<Owner> owners = this.setupDBForOwnerProdTests();
-        Owner owner1 = owners.get(0);
-        Owner owner2 = owners.get(1);
-        Owner owner3 = owners.get(2);
+        List<AsyncJobStatusDTO> jobs;
 
-        JobDetail[] jobs;
-
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true);
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true)
+            .collect(Collectors.toList());
         assertNotNull(jobs);
-        assertEquals(2, jobs.length);
-        this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2), true);
+        assertEquals(2, jobs.size());
+        this.verifyRefreshPoolsJobsWhereQueued(jobs);
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false);
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false)
+            .collect(Collectors.toList());
         assertNotNull(jobs);
-        assertEquals(3, jobs.length);
-        this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2, owner3), false);
+        assertEquals(3, jobs.size());
+        this.verifyRefreshPoolsJobsWhereQueued(jobs);
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false);
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false)
+            .collect(Collectors.toList());
         assertNotNull(jobs);
-        assertEquals(1, jobs.length);
-        this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner3), false);
+        assertEquals(1, jobs.size());
+        this.verifyRefreshPoolsJobsWhereQueued(jobs);
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false);
+        jobs = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false)
+            .collect(Collectors.toList());
         assertNotNull(jobs);
-        assertEquals(0, jobs.length);
+        assertEquals(0, jobs.size());
     }
 
-    // Temporarily disabled; reenable and remove the test above when the JobDetail streaming issue
-    // is resolved.
-    // @Test
-    // public void testRefreshPoolsByProduct() {
-    //     Configuration config = new MapConfiguration(this.config);
-    //     config.setProperty(ConfigProperties.STANDALONE, "false");
-
-    //     ProductResource productResource = new ProductResource(
-    //         this.productCurator, this.ownerCurator, this.productCertificateCurator, config, this.i18n,
-    //         this.isoFactory
-    //     );
-
-    //     List<Owner> owners = this.setupDBForOwnerProdTests();
-    //     Owner owner1 = owners.get(0);
-    //     Owner owner2 = owners.get(1);
-    //     Owner owner3 = owners.get(2);
-
-    //     List<JobDetail> jobs = new LinkedList<JobDetail>();
-
-    //     Response response = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true);
-    //     jobs.clear();
-    //     for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-    //         jobs.add((JobDetail) entity);
-    //     }
-    //     assertNotNull(jobs);
-    //     assertEquals(2, jobs.size());
-    //     this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2), true);
-
-    //     response = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false);
-    //     jobs.clear();
-    //     for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-    //         jobs.add((JobDetail) entity);
-    //     }
-    //     assertNotNull(jobs);
-    //     assertEquals(3, jobs.size());
-    //     this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner1, owner2, owner3), false);
-
-    //     response = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false);
-    //     jobs.clear();
-    //     for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-    //         jobs.add((JobDetail) entity);
-    //     }
-    //     assertNotNull(jobs);
-    //     assertEquals(1, jobs.size());
-    //     this.verifyRefreshPoolsJobs(jobs, Arrays.asList(owner3), false);
-
-    //     response = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false);
-    //     jobs.clear();
-    //     for (Object entity : (IterableStreamingOutput) response.getEntity()) {
-    //         jobs.add((JobDetail) entity);
-    //     }
-    //     assertNotNull(jobs);
-    //     assertEquals(0, jobs.size());
-    // }
-
     @Test(expected = BadRequestException.class)
-    public void testRefreshPoolsByProductInputValidation() {
+    public void testRefreshPoolsByProductInputValidation() throws JobException {
         productResource.refreshPoolsForProduct(new LinkedList<>(), true);
+    }
+
+    @Test
+    public void testRefreshPoolsByProductJobQueueingErrorsShouldBeHandled() throws JobException {
+        Configuration config = new MapConfiguration(this.config);
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        // We want to simulate the first queueJob call succeeds, and the second throws a validation exception
+        JobManager jobManager = mock(JobManager.class);
+        AsyncJobStatus status1 = new AsyncJobStatus();
+        status1.setName(RefreshPoolsJob.JOB_NAME);
+        status1.setState(AsyncJobStatus.JobState.CREATED); //need to prime the previous state field
+        status1.setState(AsyncJobStatus.JobState.QUEUED);
+        when(jobManager.queueJob(anyObject()))
+            .thenReturn(status1)
+            .thenThrow(new JobConfigValidationException("a job config validation error happened!"));
+
+        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
+            this.productCertificateCurator, config, this.i18n, this.modelTranslator, jobManager);
+        this.setupDBForOwnerProdTests();
+
+        List<AsyncJobStatusDTO> jobs = null;
+        try {
+            jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true)
+                    .collect(Collectors.toList());
+        }
+        catch (Exception e) {
+            fail("A validation exception when trying to queue a job should be handled " +
+                "by the endpoint, not thrown!");
+        }
+        assertNotNull(jobs);
+        assertEquals(2, jobs.size());
+
+        // assert first job succeeded in queueing
+        AsyncJobStatusDTO statusDTO1 = jobs.get(0);
+        assertEquals(RefreshPoolsJob.JOB_NAME, statusDTO1.getName());
+        assertEquals(AsyncJobStatus.JobState.QUEUED.toString(), statusDTO1.getState());
+        assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO1.getPreviousState());
+        assertEquals(Integer.valueOf(0), statusDTO1.getAttempts());
+        assertEquals(Integer.valueOf(1), statusDTO1.getMaxAttempts());
+
+        // assert second job failed validation
+        AsyncJobStatusDTO statusDTO2 = jobs.get(1);
+        assertEquals(RefreshPoolsJob.JOB_NAME, statusDTO2.getName());
+        assertEquals(AsyncJobStatus.JobState.FAILED.toString(), statusDTO2.getState());
+        assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO2.getPreviousState());
+        assertEquals(Integer.valueOf(0), statusDTO2.getAttempts());
+        assertEquals(Integer.valueOf(1), statusDTO2.getMaxAttempts());
     }
 }

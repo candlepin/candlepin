@@ -15,7 +15,6 @@
 package org.candlepin.pinsetter.tasks;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -123,7 +122,6 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         when(this.jobContext.getMergedJobDataMap()).thenReturn(this.jobDataMap);
         when(this.poolManager.getRefresher(eq(this.subAdapter), any(OwnerServiceAdapter.class), anyBoolean()))
             .thenReturn(this.refresher);
-        when(this.refresher.setUnitOfWork(any(UnitOfWork.class))).thenReturn(this.refresher);
         when(this.refresher.add(any(Owner.class))).thenReturn(this.refresher);
 
         this.undoImportsJob = new UndoImportsJob(

@@ -14,12 +14,18 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
 import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -31,11 +37,9 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ResultIterator;
-import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 
 import com.google.inject.Inject;
 
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -43,6 +47,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -77,11 +82,12 @@ public class ProductResource {
     private Configuration config;
     private I18n i18n;
     private ModelTranslator translator;
+    private JobManager jobManager;
 
     @Inject
     public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
         ProductCertificateCurator productCertCurator, Configuration config, I18n i18n,
-        ModelTranslator translator) {
+        ModelTranslator translator, JobManager jobManager) {
 
         this.productCurator = productCurator;
         this.productCertCurator = productCertCurator;
@@ -89,6 +95,7 @@ public class ProductResource {
         this.config = config;
         this.i18n = i18n;
         this.translator = translator;
+        this.jobManager = jobManager;
     }
 
     /**
@@ -275,10 +282,10 @@ public class ProductResource {
     @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
-    public JobDetail[] refreshPoolsForProduct(
+    public Stream<AsyncJobStatusDTO> refreshPoolsForProduct(
         @ApiParam(value = "Multiple product UUIDs", required = true)
         @QueryParam("product") List<String> productUuids,
-        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) throws JobException {
 
         if (productUuids.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
@@ -289,26 +296,31 @@ public class ProductResource {
             return null;
         }
 
-        // TODO:
-        // Replace this with the commented out block below once the job scheduling is no longer performed
-        // via PinsetterAsyncFilter
         ResultIterator<Owner> iterator = this.ownerCurator.getOwnersWithProducts(productUuids).iterate();
-        List<JobDetail> details = new LinkedList<>();
+        List<JobConfig> jobConfigs = new LinkedList<>();
         while (iterator.hasNext()) {
-            details.add(RefreshPoolsJob.forOwner(iterator.next(), lazyRegen));
+            JobConfig config = RefreshPoolsJob.createJobConfig()
+                .setOwner(iterator.next())
+                .setLazyRegeneration(lazyRegen);
+            jobConfigs.add(config);
         }
         iterator.close();
 
-        return details.toArray(new JobDetail[0]);
+        List<AsyncJobStatus> statuses = new LinkedList<>();
+        for (JobConfig config : jobConfigs) {
+            try {
+                statuses.add(this.jobManager.queueJob(config));
+            }
+            catch (Exception e) {
+                AsyncJobStatus failedStatus = new AsyncJobStatus();
+                failedStatus.setName(RefreshPoolsJob.JOB_NAME);
+                failedStatus.setState(AsyncJobStatus.JobState.FAILED);
+                failedStatus.setJobResult(e.toString());
+                statuses.add(failedStatus);
+            }
+        }
 
-        // final Boolean lazy = lazyRegen; // Necessary to deal with Java's limitations with closures
-        // return this.ownerCurator.lookupOwnersWithProduct(productUuids).transform(
-        //     new ElementTransform<Owner, JobDetail>() {
-        //         @Override
-        //         public JobDetail transform(Owner owner) {
-        //             return RefreshPoolsJob.forOwner(owner, lazy);
-        //         }
-        //     }
-        // );
+        return statuses.stream().map(
+            this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
     }
 }

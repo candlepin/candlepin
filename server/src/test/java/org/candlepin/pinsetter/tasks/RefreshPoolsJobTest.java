@@ -14,7 +14,6 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import com.google.inject.persist.UnitOfWork;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
@@ -40,7 +39,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -80,7 +78,6 @@ public class RefreshPoolsJobTest extends BaseJobTest {
         when(owner.getDisplayName()).thenReturn("test owner");
         when(pm.getRefresher(eq(subAdapter), eq(ownerAdapter), eq(true))).thenReturn(refresher);
         when(refresher.add(eq(owner))).thenReturn(refresher);
-        when(refresher.setUnitOfWork(any(UnitOfWork.class))).thenReturn(refresher);
     }
 
     @Test
