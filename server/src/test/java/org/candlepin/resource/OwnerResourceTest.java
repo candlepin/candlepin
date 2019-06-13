@@ -14,14 +14,25 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.ImportJob;
-import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -591,7 +602,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCanFilterOutDevPoolsByAttribute() throws Exception {
+    public void testCanFilterOutDevPoolsByAttribute() {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
         Product p = this.createProduct(owner);
@@ -818,7 +829,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void countShouldThrowExceptionIfUnknownOwner() throws Exception {
+    public void countShouldThrowExceptionIfUnknownOwner() {
         String key = "unknown";
         createConsumer(owner);
 
@@ -947,9 +958,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner o = new Owner();
         o.setKey("owner-key");
         OwnerResource ownerres = new OwnerResource(
-            oc, null, null, null, i18n, null, null, null, null, null, null, null, null,
+            oc, null, null, i18n, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            null, this.modelTranslator, this.jobManager);
+            null, null, this.modelTranslator, this.jobManager);
         when(oc.getByKey(anyString())).thenReturn(o);
         ActivationKeyDTO key = new ActivationKeyDTO();
         key.setReleaseVersion(TestUtil.getStringOfSize(256));
@@ -1326,7 +1337,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         JobManager jm = mock(JobManager.class);
         OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, null, null, i18n, es, eventFactory, null,
+            oc, null, null, i18n, es, eventFactory, null,
             manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null,
@@ -1342,7 +1353,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
         mm.put("Content-Disposition", contDis);
         Owner owner = new Owner();
-        owner.setKey("random-owner-key");
+        String ownerKey = "random-owner-key";
+        owner.setKey(ownerKey);
 
         AsyncJobStatus asyncJobStatus = new AsyncJobStatus();
         asyncJobStatus.setName(ImportJob.JOB_NAME);
@@ -1355,7 +1367,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(part.getBody(any(GenericType.class))).thenReturn(archive);
         when(manifestManager.importManifestAsync(eq(owner), any(File.class), eq("test_file.zip"),
                 any(ConflictOverrides.class))).thenReturn(job);
-        when(oc.getByKey(any())).thenReturn(owner);
+        when(oc.getByKey(anyString())).thenReturn(owner);
         when(jm.queueJob(eq(job))).thenReturn(asyncJobStatus);
 
         AsyncJobStatusDTO dto =
@@ -1450,7 +1462,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         );
     }
 
-    private KeyValueParameter createKeyValueParam(String key, String val) throws Exception {
+    private KeyValueParameter createKeyValueParam(String key, String val) {
         return new KeyValueParameter(key + ":" + val);
     }
 
@@ -1664,7 +1676,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UeberCertificateGenerator ucg = mock(UeberCertificateGenerator.class);
 
         OwnerResource resource = new OwnerResource(
-            oc, null, cc, i18n, null, null, null, null, null, cpm, null, null, null, null, null, ecc, ec,
+            oc, null, cc, i18n, null, null, null, null, cpm, null, null, null, null, ec,
             uc, ucg, null, null, null, null, null, null, null, null,
             null, this.modelTranslator, this.jobManager);
 

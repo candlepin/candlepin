@@ -27,7 +27,6 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.VirtConsumerMap;
-import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -79,14 +78,14 @@ public class HypervisorUpdateAction {
     @Transactional
     public Result update(
         final Owner owner,
-        final HypervisorUpdateJob.HypervisorList hypervisors,
+        final List<Consumer> hypervisors,
         final Boolean create,
         final Principal principal,
         final String jobReporterId) {
 
         final String ownerKey = owner.getKey();
 
-        log.debug("Hypervisor consumers for create/update: {}", hypervisors.getHypervisors().size());
+        log.debug("Hypervisor consumers for create/update: {}", hypervisors.size());
         log.debug("Updating hypervisor consumers for org {}", ownerKey);
 
         Set<String> hosts = new HashSet<>();
@@ -201,13 +200,12 @@ public class HypervisorUpdateAction {
         return new Result(result, hypervisorKnownConsumersMap);
     }
 
-    private void parseHypervisorList(HypervisorUpdateJob.HypervisorList hypervisorList, Set<String> hosts,
+    private void parseHypervisorList(List<Consumer> hypervisorList, Set<String> hosts,
         Set<String> guests, Map<String, Consumer> incomingHosts) {
         int emptyGuestIdCount = 0;
         int emptyHypervisorIdCount = 0;
 
-        List<Consumer> l = hypervisorList.getHypervisors();
-        for (Iterator<Consumer> hypervisors = l.iterator(); hypervisors.hasNext();) {
+        for (Iterator<Consumer> hypervisors = hypervisorList.iterator(); hypervisors.hasNext();) {
             Consumer hypervisor = hypervisors.next();
 
             HypervisorId idWrapper = hypervisor.getHypervisorId();

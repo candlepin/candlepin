@@ -14,13 +14,14 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -28,23 +29,6 @@ import java.util.List;
 
 
 public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
-
-    private void createJobsInStates(String namePrefix, int perState, JobState... states) {
-        int counter = 0;
-
-        for (JobState state : states) {
-            for (int i = 0; i < perState; ++i) {
-                AsyncJobStatus job = new AsyncJobStatus();
-
-                job.setName(namePrefix + ++counter);
-                job.setState(state);
-
-                this.asyncJobCurator.create(job);
-            }
-        }
-
-        this.asyncJobCurator.flush();
-    }
 
     @Test
     public void testGetJobsInStateSingleState() {
@@ -162,6 +146,23 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         for (AsyncJobStatus status : result) {
             assertTrue(nonTerminals.contains(status.getState()));
         }
+    }
+
+    private void createJobsInStates(String namePrefix, int perState, JobState... states) {
+        int counter = 0;
+
+        for (JobState state : states) {
+            for (int i = 0; i < perState; ++i) {
+                AsyncJobStatus job = new AsyncJobStatus();
+
+                job.setName(namePrefix + ++counter);
+                job.setState(state);
+
+                this.asyncJobCurator.create(job);
+            }
+        }
+
+        this.asyncJobCurator.flush();
     }
 
 }
