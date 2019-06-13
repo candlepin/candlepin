@@ -67,8 +67,9 @@ project directory.
 
 ## Spec Tests
 * `./gradlew rspec` runs RSpec tests serially
-* `./gradlew rspec --spec <my_spec_name> -- test 'my_test_name'` 
-runs `my_test_name` in the `my_spec_name` file. 
+* `./gradlew rspec --spec my_file_name --test 'my test name'`
+runs `my test name` in the `my_file_name_spec.rb` file
+(note that the `_spec.rb` suffix *must* be excluded).
 
 ## Liquibase
 * `buildr "changeset:my changeset name"`
