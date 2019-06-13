@@ -31,18 +31,14 @@ import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import org.hamcrest.core.StringContains;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import org.mockito.InOrder;
 import org.mockito.invocation.InvocationOnMock;
@@ -66,8 +62,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
-
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -82,7 +84,6 @@ import static org.mockito.Mockito.verify;
 
 
 
-@RunWith(JUnitParamsRunner.class)
 public class JobManagerTest {
 
     private static class StateCollectingStatus extends AsyncJobStatus {
@@ -108,7 +109,7 @@ public class JobManagerTest {
         private List<JobMessage> messages = new ArrayList<>();
 
         @Override
-        public void sendJobMessage(JobMessage jobMessage) throws JobMessageDispatchException {
+        public void sendJobMessage(JobMessage jobMessage) {
             this.messages.add(jobMessage);
         }
 
@@ -136,10 +137,7 @@ public class JobManagerTest {
     private List<ImmutablePair<String, String>> scheduledJobs;
 
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.configuration = new CandlepinCommonTestConfig();
         this.schedulerFactory = mock(SchedulerFactory.class);
@@ -163,7 +161,7 @@ public class JobManagerTest {
         doReturn(this.scheduler).when(this.schedulerFactory).getScheduler();
         doAnswer(new Answer<Date>() {
             @Override
-            public Date answer(InvocationOnMock invocation) throws Throwable {
+            public Date answer(InvocationOnMock invocation) {
                 Object[] args = invocation.getArguments();
                 String key = null;
                 String schedule = null;
@@ -185,7 +183,7 @@ public class JobManagerTest {
                         (args[1] != null ? args[1].getClass().getName() : "null");
                 }
 
-                scheduledJobs.add(new ImmutablePair<String, String>(key, schedule));
+                scheduledJobs.add(new ImmutablePair<>(key, schedule));
                 return null; // This is probably bad, but at the time of writing, it'll work.
             }
         }).when(this.scheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
@@ -208,10 +206,13 @@ public class JobManagerTest {
         }
     }
 
-
     private JobManager createJobManager() {
+        return createJobManager(this.dispatcher);
+    }
+
+    private JobManager createJobManager(JobMessageDispatcher dispatcher) {
         return new JobManager(this.configuration, this.schedulerFactory, this.modeManager, this.jobCurator,
-            this.dispatcher, this.principalProvider, this.requestScope, this.injector);
+            dispatcher, this.principalProvider, this.requestScope, this.injector);
     }
 
     private JobArguments buildJobArguments(Map<String, Object> args) {
@@ -227,17 +228,18 @@ public class JobManagerTest {
     }
 
     @Test
-    public void jobShouldFailWhenJobStatusIsNotFound() throws JobException {
+    public void jobShouldFailWhenJobStatusIsNotFound() {
         doReturn(null).when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
-        thrown.expect(JobInitializationException.class);
-        thrown.expectMessage(StringContains.containsString("Unable to find"));
 
-        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+        Throwable throwable = assertThrows(
+            JobInitializationException.class,
+            () -> manager.executeJob(new JobMessage(JOB_ID, JOB_KEY)));
+        assertThat(throwable.getMessage(), StringContains.containsString("Unable to find"));
     }
 
-    public Object[] getTerminalJobStates() {
+    public static Object[] getTerminalJobStates() {
         List<JobState> states = new ArrayList<>();
 
         for (JobState state : JobState.values()) {
@@ -249,20 +251,20 @@ public class JobManagerTest {
         return states.toArray();
     }
 
-    @Test
-    @Parameters(method = "getTerminalJobStates")
-    public void jobShouldFailWhenJobStateIsTerminal(JobState state) throws JobException {
+    @ParameterizedTest
+    @MethodSource("getTerminalJobStates")
+    public void jobShouldFailWhenJobStateIsTerminal(JobState state) {
         AsyncJobStatus status = spy(new AsyncJobStatus()
             .setJobKey(JOB_KEY)
             .setState(state));
 
-        doReturn(status).when(jobCurator).get(anyString());
+        doReturn(status).when(this.jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
-        thrown.expect(JobInitializationException.class);
-        thrown.expectMessage(StringContains.containsString("unknown or terminal state"));
-
-        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+        Throwable throwable = assertThrows(
+            JobInitializationException.class,
+            () -> manager.executeJob(new JobMessage(JOB_ID, JOB_KEY)));
+        assertThat(throwable.getMessage(), StringContains.containsString("unknown or terminal state"));
     }
 
     @Test
@@ -273,10 +275,10 @@ public class JobManagerTest {
         doReturn(status).when(jobCurator).get(anyString());
         final JobManager manager = createJobManager();
 
-        thrown.expect(JobInitializationException.class);
-        thrown.expectMessage(StringContains.containsString("Unable to instantiate"));
-
-        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+        Throwable throwable = assertThrows(
+            JobInitializationException.class,
+            () -> manager.executeJob(new JobMessage(JOB_ID, JOB_KEY)));
+        assertThat(throwable.getMessage(), StringContains.containsString("Unable to instantiate"));
     }
 
     @Test
@@ -556,7 +558,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testAttemptCountRemainsIncrementedOnExecutionFailure() throws JobException {
+    public void testAttemptCountRemainsIncrementedOnExecutionFailure() {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
         AsyncJobStatus status = new AsyncJobStatus()
             .setJobKey(JOB_KEY)
@@ -680,7 +682,7 @@ public class JobManagerTest {
         assertEquals(JobState.FAILED, status.getState());
     }
 
-    @Test(expected = JobStateManagementException.class)
+    @Test
     public void testFailedStateUpdateResultsInStateManagementExceptionDuringRetryExecution()
         throws JobException {
 
@@ -700,10 +702,11 @@ public class JobManagerTest {
         doReturn(job).when(this.injector).getInstance(TestJob1.class);
 
         JobManager manager = this.createJobManager();
-        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+        assertThrows(JobStateManagementException.class,
+            () -> manager.executeJob(new JobMessage(JOB_ID, JOB_KEY)));
     }
 
-    @Test(expected = JobMessageDispatchException.class)
+    @Test
     public void testFailedMessageDispatchResultsInMessageDispatchExceptionDuringRetryExecution()
         throws JobException {
 
@@ -721,14 +724,15 @@ public class JobManagerTest {
         doReturn(status).when(this.jobCurator).get(JOB_ID);
         doReturn(job).when(this.injector).getInstance(TestJob1.class);
 
-        this.dispatcher = mock(CollectingJobMessageDispatcher.class);
-        doThrow(new JobMessageDispatchException()).when(this.dispatcher).sendJobMessage(any());
+        JobMessageDispatcher dispatcher = mock(JobMessageDispatcher.class);
+        doThrow(new JobMessageDispatchException()).when(dispatcher).sendJobMessage(any());
 
-        JobManager manager = this.createJobManager();
-        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+        JobManager manager = this.createJobManager(dispatcher);
+        assertThrows(JobMessageDispatchException.class,
+            () -> manager.executeJob(new JobMessage(JOB_ID, JOB_KEY)));
     }
 
-    @Test(expected = JobInitializationException.class)
+    @Test
     public void testJobExecutionFailsWithNoJobKey() throws JobException {
         AsyncJobStatus status = spy(new AsyncJobStatus()
             .setState(JobState.QUEUED)
@@ -741,7 +745,8 @@ public class JobManagerTest {
         doReturn(job).when(this.injector).getInstance(TestJob1.class);
 
         JobManager manager = this.createJobManager();
-        manager.executeJob(new JobMessage(JOB_ID, JOB_KEY));
+        assertThrows(JobInitializationException.class,
+            () -> manager.executeJob(new JobMessage(JOB_ID, JOB_KEY)));
     }
 
     @Test
@@ -940,47 +945,53 @@ public class JobManagerTest {
         manager.shutdown();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testManagerCannotBePausedBeforeInit() {
         JobManager manager = this.createJobManager();
-        manager.pause();
+
+        assertThrows(IllegalStateException.class, manager::pause);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testManagerCannotBeResumedBeforeInit() {
         JobManager manager = this.createJobManager();
-        manager.resume();
+
+        assertThrows(IllegalStateException.class, manager::resume);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testManagerCannotBeInitializedTwice() {
         JobManager manager = this.createJobManager();
+
         manager.initialize();
-        manager.initialize();
+        assertThrows(IllegalStateException.class, manager::initialize);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testManagerCannotBeInitializedAfterShutdown() {
         JobManager manager = this.createJobManager();
         manager.shutdown();
-        manager.initialize();
+
+        assertThrows(IllegalStateException.class, manager::initialize);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testManagerCannotBePausedAfterShutdown() {
         JobManager manager = this.createJobManager();
         manager.shutdown();
-        manager.pause();
+
+        assertThrows(IllegalStateException.class, manager::pause);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testManagerCannotBeResumedAfterShutdown() {
         JobManager manager = this.createJobManager();
         manager.shutdown();
-        manager.pause();
+
+        assertThrows(IllegalStateException.class, manager::pause);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testManagerCannotBeStartedInSuspendMode() {
         JobManager manager = this.createJobManager();
         manager.initialize();
@@ -988,7 +999,7 @@ public class JobManagerTest {
         CandlepinModeChange mode = new CandlepinModeChange(new Date(), Mode.SUSPEND);
         doReturn(mode).when(this.modeManager).getLastCandlepinModeChange();
 
-        manager.start();
+        assertThrows(IllegalStateException.class, manager::start);
     }
 
     @Test

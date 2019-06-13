@@ -14,8 +14,16 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Refresher;
@@ -24,8 +32,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-
-import com.google.inject.persist.UnitOfWork;
 
 import org.junit.Before;
 import org.junit.Test;

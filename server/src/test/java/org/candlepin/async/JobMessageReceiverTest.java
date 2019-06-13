@@ -14,9 +14,15 @@
  */
 package org.candlepin.async;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.model.AsyncJobStatus;
@@ -29,7 +35,6 @@ import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -109,7 +114,7 @@ public class JobMessageReceiverTest {
         ClientMessage message = this.buildClientMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
 
-        doThrow(new JobExecutionException()).when(this.jobManager).executeJob(any());
+        doThrow(new JobExecutionException()).when(this.jobManager).executeJob(any(JobMessage.class));
 
         receiver.onMessage(message);
 
@@ -126,7 +131,7 @@ public class JobMessageReceiverTest {
         JobStateManagementException exception = new JobStateManagementException(new AsyncJobStatus(),
             JobState.RUNNING, JobState.FAILED, true);
 
-        doThrow(exception).when(this.jobManager).executeJob(any());
+        doThrow(exception).when(this.jobManager).executeJob(any(JobMessage.class));
 
         receiver.onMessage(message);
 
@@ -143,7 +148,7 @@ public class JobMessageReceiverTest {
         JobStateManagementException exception = new JobStateManagementException(new AsyncJobStatus(),
             JobState.RUNNING, JobState.FAILED_WITH_RETRY, false);
 
-        doThrow(exception).when(this.jobManager).executeJob(any());
+        doThrow(exception).when(this.jobManager).executeJob(any(JobMessage.class));
 
         receiver.onMessage(message);
 
@@ -157,7 +162,7 @@ public class JobMessageReceiverTest {
         ClientMessage message = this.buildClientMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
 
-        doThrow(new JobMessageDispatchException()).when(this.jobManager).executeJob(any());
+        doThrow(new JobMessageDispatchException()).when(this.jobManager).executeJob(any(JobMessage.class));
 
         receiver.onMessage(message);
 
@@ -171,7 +176,7 @@ public class JobMessageReceiverTest {
         ClientMessage message = this.buildClientMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
 
-        doThrow(new JobException(true)).when(this.jobManager).executeJob(any());
+        doThrow(new JobException(true)).when(this.jobManager).executeJob(any(JobMessage.class));
 
         receiver.onMessage(message);
 
@@ -185,7 +190,7 @@ public class JobMessageReceiverTest {
         ClientMessage message = this.buildClientMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
 
-        doThrow(new JobException(false)).when(this.jobManager).executeJob(any());
+        doThrow(new JobException(false)).when(this.jobManager).executeJob(any(JobMessage.class));
 
         receiver.onMessage(message);
 

@@ -73,7 +73,7 @@ public class HypervisorHeartbeatUpdateJob extends KingpinJob {
         map.put(JobStatus.TARGET_ID, owner.getKey());
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(REPORTER_ID, reporterId);
-        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID));
+        map.put(JobStatus.CORRELATION_ID, MDC.get(LoggingFilter.CSID_KEY));
         map.put(JobStatus.OWNER_LOG_LEVEL, owner.getLogLevel());
 
         // Not sure if this is the best way to go:

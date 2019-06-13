@@ -23,18 +23,11 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 
-import junitparams.JUnitParamsRunner;
-
-import org.junit.runner.RunWith;
-
 import java.util.Date;
-
-
 
 /**
  * Test suite for the AsyncJobStatusTranslator class
  */
-@RunWith(JUnitParamsRunner.class)
 public class AsyncJobStatusTranslatorTest extends
     AbstractTranslatorTest<AsyncJobStatus, AsyncJobStatusDTO, AsyncJobStatusTranslator> {
 

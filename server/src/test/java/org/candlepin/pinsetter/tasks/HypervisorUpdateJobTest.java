@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyString;
@@ -179,7 +180,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
             ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
-        ArgumentCaptor<Set<Consumer>> argument = ArgumentCaptor.forClass(Set.class);
+        Class<Set<Consumer>> consumersClass = (Class<Set<Consumer>>) (Class) Set.class;
+        ArgumentCaptor<Set<Consumer>> argument = ArgumentCaptor.forClass(consumersClass);
         verify(consumerCurator).saveAll(argument.capture(), eq(false), eq(false));
         Consumer created = argument.getValue().stream().findFirst().orElse(null);
         assertEquals("createReporterId", created.getHypervisorId().getReporterId());
@@ -271,7 +273,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         injector.injectMembers(job);
         job.execute(ctx);
 
-        ArgumentCaptor<Set<Consumer>> updateCaptor = ArgumentCaptor.forClass(Set.class);
+        Class<Set<Consumer>> consumersClass = (Class<Set<Consumer>>) (Class) Set.class;
+        ArgumentCaptor<Set<Consumer>> updateCaptor = ArgumentCaptor.forClass(consumersClass);
         verify(consumerCurator, times(2)).bulkUpdate(updateCaptor.capture(), eq(false));
 
         Consumer updated = updateCaptor.getValue().stream().findFirst().orElse(null);
