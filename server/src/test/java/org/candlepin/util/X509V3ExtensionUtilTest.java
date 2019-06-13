@@ -17,7 +17,13 @@ package org.candlepin.util;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.name.Named;
+import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
@@ -28,6 +34,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.Owner;
+import org.candlepin.model.dto.TinySubscription;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
@@ -50,13 +57,19 @@ public class X509V3ExtensionUtilTest {
     private Configuration config;
     private EntitlementCurator ec;
     private X509V3ExtensionUtil util;
-
+    @Inject @Named("X509V3ExtensionUtilObjectMapper") private ObjectMapper mapper;
 
     @Before
     public void init() {
         config = mock(Configuration.class);
         ec = mock(EntitlementCurator.class);
-        util = new X509V3ExtensionUtil(config, ec, new ObjectMapper());
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.ServletEnvironmentModule(),
+            new TestingModules.StandardTest()
+        );
+        injector.injectMembers(this);
+        util = new X509V3ExtensionUtil(config, ec, this.mapper);
     }
 
     @Test
@@ -181,6 +194,28 @@ public class X509V3ExtensionUtilTest {
         String resultBrandType = certProds.get(0).getBrandType();
         assertTrue(possibleBrandNames.contains(resultBrandName));
         assertEquals("OS", resultBrandType);
+    }
+
+    @Test
+    public void susbcriptionWithSyspurposeAttributes() throws JsonProcessingException {
+        Owner owner = new Owner("Test Corporation");
+        Product mktProd = new Product("mkt", "MKT SKU");
+        mktProd.setAttribute(Product.Attributes.USAGE, "my_usage");
+        mktProd.setAttribute(Product.Attributes.SUPPORT_LEVEL, "my_support_level");
+        mktProd.setAttribute(Product.Attributes.SUPPORT_TYPE, "my_support_type");
+        mktProd.setAttribute(Product.Attributes.ROLES, " my_role1, my_role2 ");
+        mktProd.setAttribute(Product.Attributes.ADDONS, " my_addon1, my_addon2 ");
+        Pool pool = TestUtil.createPool(owner, mktProd);
+
+        TinySubscription subscription = util.createSubscription(pool);
+        String output = this.mapper.writeValueAsString(subscription);
+        assertTrue("The serialized data should contain usage!", output.contains("my_usage"));
+        assertTrue("The serialized data should contain support level!", output.contains("my_support_level"));
+        assertTrue("The serialized data should contain support type!", output.contains("my_support_type"));
+        assertTrue("The serialized data should contain role!", output.contains("my_role1"));
+        assertTrue("The serialized data should contain role!", output.contains("my_role2"));
+        assertTrue("The serialized data should contain addon!", output.contains("my_addon1"));
+        assertTrue("The serialized data should contain addon!", output.contains("my_addon2"));
     }
 
 }

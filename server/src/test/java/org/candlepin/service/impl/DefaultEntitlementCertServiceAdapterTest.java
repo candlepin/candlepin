@@ -853,8 +853,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Dot1Certs()
         throws Exception {
 
-        consumer.setFact("system.certificate_version", "3.3");
+        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
         subscription.getProduct().setAttribute(Product.Attributes.RAM, "4");
+        subscription.getProduct().setAttribute(Product.Attributes.ROLES, "role1, role2 ");
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
@@ -1240,7 +1241,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testPrepareV3EntitlementData() throws IOException {
         Set<Product> products = new HashSet<>();
         products.add(product);
-        consumer.setFact("system.certificate_version", "3.3");
+        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
         consumer.setFact("uname.machine", "x86_64");
 
         Product product = pool.getProduct();
@@ -1268,7 +1269,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.3"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), (X509V3ExtensionUtil.CERT_VERSION));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
@@ -1378,7 +1379,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<>();
         products.add(product);
 
-        setupEntitlements(null, "3.3");
+        setupEntitlements(null, X509V3ExtensionUtil.CERT_VERSION);
 
         Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
         Map<String, X509ExtensionWrapper> map = new HashMap<>();
@@ -1436,7 +1437,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         inheritedArchProduct.addContent(noArchContent, false);
         products.add(inheritedArchProduct);
 
-        setupEntitlements(ARCH_LABEL, "3.3");
+        setupEntitlements(ARCH_LABEL, X509V3ExtensionUtil.CERT_VERSION);
 
         Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
         Map<String, X509ExtensionWrapper> map = new HashMap<>();
@@ -1444,7 +1445,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.3"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), (X509V3ExtensionUtil.CERT_VERSION));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
@@ -1504,7 +1505,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         wrongArchProduct.addContent(wrongArchContent, false);
         products.clear();
         products.add(wrongArchProduct);
-        setupEntitlements(ARCH_LABEL, "3.3");
+        setupEntitlements(ARCH_LABEL, X509V3ExtensionUtil.CERT_VERSION);
 
         Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
         Map<String, X509ExtensionWrapper> map = new HashMap<>();
@@ -1512,7 +1513,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.3"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), (X509V3ExtensionUtil.CERT_VERSION));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
@@ -1550,7 +1551,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<>();
         products.add(product);
 
-        consumer.setFact("system.certificate_version", "3.3");
+        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
         consumer.setFact("uname.machine", "x86_64");
 
         subscription.getProduct().setAttribute(Product.Attributes.WARNING_PERIOD, "0");
@@ -1566,7 +1567,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.3"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), (X509V3ExtensionUtil.CERT_VERSION));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
@@ -1602,7 +1603,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(product);
 
         consumer.setUuid("test-consumer");
-        consumer.setFact("system.certificate_version", "3.3");
+        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
         consumer.setFact("uname.machine", "x86_64");
 
         pool.getProduct().setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "1");
@@ -1615,7 +1616,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.3"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), (X509V3ExtensionUtil.CERT_VERSION));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
                 getProductModels(product, products, "prefix", entitlement),
@@ -1667,7 +1668,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product.addContent(content, false);
         }
 
-        consumer.setFact("system.certificate_version", "3.3");
+        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
         consumer.setFact("uname.machine", "x86_64");
 
         Set<X509ByteExtensionWrapper> byteExtensions = certServiceAdapter.prepareV3ByteExtensions(
@@ -1712,7 +1713,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
         product.addContent(wrongArchContent, false);
 
-        consumer.setFact("system.certificate_version", "3.3");
+        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
 
         Set<X509ByteExtensionWrapper> byteExtensions = certServiceAdapter.prepareV3ByteExtensions(
             product, getProductModels(product, products, "prefix", entitlement),
@@ -1750,7 +1751,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             largeContentProduct.addContent(content, false);
         }
 
-        consumer.setFact("system.certificate_version", "3.3");
+        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
 
         Set<X509ByteExtensionWrapper> byteExtensions = certServiceAdapter.prepareV3ByteExtensions(
             product, getProductModels(product, products, "prefix", largeContentEntitlement),
@@ -1789,7 +1790,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentProduct.addContent(createContent(CONTENT_NAME, CONTENT_ID,
             CONTENT_LABEL, CONTENT_TYPE, CONTENT_VENDOR, "/single", CONTENT_GPG_URL, ARCH_LABEL), false);
 
-        consumer.setFact("system.certificate_version", "3.3");
+        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
 
         Set<X509ByteExtensionWrapper> byteExtensions = certServiceAdapter.prepareV3ByteExtensions(
             product, getProductModels(product, products, "", largeContentEntitlement),
@@ -1830,7 +1831,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         consumer.setUuid("test-consumer");
-        consumer.setFact("system.certificate_version", "3.3");
+        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
         consumer.setFact("uname.machine", "x86_64");
 
         certServiceAdapter.prepareV3Extensions();

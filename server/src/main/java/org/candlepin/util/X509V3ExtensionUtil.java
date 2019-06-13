@@ -44,6 +44,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Collection;
 import java.util.HashMap;
@@ -68,7 +69,7 @@ public class X509V3ExtensionUtil extends X509Util {
     private ObjectMapper mapper;
     private Configuration config;
     private EntitlementCurator entCurator;
-    private String thisVersion = "3.3";
+    public static final String CERT_VERSION = "3.4";
 
     private long pathNodeId = 0;
     private long huffNodeId = 0;
@@ -89,7 +90,7 @@ public class X509V3ExtensionUtil extends X509Util {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
 
         X509ExtensionWrapper versionExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY), false, thisVersion);
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY), false, CERT_VERSION);
 
         toReturn.add(versionExtension);
         return toReturn;
@@ -220,6 +221,21 @@ public class X509V3ExtensionUtil extends X509Util {
         }
 
         toReturn.setService(createService(pool));
+
+        String usage = product.getAttributeValue(Product.Attributes.USAGE);
+        if (usage != null && !usage.trim().equals("")) {
+            toReturn.setUsage(usage);
+        }
+
+        String roles = product.getAttributeValue(Product.Attributes.ROLES);
+        if (roles != null && !roles.trim().equals("")) {
+            toReturn.setRoles(Arrays.asList(roles.trim().split("\\s*,\\s*")));
+        }
+
+        String addons = product.getAttributeValue(Product.Attributes.ADDONS);
+        if (addons != null && !addons.trim().equals("")) {
+            toReturn.setAddons(Arrays.asList(addons.trim().split("\\s*,\\s*")));
+        }
         return toReturn;
     }
 
