@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
+import java.util.List;
 
 
 /**
@@ -42,6 +42,9 @@ public class TinySubscription {
     @JsonProperty("virt_only")
     private Boolean virtOnly;
     private Service service;
+    private String usage;
+    private List<String> roles;
+    private List<String> addons;
 
     /**
      * @param sku
@@ -111,5 +114,17 @@ public class TinySubscription {
      */
     public void setService(Service service) {
         this.service = service;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
+    }
+
+    public void setUsage(String usage) {
+        this.usage = usage;
+    }
+
+    public void setAddons(List<String> addons) {
+        this.addons = addons;
     }
 }
