@@ -14,7 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
@@ -80,7 +79,7 @@ public class HypervisorUpdateAction {
         final Owner owner,
         final List<Consumer> hypervisors,
         final Boolean create,
-        final Principal principal,
+        final String principal,
         final String jobReporterId) {
 
         final String ownerKey = owner.getKey();
@@ -260,7 +259,7 @@ public class HypervisorUpdateAction {
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId, String reporterId,
-        Owner owner, Principal principal, Consumer incoming) {
+        Owner owner, String principal, Consumer incoming) {
         Consumer consumer = new Consumer();
         if (incoming.getName() != null) {
             consumer.setName(incoming.getName());
@@ -281,8 +280,8 @@ public class HypervisorUpdateAction {
         else {
             consumer.setServiceLevel("");
         }
-        if (principal.getUsername() != null) {
-            consumer.setUsername(principal.getUsername());
+        if (principal != null) {
+            consumer.setUsername(principal);
         }
         consumer.setEntitlementCount(0L);
         // TODO: Refactor this to not call resource methods directly

@@ -162,7 +162,7 @@ public class HypervisorUpdateJob extends KingpinJob {
 
             final HypervisorList hypervisors = parsedHypervisors(map);
             final HypervisorUpdateAction.Result updateResult = hypervisorUpdateAction.update(
-                owner, hypervisors.getHypervisors(), create, principal, jobReporterId);
+                owner, hypervisors.getHypervisors(), create, principal.getUsername(), jobReporterId);
             final HypervisorUpdateResultDTO result = updateResult.getResult();
             final VirtConsumerMap hypervisorKnownConsumersMap = updateResult.getKnownConsumers();
 
