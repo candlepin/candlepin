@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anySetOf;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyString;
@@ -161,7 +162,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
             ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerCurator).saveAll(any(Set.class), eq(false), eq(false));
+        verify(consumerCurator).saveAll(anySetOf(Consumer.class), eq(false), eq(false));
     }
 
     @Test
@@ -210,7 +211,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         injector.injectMembers(job);
         job.execute(ctx);
         verify(consumerResource).checkForFactsUpdate(any(Consumer.class), any(Consumer.class));
-        verify(consumerCurator, times(2)).bulkUpdate(any(Set.class), eq(false));
+        verify(consumerCurator, times(2)).bulkUpdate(anySetOf(Consumer.class), eq(false));
     }
 
     @Test

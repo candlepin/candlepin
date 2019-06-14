@@ -29,25 +29,16 @@ import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.GuestId;
-import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
-import org.candlepin.policy.js.compliance.ComplianceRules;
-import org.candlepin.resource.ConsumerResource;
-import org.candlepin.resource.util.GuestMigration;
-import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.impl.HypervisorUpdateAction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -59,12 +50,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -81,11 +69,8 @@ public class HypervisorUpdateJob implements AsyncJob {
     private ObjectMapper mapper;
     private OwnerCurator ownerCurator;
     private ConsumerCurator consumerCurator;
-    private ConsumerResource consumerResource;
+    private HypervisorUpdateAction hypervisorUpdateAction;
     private I18n i18n;
-    private ConsumerType hypervisorType;
-    private SubscriptionServiceAdapter subAdapter;
-    private ComplianceRules complianceRules;
     private ModelTranslator translator;
 
     public static final String JOB_KEY = "HYPERVISOR_UPDATE_JOB";
@@ -95,21 +80,22 @@ public class HypervisorUpdateJob implements AsyncJob {
     private static final String REPORTER_ID = "reporter_id";
     private static final String DATA = "data";
     private static final String PRINCIPAL = "principal";
+    private static final int BULK_SIZE = 10;
 
     @Inject
-    public HypervisorUpdateJob(OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-        ConsumerTypeCurator consumerTypeCurator, ConsumerResource consumerResource, I18n i18n,
-        SubscriptionServiceAdapter subAdapter, ComplianceRules complianceRules, ModelTranslator translator,
-        @Named("HypervisorUpdateJobObjectMapper") ObjectMapper objectMapper) {
-        this.ownerCurator = ownerCurator;
-        this.consumerCurator = consumerCurator;
-        this.consumerResource = consumerResource;
-        this.i18n = i18n;
-        this.subAdapter = subAdapter;
-        this.complianceRules = complianceRules;
-        this.translator = translator;
-        this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
-        this.mapper = objectMapper;
+    public HypervisorUpdateJob(
+        final OwnerCurator ownerCurator,
+        final ConsumerCurator consumerCurator,
+        final ModelTranslator translator,
+        final HypervisorUpdateAction hypervisorUpdateAction,
+        final I18n i18n,
+        @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper objectMapper) {
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.translator = Objects.requireNonNull(translator);
+        this.hypervisorUpdateAction = Objects.requireNonNull(hypervisorUpdateAction);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.mapper = Objects.requireNonNull(objectMapper);
     }
 
     public static HypervisorUpdateJobConfig createConfig() {
@@ -123,10 +109,10 @@ public class HypervisorUpdateJob implements AsyncJob {
      * async job.
      *
      * @param context the job's execution context
+     * @return
      */
-    @Transactional
-    @SuppressWarnings({ "checkstyle:indentation", "checkstyle:methodlength" })
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    @Override
+    public Object execute(final JobExecutionContext context) throws JobExecutionException {
         try {
             JobArguments arguments = context.getJobArguments();
             String ownerKey = arguments.getAsString(OWNER_KEY);
@@ -134,16 +120,14 @@ public class HypervisorUpdateJob implements AsyncJob {
             String principal = arguments.getAsString(PRINCIPAL);
             String jobReporterId = arguments.getAsString(REPORTER_ID);
 
-            HypervisorUpdateResultDTO result = new HypervisorUpdateResultDTO();
-
-            Owner owner = ownerCurator.getByKey(ownerKey);
+            final Owner owner = ownerCurator.getByKey(ownerKey);
             if (owner == null) {
                 log.warn("Hypervisor update attempted against non-existent org id \"{}\"", ownerKey);
                 return "Nothing to do. Owner does not exist";
             }
 
             if (owner.isAutobindDisabled() || owner.isContentAccessEnabled()) {
-                String caMessage = owner.isContentAccessEnabled() ?
+                final String caMessage = owner.isContentAccessEnabled() ?
                     " because of the content access mode setting" : "";
                 log.debug("Could not update host/guest mapping. Auto-Attach is disabled for owner {}{}",
                     owner.getKey(), caMessage);
@@ -152,129 +136,27 @@ public class HypervisorUpdateJob implements AsyncJob {
                         owner.getKey(), caMessage));
             }
 
-            byte[] data = arguments.getAs(DATA, byte[].class);
-            String json = decompress(data);
-            HypervisorList hypervisors = mapper.readValue(json, HypervisorList.class);
-            log.debug("Hypervisor consumers for create/update: {}", hypervisors.getHypervisors().size());
-            log.debug("Updating hypervisor consumers for org {}", ownerKey);
+            final HypervisorList hypervisors = parsedHypervisors(arguments);
+            final HypervisorUpdateAction.Result updateResult = hypervisorUpdateAction.update(
+                owner, hypervisors.getHypervisors(), create, principal, jobReporterId);
+            final HypervisorUpdateResultDTO result = updateResult.getResult();
+            final VirtConsumerMap hypervisorKnownConsumersMap = updateResult.getKnownConsumers();
 
-            Set<String> hosts = new HashSet<>();
-            Set<String> guests = new HashSet<>();
-            Map<String, Consumer> incomingHosts = new HashMap<>();
-            parseHypervisorList(hypervisors, hosts, guests, incomingHosts);
-            // TODO Need to ensure that we retrieve existing guestIds from the DB before continuing.
-
-            // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
-            VirtConsumerMap hypervisorKnownConsumersMap =
-                consumerCurator.getHostConsumersMap(owner, hypervisors.getHypervisors());
-            Map<String, Consumer> systemUuidKnownConsumersMap = new HashMap<>();
+            final List<Consumer> created = new ArrayList<>();
+            final List<Consumer> updated = new ArrayList<>();
             for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
-                if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
-                    systemUuidKnownConsumersMap.put(
-                        consumer.getFact(Consumer.Facts.SYSTEM_UUID), consumer);
-                }
-            }
-
-            Map<String, GuestId> guestIds = consumerCurator.getGuestIdMap(guests, owner);
-            for (String hypervisorId : hosts) {
-                Consumer incoming = incomingHosts.get(hypervisorId);
-                Consumer knownHost = hypervisorKnownConsumersMap.get(hypervisorId);
-                // HypervisorId might be different in candlepin
-                if (knownHost == null && incoming.hasFact(Consumer.Facts.SYSTEM_UUID) &&
-                    systemUuidKnownConsumersMap.get(incoming.getFact(Consumer.Facts.SYSTEM_UUID)) != null) {
-                    knownHost = systemUuidKnownConsumersMap.get(incoming.getFact(Consumer.Facts.SYSTEM_UUID));
-                    if (knownHost != null) {
-                        log.debug("Found a known host by system uuid");
-                    }
-                }
-
-                Consumer reportedOnConsumer = null;
-
-                if (knownHost == null) {
-                    if (!create) {
-                        result.addFailed(hypervisorId,
-                            "Unable to find hypervisor with id " + hypervisorId + " in org " + ownerKey);
-                    }
-                    else {
-                        log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
-                        Consumer newHost = createConsumerForHypervisorId(hypervisorId, jobReporterId, owner,
-                            principal, incoming);
-
-                        // Since we just created this new consumer, we can migrate the guests immediately
-                        GuestMigration guestMigration = new GuestMigration(consumerCurator)
-                            .buildMigrationManifest(incoming, newHost);
-
-                        // Now that we have the new consumer persisted, immediately migrate the guests to it
-                        if (guestMigration.isMigrationPending()) {
-                            guestMigration.migrate(false);
-                        }
-
-                        hypervisorKnownConsumersMap.add(hypervisorId, newHost);
-                        result.addCreated(this.translator.translate(newHost, HypervisorConsumerDTO.class));
-                        reportedOnConsumer = newHost;
-                    }
+                final HypervisorConsumerDTO translated = this.translator.translate(
+                    consumer, HypervisorConsumerDTO.class);
+                if (result.wasCreated(translated)) {
+                    created.add(consumer);
                 }
                 else {
-                    boolean hypervisorIdUpdated = false;
-                    if (knownHost.getHypervisorId() != null && !hypervisorId.equalsIgnoreCase(knownHost
-                        .getHypervisorId().getHypervisorId())) {
-                        hypervisorIdUpdated = true;
-                        log.debug("Changing hypervisor id to [" + hypervisorId + "]");
-                        knownHost.getHypervisorId().setHypervisorId(hypervisorId);
-                    }
-
-                    reportedOnConsumer = knownHost;
-                    if (jobReporterId != null && knownHost.getHypervisorId() != null &&
-                        hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
-                        knownHost.getHypervisorId().getReporterId() != null &&
-                        !jobReporterId.equalsIgnoreCase(knownHost.getHypervisorId().getReporterId())) {
-                        log.debug("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
-                            hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
-                            jobReporterId);
-                    }
-                    boolean typeUpdated = false;
-                    if (!hypervisorType.getId().equals(knownHost.getTypeId())) {
-                        typeUpdated = true;
-                        knownHost.setType(hypervisorType);
-                    }
-
-                    GuestMigration guestMigration = new GuestMigration(consumerCurator)
-                        .buildMigrationManifest(incoming, knownHost);
-
-                    boolean factsUpdated = consumerResource.checkForFactsUpdate(knownHost, incoming);
-
-                    if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated ||
-                        hypervisorIdUpdated) {
-                        knownHost.setLastCheckin(new Date());
-                        guestMigration.migrate(false);
-                        result.addUpdated(this.translator.translate(knownHost, HypervisorConsumerDTO.class));
-                    }
-                    else {
-                        result.addUnchanged(
-                            this.translator.translate(knownHost, HypervisorConsumerDTO.class));
-                    }
-                }
-                // update reporter id if it changed
-                if (jobReporterId != null && reportedOnConsumer != null &&
-                    reportedOnConsumer.getHypervisorId() != null &&
-                    (reportedOnConsumer.getHypervisorId().getReporterId() == null ||
-                        !jobReporterId.contentEquals(reportedOnConsumer.getHypervisorId().getReporterId()))) {
-                    reportedOnConsumer.getHypervisorId().setReporterId(jobReporterId);
-                }
-                else if (jobReporterId == null) {
-                    log.debug("hypervisor checkin reported asynchronously without reporter id " +
-                        "for hypervisor:{} of owner:{}", hypervisorId, ownerKey);
+                    updated.add(consumer);
                 }
             }
 
-            for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
-                consumer = result.wasCreated(
-                    this.translator.translate(consumer, HypervisorConsumerDTO.class)) ?
-                    consumerCurator.create(consumer, false) :
-                    consumerCurator.update(consumer, false);
-            }
-
-            consumerCurator.flush();
+            doInBulk(created, consumers -> consumerCurator.saveAll(consumers, false, false));
+            doInBulk(updated, consumers -> consumerCurator.bulkUpdate(consumers, false));
 
             log.info("Summary for report from {} by principal {}\n {}", jobReporterId, principal, result);
             return result;
@@ -285,61 +167,18 @@ public class HypervisorUpdateJob implements AsyncJob {
         }
     }
 
-    private void parseHypervisorList(HypervisorList hypervisorList, Set<String> hosts,
-        Set<String> guests, Map<String, Consumer> incomingHosts) {
-        int emptyGuestIdCount = 0;
-        int emptyHypervisorIdCount = 0;
+    private HypervisorList parsedHypervisors(final JobArguments arguments) throws IOException {
+        final byte[] data = arguments.getAs(DATA, byte[].class);
+        final String json = decompress(data);
+        return mapper.readValue(json, HypervisorList.class);
+    }
 
-        List<Consumer> l = hypervisorList.getHypervisors();
-        for (Iterator<Consumer> hypervisors = l.iterator(); hypervisors.hasNext();) {
-            Consumer hypervisor = hypervisors.next();
-
-            HypervisorId idWrapper = hypervisor.getHypervisorId();
-
-            if (idWrapper == null) {
-                continue;
-            }
-
-            String id = idWrapper.getHypervisorId();
-
-            if (id == null) {
-                continue;
-            }
-
-            if ("".equals(id)) {
-                hypervisors.remove();
-                emptyHypervisorIdCount++;
-                continue;
-            }
-
-            incomingHosts.put(id, hypervisor);
-            hosts.add(id);
-
-            List<GuestId> guestsIdList = hypervisor.getGuestIds();
-
-            if (guestsIdList == null || guestsIdList.isEmpty()) {
-                continue;
-            }
-
-            for (Iterator<GuestId> guestIds = guestsIdList.iterator(); guestIds.hasNext();) {
-                GuestId guestId = guestIds.next();
-                if (StringUtils.isEmpty(guestId.getGuestId())) {
-                    guestIds.remove();
-                    emptyGuestIdCount++;
-                }
-                else {
-                    guests.add(guestId.getGuestId());
-                }
-            }
-        }
-
-        if (emptyHypervisorIdCount > 0) {
-            log.debug("Ignoring {} hypervisors with empty hypervisor IDs", emptyHypervisorIdCount);
-        }
-
-        if (emptyGuestIdCount > 0) {
-            log.debug("Ignoring {} empty/null guestId(s)", emptyGuestIdCount);
-        }
+    private void doInBulk(final List<Consumer> created,
+        final java.util.function.Consumer<Set<Consumer>> action) {
+        Lists.partition(created, BULK_SIZE)
+            .stream()
+            .map(HashSet::new)
+            .forEach(action);
     }
 
     private static byte[] compress(String text) {
@@ -369,68 +208,6 @@ public class HypervisorUpdateJob implements AsyncJob {
         catch (IOException e) {
             throw new AssertionError(e);
         }
-    }
-    /*
-     * Create a new hypervisor type consumer to represent the incoming hypervisorId
-     */
-
-    private Consumer createConsumerForHypervisorId(String incHypervisorId, String reporterId,
-        Owner owner, String principal, Consumer incoming) {
-        Consumer consumer = new Consumer();
-        if (incoming.getName() != null) {
-            consumer.setName(incoming.getName());
-        }
-        else {
-            consumer.setName(sanitizeHypervisorId(incHypervisorId));
-        }
-        consumer.setType(hypervisorType);
-        consumer.setFact("uname.machine", "x86_64");
-        consumer.setGuestIds(new ArrayList<>());
-        consumer.setLastCheckin(new Date());
-        consumer.setOwner(owner);
-        consumer.setAutoheal(true);
-        consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
-        if (owner.getDefaultServiceLevel() != null) {
-            consumer.setServiceLevel(owner.getDefaultServiceLevel());
-        }
-        else {
-            consumer.setServiceLevel("");
-        }
-        if (principal != null) {
-            consumer.setUsername(principal);
-        }
-        consumer.setEntitlementCount(0L);
-        // TODO: Refactor this to not call resource methods directly
-        consumerResource.sanitizeConsumerFacts(consumer);
-
-
-        // Create HypervisorId
-        HypervisorId hypervisorId = new HypervisorId(consumer, owner, incHypervisorId);
-        hypervisorId.setReporterId(reporterId);
-        consumer.setHypervisorId(hypervisorId);
-
-        // TODO: Refactor this to not call resource methods directly
-        consumerResource.checkForFactsUpdate(consumer, incoming);
-
-        return consumer;
-    }
-
-    /*
-     * Make sure the HypervisorId is a valid consumer name.
-     */
-    private String sanitizeHypervisorId(String incHypervisorId) {
-        // Same validation as consumerResource.checkConsumerName
-        if (incHypervisorId.indexOf('#') == 0) {
-            log.debug("Hypervisor id cannot begin with # character");
-            incHypervisorId = incHypervisorId.substring(1);
-        }
-
-        int max = Consumer.MAX_LENGTH_OF_CONSUMER_NAME;
-        if (incHypervisorId.length() > max) {
-            log.debug("Hypervisor id too long, truncating");
-            incHypervisorId = incHypervisorId.substring(0, max);
-        }
-        return incHypervisorId;
     }
 
     /**

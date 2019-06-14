@@ -165,7 +165,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                 throw new Exception("The json report does not contain the proper structure.");
             }
             final HypervisorUpdateAction.Result updateResult = hypervisorUpdateAction.update(
-                owner, hypervisors.getHypervisors(), create, principal, jobReporterId);
+                owner, hypervisors.getHypervisors(), create, principal.getUsername(), jobReporterId);
             final HypervisorUpdateResultDTO result = updateResult.getResult();
             final VirtConsumerMap hypervisorKnownConsumersMap = updateResult.getKnownConsumers();
 
