@@ -120,7 +120,7 @@ dependencies {
 
     implementation "org.mozilla:jss:4.5.0"
     implementation "ldapjdk:ldapjdk:4.19"
-    implementation "org.quartz-scheduler:quartz:2.2.1"
+    implementation "org.quartz-scheduler:quartz:2.2.2"
 
     // These for ActiveMQ Artemis
     implementation "org.apache.activemq:artemis-server:${versions.artemis}"
