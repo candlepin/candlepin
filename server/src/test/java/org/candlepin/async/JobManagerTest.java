@@ -15,24 +15,34 @@
 package org.candlepin.async;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-
-import com.google.inject.Injector;
-import com.google.inject.persist.UnitOfWork;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.temp.TestJob1;
 import org.candlepin.audit.EventSink;
+import org.candlepin.auth.Access;
+import org.candlepin.auth.SystemPrincipal;
+import org.candlepin.auth.UserPrincipal;
+import org.candlepin.auth.permissions.OwnerPermission;
+import org.candlepin.auth.permissions.Permission;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
@@ -44,36 +54,35 @@ import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.model.Owner;
+
+import com.google.inject.Injector;
+import com.google.inject.persist.UnitOfWork;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
-
 import org.hamcrest.core.StringContains;
-
 import org.hibernate.Session;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import org.mockito.InOrder;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
-
 import org.slf4j.MDC;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1079,6 +1088,59 @@ public class JobManagerTest {
 
         assertNotNull(result);
         assertEquals(JobState.ABORTED, result.getState());
+    }
+
+    @Test
+    public void jobStatusFound() {
+        String jobId = "jobId";
+        Owner owner = new Owner("ownerKey", "owner");
+        JobManager manager = this.createJobManager();
+        doReturn(createJobStatus(jobId, owner)).when(this.jobCurator).get(anyString());
+        doReturn(new SystemPrincipal()).when(this.principalProvider).get();
+
+        AsyncJobStatus result = manager.getJob(jobId);
+
+        assertNotNull(result);
+        assertEquals(result.getId(), jobId);
+    }
+
+    @Test
+    public void jobStatusFoundWithPermissions() {
+        String jobId = "jobId";
+        Owner owner = new Owner("ownerKey", "owner");
+        List<Permission> permissions = Collections
+            .singletonList(new OwnerPermission(owner, Access.READ_ONLY));
+        JobManager manager = this.createJobManager();
+        doReturn(createJobStatus(jobId, owner)).when(this.jobCurator).get(anyString());
+        doReturn(new UserPrincipal("user", permissions, false))
+            .when(this.principalProvider).get();
+
+        AsyncJobStatus result = manager.getJob(jobId);
+
+        assertNotNull(result);
+        assertEquals(result.getId(), jobId);
+    }
+
+    @Test
+    public void jobStatusNotFound() {
+        String jobId = "jobId";
+        JobManager manager = this.createJobManager();
+
+        assertNull(manager.getJob(jobId));
+    }
+
+    private AsyncJobStatus createJobStatus(String jobId, Owner owner) {
+        return createJobStatus(jobId, owner, JobState.RUNNING);
+    }
+
+    private AsyncJobStatus createJobStatus(String jobId, Owner owner, JobState state) {
+        AsyncJobStatus status = spy(new AsyncJobStatus());
+        status.setState(state);
+        when(status.getId()).thenReturn(jobId);
+        HashMap<String, String> data = new HashMap<>();
+        data.put("org", owner.getKey());
+        when(status.getMetadata()).thenReturn(data);
+        return status;
     }
 
 }

@@ -98,7 +98,7 @@ public class JobManager implements ModeChangeListener {
     /**
      * Enum representing known manager states, and valid state transitions
      */
-    public static enum ManagerState {
+    public enum ManagerState {
         // Impl note: We have to use strings here since we can't reference enums that haven't yet
         // been defined. This is slightly less efficient than I'd like, but whatever.
         CREATED("INITIALIZED", "SHUTDOWN"),
@@ -1243,4 +1243,18 @@ public class JobManager implements ModeChangeListener {
             }
         }
     }
+
+    /**
+     * Lookup job status by job id.
+     *
+     * @param jobId
+     *  Id of the requested job
+     *
+     * @return
+     *  {@link AsyncJobStatus} of the requested job or null
+     */
+    public AsyncJobStatus getJob(final String jobId) {
+        return this.jobCurator.get(jobId);
+    }
+
 }

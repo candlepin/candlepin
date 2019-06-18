@@ -564,7 +564,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void userwithEmail() {
+    public void userWithEmail() {
         String username = "(foo)@{baz}.[com]&?";
         User u = userCurator.create(new User(username, "dontcare"));
         ownerAdminRole.addUser(u);
