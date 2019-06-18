@@ -656,10 +656,7 @@ describe 'Consumer Resource' do
 
     status = @consumer1.consume_product(product.id, { :async => true })
 
-    status['targetType'].should == "consumer"
-    status['targetId'].should == @consumer1.uuid
-
-    job_status = wait_for_job(status['id'], 15)
+    job_status = wait_for_async_job(status['id'], 15)
     job_status.should_not be_nil
     job_status['state'].should == 'FINISHED'
 

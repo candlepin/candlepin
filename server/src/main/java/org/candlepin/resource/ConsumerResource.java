@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
@@ -98,7 +99,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -2070,23 +2070,25 @@ public class ConsumerResource {
         // HANDLE ASYNC
         //
         if (async) {
-            JobConfig config;
+            JobConfig jobConfig;
 
             if (poolIdString != null) {
-                config = EntitlerJob.createConfig()
+                jobConfig = EntitlerJob.createConfig()
                     .setOwner(owner)
                     .setConsumer(consumer)
                     .setPoolQuantity(poolIdString, quantity);
             }
             else {
-                JobDetail detail = EntitleByProductsJob
-                    .bindByProducts(productIds, consumer, entitleDate, fromPools, owner);
-                return Response.status(Response.Status.OK)
-                    .type(MediaType.APPLICATION_JSON).entity(detail).build();
+                jobConfig = EntitleByProductsJob.createConfig()
+                    .setOwner(owner)
+                    .setConsumer(consumer)
+                    .setProductIds(productIds)
+                    .setEntitleDate(entitleDate)
+                    .setPools(fromPools);
             }
 
             // events will be triggered by the job
-            AsyncJobStatus status = jobManager.queueJob(config);
+            AsyncJobStatus status = jobManager.queueJob(jobConfig);
             AsyncJobStatusDTO statusDTO = this.translator.translate(status, AsyncJobStatusDTO.class);
             return Response.status(Response.Status.OK)
                 .type(MediaType.APPLICATION_JSON)

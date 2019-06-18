@@ -25,7 +25,7 @@ import org.candlepin.auth.permissions.OwnerPoolsPermission;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 /**
  *
@@ -54,7 +54,7 @@ public class ConsumerPrincipal extends Principal {
         addPermission(new ConsumerOrgHypervisorPermission(owner));
 
         // Allow consumers to check the status of their own jobs.
-        addPermission(new JobStatusPermission(getData(), Arrays.asList(owner.getKey())));
+        addPermission(new JobStatusPermission(getData(), Collections.singletonList(owner.getKey())));
         addPermission(new AsyncJobStatusPermission(getData()));
     }
 

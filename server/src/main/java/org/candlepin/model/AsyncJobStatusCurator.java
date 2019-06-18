@@ -76,7 +76,7 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
      *  a collection of jobs in the provided states
      */
     public List<AsyncJobStatus> getJobsInState(AsyncJobStatus.JobState... states) {
-        return states != null ? this.getJobsInState(Arrays.asList(states)) : new ArrayList();
+        return states != null ? this.getJobsInState(Arrays.asList(states)) : new ArrayList<>();
     }
 
     /**
