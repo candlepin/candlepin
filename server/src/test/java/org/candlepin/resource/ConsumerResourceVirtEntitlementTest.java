@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.candlepin.async.JobException;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
@@ -135,7 +136,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
      * Checking behavior when the physical pool has a numeric virt_limit
      */
     @Test
-    public void testLimitPool() {
+    public void testLimitPool() throws JobException {
         List<Pool> subscribedTo = new ArrayList<>();
         Consumer guestConsumer = TestUtil.createConsumer(systemType, owner);
         guestConsumer.setFact("virt.is_guest", "true");
@@ -154,8 +155,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                     10, null, null, false, null, null);
                 p = poolManager.get(p.getId());
                 // ensure the correct # consumed from the bonus pool
-                assertTrue(p.getConsumed() == 20);
-                assertTrue(p.getQuantity() == 100);
+                assertEquals(20L, p.getConsumed());
+                assertEquals(100L, p.getQuantity());
                 // keep this list so we don't need to search again
                 subscribedTo.add(p);
             }
@@ -168,8 +169,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             null, false, null, null);
         for (Pool p : subscribedTo) {
             p = poolManager.get(p.getId());
-            assertTrue(p.getConsumed() == 20);
-            assertTrue(p.getQuantity() == 30);
+            assertEquals(20L, p.getConsumed());
+            assertEquals(30L, p.getQuantity());
         }
         // manifest consume from the physical pool and then check bonus pool quantities.
         //   Should result in a revocation of one of the 10 count entitlements.
@@ -177,8 +178,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             null, false, null, null);
         for (Pool p : subscribedTo) {
             p = poolManager.get(p.getId());
-            assertTrue(p.getConsumed() == 10);
-            assertTrue(p.getQuantity() == 10);
+            assertEquals(10L, p.getConsumed());
+            assertEquals(10L, p.getQuantity());
         }
         // system consume from the physical pool and then check bonus pool quantities.
         //   Should result in no change in the entitlements for the guest.
@@ -186,13 +187,13 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             null, false, null, null);
         for (Pool p : subscribedTo) {
             p = poolManager.get(p.getId());
-            assertTrue(p.getConsumed() == 10);
-            assertTrue(p.getQuantity() == 10);
+            assertEquals(10L, p.getConsumed());
+            assertEquals(10L, p.getQuantity());
         }
     }
 
     @Test
-    public void testUnlimitPool() {
+    public void testUnlimitPool() throws JobException {
         List<Pool> subscribedTo = new ArrayList<>();
         Consumer guestConsumer = TestUtil.createConsumer(systemType, owner);
         guestConsumer.setFact("virt.is_guest", "true");
@@ -210,12 +211,12 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                 consumerResource.bind(guestConsumer.getUuid(), p.getId(), null,
                     10, null, null, false, null, null);
                 p = poolManager.get(p.getId());
-                assertTrue(p.getConsumed() == 20);
-                assertTrue(p.getQuantity() == -1);
+                assertEquals(20L, p.getConsumed());
+                assertEquals(-1L, p.getQuantity());
                 poolManager.getRefresher(subAdapter, ownerAdapter).add(owner).run();
                 // double check after pools refresh
-                assertTrue(p.getConsumed() == 20);
-                assertTrue(p.getQuantity() == -1);
+                assertEquals(20L, p.getConsumed());
+                assertEquals(-1L, p.getQuantity());
                 subscribedTo.add(p);
             }
             else {
@@ -226,8 +227,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 7, null,
             null, false, null, null);
         for (Pool p : subscribedTo) {
-            assertTrue(p.getConsumed() == 20);
-            assertTrue(p.getQuantity() == -1);
+            assertEquals(20, p.getConsumed());
+            assertEquals(-1L, p.getQuantity());
         }
         // Full consumption of physical pool causes revocation of bonus pool entitlements
         //   and quantity change to 0
@@ -235,8 +236,8 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             null, false, null, null);
         for (Pool p : subscribedTo) {
             p = poolManager.get(p.getId());
-            assertEquals(new Long(0), p.getConsumed());
-            assertTrue(p.getQuantity() == 0);
+            assertEquals(0L, p.getConsumed());
+            assertEquals(0L, p.getQuantity());
         }
     }
 
