@@ -394,7 +394,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      *  The name of the principal that created this job, or null if the job is a system-level job
      *  or the principal has not been set
      */
-    public String getPrincipal() {
+    public String getPrincipalName() {
         return this.principal;
     }
 
@@ -408,7 +408,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      * @return
      *  this job status instance
      */
-    public AsyncJobStatus setPrincipal(String principal) {
+    public AsyncJobStatus setPrincipalName(String principal) {
         this.principal = (principal != null && !principal.isEmpty()) ? principal : null;
         return this;
     }

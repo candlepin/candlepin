@@ -23,6 +23,7 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.async.JobConstraints;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
@@ -48,7 +49,6 @@ public class ExportJob implements AsyncJob {
     public static final String JOB_KEY = "EXPORT_JOB";
     public static final String JOB_NAME = "export_manifest";
 
-    protected static final String OWNER_KEY = "org";
     protected static final String CONSUMER_KEY = "consumer_uuid";
     protected static final String CDN_LABEL = "cdn_label";
     protected static final String WEBAPP_PREFIX = "webapp_prefix";
@@ -99,7 +99,7 @@ public class ExportJob implements AsyncJob {
                 throw new IllegalArgumentException("owner is null");
             }
 
-            this.setJobMetadata(OWNER_KEY, owner.getKey())
+            this.setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
                 .setLogLevel(owner.getLogLevel());
 
             return this;

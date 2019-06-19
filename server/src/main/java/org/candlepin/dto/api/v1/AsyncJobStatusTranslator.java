@@ -65,7 +65,7 @@ public class AsyncJobStatusTranslator extends TimestampedEntityTranslator<AsyncJ
         destination.setGroup(source.getGroup());
         destination.setOrigin(source.getOrigin());
         destination.setExecutor(source.getExecutor());
-        destination.setPrincipal(source.getPrincipal());
+        destination.setPrincipal(source.getPrincipalName());
         destination.setStartTime(source.getStartTime());
         destination.setEndTime(source.getEndTime());
         destination.setAttempts(source.getAttempts());

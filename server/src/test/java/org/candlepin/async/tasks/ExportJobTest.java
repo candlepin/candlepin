@@ -21,6 +21,7 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
@@ -87,8 +88,8 @@ public class ExportJobTest extends BaseJobTest {
 
         Map<String, String> metadata = config.getJobMetadata();
 
-        assertTrue(metadata.containsKey(ExportJob.OWNER_KEY));
-        assertEquals(owner.getKey(), metadata.get(ExportJob.OWNER_KEY));
+        assertTrue(metadata.containsKey(LoggingFilter.OWNER_KEY));
+        assertEquals(owner.getKey(), metadata.get(LoggingFilter.OWNER_KEY));
         assertEquals(owner.getLogLevel(), config.getLogLevel());
     }
 
