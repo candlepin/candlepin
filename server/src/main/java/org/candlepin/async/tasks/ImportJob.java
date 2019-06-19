@@ -24,6 +24,7 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.ImportRecord;
@@ -76,7 +77,7 @@ public class ImportJob implements AsyncJob {
             }
 
             // The owner is both part of metadata & arguments in this job.
-            this.setJobMetadata(OWNER_KEY, owner.getKey())
+            this.setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
                 .setJobArgument(OWNER_KEY, owner.getKey())
                 .setLogLevel(owner.getLogLevel());
 

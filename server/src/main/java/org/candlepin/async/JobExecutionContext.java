@@ -30,6 +30,16 @@ public interface JobExecutionContext {
      */
     JobArguments getJobArguments();
 
+    /**
+     * Fetches the name of the principal that created this job. This may be different from the
+     * principal of the context in which the job is executing.
+     *
+     * @return
+     *  the name of the principal which created the executing job
+     */
+    String getPrincipalName();
+
+
     // TODO: Add other stuff here as necessary
 
 }

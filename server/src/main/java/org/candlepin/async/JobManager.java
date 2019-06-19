@@ -650,7 +650,7 @@ public class JobManager implements ModeChangeListener {
         // Add environment-specific metadata...
         job.setOrigin(Util.getHostname());
         Principal principal = this.principalProvider.get();
-        job.setPrincipal(principal != null ? principal.getName() : null);
+        job.setPrincipalName(principal != null ? principal.getName() : null);
 
         // Metadata and logging configuration...
         job.setMetadata(builder.getJobMetadata());
@@ -942,7 +942,7 @@ public class JobManager implements ModeChangeListener {
      *  the job status to use to configure the principal
      */
     private void setupPrincipal(AsyncJobStatus status) {
-        String name = status.getPrincipal();
+        String name = status.getPrincipalName();
         Principal principal = name != null ? new JobPrincipal(name) : new SystemPrincipal();
 
         ResteasyProviderFactory.pushContext(Principal.class, principal);

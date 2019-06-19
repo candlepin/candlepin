@@ -23,6 +23,7 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
@@ -72,7 +73,7 @@ public class RefreshPoolsJob implements AsyncJob {
             }
 
             // The owner is both part of metadata & arguments in this job.
-            this.setJobMetadata(OWNER_KEY, owner.getKey())
+            this.setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
                 .setJobArgument(OWNER_KEY, owner.getKey())
                 .setLogLevel(owner.getLogLevel());
 
