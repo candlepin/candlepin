@@ -20,7 +20,7 @@
 %endif
 
 Name: candlepin
-Version: 2.3.17
+Version: 2.3.18
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -226,6 +226,10 @@ fi
 
 #raw
 %changelog
+* Thu Jun 20 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.3.18-1
+- 1697518: Syspurpose status does not reflect system purpose matching status
+  (ojanus@redhat.com)
+
 * Thu Apr 18 2019 William Poteat <wpoteat@redhat.com> 2.3.17-1
 - 1679286: Moved entitlement revocation to after pool update (crog@redhat.com)
 - 1679286: Removed AHC.lockAndLoadById(s) to address quirks with refresh
