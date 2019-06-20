@@ -18,6 +18,7 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.HypervisorUpdateJob;
+import org.candlepin.async.tasks.HypervisorHeartbeatUpdateJob;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
@@ -42,14 +43,12 @@ import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
-import org.candlepin.pinsetter.tasks.HypervisorHeartbeatUpdateJob;
 import org.candlepin.resource.util.GuestMigration;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -82,6 +81,8 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
+
+
 
 /**
  * HypervisorResource
@@ -299,7 +300,7 @@ public class HypervisorResource {
                 i18n.tr("Host to guest mapping was not provided for hypervisor update."));
         }
 
-        log.info("Hypervisor update by principal: " + principal);
+        log.info("Hypervisor update by principal: {}", principal);
         Owner owner = this.getOwner(ownerKey);
 
         JobConfig config = HypervisorUpdateJob.createConfig()
@@ -308,6 +309,7 @@ public class HypervisorResource {
             .setCreateMissing(createMissing)
             .setPrincipal(principal)
             .setReporter(reporterId);
+
         AsyncJobStatus status = jobManager.queueJob(config);
         return translator.translate(status, AsyncJobStatusDTO.class);
     }
@@ -322,17 +324,25 @@ public class HypervisorResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     @Path("/{owner}/heartbeat")
-    public JobDetail hypervisorHeartbeatUpdate(
+    public AsyncJobStatusDTO hypervisorHeartbeatUpdate(
         @PathParam("owner")
         @Verify(value = Owner.class, require = Access.READ_ONLY, subResource = SubResource.HYPERVISOR)
         final String ownerKey,
-        @QueryParam("reporter_id") final String reporterId) {
+        @QueryParam("reporter_id") final String reporterId)
+        throws JobException {
 
         if (reporterId == null || reporterId.isEmpty()) {
-            throw new IllegalArgumentException("ReporterId is required!");
+            throw new BadRequestException("reporter_id is absent or empty");
         }
+
         final Owner owner = this.getOwner(ownerKey);
-        return HypervisorHeartbeatUpdateJob.from(reporterId, owner);
+
+        JobConfig config = HypervisorHeartbeatUpdateJob.createJobConfig()
+            .setOwner(owner)
+            .setReporterId(reporterId);
+
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /*
