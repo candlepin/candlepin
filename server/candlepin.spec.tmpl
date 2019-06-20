@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.7.1
+Version: 2.7.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,24 @@ fi
 
 #raw
 %changelog
+* Thu Jun 20 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.2-1
+- 1717903: syspurpose attributes now part of certificates (nmoumoul@redhat.com)
+- 1502193: Periodic mysql exceptions when updating consumers in production
+  (ojanus@redhat.com)
+- Update postgres dialect to minimum supported version of Postgres 9.2
+  (bcourt@redhat.com)
+- Remove Deprecated and unused annotations. (bcourt@redhat.com)
+- 1600588: [RFE] Add sorting by product to GET /owners/{owner_key}/pools
+  (ENT-745) (skalyana@redhat.com)
+- Better reason messages for Mismatched syspurpose status; ENT-1247
+  (jhnidek@redhat.com)
+- Update to clean up compile warnings (bcourt@redhat.com)
+- ENT-1314: Modify the locking and transaction size for the hypervisor report
+  (ojanus@redhat.com)
+- 1418996: Need string change for the message Error subscribing: Owner has
+  auto-bind disabled (ENT-1340) (skalyana@dhcp137-233.rdu.redhat.com)
+- Add task to generate candlepin-api jar (khowell@redhat.com)
+
 * Fri May 24 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.1-1
 - Fix pom generation to fix builds (khowell@redhat.com)
 - 1664481: match syspurpose attributes case insensitively (nmoumoul@redhat.com)
