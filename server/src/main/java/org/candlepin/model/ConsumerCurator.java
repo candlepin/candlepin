@@ -823,7 +823,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> remainingHypervisorIds = new LinkedList<>();
         for (Consumer consumer : hypervisorList.getHypervisors()) {
             if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
-                systemUuidHypervisorMap.put(consumer.getFact(Consumer.Facts.SYSTEM_UUID),
+                systemUuidHypervisorMap.put(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(),
                     consumer.getHypervisorId());
             }
             remainingHypervisorIds.add(consumer.getHypervisorId().getHypervisorId());
@@ -850,7 +850,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             }
             for (Consumer consumer: this.getConsumers(consumerIds)) {
                 HypervisorId hypervisorId =
-                    systemUuidHypervisorMap.get(consumer.getFact(Consumer.Facts.SYSTEM_UUID));
+                    systemUuidHypervisorMap.get(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase());
                 hypervisorMap.add(hypervisorId.getHypervisorId(), consumer);
                 remainingHypervisorIds.remove(hypervisorId.getHypervisorId());
             }
