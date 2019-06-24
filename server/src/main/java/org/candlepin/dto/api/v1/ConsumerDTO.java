@@ -340,11 +340,13 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             else {
                 this.addOns.clear();
             }
+
             this.addOns.addAll(addOns);
         }
         else {
             this.addOns = null;
         }
+
         return this;
     }
 
