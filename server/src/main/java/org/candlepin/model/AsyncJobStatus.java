@@ -18,6 +18,9 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.hibernate.AbstractJsonConverter;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Collections;
@@ -112,6 +115,36 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         public Map<String, String> metadata;
         public JobArguments arguments;
         public Object result;
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+
+            if (!(obj instanceof SerializedJobData)) {
+                return false;
+            }
+
+            SerializedJobData that = (SerializedJobData) obj;
+
+            EqualsBuilder builder = new EqualsBuilder()
+                .append(this.metadata, that.metadata)
+                .append(this.arguments, that.arguments)
+                .append(this.result, that.result);
+
+            return builder.isEquals();
+        }
+
+        @Override
+        public int hashCode() {
+            HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+                .append(this.metadata)
+                .append(this.arguments)
+                .append(this.result);
+
+            return builder.toHashCode();
+        }
     }
 
     /**
@@ -123,7 +156,6 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
             super(SerializedJobData.class);
         }
     }
-
 
 
     @Id

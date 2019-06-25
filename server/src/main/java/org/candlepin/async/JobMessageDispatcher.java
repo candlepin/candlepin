@@ -23,15 +23,34 @@ package org.candlepin.async;
 public interface JobMessageDispatcher {
 
     /**
-     * Sends a job message to the backing message bus. If the message cannot be sent, this method
-     * should throw an exception.
+     * Posts a job message to the backing message bus, which may or may not be sent immediately.
+     * If the message cannot be posted, this method should throw an exception.
      *
      * @param jobMessage
-     *  The JobMessage to send
+     *  The JobMessage to post
      *
      * @throws JobMessageDispatchException
-     *  if the message cannot be sent for any reason
+     *  if the message cannot be posted for any reason
      */
-    void sendJobMessage(JobMessage jobMessage) throws JobMessageDispatchException;
+    void postJobMessage(JobMessage jobMessage) throws JobMessageDispatchException;
+
+    /**
+     * Commits any pending messages posted to the backing message bus. If no transaction is
+     * active, or no messages have been posted, this method returns silently.
+     *
+     * @throws JobMessageDispatchException
+     *  if the messaging session cannot be committed for any reason
+     */
+    void commit() throws JobMessageDispatchException;
+
+    /**
+     * Rolls back any pending messages posted to the backing message bus that have not yet been
+     * committed. If no transaction is active or there are no messages to roll back, this method
+     * returns silently.
+     *
+     * @throws JobMessageDispatchException
+     *  if the messaging session cannot be rolled back for any reason
+     */
+    void rollback() throws JobMessageDispatchException;
 
 }

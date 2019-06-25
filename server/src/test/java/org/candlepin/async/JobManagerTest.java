@@ -35,6 +35,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import org.hamcrest.core.StringContains;
 
+import org.hibernate.Session;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -109,12 +111,22 @@ public class JobManagerTest {
         private List<JobMessage> messages = new ArrayList<>();
 
         @Override
-        public void sendJobMessage(JobMessage jobMessage) {
+        public void postJobMessage(JobMessage jobMessage) {
             this.messages.add(jobMessage);
         }
 
         public List<JobMessage> getSentMessages() {
             return this.messages;
+        }
+
+        @Override
+        public void commit() {
+            // Intentionally left empty
+        }
+
+        @Override
+        public void rollback() {
+            // Intentionally left empty
         }
     }
 
@@ -153,9 +165,12 @@ public class JobManagerTest {
         this.scheduler = mock(Scheduler.class);
         this.scheduledJobs = new LinkedList<>();
 
+        Session session = mock(Session.class);
+
         doReturn(this.eventSink).when(this.injector).getInstance(EventSink.class);
         doReturn(this.jobCurator).when(this.injector).getInstance(AsyncJobStatusCurator.class);
         doReturn(this.uow).when(this.injector).getInstance(UnitOfWork.class);
+        doReturn(session).when(this.jobCurator).currentSession();
         doAnswer(returnsFirstArg()).when(this.jobCurator).merge(any(AsyncJobStatus.class));
         doAnswer(returnsFirstArg()).when(this.jobCurator).create(any(AsyncJobStatus.class));
         doReturn(this.scheduler).when(this.schedulerFactory).getScheduler();
@@ -725,7 +740,7 @@ public class JobManagerTest {
         doReturn(job).when(this.injector).getInstance(TestJob1.class);
 
         JobMessageDispatcher dispatcher = mock(JobMessageDispatcher.class);
-        doThrow(new JobMessageDispatchException()).when(dispatcher).sendJobMessage(any());
+        doThrow(new JobMessageDispatchException()).when(dispatcher).postJobMessage(any());
 
         JobManager manager = this.createJobManager(dispatcher);
         assertThrows(JobMessageDispatchException.class,

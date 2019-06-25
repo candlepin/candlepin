@@ -73,7 +73,7 @@ public class ArtemisJobMessageDispatcher implements JobMessageDispatcher {
         if (this.session == null || this.session.isClosed()) {
             log.debug("Creating new ActiveMQ session for sending async job messages...");
 
-            this.session = this.sessionFactory.getEgressSession(false);
+            this.session = this.sessionFactory.getEgressSession(true);
 
             log.debug("Created new ActiveMQ session: {}", this.session);
         }
@@ -103,7 +103,8 @@ public class ArtemisJobMessageDispatcher implements JobMessageDispatcher {
     /**
      * {@inheritDoc}
      */
-    public void sendJobMessage(JobMessage jobMessage) throws JobMessageDispatchException {
+    @Override
+    public void postJobMessage(JobMessage jobMessage) throws JobMessageDispatchException {
         try {
             ClientSession session = this.getClientSession();
             ClientMessage message = session.createMessage(true);
@@ -116,6 +117,32 @@ public class ArtemisJobMessageDispatcher implements JobMessageDispatcher {
 
             ClientProducer producer = this.getClientProducer();
             producer.send(MessageAddress.JOB_MESSAGE_ADDRESS, message);
+        }
+        catch (Exception e) {
+            throw new JobMessageDispatchException(e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void commit() throws JobMessageDispatchException {
+        try {
+            this.session.commit();
+        }
+        catch (Exception e) {
+            throw new JobMessageDispatchException(e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void rollback() throws JobMessageDispatchException {
+        try {
+            this.session.rollback();
         }
         catch (Exception e) {
             throw new JobMessageDispatchException(e);
