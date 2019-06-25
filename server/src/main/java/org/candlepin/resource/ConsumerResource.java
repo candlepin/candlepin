@@ -755,17 +755,8 @@ public class ConsumerResource {
 
         consumer.setAutoheal(true); // this is the default
 
-        if (consumer.getServiceLevel() == null) {
-            consumer.setServiceLevel("");
-        }
-
         // Sanitize the inbound facts
         this.sanitizeConsumerFacts(consumer);
-
-        // If no service level was specified, and the owner has a default set, use it:
-        if (consumer.getServiceLevel().equals("") && owner.getDefaultServiceLevel() != null) {
-            consumer.setServiceLevel(owner.getDefaultServiceLevel());
-        }
 
         Consumer consumerToCreate = new Consumer();
 
@@ -793,24 +784,42 @@ public class ConsumerResource {
         try {
             Date createdDate = consumerToCreate.getCreated();
             Date lastCheckIn = consumerToCreate.getLastCheckin();
+
             // create sets created to current time.
             consumerToCreate = consumerCurator.create(consumerToCreate);
+
             //  If we sent in a created date, we want it persisted at the update below
             if (createdDate != null) {
                 consumerToCreate.setCreated(createdDate);
             }
+
             if (lastCheckIn != null) {
                 log.info("Creating with specific last check-in time: {}", lastCheckIn);
                 consumerToCreate.setLastCheckin(lastCheckIn);
             }
+
             if (identityCertCreation) {
                 IdentityCertificate idCert = generateIdCert(consumerToCreate, false);
                 consumerToCreate.setIdCert(idCert);
             }
+
             sink.emitConsumerCreated(consumerToCreate);
 
             if (keys.size() > 0) {
                 consumerBindUtil.handleActivationKeys(consumerToCreate, keys, owner.isAutobindDisabled());
+            }
+
+            // Update syspurpose data
+            // Note: this must come after activation key handling, as syspurpose details on the
+            // consumer have higher priority than those on activation keys
+            this.updateSystemPurposeData(consumer, consumerToCreate);
+
+            // If no service level was specified, and the owner has a default set, use it:
+            String csl = consumerToCreate.getServiceLevel();
+            if ((csl == null || csl.isEmpty())) {
+                consumerToCreate.setServiceLevel(owner.getDefaultServiceLevel() != null ?
+                    owner.getDefaultServiceLevel() :
+                    "");
             }
 
             // This should update compliance on consumerToCreate, but not call the curator
@@ -1347,10 +1356,13 @@ public class ConsumerResource {
 
     private boolean updateSystemPurposeData(ConsumerDTO updated, Consumer toUpdate) {
         boolean changesMade = false;
+
         // Allow optional setting of the service level attribute:
         String level = updated.getServiceLevel();
         if (level != null && !level.equals(toUpdate.getServiceLevel())) {
-            log.info("   Updating consumer service level setting.");
+            log.info("   Updating consumer service level setting: \"{}\" => \"{}\"",
+                toUpdate.getServiceLevel(), level);
+
             // BZ 1618398 Remove validation check on consumer service level
             // consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
             toUpdate.setServiceLevel(level);
@@ -1359,23 +1371,26 @@ public class ConsumerResource {
 
         String role = updated.getRole();
         if (role != null && !role.equals(toUpdate.getRole())) {
-            log.info("   Updating role setting.");
+            log.info("   Updating consumer role setting: \"{}\" => \"{}\"", toUpdate.getRole(), role);
             toUpdate.setRole(role);
             changesMade = true;
         }
 
         String usage = updated.getUsage();
         if (usage != null && !usage.equals(toUpdate.getUsage())) {
-            log.info("   Updating usage setting.");
+            log.info("   Updating consumer usage setting: \"{}\" => \"{}\"", toUpdate.getUsage(), usage);
             toUpdate.setUsage(usage);
             changesMade = true;
         }
 
         if (updated.getAddOns() != null && !updated.getAddOns().equals(toUpdate.getAddOns())) {
-            log.info("   Updating system purpose add ons.");
+            log.info("   Updating consumer system purpose add ons: {} => {}",
+                toUpdate.getAddOns(), updated.getAddOns());
+
             toUpdate.setAddOns(updated.getAddOns());
             changesMade = true;
         }
+
         return changesMade;
     }
 

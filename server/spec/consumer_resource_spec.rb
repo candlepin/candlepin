@@ -371,6 +371,78 @@ describe 'Consumer Resource' do
     consumer['created'].should == created_date
   end
 
+  it 'should let a consumer register and set service level' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    service_level = 'test_service_level'
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, service_level)
+
+    expect(consumer['serviceLevel']).to eq(service_level)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['serviceLevel']).to eq(service_level)
+  end
+
+  it 'should let a consumer register and set system purpose role' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    role = 'test_role'
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, role)
+
+    expect(consumer['role']).to eq(role)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['role']).to eq(role)
+  end
+
+  it 'should let a consumer register and set system purpose usage' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    usage = 'test_usage'
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, usage)
+
+    expect(consumer['usage']).to eq(usage)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['usage']).to eq(usage)
+  end
+
+  it 'should let a consumer register and set system purpose addons' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    addons = ['test_addon-1', 'test_addon-2', 'test_addon-3']
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, addons)
+
+    expect(consumer['addOns']).to_not be_nil
+    expect(consumer['addOns'].size).to eq(addons.size)
+    expect(consumer['addOns']).to include(*addons)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['addOns']).to_not be_nil
+    expect(consumer['addOns'].size).to eq(addons.size)
+    expect(consumer['addOns']).to include(*addons)
+  end
+
   it 'should let a consumer register dates with milliseconds' do
     # to confirm the lack of a parse exception.
     owner = create_owner(random_string('owner'))
@@ -926,7 +998,7 @@ describe 'Consumer Resource' do
     consumer['serviceLevel'].should == 'Ultra-VIP'
 
     # Dry run against the set service level:
-    # Should get pools of both the exempt product (product1) and the other installed product (product2), 
+    # Should get pools of both the exempt product (product1) and the other installed product (product2),
     # because we no longer filter on the consumer's sla match (unless the consumer has existing entitlements),
     # and exempt sla pools are always returned.
     pools = @cp.autobind_dryrun(consumer['uuid'])

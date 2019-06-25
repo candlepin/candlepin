@@ -117,8 +117,7 @@ describe 'Consumer Resource Activation Key' do
 
     key1 = @cp.create_activation_key(@owner['key'], 'key1', nil, nil, 'test-usage', 'test-role', ['addon1','addon2'])
 
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-                                @owner['key'], ["key1"])
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"])
     consumer.uuid.should_not be_nil
 
     consumer.usage.should == "test-usage"
@@ -126,6 +125,31 @@ describe 'Consumer Resource Activation Key' do
     consumer['addOns'].length.should == 2
     expect(consumer['addOns']).to include('addon1')
     expect(consumer['addOns']).to include('addon2')
+  end
+
+  it 'should allow a consumer to register with syspurpose attributes on activation key and consumer' do
+    prod1 = create_product(random_string('product1'), random_string('product1'))
+    create_pool_and_subscription(@owner['key'], prod1.id, 10)
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1', nil, nil, 'test-usage', 'test-role', ['addon1','addon2'])
+
+    service_level = 'consumer_service_level'
+    role = 'consumer_role'
+    usage = 'consumer_usage'
+    addons = ['consumer_addon-1', 'consumer_addon-2', 'consumer_addon-3']
+
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"],
+      [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, service_level, role, usage, addons)
+
+    expect(consumer['uuid']).to_not be_nil
+
+    expect(consumer['serviceLevel']).to eq(service_level)
+    expect(consumer['role']).to eq(role)
+    expect(consumer['usage']).to eq(usage)
+
+    expect(consumer['addOns']).to_not be_nil
+    expect(consumer['addOns'].size).to eq(addons.size)
+    expect(consumer['addOns']).to include(*addons)
   end
 
   it 'should allow a consumer to register with multiple activation keys with same content override names' do
