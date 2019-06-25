@@ -34,7 +34,12 @@ import org.candlepin.util.Util;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import com.google.inject.Injector;
+import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.quartz.CronTrigger;
 import org.quartz.CronScheduleBuilder;
@@ -70,6 +75,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.transaction.Synchronization;
+import javax.transaction.Status;
 
 
 
@@ -152,6 +159,52 @@ public class JobManager implements ModeChangeListener {
     }
 
     /**
+     * The JobMessageSynchronizer commits or rolls back a messenger transaction upon the completion
+     * of a database tranaction.
+     */
+    private static class JobMessageSynchronizer implements Synchronization {
+        /** An array of states that are valid to synchronize against */
+        public static final TransactionStatus[] ACTIVE_STATES = {
+            TransactionStatus.ACTIVE, TransactionStatus.MARKED_ROLLBACK
+        };
+
+        private final JobMessageDispatcher dispatcher;
+
+        public JobMessageSynchronizer(JobMessageDispatcher dispatcher) {
+            this.dispatcher = dispatcher;
+        }
+
+        @Override
+        public void afterCompletion(int status) {
+            try {
+                switch (status) {
+                    case Status.STATUS_COMMITTED:
+                        log.debug("Transaction committed");
+                        this.dispatcher.commit();
+                        break;
+
+                    case Status.STATUS_ROLLEDBACK:
+                        log.debug("Transaction rolled back");
+                        this.dispatcher.rollback();
+                        break;
+
+                    default:
+                        // We don't care about other states, and they shouldn't be provided here anyhow
+                        log.debug("Received unexpected transaction completion status: {}", status);
+                }
+            }
+            catch (JobMessageDispatchException e) {
+                log.error("Error occurred while attempting to synchronize database and message bus", e);
+            }
+        }
+
+        @Override
+        public void beforeCompletion() {
+            // Intentionally left empty
+        }
+    }
+
+    /**
      * Registers the given class for the specified key. If the key was already registered to
      * another class, the previously registered class will be returned.
      *
@@ -229,6 +282,7 @@ public class JobManager implements ModeChangeListener {
     private final ModeManager modeManager;
     private final AsyncJobStatusCurator jobCurator;
     private final JobMessageDispatcher dispatcher;
+    private final JobMessageSynchronizer synchronizer;
     private final CandlepinRequestScope candlepinRequestScope;
     private final PrincipalProvider principalProvider;
     private final Injector injector;
@@ -262,6 +316,7 @@ public class JobManager implements ModeChangeListener {
         this.modeManager = Objects.requireNonNull(modeManager);
         this.jobCurator = Objects.requireNonNull(jobCurator);
         this.dispatcher = Objects.requireNonNull(dispatcher);
+        this.synchronizer = new JobMessageSynchronizer(this.dispatcher);
         this.candlepinRequestScope = Objects.requireNonNull(scope);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.injector = Objects.requireNonNull(injector);
@@ -807,16 +862,43 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the updated job status
      */
-    private AsyncJobStatus postJobStatusMessage(AsyncJobStatus status)
+    @Transactional
+    protected AsyncJobStatus postJobStatusMessage(AsyncJobStatus status)
         throws JobStateManagementException, JobMessageDispatchException {
+
+        // Impl note:
+        // To minimize the possibility of having a race condition between updating the job status
+        // in the database and sending the job message to Artemis, this method should always run
+        // within the context of a DB transaction. At the time of writing, this method is annotated
+        // with the @Transactional tag to force this, but it can be removed if, and only if, other
+        // measures are taken to ensure we can properly delay the sending of the job message until
+        // after the database is updated.
 
         try {
             // Build and send the job message
             JobMessage message = new JobMessage(status.getId(), status.getJobKey());
-            this.dispatcher.sendJobMessage(message);
+            this.dispatcher.postJobMessage(message);
 
             // Update the job's status
             status = this.updateJobStatus(status, JobState.QUEUED, null);
+
+            // Register our synchronizer to commit or rollback the dispatcher based on whether
+            // or not the current DB transaction completes
+            Session session = this.jobCurator.currentSession();
+            Transaction transaction = session.getTransaction();
+
+            if (transaction != null &&
+                transaction.getStatus().isOneOf(JobMessageSynchronizer.ACTIVE_STATES)) {
+
+                // We have an active transaction (probably); register the synchronizer to pass
+                // through the commit/rollback to the messaging bus.
+                transaction.registerSynchronization(this.synchronizer);
+            }
+            else {
+                // No (active) transaction, immediately commit the messages. This should never happen.
+                log.warn("No active transaction while posting job messages; dispatching immediately.");
+                this.dispatcher.commit();
+            }
 
             return status;
         }
@@ -848,6 +930,17 @@ public class JobManager implements ModeChangeListener {
         AsyncJobStatus status = this.fetchJobStatus(message);
 
         final Class<? extends AsyncJob> jobClass = getJobClass(message.getJobKey());
+
+        // Maybe in this case it'd be better to attempt to use the job key as the job class
+        // rather than failing directly. This would allow use of aliases and explicit job
+        // classes.
+        if (jobClass == null) {
+            String errmsg = String.format("No registered job class for job: %s", message.getJobKey());
+
+            log.error(errmsg);
+            throw new JobInitializationException(errmsg, true);
+        }
+
         candlepinRequestScope.enter();
         final EventSink eventSink = injector.getInstance(EventSink.class);
         final UnitOfWork uow = injector.getInstance(UnitOfWork.class);
@@ -1023,8 +1116,13 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the updated AsyncJobStatus entity
      */
-    private AsyncJobStatus updateJobStatus(AsyncJobStatus status, JobState state, Object result)
+    @Transactional
+    protected AsyncJobStatus updateJobStatus(AsyncJobStatus status, JobState state, Object result)
         throws JobStateManagementException {
+
+        // Impl note:
+        // Due to some Hibernate shenanigans, this method should only be called within the context
+        // of a database transaction. If called without a transaction, the update may be lost.
 
         JobState initState = status.getState();
 
@@ -1032,7 +1130,9 @@ public class JobManager implements ModeChangeListener {
             status.setState(state);
             status.setJobResult(result);
 
-            return this.jobCurator.merge(status);
+            status = this.jobCurator.merge(status);
+
+            return status;
         }
         catch (Exception e) {
             String errmsg = String.format("Unable to update job state for job \"%s\": %s -> %s",
@@ -1058,7 +1158,7 @@ public class JobManager implements ModeChangeListener {
         Date start = status.getStartTime();
         Date end = status.getEndTime();
 
-        return (start != null && end != null) ? end.getTime() - start.getTime() : -1;
+        return (start != null) ? end.getTime() - start.getTime() : -1;
     }
 
     /**
