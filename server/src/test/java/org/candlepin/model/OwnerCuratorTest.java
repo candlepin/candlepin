@@ -207,7 +207,6 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         assertFalse(result.contains(c3.getUuid()));
     }
 
-
     private List<Owner> setupDBForLookupOwnersForProductTests() {
         Owner owner1 = this.createOwner("owner1");
         Owner owner2 = this.createOwner("owner2");
@@ -291,5 +290,45 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         owners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("nope")).list();
         assertEquals(0, owners.size());
+    }
+
+    @Test
+    public void testLockAndLoadByKey() {
+        String ownerKey = "test_key";
+
+        Owner owner = this.createOwner(ownerKey);
+        this.ownerCurator.flush();
+        this.ownerCurator.clear();
+
+        Owner actual = this.ownerCurator.lockAndLoadByKey(ownerKey);
+
+        assertNotNull(actual);
+        assertEquals(ownerKey, actual.getKey());
+    }
+
+    @Test
+    public void testLockAndLoadByKeyDoesntLoadBadKey() {
+        String ownerKey = "test_key";
+
+        Owner owner = this.createOwner(ownerKey);
+        this.ownerCurator.flush();
+        this.ownerCurator.clear();
+
+        Owner actual = this.ownerCurator.lockAndLoadByKey(ownerKey + "-bad");
+
+        assertNull(actual);
+    }
+
+    @Test
+    public void testLockAndLoadByKeyDoesntLoadNullKey() {
+        String ownerKey = "test_key";
+
+        Owner owner = this.createOwner(ownerKey);
+        this.ownerCurator.flush();
+        this.ownerCurator.clear();
+
+        Owner actual = this.ownerCurator.lockAndLoadByKey(null);
+
+        assertNull(actual);
     }
 }

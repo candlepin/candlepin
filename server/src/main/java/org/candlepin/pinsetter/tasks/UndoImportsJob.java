@@ -103,6 +103,7 @@ public class UndoImportsJob extends UniqueByEntityJob {
             return;
         }
 
+
         String displayName = owner.getDisplayName();
 
         // Remove imports

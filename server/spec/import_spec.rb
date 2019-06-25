@@ -11,9 +11,10 @@ describe 'Import Test Group:', :serial => true do
 
     before(:all) do
       # Decide the import method to use, async or synchronous
-      @import_method = import_now
       if async
         @import_method = import_and_wait
+      else
+        @import_method = import_now
       end
 
       @cp = Candlepin.new('admin', 'admin')
@@ -127,7 +128,7 @@ describe 'Import Test Group:', :serial => true do
       custom_pool = @cp.create_pool(@import_owner['key'], prod['id'])
 
       job = @import_owner_client.undo_import(@import_owner['key'])
-      wait_for_job(job['id'], 30)
+      wait_for_async_job(job['id'], 30)
 
       pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
       pools.length.should == 1 # this is our custom pool
@@ -144,7 +145,7 @@ describe 'Import Test Group:', :serial => true do
       # Delete again and make sure another owner is clear to import the
       # same manifest:
       job = @import_owner_client.undo_import(@import_owner['key'])
-      wait_for_job(job['id'], 30)
+      wait_for_async_job(job['id'], 30)
 
       # Verify our custom sub still exists
       pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
@@ -169,7 +170,7 @@ describe 'Import Test Group:', :serial => true do
 
     it 'should create a DELETE record on a deleted import' do
       job = @import_owner_client.undo_import(@import_owner['key'])
-      wait_for_job(job['id'], 30)
+      wait_for_async_job(job['id'], 30)
       @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
         import.status == 'DELETE'
       end.should_not be_empty
@@ -371,7 +372,7 @@ describe 'Import Test Group:', :serial => true do
       # Also added the confirmation that the exception occurs when importing to
       # another owner.
       job = @import_owner_client.undo_import(@import_owner['key'])
-      wait_for_job(job['id'], 30)
+      wait_for_async_job(job['id'], 30)
 
       @import_method.call(@import_owner['key'], @cp_export_file)
       owner2 = @cp.create_owner(random_string("owner2"))

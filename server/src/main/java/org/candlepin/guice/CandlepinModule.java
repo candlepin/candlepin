@@ -35,6 +35,7 @@ import org.candlepin.async.tasks.HypervisorUpdateJob;
 import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.async.tasks.RefreshPoolsForProductJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
+import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.async.temp.AsyncJobResource;
 import org.candlepin.async.temp.TestJob1;
 import org.candlepin.audit.AMQPBusPublisher;
@@ -428,6 +429,7 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(RefreshPoolsForProductJob.JOB_KEY, RefreshPoolsForProductJob.class);
         JobManager.registerJob(RefreshPoolsJob.JOB_KEY, RefreshPoolsJob.class);
         JobManager.registerJob(HypervisorUpdateJob.JOB_KEY, HypervisorUpdateJob.class);
+        JobManager.registerJob(UndoImportsJob.JOB_KEY, UndoImportsJob.class);
     }
 
     private void configurePinsetter() {

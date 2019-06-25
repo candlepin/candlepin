@@ -49,6 +49,9 @@ public class LoggingFilter implements Filter {
     private static final int CSID_MAX_LENGTH = 40;
     private static final Pattern CSID_REGEX = Pattern.compile("^([a-zA-Z0-9-]){1," + CSID_MAX_LENGTH + "}$");
 
+    /** The metadata key used to display the owner's key or display name */
+    public static final String OWNER_KEY = "org"; // This value must match that set in logback.xml
+
 
     private String customHeaderName;
 

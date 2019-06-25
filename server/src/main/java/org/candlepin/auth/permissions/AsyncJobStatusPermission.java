@@ -59,7 +59,7 @@ public class AsyncJobStatusPermission extends TypedPermission<AsyncJobStatus> {
 
     @Override
     public boolean canAccessTarget(AsyncJobStatus target, SubResource subResource, Access required) {
-        String principal = target.getPrincipal();
+        String principal = target.getPrincipalName();
         boolean principalMatch = principal != null && principal.equals(this.principalName);
 
         if ("user".equalsIgnoreCase(principalType)) {

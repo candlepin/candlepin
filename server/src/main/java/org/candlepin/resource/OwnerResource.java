@@ -18,6 +18,7 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RefreshPoolsJob;
+import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -93,7 +94,6 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.ImportJob;
-import org.candlepin.pinsetter.tasks.UndoImportsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
@@ -1908,8 +1908,9 @@ public class OwnerResource {
         "information which is global to the candlepin server. This import data is *not* " +
         "undone, we assume that updates to this data can be safely kept. ", value = "Undo Imports")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public JobDetail undoImports(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey, @Context Principal principal) {
+    public AsyncJobStatusDTO undoImports(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey, @Context Principal principal)
+        throws JobException {
 
         Owner owner = findOwnerByKey(ownerKey);
 
@@ -1917,7 +1918,11 @@ public class OwnerResource {
             throw new NotFoundException("No import found for owner " + ownerKey);
         }
 
-        return UndoImportsJob.forOwner(owner, false);
+        JobConfig config = UndoImportsJob.createJobConfig()
+            .setOwner(owner);
+
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /**

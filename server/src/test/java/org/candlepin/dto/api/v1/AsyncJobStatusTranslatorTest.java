@@ -56,7 +56,7 @@ public class AsyncJobStatusTranslatorTest extends
         source.setGroup("job_group");
         source.setOrigin("localhost_origin");
         source.setExecutor("localhost_exec");
-        source.setPrincipal("admin");
+        source.setPrincipalName("admin");
         source.setState(JobState.QUEUED);
         source.setState(JobState.RUNNING); // The second set should prime the previous state field
         source.setStartTime(new Date());
@@ -84,7 +84,7 @@ public class AsyncJobStatusTranslatorTest extends
             assertEquals(source.getGroup(), dto.getGroup());
             assertEquals(source.getOrigin(), dto.getOrigin());
             assertEquals(source.getExecutor(), dto.getExecutor());
-            assertEquals(source.getPrincipal(), dto.getPrincipal());
+            assertEquals(source.getPrincipalName(), dto.getPrincipal());
             assertEquals(source.getStartTime(), dto.getStartTime());
             assertEquals(source.getEndTime(), dto.getEndTime());
             assertEquals(source.getJobResult(), dto.getResult());
