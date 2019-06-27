@@ -1004,7 +1004,7 @@
     <dependency>
       <groupId>org.mozilla</groupId>
       <artifactId>jss</artifactId>
-      <version>4.5.0</version>
+      <version>4.4.6</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
