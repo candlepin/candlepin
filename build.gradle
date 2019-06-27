@@ -176,6 +176,8 @@ subprojects {
         maven { url "http://oauth.googlecode.com/svn/code/maven/" }
         // For LogDriver
         maven { url "http://awood.fedorapeople.org/ivy/candlepin/" }
+        // Temporary repo, which stores jss 4.4.6
+        maven { url "http://barnabycourt.fedorapeople.org/repo/candlepin/" }
     }
 }
 
