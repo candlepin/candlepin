@@ -14,9 +14,16 @@
  */
 package org.candlepin.pki.impl;
 
+import org.mozilla.jss.CertDatabaseException;
+import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.JSSProvider;
+import org.mozilla.jss.KeyDatabaseException;
+import org.mozilla.jss.crypto.AlreadyInitializedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.security.GeneralSecurityException;
 import java.security.Security;
 import java.util.Arrays;
 
@@ -27,7 +34,9 @@ import java.util.Arrays;
  * is already installed).
  * */
 public class JSSProviderLoader {
-    public static final JSSProvider JSS_PROVIDER = new JSSProvider();
+    private static JSSProvider jssProvider = null;
+    private static final String NSS_DB_LOCATION = "/etc/pki/nssdb";
+    private static final Logger log = LoggerFactory.getLogger(JSSProviderLoader.class);
 
     static {
         // Satellite 6 is only supported on 64 bit architectures
@@ -86,6 +95,26 @@ public class JSSProviderLoader {
     }
 
     public static void addProvider() {
-        Security.addProvider(JSS_PROVIDER);
+        log.debug("Starting call to JSSProviderLoader.addProvider()...");
+        CryptoManager.InitializationValues ivs =
+            new CryptoManager.InitializationValues(NSS_DB_LOCATION);
+        ivs.noCertDB = true;
+        ivs.installJSSProvider = false;
+        ivs.initializeJavaOnly = false;
+
+        try {
+            CryptoManager.initialize(ivs);
+        }
+        catch (AlreadyInitializedException e) {
+            log.warn("CryptoManager was already initialized.", e);
+        }
+        catch (KeyDatabaseException | CertDatabaseException | GeneralSecurityException e) {
+            log.error("Could not initialize CryptoManager!", e);
+        }
+
+        jssProvider = new JSSProvider();
+        int addProviderReturn = Security.addProvider(jssProvider);
+        log.debug("Finished call to JSSProviderLoader.addProvider(). Returned value: {}",
+            addProviderReturn);
     }
 }
