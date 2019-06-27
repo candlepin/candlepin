@@ -1,6 +1,7 @@
 # vi: set ft=ruby:
 
 ### Repositories
+repositories.remote << "https://barnabycourt.fedorapeople.org/repo/candlepin"
 repositories.remote << "http://awood.fedorapeople.org/ivy/candlepin/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "https://repo.maven.apache.org/maven2/"
@@ -158,7 +159,7 @@ BOUNCYCASTLE = group('bcpkix-jdk15on', 'bcprov-jdk15on',
                      :under => 'org.bouncycastle',
                      :version => '1.60')
 
-JSS = ['org.mozilla:jss:jar:4.5.0', 'ldapjdk:ldapjdk:jar:4.19']
+JSS = ['org.mozilla:jss:jar:4.4.6', 'ldapjdk:ldapjdk:jar:4.19']
 
 SERVLET = 'javax.servlet:servlet-api:jar:2.5'
 
