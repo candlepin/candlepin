@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.7
+Version: 2.6.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,12 @@ fi
 
 #raw
 %changelog
+* Fri Jun 28 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.8-1
+- 1724115: Initialize the NSS db when loading a JSS provider
+  (nmoumoul@redhat.com)
+- 1715837: Handle matching of system uuid regardless of casing
+  (wpoteat@redhat.com)
+
 * Mon Jun 03 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.7-1
 - 1709892: Stop event persistence & deprecate event APIs (nmoumoul@redhat.com)
 - 1707522: Removed AHC.lockAndLoadById(s) to address quirks with refresh
