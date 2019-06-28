@@ -118,7 +118,8 @@ dependencies {
     implementation "org.ehcache:jcache:1.0.0"
     implementation "javax.cache:cache-api:1.0.0"
 
-    implementation "org.mozilla:jss:4.4.6"
+    compileOnly "org.mozilla:jss:4.4.6"
+    testImplementation "org.mozilla:jss:4.4.6"
     implementation "ldapjdk:ldapjdk:4.19"
     implementation "org.quartz-scheduler:quartz:2.2.1"
 
