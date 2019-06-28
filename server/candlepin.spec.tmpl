@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.16
+Version: 2.5.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,10 @@ fi
 
 #raw
 %changelog
+* Fri Jun 28 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.5.17-1
+- 1720288: Initialize the NSS db when loading a JSS provider
+  (nmoumoul@redhat.com)
+
 * Tue Jun 04 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.5.16-1
 - 1679289: Removed AHC.lockAndLoadById(s) to address quirks with refresh
   (crog@redhat.com)
