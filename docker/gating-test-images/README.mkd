@@ -7,7 +7,7 @@ Note: The building/running scripts of these images are not configurable, because
 The `build.sh` script is used for building a Candlepin image of the latest Candlepin version currently running in stage, and a corresponding postgresql image with preloaded test data.
 The images (`cp_latest_stage` & `cp_postgres`) are then pushed to the internal registry [[2]](https://registry-console.engineering.redhat.com/registry#/images/candlepin).
 It uses `docker` to build images & `docker stack` to run intermediate images.
-Note: You might need to run this with sudo.
+Note: This script needs to run with SELinux off!
 ```bash
 ./build.sh
 ```
