@@ -52,7 +52,6 @@ public class LoggingFilter implements Filter {
     /** The metadata key used to display the owner's key or display name */
     public static final String OWNER_KEY = "org"; // This value must match that set in logback.xml
 
-
     private String customHeaderName;
 
     @Override
