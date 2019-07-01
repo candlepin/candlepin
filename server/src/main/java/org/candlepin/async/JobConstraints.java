@@ -16,6 +16,8 @@ package org.candlepin.async;
 
 import org.candlepin.async.impl.UniqueByArgConstraint;
 
+import java.util.List;
+
 
 
 /**
@@ -29,17 +31,30 @@ public class JobConstraints {
     }
 
     /**
-     * Creates a new unique-by-argument constraint, using the specified parameter as the target of
+     * Creates a new unique-by-argument constraint, using the specified parameters as the target of
      * the constraint.
      *
-     * @param param
-     *  The parameter to use as the target of the new constraint
+     * @param params
+     *  The parameter, or parameters, to use as the target of the new constraint
      *
      * @return
      *  a new unique-by-argument constraint
      */
-    public static JobConstraint uniqueByArgument(String param) {
-        return new UniqueByArgConstraint(param);
+    public static JobConstraint uniqueByArguments(String... params) {
+        return new UniqueByArgConstraint(params);
     }
 
+    /**
+     * Creates a new unique-by-argument constraint, using the specified parameters as the target of
+     * the constraint.
+     *
+     * @param params
+     *  The parameters to use as the target of the new constraint
+     *
+     * @return
+     *  a new unique-by-argument constraint
+     */
+    public static JobConstraint uniqueByArguments(List<String> params) {
+        return new UniqueByArgConstraint(params);
+    }
 }

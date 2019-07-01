@@ -18,31 +18,60 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConstraint;
 import org.candlepin.model.AsyncJobStatus;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 
 
 /**
- * The UniqueByArgConstraint constrains queuing of a job if another job with same same key
- * and value of a given parameter already exists in a non-terminal state.
+ * The UniqueByArgConstraint constrains queuing of a job if another job with same same key and
+ * value of a given parameter, or set of parameters, already exists in a non-terminal state.
  */
 public class UniqueByArgConstraint implements JobConstraint {
 
-    private final String param;
+    private final List<String> params;
 
     /**
-     * Creates a new UniqueByArgConstraint using the specified parameter as the target.
+     * Creates a new UniqueByArgConstraint using the specified parameters as the target. If multiple
+     * parameters are provided, they are checked in the order provided.
      *
-     * @param param
-     *  The parameter to target with this constraint
+     * @param params
+     *  The parameter, or parameters, to target with this constraint
      *
      * @throws IllegalArgumentException
-     *  if param is null or empty
+     *  if params is null or empty, or contains a parameter which is null or empty
      */
-    public UniqueByArgConstraint(String param) {
-        if (param == null || param.isEmpty()) {
-            throw new IllegalArgumentException("param is null or empty");
+    public UniqueByArgConstraint(String... params) {
+        this(params != null ? Arrays.asList(params) : null);
+    }
+
+    /**
+     * Creates a new UniqueByArgConstraint using the specified parameters as the target. If multiple
+     * parameters are provided, they are checked in the order provided.
+     *
+     * @param params
+     *  A list of parameters to target with this constraint
+     *
+     * @throws IllegalArgumentException
+     *  if params is null or empty, or contains a parameter which is null or empty
+     */
+    public UniqueByArgConstraint(List<String> params) {
+        if (params == null || params.isEmpty()) {
+            throw new IllegalArgumentException("params is null or empty");
         }
 
-        this.param = param;
+        List<String> plist = new ArrayList<>(params.size());
+        for (String param : params) {
+            if (param == null || param.isEmpty()) {
+                throw new IllegalArgumentException("params contains a null or empty parmaeter");
+            }
+
+            plist.add(param);
+        }
+
+        this.params = Collections.<String>unmodifiableList(plist);
     }
 
     /**
@@ -65,12 +94,25 @@ public class UniqueByArgConstraint implements JobConstraint {
         JobArguments eArgs = existing.getJobArguments();
 
         if (iJobKey != null ? iJobKey.equals(eJobKey) : eJobKey == null) {
-            if (iArgs.containsKey(this.param) && eArgs.containsKey(this.param)) {
-                String iValue = iArgs.getSerializedValue(this.param);
-                String eValue = eArgs.getSerializedValue(this.param);
+            boolean matched = true;
 
-                return iValue != null ? iValue.equals(eValue) : eValue == null;
+            for (String param : this.params) {
+                if (iArgs.containsKey(param) && eArgs.containsKey(param)) {
+                    String iValue = iArgs.getSerializedValue(param);
+                    String eValue = eArgs.getSerializedValue(param);
+
+                    if (!(iValue != null ? iValue.equals(eValue) : eValue == null)) {
+                        matched = false;
+                        break;
+                    }
+                }
+                else {
+                    matched = false;
+                    break;
+                }
             }
+
+            return matched;
         }
 
         return false;

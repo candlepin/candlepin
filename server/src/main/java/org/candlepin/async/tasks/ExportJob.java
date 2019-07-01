@@ -62,7 +62,7 @@ public class ExportJob implements AsyncJob {
         public ExportJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
-                .addConstraint(JobConstraints.uniqueByArgument(CONSUMER_KEY));
+                .addConstraint(JobConstraints.uniqueByArguments(CONSUMER_KEY));
         }
 
         /**
