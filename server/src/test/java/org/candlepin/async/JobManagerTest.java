@@ -14,6 +14,20 @@
  */
 package org.candlepin.async;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+
 import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
 
@@ -63,26 +77,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 
 
 
@@ -218,6 +212,12 @@ public class JobManagerTest {
         }
         else {
             assertNull(actual);
+        }
+    }
+
+    private void verifyNotScheduled(String key) {
+        for (ImmutablePair<String, String> job : this.scheduledJobs) {
+            assertNotEquals(key, job.getKey());
         }
     }
 
@@ -813,7 +813,7 @@ public class JobManagerTest {
 
         for (String jobKey : disabled) {
             this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + jobKey + '.' +
-                ConfigProperties.ASYNC_JOBS_SUFFIX_ENABLED, "false");
+                ConfigProperties.ASYNC_JOBS_JOB_ENABLED, "false");
         }
 
         JobManager manager = this.createJobManager();
@@ -856,7 +856,7 @@ public class JobManagerTest {
         this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, String.join(",", blacklist));
         for (String jobKey : disabled) {
             this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + jobKey + '.' +
-                ConfigProperties.ASYNC_JOBS_SUFFIX_ENABLED, "false");
+                ConfigProperties.ASYNC_JOBS_JOB_ENABLED, "false");
         }
 
         JobManager manager = this.createJobManager();
@@ -876,8 +876,9 @@ public class JobManagerTest {
         int jobs = 3;
 
         for (int i = 0; i < jobs; ++i) {
-            this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '-' + i + '.' +
-                ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, String.format(schedule, i));
+            this.configuration.setProperty(
+                ConfigProperties.jobConfig(JOB_KEY + '-' + i, ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE),
+                String.format(schedule, i));
         }
 
         JobManager manager = this.createJobManager();
@@ -890,41 +891,42 @@ public class JobManagerTest {
 
     @Test
     public void testJobSchedulingDoesNotScheduleDisabledJobs() {
-        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '.' +
-            ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, "5 * * * * ?");
-        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '.' +
-            ConfigProperties.ASYNC_JOBS_SUFFIX_ENABLED, "false");
+        this.configuration.setProperty(
+            ConfigProperties.jobConfig(JOB_KEY, ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE), "5 * * * * ?");
+        this.configuration.setProperty(
+            ConfigProperties.jobConfig(JOB_KEY, ConfigProperties.ASYNC_JOBS_JOB_ENABLED), "false");
 
         JobManager manager = this.createJobManager();
         manager.initialize();
 
-        assertEquals(0, this.scheduledJobs.size());
+        // Verify the job is not scheduled
+        this.verifyNotScheduled(JOB_KEY);
     }
 
     @Test
     public void testJobSchedulingDoesNotScheduleBlacklistedJobs() {
-        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '.' +
-            ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, "5 * * * * ?");
-
+        this.configuration.setProperty(
+            ConfigProperties.jobConfig(JOB_KEY, ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE), "5 * * * * ?");
         this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, "a,b," + JOB_KEY + ",d,e");
 
         JobManager manager = this.createJobManager();
         manager.initialize();
 
-        assertEquals(0, this.scheduledJobs.size());
+        // Verify the job is not scheduled
+        this.verifyNotScheduled(JOB_KEY);
     }
 
     @Test
     public void testJobSchedulingDoesNotScheduleJobsNotOnWhitelist() {
-        this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + JOB_KEY + '.' +
-            ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, "5 * * * * ?");
-
+        this.configuration.setProperty(
+            ConfigProperties.jobConfig(JOB_KEY, ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE), "5 * * * * ?");
         this.configuration.setProperty(ConfigProperties.ASYNC_JOBS_WHITELIST, "a,b,c,d,e");
 
         JobManager manager = this.createJobManager();
         manager.initialize();
 
-        assertEquals(0, this.scheduledJobs.size());
+        // Verify the job is not scheduled
+        this.verifyNotScheduled(JOB_KEY);
     }
 
     @Test

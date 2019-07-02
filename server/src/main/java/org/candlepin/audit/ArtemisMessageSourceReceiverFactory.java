@@ -88,7 +88,7 @@ public class ArtemisMessageSourceReceiverFactory implements MessageSourceReceive
 
         // Add jobs explicitly disabled
         String prefix = Pattern.quote(ConfigProperties.ASYNC_JOBS_PREFIX);
-        String suffix = Pattern.quote(ConfigProperties.ASYNC_JOBS_SUFFIX_ENABLED);
+        String suffix = Pattern.quote(ConfigProperties.ASYNC_JOBS_JOB_ENABLED);
         Pattern regex = Pattern.compile("\\A" + prefix + "(.+)\\." + suffix + "\\z");
 
         for (String key : this.config.getKeys()) {

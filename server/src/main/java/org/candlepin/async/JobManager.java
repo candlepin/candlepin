@@ -145,14 +145,14 @@ public class JobManager implements ModeChangeListener {
 
         @Override
         public void execute(org.quartz.JobExecutionContext context) throws org.quartz.JobExecutionException {
-            String name = context.getJobDetail().getKey().getName();
+            String jobKey = context.getJobDetail().getKey().getName();
 
             try {
-                log.trace("Queuing job: {}", name);
-                this.manager.queueJob(JobConfig.forJob(name));
+                log.trace("Queuing job: {}", jobKey);
+                this.manager.queueJob(JobConfig.forJob(jobKey));
             }
             catch (JobException e) {
-                String errmsg = String.format("Unable to queue scheduled job: %s", name);
+                String errmsg = String.format("Unable to queue scheduled job: %s", jobKey);
                 throw new org.quartz.JobExecutionException(errmsg, e);
             }
         }
@@ -335,7 +335,7 @@ public class JobManager implements ModeChangeListener {
      */
     private void readJobConfiguration(Configuration config) {
         // Check if our scheduler is running in "clustered" mode
-        this.clustered = config.getBoolean("org.quartz.jobStore.isClustered", false);
+        this.clustered = config.getBoolean(ConfigProperties.QUARTZ_CLUSTERED_MODE, false);
 
         // Get the job whitelist and blacklist
         List<String> list = config.getList(ConfigProperties.ASYNC_JOBS_WHITELIST, null);
@@ -560,7 +560,7 @@ public class JobManager implements ModeChangeListener {
 
         // Check per-job config
         Configuration config = this.jobConfig.get(jobKey);
-        if (config != null && !config.getBoolean(ConfigProperties.ASYNC_JOBS_SUFFIX_ENABLED, true)) {
+        if (config != null && !config.getBoolean(ConfigProperties.ASYNC_JOBS_JOB_ENABLED, true)) {
             return false;
         }
 
@@ -610,7 +610,7 @@ public class JobManager implements ModeChangeListener {
                     continue;
                 }
 
-                String schedule = config.getString(ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, null);
+                String schedule = config.getString(ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE, null);
                 boolean enabled = this.isJobEnabled(key.getName());
 
                 // Check that the job is enabled and is still scheduled
@@ -648,7 +648,7 @@ public class JobManager implements ModeChangeListener {
                 String jobName = entry.getKey();
                 Configuration config = entry.getValue();
 
-                String schedule = config.getString(ConfigProperties.ASYNC_JOBS_SUFFIX_SCHEDULE, null);
+                String schedule = config.getString(ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE, null);
                 boolean enabled = this.isJobEnabled(jobName);
 
                 // If the job is not enabled, already scheduled or has no schedule, skip it.
