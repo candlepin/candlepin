@@ -24,6 +24,7 @@ import org.candlepin.model.AsyncJobStatus;
 
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,6 +74,17 @@ public class UniqueByArgConstraintTest {
     }
 
     @Test
+    public void testStandardMatchingFromCollection() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map("param1", "val1"));
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("param1", "val1"));
+
+        JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param1"));
+        boolean result = constraint.test(inbound, existing);
+
+        assertTrue(result);
+    }
+
+    @Test
     public void testMatchingOnJobsWithMultipleParams() {
         AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
             "paramA", "valA",
@@ -90,6 +102,121 @@ public class UniqueByArgConstraintTest {
         assertTrue(result);
     }
 
+    @Test
+    public void testMatchingOnJobsWithMultipleParamsFromCollection() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "paramA", "valA",
+            "param2", "val2",
+            "paramC", "valC"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param2"));
+        boolean result = constraint.test(inbound, existing);
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void testMultiMatchingOnJobsWithMultipleParams() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
+        boolean result = constraint.test(inbound, existing);
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void testMultiMatchingOnJobsWithMultipleParamsFromCollection() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param1", "param2", "param3"));
+        boolean result = constraint.test(inbound, existing);
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void testMultiMatchingOnJobsWithMultipleParamsOutOfOrder() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param2", "param1", "param3");
+        boolean result = constraint.test(inbound, existing);
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void testMultiMatchingOnJobsWithMultipleParamsOutOfOrderFromCollection() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param2", "param1", "param3"));
+        boolean result = constraint.test(inbound, existing);
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void testMultiMatchingOnJobsWithMultipleParamsAndExtraParams() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "paramA", "valA",
+            "param1", "val1",
+            "paramB", "valB",
+            "param2", "val2",
+            "paramC", "valC",
+            "param3", "val3",
+            "paramD", "valD"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "paramR", "valR",
+            "param1", "val1",
+            "paramS", "valS",
+            "param2", "val2",
+            "paramT", "valT",
+            "param3", "val3",
+            "paramU", "valU"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param2", "param1", "param3");
+        boolean result = constraint.test(inbound, existing);
+
+        assertTrue(result);
+    }
 
     @Test
     public void testNoMatchOnKeyMismatch() {
@@ -103,7 +230,25 @@ public class UniqueByArgConstraintTest {
     }
 
     @Test
-    public void testNoMatchOnparamKeyMismatch() {
+    public void testNoMatchOnKeyMismatchWithMultiParam() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "alt_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
+        boolean result = constraint.test(inbound, existing);
+
+        assertFalse(result);
+    }
+
+    @Test
+    public void testNoMatchOnParamMismatch() {
         AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map("param1", "val1"));
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("paramX", "val1"));
 
@@ -114,11 +259,47 @@ public class UniqueByArgConstraintTest {
     }
 
     @Test
-    public void testNoMatchOnparamValueMismatch() {
+    public void testMultiParamsNoMatchOnParamMismatch() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "param1", "val1",
+            "paramX", "val2",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
+        boolean result = constraint.test(inbound, existing);
+
+        assertFalse(result);
+    }
+
+    @Test
+    public void testNoMatchOnArgMismatch() {
         AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map("param1", "val1"));
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("param1", "valX"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1");
+        boolean result = constraint.test(inbound, existing);
+
+        assertFalse(result);
+    }
+
+    @Test
+    public void testMultiParamsNoMatchOnArgMismatch() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "param1", "val1",
+            "param2", "valX",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
         boolean result = constraint.test(inbound, existing);
 
         assertFalse(result);
@@ -136,6 +317,23 @@ public class UniqueByArgConstraintTest {
     }
 
     @Test
+    public void testMultiParamNoMatchWhenInboundJobLacksParam() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
+        boolean result = constraint.test(inbound, existing);
+
+        assertFalse(result);
+    }
+
+    @Test
     public void testNoMatchWhenExistingJobsLackParam() {
         AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map("param1", null));
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("param2", "val2"));
@@ -146,5 +344,21 @@ public class UniqueByArgConstraintTest {
         assertFalse(result);
     }
 
+    @Test
+    public void testMultiParamNoMatchWhenExistingJobsLackParam() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map(
+            "param1", "val1",
+            "param2", "val2",
+            "param3", "val3"));
+
+        AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map(
+            "param1", "val1",
+            "param3", "val3"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
+        boolean result = constraint.test(inbound, existing);
+
+        assertFalse(result);
+    }
 
 }

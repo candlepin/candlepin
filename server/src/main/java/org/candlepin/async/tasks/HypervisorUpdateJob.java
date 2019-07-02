@@ -219,7 +219,7 @@ public class HypervisorUpdateJob implements AsyncJob {
         public HypervisorUpdateJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
-                .addConstraint(JobConstraints.uniqueByArgument(OWNER_KEY));
+                .addConstraint(JobConstraints.uniqueByArguments(OWNER_KEY));
         }
 
         /**

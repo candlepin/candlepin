@@ -19,6 +19,7 @@ import org.candlepin.async.ArgumentConversionException;
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
+import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.common.filter.LoggingFilter;
@@ -55,11 +56,8 @@ public class HypervisorHeartbeatUpdateJob implements AsyncJob {
     public static class HypervisorHeartbeatUpdateJobConfig extends JobConfig {
         public HypervisorHeartbeatUpdateJobConfig() {
             this.setJobKey(JOB_KEY)
-                .setJobName(JOB_NAME);
-
-            // TODO: Should this be unique by (owner_key, reporter_id) or owner_key? If it's the
-            // former, we'll need to update the UniqueByArgConstraint to support examining multiple
-            // parameters
+                .setJobName(JOB_NAME)
+                .addConstraint(JobConstraints.uniqueByArguments(OWNER_KEY, REPORTER_ID));
         }
 
         /**

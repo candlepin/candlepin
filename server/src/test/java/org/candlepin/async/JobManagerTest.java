@@ -1036,7 +1036,7 @@ public class JobManagerTest {
             .setJobArguments(this.buildJobArguments(ejobData2)));
 
         JobConfig builder = JobConfig.forJob(JOB_KEY)
-            .addConstraint(JobConstraints.uniqueByArgument("arg1"))
+            .addConstraint(JobConstraints.uniqueByArguments("arg1"))
             .setJobArgument("arg1", "val3");
 
         doReturn(Arrays.asList(ejob1, ejob2)).when(this.jobCurator).getNonTerminalJobs();
@@ -1067,7 +1067,7 @@ public class JobManagerTest {
             .setJobArguments(this.buildJobArguments(ejobData2)));
 
         JobConfig builder = JobConfig.forJob(JOB_KEY)
-            .addConstraint(JobConstraints.uniqueByArgument("arg1"))
+            .addConstraint(JobConstraints.uniqueByArguments("arg1"))
             .setJobArgument("arg1", "val2");
 
         doReturn(Arrays.asList(ejob1, ejob2)).when(this.jobCurator).getNonTerminalJobs();
