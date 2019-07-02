@@ -30,7 +30,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.pinsetter.tasks.BaseJobTest;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
@@ -40,7 +39,7 @@ import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class RefreshPoolsForProductJobTest extends BaseJobTest {
+public class RefreshPoolsForProductJobTest {
 
     private static final String VALID_ID = "valid_id";
     private static final String VALID_NAME = "valid_name";

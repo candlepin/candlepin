@@ -25,7 +25,6 @@ import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
-import org.candlepin.pinsetter.tasks.BaseJobTest;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -44,12 +43,11 @@ public class ExportJobTest extends BaseJobTest {
 
     @Mock
     private ManifestManager manifestManager;
-
     private ExportJob job;
 
     @Before
     public void setupTest() {
-        super.init();
+        super.inject();
 
         job = new ExportJob(manifestManager);
         injector.injectMembers(job);

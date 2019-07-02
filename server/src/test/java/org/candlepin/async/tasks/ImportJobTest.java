@@ -24,7 +24,6 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.pinsetter.tasks.BaseJobTest;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
@@ -60,7 +59,8 @@ public class ImportJobTest extends BaseJobTest {
 
     @Before
     public void setup() {
-        super.init();
+        super.inject();
+
         owner = new Owner("my-test-owner");
         job = new ImportJob(ownerCurator, manifestManager);
         injector.injectMembers(job);
