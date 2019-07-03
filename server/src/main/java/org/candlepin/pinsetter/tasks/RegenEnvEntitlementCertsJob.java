@@ -49,6 +49,6 @@ public class RegenEnvEntitlementCertsJob extends KingpinJob {
         Set<String> contentIds = (Set<String>) arg0.getJobDetail().getJobDataMap().get(CONTENT);
         Boolean lazy = arg0.getMergedJobDataMap().getBoolean(LAZY_REGEN);
 
-        this.poolManager.regenerateCertificatesOf(env, contentIds, lazy);
+        this.poolManager.regenerateCertificatesOf(env.getId(), contentIds, lazy);
     }
 }

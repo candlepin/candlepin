@@ -14,8 +14,10 @@
  */
 package org.candlepin.resource;
 
-import static org.quartz.JobBuilder.newJob;
-
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
@@ -24,8 +26,10 @@ import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -36,16 +40,12 @@ import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerEnvContentAccessCurator;
-import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.util.RdbmsExceptionTranslator;
-import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -96,13 +96,15 @@ public class EnvironmentResource {
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private RdbmsExceptionTranslator rdbmsExceptionTranslator;
     private ModelTranslator translator;
+    private JobManager jobManager;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
         PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
         RdbmsExceptionTranslator rdbmsExceptionTranslator,
-        OwnerEnvContentAccessCurator ownerEnvContentAccessCurator, ModelTranslator translator) {
+        OwnerEnvContentAccessCurator ownerEnvContentAccessCurator, ModelTranslator translator,
+        JobManager jobManager) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -114,6 +116,7 @@ public class EnvironmentResource {
         this.rdbmsExceptionTranslator = rdbmsExceptionTranslator;
         this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.translator = translator;
+        this.jobManager = jobManager;
     }
 
     @ApiOperation(notes = "Retrieves a single Environment", value = "getEnv")
@@ -219,11 +222,11 @@ public class EnvironmentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
-    public JobDetail promoteContent(
+    public AsyncJobStatusDTO promoteContent(
         @PathParam("env_id") @Verify(Environment.class) String envId,
         @ApiParam(name = "contentToPromote", required = true)
         List<org.candlepin.model.dto.EnvironmentContent> contentToPromote,
-        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) throws JobException {
 
         Environment env = lookupEnvironment(envId);
 
@@ -268,17 +271,14 @@ public class EnvironmentResource {
             }
         }
 
-        JobDataMap map = new JobDataMap();
-        map.put(RegenEnvEntitlementCertsJob.ENV, env);
-        map.put(RegenEnvEntitlementCertsJob.CONTENT, contentIds);
-        map.put(RegenEnvEntitlementCertsJob.LAZY_REGEN, lazyRegen);
+        JobConfig config = RegenEnvEntitlementCertsJob.createJobConfig()
+            .setEnvironment(env)
+            .setContent(contentIds)
+            .setLazyRegeneration(lazyRegen)
+            .setOwner(env.getOwner());
 
-        JobDetail detail = newJob(RegenEnvEntitlementCertsJob.class)
-            .withIdentity("regen_entitlement_cert_of_env" + Util.generateUUID())
-            .usingJobData(map)
-            .build();
-
-        return detail;
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     @ApiOperation(notes = "Demotes a Content from an Environment. Consumer's registered to " +
@@ -293,10 +293,10 @@ public class EnvironmentResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
-    public JobDetail demoteContent(
+    public AsyncJobStatusDTO demoteContent(
         @PathParam("env_id") @Verify(Environment.class) String envId,
         @QueryParam("content") String[] contentIds,
-        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) throws JobException {
 
         Environment e = lookupEnvironment(envId);
         Map<String, EnvironmentContent> demotedContent = new HashMap<>();
@@ -331,17 +331,14 @@ public class EnvironmentResource {
         // Impl note: Unfortunately, we have to make an additional set here, as the keySet isn't
         // serializable. Attempting to use it causes exceptions.
         Set<String> demotedContentIds = new HashSet<>(demotedContent.keySet());
-        JobDataMap map = new JobDataMap();
-        map.put(RegenEnvEntitlementCertsJob.ENV, e);
-        map.put(RegenEnvEntitlementCertsJob.CONTENT, demotedContentIds);
-        map.put(RegenEnvEntitlementCertsJob.LAZY_REGEN, lazyRegen);
+        JobConfig config = RegenEnvEntitlementCertsJob.createJobConfig()
+            .setEnvironment(e)
+            .setContent(demotedContentIds)
+            .setLazyRegeneration(lazyRegen)
+            .setOwner(e.getOwner());
 
-        JobDetail detail = newJob(RegenEnvEntitlementCertsJob.class)
-            .withIdentity("regen_entitlement_cert_of_env" + Util.generateUUID())
-            .usingJobData(map)
-            .build();
-
-        return detail;
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /**
