@@ -17,11 +17,11 @@ package org.candlepin.config;
 
 import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
+import org.candlepin.async.tasks.CRLUpdateJob;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
-import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
@@ -191,7 +191,6 @@ public class ConfigProperties {
     public static final String[] DEFAULT_TASK_LIST = new String[] {
         ActiveEntitlementJob.class.getName(),
         CancelJobJob.class.getName(),
-        CertificateRevocationListTask.class.getName(),
         ExpiredPoolsJob.class.getName(),
         ImportRecordJob.class.getName(),
         JobCleaner.class.getName(),
@@ -484,7 +483,7 @@ public class ConfigProperties {
             // Async job defaults and scheduling
             this.put(ASYNC_JOBS_THREADS, "10");
 
-            this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_ENABLED), "true");
+            this.put(jobConfig(CRLUpdateJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE), CRLUpdateJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ManifestCleanerJob.DEFAULT_SCHEDULE);
 
