@@ -19,13 +19,13 @@ import static org.candlepin.common.config.ConfigurationPrefixes.*;
 
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CRLUpdateJob;
+import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
-import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
@@ -178,7 +178,6 @@ public class ConfigProperties {
 
     public static final String[] DEFAULT_TASK_LIST = new String[] {
         CancelJobJob.class.getName(),
-        ExpiredPoolsJob.class.getName(),
         ImportRecordJob.class.getName(),
         JobCleaner.class.getName(),
         SweepBarJob.class.getName(),
@@ -455,16 +454,18 @@ public class ConfigProperties {
             // Async job defaults and scheduling
             this.put(ASYNC_JOBS_THREADS, "10");
 
+            this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ActiveEntitlementJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(CRLUpdateJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 CRLUpdateJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(ExpiredPoolsCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ExpiredPoolsCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ManifestCleanerJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(OrphanCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 OrphanCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
-            this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
-                ActiveEntitlementJob.DEFAULT_SCHEDULE);
 
             // Old Pinsetter job configs
 

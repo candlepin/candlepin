@@ -18,9 +18,10 @@ describe 'Scheduled Jobs' do
   end
 
   it 'should schedule cron tasks irrespective of the case' do
-    job = @cp.trigger_job('expiredpoolsjob')
-    job.state.should == 'CREATED'
-    wait_for_job(job['id'], 15)
+    job = @cp.trigger_async_job('EXPIRED_POOLS_CLEANUP')
+    expect(job['state']).to eq('QUEUED')
+
+    wait_for_async_job(job['id'], 15)
   end
 
   it 'should purge expired pools' do
@@ -35,10 +36,11 @@ describe 'Scheduled Jobs' do
     });
     #verify pool exists before
     @cp.get_pool(pool['id']).should_not be_nil
-    job = @cp.trigger_job('ExpiredPoolsJob')
-    wait_for_job(job['id'], 15)
+    job = @cp.trigger_async_job('EXPIRED_POOLS_CLEANUP')
+    wait_for_async_job(job['id'], 15)
     lambda {
       pool = @cp.get_pool(pool['id'])
+      pp pool
     }.should raise_exception(RestClient::ResourceNotFound)
   end
 
