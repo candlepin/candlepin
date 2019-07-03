@@ -303,7 +303,7 @@ public class HypervisorResource {
         log.info("Hypervisor update by principal: {}", principal);
         Owner owner = this.getOwner(ownerKey);
 
-        JobConfig config = HypervisorUpdateJob.createConfig()
+        JobConfig config = HypervisorUpdateJob.createJobConfig()
             .setOwner(owner)
             .setData(hypervisorJson)
             .setCreateMissing(createMissing)

@@ -102,7 +102,7 @@ describe 'Content Access' do
             :contentId => @content['id'],
             :enabled => false,
           }])
-      wait_for_job(job['id'], 15)
+      wait_for_async_job(job['id'], 15)
 
       consumer = @user.register(random_string('consumer'), :system, nil,
           {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
@@ -143,7 +143,7 @@ describe 'Content Access' do
                  :contentId => @content['id'],
                  :enabled => false,
              }])
-    wait_for_job(job['id'], 15)
+    wait_for_async_job(job['id'], 15)
     @env = @user.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
 
@@ -155,7 +155,7 @@ describe 'Content Access' do
     content['id'].should == @content['id']
 
     job = @user.demote_content(@env['id'], [@content['id']])
-    wait_for_job(job['id'], 15)
+    wait_for_async_job(job['id'], 15)
     @env = @user.get_environment(@env['id'])
     @env['environmentContent'].size.should == 0
 

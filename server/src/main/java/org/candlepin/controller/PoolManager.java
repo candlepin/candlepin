@@ -19,7 +19,6 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
@@ -138,7 +137,7 @@ public interface PoolManager {
 
     void regenerateCertificatesOf(Entitlement e, boolean lazy);
 
-    void regenerateCertificatesOf(Environment env, Set<String> contentIds, boolean lazy);
+    void regenerateCertificatesOf(String envId, Set<String> contentIds, boolean lazy);
 
     void regenerateCertificatesOf(Owner owner, String productId, boolean lazy);
 
