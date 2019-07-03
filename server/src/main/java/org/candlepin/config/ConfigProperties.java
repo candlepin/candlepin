@@ -20,6 +20,7 @@ import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFI
 import org.candlepin.async.tasks.CRLUpdateJob;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
+import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
@@ -27,7 +28,6 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
-import org.candlepin.pinsetter.tasks.OrphanCleanupJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
 
@@ -194,7 +194,6 @@ public class ConfigProperties {
         ExpiredPoolsJob.class.getName(),
         ImportRecordJob.class.getName(),
         JobCleaner.class.getName(),
-        OrphanCleanupJob.class.getName(),
         SweepBarJob.class.getName(),
         UnpauseJob.class.getName(),
     };
@@ -482,9 +481,12 @@ public class ConfigProperties {
             // Async job defaults and scheduling
             this.put(ASYNC_JOBS_THREADS, "10");
 
-            this.put(jobConfig(CRLUpdateJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE), CRLUpdateJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(CRLUpdateJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                CRLUpdateJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ManifestCleanerJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(OrphanCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                OrphanCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
 

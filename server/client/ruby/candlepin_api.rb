@@ -487,6 +487,12 @@ class Candlepin
     end
   end
 
+  def trigger_async_job(job, params={}, async=false)
+    return async_call(!async) do
+      post("/async/schedule/#{job}", params)
+    end
+  end
+
   def create_consumer_type(type_label, manifest=false)
     consumer_type =  {
       'label' => type_label,
