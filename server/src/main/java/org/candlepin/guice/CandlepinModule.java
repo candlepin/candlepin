@@ -36,6 +36,7 @@ import org.candlepin.async.tasks.HypervisorUpdateJob;
 import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.async.tasks.RefreshPoolsForProductJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
+import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.async.temp.AsyncJobResource;
 import org.candlepin.async.temp.TestJob1;
@@ -429,6 +430,7 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(ImportJob.JOB_KEY, ImportJob.class);
         JobManager.registerJob(RefreshPoolsForProductJob.JOB_KEY, RefreshPoolsForProductJob.class);
         JobManager.registerJob(RefreshPoolsJob.JOB_KEY, RefreshPoolsJob.class);
+        JobManager.registerJob(RegenEnvEntitlementCertsJob.JOB_KEY, RegenEnvEntitlementCertsJob.class);
         JobManager.registerJob(HypervisorUpdateJob.JOB_KEY, HypervisorUpdateJob.class);
         JobManager.registerJob(HypervisorHeartbeatUpdateJob.JOB_KEY, HypervisorHeartbeatUpdateJob.class);
         JobManager.registerJob(UndoImportsJob.JOB_KEY, UndoImportsJob.class);

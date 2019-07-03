@@ -99,7 +99,7 @@ public class HypervisorUpdateJob implements AsyncJob {
         this.mapper = Objects.requireNonNull(objectMapper);
     }
 
-    public static HypervisorUpdateJobConfig createConfig() {
+    public static HypervisorUpdateJobConfig createJobConfig() {
         return new HypervisorUpdateJobConfig();
     }
 

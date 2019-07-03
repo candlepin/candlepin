@@ -21,7 +21,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -335,8 +334,8 @@ public class EntitlementCertificateGenerator {
     /**
      * Regenerates the certificates for the specified contents in a given environment.
      *
-     * @param environment
-     *  The environment in which the entitlements should be regenerated
+     * @param environmentId
+     *  The environment id in which the entitlements should be regenerated
      *
      * @param contentIds
      *  A collection of content Ids for which to regenerate entitlement certificates
@@ -346,14 +345,14 @@ public class EntitlementCertificateGenerator {
      *  be regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesOf(Environment environment, Collection<String> contentIds,
+    public void regenerateCertificatesOf(String environmentId, Collection<String> contentIds,
         boolean lazy) {
 
-        log.info("Regenerating relevant certificates in environment: {}", environment);
+        log.info("Regenerating relevant certificates in environment: {}", environmentId);
 
         Set<Entitlement> entsToRegen = new HashSet<>();
 
-        entLoop: for (Entitlement entitlement : this.entitlementCurator.listByEnvironment(environment)) {
+        entLoop: for (Entitlement entitlement : this.entitlementCurator.listByEnvironment(environmentId)) {
             // Impl note:
             // Since the entitlements came from the DB, we should be safe to traverse the graph as
             // necessary without any sanity checks (so long as our model's restrictions aren't

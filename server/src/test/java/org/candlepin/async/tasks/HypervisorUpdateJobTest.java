@@ -138,7 +138,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @Test
     public void ownerMustBePresent() {
-        JobConfig config = HypervisorUpdateJob.createConfig()
+        JobConfig config = HypervisorUpdateJob.createJobConfig()
             .setData(hypervisorJson)
             .setCreateMissing(true)
             .setPrincipal(principal)
@@ -149,7 +149,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @Test
     public void createFlagMustBePresent() {
-        JobConfig config = HypervisorUpdateJob.createConfig()
+        JobConfig config = HypervisorUpdateJob.createJobConfig()
             .setOwner(owner)
             .setData(hypervisorJson)
             .setPrincipal(principal)
@@ -160,7 +160,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @Test
     public void hypervisorDataMustBePresent() {
-        JobConfig config = HypervisorUpdateJob.createConfig()
+        JobConfig config = HypervisorUpdateJob.createJobConfig()
             .setOwner(owner)
             .setCreateMissing(true)
             .setPrincipal(principal)
@@ -375,7 +375,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     }
 
     private JobConfig createJobConfig(final String reporterId) {
-        return HypervisorUpdateJob.createConfig()
+        return HypervisorUpdateJob.createJobConfig()
             .setOwner(owner)
             .setData(hypervisorJson)
             .setCreateMissing(true)

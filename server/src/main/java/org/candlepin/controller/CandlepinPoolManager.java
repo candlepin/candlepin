@@ -40,7 +40,6 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
@@ -1822,12 +1821,12 @@ public class CandlepinPoolManager implements PoolManager {
      * environment, all provided products for each entitlement, and check if any product
      * provides any of the modified content set IDs.
      *
-     * @param e Environment where the content was promoted/demoted.
+     * @param e Id of the environment where the content was promoted/demoted.
      * @param affectedContent List of content set IDs promoted/demoted.
      */
     @Override
     @Transactional
-    public void regenerateCertificatesOf(Environment e, Set<String> affectedContent, boolean lazy) {
+    public void regenerateCertificatesOf(String e, Set<String> affectedContent, boolean lazy) {
         this.ecGenerator.regenerateCertificatesOf(e, affectedContent, lazy);
     }
 

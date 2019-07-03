@@ -86,7 +86,7 @@ describe 'SKU Level Enable Override' do
           :contentId => @content3['id'],
           :enabled => true,
         }])
-    wait_for_job(job['id'], 15)
+    wait_for_async_job(job['id'], 15)
 
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
@@ -157,7 +157,7 @@ describe 'SKU Level Enable Override' do
           :contentId => @content3['id'],
           :enabled => true,
         }])
-    wait_for_job(job['id'], 15)
+    wait_for_async_job(job['id'], 15)
 
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
