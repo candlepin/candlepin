@@ -17,6 +17,7 @@ package org.candlepin.config;
 
 import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
+import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
@@ -25,7 +26,6 @@ import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
-import org.candlepin.pinsetter.tasks.ManifestCleanerJob;
 import org.candlepin.pinsetter.tasks.OrphanCleanupJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnmappedGuestEntitlementCleanerJob;
@@ -140,6 +140,9 @@ public class ConfigProperties {
     public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
     public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
 
+    // Quartz configurations
+    public static final String QUARTZ_CLUSTERED_MODE = "org.quartz.jobStore.isClustered";
+
     /**
      * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
      */
@@ -180,7 +183,6 @@ public class ConfigProperties {
         ExpiredPoolsJob.class.getName(),
         ImportRecordJob.class.getName(),
         JobCleaner.class.getName(),
-        ManifestCleanerJob.class.getName(),
         OrphanCleanupJob.class.getName(),
         SweepBarJob.class.getName(),
         UnmappedGuestEntitlementCleanerJob.class.getName(),
@@ -282,13 +284,49 @@ public class ConfigProperties {
     public static final String ASYNC_JOBS_WHITELIST = "candlepin.async.whitelist";
     public static final String ASYNC_JOBS_BLACKLIST = "candlepin.async.blacklist";
 
-    // Used for per-job configuration. The full syntax is "PREFIX.{job_name}.SUFFIX". For instance,
+    // Used for per-job configuration. The full syntax is "PREFIX.{job_key}.SUFFIX". For instance,
     // to configure the schedule flag for the job TestJob1, the full configuration would be:
     // candlepin.async.jobs.TestJob1.schedule=0 0 0/3 * * ?
     public static final String ASYNC_JOBS_PREFIX = "candlepin.async.jobs.";
-    public static final String ASYNC_JOBS_SUFFIX_SCHEDULE = "schedule";
-    public static final String ASYNC_JOBS_SUFFIX_ENABLED = "enabled";
+    public static final String ASYNC_JOBS_JOB_ENABLED = "enabled";
+    public static final String ASYNC_JOBS_JOB_SCHEDULE = "schedule";
 
+    /**
+     * Fetches a string representing the prefix for all per-job configuration for the specified job.
+     * The job key or class name may be used, but the usage must be consistent.
+     *
+     * @param jobKey
+     *  the key or class name of the job for which to fetch build configuration prefix
+     *
+     * @return
+     *  the configuration prefix for the given job
+     */
+    public static String jobConfigPrefix(String jobKey) {
+        StringBuilder builder = new StringBuilder(ASYNC_JOBS_PREFIX)
+            .append(jobKey)
+            .append('.');
+
+        return builder.toString();
+    }
+
+    /**
+     * Fetches a configuration string for the given configuration for the specified job. The job may
+     * be specified via job key or class name, but the usage must be consistent.
+     *
+     * @param jobKey
+     *  the key or class name of the job for which to build the configuration string
+     *
+     * @return
+     *  the configuration string for the given configuration for the specified job
+     */
+    public static String jobConfig(String jobKey, String cfgName) {
+        StringBuilder builder = new StringBuilder(ASYNC_JOBS_PREFIX)
+            .append(jobKey)
+            .append('.')
+            .append(cfgName);
+
+        return builder.toString();
+    }
 
     public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {
         private static final long serialVersionUID = 1L;
@@ -312,7 +350,7 @@ public class ConfigProperties {
             this.put(ACTIVEMQ_CONNECTION_MONITOR_INTERVAL, "5000"); // milliseconds
 
             this.put(AUDIT_LISTENERS,
-                "org.candlepin.audit.DatabaseListener," +
+                // "org.candlepin.audit.DatabaseListener," +
                 "org.candlepin.audit.LoggingListener," +
                 "org.candlepin.audit.ActivationListener");
             this.put(AUDIT_FILTER_ENABLED, "false");
@@ -407,10 +445,7 @@ public class ConfigProperties {
              */
             this.put(PRODUCT_CACHE_MAX, "100");
 
-            /**
-             * As we do math on some facts and attributes, we need to constrain
-             * some values
-             */
+            /** As we do math on some facts and attributes, we need to constrain some values */
             this.put(INTEGER_FACTS, INTEGER_FACT_LIST);
             this.put(NON_NEG_INTEGER_FACTS, NON_NEG_INTEGER_FACT_LIST);
             this.put(INTEGER_ATTRIBUTES, INTEGER_ATTRIBUTE_LIST);
@@ -419,17 +454,26 @@ public class ConfigProperties {
             this.put(NON_NEG_LONG_ATTRIBUTES, NON_NEG_LONG_ATTRIBUTE_LIST);
             this.put(BOOLEAN_ATTRIBUTES, BOOLEAN_ATTRIBUTE_LIST);
 
+            this.put(SWAGGER_ENABLED, Boolean.toString(true));
+
+            // Async job defaults and scheduling
+            this.put(ASYNC_JOBS_THREADS, "10");
+
+            this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_ENABLED), "true");
+            this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ManifestCleanerJob.DEFAULT_SCHEDULE);
+
+            // Old Pinsetter job configs
+
             // Default 20 minutes
             this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
             this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
-            this.put(SWAGGER_ENABLED, Boolean.toString(true));
 
-            // ManifestCleanerJob config
+            // ManifestCleanerJob config (note: this is for the Pinsetter version)
             // Max Age: 24 hours
             this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
 
-            // Async Job Defaults
-            this.put(ASYNC_JOBS_THREADS, "10");
+
         }
     };
 

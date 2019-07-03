@@ -49,7 +49,6 @@ import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
-import org.candlepin.pinsetter.tasks.BaseJobTest;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.HypervisorUpdateAction;
@@ -88,7 +87,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
     @BeforeEach
     public void init() {
-        super.init();
+        super.inject();
+
         i18n = I18nFactory.getI18n(
             getClass(),
             Locale.US,

@@ -30,7 +30,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.pinsetter.tasks.BaseJobTest;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -56,7 +55,7 @@ public class RefreshPoolsJobTest extends BaseJobTest {
 
     @Before
     public void setupTest() {
-        super.init();
+        super.inject();
 
         job = new RefreshPoolsJob(ownerCurator, poolManager, subAdapter, ownerAdapter);
         injector.injectMembers(job);
