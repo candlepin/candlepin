@@ -544,7 +544,7 @@ public class JobManager implements ModeChangeListener {
      *
      *  - The per-job enabled flag is set to false
      *  - The job is in the async jobs blacklist
-     *  - The async jobs whitelist is non-empty and does not contain the specified job
+     *  - The async jobs whitelist is not empty and does not contain the specified job
      *
      * @param jobKey
      *  The key of the job to check, or the job's fully qualified class name if the job does not have
