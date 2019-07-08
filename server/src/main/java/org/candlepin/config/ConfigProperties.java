@@ -15,14 +15,14 @@
 
 package org.candlepin.config;
 
-import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
+import static org.candlepin.common.config.ConfigurationPrefixes.*;
 
+import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CRLUpdateJob;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
@@ -177,7 +177,6 @@ public class ConfigProperties {
     public static final int PINSETTER_MAX_RETRIES_DEFAULT = 10;
 
     public static final String[] DEFAULT_TASK_LIST = new String[] {
-        ActiveEntitlementJob.class.getName(),
         CancelJobJob.class.getName(),
         ExpiredPoolsJob.class.getName(),
         ImportRecordJob.class.getName(),
@@ -464,6 +463,8 @@ public class ConfigProperties {
                 OrphanCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ActiveEntitlementJob.DEFAULT_SCHEDULE);
 
             // Old Pinsetter job configs
 
