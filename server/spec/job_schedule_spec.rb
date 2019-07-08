@@ -60,8 +60,8 @@ describe 'Scheduled Jobs' do
     end
     records = @cp.list_imports(@import_owner['key'])
     records.size.should == 11
-    job = @cp.trigger_job('ImportRecordJob')
-    wait_for_job(job['id'], 15)
+    job = @cp.trigger_async_job('IMPORT_RECORD_CLEANER')
+    wait_for_async_job(job['id'], 15)
     records = @cp.list_imports(@import_owner['key'])
     records.size.should == 10
   end
