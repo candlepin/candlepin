@@ -31,6 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -40,7 +43,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+
 
 /**
  * A simple test resource that will kick off an async job. This resource is only available for
@@ -110,6 +116,32 @@ public class AsyncJobResource {
             .setJobArgument("persist", persist)
         );
 
+        return this.translator.translate(status, AsyncJobStatusDTO.class);
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("schedule/{job_key}")
+    @ApiOperation(notes = "Schedules the given job for immediate execution", value = "")
+    public AsyncJobStatusDTO schedule(
+        @Context HttpServletRequest request,
+        @PathParam("job_key") String jobKey)
+        throws JobException {
+
+        JobConfig config = JobConfig.forJob(jobKey);
+
+        // Add all of the query params as job arguments
+        for (Object entry : request.getParameterMap().entrySet()) {
+            Map.Entry<String, String[]> queryParam = (Map.Entry<String, String[]>) entry;
+
+            String param = queryParam.getKey();
+            String[] vals = queryParam.getValue();
+
+            config.setJobArgument(param, vals.length > 1 ? vals : vals[0]);
+        }
+
+        AsyncJobStatus status = this.jobManager.queueJob(config);
         return this.translator.translate(status, AsyncJobStatusDTO.class);
     }
 
