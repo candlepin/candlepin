@@ -520,7 +520,7 @@ function get_pool_priority(pool, consumer) {
 
         log.debug("Evaluating attribute {} with weight {}", attr, attrs[attr]);
         if (unsatisfiedSet.length === 0 && poolSet.length === 0) {
-            null_rule_score = 0.1;
+            null_rule_score = 0.01;
             log.debug("NULL rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, null_rule_score]);
         }
 
