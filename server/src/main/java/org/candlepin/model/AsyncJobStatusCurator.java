@@ -16,9 +16,15 @@ package org.candlepin.model;
 
 import org.candlepin.model.AsyncJobStatus.JobState;
 
-import java.util.Arrays;
+import com.google.inject.persist.Transactional;
+
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.TimestampType;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,4 +92,24 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
 
         return this.getJobsInState(states);
     }
+
+    @Transactional
+    public int cleanupAllOldJobs(Date deadline) {
+        return this.currentSession().createQuery(
+            "delete from AsyncJobStatus where updated <= :date")
+            .setParameter("date", deadline, TimestampType.INSTANCE)
+            .executeUpdate();
+    }
+
+    @Transactional
+    public int cleanUpOldCompletedJobs(Date deadLineDt) {
+        return this.currentSession().createQuery(
+            "delete from AsyncJobStatus where updated <= :date and " +
+                "(state = :completed or state = :canceled)")
+            .setParameter("date", deadLineDt, TimestampType.INSTANCE)
+            .setParameter("completed", JobState.COMPLETED.ordinal(), IntegerType.INSTANCE)
+            .setParameter("canceled", JobState.CANCELED.ordinal(), IntegerType.INSTANCE)
+            .executeUpdate();
+    }
+
 }
