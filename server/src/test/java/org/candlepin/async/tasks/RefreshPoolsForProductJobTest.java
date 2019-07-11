@@ -16,10 +16,11 @@ package org.candlepin.async.tasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.async.AsyncJob;
@@ -33,12 +34,9 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@RunWith(MockitoJUnitRunner.class)
 public class RefreshPoolsForProductJobTest {
 
     private static final String VALID_ID = "valid_id";
@@ -49,7 +47,7 @@ public class RefreshPoolsForProductJobTest {
     private SubscriptionServiceAdapter subAdapter;
     private OwnerServiceAdapter ownerAdapter;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         productCurator = mock(ProductCurator.class);
         poolManager = mock(PoolManager.class);
@@ -112,34 +110,34 @@ public class RefreshPoolsForProductJobTest {
             actualResult);
     }
 
-    @Test(expected = JobConfigValidationException.class)
-    public void productMustBePresent() throws JobConfigValidationException {
+    @Test
+    public void productMustBePresent() {
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
             .setLazy(false);
 
-        jobConfig.validate();
+        assertThrows(JobConfigValidationException.class, jobConfig::validate);
     }
 
-    @Test(expected = JobConfigValidationException.class)
-    public void productUuidMustBePresent() throws JobConfigValidationException {
+    @Test
+    public void productUuidMustBePresent() {
         final Product product = new Product(INVALID_ID, VALID_NAME);
 
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
             .setProduct(product)
             .setLazy(false);
 
-        jobConfig.validate();
+        assertThrows(JobConfigValidationException.class, jobConfig::validate);
     }
 
-    @Test(expected = JobConfigValidationException.class)
-    public void lazyFlagMustBePresent() throws JobConfigValidationException {
+    @Test
+    public void lazyFlagMustBePresent() {
         final Product product = new Product(VALID_ID, VALID_NAME);
         product.setUuid(VALID_ID);
 
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
             .setProduct(product);
 
-        jobConfig.validate();
+        assertThrows(JobConfigValidationException.class, jobConfig::validate);
     }
 
 }

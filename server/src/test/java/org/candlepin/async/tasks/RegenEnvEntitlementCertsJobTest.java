@@ -14,23 +14,6 @@
  */
 package org.candlepin.async.tasks;
 
-import org.candlepin.async.JobConfig;
-import org.candlepin.async.JobConfigValidationException;
-import org.candlepin.async.JobExecutionContext;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Environment;
-import org.candlepin.model.Owner;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
-
-import java.util.HashSet;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -38,9 +21,24 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobConfigValidationException;
+import org.candlepin.async.JobExecutionContext;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Environment;
+import org.candlepin.model.Owner;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.HashSet;
+import java.util.Set;
+
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-public class RegenEnvEntitlementCertsJobTest extends BaseJobTest {
+public class RegenEnvEntitlementCertsJobTest {
 
     @Mock private Owner owner;
     @Mock private PoolManager poolManager;
@@ -50,7 +48,6 @@ public class RegenEnvEntitlementCertsJobTest extends BaseJobTest {
 
     @BeforeEach
     public void init() {
-        super.inject();
         environment = new Environment();
         environment.setId("env_id_1");
         content = new HashSet<>();

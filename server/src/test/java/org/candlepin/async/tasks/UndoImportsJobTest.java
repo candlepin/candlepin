@@ -65,8 +65,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-
-
 /**
  * UndoImportsJobTest
  */
@@ -86,7 +84,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
     @Mock protected Refresher refresher;
     @Mock protected ExporterMetadataCurator exportCurator;
 
-    protected UndoImportsJob undoImportsJob;
+    private UndoImportsJob undoImportsJob;
 
     @BeforeEach
     public void setUp() {

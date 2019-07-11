@@ -14,12 +14,17 @@
  */
 package org.candlepin.async.tasks;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,10 +37,6 @@ import org.mockito.quality.Strictness;
 
 import java.util.List;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
 
 /**
  * Test suite for the ImportRecordCleanerJob class
@@ -156,7 +157,7 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
     @ParameterizedTest
     @ValueSource(ints = { -1, -50 })
-    public void singleOwnerBadKeepConfig(int keep) throws Exception {
+    public void singleOwnerBadKeepConfig(int keep) {
         this.setNumOfRecordsToKeep(keep);
         Owner owner = new Owner("owner");
         ownerCurator.create(owner);

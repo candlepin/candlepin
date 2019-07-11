@@ -14,8 +14,12 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
 
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
@@ -27,30 +31,26 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.sync.ExportResult;
 import org.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
 
-
-
-@RunWith(MockitoJUnitRunner.class)
-public class ExportJobTest extends BaseJobTest {
+@ExtendWith(MockitoExtension.class)
+public class ExportJobTest {
 
     @Mock
     private ManifestManager manifestManager;
     private ExportJob job;
 
-    @Before
+    @BeforeEach
     public void setupTest() {
-        super.inject();
-
         job = new ExportJob(manifestManager);
-        injector.injectMembers(job);
     }
 
     private Owner createTestOwner(String key, String logLevel) {
@@ -158,8 +158,6 @@ public class ExportJobTest extends BaseJobTest {
         config.validate();
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
     @Test
     public void testValidateNoConsumer() {
         Owner owner = this.createTestOwner("owner_key", "log_level");
@@ -168,17 +166,9 @@ public class ExportJobTest extends BaseJobTest {
         JobConfig config = ExportJob.createJobConfig()
             .setCdnLabel("test_label");
 
-        try {
-            config.validate();
-            fail("an expected exception was not thrown");
-        }
-        catch (JobConfigValidationException e) {
-            // Pass!
-        }
+        assertThrows(JobConfigValidationException.class, config::validate);
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
     @Test
     public void testValidateNoLabel() {
         Owner owner = this.createTestOwner("owner_key", "log_level");
@@ -187,13 +177,7 @@ public class ExportJobTest extends BaseJobTest {
         JobConfig config = ExportJob.createJobConfig()
             .setConsumer(consumer);
 
-        try {
-            config.validate();
-            fail("an expected exception was not thrown");
-        }
-        catch (JobConfigValidationException e) {
-            // Pass!
-        }
+        assertThrows(JobConfigValidationException.class, config::validate);
     }
 
     @Test

@@ -14,9 +14,9 @@
  */
 package org.candlepin.async;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -37,8 +37,6 @@ import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.junit.Before;
 import org.junit.Test;
-
-
 
 public class JobMessageReceiverTest {
 
@@ -65,7 +63,7 @@ public class JobMessageReceiverTest {
         doReturn(this.consumer).when(this.session).createConsumer(anyString(), anyString());
     }
 
-    public JobMessageReceiver buildJobMessageReceiver() {
+    private JobMessageReceiver buildJobMessageReceiver() {
         try {
             JobMessageReceiver receiver = new JobMessageReceiver(this.filter, this.jobManager,
                 this.sessionFactory, this.objMapper);
@@ -79,7 +77,7 @@ public class JobMessageReceiverTest {
         }
     }
 
-    public ClientMessage buildClientMessage(String jobId, String jobKey) {
+    private ClientMessage buildClientMessage(String jobId, String jobKey) {
         try {
             String body = String.format("{ \"jobId\": \"%s\", \"jobKey\": \"%s\" }", jobId, jobKey);
 
