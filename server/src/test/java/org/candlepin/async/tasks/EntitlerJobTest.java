@@ -41,7 +41,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.dto.PoolIdAndErrors;
 import org.candlepin.model.dto.PoolIdAndQuantity;
-import org.candlepin.pinsetter.tasks.BaseJobTest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
 
@@ -60,7 +59,7 @@ import java.util.Locale;
 /**
  * EntitlerJobTest
  */
-public class EntitlerJobTest extends BaseJobTest {
+public class EntitlerJobTest {
 
     private Consumer consumer;
     private Owner owner;
@@ -73,7 +72,6 @@ public class EntitlerJobTest extends BaseJobTest {
 
     @BeforeEach
     public void init() {
-        super.init();
 
         final ConsumerType ctype = new ConsumerType("system");
         ctype.setId("test-ctype");
@@ -191,9 +189,7 @@ public class EntitlerJobTest extends BaseJobTest {
     }
 
     private EntitlerJob createEntitlerJob(final PoolCurator poolCurator, final I18n i18n) {
-        final EntitlerJob job = new EntitlerJob(entitler, poolCurator, i18n);
-        injector.injectMembers(job);
-        return job;
+        return new EntitlerJob(entitler, poolCurator, i18n);
     }
 
     private void stubEntitlerErrorResult(String poolId) throws EntitlementRefusedException {

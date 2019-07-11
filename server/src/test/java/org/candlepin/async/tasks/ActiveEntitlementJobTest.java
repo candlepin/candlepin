@@ -15,8 +15,11 @@
 
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
@@ -72,7 +75,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         entitlementCurator.create(ent);
 
         consumerCurator.refresh(consumer);
-        assertFalse("valid".equals(consumer.getEntitlementStatus()));
+        assertNotEquals("valid", consumer.getEntitlementStatus());
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         job.execute(context);
@@ -111,13 +114,13 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         entitlementCurator.create(ent);
 
         consumerCurator.refresh(consumer);
-        assertFalse("valid".equals(consumer.getEntitlementStatus()));
+        assertNotEquals("valid", consumer.getEntitlementStatus());
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         job.execute(context);
         consumerCurator.refresh(consumer);
         // still not valid.  Probably not even set, but that doesn't matter
-        assertFalse("valid".equals(consumer.getEntitlementStatus()));
+        assertNotEquals("valid", consumer.getEntitlementStatus());
 
         // Should not have changed
         assertFalse(entitlementCurator.get(ent.getId()).isUpdatedOnStart());

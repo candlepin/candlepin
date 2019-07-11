@@ -31,7 +31,6 @@ import org.candlepin.async.JobExecutionException;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,24 +38,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import java.util.Date;
 import java.util.Map;
-
-
 
 /**
  * Test suite for the HypervisorHeartbeatUpdateJob class
  */
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-public class HypervisorHeartbeatUpdateJobTest extends DatabaseTestFixture {
+public class HypervisorHeartbeatUpdateJobTest {
 
     @Mock protected ConsumerCurator mockConsumerCurator;
 
-    protected HypervisorHeartbeatUpdateJob testJob;
+    private HypervisorHeartbeatUpdateJob testJob;
 
     @BeforeEach
     public void setUp() {
@@ -76,7 +70,7 @@ public class HypervisorHeartbeatUpdateJobTest extends DatabaseTestFixture {
         String ownerKey = "test_owner";
         String logLevel = "test_log_level";
 
-        Owner owner = this.createOwner(ownerKey);
+        Owner owner = new Owner(ownerKey, "ownerName");
         owner.setLogLevel(logLevel);
 
         JobConfig config = HypervisorHeartbeatUpdateJob.createJobConfig()
@@ -136,7 +130,7 @@ public class HypervisorHeartbeatUpdateJobTest extends DatabaseTestFixture {
         String ownerKey = "test_owner";
         String reporterId = "test_reporter_id";
 
-        Owner owner = this.createOwner(ownerKey);
+        Owner owner = new Owner(ownerKey, "ownerName");
 
         JobConfig config = HypervisorHeartbeatUpdateJob.createJobConfig()
             .setOwner(owner)

@@ -14,12 +14,23 @@
  */
 package org.candlepin.async.tasks;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
@@ -28,27 +39,17 @@ import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.TestUtil;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-@RunWith(MockitoJUnitRunner.class)
-public class ImportJobTest extends BaseJobTest {
+@ExtendWith(MockitoExtension.class)
+public class ImportJobTest {
 
     @Mock private ManifestManager manifestManager;
     @Mock private JobExecutionContext ctx;
@@ -57,13 +58,10 @@ public class ImportJobTest extends BaseJobTest {
 
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void setup() {
-        super.inject();
-
         owner = new Owner("my-test-owner");
         job = new ImportJob(ownerCurator, manifestManager);
-        injector.injectMembers(job);
     }
 
     private Owner createTestOwner(String key, String logLevel) {
@@ -162,8 +160,6 @@ public class ImportJobTest extends BaseJobTest {
         }
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
     @Test
     public void testValidateNoStoredFileId() {
         Owner owner = this.createTestOwner("owner_key_1", "log_level_1");
@@ -172,17 +168,9 @@ public class ImportJobTest extends BaseJobTest {
             .setOwner(owner)
             .setUploadedFileName("upload_file_name_1");
 
-        try {
-            config.validate();
-            fail("an expected exception was not thrown");
-        }
-        catch (JobConfigValidationException e) {
-            // Pass!
-        }
+        assertThrows(JobConfigValidationException.class, config::validate);
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
     @Test
     public void testValidateNoUploadedFileName() {
         Owner owner = this.createTestOwner("owner_key_1", "log_level_1");
@@ -191,13 +179,7 @@ public class ImportJobTest extends BaseJobTest {
             .setOwner(owner)
             .setStoredFileId("stored_field_id_1");
 
-        try {
-            config.validate();
-            fail("an expected exception was not thrown");
-        }
-        catch (JobConfigValidationException e) {
-            // Pass!
-        }
+        assertThrows(JobConfigValidationException.class, config::validate);
     }
 
     @Test
@@ -227,8 +209,6 @@ public class ImportJobTest extends BaseJobTest {
         assertEquals(importRecord, actualResult);
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
     @Test
     public void ensureJobFailure() throws Exception {
         String archiveFilePath = "/path/to/some/file.zip";
@@ -248,20 +228,12 @@ public class ImportJobTest extends BaseJobTest {
             any(ConflictOverrides.class), eq(uploadedFileName)))
             .thenThrow(new ImporterException(expectedMessage));
 
-        try {
-            job.execute(ctx);
-            fail("Expected exception to be thrown");
-        }
-        catch (JobExecutionException e) {
-            // Expected this failure
-            assertEquals(expectedMessage, e.getMessage());
-            assertTrue(e.getCause() instanceof ImporterException);
-            verify(manifestManager).recordImportFailure(eq(owner), eq(e.getCause()), eq(uploadedFileName));
-        }
+        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(ctx));
+        assertEquals(expectedMessage, e.getMessage());
+        verify(manifestManager).recordImportFailure(eq(owner), eq(e.getCause()), eq(uploadedFileName));
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
+
     @Test
     public void ensureJobExceptionThrownIfOwnerNotFound() {
         String archiveFilePath = "/path/to/some/file.zip";
@@ -278,15 +250,8 @@ public class ImportJobTest extends BaseJobTest {
         doReturn(jobConfig.getJobArguments()).when(ctx).getJobArguments();
         doReturn(null).when(ownerCurator).getByKey(eq("my-test-owner"));
 
-        try {
-            job.execute(ctx);
-            fail("Expected exception not thrown");
-        }
-        catch (JobExecutionException e) {
-            // Expected this failure
-            assertEquals(expectedMessage, e.getMessage());
-            assertTrue(e.getCause() instanceof NotFoundException);
-            verify(manifestManager).recordImportFailure(eq(null), eq(e.getCause()), eq(uploadedFileName));
-        }
+        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(ctx));
+        assertEquals(expectedMessage, e.getMessage());
+        verify(manifestManager).recordImportFailure(eq(null), eq(e.getCause()), eq(uploadedFileName));
     }
 }

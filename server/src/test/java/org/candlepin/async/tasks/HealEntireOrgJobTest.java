@@ -14,8 +14,14 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
@@ -32,11 +38,7 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -48,9 +50,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-public class HealEntireOrgJobTest extends BaseJobTest {
+public class HealEntireOrgJobTest {
 
     private OwnerCurator ownerCurator;
     private Entitler entitler;
@@ -59,7 +59,6 @@ public class HealEntireOrgJobTest extends BaseJobTest {
 
     @BeforeEach
     public void init() {
-        super.inject();
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK);
 
         ownerCurator = mock(OwnerCurator.class);

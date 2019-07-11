@@ -15,33 +15,27 @@
 
 package org.candlepin.async.tasks;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.model.AsyncJobStatusCurator;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
 /**
  * JobCleanerTest
  */
-public class JobCleanerTest extends BaseJobTest {
-
-    @Before
-    public void init() {
-        inject();
-    }
+public class JobCleanerTest {
 
     @Test
     public void execute() throws Exception {
         AsyncJobStatusCurator curator = mock(AsyncJobStatusCurator.class);
         JobCleaner cleaner = new JobCleaner(curator);
         JobExecutionContext context = mock(JobExecutionContext.class);
-        injector.injectMembers(cleaner);
 
         cleaner.execute(context);
         verify(curator).cleanUpOldCompletedJobs(any(Date.class));

@@ -14,23 +14,22 @@
  */
 package org.candlepin.async.impl;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConstraint;
 import org.candlepin.model.AsyncJobStatus;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-
 
 public class UniqueByArgConstraintTest {
 
@@ -82,7 +81,7 @@ public class UniqueByArgConstraintTest {
         AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map("param1", "val1"));
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("param1", "val1"));
 
-        JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param1"));
+        JobConstraint constraint = new UniqueByArgConstraint(Collections.singletonList("param1"));
         Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
         assertNotNull(result);
@@ -122,7 +121,7 @@ public class UniqueByArgConstraintTest {
             "param2", "val2",
             "param3", "val3"));
 
-        JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param2"));
+        JobConstraint constraint = new UniqueByArgConstraint(Collections.singletonList("param2"));
         Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
         assertNotNull(result);
