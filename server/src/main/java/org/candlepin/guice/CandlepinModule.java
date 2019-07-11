@@ -18,6 +18,7 @@ import org.candlepin.async.JobManager;
 import org.candlepin.async.JobMessageDispatcher;
 import org.candlepin.async.impl.ArtemisJobMessageDispatcher;
 import org.candlepin.async.tasks.ActiveEntitlementJob;
+import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.JobCleaner;
 import org.candlepin.async.tasks.CRLUpdateJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
@@ -98,7 +99,6 @@ import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.PinsetterTriggerListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
-import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
 import org.candlepin.pinsetter.tasks.UnpauseJob;
 import org.candlepin.pki.CertificateReader;
@@ -300,10 +300,6 @@ public class CandlepinModule extends AbstractModule {
         bind(JsonProvider.class);
         miscConfigurations();
 
-        // Async Jobs
-        bind(EntitlerJob.class);
-        requestStaticInjection(EntitlerJob.class);
-
         // UeberCerts
         bind(UeberCertificateGenerator.class);
 
@@ -435,6 +431,7 @@ public class CandlepinModule extends AbstractModule {
 
         JobManager.registerJob(ActiveEntitlementJob.JOB_KEY, ActiveEntitlementJob.class);
         JobManager.registerJob(CRLUpdateJob.JOB_KEY, CRLUpdateJob.class);
+        JobManager.registerJob(EntitlerJob.JOB_KEY, EntitlerJob.class);
         JobManager.registerJob(ExpiredPoolsCleanupJob.JOB_KEY, ExpiredPoolsCleanupJob.class);
         JobManager.registerJob(ExportJob.JOB_KEY, ExportJob.class);
         JobManager.registerJob(HealEntireOrgJob.JOB_KEY, HealEntireOrgJob.class);

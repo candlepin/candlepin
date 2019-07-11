@@ -82,7 +82,7 @@ describe 'System Admins' do
         :uuid => @consumer1['uuid'],
         :async => true
       })
-    wait_for_job(job['id'], 10)
+    wait_for_async_job(job['id'], 10)
   end
 
   it "can view only their system's entitlements" do

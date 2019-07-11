@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -97,7 +98,6 @@ import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
-import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -1908,7 +1908,7 @@ public class ConsumerResource {
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
         @QueryParam("entitle_date") String entitleDateStr,
-        @QueryParam("from_pool") List<String> fromPools) {
+        @QueryParam("from_pool") List<String> fromPools) throws JobException {
         /* NOTE: This method should NEVER be provided with a POST body.
            While technically that change would be backwards compatible,
            there are older clients which erroneously provide an empty string
@@ -1957,19 +1957,28 @@ public class ConsumerResource {
         // HANDLE ASYNC
         //
         if (async) {
-            JobDetail detail = null;
+            JobConfig config;
 
             if (poolIdString != null) {
-                detail = EntitlerJob.bindByPool(poolIdString, consumer, owner, quantity);
+                config = EntitlerJob.createConfig()
+                    .setOwner(owner)
+                    .setConsumer(consumer)
+                    .setPoolQuantity(poolIdString, quantity);
             }
             else {
-                detail = EntitleByProductsJob.bindByProducts(productIds, consumer, entitleDate, fromPools,
-                    owner);
+                JobDetail detail = EntitleByProductsJob
+                    .bindByProducts(productIds, consumer, entitleDate, fromPools, owner);
+                return Response.status(Response.Status.OK)
+                    .type(MediaType.APPLICATION_JSON).entity(detail).build();
             }
 
             // events will be triggered by the job
+            AsyncJobStatus status = jobManager.queueJob(config);
+            AsyncJobStatusDTO statusDTO = this.translator.translate(status, AsyncJobStatusDTO.class);
             return Response.status(Response.Status.OK)
-                .type(MediaType.APPLICATION_JSON).entity(detail).build();
+                .type(MediaType.APPLICATION_JSON)
+                .entity(statusDTO)
+                .build();
         }
 
         //

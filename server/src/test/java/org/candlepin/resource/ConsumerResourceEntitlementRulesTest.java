@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.candlepin.async.JobException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -26,7 +27,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
@@ -46,7 +46,6 @@ import javax.inject.Inject;
  */
 public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
     @Inject private PoolCurator poolCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
@@ -76,7 +75,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testMaxMembership() {
+    public void testMaxMembership() throws JobException {
         // 10 entitlements available, lets try to entitle 11 consumers.
         for (int i = 0; i < pool.getQuantity(); i++) {
             Consumer c = TestUtil.createConsumer(standardSystemType, owner);
