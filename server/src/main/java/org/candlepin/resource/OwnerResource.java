@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.HealEntireOrgJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.audit.Event;
@@ -55,8 +56,8 @@ import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
@@ -92,7 +93,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
 import org.candlepin.pinsetter.tasks.ImportJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
@@ -122,7 +122,6 @@ import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -1098,7 +1097,7 @@ public class OwnerResource {
 
     /**
      * Heals an Owner
-     * <p>
+     *
      * Starts an asynchronous healing for the given Owner. At the end of the
      * process the idea is that all of the consumers in the owned by the Owner
      * will be up to date.
@@ -1116,12 +1115,16 @@ public class OwnerResource {
         " At the end of the process the idea is that all of the consumers " +
         "in the owned by the Owner will be up to date.", value = "Heal owner")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public JobDetail healEntire(
-        @ApiParam("ownerKey id of the owner to be healed.")
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+    public AsyncJobStatusDTO healEntire(
+        @ApiParam("ownerKey id of the owner to be healed.") @PathParam("owner_key") @Verify(Owner.class)
+        String ownerKey)
+        throws JobException {
 
         Owner owner = findOwnerByKey(ownerKey);
-        return HealEntireOrgJob.healEntireOrg(owner, new Date());
+        JobConfig config = HealEntireOrgJob.createJobConfig().setOwner(owner).setEntitleDate(new Date());
+
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /**

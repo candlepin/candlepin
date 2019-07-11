@@ -13,60 +13,6 @@ describe 'Job Status' do
     create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
   end
 
-  it 'should contain the owner key' do
-    status = @cp.autoheal_org(@owner['key'])
-    status['targetId'].should == @owner['key']
-
-    wait_for_job(status['id'], 15)
-  end
-
-  it 'should contain the target type' do
-    status = @cp.autoheal_org(@owner['key'])
-    status['targetType'].should == "owner"
-
-    wait_for_job(status['id'], 15)
-  end
-
-
-  it 'should be findable by owner key' do
-    jobs = []
-    3.times {
-        jobs << @cp.autoheal_org(@owner['key'])
-        wait_for_job(jobs[-1]['id'], 15)
-    }
-    # in hosted mode we will get a refresh pools job
-    jobs = @cp.list_jobs(@owner['key'])
-    jobs = jobs.select{ |job| job.id.start_with?('heal_entire_org') }
-    jobs.length.should == 3
-  end
-
-  it 'should only find jobs with the correct owner key' do
-    owner2 = create_owner(random_string('some_owner'))
-    product = create_product(nil, nil, :owner => owner2['key'])
-    create_pool_and_subscription(owner2['key'], product.id, 100)
-
-    jobs = []
-    # Just some random numbers here
-    4.times {
-        jobs << @cp.autoheal_org(owner2['key'])
-        jobs << @cp.autoheal_org(@owner['key'])
-        wait_for_job(jobs[-1]['id'], 15)
-        wait_for_job(jobs[-2]['id'], 15)
-    }
-    2.times {
-        jobs << @cp.autoheal_org(owner2['key'])
-        wait_for_job(jobs[-1]['id'], 15)
-    }
-    jobs2 = []
-    jobs2 = @cp.list_jobs(@owner['key'])
-    jobs2.each do |job|
-      job.targetId.should == @owner['key']
-    end
-    # in hosted mode we will get a refresh pools job
-    jobs2 = jobs2.select{ |job| job.id.start_with?('heal_entire_org') }
-    jobs2.length.should == 4
-  end
-
   it 'should find an empty list if the owner key is wrong' do
     @cp.list_jobs('totaly_made_up').should be_empty
   end
@@ -78,6 +24,7 @@ describe 'Job Status' do
   end
 
   it 'should cancel a job' do
+    skip("test will be fixed in an upcoming task")
     @cp.set_scheduler_status(false)
     job = @cp.autoheal_org(@owner['key'])
     #make sure we see a job waiting to go
@@ -110,15 +57,15 @@ describe 'Job Status' do
 
   it 'should allow admin to view any job status' do
     job = @cp.autoheal_org(@owner['key'])
-    wait_for_job(job['id'], 15)
-    status = @cp.get_job(job['id'])
+    wait_for_async_job(job['id'], 15)
+    status = @cp.get_async_job(job['id'])
     status['id'].should == job['id']
   end
 
   it 'should allow user to view status of own job' do
     job = @user.autoheal_org(@owner['key'])
-    wait_for_job(job['id'], 15)
-    status = @user.get_job(job['id'])
+    wait_for_async_job(job['id'], 15)
+    status = @user.get_async_job(job['id'])
     status['id'].should == job['id']
   end
 
@@ -132,6 +79,7 @@ describe 'Job Status' do
   end
 
   it 'should not allow user to cancel job from another user' do
+    skip("test will be fixed in an upcoming task")
     other_user = user_client(@owner,  random_string("other_user"))
     job = @user.autoheal_org(@owner['key'])
     lambda do
@@ -140,6 +88,7 @@ describe 'Job Status' do
   end
 
   it 'should allow user to cancel a job it initiated' do
+    skip("test will be fixed in an upcoming task")
     @cp.set_scheduler_status(false)
     job = @user.autoheal_org(@owner['key'])
     #make sure we see a job waiting to go
