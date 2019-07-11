@@ -35,7 +35,6 @@ import org.candlepin.resource.dto.AutobindData;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.jboss.resteasy.spi.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -72,18 +71,23 @@ public class HealEntireOrgJob implements AsyncJob {
     public Object execute(JobExecutionContext context) throws JobExecutionException {
         try {
 
-            final JobArguments arguments = context.getJobArguments();
-            final String ownerKey = arguments.getAsString(OWNER_KEY);
+            JobArguments arguments = context.getJobArguments();
+            String ownerKey = arguments.getAsString(OWNER_KEY);
             Owner owner = ownerCurator.getByKey(ownerKey);
+            if (owner == null) {
+                log.warn("Healing attempted against non-existent org key \"{}\"", ownerKey);
+                throw new JobExecutionException(
+                    i18n.tr("Healing attempted against non-existent org key \"{}\"", ownerKey), true);
+            }
             if (owner.isAutobindDisabled() || owner.isContentAccessEnabled()) {
                 String caMessage = owner.isContentAccessEnabled() ?
                     " because of the content access mode setting" : "";
-                throw new BadRequestException(
-                    i18n.tr("Auto-attach is disabled for owner {0}{1}.", owner.getKey(), caMessage));
+                throw new JobExecutionException(
+                    i18n.tr("Auto-attach is disabled for owner {0}{1}.", owner.getKey(), caMessage), true);
             }
 
-            final Date entitleDate = arguments.getAs(ENTITLE_DATE_KEY, Date.class);
-            final StringBuilder result = new StringBuilder();
+            Date entitleDate = arguments.getAs(ENTITLE_DATE_KEY, Date.class);
+            StringBuilder result = new StringBuilder();
             for (String uuid : ownerCurator.getConsumerUuids(owner).list()) {
                 // Do not send in product IDs.  CandlepinPoolManager will take care
                 // of looking up the non or partially compliant products to bind.
