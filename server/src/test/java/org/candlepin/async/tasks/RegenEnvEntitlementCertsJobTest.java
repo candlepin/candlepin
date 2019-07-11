@@ -20,7 +20,6 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
-import org.candlepin.pinsetter.tasks.BaseJobTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +50,7 @@ public class RegenEnvEntitlementCertsJobTest extends BaseJobTest {
 
     @BeforeEach
     public void init() {
-        super.init();
+        super.inject();
         environment = new Environment();
         environment.setId("env_id_1");
         content = new HashSet<>();

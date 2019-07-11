@@ -56,7 +56,7 @@ public class JobMessageReceiver extends MessageReceiver {
 
     @Override
     protected void initialize() throws Exception {
-        session = this.sessionFactory.getIngressSession(false);
+        session = this.sessionFactory.getIngressSession(true);
 
         consumer = msgFilter != null ?
             session.createConsumer(queueName, msgFilter) :
