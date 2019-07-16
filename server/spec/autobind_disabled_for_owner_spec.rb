@@ -79,7 +79,7 @@ describe 'Autobind Disabled On Owner' do
     wait_for_async_job(job['id'], 15)
     job = @cp.get_async_job(job['id'], true)
     job['state'].should == "FAILED"
-    job['result'].should == "org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner #{@owner['key']}."
+    job['resultData'].should == "org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner #{@owner['key']}."
   end
 
   it 'fails to heal entire org if content access is org_environment' do
@@ -92,6 +92,6 @@ describe 'Autobind Disabled On Owner' do
     wait_for_async_job(job['id'], 15)
     job = @cp.get_async_job(job['id'], true)
     job['state'].should == "FAILED"
-    job['result'].should == "org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner #{owner['key']} because of the content access mode setting."
+    job['resultData'].should == "org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner #{owner['key']} because of the content access mode setting."
   end
 end

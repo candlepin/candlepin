@@ -56,8 +56,8 @@ import java.util.List;
 public class UndoImportsJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(UndoImportsJob.class);
 
-    public static final String JOB_KEY = "UNDO_IMPORTS";
-    public static final String JOB_NAME = "undo_imports";
+    public static final String JOB_KEY = "UndoImportsJob";
+    public static final String JOB_NAME = "undo imports";
 
     private static final String OWNER_KEY = "owner_key";
 

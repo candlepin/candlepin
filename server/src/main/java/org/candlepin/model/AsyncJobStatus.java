@@ -54,13 +54,6 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_async_jobs";
 
-    // Various keys used to store job context in the job data map
-    private static final String PRINCIPAL_KEY = "context_principal";
-    private static final String METADATA_KEY = "job_metadata";
-    private static final String ARGUMENTS_KEY = "job_arguments";
-    private static final String RESULT_KEY = "job_result";
-    private static final String RESULT_CLASS_KEY = "job_result_class";
-
     /** Enum of job states; terminal states represent states at which the job will no longer change */
     public enum JobState {
         /** The job has been created, but not yet queued or executed */
@@ -72,11 +65,11 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         /** The job has been sent to the backing job messaging/queueing system to be picked up */
         QUEUED("RUNNING", "CANCELED"),
         /** The job has been picked up and is currently being executed */
-        RUNNING("FAILED", "FAILED_WITH_RETRY", "COMPLETED", "CANCELED"),
+        RUNNING("FAILED", "FAILED_WITH_RETRY", "FINISHED", "CANCELED"),
         /** The job failed during execution, and has been rescheduled to be retried */
         FAILED_WITH_RETRY("SCHEDULED", "QUEUED", "RUNNING", "CANCELED"),
         /** The job has completed successfully */
-        COMPLETED(),
+        FINISHED(),
         /** The job failed during execution in a way that does not allow retries */
         FAILED(),
         /** The job was canceled by request */

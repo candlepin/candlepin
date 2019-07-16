@@ -36,7 +36,7 @@ import java.util.List;
 public class ImportRecordCleanerJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(ImportRecordCleanerJob.class);
 
-    public static final String JOB_KEY = "IMPORT_RECORD_CLEANER";
+    public static final String JOB_KEY = "ImportRecordCleanerJob";
     public static final String JOB_NAME = "Import record cleaner";
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";

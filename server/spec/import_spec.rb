@@ -64,7 +64,7 @@ describe 'Import Test Group:', :serial => true do
         if status["state"] == "FAILED"
           raise AsyncImportFailure.new(status)
         end
-        status["result"]
+        status["resultData"]
       }
     end
 
@@ -188,7 +188,7 @@ describe 'Import Test Group:', :serial => true do
         exception = true
       rescue AsyncImportFailure => aif
         async.should be true
-        json = aif.data["result"]
+        json = aif.data["resultData"]
         json.should_not be_nil
         exception = true
       end
@@ -222,7 +222,7 @@ describe 'Import Test Group:', :serial => true do
         exception = true
       rescue AsyncImportFailure => aif
         async.should be true
-        json = aif.data["result"]
+        json = aif.data["resultData"]
         json.should_not be_nil
         exception = true
       end
@@ -291,7 +291,7 @@ describe 'Import Test Group:', :serial => true do
         exception = true
       rescue AsyncImportFailure => aif
         async.should be true
-        json = aif.data["result"]
+        json = aif.data["resultData"]
         json.should_not be_nil
         exception = true
       end
@@ -319,7 +319,7 @@ describe 'Import Test Group:', :serial => true do
         exception = true
       rescue AsyncImportFailure => aif
         async.should be true
-        json = aif.data["result"]
+        json = aif.data["resultData"]
         json.should_not be_nil
         exception = true
       end
@@ -387,7 +387,7 @@ describe 'Import Test Group:', :serial => true do
         exception = true
       rescue AsyncImportFailure => aif
         async.should be true
-        json = aif.data["result"]
+        json = aif.data["resultData"]
         json.should_not be_nil
         exception = true
       end

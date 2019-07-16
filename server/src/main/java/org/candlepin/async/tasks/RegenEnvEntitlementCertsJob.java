@@ -38,8 +38,8 @@ import java.util.Set;
  */
 public class RegenEnvEntitlementCertsJob implements AsyncJob {
 
-    public static final String JOB_KEY = "REGEN_ENV_ENT_CERTS_JOB";
-    public static final String JOB_NAME = "regen_env_entitlement_certs";
+    public static final String JOB_KEY = "RegenEnvEntitlementCertsJob";
+    public static final String JOB_NAME = "regenerate environment entitlement certificates";
 
     private static final String ENV_ID = "env_id";
     private static final String CONTENT = "content_ids";

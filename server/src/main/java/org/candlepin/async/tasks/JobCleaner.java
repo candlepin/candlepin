@@ -40,7 +40,7 @@ public class JobCleaner implements AsyncJob {
 
     private AsyncJobStatusCurator jobCurator;
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
-    public static final String JOB_KEY = "JOB_CLEANER";
+    public static final String JOB_KEY = "JobCleaner";
     public static final String JOB_NAME = "job cleaner";
 
     @Inject

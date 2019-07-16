@@ -42,8 +42,8 @@ public class RefreshPoolsForProductJob implements AsyncJob {
     private final SubscriptionServiceAdapter subAdapter;
     private final OwnerServiceAdapter ownerAdapter;
 
-    public static final String JOB_KEY = "REFRESH_POOLS_FOR_PRODUCT";
-    private static final String JOB_NAME = "refresh_pools_for_product";
+    public static final String JOB_KEY = "RefreshPoolsForProductJob";
+    private static final String JOB_NAME = "refresh pools for product";
     private static final String LAZY_KEY = "lazy_regen";
     private static final String PRODUCT_KEY = "product_key";
 

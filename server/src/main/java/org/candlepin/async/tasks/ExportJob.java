@@ -46,7 +46,7 @@ import java.util.Map;
 public class ExportJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(ExportJob.class);
 
-    public static final String JOB_KEY = "EXPORT_JOB";
+    public static final String JOB_KEY = "ExportJob";
     public static final String JOB_NAME = "export_manifest";
 
     protected static final String CONSUMER_KEY = "consumer_uuid";

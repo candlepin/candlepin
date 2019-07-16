@@ -18,7 +18,7 @@ describe 'Scheduled Jobs' do
   end
 
   it 'should schedule cron tasks irrespective of the case' do
-    job = @cp.trigger_async_job('EXPIRED_POOLS_CLEANUP')
+    job = @cp.trigger_async_job('ExpiredPoolsCleanupJob')
     expect(job['state']).to eq('QUEUED')
 
     wait_for_async_job(job['id'], 15)
@@ -36,7 +36,7 @@ describe 'Scheduled Jobs' do
     });
     #verify pool exists before
     @cp.get_pool(pool['id']).should_not be_nil
-    job = @cp.trigger_async_job('EXPIRED_POOLS_CLEANUP')
+    job = @cp.trigger_async_job('ExpiredPoolsCleanupJob')
     wait_for_async_job(job['id'], 15)
     lambda {
       pool = @cp.get_pool(pool['id'])
@@ -60,7 +60,7 @@ describe 'Scheduled Jobs' do
     end
     records = @cp.list_imports(@import_owner['key'])
     records.size.should == 11
-    job = @cp.trigger_async_job('IMPORT_RECORD_CLEANER')
+    job = @cp.trigger_async_job('ImportRecordCleanerJob')
     wait_for_async_job(job['id'], 15)
     records = @cp.list_imports(@import_owner['key'])
     records.size.should == 10

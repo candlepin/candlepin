@@ -16,6 +16,8 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -36,7 +38,10 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
     @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")
     private String id;
 
-    @ApiModelProperty(example = "refresh_pools-ff808081554a3e4101554a3e9033005d")
+    @ApiModelProperty(example = "RefreshPoolsJob")
+    private String key;
+
+    @ApiModelProperty(example = "refresh pools job")
     private String name;
 
     @ApiModelProperty(example = "refresh")
@@ -119,6 +124,32 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
      */
     public AsyncJobStatusDTO setId(String id) {
         this.id = id;
+        return this;
+    }
+
+    /**
+     * Retrieves the key of the job status represented by this DTO. If the key has not yet been
+     * defined, this method returns null.
+     *
+     * @return
+     *  the key of the job status, or null if the key has not yet been defined
+     */
+    @JsonProperty("key")
+    public String getJobKey() {
+        return this.key;
+    }
+
+    /**
+     * Sets the key of the job status represented by this DTO.
+     *
+     * @param key
+     *  The key of the job status represented by this DTO
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public AsyncJobStatusDTO setJobKey(String key) {
+        this.key = key;
         return this;
     }
 
@@ -409,6 +440,7 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
      *  the result of the last execution of the job status, or null if the result has not yet been
      *  defined
      */
+    @JsonProperty("resultData")
     public Object getResult() {
         return this.result;
     }
@@ -443,8 +475,8 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
      */
     @Override
     public String toString() {
-        return String.format("AsyncJobStatusDTO [id: %s, name: %s, group: %s, state: %s]",
-            this.getId(), this.getName(), this.getGroup(), this.getState());
+        return String.format("AsyncJobStatusDTO [id: %s, key: %s, group: %s, state: %s]",
+            this.getId(), this.getJobKey(), this.getGroup(), this.getState());
     }
 
     /**
@@ -462,6 +494,7 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
                 .append(this.getGroup(), that.getGroup())
+                .append(this.getJobKey(), that.getJobKey())
                 .append(this.getName(), that.getName())
                 .append(this.getOrigin(), that.getOrigin())
                 .append(this.getExecutor(), that.getExecutor())
@@ -489,6 +522,7 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
             .append(super.hashCode())
             .append(this.getId())
             .append(this.getGroup())
+            .append(this.getJobKey())
             .append(this.getName())
             .append(this.getOrigin())
             .append(this.getExecutor())
@@ -536,6 +570,7 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
 
         this.setId(source.getId())
             .setGroup(source.getGroup())
+            .setJobKey(source.getJobKey())
             .setName(source.getName())
             .setOrigin(source.getOrigin())
             .setExecutor(source.getExecutor())

@@ -107,7 +107,7 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
             "delete from AsyncJobStatus where updated <= :date and " +
                 "(state = :completed or state = :canceled)")
             .setParameter("date", deadLineDt, TimestampType.INSTANCE)
-            .setParameter("completed", JobState.COMPLETED.ordinal(), IntegerType.INSTANCE)
+            .setParameter("completed", JobState.FINISHED.ordinal(), IntegerType.INSTANCE)
             .setParameter("canceled", JobState.CANCELED.ordinal(), IntegerType.INSTANCE)
             .executeUpdate();
     }

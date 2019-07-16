@@ -48,7 +48,7 @@ import java.util.List;
 public class HealEntireOrgJob implements AsyncJob {
 
     private static Logger log = LoggerFactory.getLogger(HealEntireOrgJob.class);
-    public static final String JOB_KEY = "HEAL_ENTIRE_ORG_JOB";
+    public static final String JOB_KEY = "HealEntireOrgJob";
     private static final String JOB_NAME = "heal entire org job";
     public static final String OWNER_KEY = "org";
     public static final String ENTITLE_DATE_KEY = "entitle_date";
