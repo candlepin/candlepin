@@ -724,4 +724,32 @@ describe 'Autobind On Owner' do
     status['compliantAddOns']['PROVIDED_ADDON'][0]['pool']['id'].should == pool_with_addon_only.id
     status['compliantRole']['PROVIDED_ROLE'][0]['pool']['id'].should == pool_with_role_only.id
   end
+
+  it 'virtual system should bind to virt-only pool despite lacking syspurpose attribute matches' do
+    mkt_product1 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:owner => owner_key})
+    mkt_product2 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:attributes => {:virt_only => "true", :support_level => "provided_sla",:usage => "Production",
+                                  :roles => "SP Server", :addons => "provided_addon"},
+                                  :owner => owner_key})
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
+    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {"virt.is_guest"=>"true"}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, [])
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 1
+    entitlements[0].pool.productId.should == mkt_product2.id
+  end
 end
