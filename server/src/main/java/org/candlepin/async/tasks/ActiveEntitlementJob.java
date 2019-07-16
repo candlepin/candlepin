@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class ActiveEntitlementJob implements AsyncJob {
 
-    public static final String JOB_KEY = "ACTIVE_ENTITLEMENT_JOB";
+    public static final String JOB_KEY = "ActiveEntitlementJob";
     private static final String JOB_NAME = "active entitlement job";
     // Every hour:
     public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?";

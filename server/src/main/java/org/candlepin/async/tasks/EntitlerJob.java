@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
  */
 public class EntitlerJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(EntitlerJob.class);
-    public static final String JOB_KEY = "ENTITLER_JOB";
+    public static final String JOB_KEY = "EntitlerJob";
     private static final String JOB_NAME = "bind_by_pool";
     private static final String OWNER_KEY = "org";
     private static final String CONSUMER_UUID_KEY = "consumer_uuid";

@@ -74,7 +74,7 @@ public class HypervisorUpdateJob implements AsyncJob {
     private I18n i18n;
     private ModelTranslator translator;
 
-    public static final String JOB_KEY = "HYPERVISOR_UPDATE_JOB";
+    public static final String JOB_KEY = "HypervisorUpdateJob";
     private static final String JOB_NAME = "hypervisor_update";
     private static final String OWNER_KEY = "org";
     public static final String CREATE = "create";

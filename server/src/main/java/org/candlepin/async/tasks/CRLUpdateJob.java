@@ -38,7 +38,7 @@ import java.io.IOException;
 public class CRLUpdateJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(CRLUpdateJob.class);
 
-    public static final String JOB_KEY = "CRL_UPDATE";
+    public static final String JOB_KEY = "CRLUpdateJob";
     public static final String JOB_NAME = "CRL update";
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";

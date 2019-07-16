@@ -42,7 +42,7 @@ import java.util.Objects;
 public class HypervisorHeartbeatUpdateJob implements AsyncJob {
     private static final Logger log = LoggerFactory.getLogger(HypervisorHeartbeatUpdateJob.class);
 
-    public static final String JOB_KEY = "HYPERVISOR_HEARTBEAT_UPDATE";
+    public static final String JOB_KEY = "HypervisorHeartbeatUpdateJob";
     public static final String JOB_NAME = "hypervisor_heartbeat_update";
 
     private static final String REPORTER_ID = "reporter_id";

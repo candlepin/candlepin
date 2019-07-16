@@ -32,7 +32,7 @@ import com.google.inject.Inject;
  * other still valid entitlements.
  */
 public class ExpiredPoolsCleanupJob implements AsyncJob {
-    public static final String JOB_KEY = "EXPIRED_POOLS_CLEANUP";
+    public static final String JOB_KEY = "ExpiredPoolsCleanupJob";
     public static final String JOB_NAME = "expired pools cleanup";
 
     public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?"; // Every hour

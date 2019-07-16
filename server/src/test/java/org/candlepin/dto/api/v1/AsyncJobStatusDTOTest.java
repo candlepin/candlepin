@@ -36,7 +36,8 @@ public class AsyncJobStatusDTOTest extends AbstractDTOTest<AsyncJobStatusDTO> {
 
         this.values = new HashMap<>();
         this.values.put("Id", "test_job_id");
-        this.values.put("Name", "job_name-8675309");
+        this.values.put("JobKey", "job_key");
+        this.values.put("Name", "job_name");
         this.values.put("Group", "job_group");
         this.values.put("Origin", "localhost-origin");
         this.values.put("Executor", "localhost-executor");

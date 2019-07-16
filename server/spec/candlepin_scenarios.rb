@@ -795,7 +795,7 @@ class AsyncStandardExporter < StandardExporter
       raise AsyncExportFailure.new(status)
     end
 
-    result = status["result"]
+    result = status["resultData"]
     client.download_consumer_export(result["exportedConsumer"], result["exportId"], dest_dir)
   end
 end

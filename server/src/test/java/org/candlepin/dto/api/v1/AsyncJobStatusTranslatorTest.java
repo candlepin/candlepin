@@ -52,6 +52,7 @@ public class AsyncJobStatusTranslatorTest extends
         doReturn("job_id-1234567890").when(source).getId();
         doReturn(Integer.valueOf(3)).when(source).getAttempts();
 
+        source.setJobKey("job_key");
         source.setName("job_name-8675309");
         source.setGroup("job_group");
         source.setOrigin("localhost_origin");
@@ -80,6 +81,7 @@ public class AsyncJobStatusTranslatorTest extends
             // childrenGenerated flag
 
             assertEquals(source.getId(), dto.getId());
+            assertEquals(source.getJobKey(), dto.getJobKey());
             assertEquals(source.getName(), dto.getName());
             assertEquals(source.getGroup(), dto.getGroup());
             assertEquals(source.getOrigin(), dto.getOrigin());
