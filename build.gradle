@@ -3,6 +3,15 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 // vim: set expandtab sts=4 sw=4 ai:
 
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'org.yaml', name: 'snakeyaml', version: '1.19'
+    }
+}
+
 plugins {
     id "nebula.lint" version "11.5.0"
     id "checkstyle"
@@ -184,38 +193,6 @@ subprojects {
 configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "candlepin" }) {
     apply plugin: "checkstyle"
     apply plugin: "org.candlepin.gradle.SpecVersion"
-
-    ext {
-        logdriver_class = "net.rkbloom.logdriver.LogDriver"
-        use_logdriver = "true".equals(project.findProperty("logdriver"))
-
-        cpdb_username = "candlepin"
-        cpdb_password = ""
-        db_name = "candlepin"
-        if (!project.findProperty("db_host") ||
-            (project.findProperty("db_host") && "".equals(project.findProperty("db_host")))) {
-            db_host = "localhost"
-        }
-        if (project.findProperty("app_db_name") && !"".equals(project.findProperty("app_db_name"))) {
-            db_name = project.findProperty("app_db_name")
-        }
-        // If MYSQL set up the mysql stuff else set up postgres (default)
-        if (project.findProperty("database_server") == "mysql") {
-            jdbc_driver_class = "com.mysql.jdbc.Driver"
-            jdbc_dialect = "org.hibernate.dialect.MySQL5InnoDBDialect"
-            jdbc_quartz_driver_class = "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"
-            jdbc_url = "jdbc:mysql://${db_host}/${db_name}"
-        } else {
-            jdbc_driver_class = "org.postgresql.Driver"
-            jdbc_dialect = "org.hibernate.dialect.PostgreSQL92Dialect"
-            jdbc_quartz_driver_class = "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
-            jdbc_url = "jdbc:postgresql://${db_host}/${db_name}"
-        }
-
-        amqp_enabled = "true".equals(project.findProperty("qpid"))
-        external_broker = "true".equals(project.findProperty("external_broker"))
-        hostedtest = "true".equals(project.findProperty("hostedtest"))
-    }
 
     checkstyle {
         toolVersion = "$versions.checkstyle"
