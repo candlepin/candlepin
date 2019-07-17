@@ -84,7 +84,6 @@ import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 
 import org.hibernate.exception.ConstraintViolationException;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
@@ -657,40 +656,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertThrows(ForbiddenException.class, () ->
             ownerResource.deleteOwner(owner.getKey(), true, false)
         );
-    }
-
-    @Test
-    public void ownersAtomFeed() {
-        // Make sure we're acting as the correct owner admin:
-        setupPrincipal(owner, Access.ALL);
-
-        securityInterceptor.enable();
-
-        Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
-        assertEquals(0, feed.getEntries().size());
-    }
-
-
-    @Test
-    public void ownerCannotAccessAnotherOwnersAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        setupPrincipal(owner2, Access.ALL);
-
-        securityInterceptor.enable();
-
-        assertThrows(NotFoundException.class, () -> ownerResource.getOwnerAtomFeed(owner.getKey()));
-    }
-
-    @Test
-    public void testConsumerRoleCannotAccessOwnerAtomFeed() {
-        Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c, owner));
-
-        securityInterceptor.enable();
-
-        assertThrows(ForbiddenException.class, () -> ownerResource.getOwnerAtomFeed(owner.getKey()));
     }
 
     @Test

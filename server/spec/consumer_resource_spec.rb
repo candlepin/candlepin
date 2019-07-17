@@ -125,32 +125,6 @@ describe 'Consumer Resource' do
     }.should raise_exception(RestClient::ResourceNotFound)
   end
 
-  it "should expose a consumer's event atom feed" do
-    atom = @consumer1.list_consumer_events_atom(@consumer1.uuid)
-    doc = REXML::Document.new(atom)
-    events = REXML::XPath.match(doc, "//*[local-name()='event'][type = 'CREATED' and target ='CONSUMER']")
-
-    # All atom feed endpoints are deprecated, and should be returning a feed without any events:
-    events.length.should be == 0
-
-    # Consumer 2 should not be able to see consumer 1's feed:
-    lambda {
-      @consumer2.list_consumer_events_atom(@consumer1.uuid)
-    }.should raise_exception(RestClient::ResourceNotFound)
-  end
-
-  it "should expose a consumer's events" do
-    events = @consumer1.list_consumer_events(@consumer1.uuid)
-
-    # All event retrieval endpoints are deprecated, and should be returning an empty list of events:
-    events.size.should be == 0
-
-    # Consumer 2 should not be able to see consumer 1's feed:
-    lambda {
-      @consumer2.list_consumer_events(@consumer1.uuid)
-    }.should raise_exception(RestClient::ResourceNotFound)
-  end
-
   it 'should receive paged consumers back when requested' do
     (1..4).each do |i|
       consumer_client(@user1, random_string('system'))
