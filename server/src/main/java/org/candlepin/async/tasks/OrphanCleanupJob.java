@@ -43,7 +43,7 @@ import javax.persistence.LockModeType;
 public class OrphanCleanupJob implements AsyncJob  {
     private static Logger log = LoggerFactory.getLogger(OrphanCleanupJob.class);
 
-    public static final String JOB_KEY = "ORPHAN_CLEANUP";
+    public static final String JOB_KEY = "OrphanCleanupJob";
     public static final String JOB_NAME = "orphan cleanup";
 
     // Every Sunday at 3:00am

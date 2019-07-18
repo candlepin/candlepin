@@ -165,7 +165,7 @@ public class AsyncJobResource {
         @PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
         AsyncJobStatus status = this.jobCurator.get(jobId);
 
-        if (status != null && status.getState() == AsyncJobStatus.JobState.COMPLETED) {
+        if (status != null && status.getState() == AsyncJobStatus.JobState.FINISHED) {
             this.jobCurator.delete(status);
         }
 

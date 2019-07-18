@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 public class ImportJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(ImportJob.class);
 
-    public static final String JOB_KEY = "IMPORT_JOB";
+    public static final String JOB_KEY = "ImportJob";
     public static final String JOB_NAME = "import_manifest";
 
     protected static final String OWNER_KEY = "org";

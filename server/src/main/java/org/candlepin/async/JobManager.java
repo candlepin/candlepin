@@ -67,6 +67,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -539,12 +540,20 @@ public class JobManager implements ModeChangeListener {
     }
 
     /**
-     * Checks if the specified job is enabled. Jobs default to enabled, but can be disabled if any
-     * of the following occur, in order:
+     * Checks if the specified job is enabled. Jobs default to enabled, but can be enabled or
+     * disabled based on a handful of configurations. The general processing of these configs is in
+     * order of most to least explicit, leading to the following algorithm:
      *
-     *  - The per-job enabled flag is set to false
-     *  - The job is in the async jobs blacklist
-     *  - The async jobs whitelist is not empty and does not contain the specified job
+     * - If the job-specific configuration option is specified, that value is used in all
+     *   situations.
+     * - If no job-specific configuration option is provided, the blacklist is checked. If the job
+     *   appears on the blacklist, it is disabled.
+     * - If no job-specific configuration option is provided and the job does not appear on the
+     *   blacklist, the whitelist is checked. If no whitelist is provided, or the job appears on
+     *   the whitelist, it is enabled. If the whitelist is specified and the job is not present, it
+     *   is disabled.
+     * - If all of the above checks fail or are otherwise inconclusive, the job is assumed to be
+     *   enabled.
      *
      * @param jobKey
      *  The key of the job to check, or the job's fully qualified class name if the job does not have
@@ -560,8 +569,14 @@ public class JobManager implements ModeChangeListener {
 
         // Check per-job config
         Configuration config = this.jobConfig.get(jobKey);
-        if (config != null && !config.getBoolean(ConfigProperties.ASYNC_JOBS_JOB_ENABLED, true)) {
-            return false;
+
+        if (config != null) {
+            try {
+                return config.getBoolean(ConfigProperties.ASYNC_JOBS_JOB_ENABLED);
+            }
+            catch (NoSuchElementException e) {
+                // Property is not defined for this job; check other fields
+            }
         }
 
         // Check blacklist
@@ -990,7 +1005,7 @@ public class JobManager implements ModeChangeListener {
 
             eventSink.sendEvents();
             status.setEndTime(new Date());
-            status = this.updateJobStatus(status, JobState.COMPLETED, result);
+            status = this.updateJobStatus(status, JobState.FINISHED, result);
 
             if (status.logExecutionDetails()) {
                 log.info("Job \"{}\" completed in {}ms", status.getName(), this.getJobRuntime(status));

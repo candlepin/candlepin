@@ -154,7 +154,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void completedAndSelectedByDateCriteriaShouldBeDeleted() {
-        createJob("CompletedJob", null, Util.yesterday(), "Completed", JobState.COMPLETED);
+        createJob("CompletedJob", null, Util.yesterday(), "Completed", JobState.FINISHED);
         this.asyncJobCurator.cleanUpOldCompletedJobs(Util.addDaysToDt(2));
         assertEquals(0, this.asyncJobCurator.listAll().list().size());
     }
@@ -176,7 +176,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
      */
     @Test
     public void completedButNotSelectedByDateCriteriaShouldNotBeDeleted() {
-        createJob("CompletedJob", Util.yesterday(), new Date(), "Completed", JobState.COMPLETED);
+        createJob("CompletedJob", Util.yesterday(), new Date(), "Completed", JobState.FINISHED);
         this.asyncJobCurator.cleanUpOldCompletedJobs(Util.yesterday());
         assertEquals(1, this.asyncJobCurator.listAll().list().size());
     }

@@ -36,7 +36,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
  */
 public class RefreshPoolsJob implements AsyncJob {
 
-    public static final String JOB_KEY = "REFRESH_POOLS_JOB";
+    public static final String JOB_KEY = "RefreshPoolsJob";
     public static final String JOB_NAME = "refresh_pools";
 
     protected static final String OWNER_KEY = "org";

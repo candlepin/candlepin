@@ -390,7 +390,7 @@ public class JobManagerTest {
 
         assertTrue(status.containsAll(
             JobState.RUNNING,
-            JobState.COMPLETED));
+            JobState.FINISHED));
     }
 
     @Test

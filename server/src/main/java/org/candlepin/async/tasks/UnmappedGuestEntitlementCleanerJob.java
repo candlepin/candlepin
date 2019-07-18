@@ -30,7 +30,7 @@ import javax.inject.Inject;
 public class UnmappedGuestEntitlementCleanerJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(UnmappedGuestEntitlementCleanerJob.class);
 
-    public static final String JOB_KEY = "UNMAPPED_GUEST_ENT_CLEANER";
+    public static final String JOB_KEY = "UnmappedGuestEntitlementCleanerJob";
     public static final String JOB_NAME = "Unmapped guest entitlement cleaner";
 
     // Run at 3 AM and every 12 hours afterwards

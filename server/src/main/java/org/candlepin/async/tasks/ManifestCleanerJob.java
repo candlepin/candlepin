@@ -52,7 +52,7 @@ import java.util.Date;
 public class ManifestCleanerJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(ManifestCleanerJob.class);
 
-    public static final String JOB_KEY = "MANIFEST_CLEANER";
+    public static final String JOB_KEY = "ManifestCleanerJob";
     public static final String JOB_NAME = "manifest cleaner";
 
     public static final String CFG_MAX_AGE_IN_MINUTES = "max_age_in_minutes";
