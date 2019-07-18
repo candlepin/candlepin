@@ -20,8 +20,11 @@ import org.candlepin.model.AsyncJobStatus;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 
@@ -78,7 +81,7 @@ public class UniqueByArgConstraint implements JobConstraint {
      * @{inheritDoc}
      */
     @Override
-    public boolean test(AsyncJobStatus inbound, AsyncJobStatus existing) {
+    public Collection<AsyncJobStatus> test(AsyncJobStatus inbound, Collection<AsyncJobStatus> existing) {
         if (inbound == null) {
             throw new IllegalArgumentException("inbound is null");
         }
@@ -87,9 +90,40 @@ public class UniqueByArgConstraint implements JobConstraint {
             throw new IllegalArgumentException("existing is null");
         }
 
+        Set<AsyncJobStatus> constraining = new HashSet<>();
+
         String iJobKey = inbound.getJobKey();
         JobArguments iArgs = inbound.getJobArguments();
 
+        for (AsyncJobStatus eJob : existing) {
+            if (eJob == null) {
+                throw new IllegalArgumentException("existing jobs contains a null element");
+            }
+
+            if (this.test(iJobKey, iArgs, eJob)) {
+                constraining.add(eJob);
+            }
+        }
+
+        return constraining;
+    }
+
+    /**
+     * Tests this constraint on a per-job basis
+     *
+     * @param iJobKey
+     *  the job key for the inbound job
+     *
+     * @param iArgs
+     *  the job arguments for the inbound job
+     *
+     * @param existing
+     *  the existing job to test
+     *
+     * @return
+     *  true if the inbound job is constraints by the provided existing job; false otherwise
+     */
+    private boolean test(String iJobKey, JobArguments iArgs, AsyncJobStatus existing) {
         String eJobKey = existing.getJobKey();
         JobArguments eArgs = existing.getJobArguments();
 

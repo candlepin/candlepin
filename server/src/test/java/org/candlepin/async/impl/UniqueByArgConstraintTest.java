@@ -25,6 +25,8 @@ import org.candlepin.model.AsyncJobStatus;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,9 +70,11 @@ public class UniqueByArgConstraintTest {
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("param1", "val1"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertTrue(result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains(existing));
     }
 
     @Test
@@ -79,9 +83,11 @@ public class UniqueByArgConstraintTest {
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("param1", "val1"));
 
         JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param1"));
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertTrue(result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains(existing));
     }
 
     @Test
@@ -97,9 +103,11 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param2");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertTrue(result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains(existing));
     }
 
     @Test
@@ -115,9 +123,11 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param2"));
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertTrue(result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains(existing));
     }
 
     @Test
@@ -133,9 +143,11 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertTrue(result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains(existing));
     }
 
     @Test
@@ -151,9 +163,11 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param1", "param2", "param3"));
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertTrue(result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains(existing));
     }
 
     @Test
@@ -169,9 +183,11 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param2", "param1", "param3");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertTrue(result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains(existing));
     }
 
     @Test
@@ -187,9 +203,11 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint(Arrays.asList("param2", "param1", "param3"));
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertTrue(result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains(existing));
     }
 
     @Test
@@ -213,9 +231,11 @@ public class UniqueByArgConstraintTest {
             "paramU", "valU"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param2", "param1", "param3");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertTrue(result);
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains(existing));
     }
 
     @Test
@@ -224,9 +244,9 @@ public class UniqueByArgConstraintTest {
         AsyncJobStatus existing = this.buildJobStatus("existing", "alt_key", this.map("param1", "val1"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
     }
 
     @Test
@@ -242,9 +262,9 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
     }
 
     @Test
@@ -253,9 +273,9 @@ public class UniqueByArgConstraintTest {
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("paramX", "val1"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
     }
 
     @Test
@@ -271,9 +291,9 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
     }
 
     @Test
@@ -282,9 +302,9 @@ public class UniqueByArgConstraintTest {
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("param1", "valX"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
     }
 
     @Test
@@ -300,9 +320,9 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
     }
 
     @Test
@@ -311,9 +331,9 @@ public class UniqueByArgConstraintTest {
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("param1", null));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
     }
 
     @Test
@@ -328,9 +348,9 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
     }
 
     @Test
@@ -339,9 +359,9 @@ public class UniqueByArgConstraintTest {
         AsyncJobStatus existing = this.buildJobStatus("existing", "test_key", this.map("param2", "val2"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
     }
 
     @Test
@@ -356,9 +376,47 @@ public class UniqueByArgConstraintTest {
             "param3", "val3"));
 
         JobConstraint constraint = new UniqueByArgConstraint("param1", "param2", "param3");
-        boolean result = constraint.test(inbound, existing);
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Collections.singletonList(existing));
 
-        assertFalse(result);
+        assertTrue(result == null || result.isEmpty());
+    }
+
+    @Test
+    public void testMultipleExistingJobsMatchesCorrectJob() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map("param1", "val1"));
+
+        AsyncJobStatus existing1 = this.buildJobStatus("existing1", "test_key", this.map("param1", "val3"));
+        AsyncJobStatus existing2 = this.buildJobStatus("existing2", "test_key", this.map("param1", "val1"));
+        AsyncJobStatus existing3 = this.buildJobStatus("existing3", "test_key", this.map("param1", "val2"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param1");
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Arrays.asList(existing1, existing2,
+            existing3));
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertFalse(result.contains(existing1));
+        assertTrue(result.contains(existing2));
+        assertFalse(result.contains(existing3));
+    }
+
+    @Test
+    public void testMultipleExistingJobsMatchesMultipleCorrectJobs() {
+        AsyncJobStatus inbound = this.buildJobStatus("inbound", "test_key", this.map("param1", "val1"));
+
+        AsyncJobStatus existing1 = this.buildJobStatus("existing1", "test_key", this.map("param1", "val1"));
+        AsyncJobStatus existing2 = this.buildJobStatus("existing2", "test_key", this.map("param1", "val2"));
+        AsyncJobStatus existing3 = this.buildJobStatus("existing3", "test_key", this.map("param1", "val1"));
+
+        JobConstraint constraint = new UniqueByArgConstraint("param1");
+        Collection<AsyncJobStatus> result = constraint.test(inbound, Arrays.asList(existing1, existing2,
+            existing3));
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertTrue(result.contains(existing1));
+        assertFalse(result.contains(existing2));
+        assertTrue(result.contains(existing3));
     }
 
 }
