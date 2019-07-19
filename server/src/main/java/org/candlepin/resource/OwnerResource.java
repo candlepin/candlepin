@@ -116,7 +116,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -1526,60 +1525,6 @@ public class OwnerResource {
         }
 
         return poolDTOs;
-    }
-
-    /**
-     * Retrieves an Event
-     *
-     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns a feed
-     * without any entries, and will be removed on the next major release.
-     *
-     * @return a Feed object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @Deprecated
-    @ApiOperation(
-        notes = "Retrieves an Event Atom Feed for an owner. DEPRECATED: Event persistence/retrieval is " +
-        "being phased out. This endpoint currently returns a feed without any entries, and will be " +
-        "removed on the next major release.",
-        value = "Get Atom Feed")
-    @GET
-    @Produces("application/atom+xml")
-    @Path("{owner_key}/atom")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public Feed getOwnerAtomFeed(@PathParam("owner_key")
-        @Verify(Owner.class) String ownerKey) {
-        Owner o = findOwnerByKey(ownerKey);
-        String path = String.format("/owners/%s/atom", ownerKey);
-        Feed feed = this.eventAdapter.toFeed(null, path);
-        feed.setTitle("Event feed for owner " + o.getDisplayName());
-        return feed;
-    }
-
-    /**
-     * Retrieves a list of Events for an Owner
-     *
-     * @deprecated This endpoint currently returns an empty list of events, and will be removed
-     * on the next major release.
-     *
-     * @return a list of Event objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @Deprecated
-    @ApiOperation(
-        notes = "Retrieves a list of Events for an Owner. DEPRECATED: Event persistence/retrieval is being " +
-        "phased out. This endpoint currently returns an empty list of events, and will be removed " +
-        "on the next major release.",
-        value = "Get Events")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/events")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public List<Event> getEvents(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        return Collections.emptyList();
     }
 
     /**

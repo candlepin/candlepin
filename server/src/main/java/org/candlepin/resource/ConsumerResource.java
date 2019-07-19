@@ -128,7 +128,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobDetail;
@@ -2256,58 +2255,6 @@ public class ConsumerResource {
             throw new NotFoundException(i18n.tr(
                 "No entitlements for consumer \"{0}\" with pool id \"{1}\"", consumerUuid, poolId));
         }
-    }
-
-    /**
-     * Retrieves a list of Consumer Events.
-     *
-     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns an empty
-     * list of events, and will be removed on the next major release.
-     *
-     * @param consumerUuid a consumer uuid
-     * @return an empty list
-     */
-    @Deprecated
-    @ApiOperation(
-        notes = "Retrieves a list of Consumer Events. DEPRECATED: Event persistence/retrieval is being " +
-        "phased out. This endpoint currently returns an empty list of events, and will be removed on the " +
-        "next major release.",
-        value = "getConsumerEvents")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}/events")
-    public List<Event> getConsumerEvents(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        return Collections.emptyList();
-    }
-
-    /**
-     * Retrieves and Event Atom Feed for a Consumer.
-     *
-     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns a feed
-     * without any entries, and will be removed on the next major release.
-     *
-     * @param consumerUuid a consumer uuid
-     * @return an empty list
-     */
-    @Deprecated
-    @ApiOperation(
-        notes = "Retrieves and Event Atom Feed for a Consumer. DEPRECATED: Event persistence/retrieval is " +
-        "being phased out. This endpoint currently returns a feed without any entries, and will be " +
-        "removed on the next major release.",
-        value = "getConsumerAtomFeed")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces("application/atom+xml")
-    @Path("/{consumer_uuid}/atom")
-    public Feed getConsumerAtomFeed(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        String path = String.format("/consumers/%s/atom", consumerUuid);
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        Feed feed = this.eventAdapter.toFeed(null, path);
-        feed.setTitle("Event feed for consumer " + consumer.getUuid());
-        return feed;
     }
 
     @ApiOperation(notes = "Regenerates the Entitlement Certificates for a Consumer",

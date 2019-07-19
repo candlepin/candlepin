@@ -39,9 +39,6 @@ public class Event {
 
     private static final Logger log = LoggerFactory.getLogger(Event.class);
 
-    /** Name of the table backing this object in the database */
-    public static final String DB_TABLE = "cp_event";
-
     private static final long serialVersionUID = 1L;
 
     /**

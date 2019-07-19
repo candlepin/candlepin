@@ -57,33 +57,6 @@ describe 'Consumer Facts' do
     consumer['facts']['memory.memtotal'].should be_nil
   end
 
-  it 'emits an event when facts are updated' do
-    updated_facts = {
-      'uname.machine' => 'x86_64',
-      'uname.system'     => 'Linux',
-    }
-    @consumer_api.update_consumer({:facts => updated_facts})
-
-    # Event needs to be received by hornetq listener and stored to db, a
-    # second should be plenty time.
-    sleep 1
-
-    events = @consumer_api.list_consumer_events(@consumer.uuid)
-    # All event retrieval endpoints are deprecated, and should be returning an empty list of events:
-    events.size.should eq(0)
-  end
-
-  it 'does not emit an event when facts do not change' do
-    updated_facts = {
-      'uname.machine' => 'i686',
-      'uname.system'     => 'Linux',
-    }
-    @consumer_api.update_consumer({:facts => updated_facts})
-    events = @consumer_api.list_consumer_events(@consumer.uuid)
-    # All event retrieval endpoints are deprecated, and should be returning an empty list of events:
-    events.size.should eq(0)
-  end
-
   it 'updates consumer updated date when facts are updated' do
     updated_facts = {
       'uname.system' => 'x86_64',
