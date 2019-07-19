@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -779,18 +780,19 @@ public class JobManager implements ModeChangeListener {
             Set<AsyncJobStatus> blockingJobs = new HashSet<>();
 
             if (constraints != null && !constraints.isEmpty()) {
-                Collection<AsyncJobStatus> jobs = this.jobCurator.getNonTerminalJobs();
+                Collection<AsyncJobStatus> existingJobs = Collections.unmodifiableList(
+                    this.jobCurator.getNonTerminalJobs());
 
-                for (AsyncJobStatus existing : jobs) {
-                    // Check inbound job's constraints
-                    for (JobConstraint constraint : constraints) {
-                        if (constraint.test(status, existing)) {
-                            blockingJobs.add(existing);
-                        }
+                // Check inbound job's constraints
+                for (JobConstraint constraint : constraints) {
+                    Collection<AsyncJobStatus> blocking = constraint.test(status, existingJobs);
+
+                    if (blocking != null) {
+                        blockingJobs.addAll(blocking);
                     }
-
-                    // TODO: Add support for two-way checking of job constraints
                 }
+
+                // TODO: Add support for two-way checking of job constraints
             }
 
             if (blockingJobs.isEmpty()) {
