@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.7.2
+Version: 2.8.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,22 @@ fi
 
 #raw
 %changelog
+* Mon Jul 22 2019 Kevin Howell <khowell@redhat.com> 2.8.0-1
+- 1722477: Remove storage of events and resources that access the stored events
+  (wpoteat@redhat.com)
+- Gradle auto-conf task now references custom.yaml. (awood@redhat.com)
+- 1702383: prefer virtual pool and conusmer match over syspurpose null_rule
+  (wpoteat@redhat.com)
+- Removed config referencing the deleted DatabaseListener (crog@redhat.com)
+- Require pathfix.py on Fedora30+ (nmoumoul@redhat.com)
+- 1723799: Initialize the NSS db when loading a JSS provider
+  (nmoumoul@redhat.com)
+- Improved deploy script to allow usage of symlinks by tomcat
+  (jhnidek@redhat.com)
+- Consumer creation will now respect syspurpose attributes (crog@redhat.com)
+- 1715838: Handle matching of system uuid regardless of casing
+  (wpoteat@redhat.com)
+
 * Thu Jun 20 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.2-1
 - 1717903: syspurpose attributes now part of certificates (nmoumoul@redhat.com)
 - 1502193: Periodic mysql exceptions when updating consumers in production
