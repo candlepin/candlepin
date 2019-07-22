@@ -734,13 +734,14 @@ describe 'Consumer Resource' do
   it 'should not allow a consumer to update their hypervisorId to one in use by owner' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
-    consumer1 = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [], nil, [], "hYpervisor")
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
-    consumer1 =  @cp.get_consumer(consumer1['uuid'])
-    consumer1['hypervisorId']['hypervisorId'].should == "hypervisor"
+    consumer1 = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [], nil, [], "hYpervisor")
+    consumer_client1 = Candlepin.new(nil, nil, consumer1['idCert']['cert'], consumer1['idCert']['key'])
 
-    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer = consumer_client.get_consumer()
     consumer['hypervisorId'].should == nil
+    consumer1 =  consumer_client1.get_consumer()
+    consumer1['hypervisorId']['hypervisorId'].should == "hypervisor"
 
     begin
       consumer_client.update_consumer({:hypervisorId => "hypervisor"})
@@ -749,6 +750,11 @@ describe 'Consumer Resource' do
       json = JSON.parse(e.http_body)
       json.displayMessage.end_with?('Hypervisor id: hypervisor is already used.').should == true
     end
+
+    # should handle update to same consumer without issue
+    consumer_client1.update_consumer({:hypervisorId => "hypervisor"})
+
+
   end
 
   it 'should allow a consumer to unset their hypervisorId' do

@@ -1404,7 +1404,9 @@ public class ConsumerResource {
             }
             else {
                 Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
-                if (isUsedByOwner(incomingId, owner)) {
+                if ((existingId == null ||
+                    !incomingId.getHypervisorId().equals(existingId.getHypervisorId())) &&
+                    isUsedByOwner(incomingId, owner)) {
                     throw new BadRequestException(i18n.tr(
                         "Problem updating unit {0}. Hypervisor id: {1} is already used.",
                         incoming, incomingId.getHypervisorId()));
