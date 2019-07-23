@@ -705,6 +705,25 @@ describe 'Consumer Resource' do
     consumer['hypervisorId']['hypervisorId'].should == "123abc"
   end
 
+
+  it 'should allow a consumer to update their hypervisorId to same value' do
+    user_cp = user_client(@owner1, random_string('Billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId'].should == nil
+
+    consumer_client.update_consumer({:hypervisorId => "123abC"})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId']['hypervisorId'].should == "123abc"
+
+    # Empty update shouldn't modify the setting:
+    consumer_client.update_consumer({:hypervisorId => "123abC"})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['hypervisorId']['hypervisorId'].should == "123abc"
+  end
+
   it 'should not allow a consumer to update their hypervisorId to one in use by owner' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])

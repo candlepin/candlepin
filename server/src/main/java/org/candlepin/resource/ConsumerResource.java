@@ -1403,7 +1403,7 @@ public class ConsumerResource {
             }
             else {
                 Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
-                if (isUsedByOwner(incomingId, owner)) {
+                if (hypervisorChanged(existing, incoming) && isAlreadyInUse(incomingId, owner)) {
                     throw new BadRequestException(i18n.tr(
                         "Problem updating unit {0}. Hypervisor id: {1} is already used.",
                         incoming, incomingId.getHypervisorId()));
@@ -1430,11 +1430,43 @@ public class ConsumerResource {
         return false;
     }
 
-    private boolean isUsedByOwner(HypervisorIdDTO hypervisor, Owner owner) {
-        if (hypervisor == null) {
+    /**
+     * Verifies whether the hypervisor id of a new consumer is different from current consumer.
+     *
+     * @param current existing consumer
+     * @param incoming a new consumer
+     * @return true if hypervisor id of a new consumer is different from current consumer
+     */
+    private boolean hypervisorChanged(final Consumer current, final ConsumerDTO incoming) {
+        if (current == null || incoming == null) {
             return false;
         }
-        return consumerCurator.getHypervisor(hypervisor.getHypervisorId(), owner) != null;
+        final HypervisorId currentHypervisor = current.getHypervisorId();
+        final HypervisorIdDTO newHypervisor = incoming.getHypervisorId();
+        if (currentHypervisor == null && newHypervisor == null) {
+            return false;
+        }
+        else if (currentHypervisor == null || newHypervisor == null) {
+            return true;
+        }
+        final String currentHypervisorId = currentHypervisor.getHypervisorId();
+        final String newHypervisorId = newHypervisor.getHypervisorId();
+        if (currentHypervisorId == null && newHypervisorId == null) {
+            return false;
+        }
+        else if (currentHypervisorId == null || newHypervisorId == null) {
+            return true;
+        }
+        else {
+            return currentHypervisorId.equals(newHypervisorId);
+        }
+    }
+
+    private boolean isAlreadyInUse(HypervisorIdDTO hypervisorId, Owner owner) {
+        if (hypervisorId == null) {
+            return false;
+        }
+        return consumerCurator.getHypervisor(hypervisorId.getHypervisorId(), owner) != null;
     }
 
     /**
