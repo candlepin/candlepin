@@ -23,7 +23,6 @@ import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
 import org.candlepin.pinsetter.tasks.KingpinJob;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -36,12 +35,9 @@ import org.hibernate.criterion.Restrictions;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.inject.Singleton;
-import javax.persistence.TypedQuery;
 
 
 
@@ -133,39 +129,6 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
             .add(Restrictions.eq("principalName", principalName));
 
         return this.cpQueryFactory.<JobStatus>buildQuery(this.currentSession(), criteria);
-    }
-
-    /**
-     * This implementation allows us to avoid looping through all canceled jobs.
-     * Finds all jobs marked as CANCELED which have an ID in the input list
-     * so we can remove the scheduled job.
-     *
-     * @param jobIds
-     *  A collection of IDs representing the jobs to check
-     *
-     * @return
-     *  A set of JobStatus objects representing canceled jobs from the provided job ID collection
-     */
-    @SuppressWarnings("unchecked")
-    public Set<JobStatus> findCanceledJobs(Iterable<String> jobIds) {
-        Set<JobStatus> statuses = new HashSet<>();
-
-        if (jobIds != null && jobIds.iterator().hasNext()) {
-            String jpql = "SELECT js FROM JobStatus js WHERE js.state = :state AND js.id IN (:job_ids)";
-
-            TypedQuery<JobStatus> query = this.getEntityManager()
-                .createQuery(jpql, JobStatus.class)
-                .setParameter("state", JobState.CANCELED);
-
-            int blockSize = Math.min(this.getQueryParameterLimit() - 1, this.getInBlockSize());
-
-            for (List<String> block : Iterables.partition(jobIds, blockSize)) {
-                query.setParameter("job_ids", block);
-                statuses.addAll(query.getResultList());
-            }
-        }
-
-        return statuses;
     }
 
     @SuppressWarnings("unchecked")

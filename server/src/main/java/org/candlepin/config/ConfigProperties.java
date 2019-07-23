@@ -26,10 +26,7 @@ import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
-import org.candlepin.pinsetter.tasks.SweepBarJob;
-import org.candlepin.pinsetter.tasks.UnpauseJob;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -176,11 +173,7 @@ public class ConfigProperties {
     public static final String PINSETTER_MAX_RETRIES = "pinsetter.retries.max";
     public static final int PINSETTER_MAX_RETRIES_DEFAULT = 10;
 
-    public static final String[] DEFAULT_TASK_LIST = new String[] {
-        CancelJobJob.class.getName(),
-        SweepBarJob.class.getName(),
-        UnpauseJob.class.getName(),
-    };
+    public static final String[] DEFAULT_TASK_LIST = new String[] {};
 
     public static final String MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES =
         "pinsetter.org.candlepin.pinsetter.tasks.ManifestCleanerJob.max_age_in_minutes";

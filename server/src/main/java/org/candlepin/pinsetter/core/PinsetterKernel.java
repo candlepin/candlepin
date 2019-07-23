@@ -30,7 +30,6 @@ import org.candlepin.controller.ModeManager;
 import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.KingpinJob;
 import org.candlepin.util.PropertyUtil;
 import org.candlepin.util.Util;
@@ -42,7 +41,6 @@ import org.apache.commons.lang.StringUtils;
 import org.quartz.CronTrigger;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
-import org.quartz.JobExecutionException;
 import org.quartz.JobKey;
 import org.quartz.JobListener;
 import org.quartz.Scheduler;
@@ -173,7 +171,6 @@ public class PinsetterKernel implements ModeChangeListener {
 
     /**
      * Configures the system.
-     * @param conf Configuration object containing config values.
      */
     private void configure() {
         log.debug("Scheduling tasks");
@@ -189,11 +186,6 @@ public class PinsetterKernel implements ModeChangeListener {
 
                 // get other tasks
                 addToList(jobFQNames, ConfigProperties.TASKS);
-            }
-            else if (!isClustered()) {
-                // Since pinsetter is disabled, we only want to allow
-                // CancelJob and async jobs on this node.
-                jobFQNames.add(CancelJobJob.class.getName());
             }
 
             // Bail if there is nothing to configure
@@ -535,15 +527,6 @@ public class PinsetterKernel implements ModeChangeListener {
     }
 
     public void unpauseScheduler() throws PinsetterException {
-        log.debug("looking for canceled jobs since scheduler was paused");
-        CancelJobJob cjj = new CancelJobJob(jobCurator, this);
-        try {
-            // Not sure why we don't want to use a UnitOfWork here
-            cjj.toExecute(null);
-        }
-        catch (JobExecutionException e1) {
-            throw new PinsetterException("Could not clear canceled jobs before starting");
-        }
         log.debug("restarting scheduler");
         try {
             scheduler.start();
