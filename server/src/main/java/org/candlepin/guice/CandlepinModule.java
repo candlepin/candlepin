@@ -99,8 +99,6 @@ import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.PinsetterTriggerListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
-import org.candlepin.pinsetter.tasks.SweepBarJob;
-import org.candlepin.pinsetter.tasks.UnpauseJob;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
@@ -457,8 +455,6 @@ public class CandlepinModule extends AbstractModule {
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
         bind(org.candlepin.pinsetter.tasks.JobCleaner.class);
-        bind(UnpauseJob.class);
-        bind(SweepBarJob.class);
     }
 
     private void configureExporter() {

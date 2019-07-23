@@ -30,9 +30,9 @@ import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.controller.ModeManager;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
+import org.candlepin.pinsetter.tasks.OrphanCleanupJob;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -55,7 +55,6 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -159,11 +158,8 @@ public class PinsetterKernelTest {
                 sfactory, triggerListener, modeManager);
         pk.startup();
         verify(sched).start();
-        ArgumentCaptor<JobStatus> arg = ArgumentCaptor.forClass(JobStatus.class);
-        verify(jcurator, atMost(1)).create(arg.capture());
-        JobStatus stat = arg.getValue();
-        assertTrue(stat.getId().startsWith(Util.getClassName(CancelJobJob.class)));
-        verify(sched, atMost(1)).scheduleJob(any(JobDetail.class), any(Trigger.class));
+        verify(jcurator, never()).create(any());
+        verify(sched, never()).scheduleJob(any(), any());
     }
 
     @Test
@@ -235,12 +231,12 @@ public class PinsetterKernelTest {
     public void retriggerTest() throws Exception {
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
             sfactory, triggerListener, modeManager);
-        String job = "CancelJobJob";
+        String job = "OrphanCleanupJob";
         TriggerKey key = new TriggerKey(job);
         Set<TriggerKey> keys = new HashSet<>();
         keys.add(key);
         when(sched.getTriggerKeys(any(GroupMatcher.class))).thenReturn(keys);
-        pk.retriggerCronJob(job, CancelJobJob.class);
+        pk.retriggerCronJob(job, OrphanCleanupJob.class);
         ArgumentCaptor<Trigger> triggerCaptor = ArgumentCaptor.forClass(Trigger.class);
         verify(sched).rescheduleJob(eq(key), triggerCaptor.capture());
         Trigger capturedTrigger = triggerCaptor.getValue();
@@ -453,27 +449,9 @@ public class PinsetterKernelTest {
 
     @Test
     public void unpauseScheduler() throws Exception {
-        JobStatus mockStatus1 = mock(JobStatus.class);
-        JobStatus mockStatus2 = mock(JobStatus.class);
-
-        Set<JobStatus> statuses = Util.asSet(mockStatus1, mockStatus2);
-
-        when(mockStatus1.getId()).thenReturn("group1");
-        when(mockStatus1.getGroup()).thenReturn("group1");
-        when(mockStatus2.getId()).thenReturn("group2");
-        when(mockStatus2.getGroup()).thenReturn("group2");
-        when(jcurator.findCanceledJobs(any(Collection.class))).thenReturn(statuses);
-
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator,
             sfactory, triggerListener, modeManager);
-
-        Set<JobKey> mockJK = new HashSet<>();
-        JobKey jk = new JobKey("test key");
-        mockJK.add(jk);
-        when(pk.getSingleJobKeys()).thenReturn(mockJK);
-
         pk.unpauseScheduler();
-        verify(jcurator).findCanceledJobs(any(Set.class));
         verify(sched).start();
     }
 
