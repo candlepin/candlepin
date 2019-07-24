@@ -24,4 +24,8 @@ public class NotFoundException extends CandlepinException {
     public NotFoundException(String message) {
         super(Status.NOT_FOUND, message);
     }
+
+    public NotFoundException(String message, Throwable e) {
+        super(Status.NOT_FOUND, message, e);
+    }
 }

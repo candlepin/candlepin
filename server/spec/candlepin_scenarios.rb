@@ -54,7 +54,7 @@ module CandlepinMethods
   end
 
   def wait_for_async_job(job_id, timeout_seconds)
-    states = ['COMPLETED', 'FAILED', 'CANCELED', 'ABORTED']
+    states = ['COMPLETED', 'FAILED', 'CANCELED', 'ABORTED', 'FINISHED']
     wait_interval = 2 # seconds
     total_taken = 0
     while total_taken < timeout_seconds

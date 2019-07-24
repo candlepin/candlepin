@@ -22,8 +22,6 @@ import org.candlepin.model.Owner;
 
 import org.hibernate.criterion.Criterion;
 
-
-
 /**
  * Determines users and consumers specific access to AsyncJobStatus.
  *
@@ -32,8 +30,8 @@ import org.hibernate.criterion.Criterion;
  */
 public class AsyncJobStatusPermission extends TypedPermission<AsyncJobStatus> {
 
-    private String principalName;
-    private String principalType;
+    private final String principalName;
+    private final String principalType;
 
     public AsyncJobStatusPermission(PrincipalData principalData) {
         this.principalName = principalData.getName();

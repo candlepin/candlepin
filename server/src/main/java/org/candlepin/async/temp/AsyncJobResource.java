@@ -14,22 +14,28 @@
  */
 package org.candlepin.async.temp;
 
-import org.candlepin.auth.Verify;
-import com.google.inject.Inject;
-import io.swagger.annotations.ApiOperation;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
+import org.candlepin.auth.Verify;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.OwnerServiceAdapter;
+
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 import java.util.Map;
 
@@ -149,9 +155,13 @@ public class AsyncJobResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{job_id}")
     @ApiOperation(notes = "Fetches the job info for a given job ID", value = "")
+    @ApiResponses({
+        @ApiResponse(code = 404, message = "") })
     public AsyncJobStatusDTO get(@PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
-        AsyncJobStatus status = this.jobCurator.get(jobId);
-
+        final AsyncJobStatus status = this.jobManager.getJob(jobId);
+        if (status == null) {
+            throw new NotFoundException("Could not find job with id: " + jobId);
+        }
         return this.translator.translate(status, AsyncJobStatusDTO.class);
     }
 
