@@ -14,24 +14,27 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ManifestManager;
-import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,23 +42,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-
-
 /**
  * Test suite for the ManifestCleanerJob class
  */
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-public class ManifestCleanerJobTest extends DatabaseTestFixture {
+public class ManifestCleanerJobTest {
 
     private Path manifestDir;
     private ManifestManager manifestManager;
+    private Configuration config;
 
     @BeforeEach
     public void setUp() throws IOException {
         this.manifestDir = Files.createTempDirectory("test_sync-");
         this.manifestManager = mock(ManifestManager.class);
 
+        this.config = new CandlepinCommonTestConfig();
         this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, manifestDir.toString());
     }
 

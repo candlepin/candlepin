@@ -31,7 +31,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.pinsetter.tasks.BaseJobTest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +40,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-public class EntitleByProductsJobTest extends BaseJobTest {
+public class EntitleByProductsJobTest {
 
     private Consumer consumer;
     private Owner owner;
@@ -50,7 +49,6 @@ public class EntitleByProductsJobTest extends BaseJobTest {
 
     @BeforeEach
     public void init() {
-        super.init();
         consumerUuid = "49bd6a8f-e9f8-40cc-b8d7-86cafd687a0e";
 
         final ConsumerType ctype = new ConsumerType("system");
@@ -171,7 +169,6 @@ public class EntitleByProductsJobTest extends BaseJobTest {
         when(entitler.bindByProducts(eq(pids), eq(consumerUuid), eq(entitleDate), eq(fromPools)))
             .thenReturn(ents);
         final EntitleByProductsJob job = new EntitleByProductsJob(entitler, null);
-        injector.injectMembers(job);
 
         job.execute(ctx);
 

@@ -87,8 +87,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-
-
 public class JobManagerTest {
 
     private static class StateCollectingStatus extends AsyncJobStatus {
@@ -263,7 +261,7 @@ public class JobManagerTest {
         assertThat(throwable.getMessage(), StringContains.containsString("Unable to find"));
     }
 
-    public static Object[] getTerminalJobStates() {
+    private static Object[] getTerminalJobStates() {
         List<JobState> states = new ArrayList<>();
 
         for (JobState state : JobState.values()) {
@@ -292,7 +290,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void shouldFailWhenJobCouldNotBeConstructed() throws JobException {
+    public void shouldFailWhenJobCouldNotBeConstructed() {
         AsyncJobStatus status = spy(new AsyncJobStatus()
             .setJobKey(JOB_KEY));
 
@@ -420,7 +418,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void failedJobShouldEndAsFailed() throws JobInitializationException {
+    public void failedJobShouldEndAsFailed() {
         final StateCollectingStatus status = new StateCollectingStatus();
         status.setJobKey(JOB_KEY);
 
@@ -707,9 +705,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testFailedStateUpdateResultsInStateManagementExceptionDuringRetryExecution()
-        throws JobException {
-
+    public void testFailedStateUpdateResultsInStateManagementExceptionDuringRetryExecution() {
         AsyncJobStatus status = spy(new AsyncJobStatus()
             .setJobKey(JOB_KEY)
             .setState(JobState.QUEUED)
@@ -757,7 +753,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testJobExecutionFailsWithNoJobKey() throws JobException {
+    public void testJobExecutionFailsWithNoJobKey() {
         AsyncJobStatus status = spy(new AsyncJobStatus()
             .setState(JobState.QUEUED)
             .setMaxAttempts(3));

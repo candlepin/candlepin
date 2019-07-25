@@ -14,32 +14,26 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.util.CrlFileUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import java.io.File;
-
-
 
 /**
  * Test suite for the CRLUpdateJob class
  */
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class CRLUpdateJobTest {
 
     private Configuration config;
@@ -56,7 +50,7 @@ public class CRLUpdateJobTest {
     }
 
     @Test
-    public void executeFailsOnEmptyFilePath() throws JobExecutionException {
+    public void executeFailsOnEmptyFilePath() {
         this.config.setProperty(ConfigProperties.CRL_FILE_PATH, "");
 
         JobExecutionContext context = mock(JobExecutionContext.class);
@@ -65,7 +59,7 @@ public class CRLUpdateJobTest {
     }
 
     @Test
-    public void executeFailsOnAbsentFilePath() throws JobExecutionException {
+    public void executeFailsOnAbsentFilePath() {
         this.config.clearProperty(ConfigProperties.CRL_FILE_PATH);
 
         JobExecutionContext context = mock(JobExecutionContext.class);

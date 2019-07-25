@@ -16,10 +16,10 @@ package org.candlepin.async.tasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
 
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
@@ -34,16 +34,16 @@ import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
 
-@RunWith(MockitoJUnitRunner.class)
-public class RefreshPoolsJobTest extends BaseJobTest {
+@ExtendWith(MockitoExtension.class)
+public class RefreshPoolsJobTest {
 
     private RefreshPoolsJob job;
     @Mock protected OwnerCurator ownerCurator;
@@ -53,12 +53,9 @@ public class RefreshPoolsJobTest extends BaseJobTest {
     @Mock protected Refresher refresher;
     @Mock private JobExecutionContext ctx;
 
-    @Before
+    @BeforeEach
     public void setupTest() {
-        super.inject();
-
         job = new RefreshPoolsJob(ownerCurator, poolManager, subAdapter, ownerAdapter);
-        injector.injectMembers(job);
     }
 
     private Owner createTestOwner(String key, String logLevel) {
@@ -107,25 +104,14 @@ public class RefreshPoolsJobTest extends BaseJobTest {
         config.validate();
     }
 
-
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
     @Test
     public void testValidateNoOwner() {
         JobConfig config = RefreshPoolsJob.createJobConfig()
             .setLazyRegeneration(true);
 
-        try {
-            config.validate();
-            fail("an expected exception was not thrown");
-        }
-        catch (JobConfigValidationException e) {
-            // Pass!
-        }
+        assertThrows(JobConfigValidationException.class, config::validate);
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
     @Test
     public void testValidateNoLazyRegeneration() {
         Owner owner = this.createTestOwner("owner_key", "log_level");
@@ -133,13 +119,7 @@ public class RefreshPoolsJobTest extends BaseJobTest {
         JobConfig config = RefreshPoolsJob.createJobConfig()
             .setOwner(owner);
 
-        try {
-            config.validate();
-            fail("an expected exception was not thrown");
-        }
-        catch (JobConfigValidationException e) {
-            // Pass!
-        }
+        assertThrows(JobConfigValidationException.class, config::validate);
     }
 
     @Test
@@ -160,10 +140,8 @@ public class RefreshPoolsJobTest extends BaseJobTest {
         assertEquals("Pools refreshed for owner my-test-owner-displayname", actualResult);
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
     @Test
-    public void ensureJobFailure() throws Exception {
+    public void ensureJobFailure() {
         Owner owner = createTestOwner("my-test-owner", "test-log-level");
 
         JobConfig jobConfig = RefreshPoolsJob.createJobConfig()
@@ -176,21 +154,12 @@ public class RefreshPoolsJobTest extends BaseJobTest {
         doReturn(refresher).when(refresher).add(eq(owner));
         doThrow(new RuntimeException("something went wrong with refresh")).when(refresher).run();
 
-        try {
-            job.execute(ctx);
-            fail("Expected exception to be thrown");
-        }
-        catch (Exception e) {
-            // Expected this failure
-            assertEquals("something went wrong with refresh", e.getMessage());
-            assertTrue(e instanceof JobExecutionException);
-        }
+        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(ctx));
+        assertEquals("something went wrong with refresh", e.getMessage());
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
     @Test
-    public void ensureJobExceptionThrownIfOwnerNotFound() throws Exception {
+    public void ensureJobExceptionThrownIfOwnerNotFound() {
         Owner owner = createTestOwner("my-test-owner", "test-log-level");
 
         JobConfig jobConfig = RefreshPoolsJob.createJobConfig()
@@ -200,14 +169,7 @@ public class RefreshPoolsJobTest extends BaseJobTest {
         doReturn(jobConfig.getJobArguments()).when(ctx).getJobArguments();
         doReturn(null).when(ownerCurator).getByKey(eq("my-test-owner"));
 
-        try {
-            job.execute(ctx);
-            fail("Expected exception to be thrown");
-        }
-        catch (Exception e) {
-            // Expected this failure
-            assertEquals("Nothing to do. Owner no longer exists", e.getMessage());
-            assertTrue(e instanceof JobExecutionException);
-        }
+        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(ctx));
+        assertEquals("Nothing to do. Owner no longer exists", e.getMessage());
     }
 }
