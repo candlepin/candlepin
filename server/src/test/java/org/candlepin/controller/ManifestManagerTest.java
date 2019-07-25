@@ -300,7 +300,7 @@ public class ManifestManagerTest {
         JobArguments jobArgs = job.getJobArguments();
         assertEquals(ImportJob.JOB_KEY, job.getJobKey());
         assertEquals(ImportJob.JOB_NAME, job.getJobName());
-        assertEquals(owner.getKey(), job.getJobMetadata().get("org"));
+        assertEquals(owner, job.getContextOwner());
         assertEquals(manifest.getId(), jobArgs.getAsString("stored_manifest_file_id"));
         assertEquals(filename, jobArgs.getAsString("uploaded_file_name"));
 

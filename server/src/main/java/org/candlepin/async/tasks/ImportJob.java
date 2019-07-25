@@ -54,7 +54,7 @@ public class ImportJob implements AsyncJob {
     /**
      * Job configuration object for the import job
      */
-    public static class ImportJobConfig extends JobConfig {
+    public static class ImportJobConfig extends JobConfig<ImportJobConfig> {
         public ImportJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
@@ -76,10 +76,9 @@ public class ImportJob implements AsyncJob {
                 throw new IllegalArgumentException("owner is null");
             }
 
-            // The owner is both part of metadata & arguments in this job.
-            this.setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
-                .setJobArgument(OWNER_KEY, owner.getKey())
-                .setLogLevel(owner.getLogLevel());
+            // The owner is both part of context & arguments in this job.
+            this.setContextOwner(owner)
+                .setJobArgument(OWNER_KEY, owner.getKey());
 
             return this;
         }

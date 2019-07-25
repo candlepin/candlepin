@@ -32,8 +32,11 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -168,6 +171,13 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     private String origin;
     private String executor;
     private String principal;
+
+    @Column(name = "owner_id")
+    private String ownerId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", insertable = false, updatable = false)
+    private Owner owner;
 
     @Column(name = "log_level")
     private String logLevel;
@@ -436,6 +446,69 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     public AsyncJobStatus setPrincipalName(String principal) {
         this.principal = (principal != null && !principal.isEmpty()) ? principal : null;
         return this;
+    }
+
+    /**
+     * Sets the owner for this job's context. The context owner will be used for the following
+     * purposes if set:
+     *
+     *  - owner-specific job queries/lookups
+     *  - setting the log level if an explicit log level is not set and one is present at the org
+     *    level
+     *  - setting the owner metadata if present; overriding any value set for the owner metadata
+     *    key if applicable
+     *
+     * Note that the context owner is not available via job arguments unless it is also explicitly
+     * set as an argument.
+     *
+     * @param owner
+     *  the owner to set for this job's context
+     *
+     * @throws IllegalArgumentException
+     *  if owner is not null and does not have an ID
+     *
+     * @return
+     *  this job status instance
+     */
+    public AsyncJobStatus setContextOwner(Owner owner) {
+        if (owner != null && owner.getId() == null) {
+            throw new IllegalArgumentException("owner is null and lacks an ID");
+        }
+
+        if (owner != null) {
+            this.owner = owner;
+            this.ownerId = owner.getId();
+        }
+        else {
+            this.owner = null;
+            this.ownerId = null;
+        }
+
+        return this;
+    }
+
+    /**
+     * Fetches the ID for this job's context owner. If this job is not run in the context of an
+     * owner, this method returns null.
+     *
+     * @return
+     *  the ID of this job's context owner, or null if this job is not run in the context of a
+     *  specific owner
+     */
+    public String getContextOwnerId() {
+        return this.ownerId;
+    }
+
+    /**
+     * Fetches the context owner for this job. If this job is not run in the context of an owner,
+     * this method returns null. This method may perform a lazy lookup of the owner, and should
+     * generally be avoided in situations where the owner ID is sufficient.
+     *
+     * @return
+     *  this job's context owner, or null if this job is not run in the context of a specific owner
+     */
+    public Owner getContextOwner() {
+        return this.owner;
     }
 
     /**

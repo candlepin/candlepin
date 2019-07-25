@@ -51,7 +51,7 @@ import java.util.Locale;
 
 /**
  * JobResourceTest
- */
+ *
 public class JobResourceTest {
 
     private JobResource jobResource;
@@ -238,7 +238,7 @@ public class JobResourceTest {
      * @param p param3
      * @return true if a BadRequestException was thrown, otherwise
      * returns false.
-     */
+     *
     private boolean expectException(String o, String c, String p) {
         try {
             jobResource.getStatuses(o, c, p);
@@ -274,3 +274,4 @@ public class JobResourceTest {
         assertTrue(expectException(null, "", "pname"));
     }
 }
+    */

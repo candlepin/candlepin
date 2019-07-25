@@ -30,6 +30,7 @@ import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.model.Owner;
 import org.candlepin.util.Util;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -88,6 +89,10 @@ import javax.transaction.Status;
 @Singleton
 public class JobManager implements ModeChangeListener {
     private static final Logger log = LoggerFactory.getLogger(JobManager.class);
+
+    private static final String MDC_REQUEST_TYPE_KEY = "requestType";
+    private static final String MDC_REQUEST_UUID_KEY = "requestUuid";
+    private static final String MDC_LOG_LEVEL_KEY = "logLevel";
 
     private static final String QRTZ_GROUP_CONFIG = "cp_async_config";
     private static final String QRTZ_GROUP_MANUAL = "cp_async_manual";
@@ -376,7 +381,7 @@ public class JobManager implements ModeChangeListener {
      *  if this JobManager has already been initialized, or is otherwise in a state where
      *  initialization cannot be performed
      */
-    public synchronized void initialize() {
+    public synchronized void initialize() throws StateManagementException {
         // TODO: We're probably going to want to add some bits to avoid queuing/scheduling new jobs
         // during shutdown. We probably also want to have a means of closing the message listeners
         // backing all of this as well, so we don't try to execute jobs before we're initialized or
@@ -402,7 +407,9 @@ public class JobManager implements ModeChangeListener {
             this.state = ManagerState.INITIALIZED;
         }
         catch (Exception e) {
-            log.error("Unexpected exception occurred during initialization", e);
+            String errmsg = "Unexpected exception occurred during initialization";
+
+            log.error(errmsg, e);
 
             try {
                 if (this.scheduler != null) {
@@ -414,8 +421,7 @@ public class JobManager implements ModeChangeListener {
                 log.error("Unable to shutdown quartz scheduler while processing other exceptions", se);
             }
 
-            // TODO: Change this to something a bit nicer. Maybe a JobException?
-            throw new RuntimeException(e);
+            throw new StateManagementException(this.state, ManagerState.INITIALIZED, errmsg, e);
         }
     }
 
@@ -427,7 +433,7 @@ public class JobManager implements ModeChangeListener {
      *  if this JobManager has not been initialized, has already shutdown or Candlepin is
      *  in suspend mode
      */
-    public synchronized void start() {
+    public synchronized void start() throws StateManagementException {
         log.trace("Start request received");
 
         this.validateStateTransition(ManagerState.RUNNING);
@@ -447,7 +453,10 @@ public class JobManager implements ModeChangeListener {
             this.state = ManagerState.RUNNING;
         }
         catch (Exception e) {
-            log.error("Unexpected exception occurred while starting job manager", e);
+            String errmsg = "Unexpected exception occurred while starting job manager";
+
+            log.error(errmsg, e);
+            throw new StateManagementException(this.state, ManagerState.SHUTDOWN, errmsg, e);
         }
     }
 
@@ -457,7 +466,7 @@ public class JobManager implements ModeChangeListener {
      * @throws IllegalStateException
      *  if this JobManager has not been initialized or has already shutdown
      */
-    public void resume() {
+    public void resume() throws StateManagementException {
         this.start();
     }
 
@@ -474,7 +483,7 @@ public class JobManager implements ModeChangeListener {
      * @throws IllegalStateException
      *  if this JobManager has not been initialized or has already shutdown
      */
-    public synchronized void pause() {
+    public synchronized void pause() throws StateManagementException {
         log.trace("Pause request received");
 
         this.validateStateTransition(ManagerState.PAUSED);
@@ -488,7 +497,10 @@ public class JobManager implements ModeChangeListener {
             this.state = ManagerState.PAUSED;
         }
         catch (Exception e) {
-            log.error("Unexpected exception occurred while pausing job manager", e);
+            String errmsg = "Unexpected exception occurred while pausing job manager";
+
+            log.error(errmsg, e);
+            throw new StateManagementException(this.state, ManagerState.PAUSED, errmsg, e);
         }
     }
 
@@ -501,7 +513,7 @@ public class JobManager implements ModeChangeListener {
      *  if this JobManager has already been shutdown, or is otherwise in a state where a shut
      *  down cannot be performed
      */
-    public synchronized void shutdown() {
+    public synchronized void shutdown() throws StateManagementException {
         // TODO: actually do something with this
 
         this.validateStateTransition(ManagerState.SHUTDOWN);
@@ -517,8 +529,21 @@ public class JobManager implements ModeChangeListener {
             this.state = ManagerState.SHUTDOWN;
         }
         catch (Exception e) {
-            log.error("Unexpected exception occurred while shutting down job manager", e);
+            String errmsg = "Unexpected exception occurred while shutting down job manager";
+
+            log.error(errmsg, e);
+            throw new StateManagementException(this.state, ManagerState.SHUTDOWN, errmsg, e);
         }
+    }
+
+    /**
+     * Fetches the current state of this job manager.
+     *
+     * @return
+     *  the current state of this job manager
+     */
+    public synchronized ManagerState getManagerState() {
+        return this.state;
     }
 
     /**
@@ -717,6 +742,7 @@ public class JobManager implements ModeChangeListener {
         job.setJobKey(builder.getJobKey());
         job.setName(builder.getJobName() != null ? builder.getJobName() : builder.getJobKey());
         job.setGroup(builder.getJobGroup());
+        job.setContextOwner(builder.getContextOwner());
 
         // Add environment-specific metadata...
         job.setOrigin(Util.getHostname());
@@ -941,7 +967,7 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  a JobStatus instance representing the job's status
      */
-    public synchronized AsyncJobStatus executeJob(final JobMessage message) throws JobException {
+    public synchronized AsyncJobStatus executeJob(JobMessage message) throws JobException {
         // TODO: Check manager state
 
         AsyncJobStatus status = this.fetchJobStatus(message);
@@ -964,8 +990,7 @@ public class JobManager implements ModeChangeListener {
 
         try {
             uow.begin();
-            this.setupLogging(status);
-            this.setupPrincipal(status);
+            this.setupJobRuntimeEnvironment(status);
 
             final AsyncJob job = injector.getInstance(jobClass);
 
@@ -1024,34 +1049,55 @@ public class JobManager implements ModeChangeListener {
     }
 
     /**
-     * Configures the logging environment and injects metadata for the specified job
+     *
+     *
+     *
+     */
+    public synchronized AsyncJobStatus cancelJob() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+
+
+    /**
+     * Configures the job's runtime environment, performing the following operations:
+     *
+     *  - Setting up the logging level
+     *  - Injecting the job's metadata to the logging backend
+     *  - Setting up the principal to use during job runtime
      *
      * @param status
-     *  the job status to use to configure the logging environment
+     *  the job status to use to configure the runtime environment
      */
-    private void setupLogging(final AsyncJobStatus status) {
-        MDC.put("requestType", "job");
-        MDC.put("requestUuid", status.getId());
+    private void setupJobRuntimeEnvironment(AsyncJobStatus status) {
+        MDC.put(MDC_REQUEST_TYPE_KEY, "job");
+        MDC.put(MDC_REQUEST_UUID_KEY, status.getId());
 
         // Inject all of our metadata...
         for (Map.Entry<String, String> entry : status.getMetadata().entrySet()) {
             MDC.put(entry.getKey(), entry.getValue());
         }
 
-        // Update the logging level if we've one set...
-        String logLevel = status.getLogLevel();
-        if (logLevel != null && !logLevel.isEmpty()) {
-            MDC.put("logLevel", logLevel);
+        // If we have an owner, override whatever metadata we've set with the actual owner's key.
+        Owner contextOwner = status.getContextOwner();
+        if (contextOwner != null) {
+            MDC.put(LoggingFilter.OWNER_KEY, contextOwner.getKey());
         }
-    }
 
-    /**
-     * Configures and injects the principal to be used during the execution of the specified job.
-     *
-     * @param status
-     *  the job status to use to configure the principal
-     */
-    private void setupPrincipal(AsyncJobStatus status) {
+        // Set our logging level according to the following:
+        // - If the job has an explicit log level set, use that
+        // - If the job is running in the context of an owner and the owner has a log level set, use that
+        String logLevel = status.getLogLevel();
+
+        if ((logLevel == null || logLevel.isEmpty()) && contextOwner != null) {
+            logLevel = contextOwner.getLogLevel();
+        }
+
+        if (logLevel != null && !logLevel.isEmpty()) {
+            MDC.put(MDC_LOG_LEVEL_KEY, logLevel);
+        }
+
+        // Setup and inject the principal
         String name = status.getPrincipalName();
         Principal principal = name != null ? new JobPrincipal(name) : new SystemPrincipal();
 
