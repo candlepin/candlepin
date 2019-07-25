@@ -50,7 +50,7 @@ public class RefreshPoolsJob implements AsyncJob {
     /**
      * Job configuration object for the refresh pools job
      */
-    public static class RefreshPoolsJobConfig extends JobConfig {
+    public static class RefreshPoolsJobConfig extends JobConfig<RefreshPoolsJobConfig> {
         public RefreshPoolsJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
@@ -72,10 +72,9 @@ public class RefreshPoolsJob implements AsyncJob {
                 throw new IllegalArgumentException("owner is null");
             }
 
-            // The owner is both part of metadata & arguments in this job.
-            this.setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
-                .setJobArgument(OWNER_KEY, owner.getKey())
-                .setLogLevel(owner.getLogLevel());
+            // The owner is both part of context & arguments in this job.
+            this.setContextOwner(owner)
+                .setJobArgument(OWNER_KEY, owner.getKey());
 
             return this;
         }

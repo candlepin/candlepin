@@ -68,31 +68,12 @@ public class RegenEnvEntitlementCertsJob implements AsyncJob {
     /**
      * Job configuration object for the regenerate environment entitlements job
      */
-    public static class RegenEnvEntitlementCertsJobConfig extends JobConfig {
+    public static class RegenEnvEntitlementCertsJobConfig extends
+        JobConfig<RegenEnvEntitlementCertsJobConfig> {
+
         private RegenEnvEntitlementCertsJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME);
-        }
-
-        /**
-         * Sets the owner for this regenerate environment entitlements job.
-         * The owner is not required, but provides the org context in which the job will be executed.
-         *
-         * @param owner
-         *  the owner to set for this job
-         *
-         * @return
-         *  a reference to this job config
-         */
-        public RegenEnvEntitlementCertsJobConfig setOwner(Owner owner) {
-            if (owner == null) {
-                throw new IllegalArgumentException("owner is null");
-            }
-
-            this.setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
-                .setLogLevel(owner.getLogLevel());
-
-            return this;
         }
 
         /**

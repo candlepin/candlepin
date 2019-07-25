@@ -58,7 +58,7 @@ public class ExportJob implements AsyncJob {
     /**
      * Job configuration object for the export job
      */
-    public static class ExportJobConfig extends JobConfig {
+    public static class ExportJobConfig extends JobConfig<ExportJobConfig> {
         public ExportJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
@@ -81,27 +81,6 @@ public class ExportJob implements AsyncJob {
             }
 
             this.setJobArgument(CONSUMER_KEY, consumer.getUuid());
-            return this;
-        }
-
-        /**
-         * Sets the owner for this export job. The owner is not required, but provides the org
-         * context in which the job will be executed.
-         *
-         * @param owner
-         *  the owner to set for this job
-         *
-         * @return
-         *  a reference to this job config
-         */
-        public ExportJobConfig setOwner(Owner owner) {
-            if (owner == null) {
-                throw new IllegalArgumentException("owner is null");
-            }
-
-            this.setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
-                .setLogLevel(owner.getLogLevel());
-
             return this;
         }
 

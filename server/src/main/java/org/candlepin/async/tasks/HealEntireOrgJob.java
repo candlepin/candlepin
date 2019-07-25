@@ -134,7 +134,7 @@ public class HealEntireOrgJob implements AsyncJob {
     /**
      * Job configuration object for the heal entire org job
      */
-    public static class HealEntireOrgJobConfig extends JobConfig {
+    public static class HealEntireOrgJobConfig extends JobConfig<HealEntireOrgJobConfig> {
 
         public HealEntireOrgJobConfig() {
             this.setJobKey(JOB_KEY).setJobName(JOB_NAME)
@@ -145,8 +145,10 @@ public class HealEntireOrgJob implements AsyncJob {
             if (owner == null) {
                 throw new IllegalArgumentException("Owner is null");
             }
-            this.setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
-                .setJobArgument(OWNER_KEY, owner.getKey()).setLogLevel(owner.getLogLevel());
+
+            this.setContextOwner(owner)
+                .setJobArgument(OWNER_KEY, owner.getKey());
+
             return this;
         }
 
@@ -158,6 +160,7 @@ public class HealEntireOrgJob implements AsyncJob {
         @Override
         public void validate() throws JobConfigValidationException {
             super.validate();
+
             try {
                 JobArguments arguments = this.getJobArguments();
                 String ownerKey = arguments.getAsString(OWNER_KEY);
@@ -165,6 +168,7 @@ public class HealEntireOrgJob implements AsyncJob {
                     String errmsg = "owner has not been set, or the provided owner lacks a key";
                     throw new JobConfigValidationException(errmsg);
                 }
+
                 Date entitleDate = arguments.getAs(ENTITLE_DATE_KEY, Date.class);
                 if (entitleDate == null) {
                     String errmsg = "entitle date has not been set";

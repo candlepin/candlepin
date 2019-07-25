@@ -15,19 +15,18 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Verify;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.StateManagementException;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.JobStatusDTO;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.SchedulerStatusDTO;
 import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.JobCurator;
-import org.candlepin.pinsetter.core.PinsetterException;
-import org.candlepin.pinsetter.core.PinsetterKernel;
-import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -38,7 +37,9 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -63,241 +64,163 @@ import io.swagger.annotations.Authorization;
 @Path("/jobs")
 @Api(value = "jobs", authorizations = { @Authorization("basic") })
 public class JobResource {
-
-    private JobCurator curator;
-    private PinsetterKernel pk;
-    private I18n i18n;
-    private ModelTranslator translator;
-
     private static Logger log = LoggerFactory.getLogger(JobResource.class);
 
+    private I18n i18n;
+    private ModelTranslator translator;
+    private JobManager jobManager;
+    private AsyncJobStatusCurator curator;
+
+
     @Inject
-    public JobResource(JobCurator curator, PinsetterKernel pk, I18n i18n, ModelTranslator translator) {
-        this.curator = curator;
-        this.pk = pk;
-        this.i18n = i18n;
-        this.translator = translator;
+    public JobResource(I18n i18n, ModelTranslator translator, JobManager jobManager) {
+        this.i18n = Objects.requireNonNull(i18n);
+        this.translator = Objects.requireNonNull(translator);
+        this.jobManager = Objects.requireNonNull(jobManager);
     }
 
 
-    /**
-     * Returns false if only one of the strings is not empty, otherwise
-     * returns true.
-     * @param owner param1
-     * @param uuid param2
-     * @param pname param3
-     * @return a boolean
-     */
-    private boolean ensureOnlyOne(String owner, String uuid, String pname) {
-        String[] params = new String[3];
-        params[0] = owner;
-        params[1] = uuid;
-        params[2] = pname;
 
-        boolean found = false;
-
-        for (String s : params) {
-            if (found && !StringUtils.isEmpty(s)) {
-                return false;
-            }
-            else if (!StringUtils.isEmpty(s)) {
-                found = true;
-            }
-        }
-
-        return true;
-    }
-
-    @ApiOperation(notes = "Retrieves a list of Job Status", value = "getStatuses",
-        response = JobStatus.class, responseContainer = "list")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
+    // Scheduler status
+    @ApiOperation(
+        value = "fetches the status of the job scheduler for this Candlepin node",
+        response = AsyncJobStatusDTO.class, responseContainer = "set")
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<JobStatusDTO> getStatuses(
-        @QueryParam("owner") String ownerKey,
-        @QueryParam("consumer") String uuid,
-        @QueryParam("principal") String principalName) {
-
-        boolean allParamsEmpty = StringUtils.isEmpty(ownerKey) &&
-            StringUtils.isEmpty(uuid) &&
-            StringUtils.isEmpty(principalName);
-
-        // make sure we only specified one
-        if (allParamsEmpty || !ensureOnlyOne(ownerKey, uuid, principalName)) {
-            throw new BadRequestException(i18n.tr("You must specify exactly " +
-                "one of owner key, unit UUID, or principal name."));
-        }
-
-        CandlepinQuery<JobStatus> statuses = null;
-        if (!StringUtils.isEmpty(ownerKey)) {
-            statuses = curator.findByOwnerKey(ownerKey);
-        }
-        else if (!StringUtils.isEmpty(uuid)) {
-            statuses = curator.findByConsumerUuid(uuid);
-        }
-        else if (!StringUtils.isEmpty(principalName)) {
-            statuses = curator.findByPrincipalName(principalName);
-        }
-
-        if (statuses == null) {
-            throw new NotFoundException("");
-        }
-
-        return this.translator.translateQuery(
-            statuses.transform(jobStatus -> jobStatus.cloakResultData(true)), JobStatusDTO.class);
-    }
-
-    @ApiOperation(notes = "Retrieves the Scheduler Status", value = "getSchedulerStatus")
-    @GET
-    @Path("scheduler")
+    @Path("/scheduler")
     @Produces(MediaType.APPLICATION_JSON)
     public SchedulerStatusDTO getSchedulerStatus() {
-        SchedulerStatusDTO ss = new SchedulerStatusDTO();
-        try {
-            ss.setRunning(pk.getSchedulerStatus());
-        }
-        catch (PinsetterException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return ss;
+        SchedulerStatusDTO output = new SchedulerStatusDTO();
+
+        JobManager.ManagerState state = this.jobManager.getManagerState();
+        output.setRunning(state == JobManager.ManagerState.RUNNING);
+
+        // TODO: Add other stuff here as necessary (jobs stats like running, queued, etc.)
+
+        return output;
     }
 
-    @ApiOperation(notes = "Updates the Scheduler Status", value = "setSchedulerStatus")
-    @ApiResponses({ @ApiResponse(code = 500, message = "") })
+    @ApiOperation(
+        value = "enables or disables the job scheduler for this Candlepin node",
+        response = AsyncJobStatusDTO.class, responseContainer = "set")
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
     @POST
-    @Path("scheduler")
+    @Path("/scheduler")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
     public SchedulerStatusDTO setSchedulerStatus(boolean running) {
+
         try {
+            // Impl note: This is kind of lazy and may run into problems in obscure circumstances where
+            // the state has been paused for a specific reason (suspend mode, for instance) or is otherwise
+            // in a state where we can't start/pause. In such cases, we'll trigger a StateManagementException
+            // or an IllegalStateException
+
             if (running) {
-                pk.unpauseScheduler();
+                this.jobManager.start();
             }
             else {
-                pk.pauseScheduler();
+                this.jobManager.pause();
             }
         }
-        catch (PinsetterException pe) {
-            throw new IseException(i18n.tr("Error setting scheduler status"));
+        catch (IllegalStateException | StateManagementException e) {
+            String errmsg = i18n.tr("Error setting scheduler status");
+            throw new IseException(errmsg, e);
         }
-        return getSchedulerStatus();
+
+        return this.getSchedulerStatus();
     }
 
-    @ApiOperation(notes = "Re-trigger cron jobs", value = "retrigger")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 500, message = "") })
-    @POST
-    @Path("retrigger/{task}")
-    @Consumes(MediaType.APPLICATION_JSON)
+
+    // Job status
+    @ApiOperation(
+        value = "fetches a set of job statuses matching the given filter options",
+        response = AsyncJobStatusDTO.class, responseContainer = "set")
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @GET
+    @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    @SuppressWarnings("unchecked")
-    public void retrigger(@PathParam("task") String task) {
+    public CandlepinQuery<AsyncJobStatusDTO> listJobStatuses(
+        @QueryParam("key") List<String> keys,
+        @QueryParam("state") List<String> states,
+        @QueryParam("owner") List<String> ownerKeys
+        ) {
 
-        /*
-         * at the time of implementing this API, the only jobs that
-         * are permissible are cron jobs.
-         */
-        Class cronJobClass = getCronJobClass(task);
-
-        try {
-            pk.retriggerCronJob(task, cronJobClass);
-        }
-        catch (PinsetterException e) {
-            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", task,
-                e.getMessage()));
-        }
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    @ApiOperation(notes = "Fires cron jobs asynchronously and immediately", value = "schedule")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 500, message = "") })
-    @POST
-    @Path("schedule/{task}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @SuppressWarnings("unchecked")
-    public JobStatusDTO schedule(@PathParam("task") String task) {
-
-        Class cronJobClass = getCronJobClass(task);
-        try {
-            /*
-             * at the time of implementing this API, the only jobs that
-             * are permissible are cron jobs.
-             */
-            return this.translator.translate(
-                pk.scheduleSingleJob(cronJobClass, Util.generateUUID()), JobStatusDTO.class);
-        }
-        catch (PinsetterException e) {
-            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", task,
-                e.getMessage()));
-        }
-    }
-
-    private Class getCronJobClass(String task) {
-        String className = "org.candlepin.pinsetter.tasks." + task;
-        try {
-            for (String permissibleJob : ConfigProperties.DEFAULT_TASK_LIST) {
-                if (className.equalsIgnoreCase(permissibleJob)) {
-                    return Class.forName(permissibleJob);
-                }
-            }
-        }
-        catch (ClassNotFoundException e) {
-            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", className,
-                e.getMessage()));
-        }
-        throw new BadRequestException(i18n.tr("Not a permissible job: {0}. Only {1} are permissible",
-            task, prettyPrintJobs(ConfigProperties.DEFAULT_TASK_LIST)));
-    }
-
-    private String prettyPrintJobs(String... jobs) {
-        List<String> jobNames = new ArrayList<>();
-        for (String job : jobs) {
-            jobNames.add(StringUtils.substringAfterLast(job, "."));
-        }
-        return StringUtils.join(jobNames, ", ");
-    }
-
-    @ApiOperation(notes = "Retrieves a single Job Status", value = "getStatus")
+    @ApiOperation(
+        value = "fetches the job status associated with the specified job ID",
+        response = AsyncJobStatusDTO.class)
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
     @GET
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JobStatusDTO getStatus(@PathParam("job_id") @Verify(JobStatus.class) String jobId,
-        @QueryParam("result_data") @DefaultValue("false") boolean resultData) {
-        JobStatus js = curator.get(jobId);
-        js.cloakResultData(!resultData);
-        return this.translator.translate(js, JobStatusDTO.class);
+    public AsyncJobStatusDTO getJobStatus(
+        @PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
+
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    @ApiOperation(notes = "Cancels a Job Status", value = "cancel")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
+    @ApiOperation(
+        value = "cancels the job associated with the specified job ID",
+        response = AsyncJobStatusDTO.class)
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
     @DELETE
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JobStatusDTO cancel(@PathParam("job_id") @Verify(JobStatus.class) String jobId) {
-        JobStatus j = curator.get(jobId);
-        if (j.getState().equals(JobState.CANCELED)) {
-            throw new BadRequestException(i18n.tr("job already canceled"));
-        }
-        if (j.isDone()) {
-            throw new BadRequestException(i18n.tr("cannot cancel a job that is in a finished state"));
-        }
-        return this.translator.translate(curator.cancel(jobId), JobStatusDTO.class);
+    public AsyncJobStatusDTO cancelJob(
+        @PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
+
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    @ApiOperation(notes = "Retrieves a Job Status and Removes if finished",
-        value = "getStatusAndDeleteIfFinished")
-    @POST
-    @Path("/{job_id}")
+    @ApiOperation(
+        value = "cancels the job associated with the specified job ID",
+        response = AsyncJobStatusDTO.class)
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @DELETE
+    @Path("/")
     @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    public JobStatusDTO getStatusAndDeleteIfFinished(
-        @PathParam("job_id") @Verify(JobStatus.class) String jobId) {
-        JobStatus status = curator.get(jobId);
+    public AsyncJobStatusDTO cleanupTerminalJobs(
+        @QueryParam("cutoff") Date cutoff,
+        @QueryParam("state") List<String> states) {
 
-        if (status != null && status.getState() == JobState.FINISHED) {
-            curator.delete(status);
-        }
-
-        return this.translator.translate(status, JobStatusDTO.class);
+        throw new UnsupportedOperationException("Not yet implemented");
     }
+
+
+    @ApiOperation(
+        value = "schedules a job using the specified key and job properties",
+        response = AsyncJobStatusDTO.class)
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @POST
+    @Path("schedule/{job_key}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public AsyncJobStatusDTO scheduleJob(
+        @PathParam("job_key") String jobKey) {
+
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
 }

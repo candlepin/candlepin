@@ -75,11 +75,7 @@ public class RefreshPoolsJobTest {
         JobConfig config = RefreshPoolsJob.createJobConfig()
             .setOwner(owner);
 
-        Map<String, String> metadata = config.getJobMetadata();
-
-        assertTrue(metadata.containsKey(RefreshPoolsJob.OWNER_KEY));
-        assertEquals(owner.getKey(), metadata.get(RefreshPoolsJob.OWNER_KEY));
-        assertEquals(owner.getLogLevel(), config.getLogLevel());
+        assertEquals(owner, config.getContextOwner());
     }
 
     @Test

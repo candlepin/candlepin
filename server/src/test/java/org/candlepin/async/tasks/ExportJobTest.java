@@ -86,9 +86,7 @@ public class ExportJobTest {
 
         Map<String, String> metadata = config.getJobMetadata();
 
-        assertTrue(metadata.containsKey(LoggingFilter.OWNER_KEY));
-        assertEquals(owner.getKey(), metadata.get(LoggingFilter.OWNER_KEY));
-        assertEquals(owner.getLogLevel(), config.getLogLevel());
+        assertEquals(owner, config.getContextOwner());
     }
 
     @Test

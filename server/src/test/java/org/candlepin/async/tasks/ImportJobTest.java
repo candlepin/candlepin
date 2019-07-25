@@ -81,12 +81,9 @@ public class ImportJobTest {
         JobConfig config = ImportJob.createJobConfig()
             .setOwner(owner);
 
-        Map<String, String> metadata = config.getJobMetadata();
         JobArguments args = config.getJobArguments();
 
-        assertTrue(metadata.containsKey(ImportJob.OWNER_KEY));
-        assertEquals(owner.getKey(), metadata.get(ImportJob.OWNER_KEY));
-        assertEquals(owner.getLogLevel(), config.getLogLevel());
+        assertEquals(owner, config.getContextOwner());
         assertEquals(owner.getKey(), args.getAsString(ImportJob.OWNER_KEY));
     }
 

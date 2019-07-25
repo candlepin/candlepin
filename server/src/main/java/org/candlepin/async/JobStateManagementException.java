@@ -68,7 +68,7 @@ public class JobStateManagementException extends JobException {
     public JobStateManagementException(AsyncJobStatus status, JobState initialState, JobState intendedState,
         String message) {
 
-        this(status, initialState, intendedState, null, null, false);
+        this(status, initialState, intendedState, message, null, false);
     }
 
     /**
@@ -93,7 +93,7 @@ public class JobStateManagementException extends JobException {
     public JobStateManagementException(AsyncJobStatus status, JobState initialState, JobState intendedState,
         Throwable cause) {
 
-        this(status, initialState, intendedState, null, null, false);
+        this(status, initialState, intendedState, null, cause, false);
     }
 
     /**
@@ -116,7 +116,7 @@ public class JobStateManagementException extends JobException {
     public JobStateManagementException(AsyncJobStatus status, JobState initialState, JobState intendedState,
         boolean terminal) {
 
-        this(status, initialState, intendedState, null, null, false);
+        this(status, initialState, intendedState, null, null, terminal);
     }
 
     /**
@@ -145,7 +145,7 @@ public class JobStateManagementException extends JobException {
     public JobStateManagementException(AsyncJobStatus status, JobState initialState, JobState intendedState,
         String message, Throwable cause) {
 
-        this(status, initialState, intendedState, null, null, false);
+        this(status, initialState, intendedState, message, cause, false);
     }
 
     /**
@@ -172,7 +172,7 @@ public class JobStateManagementException extends JobException {
     public JobStateManagementException(AsyncJobStatus status, JobState initialState, JobState intendedState,
         String message, boolean terminal) {
 
-        this(status, initialState, intendedState, null, null, false);
+        this(status, initialState, intendedState, message, null, terminal);
     }
 
     /**
@@ -201,7 +201,7 @@ public class JobStateManagementException extends JobException {
     public JobStateManagementException(AsyncJobStatus status, JobState initialState, JobState intendedState,
         Throwable cause, boolean terminal) {
 
-        this(status, initialState, intendedState, null, null, false);
+        this(status, initialState, intendedState, null, cause, terminal);
     }
 
     /**

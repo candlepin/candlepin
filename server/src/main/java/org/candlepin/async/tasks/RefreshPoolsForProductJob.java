@@ -104,7 +104,7 @@ public class RefreshPoolsForProductJob implements AsyncJob {
     /**
      * Job configuration object for the refresh pools for product job
      */
-    public static class RefreshPoolsForProductJobConfig extends JobConfig {
+    public static class RefreshPoolsForProductJobConfig extends JobConfig<RefreshPoolsForProductJobConfig> {
 
         RefreshPoolsForProductJobConfig() {
             this.setJobKey(JOB_KEY)
