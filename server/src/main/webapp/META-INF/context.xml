@@ -1,2 +1,6 @@
 <!-- Candlepin needs symlink support to read its jars -->
-<Context path="/candlepin" allowLinking="true" />
+<Context path="/candlepin" allowLinking="true">
+    <Loader className="org.apache.catalina.loader.VirtualWebappLoader"
+            virtualClasspath="${basedir}/target/classes;${basedir}/target/${project.build.finalName}/WEB-INF/lib;/usr/lib/java/jss4.jar"/>
+    <JarScanner scanAllDirectories="true"/>
+</Context>
