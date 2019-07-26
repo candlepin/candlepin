@@ -125,6 +125,9 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
         /** Attribute used to identify unmapped guest pools. Pool must also be a derived pool */
         public static final String UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
+
+        /** Attribute used to identify custom pools */
+        public static final String CUSTOM_POOL = "custom_pool";
     }
 
     /**
@@ -155,7 +158,8 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         STACK_DERIVED,
         BONUS,
         UNMAPPED_GUEST,
-        DEVELOPMENT;
+        DEVELOPMENT,
+        CUSTOM;
 
         /**
          * Checks if this type represents a derived pool type
@@ -1282,6 +1286,9 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         }
         else if (hasAttribute(Attributes.DEVELOPMENT_POOL)) {
             return PoolType.DEVELOPMENT;
+        }
+        else if (hasAttribute(Attributes.CUSTOM_POOL)) {
+            return PoolType.CUSTOM;
         }
 
         return PoolType.NORMAL;
