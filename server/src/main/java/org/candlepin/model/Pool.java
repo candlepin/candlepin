@@ -36,6 +36,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.Type;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -125,9 +126,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
         /** Attribute used to identify unmapped guest pools. Pool must also be a derived pool */
         public static final String UNMAPPED_GUESTS_ONLY = "unmapped_guests_only";
-
-        /** Attribute used to identify custom pools */
-        public static final String CUSTOM_POOL = "custom_pool";
     }
 
     /**
@@ -158,8 +156,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         STACK_DERIVED,
         BONUS,
         UNMAPPED_GUEST,
-        DEVELOPMENT,
-        CUSTOM;
+        DEVELOPMENT;
 
         /**
          * Checks if this type represents a derived pool type
@@ -396,6 +393,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @JsonIgnore
     private Cdn cdn;
 
+    /**
+     * A "locked (true)" pool is logically equivalent to a non-"custom" pool.
+     * A "un-locked (false)" pool is logically equivalent to a "custom" pool.
+     */
+    @Column(name = "locked")
+    @Type(type = "org.hibernate.type.NumericBooleanType")
+    private boolean locked;
 
     public Pool() {
         this.activeSubscription = Boolean.TRUE;
@@ -1287,9 +1291,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         else if (hasAttribute(Attributes.DEVELOPMENT_POOL)) {
             return PoolType.DEVELOPMENT;
         }
-        else if (hasAttribute(Attributes.CUSTOM_POOL)) {
-            return PoolType.CUSTOM;
-        }
 
         return PoolType.NORMAL;
     }
@@ -1494,6 +1495,14 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     public void setCertificate(SubscriptionsCertificate cert) {
         this.cert = cert;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
 }

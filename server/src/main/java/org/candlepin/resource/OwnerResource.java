@@ -1703,7 +1703,7 @@ public class OwnerResource {
         pool.setUpstreamPoolId(inputPoolDTO.getUpstreamPoolId());
         pool.setSubscriptionSubKey(inputPoolDTO.getSubscriptionSubKey());
         pool.setSubscriptionId(inputPoolDTO.getSubscriptionId());
-        pool.setAttribute(Pool.Attributes.CUSTOM_POOL, "true");
+        pool.setLocked(false);
 
         if (inputPoolDTO.getProductId() == null || inputPoolDTO.getProductId().isEmpty()) {
             throw new BadRequestException(i18n.tr("Pool product ID not specified"));
