@@ -93,6 +93,7 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
         dest.setSourceStackId(source.getSourceStackId());
         dest.setSubscriptionSubKey(source.getSubscriptionSubKey());
         dest.setSubscriptionId(source.getSubscriptionId());
+        dest.setLocked(source.isLocked());
 
         // Process nested objects if we have a model translator to use to the translation...
         if (modelTranslator != null) {

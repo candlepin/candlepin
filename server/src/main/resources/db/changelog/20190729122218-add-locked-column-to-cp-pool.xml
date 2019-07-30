@@ -6,7 +6,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet id="20190729122218" author="prakgupt">
+    <changeSet id="20190729122218-1" author="prakgupt">
         <comment>Adding column locked to identify custom and non-custom pools.
         </comment>
 

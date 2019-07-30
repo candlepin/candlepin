@@ -155,6 +155,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     private String subscriptionSubKey;
     private String subscriptionId;
     private CertificateDTO certificate;
+    private Boolean locked;
 
     /**
      * Initializes a new PoolDTO instance with null values.
@@ -216,6 +217,27 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     @JsonIgnore
     public PoolDTO setType(String type) {
         this.type = type;
+        return this;
+    }
+
+    /**
+     * Identifies custom and non custom pools
+     *
+     * @return Boolean identifying custom and non custom pools
+     */
+    public Boolean isLocked() {
+        return locked;
+    }
+
+    /**
+     * "locked (true)" pool is logically equivalent to a "non-custom" pool.
+     * "un-locked (false)" pool is logically equivalent to a "custom" pool.
+     *
+     * @return a reference to this PoolDTO object.
+     * @pram set custom or non custom pool
+     */
+    public PoolDTO setLocked(Boolean locked) {
+        this.locked = locked;
         return this;
     }
 
@@ -1340,7 +1362,8 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
                 .append(this.getSourceStackId(), that.getSourceStackId())
                 .append(this.getSubscriptionSubKey(), that.getSubscriptionSubKey())
                 .append(this.getSubscriptionId(), that.getSubscriptionId())
-                .append(thisCertificateId, thatCertificateId);
+                .append(thisCertificateId, thatCertificateId)
+                .append(this.isLocked(), that.isLocked());
 
             return builder.isEquals();
         }
@@ -1392,7 +1415,8 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
             .append(this.getSourceStackId())
             .append(this.getSubscriptionSubKey())
             .append(this.getSubscriptionId())
-            .append(this.getCertificate() != null ? this.getCertificate().getId() : null);
+            .append(this.getCertificate() != null ? this.getCertificate().getId() : null)
+            .append(this.isLocked());
 
         return builder.toHashCode();
     }
@@ -1423,6 +1447,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
 
         Date startDate = this.getStartDate();
         copy.setStartDate(startDate != null ? (Date) startDate.clone() : null);
+        copy.setLocked(this.isLocked());
 
         return copy;
     }
@@ -1469,6 +1494,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
         this.setSubscriptionSubKey(source.getSubscriptionSubKey());
         this.setSubscriptionId(source.getSubscriptionId());
         this.setCertificate(source.getCertificate());
+        this.setLocked(source.isLocked());
 
         return this;
     }
