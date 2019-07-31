@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.ProductManager;
@@ -54,10 +55,14 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
     @Inject protected ProductManager productManager;
 
+    private JobManager jobManager;
+
     private OwnerProductResource ownerProductResource;
 
     @BeforeEach
     public void setup() {
+        this.jobManager = mock(JobManager.class);
+
         this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
             this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
             this.productCurator, this.productManager, this.modelTranslator, this.jobManager

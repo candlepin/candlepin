@@ -22,7 +22,6 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;

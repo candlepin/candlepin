@@ -24,13 +24,7 @@
             <column name="origin" type="varchar(255)"/>
             <column name="executor" type="varchar(255)"/>
             <column name="principal" type="varchar(255)"/>
-            <column name="owner_id" type="varchar(36)">
-                <constraints
-                    nullable="true"
-                    foreignKeyName="cp_async_jobs_fk1"
-                    references="cp_owner(id)"
-                    deleteCascade="false"/>
-            </column>
+            <column name="owner_id" type="varchar(36)"/>
 
             <column name="previous_state" type="int"/>
             <column name="state" type="int"/>

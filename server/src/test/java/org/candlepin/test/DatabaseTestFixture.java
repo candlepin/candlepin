@@ -18,7 +18,6 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingInterceptor;
 import org.candlepin.TestingModules;
-import org.candlepin.async.JobManager;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -159,7 +158,6 @@ public class DatabaseTestFixture {
 
     @Inject protected ResourceLocatorMap locatorMap;
     @Inject protected ModelTranslator modelTranslator;
-    @Inject protected JobManager jobManager;
 
     private static Injector parentInjector;
     protected Injector injector;

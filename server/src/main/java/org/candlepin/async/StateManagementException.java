@@ -20,8 +20,8 @@ import org.candlepin.async.JobManager.ManagerState;
 
 /**
  * The StateManagementException represents an unexpected error that occurred while attempting to
- * update a given job's state. The job is now in an unexpected, bad state and some recovery should
- * be attempted to correct it.
+ * update the job manager's state. The manager may be left in an unexpected, bad state and some
+ * recovery should be attempted to correct it.
  */
 public class StateManagementException extends RuntimeException {
 
@@ -67,9 +67,6 @@ public class StateManagementException extends RuntimeException {
      * detail message of cause). This constructor is useful for exceptions that are little more
      * than wrappers for other throwables (for example, PrivilegedActionException).
      *
-     * @param status
-     *  The AsyncJobStatus instance being updated at the time of failure
-     *
      * @param initialState
      *  The initial state of the job status before any changes were made leading to the exception
      *
@@ -91,9 +88,6 @@ public class StateManagementException extends RuntimeException {
      * <p></p>
      * Note that the detail message associated with cause is not automatically incorporated in this
      * exception's detail message.
-     *
-     * @param status
-     *  The AsyncJobStatus instance being updated at the time of failure
      *
      * @param initialState
      *  The initial state of the job status before any changes were made leading to the exception

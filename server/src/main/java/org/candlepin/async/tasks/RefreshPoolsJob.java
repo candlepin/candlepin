@@ -23,7 +23,6 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;

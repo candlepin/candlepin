@@ -24,7 +24,6 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.ImportRecord;

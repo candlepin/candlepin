@@ -66,11 +66,11 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         /** The job has been scheduled to run at some time in the future */
         SCHEDULED("QUEUED", "RUNNING", "CANCELED", "ABORTED"),
         /** The job has been sent to the backing job messaging/queueing system to be picked up */
-        QUEUED("RUNNING", "CANCELED"),
+        QUEUED("RUNNING", "CANCELED", "FAILED"),
         /** The job has been picked up and is currently being executed */
-        RUNNING("FAILED", "FAILED_WITH_RETRY", "FINISHED", "CANCELED"),
+        RUNNING("FINISHED", "FAILED_WITH_RETRY", "FAILED", "CANCELED"),
         /** The job failed during execution, and has been rescheduled to be retried */
-        FAILED_WITH_RETRY("SCHEDULED", "QUEUED", "RUNNING", "CANCELED"),
+        FAILED_WITH_RETRY("SCHEDULED", "QUEUED", "RUNNING", "FAILED", "CANCELED"),
         /** The job has completed successfully */
         FINISHED(),
         /** The job failed during execution in a way that does not allow retries */
@@ -471,11 +471,11 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      *  this job status instance
      */
     public AsyncJobStatus setContextOwner(Owner owner) {
-        if (owner != null && owner.getId() == null) {
-            throw new IllegalArgumentException("owner is null and lacks an ID");
-        }
-
         if (owner != null) {
+            if (owner.getId() == null) {
+                throw new IllegalArgumentException("provided owner lacks an ID");
+            }
+
             this.owner = owner;
             this.ownerId = owner.getId();
         }

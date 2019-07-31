@@ -12,33 +12,138 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.async.tasks;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobExecutionContext;
-import org.candlepin.model.AsyncJobStatusCurator;
+import org.candlepin.async.JobExecutionException;
+import org.candlepin.async.JobManager;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.AsyncJobStatus.JobState;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+
 
 /**
  * JobCleanerTest
  */
+@ExtendWith(MockitoExtension.class)
 public class JobCleanerTest {
 
-    @Test
-    public void execute() throws Exception {
-        AsyncJobStatusCurator curator = mock(AsyncJobStatusCurator.class);
-        JobCleaner cleaner = new JobCleaner(curator);
-        JobExecutionContext context = mock(JobExecutionContext.class);
+    private Configuration config;
+    private JobManager jobManager;
 
-        cleaner.execute(context);
-        verify(curator).cleanUpOldCompletedJobs(any(Date.class));
-        verify(curator).cleanupAllOldJobs(any(Date.class));
+    @BeforeEach
+    public void init() {
+        this.jobManager = mock(JobManager.class);
+        this.config = new CandlepinCommonTestConfig();
     }
+
+    private JobCleaner createJobInstance() {
+        return new JobCleaner(this.config, this.jobManager);
+    }
+
+    private void setMaxAgeConfig(int maxAgeInMinutes) {
+        String cfg = ConfigProperties.jobConfig(JobCleaner.JOB_KEY, JobCleaner.CFG_MAX_JOB_AGE);
+        this.config.setProperty(cfg, String.valueOf(maxAgeInMinutes));
+    }
+
+    private long subtractMinutes(long baseTime, int minutes) {
+        return baseTime - minutes * 60 * 1000;
+    }
+
+    private Set<JobState> getExpectedJobStates() {
+        return Arrays.stream(JobState.values())
+            .filter(state -> state.isTerminal())
+            .collect(Collectors.toSet());
+    }
+
+    private static Stream<Arguments> maxAgeProvider() {
+        return Stream.of(
+            Arguments.of(JobCleaner.CFG_DEFAULT_MAX_JOB_AGE),
+            Arguments.of(60),
+            Arguments.of(1));
+    }
+
+    @ParameterizedTest
+    @MethodSource("maxAgeProvider")
+    public void testStandardExecution(int maxAge) throws JobExecutionException {
+        this.setMaxAgeConfig(maxAge);
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        long minTime = this.subtractMinutes(System.currentTimeMillis(), maxAge);
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        JobCleaner job = this.createJobInstance();
+        Object result = job.execute(context);
+
+        long maxTime = this.subtractMinutes(System.currentTimeMillis(), maxAge);
+        assertNotNull(result);
+
+        verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        // The job cleaner is not job-specific nor owner-specific
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+
+        // It should also not define an "after" date limit
+        assertNull(builder.getStartDate());
+
+        // Job states should be defined as all terminal states
+        Set<JobState> expectedStates = this.getExpectedJobStates();
+        Collection<JobState> states = builder.getJobStates();
+
+        assertNotNull(states);
+        assertEquals(expectedStates.size(), states.size());
+
+        for (JobState expectedState : expectedStates) {
+            assertTrue(states.contains(expectedState));
+        }
+
+        // The cutoff date should be defined as the "end" date/time:
+        Date endTime = builder.getEndDate();
+
+        assertNotNull(endTime);
+
+        // We allow a bit of leeway in the date to account for deltas in actual test
+        // execution time
+        assertTrue(endTime.getTime() >= minTime && endTime.getTime() <= maxTime);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "0", "-50" })
+    public void testBadAgeConfig(int maxAge) {
+        this.setMaxAgeConfig(maxAge);
+
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        JobCleaner job = this.createJobInstance();
+        assertThrows(JobExecutionException.class, () -> job.execute(context));
+    }
+
+
+
 }

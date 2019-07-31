@@ -27,7 +27,6 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -51,7 +50,6 @@ import java.util.Locale;
 import java.util.Map;
 
 public class HealEntireOrgJobTest {
-
     private OwnerCurator ownerCurator;
     private Entitler entitler;
     private ConsumerCurator consumerCurator;

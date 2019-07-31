@@ -23,10 +23,8 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.async.JobConstraints;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Owner;
 import org.candlepin.sync.ExportResult;
 
 import org.slf4j.Logger;
@@ -178,16 +176,17 @@ public class ExportJob implements AsyncJob {
     public Object execute(JobExecutionContext context) throws JobExecutionException {
         JobArguments args = context.getJobArguments();
 
-        final String consumerUuid = args.getAsString(CONSUMER_KEY);
-        final String cdnLabel = args.getAsString(CDN_LABEL);
-        final String webAppPrefix = args.getAsString(WEBAPP_PREFIX);
-        final String apiUrl = args.getAsString(API_URL);
-        final Map<String, String> extensionData = (Map<String, String>) args.getAs(EXTENSION_DATA, Map.class);
+        String consumerUuid = args.getAsString(CONSUMER_KEY);
+        String cdnLabel = args.getAsString(CDN_LABEL);
+        String webAppPrefix = args.getAsString(WEBAPP_PREFIX);
+        String apiUrl = args.getAsString(API_URL);
+        Map<String, String> extensionData = (Map<String, String>) args.getAs(EXTENSION_DATA, Map.class);
 
         log.info("Starting async export for {}", consumerUuid);
         try {
-            final ExportResult result = manifestManager.generateAndStoreManifest(
-                consumerUuid, cdnLabel, webAppPrefix, apiUrl, extensionData);
+            ExportResult result = manifestManager.generateAndStoreManifest(consumerUuid, cdnLabel,
+                webAppPrefix, apiUrl, extensionData);
+
             log.info("Async export complete.");
             return result;
         }

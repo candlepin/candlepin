@@ -21,10 +21,8 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Environment;
-import org.candlepin.model.Owner;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -24,7 +24,6 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;

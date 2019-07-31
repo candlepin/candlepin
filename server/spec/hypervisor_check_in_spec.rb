@@ -730,8 +730,8 @@ describe 'Hypervisor Resource', :type => :virt do
   def run_async_update(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil, facts=nil)
     host_mapping = get_async_host_guest_mapping(host_name, host_hyp_id, guests, facts)
     job_detail = JSON.parse(consumer.hypervisor_update(owner['key'], host_mapping, create, reporter_id))
-    wait_for_async_job(job_detail['id'], 60)
-    return @cp.get_async_job(job_detail['id'], true)
+    wait_for_job(job_detail['id'], 60)
+    return @cp.get_job(job_detail['id'], true)
   end
 
   def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil, facts=nil)
@@ -745,8 +745,8 @@ describe 'Hypervisor Resource', :type => :virt do
 
   def send_host_guest_mapping(owner, client, mapping, create=true, reporter_id=nil)
     job_detail = JSON.parse(client.hypervisor_update(owner['key'], mapping, create, reporter_id))
-    wait_for_async_job(job_detail['id'], 60)
-    return @cp.get_async_job(job_detail['id'], true)
+    wait_for_job(job_detail['id'], 60)
+    return @cp.get_job(job_detail['id'], true)
   end
 
   def create_virtwho_client(user)

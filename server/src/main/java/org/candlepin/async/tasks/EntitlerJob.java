@@ -26,7 +26,6 @@ import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.dto.PoolIdAndErrors;
