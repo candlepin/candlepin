@@ -55,6 +55,16 @@
                     <name>OAuth</name>
                     <url>http://oauth.googlecode.com/svn/code/maven/</url>
                 </repository>
+                <repository>
+                    <id>awood</id>
+                    <name>awood.fedorapeople.org</name>
+                    <url>http://awood.fedorapeople.org/ivy/candlepin/</url>
+                </repository>
+                <repository>
+                    <id>barnabycourt</id>
+                    <name>barnabycourt.fedorapeople.org</name>
+                    <url>http://barnabycourt.fedorapeople.org/repo/candlepin/</url>
+                </repository>
             </repositories>
         </profile>
     </profiles>

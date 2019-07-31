@@ -42,12 +42,9 @@ BuildRequires: /usr/bin/pathfix.py
 
 Requires: java >= 1:1.8.0
 Requires: wget
-%if 0%{?rhel} <= 7
-Requires: tomcat >= 0:7.0.0
-%else
-Requires: pki-servlet-container >= 0:7.0.0
-%endif
-Requires: jss
+## tomcatjss itself depends on jss and tomcat/pki-servlet-container/pki-servlet-engine
+## without having to worry about about the renaming of those packages.
+Requires: tomcatjss >= 7.2.1-7.1
 Requires: javapackages-tools
 
 %description
@@ -138,6 +135,12 @@ touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 %{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
 %{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/tomcat/
 %{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
+
+## if we're running with tomcat 8+, use the appropriate context.xml file.
+%if 0%{?rhel} > 7 || 0%{?fedora} > 27
+mv %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context_tomcat8.xml \
+%{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context.xml
+%endif
 
 %{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/tomcat/keystore
 

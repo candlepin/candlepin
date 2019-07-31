@@ -65,6 +65,7 @@ else
     # Tomcat 8.5+ requires the cert be separate from the key when used as both a keystore and a trust store
     $SUDO keytool -keystore $KEYSTORE -noprompt -importcert -storepass:file $KEYSTORE_PASSWORD -alias candlepin_ca -file $CA_CERT
 
+    $SUDO chmod a+r $CERTS_HOME/*
     $SUDO cp $CA_REDHAT_CERT $CA_UPSTREAM_CERT
     $SUDO chmod a+r $KEYSTORE
 fi
