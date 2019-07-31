@@ -59,8 +59,8 @@ describe 'Import Test Group:', :serial => true do
         headers = { :correlation_id => @cp_correlation_id }
         job = @cp.import_async(owner_key, export_file, param_map, headers)
         # Wait a little longer here as import can take a bit of time
-        wait_for_async_job(job["id"], 10)
-        status = @cp.get_async_job(job["id"], true)
+        wait_for_job(job["id"], 10)
+        status = @cp.get_job(job["id"], true)
         if status["state"] == "FAILED"
           raise AsyncImportFailure.new(status)
         end
@@ -128,7 +128,7 @@ describe 'Import Test Group:', :serial => true do
       custom_pool = @cp.create_pool(@import_owner['key'], prod['id'])
 
       job = @import_owner_client.undo_import(@import_owner['key'])
-      wait_for_async_job(job['id'], 30)
+      wait_for_job(job['id'], 30)
 
       pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
       pools.length.should == 1 # this is our custom pool
@@ -145,7 +145,7 @@ describe 'Import Test Group:', :serial => true do
       # Delete again and make sure another owner is clear to import the
       # same manifest:
       job = @import_owner_client.undo_import(@import_owner['key'])
-      wait_for_async_job(job['id'], 30)
+      wait_for_job(job['id'], 30)
 
       # Verify our custom sub still exists
       pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
@@ -170,7 +170,7 @@ describe 'Import Test Group:', :serial => true do
 
     it 'should create a DELETE record on a deleted import' do
       job = @import_owner_client.undo_import(@import_owner['key'])
-      wait_for_async_job(job['id'], 30)
+      wait_for_job(job['id'], 30)
       @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
         import.status == 'DELETE'
       end.should_not be_empty
@@ -372,7 +372,7 @@ describe 'Import Test Group:', :serial => true do
       # Also added the confirmation that the exception occurs when importing to
       # another owner.
       job = @import_owner_client.undo_import(@import_owner['key'])
-      wait_for_async_job(job['id'], 30)
+      wait_for_job(job['id'], 30)
 
       @import_method.call(@import_owner['key'], @cp_export_file)
       owner2 = @cp.create_owner(random_string("owner2"))

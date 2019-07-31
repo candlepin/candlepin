@@ -17,6 +17,10 @@ package org.candlepin.resource;
 import static org.quartz.JobBuilder.*;
 
 import org.candlepin.auth.Verify;
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
@@ -25,7 +29,9 @@ import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -36,22 +42,18 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Pool;
 import org.candlepin.model.SubscriptionsCertificate;
-import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
-import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -97,6 +99,7 @@ public class EntitlementResource {
     private Entitler entitler;
     private Enforcer enforcer;
     private EntitlementRulesTranslator messageTranslator;
+    private JobManager jobManager;
     private ModelTranslator translator;
 
     @Inject
@@ -108,6 +111,7 @@ public class EntitlementResource {
         Entitler entitler,
         Enforcer enforcer,
         EntitlementRulesTranslator messageTranslator,
+        JobManager jobManager,
         ModelTranslator translator) {
 
         this.entitlementCurator = entitlementCurator;
@@ -118,6 +122,7 @@ public class EntitlementResource {
         this.entitler = entitler;
         this.enforcer = enforcer;
         this.messageTranslator = messageTranslator;
+        this.jobManager = jobManager;
         this.translator = translator;
     }
 
@@ -304,20 +309,17 @@ public class EntitlementResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Path("product/{product_id}")
-    public JobDetail regenerateEntitlementCertificatesForProduct(
+    public AsyncJobStatusDTO regenerateEntitlementCertificatesForProduct(
         @PathParam("product_id") String productId,
-        @QueryParam("lazy_regen") @DefaultValue("true") boolean lazyRegen) {
+        @QueryParam("lazy_regen") @DefaultValue("true") boolean lazyRegen)
+        throws JobException {
 
-        JobDataMap map = new JobDataMap();
-        map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
-        map.put(RegenProductEntitlementCertsJob.LAZY_REGEN, lazyRegen);
+        JobConfig config = RegenProductEntitlementCertsJob.createJobConfig()
+            .setProductId(productId)
+            .setLazyRegeneration(lazyRegen);
 
-        JobDetail detail = newJob(RegenProductEntitlementCertsJob.class)
-            .withIdentity("regen_entitlement_cert_of_prod" + Util.generateUUID())
-            .usingJobData(map)
-            .build();
-
-        return detail;
+        AsyncJobStatus status = this.jobManager.queueJob(config);
+        return this.translator.translate(status, AsyncJobStatusDTO.class);
     }
 
     @ApiOperation(notes = "Migrate entitlements from one distributor consumer to another." +

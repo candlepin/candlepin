@@ -15,7 +15,9 @@
 package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.PermissionFactory;
@@ -51,6 +53,8 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Inject private ServiceLevelValidator serviceLevelValidator;
     @Inject private ContentOverrideValidator contentOverrideValidator;
 
+    private JobManager jobManager;
+
     private Owner owner;
     private OwnerResource or;
 
@@ -67,6 +71,8 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         principal = new UserPrincipal("testing user",
             new ArrayList<>(permFactory.createPermissions(user, ownerAdminRole.getPermissions())), false);
         setupPrincipal(principal);
+
+        this.jobManager = mock(JobManager.class);
 
         or = new OwnerResource(
             ownerCurator, null, consumerCurator, i18n, null, null, null,

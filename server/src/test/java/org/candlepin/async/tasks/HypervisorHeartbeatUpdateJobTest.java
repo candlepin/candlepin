@@ -28,7 +28,6 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 
@@ -40,7 +39,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Date;
-import java.util.Map;
 
 /**
  * Test suite for the HypervisorHeartbeatUpdateJob class
@@ -68,7 +66,7 @@ public class HypervisorHeartbeatUpdateJobTest {
     @Test
     public void testConfigSetOwner() {
         String ownerKey = "test_owner";
-        Owner owner = this.createOwner(ownerKey);
+        Owner owner = new Owner(ownerKey, ownerKey);
 
         JobConfig config = HypervisorHeartbeatUpdateJob.createJobConfig()
             .setOwner(owner);

@@ -76,8 +76,8 @@ describe 'Autobind Disabled On Owner' do
 
   it 'fails to heal entire org' do
     job = @cp.heal_owner(@owner['key'])
-    wait_for_async_job(job['id'], 15)
-    job = @cp.get_async_job(job['id'], true)
+    wait_for_job(job['id'], 15)
+    job = @cp.get_job(job['id'], true)
     job['state'].should == "FAILED"
     job['resultData'].should == "org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner #{@owner['key']}."
   end
@@ -89,8 +89,8 @@ describe 'Autobind Disabled On Owner' do
     })
     user_cp = user_client(owner, random_string("test-user"))
     job = @cp.heal_owner(owner['key'])
-    wait_for_async_job(job['id'], 15)
-    job = @cp.get_async_job(job['id'], true)
+    wait_for_job(job['id'], 15)
+    job = @cp.get_job(job['id'], true)
     job['state'].should == "FAILED"
     job['resultData'].should == "org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner #{owner['key']} because of the content access mode setting."
   end

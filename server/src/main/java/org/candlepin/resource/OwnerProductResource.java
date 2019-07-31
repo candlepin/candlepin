@@ -477,10 +477,10 @@ public class OwnerProductResource {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
 
-        JobConfig config = RefreshPoolsForProductJob
-            .createJobConfig()
+        JobConfig config = RefreshPoolsForProductJob.createJobConfig()
             .setProduct(product)
             .setLazy(lazyRegen);
+
         AsyncJobStatus status = jobManager.queueJob(config);
         return this.translator.translate(status, AsyncJobStatusDTO.class);
     }

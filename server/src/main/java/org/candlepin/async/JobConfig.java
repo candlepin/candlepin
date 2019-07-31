@@ -28,6 +28,35 @@ import java.util.Set;
 /**
  * The JobConfig object collects the configuration for a job, which can be provided to the
  * JobManager to queue a new instance of that job.
+ * <p></p>
+ * This class allows for a generic type definition, which subclasses should use to specify
+ * the exact subclass or subclass type represents this class. This function is purely to
+ * facilitate method chaining with mutators that return a self reference.
+ *
+ * For example, if we have a JobConfig subclass named TestJobConfig, it should be declared as
+ * follows:
+ *
+ *      public TestJobConfig extends JobConfig<TestJobConfig>
+ *
+ * While redundant, this signals the specific JobConfig subclass to return by mutators implemented
+ * by the base JobConfig class. Similarly, if the TestJobConfig was designed such that it is
+ * intended to be further subclassed, it should be declared as follows:
+ *
+ *      public [abstract] TestJobConfig<T extends TestJobConfig> extends JobConfig<T>
+ *
+ * Mutators implemented in TestJobConfig then would have declarations as such:
+ *
+ *      public T setSomeValue(String value) {
+ *          this.value = value; // Assign the value
+ *
+ *          return (T) this;
+ *      }
+ *
+ * Subclasses would then follow one of these patterns as necessary according to their design and
+ * intent.
+ *
+ * @param <T>
+ *  the concrete JobConfig class being implemented
  */
 public class JobConfig<T extends JobConfig> {
 

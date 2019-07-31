@@ -25,7 +25,6 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 
 import com.google.inject.Inject;
 

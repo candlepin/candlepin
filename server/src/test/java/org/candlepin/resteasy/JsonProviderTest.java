@@ -44,6 +44,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.core.MediaType;
 
+
+
 @RunWith(MockitoJUnitRunner.class)
 public class JsonProviderTest {
 
@@ -85,7 +87,6 @@ public class JsonProviderTest {
      */
     @Test
     public void canSerializeDatesWithLargeTimestampsConcurrently() {
-
         JsonProvider provider = new JsonProvider(config,
             new ProductCachedSerializationModule(productCurator));
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);

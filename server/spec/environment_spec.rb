@@ -69,7 +69,7 @@ describe 'Environments' do
   it 'sets content.enabled to nil by default' do
     content = create_content
     job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'][0]['enabled'].should == nil
   end
@@ -77,7 +77,7 @@ describe 'Environments' do
   it 'can have enabled content' do
     content = create_content
     job = @org_admin.promote_content(@env['id'], [{:contentId => content['id'],:enabled => true}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'][0]['enabled'].should == true
   end
@@ -85,7 +85,7 @@ describe 'Environments' do
   it 'can have disabled content' do
     content = create_content
     job = @org_admin.promote_content(@env['id'], [{:contentId => content['id'],:enabled => false}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'][0]['enabled'].should == false
   end
@@ -93,7 +93,7 @@ describe 'Environments' do
   it 'can have promoted content' do
     content = create_content
     job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
   end
@@ -103,7 +103,7 @@ describe 'Environments' do
     content2 = create_content
 
     job = @org_admin.promote_content(@env['id'], [{:contentId => content1['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     lambda do
       @org_admin.promote_content(
@@ -119,18 +119,18 @@ describe 'Environments' do
   it 'can promote multiple contents' do
     content = create_content
     job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     content2 = create_content
     job = @org_admin.promote_content(@env['id'], [{:contentId => content2['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     content3 = create_content
     content4 = create_content
     job = @org_admin.promote_content(
       @env['id'], [{:contentId => content3['id']}, {:contentId => content4['id']}]
     )
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 4
@@ -143,7 +143,7 @@ describe 'Environments' do
       @env['id'], [{:contentId => content1['id']}, {:contentId => content2['id']}]
     )
 
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 2
@@ -161,11 +161,11 @@ describe 'Environments' do
     content = create_content
     content2 = create_content
     job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     job = @org_admin.promote_content(@env['id'], [{:contentId => content2['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     job = @org_admin.demote_content(@env['id'], [content['id'], content2['id']])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 0
   end
@@ -174,9 +174,9 @@ describe 'Environments' do
     content = create_content
     content2 = create_content
     job = @org_admin.promote_content(@env['id'], [{:contentId => content['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     job = @org_admin.promote_content(@env['id'], [{:contentId => content2['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     lambda do
       @org_admin.demote_content(@env['id'], ['bad_content_id'])
@@ -197,7 +197,7 @@ describe 'Environments' do
     @env['environmentContent'].size.should == 2
 
     job = @org_admin.demote_content(@env['id'], [content['id'], content2['id']])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 0
   end
@@ -221,7 +221,7 @@ describe 'Environments' do
           :contentId => content['id'],
           :enabled => false,
         }])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
@@ -252,7 +252,7 @@ describe 'Environments' do
         [{
           :contentId => content['id'],
         }])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
@@ -268,7 +268,7 @@ describe 'Environments' do
         [{
           :contentId => content2['id'],
         }])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     ent = consumer_cp.list_entitlements()[0]
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
@@ -280,7 +280,7 @@ describe 'Environments' do
 
     # Demote it and check again:
     job = @org_admin.demote_content(@env['id'], [content2['id']])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     ent = consumer_cp.list_entitlements()[0]
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
@@ -298,15 +298,15 @@ describe 'Environments' do
 
     env2 = @cp.create_environment(@owner['key'], random_string("env2"), random_string("env2"))
     job = @cp.promote_content(env2['id'], [{:contentId => content1['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     job = @cp.promote_content(env2['id'], [{:contentId => content2['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     env3 = @cp.create_environment(@owner['key'], random_string("env3"), random_string("env3"))
     job = @cp.promote_content(env3['id'], [{:contentId => content1['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     job = @cp.promote_content(env3['id'], [{:contentId => content2['id']}])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     @cp.register(random_string("consumer1"), :system, nil, {}, random_string("consumer1"), @owner['key'], [], [], env3['id'])
     @cp.register(random_string("consumer2"), :system, nil, {}, random_string("consumer2"), @owner['key'], [], [], env3['id'])
 

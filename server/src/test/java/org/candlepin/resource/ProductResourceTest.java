@@ -19,14 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.anyObject;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
+import org.candlepin.async.JobConfig;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
@@ -49,7 +47,12 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -75,6 +78,29 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private ProductCurator productCurator;
     @Inject private Configuration config;
     @Inject private I18n i18n;
+
+    private JobManager jobManager;
+
+    @BeforeEach
+    public void init() throws Exception {
+        super.init();
+
+        this.jobManager = mock(JobManager.class);
+
+        doAnswer(new Answer<AsyncJobStatus>() {
+            @Override
+            public AsyncJobStatus answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                JobConfig jobConfig = (JobConfig) args[0];
+
+                return new AsyncJobStatus()
+                    .setState(AsyncJobStatus.JobState.QUEUED)
+                    .setJobKey(jobConfig.getJobKey())
+                    .setName(jobConfig.getJobName())
+                    .setJobArguments(jobConfig.getJobArguments());
+            }
+        }).when(this.jobManager).queueJob(any(JobConfig.class));
+    }
 
     private ProductDTO buildTestProductDTO() {
         ProductDTO dto = TestUtil.createProductDTO("test_product");
@@ -234,10 +260,10 @@ public class ProductResourceTest extends DatabaseTestFixture {
         assertThrows(BadRequestException.class, () -> productResource.getProductOwners(new LinkedList<>()));
     }
 
-    private void verifyRefreshPoolsJobsWhereQueued(List<AsyncJobStatusDTO> jobs) {
+    private void verifyRefreshPoolsJobsWereQueued(List<AsyncJobStatusDTO> jobs) {
         for (AsyncJobStatusDTO job : jobs) {
             assertEquals(RefreshPoolsJob.JOB_NAME, job.getName());
-            assertEquals(AsyncJobStatus.JobState.FAILED.toString(), job.getState());
+            assertEquals(AsyncJobStatus.JobState.QUEUED.toString(), job.getState());
             assertEquals(AsyncJobStatus.JobState.CREATED.toString(), job.getPreviousState());
             assertEquals(Integer.valueOf(0), job.getAttempts());
             assertEquals(Integer.valueOf(1), job.getMaxAttempts());
@@ -253,28 +279,61 @@ public class ProductResourceTest extends DatabaseTestFixture {
             this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
         this.setupDBForOwnerProdTests();
 
-        List<AsyncJobStatusDTO> jobs;
-
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true)
+        List<AsyncJobStatusDTO> jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true)
             .collect(Collectors.toList());
+
         assertNotNull(jobs);
         assertEquals(2, jobs.size());
-        this.verifyRefreshPoolsJobsWhereQueued(jobs);
+        this.verifyRefreshPoolsJobsWereQueued(jobs);
+    }
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1", "p2"), false)
+    @Test
+    public void testRefreshPoolsByProductForMultipleProducts() throws JobException {
+        Configuration config = new MapConfiguration(this.config);
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
+            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        this.setupDBForOwnerProdTests();
+
+        List<AsyncJobStatusDTO> jobs = productResource
+            .refreshPoolsForProduct(Arrays.asList("p1", "p2"), false)
             .collect(Collectors.toList());
+
         assertNotNull(jobs);
         assertEquals(3, jobs.size());
-        this.verifyRefreshPoolsJobsWhereQueued(jobs);
+        this.verifyRefreshPoolsJobsWereQueued(jobs);
+    }
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false)
+    @Test
+    public void testRefreshPoolsByProductWithoutLazyOffload() throws JobException {
+        Configuration config = new MapConfiguration(this.config);
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
+            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        this.setupDBForOwnerProdTests();
+
+        List<AsyncJobStatusDTO> jobs = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false)
             .collect(Collectors.toList());
+
         assertNotNull(jobs);
         assertEquals(1, jobs.size());
-        this.verifyRefreshPoolsJobsWhereQueued(jobs);
+        this.verifyRefreshPoolsJobsWereQueued(jobs);
+    }
 
-        jobs = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false)
+    @Test
+    public void testRefreshPoolsByProductWithBadProductId() throws JobException {
+        Configuration config = new MapConfiguration(this.config);
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
+            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        this.setupDBForOwnerProdTests();
+
+        List<AsyncJobStatusDTO> jobs = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false)
             .collect(Collectors.toList());
+
         assertNotNull(jobs);
         assertEquals(0, jobs.size());
     }
