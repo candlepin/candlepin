@@ -1169,4 +1169,33 @@ describe 'Hypervisor Resource', :type => :virt do
     test_host = @cp.get_consumer(test_host.uuid)
     @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_2
   end
+
+  it 'check in will fail when json does not have the proper structure' do
+    owner = create_owner random_string('test_owner1')
+    user = user_client(owner, random_string("user"))
+    uuid1 = random_string('system.uuid')
+    uuid2 = random_string('system.uuid')
+    # incorrect json structure
+    report = {
+        "name" => '',
+        "uuid" => uuid1,
+        "hypervisorId" => {"hypervisorId" => 'hypervisor_id_1'},
+        "guestIds" => [
+            {'guestId' => uuid2}
+        ],
+        "facts" => {"test_fact" => "fact_value" }
+    }
+    job_detail = send_host_guest_mapping(owner, user, report.to_json())
+    job_detail["state"].should == "FAILED"
+
+    # empty json
+    report = {}
+    job_detail = send_host_guest_mapping(owner, user, report.to_json())
+    job_detail["state"].should == "FAILED"
+
+    # this is the correct version of an empy list of hypervisors
+    report = {hypervisors:[]}
+    job_detail = send_host_guest_mapping(owner, user, report.to_json())
+    job_detail["state"].should == "FINISHED"
+  end
 end
