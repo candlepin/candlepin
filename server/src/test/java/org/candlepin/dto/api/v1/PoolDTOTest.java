@@ -137,6 +137,7 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         this.values.put("Certificate", cert);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
+        this.values.put("Locked", true);
     }
 
     /**
