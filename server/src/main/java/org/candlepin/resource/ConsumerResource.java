@@ -1113,7 +1113,8 @@ public class ConsumerResource {
             log.warn("User {} does not have access to create consumers in org {}",
                 principal.getPrincipalName(), owner.getKey());
 
-            throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", owner.getKey()));
+            throw new NotFoundException(i18n.tr("{0} is not authorized to register with any organizations.",
+                    principal.getName()));
         }
 
         return owner;
