@@ -61,10 +61,10 @@ gendb() {
 deploy() {
   printf "\nDeploying Candlepin War File\n"
   VERSION="$(grep Version: $PROJECT_DIR/candlepin.spec.tmpl | cut --delim=' ' -f2)"
-    if [ -z $CLEAN ] ; then
+    if [ -z $DEPLOY_DIR ] ; then
         $SUDO rm -rf $DEPLOY
     else
-        $SUDO rm -rf $CLEAN
+        $SUDO rm -rf $DEPLOY_DIR
     fi
     echo cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
     $SUDO cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
@@ -303,7 +303,7 @@ if [ "$SUPERVISOR" == "1" ]; then
 fi
 
 DEPLOY="$TC_HOME/webapps/candlepin.war"
-CLEAN="$TC_HOME/webapps/candlepin/"
+DEPLOY_DIR="$TC_HOME/webapps/candlepin/"
 
 REPOS="$TC_HOME/webapps/ROOT"
 
@@ -407,6 +407,15 @@ fi
 
 # deploy the webapp
 deploy
+
+# Need to use newer APIs in context.xml for Tomcat 8+
+MAJOR_TC_VERSION=${TC_VERSION%.*}
+if (( MAJOR_TC_VERSION >= 8 )); then
+    printf "\nTomcat version is 8 or newer. Updating context.xml...\n\n"
+    $SUDO unzip -q $DEPLOY -d $DEPLOY_DIR
+    $SUDO mv $DEPLOY_DIR/META-INF/context_tomcat8.xml $DEPLOY_DIR/META-INF/context.xml
+    $SUDO chown -R tomcat:tomcat $DEPLOY_DIR
+fi
 
 eval $START
 

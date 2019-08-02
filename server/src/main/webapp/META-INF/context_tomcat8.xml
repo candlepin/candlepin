@@ -1,0 +1,11 @@
+<!-- context.xml file compatible from Tomcat version 8 and up -->
+<Context path="/candlepin">
+    <!-- Candlepin needs symlink support to read its jars. Also, we want to load the jss jar from the
+    filesystem, instead of having a hard dependency on a specific version. -->
+    <Resources allowLinking="true">
+        <JarResources className="org.apache.catalina.webresources.FileResourceSet"
+            base="/usr/lib/java/jss4.jar"
+            webAppMount="/WEB-INF/lib/jss4.jar">
+        </JarResources>
+    </Resources>
+</Context>
