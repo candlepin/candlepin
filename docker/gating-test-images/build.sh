@@ -48,14 +48,6 @@ docker build --tag=temp_candlepin temp-cp/
 evalrc $? "temp_candlepin image build was not successful."
 
 echo "============ Deploying temporary candlepin and loading test data ============ "
-# Need to temporarily disable selinux to avoid denial when writing on the .sql:/db-data bind mount
-SELINUX_ENFORCING=false
-if [ "$(getenforce)" == "Enforcing" ]; then
-    SELINUX_ENFORCING=true
-    echo "Temporarily disabling SELinux..."
-    setenforce 0
-fi
-
 # need to be in a swarm in order to use the stack command
 docker swarm init
 
@@ -67,11 +59,6 @@ evalrc $? "load_and_dump_stack stack deploy was not successful."
 echo "============ Waiting for data to be dumped... ============ "
 retry 30 "dump.sql" test -f sql/dump.sql
 evalrc $? "dump.sql did not get dumped in time. Exiting..."
-
-if [ $SELINUX_ENFORCING == true ]; then
-    echo "Re-enabling SELinux..."
-    setenforce 1
-fi
 
 echo "============ Removing temporary stack ============ "
 docker stack rm load_and_dump_stack

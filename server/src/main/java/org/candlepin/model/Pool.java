@@ -36,6 +36,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.Type;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -392,6 +393,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @JsonIgnore
     private Cdn cdn;
 
+    /**
+     * A "locked (true)" pool is logically equivalent to a non-"custom" pool.
+     * A "un-locked (false)" pool is logically equivalent to a "custom" pool.
+     */
+    @Column(name = "locked")
+    @Type(type = "org.hibernate.type.NumericBooleanType")
+    private boolean locked;
 
     public Pool() {
         this.activeSubscription = Boolean.TRUE;
@@ -1487,6 +1495,14 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     public void setCertificate(SubscriptionsCertificate cert) {
         this.cert = cert;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
 }

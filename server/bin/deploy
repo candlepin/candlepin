@@ -61,10 +61,10 @@ gendb() {
 deploy() {
   printf "\nDeploying Candlepin War File\n"
   VERSION="$(grep Version: $PROJECT_DIR/candlepin.spec.tmpl | cut --delim=' ' -f2)"
-    if [ -z $CLEAN ] ; then
+    if [ -z $DEPLOY_DIR ] ; then
         $SUDO rm -rf $DEPLOY
     else
-        $SUDO rm -rf $CLEAN
+        $SUDO rm -rf $DEPLOY_DIR
     fi
     echo cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
     $SUDO cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
@@ -109,19 +109,37 @@ upload_products() {
 }
 
 create_test_repos() {
-    if [ ! -d "${REPOS}" ]; then
-        $SUDO mkdir "${REPOS}"
-    fi
     if [ "$TESTREPO" = "1" ]; then
+        if [ ! -d "${REPOS}" ]; then
+            $SUDO mkdir "${REPOS}"
+        fi
+
+        # Run Python script and generate all repos and testing rpms
         $SUDO $SELF_DIR/create_test_repos.py $SELF_DIR/test_data.json
+
+        # Tomcat has to own all of that
+        $SUDO chown -R tomcat:tomcat "${REPOS}"
+
+        echo ""
+        echo "Run following commands on registered system to use created repositories:"
+        echo ""
+        echo "    subscription-manager config --rhsm.baseurl=http://<ip_of_this_server>:8080"
+        echo "    curl http://<ip_of_this_server>:8080/RPM-GPG-KEY-candlepin > /etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin"
+        echo ""
     fi
-    $SUDO chown -R tomcat:tomcat "${REPOS}"
-    echo ""
-    echo "Run following commands on registered system to use created repositories:"
-    echo ""
-    echo "    subscription-manager config --rhsm.baseurl=http://<ip_of_this_server>:8080"
-    echo "    curl http://<ip_of_this_server>:8080/RPM-GPG-KEY-candlepin > /etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin"
-    echo ""
+}
+
+configure_tomcat_root_dir() {
+    # Create configuration file for tomcat to be able to use symbolic links
+    if [ "$TESTREPO" = "1" ]; then
+        if [ ! -d "${REPOS}/META-INF" ]; then
+            $SUDO mkdir -p "${REPOS}/META-INF"
+        fi
+
+        if [ ! -f "${REPOS}/META-INF/context.xml" ]; then
+            $SUDO cp "$PROJECT_DIR/src/main/root/META-INF/context.xml" "${REPOS}/META-INF/context.xml"
+        fi
+    fi
 }
 
 create_var_lib_candlepin() {
@@ -285,7 +303,7 @@ if [ "$SUPERVISOR" == "1" ]; then
 fi
 
 DEPLOY="$TC_HOME/webapps/candlepin.war"
-CLEAN="$TC_HOME/webapps/candlepin/"
+DEPLOY_DIR="$TC_HOME/webapps/candlepin/"
 
 REPOS="$TC_HOME/webapps/ROOT"
 
@@ -379,6 +397,7 @@ update_keystore
 $SUDO python $PROJECT_DIR/bin/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
 
 create_var_lib_candlepin
+configure_tomcat_root_dir
 create_var_log_candlepin
 create_var_cache_candlepin
 
@@ -388,6 +407,15 @@ fi
 
 # deploy the webapp
 deploy
+
+# Need to use newer APIs in context.xml for Tomcat 8+
+MAJOR_TC_VERSION=${TC_VERSION%.*}
+if (( MAJOR_TC_VERSION >= 8 )); then
+    printf "\nTomcat version is 8 or newer. Updating context.xml...\n\n"
+    $SUDO unzip -q $DEPLOY -d $DEPLOY_DIR
+    $SUDO mv $DEPLOY_DIR/META-INF/context_tomcat8.xml $DEPLOY_DIR/META-INF/context.xml
+    $SUDO chown -R tomcat:tomcat $DEPLOY_DIR
+fi
 
 eval $START
 

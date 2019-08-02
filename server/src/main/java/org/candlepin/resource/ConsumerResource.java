@@ -133,7 +133,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobDetail;
@@ -763,17 +762,8 @@ public class ConsumerResource {
 
         consumer.setAutoheal(true); // this is the default
 
-        if (consumer.getServiceLevel() == null) {
-            consumer.setServiceLevel("");
-        }
-
         // Sanitize the inbound facts
         this.sanitizeConsumerFacts(consumer);
-
-        // If no service level was specified, and the owner has a default set, use it:
-        if (consumer.getServiceLevel().equals("") && owner.getDefaultServiceLevel() != null) {
-            consumer.setServiceLevel(owner.getDefaultServiceLevel());
-        }
 
         Consumer consumerToCreate = new Consumer();
 
@@ -801,24 +791,42 @@ public class ConsumerResource {
         try {
             Date createdDate = consumerToCreate.getCreated();
             Date lastCheckIn = consumerToCreate.getLastCheckin();
+
             // create sets created to current time.
             consumerToCreate = consumerCurator.create(consumerToCreate);
+
             //  If we sent in a created date, we want it persisted at the update below
             if (createdDate != null) {
                 consumerToCreate.setCreated(createdDate);
             }
+
             if (lastCheckIn != null) {
                 log.info("Creating with specific last check-in time: {}", lastCheckIn);
                 consumerToCreate.setLastCheckin(lastCheckIn);
             }
+
             if (identityCertCreation) {
                 IdentityCertificate idCert = generateIdCert(consumerToCreate, false);
                 consumerToCreate.setIdCert(idCert);
             }
+
             sink.emitConsumerCreated(consumerToCreate);
 
             if (keys.size() > 0) {
                 consumerBindUtil.handleActivationKeys(consumerToCreate, keys, owner.isAutobindDisabled());
+            }
+
+            // Update syspurpose data
+            // Note: this must come after activation key handling, as syspurpose details on the
+            // consumer have higher priority than those on activation keys
+            this.updateSystemPurposeData(consumer, consumerToCreate);
+
+            // If no service level was specified, and the owner has a default set, use it:
+            String csl = consumerToCreate.getServiceLevel();
+            if ((csl == null || csl.isEmpty())) {
+                consumerToCreate.setServiceLevel(owner.getDefaultServiceLevel() != null ?
+                    owner.getDefaultServiceLevel() :
+                    "");
             }
 
             // This should update compliance on consumerToCreate, but not call the curator
@@ -1355,10 +1363,13 @@ public class ConsumerResource {
 
     private boolean updateSystemPurposeData(ConsumerDTO updated, Consumer toUpdate) {
         boolean changesMade = false;
+
         // Allow optional setting of the service level attribute:
         String level = updated.getServiceLevel();
         if (level != null && !level.equals(toUpdate.getServiceLevel())) {
-            log.info("   Updating consumer service level setting.");
+            log.info("   Updating consumer service level setting: \"{}\" => \"{}\"",
+                toUpdate.getServiceLevel(), level);
+
             // BZ 1618398 Remove validation check on consumer service level
             // consumerBindUtil.validateServiceLevel(toUpdate.getOwnerId(), level);
             toUpdate.setServiceLevel(level);
@@ -1367,23 +1378,26 @@ public class ConsumerResource {
 
         String role = updated.getRole();
         if (role != null && !role.equals(toUpdate.getRole())) {
-            log.info("   Updating role setting.");
+            log.info("   Updating consumer role setting: \"{}\" => \"{}\"", toUpdate.getRole(), role);
             toUpdate.setRole(role);
             changesMade = true;
         }
 
         String usage = updated.getUsage();
         if (usage != null && !usage.equals(toUpdate.getUsage())) {
-            log.info("   Updating usage setting.");
+            log.info("   Updating consumer usage setting: \"{}\" => \"{}\"", toUpdate.getUsage(), usage);
             toUpdate.setUsage(usage);
             changesMade = true;
         }
 
         if (updated.getAddOns() != null && !updated.getAddOns().equals(toUpdate.getAddOns())) {
-            log.info("   Updating system purpose add ons.");
+            log.info("   Updating consumer system purpose add ons: {} => {}",
+                toUpdate.getAddOns(), updated.getAddOns());
+
             toUpdate.setAddOns(updated.getAddOns());
             changesMade = true;
         }
+
         return changesMade;
     }
 
@@ -1396,11 +1410,18 @@ public class ConsumerResource {
                 existing.setHypervisorId(null);
             }
             else {
+                Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
+                if ((existingId == null ||
+                    !incomingId.getHypervisorId().equals(existingId.getHypervisorId())) &&
+                    isUsedByOwner(incomingId, owner)) {
+                    throw new BadRequestException(i18n.tr(
+                        "Problem updating unit {0}. Hypervisor id: {1} is already used.",
+                        incoming, incomingId.getHypervisorId()));
+                }
                 if (existingId != null) {
                     if (existingId.getHypervisorId() != null &&
                         !existingId.getHypervisorId().equals(incomingId.getHypervisorId())) {
                         existingId.setHypervisorId(incomingId.getHypervisorId());
-                        Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
                         existingId.setOwner(owner);
                     }
                     else {
@@ -1409,7 +1430,6 @@ public class ConsumerResource {
                 }
                 else {
                     // Safer to build a new clean HypervisorId object
-                    Owner owner = ownerCurator.findOwnerById(existing.getOwnerId());
                     HypervisorId hypervisorId = new HypervisorId(incomingId.getHypervisorId());
                     hypervisorId.setOwner(owner);
                     existing.setHypervisorId(hypervisorId);
@@ -1418,6 +1438,13 @@ public class ConsumerResource {
             return true;
         }
         return false;
+    }
+
+    private boolean isUsedByOwner(HypervisorIdDTO hypervisor, Owner owner) {
+        if (hypervisor == null) {
+            return false;
+        }
+        return consumerCurator.getHypervisor(hypervisor.getHypervisorId(), owner) != null;
     }
 
     /**
@@ -2249,58 +2276,6 @@ public class ConsumerResource {
             throw new NotFoundException(i18n.tr(
                 "No entitlements for consumer \"{0}\" with pool id \"{1}\"", consumerUuid, poolId));
         }
-    }
-
-    /**
-     * Retrieves a list of Consumer Events.
-     *
-     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns an empty
-     * list of events, and will be removed on the next major release.
-     *
-     * @param consumerUuid a consumer uuid
-     * @return an empty list
-     */
-    @Deprecated
-    @ApiOperation(
-        notes = "Retrieves a list of Consumer Events. DEPRECATED: Event persistence/retrieval is being " +
-        "phased out. This endpoint currently returns an empty list of events, and will be removed on the " +
-        "next major release.",
-        value = "getConsumerEvents")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}/events")
-    public List<Event> getConsumerEvents(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        return Collections.emptyList();
-    }
-
-    /**
-     * Retrieves and Event Atom Feed for a Consumer.
-     *
-     * @deprecated Event persistence/retrieval is being phased out. This endpoint currently returns a feed
-     * without any entries, and will be removed on the next major release.
-     *
-     * @param consumerUuid a consumer uuid
-     * @return an empty list
-     */
-    @Deprecated
-    @ApiOperation(
-        notes = "Retrieves and Event Atom Feed for a Consumer. DEPRECATED: Event persistence/retrieval is " +
-        "being phased out. This endpoint currently returns a feed without any entries, and will be " +
-        "removed on the next major release.",
-        value = "getConsumerAtomFeed")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces("application/atom+xml")
-    @Path("/{consumer_uuid}/atom")
-    public Feed getConsumerAtomFeed(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        String path = String.format("/consumers/%s/atom", consumerUuid);
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        Feed feed = this.eventAdapter.toFeed(null, path);
-        feed.setTitle("Event feed for consumer " + consumer.getUuid());
-        return feed;
     }
 
     @ApiOperation(notes = "Regenerates the Entitlement Certificates for a Consumer",

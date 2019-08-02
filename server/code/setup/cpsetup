@@ -47,6 +47,7 @@ if os.path.exists('/usr/sbin/tomcat') and not os.path.exists('/usr/sbin/tomcat6'
 else:
     TOMCAT = 'tomcat6'
 
+
 def run_command(command):
     (status, output) = getstatusoutput(command)
     if status > 0:
@@ -57,12 +58,14 @@ def run_command(command):
         raise Exception("Error running command")
     return output
 
+
 # run with 'sudo' if not running as root
 def run_command_with_sudo(command):
     if os.geteuid()==0:
         run_command(command)
     else:
         run_command('sudo %s' % command)
+
 
 class TomcatSetup(object):
     def __init__(self, conf_dir, keystorepwd):
@@ -72,7 +75,8 @@ class TomcatSetup(object):
         self.https_conn = """
     <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true"
                maxThreads="150" scheme="https" secure="true"
-               clientAuth="want" SSLProtocol="TLS"
+               clientAuth="want"
+               sslEnabledProtocols="TLSv1,+TLSv1.1,+TLSv1.2"
                keystoreFile="conf/keystore"
                truststoreFile="conf/keystore"
                keystorePass="%s"
@@ -89,30 +93,30 @@ class TomcatSetup(object):
                     TLS_ECDH_anon_WITH_AES_256_CBC_SHA"
                truststorePass="%s" />""" % (keystorepwd, keystorepwd)
 
-
     def _backup_config(self, conf_dir):
         run_command('cp %s/server.xml %s/server.xml.original' % (conf_dir, conf_dir))
 
     def _replace_current(self, original):
         regex = re.compile(self.existing_pattern, re.DOTALL)
-        return regex.sub(self.https_conn, original)
+        return regex.sub(self.https_conn, original, 1)
 
     def _replace_commented(self, original):
         regex = re.compile(self.comment_pattern, re.DOTALL)
-        return regex.sub(self.https_conn, original)
+        return regex.sub(self.https_conn, original, 1)
 
     def update_config(self):
         self._backup_config(self.conf_dir)
-        original = open(os.path.join(self.conf_dir, 'server.xml'), 'r').read()
+        original_file = open(os.path.join(self.conf_dir, 'server.xml'), 'r')
+        original = original_file.read()
 
         if re.search(self.comment_pattern, original, re.DOTALL):
             updated = self._replace_commented(original)
         else:
             updated = self._replace_current(original)
-
+        original_file.close()
         config = open(os.path.join(self.conf_dir, 'server.xml'), 'w')
         config.write(updated)
-        file.close
+        config.close()
 
     def fix_perms(self):
         run_command("chmod g+x /var/log/" + TOMCAT)
@@ -139,6 +143,7 @@ class TomcatSetup(object):
             except:
                 print("Waiting for tomcat to restart...")
 
+
 class CertSetup(object):
     def __init__(self):
         self.cert_home = '/etc/candlepin/certs'
@@ -158,14 +163,27 @@ class CertSetup(object):
 
         print("Creating CA private key password")
         run_command_with_sudo('su -c "echo $RANDOM > %s"' % self.ca_key_passwd)
+
         print("Creating CA private key")
-        run_command_with_sudo('openssl genrsa -out %s -passout "file:%s" 1024' % (self.ca_key, self.ca_key_passwd))
+        run_command_with_sudo('openssl genrsa -out %s -passout "file:%s" 2048'
+                              % (self.ca_key, self.ca_key_passwd))
+
         print("Creating CA public key")
         run_command_with_sudo('openssl rsa -pubout -in %s -out %s' % (self.ca_key, self.ca_pub_key))
+
         print("Creating CA certificate")
-        run_command_with_sudo('openssl req -new -x509 -days 365 -key %s -out %s -subj "/CN=%s/C=US/L=Raleigh/"' % (self.ca_key, self.ca_cert, socket.gethostname()))
-        run_command_with_sudo('openssl pkcs12 -export -in %s -inkey %s -out %s -name tomcat -CAfile %s -caname root -chain -password pass:password' % (self.ca_cert, self.ca_key, self.keystore, self.ca_cert))
-        run_command_with_sudo('chmod a+r %s' % self.keystore)
+        run_command_with_sudo('openssl req -new -x509 -days 365 -key %s -out %s '
+                              '-subj "/CN=%s/C=US/L=Raleigh/"'
+                              % (self.ca_key, self.ca_cert, socket.gethostname()))
+        run_command_with_sudo('openssl pkcs12 -export -in %s -inkey %s -out %s -name tomcat -CAfile %s '
+                              '-caname root -chain -password pass:password'
+                              % (self.ca_cert, self.ca_key, self.keystore, self.ca_cert))
+
+        # Tomcat 8.5+ requires the cert be separate from the key when used
+        # as both a keystore and a trust store
+        run_command_with_sudo('keytool -keystore %s -noprompt -importcert -storepass password '
+                              '-alias candlepin_ca -file %s' % (self.keystore, self.ca_cert))
+        run_command_with_sudo('chmod a+r %s/*' % self.cert_home)
 
 
 class PostgresqlConf(object):

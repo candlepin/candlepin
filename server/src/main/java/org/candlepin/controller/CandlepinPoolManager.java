@@ -859,6 +859,7 @@ public class CandlepinPoolManager implements PoolManager {
         pool.setUpstreamPoolId(sub.getUpstreamPoolId());
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
         pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
+        pool.setLocked(true);
 
         // Resolve CDN
         if (sub.getCdn() != null) {

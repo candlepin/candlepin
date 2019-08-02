@@ -1081,6 +1081,48 @@ describe 'Hypervisor Resource', :type => :virt do
     hypervisor_uuid.should == test_host['uuid']
   end
 
+  it 'should merge hypervisor into consumer with the same uuid ignore casing - async' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "TEST-UUID", "virt.is_guest"=>"false"}, nil, owner['key'])
+
+    host_hyp_id = "hypervisor"
+    guests = ['g1', 'g2']
+    host_facts = {
+        "dmi.system.uuid" => "test-uuid"}
+    job_detail = async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests, nil, nil, host_facts)
+    result_data = job_detail['resultData']
+    result_data.updated.size.should == 1
+    hypervisor_uuid = result_data.updated[0].uuid
+
+    @cp.list_consumers({:owner=>owner['key']}).length.should == 1
+    test_host = @cp.get_consumer(test_host['uuid'])
+    test_host['type']['label'].should == 'hypervisor'
+    hypervisor_uuid.should == test_host['uuid']
+  end
+
+  it 'should merge hypervisor into consumer with the same uuid ignore casing reverse - async' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+
+    host_hyp_id = "hypervisor"
+    guests = ['g1', 'g2']
+    host_facts = {
+        "dmi.system.uuid" => "TEST-UUID"}
+    job_detail = async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests, nil, nil, host_facts)
+    result_data = job_detail['resultData']
+    result_data.updated.size.should == 1
+    hypervisor_uuid = result_data.updated[0].uuid
+
+    @cp.list_consumers({:owner=>owner['key']}).length.should == 1
+    test_host = @cp.get_consumer(test_host['uuid'])
+    test_host['type']['label'].should == 'hypervisor'
+    hypervisor_uuid.should == test_host['uuid']
+  end
+
   it 'should not fail when facts change but not the guest list' do
     # test for BZ 1651651
     # if facts or hypervisor id changes, the migration was attempted
@@ -1122,5 +1164,34 @@ describe 'Hypervisor Resource', :type => :virt do
     async_update_hypervisor(owner, user, host_hyp_id_1, host_hyp_id_2, guests, true,nil, {"dmi.system.uuid" => host_system_id})
     test_host = @cp.get_consumer(test_host.uuid)
     @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_2
+  end
+
+  it 'check in will fail when json does not have the proper structure' do
+    owner = create_owner random_string('test_owner1')
+    user = user_client(owner, random_string("user"))
+    uuid1 = random_string('system.uuid')
+    uuid2 = random_string('system.uuid')
+    # incorrect json structure
+    report = {
+        "name" => '',
+        "uuid" => uuid1,
+        "hypervisorId" => {"hypervisorId" => 'hypervisor_id_1'},
+        "guestIds" => [
+            {'guestId' => uuid2}
+        ],
+        "facts" => {"test_fact" => "fact_value" }
+    }
+    job_detail = send_host_guest_mapping(owner, user, report.to_json())
+    job_detail["state"].should == "FAILED"
+
+    # empty json
+    report = {}
+    job_detail = send_host_guest_mapping(owner, user, report.to_json())
+    job_detail["state"].should == "FAILED"
+
+    # this is the correct version of an empy list of hypervisors
+    report = {hypervisors:[]}
+    job_detail = send_host_guest_mapping(owner, user, report.to_json())
+    job_detail["state"].should == "FINISHED"
   end
 end

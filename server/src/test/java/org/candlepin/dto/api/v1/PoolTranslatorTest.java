@@ -160,6 +160,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         sourceStack.setId("source-stack-id-1");
         sourceStack.setSourceConsumer(sourceConsumer);
         source.setSourceStack(sourceStack);
+        source.setLocked(true);
 
         return source;
     }
@@ -202,6 +203,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
             assertEquals(source.getSourceStackId(), dest.getSourceStackId());
             assertEquals(source.getSubscriptionSubKey(), dest.getSubscriptionSubKey());
             assertEquals(source.getSubscriptionId(), dest.getSubscriptionId());
+            assertEquals(source.isLocked(), dest.isLocked());
 
             if (childrenGenerated) {
                 this.ownerTranslatorTest

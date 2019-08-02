@@ -80,7 +80,7 @@ class Candlepin
               content_tags=[], created_date=nil, last_checkin_date=nil,
               annotations=nil, recipient_owner_key=nil, user_agent=nil,
               entitlement_count=0, id_cert=nil, serviceLevel=nil, role=nil, usage=nil,
-              addOns=[], reporter_id=nil)
+              addOns=nil, reporter_id=nil)
 
     consumer = {
       :type => {:label => type},
@@ -88,7 +88,6 @@ class Candlepin
       :facts => facts,
       :installedProducts => installedProducts,
       :contentTags => content_tags,
-      :addOns => addOns,
     }
 
     consumer[:capabilities] = capabilities.collect { |name| {'name' => name} } if capabilities
@@ -106,6 +105,7 @@ class Candlepin
     consumer[:serviceLevel] = serviceLevel if serviceLevel
     consumer[:role] = role if role
     consumer[:usage] = usage if usage
+    consumer[:addOns] = addOns if addOns
 
     params = {}
 

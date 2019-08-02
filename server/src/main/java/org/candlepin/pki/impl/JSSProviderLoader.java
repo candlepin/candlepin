@@ -14,26 +14,34 @@
  */
 package org.candlepin.pki.impl;
 
+import org.apache.commons.lang3.StringUtils;
+import org.mozilla.jss.CertDatabaseException;
 import org.mozilla.jss.JSSProvider;
+import org.mozilla.jss.KeyDatabaseException;
+import org.mozilla.jss.crypto.AlreadyInitializedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.security.GeneralSecurityException;
 import java.security.Security;
 import java.util.Arrays;
 
 /**
- * When this class is loaded, the JSS provider will be installed into the JVM.  The
- * provider can also be added via a call to a static method if needed in a test for example.  The
- * addProvider() method can be called more than once without ill effect (-1 will be returned if the provider
- * is already installed).
- * */
+ * Provides the addProvider() method, which, when called, initializes the JSS CryptoManager (which in turn
+ * initializes the NSS DB) and loads the JSS Provider into the JVM.
+ */
 public class JSSProviderLoader {
-    public static final JSSProvider JSS_PROVIDER = new JSSProvider();
+    private static JSSProvider jssProvider = null;
+    private static final String NSS_DB_LOCATION = "/etc/pki/nssdb";
+    private static final Logger log = LoggerFactory.getLogger(JSSProviderLoader.class);
 
     static {
         // Satellite 6 is only supported on 64 bit architectures
         addLibraryPath("/usr/lib64/jss");
         System.loadLibrary("jss4");
-        addProvider();
     }
 
     /**
@@ -77,7 +85,7 @@ public class JSSProviderLoader {
             usrPathsField.set(null, newPaths);
         }
         catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException("Could not add " + pathToAdd + " to library path", e);
+            throw new JSSLoaderException("Could not add " + pathToAdd + " to library path", e);
         }
     }
 
@@ -85,7 +93,96 @@ public class JSSProviderLoader {
         // static methods only
     }
 
+    /**
+     * Initializes the JSS CryptoManager (which in turn initializes the NSS DB), and loads the JSS provider
+     * into the JVM. The method should be called during context initialization. Can be called more than once
+     * without ill effect (-1 will be returned if the provider is already installed).
+     *
+     * Note: This method uses reflection to initialize the CryptoManager, due to dynamically loading the
+     * InitializationValues class, depending on which JSS version is on the classpath. This is because of
+     * breaking changes introduced between JSS 4.4.X (RHEL 7) and 4.5.0+ (RHEL 8).
+     */
     public static void addProvider() {
-        Security.addProvider(JSS_PROVIDER);
+        log.debug("Starting call to JSSProviderLoader.addProvider()...");
+
+        ClassLoader loader = JSSProviderLoader.class.getClassLoader();
+
+        Object initializationValuesObject = getInitializationValuesObject(loader);
+        Class<?> ivsClass = initializationValuesObject.getClass();
+
+        try {
+            // Set values on fields of the InitializationValues object.
+            Field noCertDB = ivsClass.getField("noCertDB");
+            Field installJSSProvider = ivsClass.getField("installJSSProvider");
+            Field initializeJavaOnly = ivsClass.getField("initializeJavaOnly");
+            noCertDB.set(initializationValuesObject, true);
+            installJSSProvider.set(initializationValuesObject, false);
+            initializeJavaOnly.set(initializationValuesObject, false);
+
+            // Initialize the CryptoManager, which will initialize the nss DB.
+            Class<?> cryptoManagerClass = loader.loadClass("org.mozilla.jss.CryptoManager");
+            Method initialize = cryptoManagerClass.getMethod("initialize", ivsClass);
+            initialize.invoke(null, initializationValuesObject);
+        }
+        catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException |
+            InvocationTargetException | IllegalAccessException e) {
+
+            if (e.getCause() instanceof AlreadyInitializedException) {
+                log.warn("CryptoManager was already initialized.");
+            }
+            else if (e.getCause() instanceof KeyDatabaseException ||
+                e.getCause() instanceof CertDatabaseException ||
+                e.getCause() instanceof GeneralSecurityException) {
+                throw new JSSLoaderException("Could not initialize CryptoManager!", e.getCause());
+            }
+            else {
+                throw new JSSLoaderException("Could not initialize CryptoManager!", e);
+            }
+        }
+
+        jssProvider = new JSSProvider();
+        int addProviderReturn = Security.addProvider(jssProvider);
+        log.debug("Finished call to JSSProviderLoader.addProvider(). Returned value: {}",
+            addProviderReturn);
+    }
+
+    /*
+     * Load the appropriate InitializationValues class, depending on JSS version,
+     * and return an instance of it. We load:
+     * - the 4.4.Z version of the class for RHEL 7.6+
+     * - the 4.5.Z+ version of the class for RHEL 8+
+     */
+    private static Object getInitializationValuesObject(ClassLoader loader) {
+        String jssVersionStr = JSSProvider.class.getPackage().getSpecificationVersion();
+        log.info("Using JSS version {}", jssVersionStr);
+
+        float jssVersion;
+        // Get the X.Y out of the version, even if it is in the format X.Y.Z
+        if (StringUtils.countMatches(jssVersionStr, ".") == 1) {
+            jssVersion = new Float(jssVersionStr);
+        }
+        else {
+            int indexOfLastPeriod = jssVersionStr.lastIndexOf(".");
+            jssVersion = new Float(jssVersionStr.substring(0, indexOfLastPeriod));
+        }
+
+        try {
+            String ivsClassName;
+            if (Float.compare(jssVersion, 4.4f) == 0) {
+                ivsClassName = "org.mozilla.jss.CryptoManager$InitializationValues";
+            }
+            else if (Float.compare(jssVersion, 4.4f) > 0) {
+                ivsClassName = "org.mozilla.jss.InitializationValues";
+            }
+            else {
+                throw new JSSLoaderException("Candlepin does not support JSS versions less than 4.4!");
+            }
+            return loader.loadClass(ivsClassName).getConstructor(String.class).newInstance(NSS_DB_LOCATION);
+        }
+        catch (InstantiationException | ClassNotFoundException | IllegalAccessException |
+            NoSuchMethodException | InvocationTargetException e) {
+
+            throw new JSSLoaderException("Could not instantiate a JSS InitializationValues object!", e);
+        }
     }
 }

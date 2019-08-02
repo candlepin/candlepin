@@ -336,7 +336,6 @@ public class ConfigProperties {
             this.put(ACTIVEMQ_CONNECTION_MONITOR_INTERVAL, "5000"); // milliseconds
 
             this.put(AUDIT_LISTENERS,
-                // "org.candlepin.audit.DatabaseListener," +
                 "org.candlepin.audit.LoggingListener," +
                 "org.candlepin.audit.ActivationListener");
             this.put(AUDIT_FILTER_ENABLED, "false");

@@ -1,5 +1,6 @@
 // vim: set expandtab sts=4 sw=4 ai:
 import groovy.text.GStringTemplateEngine
+import org.yaml.snakeyaml.Yaml
 
 description = "Candlepin Server"
 
@@ -24,6 +25,42 @@ processResources {
     }
 }
 
+ext {
+    logdriver_class = "net.rkbloom.logdriver.LogDriver"
+    use_logdriver = "true".equals(project.findProperty("logdriver"))
+
+    cpdb_username = "candlepin"
+    cpdb_password = ""
+    db_name = "candlepin"
+    if (project.findProperty("hidden_resources")) {
+        hidden_resources = project.findProperty("hidden_resources")
+    }
+    if (!project.findProperty("db_host") ||
+        (project.findProperty("db_host") && "".equals(project.findProperty("db_host")))) {
+        db_host = "localhost"
+    }
+    if (project.findProperty("app_db_name") && !"".equals(project.findProperty("app_db_name"))) {
+        db_name = project.findProperty("app_db_name")
+    }
+    // If MYSQL set up the mysql stuff else set up postgres (default)
+    if (project.findProperty("database_server") == "mysql") {
+        jdbc_driver_class = "com.mysql.jdbc.Driver"
+        jdbc_dialect = "org.hibernate.dialect.MySQL5InnoDBDialect"
+        jdbc_quartz_driver_class = "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"
+        jdbc_url = "jdbc:mysql://${db_host}/${db_name}"
+    } else {
+        jdbc_driver_class = "org.postgresql.Driver"
+        jdbc_dialect = "org.hibernate.dialect.PostgreSQL92Dialect"
+        jdbc_quartz_driver_class = "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate"
+        jdbc_url = "jdbc:postgresql://${db_host}/${db_name}"
+    }
+
+    amqp_enabled = "true".equals(project.findProperty("qpid"))
+    external_broker = "true".equals(project.findProperty("external_broker"))
+    hostedtest = "true".equals(project.findProperty("hostedtest"))
+    pinsetter_enabled = "true".equals(project.findProperty("pinsetter_enabled"))
+}
+
 war {
     if (!hostedtest) {
         rootSpec.exclude("**/hostedtest/**")
@@ -45,11 +82,27 @@ task rspec(type: Rspec)
 
 // A task to generate the the candlepin config file for use in etc or other locations.
 task generateConfig() {
-    def template = file("conf/candlepin.conf.template")
+    dependsOn ":candlepin:processResources"
+    def template = file("$projectDir/conf/candlepin.conf.template")
     def targetFile = file("$buildDir/candlepin.conf")
     doLast {
+        def defaults = [candlepin: project.ext.properties]
+        def binding = [candlepin: defaults['candlepin']]
+
+        try {
+            def custom = new Yaml().load(new File("$projectDir/custom.yaml").newInputStream())
+            // Overwrite the defaults with the values from custom.yaml
+            // We have to use the key 'candlepin' instead of 'candlepin.conf' since the dot in the
+            // key name would otherwise be interpreted as a dereference in the template.
+            if (custom && custom['candlepin.conf']) {
+                binding['candlepin'] << custom['candlepin.conf']
+            }
+        }
+        catch (FileNotFoundException e) {
+            println "No custom.yaml found.  Using defaults."
+        }
+
         // change contents via cli options
-        def binding = [project: project]
         // change file contents
         def tmp = new GStringTemplateEngine()
             .createTemplate(template)
@@ -57,6 +110,7 @@ task generateConfig() {
         targetFile.write(tmp.toString(), "UTF-8")
     }
 }
+assemble.dependsOn(generateConfig)
 
 // task to generate candlepin-api jar that Hosted adapters build against
 // invoked as `./gradlew apiJar`
@@ -118,7 +172,8 @@ dependencies {
     implementation "org.ehcache:jcache:1.0.0"
     implementation "javax.cache:cache-api:1.0.0"
 
-    implementation "org.mozilla:jss:4.5.0"
+    compileOnly "org.mozilla:jss:4.4.6"
+    testImplementation "org.mozilla:jss:4.4.6"
     implementation "ldapjdk:ldapjdk:4.19"
     implementation "org.quartz-scheduler:quartz:2.2.2"
 

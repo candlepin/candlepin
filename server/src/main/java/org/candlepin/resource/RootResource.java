@@ -58,7 +58,6 @@ public class RootResource {
         RESOURCE_CLASSES = new HashMap<>();
         addResource(AdminResource.class);
         addResource(UserResource.class);
-        addResource(AtomFeedResource.class);
         addResource(CertificateSerialResource.class);
         addResource(CdnResource.class);
         addResource(ConsumerResource.class);
@@ -66,7 +65,6 @@ public class RootResource {
         addResource(ContentResource.class);
         addResource(CrlResource.class);
         addResource(EntitlementResource.class);
-        addResource(EventResource.class);
         addResource(JobResource.class);
         addResource(OwnerResource.class);
         addResource(PoolResource.class);

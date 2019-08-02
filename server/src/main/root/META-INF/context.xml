@@ -1,0 +1,2 @@
+<!-- Testing repositories have to contain symlinks, when golden ticket is used -->
+<Context override="true" allowLinking="true" />

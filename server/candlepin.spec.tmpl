@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.7.1
+Version: 2.8.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -36,18 +36,15 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
 
 BuildRequires: selinux-policy-doc
-%if 0%{?rhel} == 8
+%if 0%{?rhel} == 8 || 0%{?fedora} > 29
 BuildRequires: /usr/bin/pathfix.py
 %endif
 
 Requires: java >= 1:1.8.0
 Requires: wget
-%if 0%{?rhel} <= 7
-Requires: tomcat >= 0:7.0.0
-%else
-Requires: pki-servlet-container >= 0:7.0.0
-%endif
-Requires: jss
+## tomcatjss itself depends on jss and tomcat/pki-servlet-container/pki-servlet-engine
+## without having to worry about about the renaming of those packages.
+Requires: tomcatjss >= 7.2.1-7.1
 Requires: javapackages-tools
 
 %description
@@ -92,7 +89,7 @@ SELinux policy module supporting candlepin
 
 %prep
 %setup -q %{SOURCE0}
-%if 0%{?rhel} == 8
+%if 0%{?rhel} == 8 || 0%{?fedora} > 29
 pathfix.py -pni "%{__python3} %{py3_shbang_opts}" code/setup/cpdb code/setup/cpsetup
 %endif
 
@@ -138,6 +135,12 @@ touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 %{__install} -d -m 755 %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
 %{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/tomcat/
 %{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
+
+## if we're running with tomcat 8+, use the appropriate context.xml file.
+%if 0%{?rhel} > 7 || 0%{?fedora} > 27
+mv %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context_tomcat8.xml \
+%{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context.xml
+%endif
 
 %{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/tomcat/keystore
 
@@ -227,6 +230,40 @@ fi
 
 #raw
 %changelog
+* Mon Jul 22 2019 Kevin Howell <khowell@redhat.com> 2.8.0-1
+- 1722477: Remove storage of events and resources that access the stored events
+  (wpoteat@redhat.com)
+- Gradle auto-conf task now references custom.yaml. (awood@redhat.com)
+- 1702383: prefer virtual pool and conusmer match over syspurpose null_rule
+  (wpoteat@redhat.com)
+- Removed config referencing the deleted DatabaseListener (crog@redhat.com)
+- Require pathfix.py on Fedora30+ (nmoumoul@redhat.com)
+- 1723799: Initialize the NSS db when loading a JSS provider
+  (nmoumoul@redhat.com)
+- Improved deploy script to allow usage of symlinks by tomcat
+  (jhnidek@redhat.com)
+- Consumer creation will now respect syspurpose attributes (crog@redhat.com)
+- 1715838: Handle matching of system uuid regardless of casing
+  (wpoteat@redhat.com)
+
+* Thu Jun 20 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.2-1
+- 1717903: syspurpose attributes now part of certificates (nmoumoul@redhat.com)
+- 1502193: Periodic mysql exceptions when updating consumers in production
+  (ojanus@redhat.com)
+- Update postgres dialect to minimum supported version of Postgres 9.2
+  (bcourt@redhat.com)
+- Remove Deprecated and unused annotations. (bcourt@redhat.com)
+- 1600588: [RFE] Add sorting by product to GET /owners/{owner_key}/pools
+  (ENT-745) (skalyana@redhat.com)
+- Better reason messages for Mismatched syspurpose status; ENT-1247
+  (jhnidek@redhat.com)
+- Update to clean up compile warnings (bcourt@redhat.com)
+- ENT-1314: Modify the locking and transaction size for the hypervisor report
+  (ojanus@redhat.com)
+- 1418996: Need string change for the message Error subscribing: Owner has
+  auto-bind disabled (ENT-1340) (skalyana@dhcp137-233.rdu.redhat.com)
+- Add task to generate candlepin-api jar (khowell@redhat.com)
+
 * Fri May 24 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.1-1
 - Fix pom generation to fix builds (khowell@redhat.com)
 - 1664481: match syspurpose attributes case insensitively (nmoumoul@redhat.com)

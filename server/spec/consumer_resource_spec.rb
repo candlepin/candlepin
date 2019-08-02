@@ -125,32 +125,6 @@ describe 'Consumer Resource' do
     }.should raise_exception(RestClient::ResourceNotFound)
   end
 
-  it "should expose a consumer's event atom feed" do
-    atom = @consumer1.list_consumer_events_atom(@consumer1.uuid)
-    doc = REXML::Document.new(atom)
-    events = REXML::XPath.match(doc, "//*[local-name()='event'][type = 'CREATED' and target ='CONSUMER']")
-
-    # All atom feed endpoints are deprecated, and should be returning a feed without any events:
-    events.length.should be == 0
-
-    # Consumer 2 should not be able to see consumer 1's feed:
-    lambda {
-      @consumer2.list_consumer_events_atom(@consumer1.uuid)
-    }.should raise_exception(RestClient::ResourceNotFound)
-  end
-
-  it "should expose a consumer's events" do
-    events = @consumer1.list_consumer_events(@consumer1.uuid)
-
-    # All event retrieval endpoints are deprecated, and should be returning an empty list of events:
-    events.size.should be == 0
-
-    # Consumer 2 should not be able to see consumer 1's feed:
-    lambda {
-      @consumer2.list_consumer_events(@consumer1.uuid)
-    }.should raise_exception(RestClient::ResourceNotFound)
-  end
-
   it 'should receive paged consumers back when requested' do
     (1..4).each do |i|
       consumer_client(@user1, random_string('system'))
@@ -369,6 +343,78 @@ describe 'Consumer Resource' do
     consumer = client.get_consumer(consumer['uuid'])
     consumer['lastCheckin'].should == checkin_date
     consumer['created'].should == created_date
+  end
+
+  it 'should let a consumer register and set service level' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    service_level = 'test_service_level'
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, service_level)
+
+    expect(consumer['serviceLevel']).to eq(service_level)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['serviceLevel']).to eq(service_level)
+  end
+
+  it 'should let a consumer register and set system purpose role' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    role = 'test_role'
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, role)
+
+    expect(consumer['role']).to eq(role)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['role']).to eq(role)
+  end
+
+  it 'should let a consumer register and set system purpose usage' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    usage = 'test_usage'
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, usage)
+
+    expect(consumer['usage']).to eq(usage)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['usage']).to eq(usage)
+  end
+
+  it 'should let a consumer register and set system purpose addons' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    addons = ['test_addon-1', 'test_addon-2', 'test_addon-3']
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, addons)
+
+    expect(consumer['addOns']).to_not be_nil
+    expect(consumer['addOns'].size).to eq(addons.size)
+    expect(consumer['addOns']).to include(*addons)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['addOns']).to_not be_nil
+    expect(consumer['addOns'].size).to eq(addons.size)
+    expect(consumer['addOns']).to include(*addons)
   end
 
   it 'should let a consumer register dates with milliseconds' do
@@ -659,17 +705,27 @@ describe 'Consumer Resource' do
   it 'should not allow a consumer to update their hypervisorId to one in use by owner' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
-    consumer1 = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [], nil, [], "hYpervisor")
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
-    consumer1 =  @cp.get_consumer(consumer1['uuid'])
+    consumer1 = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [], nil, [], "hYpervisor")
+    consumer_client1 = Candlepin.new(nil, nil, consumer1['idCert']['cert'], consumer1['idCert']['key'])
+
+    consumer = consumer_client.get_consumer()
+    consumer['hypervisorId'].should == nil
+    consumer1 =  consumer_client1.get_consumer()
     consumer1['hypervisorId']['hypervisorId'].should == "hypervisor"
 
-    consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['hypervisorId'].should == nil
-
-    lambda do
+    begin
       consumer_client.update_consumer({:hypervisorId => "hypervisor"})
-    end.should raise_exception(RestClient::BadRequest)
+      fail 'Should have failed!'
+    rescue RestClient::BadRequest => e
+      json = JSON.parse(e.http_body)
+      json.displayMessage.end_with?('Hypervisor id: hypervisor is already used.').should == true
+    end
+
+    # should handle update to same consumer without issue
+    consumer_client1.update_consumer({:hypervisorId => "hypervisor"})
+
+
   end
 
   it 'should allow a consumer to unset their hypervisorId' do
@@ -919,7 +975,7 @@ describe 'Consumer Resource' do
     consumer['serviceLevel'].should == 'Ultra-VIP'
 
     # Dry run against the set service level:
-    # Should get pools of both the exempt product (product1) and the other installed product (product2), 
+    # Should get pools of both the exempt product (product1) and the other installed product (product2),
     # because we no longer filter on the consumer's sla match (unless the consumer has existing entitlements),
     # and exempt sla pools are always returned.
     pools = @cp.autobind_dryrun(consumer['uuid'])

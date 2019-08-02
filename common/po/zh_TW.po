@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-05-24 13:27-0400\n"
+"POT-Creation-Date: 2019-06-20 10:07-0400\n"
 "PO-Revision-Date: 2017-11-10 09:11+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Chinese (Traditional, Taiwan)\n"
@@ -472,7 +472,7 @@ msgid ""
 "details"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:828
+#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:829
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "因為同步修改導致需求失敗，請再試一次。"
 
@@ -515,7 +515,7 @@ msgstr "為擁有者 {0} 產生 ueber 憑證時發生問題"
 msgid "Auto-attach is disabled for owner {0}{1}."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/pinsetter/tasks/HypervisorUpdateJob.java:232
+#: server/src/main/java/org/candlepin/pinsetter/tasks/HypervisorUpdateJob.java:159
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:160
 #, java-format
 msgid ""
@@ -938,59 +938,72 @@ msgstr "更新單位 {0} 時發生了問題"
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1608
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1394
+#, java-format
+msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
+msgstr ""
+
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1619
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1630
 #, java-format
 msgid "Consumer with UUID {0} was already deleted."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1635
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1646
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:312
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "因為 {2} 所以無法取消註冊 {0} {1}"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1684
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1687
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1724
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1737
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1740
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1840
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1843
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1695
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1698
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1735
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1748
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1751
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1851
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1854
 msgid "Cannot retrieve content access certificate"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1710
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1721
 msgid "Content access mode does not allow this request."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1778
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1789
 msgid "Unable to create entitlement certificate archive"
 msgstr "無法建立權利憑證封存檔案"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1865
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1876
 msgid "Cannot bind by multiple parameters."
 msgstr "無法以多重參數綁定。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author snowlet
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1869
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1880
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "自動綁定時，無法指定數量。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1982
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1993
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2031
-msgid "Owner has autobind disabled"
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2043
+#, java-format
+msgid ""
+"Organization \"{0}\" has auto-attach disabled because of the content access "
+"mode setting."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2067
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2177
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2048
+#, java-format
+msgid "Organization \"{0}\" has auto-attach disabled."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2087
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2197
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:197
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:236
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:255
@@ -1000,33 +1013,33 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2200
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2220
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2222
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2242
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2345
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2365
 msgid "Unable to create export archive"
 msgstr "無法建立 export 封存"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2556
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2576
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "嘗試為單位 {0} 產生 ID 憑證時發生了問題"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2600
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2620
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "擁有 UUID {0} 的系統不是虛擬客座端。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2701
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2721
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
