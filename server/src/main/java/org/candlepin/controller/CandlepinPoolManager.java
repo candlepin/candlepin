@@ -1848,6 +1848,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    @Transactional
     public Set<Pool> revokeEntitlements(List<Entitlement> entsToRevoke) {
         return revokeEntitlements(entsToRevoke, null, true);
     }

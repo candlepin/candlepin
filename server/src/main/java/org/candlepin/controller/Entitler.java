@@ -45,6 +45,7 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductInfo;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -70,7 +71,9 @@ import java.util.Map.Entry;
  * entitler
  */
 public class Entitler {
-    private static Logger log = LoggerFactory.getLogger(Entitler.class);
+
+    private static final Logger log = LoggerFactory.getLogger(Entitler.class);
+    private static final int MAX_DEV_LIFE_DAYS = 90;
 
     private Configuration config;
     private ConsumerCurator consumerCurator;
@@ -87,8 +90,6 @@ public class Entitler {
     private ProductCurator productCurator;
     private ProductManager productManager;
     private ProductServiceAdapter productAdapter;
-
-    private int maxDevLifeDays = 90;
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
@@ -299,10 +300,10 @@ public class Entitler {
     }
 
     private Date getEndDate(Product prod, Date startTime) {
-        int interval = maxDevLifeDays;
+        int interval = MAX_DEV_LIFE_DAYS;
         String prodExp = prod.getAttributeValue(Product.Attributes.TTL);
 
-        if (prodExp != null &&  Integer.parseInt(prodExp) < maxDevLifeDays) {
+        if (prodExp != null &&  Integer.parseInt(prodExp) < MAX_DEV_LIFE_DAYS) {
             interval = Integer.parseInt(prodExp);
         }
 
@@ -483,10 +484,16 @@ public class Entitler {
         }
 
         if (!entsToDelete.isEmpty()) {
-            poolManager.revokeEntitlements(entsToDelete);
+            for (List<Entitlement> ents : this.partition(entsToDelete)) {
+                poolManager.revokeEntitlements(ents);
+            }
         }
 
         return total;
+    }
+
+    private Iterable<List<Entitlement>> partition(List<Entitlement> entsToDelete) {
+        return Iterables.partition(entsToDelete, config.getInt(ConfigProperties.ENTITLER_BULK_SIZE));
     }
 
     public int revokeUnmappedGuestEntitlements() {
