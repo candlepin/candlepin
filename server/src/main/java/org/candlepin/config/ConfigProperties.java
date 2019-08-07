@@ -190,6 +190,7 @@ public class ConfigProperties {
 
     public static final String ENTITLER_JOB_THROTTLE =
         "pinsetter." + EntitlerJob.class.getName() + ".throttle";
+    public static final String ENTITLER_BULK_SIZE = "entitler.bulk.size";
 
     public static final String BATCH_BIND_NUMBER_OF_POOLS_LIMIT =
         "candlepin.batch.bind.number_of_pools_limit";
@@ -348,6 +349,7 @@ public class ConfigProperties {
             this.put("org.quartz.threadPool.threadPriority", "5");
             this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
             this.put(ENTITLER_JOB_THROTTLE, "7");
+            this.put(ENTITLER_BULK_SIZE, "1000");
             this.put(BATCH_BIND_NUMBER_OF_POOLS_LIMIT, "100");
 
             // AMQP (Qpid) configuration used by events
