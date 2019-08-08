@@ -14,8 +14,20 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyMap;
+import static org.mockito.Mockito.anySet;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.nullable;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -33,11 +45,9 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -48,13 +58,11 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -79,7 +87,7 @@ import java.util.stream.Collectors;
 /**
  * EntitlerTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class EntitlerTest {
     private I18n i18n;
     private Entitler entitler;
@@ -93,10 +101,8 @@ public class EntitlerTest {
     @Mock private ConsumerCurator cc;
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private Configuration config;
-    @Mock private OwnerProductCurator ownerProductCurator;
     @Mock private OwnerCurator ownerCurator;
     @Mock private PoolCurator poolCurator;
-    @Mock private ProductCurator productCurator;
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private ProductManager productManager;
     @Mock private ContentManager contentManager;
@@ -108,11 +114,8 @@ public class EntitlerTest {
         return result;
     }
 
-    @Before
+    @BeforeEach
     public void init() {
-        when(consumer.getOwnerId()).thenReturn("admin");
-        when(ownerCurator.findOwnerById(eq("admin"))).thenReturn(owner);
-
         i18n = I18nFactory.getI18n(
             getClass(),
             Locale.US,
@@ -120,82 +123,74 @@ public class EntitlerTest {
         );
         translator = new EntitlementRulesTranslator(i18n);
 
-        when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
-
         entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator, config,
-            ownerProductCurator, ownerCurator, poolCurator, productCurator, productManager, productAdapter,
+            ownerCurator, poolCurator, productManager, productAdapter,
             contentManager);
     }
 
-    private void mockProductImport(Owner owner, Map<String, Product> products) {
-        when(productManager.importProducts(eq(owner), any(Map.class), any(Map.class)))
-            .thenAnswer(new Answer<ImportResult<Product>>() {
-                @Override
-                public ImportResult<Product> answer(InvocationOnMock invocation) throws Throwable {
-                    Object[] args = invocation.getArguments();
-                    Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
-                    ImportResult<Product> importResult = new ImportResult<>();
-                    Map<String, Product> output = importResult.getCreatedEntities();
+    private void mockProductImport(Map<String, Product> products) {
+        when(productManager.importProducts(any(Owner.class), anyMap(), anyMap()))
+            .thenAnswer(invocation -> {
+                Object[] args = invocation.getArguments();
+                Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
+                ImportResult<Product> importResult = new ImportResult<>();
+                Map<String, Product> output = importResult.getCreatedEntities();
 
-                    if (productData != null) {
-                        for (String pid : productData.keySet()) {
-                            Product product = products.get(pid);
+                if (productData != null) {
+                    for (String pid : productData.keySet()) {
+                        Product product = products.get(pid);
 
-                            if (product != null) {
-                                output.put(product.getId(), product);
-                            }
+                        if (product != null) {
+                            output.put(product.getId(), product);
                         }
                     }
-
-                    return importResult;
                 }
+
+                return importResult;
             });
     }
 
-    private void mockProductImport(Owner owner, Product... products) {
-        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
+    private void mockProductImport(Product... products) {
+        this.mockContentImport(Collections.emptyMap());
         Map<String, Product> productMap = new HashMap<>();
 
         for (Product product : products) {
             productMap.put(product.getId(), product);
         }
 
-        this.mockProductImport(owner, productMap);
+        this.mockProductImport(productMap);
     }
 
-    private void mockContentImport(Owner owner, Map<String, Content> contents) {
-        when(contentManager.importContent(eq(owner), any(Map.class), any(Set.class)))
-            .thenAnswer(new Answer<ImportResult<Content>>() {
-                @Override
-                public ImportResult<Content> answer(InvocationOnMock invocation) throws Throwable {
-                    Object[] args = invocation.getArguments();
-                    Map<String, ContentData> contentData = (Map<String, ContentData>) args[1];
-                    ImportResult<Content> importResult = new ImportResult<>();
-                    Map<String, Content> output = importResult.getCreatedEntities();
+    private void mockContentImport(Map<String, Content> contents) {
+        when(contentManager.importContent(any(), anyMap(), anySet()))
+            .thenAnswer(invocation -> {
+                Object[] args = invocation.getArguments();
+                Map<String, ContentData> contentData = (Map<String, ContentData>) args[1];
+                ImportResult<Content> importResult = new ImportResult<>();
+                Map<String, Content> output = importResult.getCreatedEntities();
 
-                    if (contentData != null) {
-                        for (String pid : contentData.keySet()) {
-                            Content content = contents.get(pid);
+                if (contentData != null) {
+                    for (String pid : contentData.keySet()) {
+                        Content content = contents.get(pid);
 
-                            if (content != null) {
-                                output.put(content.getId(), content);
-                            }
+                        if (content != null) {
+                            output.put(content.getId(), content);
                         }
                     }
-
-                    return importResult;
                 }
+
+                return importResult;
             });
     }
 
-    private void mockContentImport(Owner owner, Content... contents) {
+    private void mockContentImport(Content... contents) {
         Map<String, Content> contentMap = new HashMap<>();
 
         for (Content content : contents) {
             contentMap.put(content.getId(), content);
         }
 
-        this.mockContentImport(owner, contentMap);
+        this.mockContentImport(contentMap);
     }
 
     @Test
@@ -219,7 +214,6 @@ public class EntitlerTest {
     @Test
     public void bindByPool() throws EntitlementRefusedException {
         String poolid = "pool10";
-        Pool pool = mock(Pool.class);
         Entitlement ent = mock(Entitlement.class);
         List<Entitlement> eList = new ArrayList<>();
         eList.add(ent);
@@ -235,10 +229,16 @@ public class EntitlerTest {
 
     @Test
     public void bindByProductsString() throws Exception {
+        Owner owner = new Owner("o1");
+        owner.setId(TestUtil.randomString());
         String[] pids = {"prod1", "prod2", "prod3"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
+        when(consumer.getOwnerId()).thenReturn(owner.getOwnerId());
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+
         entitler.bindByProducts(pids, "abcd1234", null, null);
-        AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
+
+        AutobindData data = AutobindData.create(consumer, this.owner).forProducts(pids);
         verify(pm).entitleByProducts(eq(data));
     }
 
@@ -246,11 +246,13 @@ public class EntitlerTest {
     public void bindByProducts() throws Exception  {
         String[] pids = {"prod1", "prod2", "prod3"};
         AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
+
         entitler.bindByProducts(data);
+
         verify(pm).entitleByProducts(data);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void nullPool() throws EntitlementRefusedException {
         String poolid = "foo";
         Consumer c = TestUtil.createConsumer(); // keeps me from casting null
@@ -258,154 +260,134 @@ public class EntitlerTest {
         pQs.put(poolid, 1);
         when(cc.findByUuid(eq(c.getUuid()))).thenReturn(c);
         when(pm.entitleByPools(eq(c), eq(pQs))).thenThrow(new IllegalArgumentException());
-        entitler.bindByPoolQuantities(c.getUuid(), pQs);
+
+        assertThrows(BadRequestException.class, () -> entitler.bindByPoolQuantities(c.getUuid(), pQs));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void someOtherErrorPool() {
-        bindByPoolErrorTest("do.not.match");
+        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest("do.not.match"));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void consumerTypeMismatchPool() {
-        bindByPoolErrorTest("rulefailed.consumer.type.mismatch");
+        String msg = "rulefailed.consumer.type.mismatch";
+        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void alreadyHasProductPool() {
-        bindByPoolErrorTest("rulefailed.consumer.already.has.product");
+        String msg = "rulefailed.consumer.already.has.product";
+        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void noEntitlementsAvailable() {
-        bindByPoolErrorTest("rulefailed.no.entitlements.available");
+        String msg = "rulefailed.no.entitlements.available";
+        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
     }
 
     @Test
     public void consumerDoesntSupportInstanceBased() {
         String expected = "Unit does not support instance based calculation required by pool \"pool10\"";
-        try {
-            bindByPoolErrorTest("rulefailed.instance.unsupported.by.consumer");
-            fail();
-        }
-        catch (ForbiddenException e) {
-            assertEquals(expected, e.getMessage());
-        }
+        String msg = "rulefailed.instance.unsupported.by.consumer";
+
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        assertEquals(expected, e.getMessage());
     }
 
     @Test
     public void consumerDoesntSupportCores() {
         String expected = "Unit does not support core calculation required by pool \"pool10\"";
-        try {
-            bindByPoolErrorTest("rulefailed.cores.unsupported.by.consumer");
-            fail();
-        }
-        catch (ForbiddenException e) {
-            assertEquals(expected, e.getMessage());
-        }
+        String msg = "rulefailed.cores.unsupported.by.consumer";
+
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        assertEquals(expected, e.getMessage());
     }
 
     @Test
     public void consumerDoesntSupportRam() {
         String expected = "Unit does not support RAM calculation required by pool \"pool10\"";
-        try {
-            bindByPoolErrorTest("rulefailed.ram.unsupported.by.consumer");
-            fail();
-        }
-        catch (ForbiddenException e) {
-            assertEquals(expected, e.getMessage());
-        }
+        String msg = "rulefailed.ram.unsupported.by.consumer";
+
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        assertEquals(expected, e.getMessage());
     }
 
     @Test
     public void consumerDoesntSupportDerived() {
         String expected = "Unit does not support derived products data required by pool \"pool10\"";
-        try {
-            bindByPoolErrorTest("rulefailed.derivedproduct.unsupported.by.consumer");
-            fail();
-        }
-        catch (ForbiddenException e) {
-            assertEquals(expected, e.getMessage());
-        }
+        String msg = "rulefailed.derivedproduct.unsupported.by.consumer";
+
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        assertEquals(expected, e.getMessage());
     }
 
-    private void bindByPoolErrorTest(String msg) {
-        try {
-            String poolid = "pool10";
-            Pool pool = mock(Pool.class);
-            Map<String, ValidationResult> fakeResult = new HashMap<>();
-            fakeResult.put(poolid, fakeOutResult(msg));
-            EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
+    private void bindByPoolErrorTest(String msg) throws EntitlementRefusedException {
+        String poolid = "pool10";
+        Pool pool = mock(Pool.class);
+        Map<String, ValidationResult> fakeResult = new HashMap<>();
+        fakeResult.put(poolid, fakeOutResult(msg));
+        EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
 
-            when(pool.getId()).thenReturn(poolid);
-            when(poolCurator.get(eq(poolid))).thenReturn(pool);
-            Map<String, Integer> pQs = new HashMap<>();
-            pQs.put(poolid, 1);
-            when(pm.entitleByPools(eq(consumer), eq(pQs))).thenThrow(ere);
-            entitler.bindByPoolQuantity(consumer, poolid, 1);
-        }
-        catch (EntitlementRefusedException e) {
-            fail(msg + ": threw unexpected error");
-        }
+        when(pool.getId()).thenReturn(poolid);
+        when(poolCurator.get(eq(poolid))).thenReturn(pool);
+        Map<String, Integer> pQs = new HashMap<>();
+        pQs.put(poolid, 1);
+        when(pm.entitleByPools(eq(consumer), eq(pQs))).thenThrow(ere);
+        entitler.bindByPoolQuantity(consumer, poolid, 1);
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void alreadyHasProduct() throws Exception {
-        bindByProductErrorTest("rulefailed.consumer.already.has.product");
+    @Test
+    public void alreadyHasProduct() {
+        String msg = "rulefailed.consumer.already.has.product";
+        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest(msg));
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void noEntitlementsForProduct() throws Exception {
-        bindByProductErrorTest("rulefailed.no.entitlements.available");
+    @Test
+    public void noEntitlementsForProduct() {
+        String msg = "rulefailed.no.entitlements.available";
+        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest(msg));
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void mismatchByProduct() throws Exception {
-        bindByProductErrorTest("rulefailed.consumer.type.mismatch");
+    @Test
+    public void mismatchByProduct() {
+        String msg = "rulefailed.consumer.type.mismatch";
+        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest(msg));
     }
 
     @Test
     public void virtOnly() {
         String expected = "Pool is restricted to virtual guests: \"pool10\".";
-        try {
-            bindByPoolErrorTest("rulefailed.virt.only");
-            fail();
-        }
-        catch (ForbiddenException e) {
-            assertEquals(expected, e.getMessage());
-        }
+        String msg = "rulefailed.virt.only";
+
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        assertEquals(expected, e.getMessage());
     }
 
     @Test
-    public void physicalOnly() throws Exception {
+    public void physicalOnly() {
         String expected = "Pool is restricted to physical systems: \"pool10\".";
-        try {
-            bindByPoolErrorTest("rulefailed.physical.only");
-            fail();
-        }
-        catch (ForbiddenException e) {
-            assertEquals(expected, e.getMessage());
-        }
+        String msg = "rulefailed.physical.only";
+
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        assertEquals(expected, e.getMessage());
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void allOtherErrors() throws Exception {
-        bindByProductErrorTest("generic.error");
+    @Test
+    public void allOtherErrors() {
+        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest("generic.error"));
     }
 
-    private void bindByProductErrorTest(String msg) throws Exception {
-        try {
-            String[] pids = {"prod1", "prod2", "prod3"};
-            Map<String, ValidationResult> fakeResult = new HashMap<>();
-            fakeResult.put("blah", fakeOutResult(msg));
-            EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
-            AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
-            when(pm.entitleByProducts(data)).thenThrow(ere);
-            entitler.bindByProducts(data);
-        }
-        catch (EntitlementRefusedException e) {
-            fail(msg + ": threw unexpected error");
-        }
+    private void bindByProductErrorTest(String msg)
+        throws EntitlementRefusedException, AutobindDisabledForOwnerException {
+        String[] pids = {"prod1", "prod2", "prod3"};
+        Map<String, ValidationResult> fakeResult = new HashMap<>();
+        fakeResult.put("blah", fakeOutResult(msg));
+        EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
+        AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
+        when(pm.entitleByProducts(data)).thenThrow(ere);
+        entitler.bindByProducts(data);
     }
 
     @Test
@@ -464,16 +446,17 @@ public class EntitlerTest {
         p1.setEntitlements(entitlementSet1);
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(Arrays.asList(e1).iterator());
+        when(cqmock.iterator()).thenReturn(Collections.singletonList(e1).iterator());
         when(entitlementCurator.findByPoolAttribute(eq(c), eq("unmapped_guests_only"), eq("true")))
             .thenReturn(cqmock);
+        when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
 
         String[] pids = {product.getId(), "prod2"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(c);
         entitler.bindByProducts(pids, "abcd1234", null, null);
         AutobindData data = AutobindData.create(c, owner1).forProducts(pids);
         verify(pm).entitleByProducts(eq(data));
-        verify(pm).revokeEntitlements(Arrays.asList(e1));
+        verify(pm).revokeEntitlements(Collections.singletonList(e1));
     }
 
     @Test
@@ -484,6 +467,7 @@ public class EntitlerTest {
         when(cqmock.iterator()).thenReturn(entsOf(pool1, pool2).iterator());
         when(entitlementCurator.findByPoolAttribute(eq("unmapped_guests_only"), eq("true")))
             .thenReturn(cqmock);
+        when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
 
         int total = entitler.revokeUnmappedGuestEntitlements();
 
@@ -516,9 +500,6 @@ public class EntitlerTest {
 
         p.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
         devProdDTOs.add(p.toDTO());
-        Pool activePool = TestUtil.createPool(owner, p);
-        List<Pool> activeList = new ArrayList<>();
-        activeList.add(activePool);
         Pool devPool = mock(Pool.class);
 
         Consumer devSystem = TestUtil.createConsumer(owner);
@@ -526,10 +507,10 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(eq(owner.getKey()), any(List.class))).thenReturn(devProdDTOs);
+        doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
-        this.mockProductImport(owner, p);
-        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
+        this.mockProductImport(p);
+        this.mockContentImport(Collections.emptyMap());
 
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
@@ -539,16 +520,10 @@ public class EntitlerTest {
         verify(pm).createPool(any(Pool.class));
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void testDevPoolCreationAtBindFailStandalone() throws Exception {
+    @Test
+    public void testDevPoolCreationAtBindFailStandalone() {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
-        devProdDTOs.add(p.toDTO());
-
-        Pool activePool = TestUtil.createPool(owner, p);
-        List<Pool> activeList = new ArrayList<>();
-        activeList.add(activePool);
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
@@ -557,15 +532,14 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
 
         AutobindData ad = new AutobindData(devSystem, owner);
-        entitler.bindByProducts(ad);
+
+        assertThrows(ForbiddenException.class, () -> entitler.bindByProducts(ad));
     }
 
-    @Test(expected = ForbiddenException.class)
-    public void testDevPoolCreationAtBindFailNotActive() throws Exception {
+    @Test
+    public void testDevPoolCreationAtBindFailNotActive() {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<>();
         Product p = TestUtil.createProduct("test-product", "Test Product");
-        devProdDTOs.add(p.toDTO());
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
@@ -574,7 +548,8 @@ public class EntitlerTest {
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
 
         AutobindData ad = new AutobindData(devSystem, owner);
-        entitler.bindByProducts(ad);
+
+        assertThrows(ForbiddenException.class, () -> entitler.bindByProducts(ad));
     }
 
     @Test
@@ -585,20 +560,16 @@ public class EntitlerTest {
         Product ip = TestUtil.createProduct("test-product-installed", "Installed Test Product");
         devProdDTOs.add(ip.toDTO());
 
-        Pool activePool = TestUtil.createPool(owner, p);
-        List<Pool> activeList = new ArrayList<>();
-        activeList.add(activePool);
-
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(any(String.class), any(List.class))).thenReturn(devProdDTOs);
+        doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
-        mockProductImport(owner, p, ip);
-        mockContentImport(owner, new Content[] {});
+        mockProductImport(p, ip);
+        mockContentImport();
 
         AutobindData ad = new AutobindData(devSystem, owner);
         try {
@@ -620,10 +591,6 @@ public class EntitlerTest {
         devProdDTOs.add(p.toDTO());
         devProdDTOs.add(ip1.toDTO());
 
-        Pool activePool = TestUtil.createPool(owner, p);
-        List<Pool> activeList = new ArrayList<>();
-        activeList.add(activePool);
-
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip1));
@@ -631,10 +598,10 @@ public class EntitlerTest {
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
-        when(productAdapter.getProductsByIds(any(String.class), any(List.class))).thenReturn(devProdDTOs);
+        doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
-        this.mockProductImport(owner, p, ip1, ip2);
-        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
+        this.mockProductImport(p, ip1, ip2);
+        this.mockContentImport(Collections.emptyMap());
 
         Pool expectedPool = entitler.assembleDevPool(devSystem, owner, p.getId());
         when(pm.createPool(any(Pool.class))).thenReturn(expectedPool);
@@ -658,10 +625,10 @@ public class EntitlerTest {
         devSystem.setFact("dev_sku", p1.getId());
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
-        when(productAdapter.getProductsByIds(eq(owner.getKey()), any(List.class))).thenReturn(devProdDTOs);
+        doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
-        this.mockProductImport(owner, p1, p2, p3);
-        this.mockContentImport(owner, Collections.<String, Content>emptyMap());
+        this.mockProductImport(p1, p2, p3);
+        this.mockContentImport(Collections.emptyMap());
 
         Pool created = entitler.assembleDevPool(devSystem, owner, devSystem.getFact("dev_sku"));
         Calendar cal = Calendar.getInstance();
@@ -676,12 +643,12 @@ public class EntitlerTest {
         assertEquals(1L, created.getQuantity().longValue());
     }
 
-    public Pool createValidPool(String id) {
+    private Pool createValidPool(String id) {
         Date expireInFuture = new Date(new Date().getTime() + 60L * 60L * 1000L);
         return createPool(id, expireInFuture);
     }
 
-    public Pool createExpiredPool(String id) {
+    private Pool createExpiredPool(String id) {
         Date thirtySixHoursAgo = new Date(new Date().getTime() - 36L * 60L * 60L * 1000L);
         return createPool(id, thirtySixHoursAgo);
     }
