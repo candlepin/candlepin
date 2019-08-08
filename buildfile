@@ -45,10 +45,14 @@ RESTEASY = [group('resteasy-jaxrs',
             'org.reactivestreams:reactive-streams:jar:1.0.0.final']
 
 JACKSON_NS = "com.fasterxml.jackson"
-JACKSON_VERSION = "2.9.4"
-JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
+JACKSON_VERSION = "2.9.9"
+JACKSON_PATCH_VERSION = "2.9.9.3"
+JACKSON = [group('jackson-databind',
                  :under=> "#{JACKSON_NS}.core",
-                 :version => JACKSON_VERSION),
+                 :version => JACKSON_PATCH_VERSION),
+           group('jackson-annotations', 'jackson-core',
+                            :under=> "#{JACKSON_NS}.core",
+                            :version => JACKSON_VERSION),
            group('jackson-jaxrs-base', 'jackson-jaxrs-json-provider',
                  :under=> "#{JACKSON_NS}.jaxrs",
                  :version => JACKSON_VERSION),
