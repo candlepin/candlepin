@@ -46,6 +46,7 @@ import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -327,6 +328,7 @@ public class EntitlementResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Path("{entitlement_id}/migrate")
+    @Transactional
     public Response migrateEntitlement(
         @PathParam("entitlement_id") @Verify(Entitlement.class) String id,
         @QueryParam("to_consumer") @Verify(Consumer.class) String uuid,
