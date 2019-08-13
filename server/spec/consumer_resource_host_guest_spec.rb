@@ -195,6 +195,30 @@ describe 'Consumer Resource Host/Guest' do
     host2['uuid'].should == host_consumer2['uuid']
   end
 
+  it 'should ignore duplicate guest ids' do
+    uuid1 = random_string('system.uuid')
+    uuid2 = random_string('system.uuid')
+    guests = [{'guestId' => uuid1}, {'guestId' => uuid1}, {'guestId' => uuid2},  {'guestId' => uuid2}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    host_consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid1}, nil, nil, [], [])
+    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid2}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestIds => guests})
+
+    guest_consumers = @cp.get_consumer_guests(host_consumer['uuid'])
+    expect(guest_consumers.length).to eq(2)
+
+    guest_uuids = guest_consumers.map { |guest| guest['uuid'] }
+    expect(guest_uuids).to contain_exactly(guest_consumer1['uuid'], guest_consumer2['uuid'])
+
+  end
+
   it 'guest should not impose SLA on host auto-attach' do
     uuid1 = random_string('system.uuid')
     uuid2 = random_string('system.uuid')
