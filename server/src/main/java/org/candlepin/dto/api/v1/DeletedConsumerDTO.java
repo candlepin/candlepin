@@ -35,6 +35,7 @@ public class DeletedConsumerDTO extends TimestampedCandlepinDTO<DeletedConsumerD
     private String ownerId;
     private String ownerKey;
     private String ownerDisplayName;
+    private String principalName;
 
     /**
      * Initializes a new DeletedConsumerDTO instance with null values.
@@ -159,6 +160,32 @@ public class DeletedConsumerDTO extends TimestampedCandlepinDTO<DeletedConsumerD
         return ownerDisplayName;
     }
 
+    /**
+     * Sets or clears the name of the principal that caused the consumer to be deleted. If the
+     * incoming principal name is null, any existing value will be cleared.
+     *
+     * @param principalName
+     *  the name of the principal to set for this deletion event, or null to clear it
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public DeletedConsumerDTO setPrincipalName(String principalName) {
+        this.principalName = principalName;
+        return this;
+    }
+
+    /**
+     * Fetches the name of the principal that caused the consumer to be deleted, or null if the
+     * principal has not yet been set.
+     *
+     * @return
+     *  the name of the principal that caused the consumer to be deleted, or null if the principal
+     *  has not been set
+     */
+    public String getPrincipalName() {
+        return this.principalName;
+    }
 
     /**
      * {@inheritDoc}
@@ -186,7 +213,8 @@ public class DeletedConsumerDTO extends TimestampedCandlepinDTO<DeletedConsumerD
                 .append(this.getConsumerUuid(), that.getConsumerUuid())
                 .append(this.getOwnerId(), that.getOwnerId())
                 .append(this.getOwnerKey(), that.getOwnerKey())
-                .append(this.getOwnerDisplayName(), that.getOwnerDisplayName());
+                .append(this.getOwnerDisplayName(), that.getOwnerDisplayName())
+                .append(this.getPrincipalName(), that.getPrincipalName());
 
             return builder.isEquals();
         }
@@ -205,7 +233,8 @@ public class DeletedConsumerDTO extends TimestampedCandlepinDTO<DeletedConsumerD
             .append(this.getConsumerUuid())
             .append(this.getOwnerId())
             .append(this.getOwnerKey())
-            .append(this.getOwnerDisplayName());
+            .append(this.getOwnerDisplayName())
+            .append(this.getPrincipalName());
 
         return builder.toHashCode();
     }
@@ -229,7 +258,8 @@ public class DeletedConsumerDTO extends TimestampedCandlepinDTO<DeletedConsumerD
             .setConsumerUuid(source.getConsumerUuid())
             .setOwnerId(source.getOwnerId())
             .setOwnerKey(source.getOwnerKey())
-            .setOwnerDisplayName(source.getOwnerDisplayName());
+            .setOwnerDisplayName(source.getOwnerDisplayName())
+            .setPrincipalName(source.getPrincipalName());
 
         return this;
     }
