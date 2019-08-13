@@ -23,39 +23,43 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
-import liquibase.database.DatabaseConnection;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.ResourceAccessor;
-import liquibase.sql.visitor.SqlVisitor;
-import liquibase.statement.SqlStatement;
-import liquibase.statement.core.RawSqlStatement;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.Collections;
+
+
+
 
 public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback {
     private static final String TRUNCATE_SQL =
         "TRUNCATE SCHEMA %s RESTART IDENTITY AND COMMIT NO CHECK";
 
     private static final String DROP_SQL =
-        "DROP SCHEMA %s CASCADE";
+        "DROP SCHEMA IF EXISTS %s CASCADE";
 
     private Liquibase liquibase;
     private ResourceAccessor accessor;
     private Database database;
+    private JdbcConnection connection;
 
     public LiquibaseExtension(String changelogFile) {
         try {
             String connectionUrl = getJdbcUrl("testing");
             Connection jdbcConnection = DriverManager.getConnection(connectionUrl, "sa", "");
-            DatabaseConnection conn = new JdbcConnection(jdbcConnection);
-            database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(conn);
-            accessor = new ClassLoaderResourceAccessor();
-            liquibase = new Liquibase(changelogFile, accessor, database);
+            this.connection = new JdbcConnection(jdbcConnection);
+            this.database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(this.connection);
+            this.accessor = new ClassLoaderResourceAccessor();
+            this.liquibase = new Liquibase(changelogFile, this.accessor, this.database);
+
+            this.dropLiquibaseSchema();
+            this.dropPublicSchema();
         }
         catch (Exception e) {
             throw new IllegalStateException(e);
@@ -99,32 +103,34 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
     }
 
     public void dropPublicSchema() {
-        exec(String.format(DROP_SQL, "PUBLIC"));
+        this.executeUpdate(String.format(DROP_SQL, "PUBLIC"));
     }
 
     public void dropLiquibaseSchema() {
-        exec(String.format(DROP_SQL, "LIQUIBASE"));
+        this.executeUpdate(String.format(DROP_SQL, "LIQUIBASE"));
     }
 
     public void truncatePublicSchema() {
-        exec(String.format(TRUNCATE_SQL, "PUBLIC"));
+        this.executeUpdate(String.format(TRUNCATE_SQL, "PUBLIC"));
     }
 
     public void truncateLiquibaseSchema() {
-        exec(String.format(TRUNCATE_SQL, "LIQUIBASE"));
+        this.executeUpdate(String.format(TRUNCATE_SQL, "LIQUIBASE"));
     }
 
     public void createLiquibaseSchema() {
-        exec("CREATE SCHEMA LIQUIBASE");
+        this.executeUpdate("CREATE SCHEMA LIQUIBASE");
         database.setLiquibaseSchemaName("LIQUIBASE");
     }
 
-    private void exec(String sql) {
-        SqlStatement s = new RawSqlStatement(sql);
+    private void executeUpdate(String sql) {
         try {
-            database.execute(new SqlStatement[] { s }, Collections.<SqlVisitor>emptyList());
+            Statement statement = this.connection.createStatement();
+            statement.executeUpdate(sql);
+
+            statement.close();
         }
-        catch (LiquibaseException e) {
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
