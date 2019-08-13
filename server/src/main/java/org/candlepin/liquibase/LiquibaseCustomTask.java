@@ -18,6 +18,8 @@ import liquibase.database.Database;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.DatabaseException;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,7 +34,7 @@ import java.util.UUID;
  * The LiquibaseCustomTask class provides some common utility functions for performing queries or
  * generating UUIDs for new objects.
  */
-public abstract class LiquibaseCustomTask {
+public abstract class LiquibaseCustomTask implements Closeable {
 
     protected Database database;
     protected JdbcConnection connection;
@@ -58,6 +60,20 @@ public abstract class LiquibaseCustomTask {
         this.logger = logger;
 
         this.preparedStatements = new HashMap<>();
+    }
+
+    @Override
+    public void close() throws IOException {
+        try {
+            for (PreparedStatement statement : this.preparedStatements.values()) {
+                statement.close();
+            }
+
+            this.preparedStatements.clear();
+        }
+        catch (SQLException e) {
+            throw new IOException(e);
+        }
     }
 
     /**

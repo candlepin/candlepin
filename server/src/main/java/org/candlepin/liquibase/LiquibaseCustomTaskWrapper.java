@@ -69,6 +69,7 @@ public abstract class LiquibaseCustomTaskWrapper<T extends LiquibaseCustomTask> 
                 .newInstance(database, new LiquibaseCustomTaskLogger());
 
             task.execute();
+            task.close();
         }
         catch (Exception e) {
             throw new CustomChangeException(e);
