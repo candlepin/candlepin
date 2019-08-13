@@ -141,4 +141,5 @@
     <include file="db/changelog/20190423122527-add-syspurpose-fields-to-act-key.xml"/>
     <include file="db/changelog/20190717140948-delete-cp-events-table.xml"/>
     <include file="db/changelog/20190729122218-add-locked-column-to-cp-pool.xml"/>
+    <include file="db/changelog/20190813155224-add-principal-to-deleted-consumers.xml"/>
 </databaseChangeLog>

@@ -562,6 +562,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         create(anObject, true);
     }
 
+    @Transactional
+    public E saveOrUpdate(E entity) {
+        Session session = this.currentSession();
+        session.saveOrUpdate(entity);
+
+        return entity;
+    }
+
     public void flush() {
         try {
             getEntityManager().flush();
