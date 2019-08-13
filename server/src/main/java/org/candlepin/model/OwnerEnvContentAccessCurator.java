@@ -95,8 +95,4 @@ public class OwnerEnvContentAccessCurator extends AbstractHibernateCurator<Owner
                 .setParameter("environmentId", environmentId)
                 .executeUpdate();
     }
-
-    public void saveOrUpdate(OwnerEnvContentAccess ownerEnvContentAccess) {
-        this.currentSession().saveOrUpdate(ownerEnvContentAccess);
-    }
 }

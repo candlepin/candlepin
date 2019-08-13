@@ -72,6 +72,9 @@ public class DeletedConsumer extends AbstractHibernateObject {
     @Size(max = 255)
     private String ownerDisplayName;
 
+    @Column(name = "principal_name")
+    private String principalName;
+
     public DeletedConsumer(String cuuid, String oid, String okey, String oname) {
         consumerUuid = cuuid;
         ownerId = oid;
@@ -88,41 +91,53 @@ public class DeletedConsumer extends AbstractHibernateObject {
         return id;
     }
 
-    /**
-     * @param id the db id.
-     */
-    public void setId(String id) {
+    public DeletedConsumer setId(String id) {
         this.id = id;
+        return this;
     }
 
-    public void setConsumerUuid(String cid) {
+    public DeletedConsumer setConsumerUuid(String cid) {
         consumerUuid = cid;
+        return this;
     }
 
     public String getConsumerUuid() {
         return consumerUuid;
     }
 
-    public void setOwnerId(String oid) {
+    public DeletedConsumer setOwnerId(String oid) {
         ownerId = oid;
+        return this;
     }
 
     public String getOwnerId() {
         return ownerId;
     }
 
-    public void setOwnerKey(String okey) {
+    public DeletedConsumer setOwnerKey(String okey) {
         ownerKey = okey;
+        return this;
     }
 
     public String getOwnerKey() {
         return ownerKey;
     }
-    public void setOwnerDisplayName(String oname) {
+
+    public DeletedConsumer setOwnerDisplayName(String oname) {
         ownerDisplayName = oname;
+        return this;
     }
 
     public String getOwnerDisplayName() {
         return ownerDisplayName;
+    }
+
+    public DeletedConsumer setPrincipalName(String principalName) {
+        this.principalName = principalName;
+        return this;
+    }
+
+    public String getPrincipalName() {
+        return this.principalName;
     }
 }
