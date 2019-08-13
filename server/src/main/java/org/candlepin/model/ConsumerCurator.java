@@ -772,6 +772,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<Consumer> guests = new ArrayList<>();
         List<GuestId> consumerGuests = consumer.getGuestIds();
         if (consumerGuests != null) {
+            consumerGuests = consumerGuests.stream().distinct()
+                .collect(Collectors.toList());
             for (GuestId cg : consumerGuests) {
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.
