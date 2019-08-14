@@ -134,10 +134,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private String serviceLevel;
 
     @Column(name = "sp_role", length = 255, nullable = true)
+    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     @Size(max = 255)
     private String role;
 
     @Column(name = "sp_usage", length = 255, nullable = true)
+    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     @Size(max = 255)
     private String usage;
 
