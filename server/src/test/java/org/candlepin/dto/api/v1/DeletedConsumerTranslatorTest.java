@@ -46,6 +46,7 @@ public class DeletedConsumerTranslatorTest extends
         source.setOwnerId("deleted-consumer-owner-id");
         source.setOwnerKey("deleted-consumer-owner-key");
         source.setOwnerDisplayName("deleted-consumer-owner-display-name");
+        source.setPrincipalName("test-principal-name");
 
         return source;
     }

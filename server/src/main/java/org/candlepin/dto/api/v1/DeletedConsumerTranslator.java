@@ -61,7 +61,8 @@ public class DeletedConsumerTranslator extends
             .setConsumerUuid(source.getConsumerUuid())
             .setOwnerId(source.getOwnerId())
             .setOwnerKey(source.getOwnerKey())
-            .setOwnerDisplayName(source.getOwnerDisplayName());
+            .setOwnerDisplayName(source.getOwnerDisplayName())
+            .setPrincipalName(source.getPrincipalName());
 
         return dest;
     }
