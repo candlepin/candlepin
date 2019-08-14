@@ -38,11 +38,8 @@ import java.util.Collections;
 
 
 public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback {
-    private static final String TRUNCATE_SQL =
-        "TRUNCATE SCHEMA %s RESTART IDENTITY AND COMMIT NO CHECK";
-
-    private static final String DROP_SQL =
-        "DROP SCHEMA IF EXISTS %s CASCADE";
+    private static final String TRUNCATE_SQL = "TRUNCATE SCHEMA %s RESTART IDENTITY AND COMMIT NO CHECK";
+    private static final String DROP_SQL = "DROP SCHEMA IF EXISTS %s CASCADE";
 
     private Liquibase liquibase;
     private ResourceAccessor accessor;
@@ -124,11 +121,8 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
     }
 
     private void executeUpdate(String sql) {
-        try {
-            Statement statement = this.connection.createStatement();
+        try (Statement statement = this.connection.createStatement()) {
             statement.executeUpdate(sql);
-
-            statement.close();
         }
         catch (Exception e) {
             throw new RuntimeException(e);
