@@ -9,7 +9,7 @@
     <changeSet id="20190813155224-1" author="crog">
         <comment>
             Adds a column for the principal name indicating the principal
-            that caused the principal to be deleted
+            that caused the consumer to be deleted
         </comment>
 
         <addColumn tableName="cp_deleted_consumers">
