@@ -36,6 +36,7 @@ public class DeletedConsumerDTOTest extends AbstractDTOTest<DeletedConsumerDTO> 
         this.values.put("OwnerId", "owner-id");
         this.values.put("OwnerKey", "owner-key");
         this.values.put("OwnerDisplayName", "owner-display-name");
+        this.values.put("PrincipalName", "test-principal-name");
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
     }

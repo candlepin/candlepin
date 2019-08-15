@@ -1230,4 +1230,5 @@
     <include file="db/changelog/20181116110941-virt-fact-index.xml"/>
     <include file="db/changelog/20190401093722-add-content-override-index.xml"/>
     <include file="db/changelog/20190423122527-add-syspurpose-fields-to-act-key.xml"/>
+    <include file="db/changelog/20190813155224-add-principal-to-deleted-consumers.xml"/>
 </databaseChangeLog>
