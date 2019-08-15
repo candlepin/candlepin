@@ -34,20 +34,41 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.Collections;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 
 
+/**
+ * The LiquibaseExtension class performs initialization and teardown of a temporary database for use
+ * with unit tests that are backed by a pseudo-mocked database.
+ *
+ * Databases created by this extension exist for the duration of a single test suite. Between each
+ * test in a given test suite, the database will be truncated. After all applicable tests in a given
+ * suite have been executed, the database will be destroyed, and all filesystem-based resources will
+ * be removed.
+ */
 public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback {
+    private static final String HSQLDB_DIR_PREFIX = "cp_unittest_hsqldb-";
+    private static final String HSQLDB_DIR_PROPERTY = "hsqldb_dir";
+
     private static final String TRUNCATE_SQL = "TRUNCATE SCHEMA %s RESTART IDENTITY AND COMMIT NO CHECK";
     private static final String DROP_SQL = "DROP SCHEMA IF EXISTS %s CASCADE";
+    private static final String SHUTDOWN_CMD = "SHUTDOWN";
 
     private Liquibase liquibase;
     private ResourceAccessor accessor;
     private Database database;
     private JdbcConnection connection;
 
+    private File hsqldbDir;
+
     public LiquibaseExtension(String changelogFile) {
         try {
+            this.hsqldbDir = this.setupTempDirectory();
+
             String connectionUrl = getJdbcUrl("testing");
             Connection jdbcConnection = DriverManager.getConnection(connectionUrl, "sa", "");
             this.connection = new JdbcConnection(jdbcConnection);
@@ -67,6 +88,25 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
         this("db/changelog/changelog-testing.xml");
     }
 
+    private File setupTempDirectory() throws IOException {
+        Path tmp = Files.createTempDirectory(HSQLDB_DIR_PREFIX);
+        System.setProperty(HSQLDB_DIR_PROPERTY, tmp.toString());
+
+        return tmp.toFile();
+    }
+
+    private void tearDownTempFiles(File file) throws IOException {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                for (File child : file.listFiles()) {
+                    this.tearDownTempFiles(child);
+                }
+            }
+
+            file.delete();
+        }
+    }
+
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         createLiquibaseSchema();
@@ -77,6 +117,9 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
     public void afterAll(ExtensionContext context) throws Exception {
         dropPublicSchema();
         dropLiquibaseSchema();
+        this.executeUpdate(SHUTDOWN_CMD);
+
+        this.tearDownTempFiles(this.hsqldbDir);
     }
 
     @Override
