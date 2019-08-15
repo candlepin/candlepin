@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.7.4
+Version: 2.7.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,10 @@ fi
 
 #raw
 %changelog
+* Thu Aug 15 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.5-1
+- Added an additional null check during entitlement revocation
+  (crog@redhat.com)
+
 * Thu Aug 15 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.4-1
 - 1741209: Added principal to consumer deletion records (crog@redhat.com)
 
