@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.7.3
+Version: 2.7.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,9 @@ fi
 
 #raw
 %changelog
+* Thu Aug 15 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.4-1
+- 1741209: Added principal to consumer deletion records (crog@redhat.com)
+
 * Tue Jul 23 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.3-1
 - 1732490: Correct test of hypervisor id use to account for current consumer
   (wpoteat@redhat.com)
