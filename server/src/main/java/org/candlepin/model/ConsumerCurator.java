@@ -14,9 +14,11 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
@@ -76,6 +78,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private FactValidator factValidator;
     @Inject private OwnerCurator ownerCurator;
     @Inject private Provider<HostCache> cachedHostsProvider;
+    @Inject private PrincipalProvider principalProvider;
 
     public ConsumerCurator() {
         super(Consumer.class);
@@ -94,25 +97,29 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public void delete(Consumer entity) {
         log.debug("Deleting consumer: {}", entity);
 
-        // save off the IDs before we delete
-        Owner owner = ownerCurator.findOwnerById(entity.getOwnerId());
-        DeletedConsumer dc = new DeletedConsumer(entity.getUuid(), entity.getOwnerId(),
-            owner.getKey(), owner.getDisplayName());
+        // Fetch the principal that's triggering this
+        Principal principal = this.principalProvider.get();
 
+        Owner owner = entity.getOwner();
+
+        // Check if we've already got a record for this consumer (???), creating one if necessary
+        DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumerUuid(entity.getUuid());
+        if (deletedConsumer == null) {
+            deletedConsumer = new DeletedConsumer();
+        }
+
+        // Set/update the properties on our deleted consumer record
+        deletedConsumer.setConsumerUuid(entity.getUuid())
+            .setOwnerId(entity.getOwnerId())
+            .setOwnerKey(owner.getKey())
+            .setOwnerDisplayName(owner.getDisplayName())
+            .setPrincipalName(principal != null ? principal.getName() : null);
+
+        // Actually delete the consumer
         super.delete(entity);
 
-        DeletedConsumer existing = deletedConsumerCurator.findByConsumerUuid(dc.getConsumerUuid());
-        if (existing != null) {
-            // update the owner ID in case the same UUID was specified by two owners
-            existing.setOwnerId(dc.getOwnerId());
-            existing.setOwnerKey(dc.getOwnerKey());
-            existing.setOwnerDisplayName(dc.getOwnerDisplayName());
-            existing.setUpdated(new Date());
-            deletedConsumerCurator.save(existing);
-        }
-        else {
-            deletedConsumerCurator.create(dc);
-        }
+        // Save our deletion record
+        this.deletedConsumerCurator.saveOrUpdate(deletedConsumer);
     }
 
     @Transactional
@@ -771,6 +778,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<Consumer> guests = new ArrayList<>();
         List<GuestId> consumerGuests = consumer.getGuestIds();
         if (consumerGuests != null) {
+            consumerGuests = consumerGuests.stream().distinct()
+                .collect(Collectors.toList());
             for (GuestId cg : consumerGuests) {
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.

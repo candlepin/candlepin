@@ -23,39 +23,61 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
-import liquibase.database.DatabaseConnection;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.ResourceAccessor;
-import liquibase.sql.visitor.SqlVisitor;
-import liquibase.statement.SqlStatement;
-import liquibase.statement.core.RawSqlStatement;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.Collections;
 
-public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback {
-    private static final String TRUNCATE_SQL =
-        "TRUNCATE SCHEMA %s RESTART IDENTITY AND COMMIT NO CHECK";
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-    private static final String DROP_SQL =
-        "DROP SCHEMA %s CASCADE";
+
+
+/**
+ * The LiquibaseExtension class performs initialization and teardown of a temporary database for use
+ * with unit tests that are backed by a pseudo-mocked database.
+ *
+ * Databases created by this extension exist for the duration of a single test suite. Between each
+ * test in a given test suite, the database will be truncated. After all applicable tests in a given
+ * suite have been executed, the database will be destroyed, and all filesystem-based resources will
+ * be removed.
+ */
+public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback {
+    private static final String HSQLDB_DIR_PREFIX = "cp_unittest_hsqldb-";
+    private static final String HSQLDB_DIR_PROPERTY = "hsqldb_dir";
+
+    private static final String TRUNCATE_SQL = "TRUNCATE SCHEMA %s RESTART IDENTITY AND COMMIT NO CHECK";
+    private static final String DROP_SQL = "DROP SCHEMA IF EXISTS %s CASCADE";
+    private static final String SHUTDOWN_CMD = "SHUTDOWN";
 
     private Liquibase liquibase;
     private ResourceAccessor accessor;
     private Database database;
+    private JdbcConnection connection;
+
+    private File hsqldbDir;
 
     public LiquibaseExtension(String changelogFile) {
         try {
+            this.hsqldbDir = this.setupTempDirectory();
+
             String connectionUrl = getJdbcUrl("testing");
             Connection jdbcConnection = DriverManager.getConnection(connectionUrl, "sa", "");
-            DatabaseConnection conn = new JdbcConnection(jdbcConnection);
-            database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(conn);
-            accessor = new ClassLoaderResourceAccessor();
-            liquibase = new Liquibase(changelogFile, accessor, database);
+            this.connection = new JdbcConnection(jdbcConnection);
+            this.database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(this.connection);
+            this.accessor = new ClassLoaderResourceAccessor();
+            this.liquibase = new Liquibase(changelogFile, this.accessor, this.database);
+
+            this.dropLiquibaseSchema();
+            this.dropPublicSchema();
         }
         catch (Exception e) {
             throw new IllegalStateException(e);
@@ -64,6 +86,25 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
 
     public LiquibaseExtension() {
         this("db/changelog/changelog-testing.xml");
+    }
+
+    private File setupTempDirectory() throws IOException {
+        Path tmp = Files.createTempDirectory(HSQLDB_DIR_PREFIX);
+        System.setProperty(HSQLDB_DIR_PROPERTY, tmp.toString());
+
+        return tmp.toFile();
+    }
+
+    private void tearDownTempFiles(File file) throws IOException {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                for (File child : file.listFiles()) {
+                    this.tearDownTempFiles(child);
+                }
+            }
+
+            file.delete();
+        }
     }
 
     @Override
@@ -76,6 +117,9 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
     public void afterAll(ExtensionContext context) throws Exception {
         dropPublicSchema();
         dropLiquibaseSchema();
+        this.executeUpdate(SHUTDOWN_CMD);
+
+        this.tearDownTempFiles(this.hsqldbDir);
     }
 
     @Override
@@ -99,32 +143,31 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
     }
 
     public void dropPublicSchema() {
-        exec(String.format(DROP_SQL, "PUBLIC"));
+        this.executeUpdate(String.format(DROP_SQL, "PUBLIC"));
     }
 
     public void dropLiquibaseSchema() {
-        exec(String.format(DROP_SQL, "LIQUIBASE"));
+        this.executeUpdate(String.format(DROP_SQL, "LIQUIBASE"));
     }
 
     public void truncatePublicSchema() {
-        exec(String.format(TRUNCATE_SQL, "PUBLIC"));
+        this.executeUpdate(String.format(TRUNCATE_SQL, "PUBLIC"));
     }
 
     public void truncateLiquibaseSchema() {
-        exec(String.format(TRUNCATE_SQL, "LIQUIBASE"));
+        this.executeUpdate(String.format(TRUNCATE_SQL, "LIQUIBASE"));
     }
 
     public void createLiquibaseSchema() {
-        exec("CREATE SCHEMA LIQUIBASE");
+        this.executeUpdate("CREATE SCHEMA LIQUIBASE");
         database.setLiquibaseSchemaName("LIQUIBASE");
     }
 
-    private void exec(String sql) {
-        SqlStatement s = new RawSqlStatement(sql);
-        try {
-            database.execute(new SqlStatement[] { s }, Collections.<SqlVisitor>emptyList());
+    private void executeUpdate(String sql) {
+        try (Statement statement = this.connection.createStatement()) {
+            statement.executeUpdate(sql);
         }
-        catch (LiquibaseException e) {
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

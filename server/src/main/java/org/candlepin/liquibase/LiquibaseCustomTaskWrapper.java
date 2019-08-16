@@ -21,6 +21,8 @@ import liquibase.exception.SetupException;
 import liquibase.exception.ValidationErrors;
 import liquibase.resource.ResourceAccessor;
 
+import java.lang.reflect.InvocationTargetException;
+
 
 
 /**
@@ -40,6 +42,26 @@ public abstract class LiquibaseCustomTaskWrapper<T extends LiquibaseCustomTask> 
         }
 
         this.typeClass = typeClass;
+    }
+
+    /**
+     * Instantiates the actual task instance, providing the specified database and logger to the
+     * new instance.
+     *
+     * @param database
+     *  the database instance to provide to the new task
+     *
+     * @param logger
+     *  the custom task logger instance to provide to the new task
+     *
+     * @return
+     *  the new instance of the liquibase task
+     */
+    private T instantiateTask(Database database, CustomTaskLogger logger) throws NoSuchMethodException,
+        InstantiationException, IllegalAccessException, InvocationTargetException {
+
+        return this.typeClass.getConstructor(Database.class, CustomTaskLogger.class)
+            .newInstance(database, logger);
     }
 
     @Override
@@ -64,10 +86,9 @@ public abstract class LiquibaseCustomTaskWrapper<T extends LiquibaseCustomTask> 
 
     @Override
     public void execute(Database database) throws CustomChangeException {
-        try {
-            T task = this.typeClass.getConstructor(Database.class, CustomTaskLogger.class)
-                .newInstance(database, new LiquibaseCustomTaskLogger());
+        CustomTaskLogger logger = new LiquibaseCustomTaskLogger();
 
+        try (T task = this.instantiateTask(database, logger)) {
             task.execute();
         }
         catch (Exception e) {

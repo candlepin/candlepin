@@ -93,7 +93,7 @@ public class GuestMigration {
         log.debug("Updating {} guest IDs.", incoming.getGuestIds().size());
         List<GuestId> existingGuests = existing.getGuestIds();
         // Transform incoming GuestIdDTOs to GuestIds
-        List<GuestId> incomingGuestIds = incoming.getGuestIds().stream().filter(Objects::nonNull)
+        List<GuestId> incomingGuestIds = incoming.getGuestIds().stream().filter(Objects::nonNull).distinct()
             .map(guestIdDTO -> new GuestId(guestIdDTO.getGuestId(), existing, guestIdDTO.getAttributes()))
             .collect(Collectors.toList());
 

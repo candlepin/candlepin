@@ -31,6 +31,7 @@ import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
@@ -951,6 +952,25 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Date deletionDate2 = dc.getUpdated();
         assertEquals(-1, deletionDate1.compareTo(deletionDate2));
         assertEquals(altOwner.getId(), dc.getOwnerId());
+    }
+
+    @Test
+    public void testDeleteRetainsPrincipalName() {
+        String principalName = "test_principal_name";
+        this.setupAdminPrincipal(principalName);
+
+        Consumer consumer = new Consumer("test_consumer", "test_user", this.owner, this.ct);
+        consumer.setUuid("test_consumer_uuid");
+        consumer = this.consumerCurator.create(consumer);
+
+        this.consumerCurator.delete(consumer);
+
+        Consumer fetched = this.consumerCurator.get(consumer.getUuid());
+        assertNull(fetched);
+
+        DeletedConsumer deletionRecord = this.dcc.findByConsumerUuid(consumer.getUuid());
+        assertNotNull(deletionRecord);
+        assertEquals(principalName, deletionRecord.getPrincipalName());
     }
 
     @Test
