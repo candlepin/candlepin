@@ -30,12 +30,10 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -83,19 +81,17 @@ public class Entitler {
     private EntitlementRulesTranslator messageTranslator;
     private EntitlementCurator entitlementCurator;
     private I18n i18n;
-    private OwnerProductCurator ownerProductCurator;
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
     private PoolManager poolManager;
-    private ProductCurator productCurator;
     private ProductManager productManager;
     private ProductServiceAdapter productAdapter;
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
-        EntitlementCurator entitlementCurator, Configuration config, OwnerProductCurator ownerProductCurator,
-        OwnerCurator ownerCurator, PoolCurator poolCurator, ProductCurator productCurator,
+        EntitlementCurator entitlementCurator, Configuration config,
+        OwnerCurator ownerCurator, PoolCurator poolCurator,
         ProductManager productManager, ProductServiceAdapter productAdapter, ContentManager contentManager) {
 
         this.poolManager = pm;
@@ -106,10 +102,8 @@ public class Entitler {
         this.messageTranslator = messageTranslator;
         this.entitlementCurator = entitlementCurator;
         this.config = config;
-        this.ownerProductCurator = ownerProductCurator;
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
-        this.productCurator = productCurator;
         this.productManager = productManager;
         this.productAdapter = productAdapter;
         this.contentManager = contentManager;
