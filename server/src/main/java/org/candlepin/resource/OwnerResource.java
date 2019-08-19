@@ -1316,7 +1316,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public void deleteLogLevel(@PathParam("owner_key") String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
-        owner.setLogLevel(null);
+        owner.setLogLevel((String) null);
         ownerCurator.merge(owner);
     }
 

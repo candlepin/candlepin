@@ -16,7 +16,6 @@ package org.candlepin.controller;
 
 import static org.mockito.Mockito.*;
 
-import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -81,8 +80,7 @@ public class OwnerManagerTest {
     private UeberCertificateCurator uberCertificateCurator;
     @Mock
     private OwnerServiceAdapter ownerServiceAdapter;
-    @Mock
-    private AsyncJobStatusCurator jobCurator;
+
 
     @Before
     public void setUp() {
@@ -90,7 +88,7 @@ public class OwnerManagerTest {
             exportCurator, importRecordCurator, permissionCurator, ownerProductCurator, productManager,
             ownerContentCurator, contentManager, ownerCurator, contentAccessCertService,
             contentAccessCertCurator, ownerEnvContentAccessCurator, uberCertificateCurator,
-            ownerServiceAdapter, jobCurator);
+            ownerServiceAdapter);
     }
 
     @Test

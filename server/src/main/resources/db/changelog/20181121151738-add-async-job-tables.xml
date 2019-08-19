@@ -17,6 +17,7 @@
 
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
+            <column name="version" type="int"/>
 
             <column name="name" type="varchar(255)"/>
             <column name="job_key" type="varchar(255)"/>

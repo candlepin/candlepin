@@ -31,12 +31,12 @@ import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
-import com.google.inject.persist.UnitOfWork;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -70,7 +70,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -79,6 +78,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.persistence.EntityTransaction;
+import javax.persistence.PersistenceException;
 import javax.transaction.Synchronization;
 import javax.transaction.Status;
 
@@ -90,6 +91,8 @@ import javax.transaction.Status;
 @Singleton
 public class JobManager implements ModeChangeListener {
     private static final Logger log = LoggerFactory.getLogger(JobManager.class);
+
+    private static final String UNKNOWN_OWNER_KEY = "-UNKNOWN-";
 
     private static final String MDC_REQUEST_TYPE_KEY = "requestType";
     private static final String MDC_REQUEST_UUID_KEY = "requestUuid";
@@ -289,6 +292,7 @@ public class JobManager implements ModeChangeListener {
     private final SchedulerFactory schedulerFactory;
     private final ModeManager modeManager;
     private final AsyncJobStatusCurator jobCurator;
+    private final OwnerCurator ownerCurator;
     private final JobMessageDispatcher dispatcher;
     private final JobMessageSynchronizer synchronizer;
     private final CandlepinRequestScope candlepinRequestScope;
@@ -298,6 +302,7 @@ public class JobManager implements ModeChangeListener {
     private ManagerState state;
     private QuartzJobExecutor qrtzExecutor;
     private Scheduler scheduler;
+    private ThreadLocal<Map<String, String>> mdcState;
 
     private boolean clustered;
     private Set<String> whitelist;
@@ -314,6 +319,7 @@ public class JobManager implements ModeChangeListener {
         SchedulerFactory schedulerFactory,
         ModeManager modeManager,
         AsyncJobStatusCurator jobCurator,
+        OwnerCurator ownerCurator,
         JobMessageDispatcher dispatcher,
         PrincipalProvider principalProvider,
         CandlepinRequestScope scope,
@@ -323,6 +329,7 @@ public class JobManager implements ModeChangeListener {
         this.schedulerFactory = Objects.requireNonNull(schedulerFactory);
         this.modeManager = Objects.requireNonNull(modeManager);
         this.jobCurator = Objects.requireNonNull(jobCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.dispatcher = Objects.requireNonNull(dispatcher);
         // this.receiver = Objects.requireNonNull(receiver);
         this.synchronizer = new JobMessageSynchronizer(this.dispatcher);
@@ -332,6 +339,7 @@ public class JobManager implements ModeChangeListener {
 
         this.state = ManagerState.CREATED;
         this.qrtzExecutor = new QuartzJobExecutor(this);
+        this.mdcState = new ThreadLocal<>();
 
         this.readJobConfiguration(this.configuration);
     }
@@ -599,12 +607,11 @@ public class JobManager implements ModeChangeListener {
         Configuration config = this.jobConfig.get(jobKey);
 
         if (config != null) {
-            try {
+            if (config.containsKey(ConfigProperties.ASYNC_JOBS_JOB_ENABLED)) {
                 return config.getBoolean(ConfigProperties.ASYNC_JOBS_JOB_ENABLED);
             }
-            catch (NoSuchElementException e) {
-                // Property is not defined for this job; check other fields
-            }
+
+            // Property is not defined for this job; check other fields
         }
 
         // Check blacklist
@@ -1047,6 +1054,12 @@ public class JobManager implements ModeChangeListener {
 
         AsyncJobStatus status = this.fetchJobStatus(message);
 
+        // If the job was canceled, just return. No need to do anything special here.
+        if (status.getState() == JobState.CANCELED) {
+            log.debug("Skipping canceled job: {} ({})", status.getJobKey(), status.getId());
+            return status;
+        }
+
         final Class<? extends AsyncJob> jobClass = getJobClass(status.getJobKey());
 
         // Maybe in this case it'd be better to attempt to use the job key as the job class
@@ -1061,15 +1074,11 @@ public class JobManager implements ModeChangeListener {
             throw new JobInitializationException(errmsg, true);
         }
 
-        candlepinRequestScope.enter();
-        final EventSink eventSink = injector.getInstance(EventSink.class);
-        final UnitOfWork uow = injector.getInstance(UnitOfWork.class);
-
         try {
-            uow.begin();
             this.setupJobRuntimeEnvironment(status);
 
-            final AsyncJob job = injector.getInstance(jobClass);
+            EventSink eventSink = injector.getInstance(EventSink.class);
+            AsyncJob job = injector.getInstance(jobClass);
 
             if (job == null) {
                 String errmsg = String.format("Unable to instantiate job class \"{}\" for job: {}",
@@ -1083,7 +1092,13 @@ public class JobManager implements ModeChangeListener {
             status.incrementAttempts();
             status.setStartTime(new Date());
             status.setEndTime(null);
-            this.updateJobStatus(status, JobState.RUNNING, null);
+            status = this.updateJobStatus(status, JobState.RUNNING, null);
+
+            // Impl note: We need to be sure we do not have a transaction open at this point
+            EntityTransaction transaction = this.jobCurator.getTransaction();
+            if (transaction != null && transaction.isActive()) {
+                throw new IllegalStateException("A remnant transaction is open before executing job");
+            }
 
             if (status.logExecutionDetails()) {
                 log.info("Starting job \"{}\" using class: {}", status.getName(), jobClass.getName());
@@ -1093,6 +1108,10 @@ public class JobManager implements ModeChangeListener {
 
             try {
                 result = job.execute(status);
+
+                // If a transaction was left open, we should scream about it. Note that this will
+                // cause the job to fail if the session cannot be terminated cleanly.
+                this.checkPostJobExecutionTransactionStatus(status);
             }
             catch (JobExecutionException e) {
                 boolean retry = !e.isTerminal() && status.getAttempts() < status.getMaxAttempts();
@@ -1118,106 +1137,14 @@ public class JobManager implements ModeChangeListener {
             return status;
         }
         finally {
-            uow.end();
-            candlepinRequestScope.exit();
-
-            ResteasyProviderFactory.popContextData(Principal.class);
+            this.teardownJobRuntimeEnvironment();
         }
-    }
-
-    /**
-     * Cancels the job associated with the specified job ID. If no such job status could be found,
-     * this method returns null.
-     *
-     * @param jobId
-     *  the ID of the job to cancel
-     *
-     * @throws IllegalStateException
-     *  if the job is already in a terminal state
-     *
-     * @return
-     *  the updated job status associated with the canceled job, or null if no such job status
-     *  could be found
-     */
-    @Transactional
-    public synchronized AsyncJobStatus cancelJob(String jobId) {
-        if (jobId == null || jobId.isEmpty()) {
-            throw new IllegalArgumentException("jobId is null or empty");
-        }
-
-        AsyncJobStatus status = this.jobCurator.lockAndLoad(jobId);
-        if (status != null) {
-            if (status.getState().isTerminal()) {
-                throw new IllegalStateException("job is already in a terminal state: " + status);
-            }
-
-            if (status.getState() != JobState.RUNNING) {
-                this.setJobState(status, JobState.CANCELED);
-            }
-            else {
-                // Impl note: With the locking, we probably shouldn't cancel a job that's in a
-                // running state, since the state change is almost guaranteed to get clobbered. For
-                // now, we'll just make sure it's not set to retry if it fails; ensuring the current
-                // run is the last run.
-                log.warn("Attempting to cancel job that's already running: {}", status);
-
-                if (status.getMaxAttempts() > 1) {
-                    log.warn("Setting max attempts to: 1");
-                    status.setMaxAttempts(1);
-                }
-
-                // TODO: Also set retry behavior to default to false here if that's added in
-                // the future
-            }
-
-            status = this.jobCurator.merge(status);
-        }
-
-        return status;
-    }
-
-    /**
-     * Cleans up all jobs in the given terminal states within the date range provided. If no states
-     * are provided, this method defaults to all terminal states. If non-terminal states are
-     * provided, they will be ignored.
-     *
-     * @param queryBuilder
-     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
-     *  to select jobs
-     *
-     * @return
-     *  the number of jobs deleted as a result of this operation
-     */
-    public synchronized int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
-        // Prepare for the defaults...
-        if (queryBuilder == null) {
-            queryBuilder = new AsyncJobStatusCurator.AsyncJobStatusQueryBuilder();
-        }
-
-        Collection<JobState> states = queryBuilder.getJobStates();
-        if (states != null && !states.isEmpty()) {
-            // Make sure we don't attempt to blast some non-terminal jobs.
-            states = states.stream()
-                .filter(state -> state != null && state.isTerminal())
-                .collect(Collectors.toSet());
-        }
-        else {
-            // Set the default: all terminal states
-            states = Arrays.stream(JobState.values())
-                .filter(state -> state.isTerminal())
-                .collect(Collectors.toSet());
-        }
-
-        queryBuilder.setJobStates(states);
-
-        // TODO: any other sanity restrictions deemed necessary
-
-        return this.jobCurator.deleteJobs(queryBuilder);
     }
 
     /**
      * Configures the job's runtime environment, performing the following operations:
      *
+     *  - Entering the new injection scope (CandlepinRequestScope)
      *  - Setting up the logging level
      *  - Injecting the job's metadata to the logging backend
      *  - Setting up the principal to use during job runtime
@@ -1226,6 +1153,12 @@ public class JobManager implements ModeChangeListener {
      *  the job status to use to configure the runtime environment
      */
     private void setupJobRuntimeEnvironment(AsyncJobStatus status) {
+        // Enter custom scope
+        this.candlepinRequestScope.enter();
+
+        // Save MDC state
+        this.mdcState.set(MDC.getCopyOfContextMap());
+
         MDC.put(MDC_REQUEST_TYPE_KEY, "job");
         MDC.put(MDC_REQUEST_UUID_KEY, status.getId());
 
@@ -1234,26 +1167,39 @@ public class JobManager implements ModeChangeListener {
             MDC.put(entry.getKey(), entry.getValue());
         }
 
-        // If we have an owner, override whatever metadata we've set with the actual owner's key.
-        // Owner contextOwner = status.getContextOwner();
-        Owner contextOwner = new Owner();
-        contextOwner.setKey("TEST KEY");
+        // Attempt to lookup the owner
+        String ownerId = status.getContextOwnerId();
+        String ownerKey = null;
+        String ownerLogLevel = null;
 
-        if (contextOwner != null) {
-            MDC.put(LoggingFilter.OWNER_KEY, contextOwner.getKey());
+        if (ownerId != null && !ownerId.isEmpty()) {
+            Owner contextOwner = this.ownerCurator.get(ownerId);
+
+            if (contextOwner != null) {
+                ownerKey = contextOwner.getKey();
+                ownerLogLevel = contextOwner.getLogLevel();
+            }
+            else {
+                log.warn("Owner ID specified for job does not exist: {}", ownerId);
+                ownerKey = UNKNOWN_OWNER_KEY;
+            }
+        }
+
+        // If we have an owner, override whatever metadata we've set with the actual owner's key.
+        if (ownerKey != null) {
+            MDC.put(LoggingFilter.OWNER_KEY, ownerKey);
         }
 
         // Set our logging level according to the following:
         // - If the job has an explicit log level set, use that
         // - If the job is running in the context of an owner and the owner has a log level set, use that
-        String logLevel = status.getLogLevel();
+        String jobLogLevel = status.getLogLevel();
 
-        if ((logLevel == null || logLevel.isEmpty()) && contextOwner != null) {
-            logLevel = contextOwner.getLogLevel();
+        if (jobLogLevel != null && !jobLogLevel.isEmpty()) {
+            MDC.put(MDC_LOG_LEVEL_KEY, jobLogLevel);
         }
-
-        if (logLevel != null && !logLevel.isEmpty()) {
-            MDC.put(MDC_LOG_LEVEL_KEY, logLevel);
+        else if (ownerLogLevel != null && !ownerLogLevel.isEmpty()) {
+            MDC.put(MDC_LOG_LEVEL_KEY, ownerLogLevel);
         }
 
         // Setup and inject the principal
@@ -1261,6 +1207,65 @@ public class JobManager implements ModeChangeListener {
         Principal principal = name != null ? new JobPrincipal(name) : new SystemPrincipal();
 
         ResteasyProviderFactory.pushContext(Principal.class, principal);
+    }
+
+    /**
+     * Tears down the job's runtime environment, performing the following operations:
+     *
+     *  - Removing the job's context principal from the environment
+     *  - Leaving the injection scope (CandlepinRequestScope)
+     */
+    private void teardownJobRuntimeEnvironment() {
+        // Pop principal info
+        ResteasyProviderFactory.popContextData(Principal.class);
+
+        // Restore original MDC state
+        Map<String, String> state = this.mdcState.get();
+        if (state != null) {
+            MDC.setContextMap(state);
+        }
+        else {
+            MDC.clear();
+        }
+
+        // Leave scope
+        this.candlepinRequestScope.exit();
+    }
+
+    /**
+     * Checks that the job did not leave an active session open after completing its normal
+     * execution. If a session was left open, this method attempts to commit it, or roll it back
+     * if it is set to rollback only. If the session cannot be cleaned up, this method throws a
+     * PersistenceException.
+     *
+     * @param status
+     *  The AsyncJobStatus instance for the job being executed
+     *
+     * @throws PersistenceException
+     *  if an unexpected exception occurs while terminating the session
+     */
+    private void checkPostJobExecutionTransactionStatus(AsyncJobStatus status) throws PersistenceException {
+        try {
+            EntityTransaction transaction = this.jobCurator.getTransaction();
+            if (transaction != null && transaction.isActive()) {
+                if (!transaction.getRollbackOnly()) {
+                    log.warn("Job \"{}\" terminated with an open session; committing session...",
+                        status.getName());
+
+                    transaction.commit();
+                }
+                else {
+                    log.warn("Job \"{}\" terminated with an open, rollback-only session; " +
+                        "rolling back session...", status.getName());
+
+                    transaction.rollback();
+                }
+            }
+        }
+        catch (PersistenceException e) {
+            log.error("Unable to cleanup remnant job session; post-job database state is now undefined!");
+            throw e;
+        }
     }
 
     /**
@@ -1300,14 +1305,6 @@ public class JobManager implements ModeChangeListener {
             throw new JobInitializationException(errmsg, true);
         }
 
-        if (status.getState() == null || status.getState().isTerminal()) {
-            String errmsg = String.format("Job \"%s\" (%s) is in an unknown or terminal state: %s",
-                status.getId(), status.getJobKey(), status.getState());
-
-            log.error(errmsg);
-            throw new JobInitializationException(errmsg, true);
-        }
-
         // Sanity check: make sure we don't try to execute a job that's disabled on this node
         // This shouldn't happen, as we should be properly filtering which messages we pull off the
         // message queue, but if that fails, we'll fall back to failing non-terminally.
@@ -1319,9 +1316,21 @@ public class JobManager implements ModeChangeListener {
             throw new JobInitializationException(errmsg, false);
         }
 
-        // Warn if we're about to execute a job that's not queued for execution (this is likely
-        // just state recovery and is probably okay).
-        if (status.getState() != JobState.QUEUED) {
+        JobState jobState = status.getState();
+
+        // The "CANCELED" state is a special case we'll handle semi-silently in the execute method,
+        // as it's not an error to cancel a QUEUED job, and we still want to get through the message
+        // normally.
+        if (jobState == null || (!JobState.CANCELED.equals(jobState) && jobState.isTerminal())) {
+            String errmsg = String.format("Job \"%s\" (%s) is in an unknown or terminal state: %s",
+                status.getId(), status.getJobKey(), status.getState());
+
+            log.error(errmsg);
+            throw new JobInitializationException(errmsg, true);
+        }
+        else if (jobState != JobState.QUEUED) {
+            // Warn if we're about to execute a job that's not queued for execution (this is likely
+            // just state recovery and is probably okay).
             log.warn("Job \"{}\" ({}) is in an unexpected, non-terminal state: {}", status.getId(),
                 status.getJobKey(), status.getState());
 
@@ -1419,6 +1428,12 @@ public class JobManager implements ModeChangeListener {
         // Rollback any unsent events
         eventSink.rollback();
 
+        // Rollback the transaction if one is still open
+        EntityTransaction transaction = this.jobCurator.getTransaction();
+        if (transaction != null && transaction.isActive()) {
+            transaction.rollback();
+        }
+
         String result = throwable != null ? throwable.toString() : null;
 
         if (retry) {
@@ -1437,6 +1452,96 @@ public class JobManager implements ModeChangeListener {
         }
 
         return status;
+    }
+
+    /**
+     * Cancels the job associated with the specified job ID. If no such job status could be found,
+     * this method returns null.
+     *
+     * @param jobId
+     *  the ID of the job to cancel
+     *
+     * @throws IllegalStateException
+     *  if the job is already in a terminal state
+     *
+     * @return
+     *  the updated job status associated with the canceled job, or null if no such job status
+     *  could be found
+     */
+    @Transactional
+    public synchronized AsyncJobStatus cancelJob(String jobId) {
+        if (jobId == null || jobId.isEmpty()) {
+            throw new IllegalArgumentException("jobId is null or empty");
+        }
+
+        AsyncJobStatus status = this.jobCurator.get(jobId);
+        if (status != null) {
+            if (status.getState().isTerminal()) {
+                throw new IllegalStateException("job is already in a terminal state: " + status);
+            }
+
+            if (status.getState() != JobState.RUNNING) {
+                this.setJobState(status, JobState.CANCELED);
+            }
+            else {
+                // Impl note: With the locking, we probably shouldn't cancel a job that's in a
+                // running state, since the state change is almost guaranteed to get clobbered. For
+                // now, we'll just make sure it's not set to retry if it fails; ensuring the current
+                // run is the last run.
+                log.warn("Attempting to cancel job that's already running: {}", status);
+
+                if (status.getMaxAttempts() > 1) {
+                    log.warn("Setting max attempts to: 1");
+                    status.setMaxAttempts(1);
+                }
+
+                // TODO: Also set retry behavior to default to false here if that's added in
+                // the future
+            }
+
+            status = this.jobCurator.merge(status);
+        }
+
+        return status;
+    }
+
+    /**
+     * Cleans up all jobs in the given terminal states within the date range provided. If no states
+     * are provided, this method defaults to all terminal states. If non-terminal states are
+     * provided, they will be ignored.
+     *
+     * @param queryBuilder
+     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
+     *  to select jobs
+     *
+     * @return
+     *  the number of jobs deleted as a result of this operation
+     */
+    public synchronized int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
+        // Prepare for the defaults...
+        if (queryBuilder == null) {
+            queryBuilder = new AsyncJobStatusCurator.AsyncJobStatusQueryBuilder();
+        }
+
+        Collection<JobState> states = queryBuilder.getJobStates();
+        if (states != null && !states.isEmpty()) {
+            // Make sure we don't attempt to blast some non-terminal jobs.
+            states = states.stream()
+                .filter(state -> state != null && state.isTerminal())
+                .collect(Collectors.toSet());
+        }
+        else {
+            // Set the default: all terminal states
+            states = Arrays.stream(JobState.values())
+                .filter(state -> state.isTerminal())
+                .collect(Collectors.toSet());
+        }
+
+        queryBuilder.setJobStates(states);
+
+        // TODO: any other sanity restrictions deemed necessary
+
+        return this.jobCurator.deleteJobs(queryBuilder);
     }
 
     /**
