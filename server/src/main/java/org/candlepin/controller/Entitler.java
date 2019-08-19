@@ -198,7 +198,8 @@ public class Entitler {
         Consumer consumer = data.getConsumer();
         Owner owner = data.getOwner();
 
-        if ((!consumer.isDev() && owner.isAutobindDisabled()) || owner.isContentAccessEnabled()) {
+        if ((!consumer.isDev() && owner.isAutobindDisabled()) &&
+            owner.isAutobindHypervisorDisabled() || owner.isContentAccessEnabled()) {
             String caMessage = owner.isContentAccessEnabled() ?
                 " because of the content access mode setting" : "";
             log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}",

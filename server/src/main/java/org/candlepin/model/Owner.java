@@ -138,6 +138,12 @@ public class Owner extends AbstractHibernateObject<Owner>
     private Boolean autobindDisabled;
 
     /**
+     * When set, autobindHyperVisorDisabled will be disabled
+     */
+    @Column(name = "autobind_hypervisor_disabled")
+    private Boolean autobindHypervisorDisabled;
+
+    /**
      * Determines the behavior of the content access.
      */
     @Column(name = "content_access_mode", nullable = false)
@@ -157,6 +163,7 @@ public class Owner extends AbstractHibernateObject<Owner>
         this.pools = new HashSet<>();
         this.environments = new HashSet<>();
         this.autobindDisabled = false;
+        this.autobindHypervisorDisabled = false;
     }
 
     /**
@@ -496,6 +503,22 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     public void setAutobindDisabled(boolean autobindDisabled) {
         this.autobindDisabled = autobindDisabled;
+    }
+
+    /**
+     * Checks if autobindHypervisor is disabled for consumers of this owner/organization.
+     *
+     * @return
+     *  true if autobindHypervisor is disabled for this owner/organization; false otherwise
+     */
+    @JsonProperty("autobindHypervisorDisabled")
+    public boolean isAutobindHypervisorDisabled() {
+        return this.autobindHypervisorDisabled != null ?
+           this.autobindHypervisorDisabled.booleanValue() : false;
+    }
+
+    public void setAutobindHypervisorDisabled(boolean autobindHypervisorDisabled) {
+        this.autobindHypervisorDisabled = autobindHypervisorDisabled;
     }
 
     /**

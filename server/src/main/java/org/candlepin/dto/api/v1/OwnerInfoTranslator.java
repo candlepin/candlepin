@@ -75,6 +75,7 @@ public class OwnerInfoTranslator implements ObjectTranslator<OwnerInfo, OwnerDTO
         dest.setDefaultServiceLevel(null);
         dest.setLogLevel(null);
         dest.setAutobindDisabled(null);
+        dest.setAutobindHypervisorDisabled(null);
         dest.setContentAccessMode(null);
         dest.setContentAccessModeList(null);
         dest.setLastRefreshed(null);

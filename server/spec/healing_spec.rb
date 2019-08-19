@@ -150,6 +150,7 @@ describe 'Healing' do
   it 'healing fails when autobind disabled on owner' do
     owner = create_owner random_string('test_owner1')
     owner['autobindDisabled'] = true
+    owner['autobindHypervisorDisabled'] = true
     @cp.update_owner(owner['key'], owner)
 
     owner = @cp.get_owner(owner['key'])

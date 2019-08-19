@@ -64,6 +64,7 @@ public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO
         dest.setDefaultServiceLevel(source.getDefaultServiceLevel());
         dest.setLogLevel(source.getLogLevel());
         dest.setAutobindDisabled(source.isAutobindDisabled());
+        dest.setAutobindHypervisorDisabled(source.isAutobindHypervisorDisabled());
         dest.setContentAccessMode(source.getContentAccessMode());
         dest.setContentAccessModeList(source.getContentAccessModeList());
         dest.setLastRefreshed(source.getLastRefreshed());

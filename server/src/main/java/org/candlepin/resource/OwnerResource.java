@@ -558,6 +558,10 @@ public class OwnerResource {
         if (dto.isAutobindDisabled() != null) {
             entity.setAutobindDisabled(dto.isAutobindDisabled());
         }
+
+        if (dto.isAutobindHypervisorDisabled() != null) {
+            entity.setAutobindHypervisorDisabled(dto.isAutobindHypervisorDisabled());
+        }
     }
 
     /**
