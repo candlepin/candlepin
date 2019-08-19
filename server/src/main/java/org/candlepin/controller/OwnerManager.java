@@ -14,9 +14,6 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.model.AsyncJobStatus.JobState;
-import org.candlepin.model.AsyncJobStatusCurator;
-import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
@@ -82,7 +79,6 @@ public class OwnerManager {
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private UeberCertificateCurator uberCertificateCurator;
     private OwnerServiceAdapter ownerServiceAdapter;
-    private AsyncJobStatusCurator jobCurator;
 
     @Inject
     public OwnerManager(ConsumerCurator consumerCurator,
@@ -100,8 +96,7 @@ public class OwnerManager {
         ContentAccessCertificateCurator contentAccessCertCurator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
         UeberCertificateCurator uberCertificateCurator,
-        OwnerServiceAdapter ownerServiceAdapter,
-        AsyncJobStatusCurator jobCurator) {
+        OwnerServiceAdapter ownerServiceAdapter) {
 
         this.consumerCurator = consumerCurator;
         this.activationKeyCurator = activationKeyCurator;
@@ -119,7 +114,6 @@ public class OwnerManager {
         this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.uberCertificateCurator = uberCertificateCurator;
         this.ownerServiceAdapter = ownerServiceAdapter;
-        this.jobCurator = jobCurator;
     }
 
     @Transactional
@@ -193,17 +187,6 @@ public class OwnerManager {
 
         log.info("Deleting all content...");
         this.contentManager.removeAllContent(owner, false);
-
-        // Impl note:
-        // This may not be the correct behavior here. Perhaps it's better to clear the context
-        // owner where applicable and let the jobs continue to run?
-        log.info("Deleting jobs associated with owner: {}", owner);
-        AsyncJobStatusQueryBuilder jobQueryBuilder = new AsyncJobStatusQueryBuilder()
-            .setOwnerIds(owner.getId())
-            .setJobStates(JobState.values());
-
-        int count = this.jobCurator.deleteJobs(jobQueryBuilder);
-        log.info("{} jobs deleted", count);
 
         log.info("Deleting owner: {}", owner);
         ownerCurator.delete(owner);

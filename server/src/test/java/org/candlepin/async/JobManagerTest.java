@@ -27,6 +27,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ModeManager;
@@ -39,10 +40,10 @@ import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Injector;
-import com.google.inject.persist.UnitOfWork;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -56,9 +57,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import org.mockito.ArgumentCaptor;
-import org.mockito.InOrder;
 import org.mockito.Mockito;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.invocation.InvocationOnMock;
@@ -72,8 +72,8 @@ import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 
 import org.slf4j.MDC;
+import org.slf4j.event.Level;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -98,8 +98,17 @@ import java.util.stream.Stream;
 public class JobManagerTest {
 
     private static class StateCollectingStatus extends AsyncJobStatus {
-
         private final List<JobState> states = new ArrayList<>();
+        private final String id;
+
+        public StateCollectingStatus(String id) {
+            this.id = id;
+        }
+
+        @Override
+        public String getId() {
+            return this.id;
+        }
 
         @Override
         public AsyncJobStatus setState(final JobState state) {
@@ -156,12 +165,12 @@ public class JobManagerTest {
     private SchedulerFactory schedulerFactory;
     private ModeManager modeManager;
     private AsyncJobStatusCurator jobCurator;
+    private OwnerCurator ownerCurator;
     private PrincipalProvider principalProvider;
     private CandlepinRequestScope requestScope;
     private CollectingJobMessageDispatcher dispatcher;
     private Injector injector;
     private EventSink eventSink;
-    private UnitOfWork uow;
 
     private Scheduler scheduler;
     private List<ImmutablePair<String, String>> scheduledJobs;
@@ -169,18 +178,20 @@ public class JobManagerTest {
 
     @BeforeEach
     public void setUp() throws Exception {
+        MDC.clear();
+
         JobManager.registerJob(TestJob.JOB_KEY, TestJob.class);
 
         this.config = new CandlepinCommonTestConfig();
         this.schedulerFactory = mock(SchedulerFactory.class);
         this.modeManager = mock(ModeManager.class);
+        this.ownerCurator = mock(OwnerCurator.class);
         this.jobCurator = mock(AsyncJobStatusCurator.class);
         this.principalProvider = mock(PrincipalProvider.class);
         this.requestScope = mock(CandlepinRequestScope.class);
         this.dispatcher = new CollectingJobMessageDispatcher();
         this.injector = mock(Injector.class);
         this.eventSink = mock(EventSink.class);
-        this.uow = mock(UnitOfWork.class);
 
         this.scheduler = mock(Scheduler.class);
         this.scheduledJobs = new LinkedList<>();
@@ -189,7 +200,6 @@ public class JobManagerTest {
 
         doReturn(this.eventSink).when(this.injector).getInstance(EventSink.class);
         doReturn(this.jobCurator).when(this.injector).getInstance(AsyncJobStatusCurator.class);
-        doReturn(this.uow).when(this.injector).getInstance(UnitOfWork.class);
         doReturn(session).when(this.jobCurator).currentSession();
         doAnswer(returnsFirstArg()).when(this.jobCurator).merge(Mockito.any(AsyncJobStatus.class));
         doAnswer(returnsFirstArg()).when(this.jobCurator).create(Mockito.any(AsyncJobStatus.class));
@@ -253,7 +263,7 @@ public class JobManagerTest {
 
     private JobManager createJobManager(JobMessageDispatcher dispatcher) {
         return new JobManager(this.config, this.schedulerFactory, this.modeManager, this.jobCurator,
-            dispatcher, this.principalProvider, this.requestScope, this.injector);
+            this.ownerCurator, dispatcher, this.principalProvider, this.requestScope, this.injector);
     }
 
     private JobArguments buildJobArguments(Map<String, Object> args) {
@@ -269,31 +279,36 @@ public class JobManagerTest {
     }
 
     private AsyncJobStatus createJobStatus(String jobId) {
-        return createJobStatus(jobId, null, JobState.RUNNING);
+        return createJobStatus(jobId, null, null);
     }
 
     private AsyncJobStatus createJobStatus(String jobId, Owner owner) {
-        return createJobStatus(jobId, owner, JobState.RUNNING);
+        return createJobStatus(jobId, owner, null);
     }
 
     private AsyncJobStatus createJobStatus(String jobId, Owner owner, JobState state) {
         AsyncJobStatus status = spy(new AsyncJobStatus());
-        status.setState(state);
-        when(status.getId()).thenReturn(jobId);
-        HashMap<String, String> data = new HashMap<>();
 
-        if (owner != null) {
-            data.put("org", owner.getKey());
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        when(status.getId()).thenReturn(jobId);
+
+
+        if (state != null) {
+            status.setState(state);
         }
 
-        when(status.getMetadata()).thenReturn(data);
+        status.setContextOwner(owner);
+
         return status;
     }
 
-    public static Stream<Arguments> terminalJobStatesProvider() {
-        return Arrays.stream(JobState.values())
-            .filter(state -> state != null && state.isTerminal())
-            .map(state -> Arguments.of(state));
+    private AsyncJobStatus injectMockedJobStatus(AsyncJobStatus status) {
+        String id = status.getId();
+
+        doReturn(status).when(this.jobCurator).get(id);
+        doReturn(status).when(this.jobCurator).lockAndLoad(id);
+
+        return status;
     }
 
     @Test
@@ -310,15 +325,21 @@ public class JobManagerTest {
         assertThat(throwable.getMessage(), StringContains.containsString("Unable to find"));
     }
 
-    @ParameterizedTest
-    @MethodSource("terminalJobStatesProvider")
-    public void jobShouldFailWhenJobStateIsTerminal(JobState state) {
-        AsyncJobStatus status = spy(new AsyncJobStatus()
-            .setJobKey(TestJob.JOB_KEY)
-            .setState(state));
+    public static Stream<Arguments> terminalJobStatesProviderSansCanceled() {
+        return Arrays.stream(JobState.values())
+            .filter(state -> state != null && state.isTerminal())
+            .filter(state -> state != null && state != JobState.CANCELED)
+            .map(state -> Arguments.of(state));
+    }
 
-        doReturn(status).when(this.jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+    @ParameterizedTest
+    @MethodSource("terminalJobStatesProviderSansCanceled")
+    public void jobShouldFailWhenJobStateIsTerminal(JobState state) {
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
+            .setJobKey(TestJob.JOB_KEY)
+            .setState(state);
+
+        this.injectMockedJobStatus(status);
 
         JobManager manager = createJobManager();
         manager.initialize();
@@ -332,11 +353,10 @@ public class JobManagerTest {
 
     @Test
     public void shouldFailWhenJobCouldNotBeConstructed() {
-        AsyncJobStatus status = spy(new AsyncJobStatus()
-            .setJobKey(TestJob.JOB_KEY));
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
+            .setJobKey(TestJob.JOB_KEY);
 
-        doReturn(status).when(jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         JobManager manager = createJobManager();
         manager.initialize();
@@ -350,14 +370,13 @@ public class JobManagerTest {
 
     @Test
     public void jobShouldBeExecuted() throws JobException {
-        AsyncJobStatus status = spy(new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
-            .setState(JobState.QUEUED));
+            .setState(JobState.QUEUED);
 
         final AsyncJob spy = mock(AsyncJob.class);
         doReturn(spy).when(injector).getInstance(TestJob.class);
-        doReturn(status).when(jobCurator).get(anyString());
-        doReturn(status).when(jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         JobManager manager = createJobManager();
         manager.initialize();
@@ -369,18 +388,14 @@ public class JobManagerTest {
     }
 
     @Test
-    public void shouldConfigureLoggingContext() throws JobException {
-        final AsyncJobStatus status = spy(new AsyncJobStatus()
+    public void testJobManagerDoesNotExecuteCanceledJob() throws JobException {
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
-            .addMetadata("owner_key", "test_owner")
-            .addMetadata("some_key", "some_value")
-            .setLogLevel("TRACE"));
+            .setState(JobState.CANCELED);
 
-        doReturn(JOB_ID).when(status).getId();
-
-        doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob.class);
-        doReturn(status).when(jobCurator).get(JOB_ID);
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        final AsyncJob spy = mock(AsyncJob.class);
+        doReturn(spy).when(injector).getInstance(TestJob.class);
+        this.injectMockedJobStatus(status);
 
         JobManager manager = createJobManager();
         manager.initialize();
@@ -388,22 +403,134 @@ public class JobManagerTest {
 
         manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY));
 
-        assertEquals("job", MDC.get("requestType"));
-        assertEquals(status.getId(), MDC.get("requestUuid"));
-        assertEquals("test_owner", MDC.get("owner_key"));
-        assertEquals("some_value", MDC.get("some_key"));
-        assertEquals("TRACE", MDC.get("logLevel"));
+        verify(spy, never()).execute(any());
+    }
+
+    public static Stream<Arguments> loggingContextArgProvider() {
+        Owner owner1 = new Owner("test_owner-1", "owner_name-1");
+        owner1.setId("test_owner_id-1");
+
+        Owner owner2 = new Owner("test_owner-2", "owner_name-2");
+        owner2.setId("test_owner_id-2");
+        owner2.setLogLevel(Level.DEBUG);
+
+        String jobLogLevel = Level.TRACE.name();
+
+        return Stream.of(
+            Arguments.of(null, null, null),
+            Arguments.of(null, jobLogLevel, jobLogLevel),
+            Arguments.of(owner1, null, owner1.getLogLevel()),
+            Arguments.of(owner1, jobLogLevel, jobLogLevel),
+            Arguments.of(owner2, null, owner2.getLogLevel()),
+            Arguments.of(owner2, jobLogLevel, jobLogLevel));
+    }
+
+    @ParameterizedTest
+    @MethodSource("loggingContextArgProvider")
+    public void testLoggingContextConfiguration(Owner owner, String jobLogLevel, String expectedLogLevel)
+        throws JobException {
+
+        int metadataEntries = 3;
+
+        // Setup environment
+        AsyncJobStatus status = this.createJobStatus(JOB_ID, owner)
+            .setJobKey(TestJob.JOB_KEY)
+            .setLogLevel(jobLogLevel);
+
+        for (int i = 0; i < metadataEntries; ++i) {
+            status.addMetadata("md_key-" + i, "md_val-" + i);
+        }
+
+        Map<String, String> mdcCapture = new HashMap<>();
+        AsyncJob captureJob = jdata -> {
+            mdcCapture.putAll(MDC.getCopyOfContextMap());
+            return null;
+        };
+
+        doReturn(captureJob).when(injector).getInstance(TestJob.class);
+        this.injectMockedJobStatus(status);
+
+        if (owner != null) {
+            doReturn(owner).when(this.ownerCurator).get(owner.getId());
+        }
+
+        JobManager manager = createJobManager();
+        manager.initialize();
+        manager.start();
+
+        manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY));
+
+        assertEquals("job", mdcCapture.get("requestType"));
+        assertEquals(status.getId(), mdcCapture.get("requestUuid"));
+        assertEquals(expectedLogLevel, mdcCapture.get("logLevel"));
+
+        for (int i = 0; i < metadataEntries; ++i) {
+            assertEquals("md_val-" + i, mdcCapture.get("md_key-" + i));
+        }
+
+        if (owner != null) {
+            assertEquals(owner.getKey(), mdcCapture.get(LoggingFilter.OWNER_KEY));
+        }
+        else {
+            assertNull(mdcCapture.get(LoggingFilter.OWNER_KEY));
+        }
+    }
+
+    @Test
+    public void testEnvironmentSetupGracefullyHandlesOwnerLookupFailure() throws JobException {
+        Owner owner = new Owner("test_owner");
+        owner.setId("dead owner id");
+
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(TestJob.JOB_KEY)
+            .setContextOwner(owner));
+
+        doReturn(JOB_ID).when(status).getId();
+        doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob.class);
+        this.injectMockedJobStatus(status);
+
+        JobManager manager = createJobManager();
+        manager.initialize();
+        manager.start();
+
+        manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY));
+        // This should not fail
+    }
+
+    @Test
+    public void testMDCStateIsMaintained() throws JobException {
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(TestJob.JOB_KEY)
+            .addMetadata("job_metadata", "job_metadata_val")
+            .addMetadata("some_shared_key", "job_value"));
+
+        doReturn(JOB_ID).when(status).getId();
+        doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob.class);
+        this.injectMockedJobStatus(status);
+
+        MDC.put("some_shared_key", "global_value");
+        MDC.put("some_other_key", "global_value");
+
+        JobManager manager = createJobManager();
+        manager.initialize();
+        manager.start();
+
+        manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY));
+
+        // We should only have the two values we set directly
+        assertEquals("global_value", MDC.get("some_shared_key"));
+        assertEquals("global_value", MDC.get("some_other_key"));
+        assertNull(MDC.get("job_metadata"));
     }
 
     @Test
     public void shouldSendEvents() throws JobException {
-        AsyncJobStatus status = spy(new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
-            .setState(JobState.QUEUED));
+            .setState(JobState.QUEUED);
 
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob.class);
-        doReturn(status).when(jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         JobManager manager = createJobManager();
         manager.initialize();
@@ -420,13 +547,12 @@ public class JobManagerTest {
             throw new JobExecutionException();
         };
 
-        AsyncJobStatus status = spy(new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
-            .setState(JobState.QUEUED));
+            .setState(JobState.QUEUED);
 
         doReturn(job).when(injector).getInstance(TestJob.class);
-        doReturn(status).when(jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         JobManager manager = createJobManager();
         manager.initialize();
@@ -443,13 +569,12 @@ public class JobManagerTest {
 
     @Test
     public void successfulJobShouldEndAsCompleted() throws JobException {
-        final StateCollectingStatus status = new StateCollectingStatus();
+        final StateCollectingStatus status = new StateCollectingStatus(JOB_ID);
         status.setJobKey(TestJob.JOB_KEY);
 
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob.class);
         doReturn(new AsyncJobStatus().setState(JobState.QUEUED)).when(jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).get(JOB_ID);
-        doReturn(status).when(this.jobCurator).lockAndLoad(JOB_ID);
+        this.injectMockedJobStatus(status);
 
         JobManager manager = createJobManager();
         manager.initialize();
@@ -466,13 +591,12 @@ public class JobManagerTest {
 
     @Test
     public void shouldSetJobExecutor() throws JobException {
-        final AsyncJobStatus status = new AsyncJobStatus()
+        final AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY);
 
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob.class);
         doReturn(new AsyncJobStatus().setState(JobState.QUEUED)).when(jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).get(JOB_ID);
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         final JobManager manager = createJobManager();
         manager.initialize();
@@ -485,7 +609,7 @@ public class JobManagerTest {
 
     @Test
     public void failedJobShouldEndAsFailed() {
-        final StateCollectingStatus status = new StateCollectingStatus();
+        final StateCollectingStatus status = new StateCollectingStatus(JOB_ID);
         status.setJobKey(TestJob.JOB_KEY);
 
         final AsyncJob mock = jdata -> {
@@ -493,8 +617,7 @@ public class JobManagerTest {
         };
 
         doReturn(mock).when(injector).getInstance(TestJob.class);
-        doReturn(status).when(this.jobCurator).get(JOB_ID);
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         JobManager manager = createJobManager();
         manager.initialize();
@@ -514,66 +637,14 @@ public class JobManagerTest {
     }
 
     @Test
-    public void shouldSurroundJobExecutionWithUnitOfWork() throws JobException {
-        AsyncJobStatus status = new AsyncJobStatus()
-            .setJobKey(TestJob.JOB_KEY)
-            .setState(JobState.QUEUED);
-
-        AsyncJob job = mock(AsyncJob.class);
-        doReturn(job).when(injector).getInstance(TestJob.class);
-        doReturn(status).when(jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
-
-        InOrder inOrder = inOrder(uow, job, uow);
-        JobManager manager = createJobManager();
-        manager.initialize();
-        manager.start();
-
-        manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY));
-
-        inOrder.verify(uow).begin();
-        inOrder.verify(job).execute(any());
-        inOrder.verify(uow).end();
-    }
-
-    @Test
-    public void shouldProperlyEndUnitOfWorkOfFailedJobs() throws JobException {
-        AsyncJobStatus status = new AsyncJobStatus()
-            .setJobKey(TestJob.JOB_KEY)
-            .setState(JobState.QUEUED);
-
-        AsyncJob job = mock(AsyncJob.class);
-        doReturn(job).when(injector).getInstance(TestJob.class);
-        doReturn(status).when(jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
-        doThrow(new JobExecutionException()).when(job).execute(any());
-
-        InOrder inOrder = inOrder(uow, job, uow);
-        JobManager manager = createJobManager();
-        manager.initialize();
-        manager.start();
-
-        try {
-            manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY));
-            fail("Must not happen!");
-        }
-        catch (JobExecutionException e) {
-            inOrder.verify(uow).begin();
-            inOrder.verify(job).execute(any());
-            inOrder.verify(uow).end();
-        }
-    }
-
-    @Test
     public void testStartTimeIsSetOnExecution() throws JobException {
         AsyncJob job = jdata -> { return null; };
-        AsyncJobStatus status = new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob.class);
-        doReturn(status).when(this.jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         assertNull(status.getStartTime());
         Date start = new Date();
@@ -594,13 +665,12 @@ public class JobManagerTest {
     @Test
     public void testEndTimeIsSetOnExecution() throws JobException {
         AsyncJob job = jdata -> { return null; };
-        AsyncJobStatus status = new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob.class);
-        doReturn(status).when(this.jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         assertNull(status.getEndTime());
         Date start = new Date();
@@ -621,13 +691,12 @@ public class JobManagerTest {
     @Test
     public void testEndTimeIsSetOnExecutionFailure() {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
-        AsyncJobStatus status = new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob.class);
-        doReturn(status).when(this.jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         assertNull(status.getEndTime());
         Date start = new Date();
@@ -656,13 +725,12 @@ public class JobManagerTest {
     @Test
     public void testAttemptCountIsIncrementedOnExecution() throws JobException {
         AsyncJob job = jdata -> { return null; };
-        AsyncJobStatus status = new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob.class);
-        doReturn(status).when(this.jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         assertEquals(0, status.getAttempts());
 
@@ -678,13 +746,12 @@ public class JobManagerTest {
     @Test
     public void testAttemptCountRemainsIncrementedOnExecutionFailure() {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
-        AsyncJobStatus status = new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED);
 
         doReturn(job).when(this.injector).getInstance(TestJob.class);
-        doReturn(status).when(this.jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         assertEquals(0, status.getAttempts());
 
@@ -708,17 +775,13 @@ public class JobManagerTest {
     @Test
     public void testFailingWithRetryGeneratesNewJobMessage() {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
-        AsyncJobStatus status = spy(new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED)
-            .setMaxAttempts(3));
-
-        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
-        doReturn(JOB_ID).when(status).getId();
+            .setMaxAttempts(3);
 
         doReturn(job).when(this.injector).getInstance(TestJob.class);
-        doReturn(status).when(this.jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         assertEquals(0, this.dispatcher.getSentMessages().size());
 
@@ -748,18 +811,14 @@ public class JobManagerTest {
     @Test
     public void testFailingWithRetryDoesNotRetryWhenAttemptsExhaused() {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
-        AsyncJobStatus status = spy(new AsyncJobStatus()
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED)
             .incrementAttempts()
-            .setMaxAttempts(2));
-
-        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
-        doReturn(JOB_ID).when(status).getId();
+            .setMaxAttempts(2);
 
         doReturn(job).when(this.injector).getInstance(TestJob.class);
-        doReturn(status).when(this.jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         assertEquals(0, this.dispatcher.getSentMessages().size());
 
@@ -793,8 +852,7 @@ public class JobManagerTest {
         doReturn(JOB_ID).when(status).getId();
 
         doReturn(job).when(this.injector).getInstance(TestJob.class);
-        doReturn(status).when(this.jobCurator).get(anyString());
-        doReturn(status).when(this.jobCurator).lockAndLoad(anyString());
+        this.injectMockedJobStatus(status);
 
         assertEquals(0, this.dispatcher.getSentMessages().size());
 
@@ -824,15 +882,14 @@ public class JobManagerTest {
             .setMaxAttempts(3));
 
         AsyncJob job = jdata -> {
-            doThrow(new SQLException()).when(jobCurator).merge(status);
+            doThrow(new RuntimeException()).when(jobCurator).merge(status);
             throw new JobExecutionException("kaboom");
         };
 
         // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
         doReturn(JOB_ID).when(status).getId();
-        doReturn(status).when(this.jobCurator).get(JOB_ID);
-        doReturn(status).when(this.jobCurator).lockAndLoad(JOB_ID);
         doReturn(job).when(this.injector).getInstance(TestJob.class);
+        this.injectMockedJobStatus(status);
 
         JobManager manager = this.createJobManager();
         manager.initialize();
@@ -857,9 +914,8 @@ public class JobManagerTest {
 
         // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
         doReturn(JOB_ID).when(status).getId();
-        doReturn(status).when(this.jobCurator).get(JOB_ID);
-        doReturn(status).when(this.jobCurator).lockAndLoad(JOB_ID);
         doReturn(job).when(this.injector).getInstance(TestJob.class);
+        this.injectMockedJobStatus(status);
 
         JobMessageDispatcher dispatcher = mock(JobMessageDispatcher.class);
         doThrow(new JobMessageDispatchException()).when(dispatcher).postJobMessage(any());
@@ -881,8 +937,8 @@ public class JobManagerTest {
         AsyncJob job = jdata -> { return null; };
 
         doReturn(JOB_ID).when(status).getId();
-        doReturn(status).when(this.jobCurator).get(JOB_ID);
         doReturn(job).when(this.injector).getInstance(TestJob.class);
+        this.injectMockedJobStatus(status);
 
         JobManager manager = this.createJobManager();
         manager.initialize();
@@ -1227,9 +1283,12 @@ public class JobManagerTest {
     public void jobStatusFound() {
         String jobId = "jobId";
         Owner owner = new Owner("ownerKey", "owner");
+        owner.setId("test_owner");
+
         JobManager manager = this.createJobManager();
-        doReturn(createJobStatus(jobId, owner)).when(this.jobCurator).get(anyString());
+
         doReturn(new SystemPrincipal()).when(this.principalProvider).get();
+        this.injectMockedJobStatus(this.createJobStatus(jobId, owner));
 
         AsyncJobStatus result = manager.findJob(jobId);
 
@@ -1240,13 +1299,16 @@ public class JobManagerTest {
     @Test
     public void jobStatusFoundWithPermissions() {
         String jobId = "jobId";
+
         Owner owner = new Owner("ownerKey", "owner");
+        owner.setId("test_owner");
+
         List<Permission> permissions = Collections
             .singletonList(new OwnerPermission(owner, Access.READ_ONLY));
         JobManager manager = this.createJobManager();
-        doReturn(createJobStatus(jobId, owner)).when(this.jobCurator).get(anyString());
-        doReturn(new UserPrincipal("user", permissions, false))
-            .when(this.principalProvider).get();
+
+        doReturn(new UserPrincipal("user", permissions, false)).when(this.principalProvider).get();
+        this.injectMockedJobStatus(this.createJobStatus(jobId, owner));
 
         AsyncJobStatus result = manager.findJob(jobId);
 
@@ -1432,8 +1494,7 @@ public class JobManagerTest {
     public void testCancelJob() {
         String jobId = "job_id";
         AsyncJobStatus expected = this.createJobStatus(jobId, null, JobState.QUEUED);
-
-        doReturn(expected).when(this.jobCurator).lockAndLoad(jobId);
+        this.injectMockedJobStatus(expected);
 
         JobManager manager = this.createJobManager();
         AsyncJobStatus output = manager.cancelJob(expected.getId());
@@ -1449,7 +1510,7 @@ public class JobManagerTest {
         AsyncJobStatus expected = this.createJobStatus(jobId, null, JobState.RUNNING)
             .setMaxAttempts(5);
 
-        doReturn(expected).when(this.jobCurator).lockAndLoad(jobId);
+        this.injectMockedJobStatus(expected);
 
         JobManager manager = this.createJobManager();
         AsyncJobStatus output = manager.cancelJob(expected.getId());
@@ -1460,6 +1521,12 @@ public class JobManagerTest {
         assertEquals(1, output.getMaxAttempts());
     }
 
+    public static Stream<Arguments> terminalJobStatesProvider() {
+        return Arrays.stream(JobState.values())
+            .filter(state -> state != null && state.isTerminal())
+            .map(state -> Arguments.of(state));
+    }
+
     @ParameterizedTest
     @MethodSource("terminalJobStatesProvider")
     public void testCancelJobWontCancelTerminalJobs(JobState state) {
@@ -1468,8 +1535,7 @@ public class JobManagerTest {
 
         String jobId = "job_id";
         AsyncJobStatus expected = this.createJobStatus(jobId, null, state);
-
-        doReturn(expected).when(this.jobCurator).lockAndLoad(jobId);
+        this.injectMockedJobStatus(expected);
 
         JobManager manager = this.createJobManager();
         assertThrows(IllegalStateException.class, () -> manager.cancelJob(expected.getId()));
