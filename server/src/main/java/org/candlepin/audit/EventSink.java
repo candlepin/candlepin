@@ -14,16 +14,14 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-
-import java.util.List;
 
 /**
  * EventSink
@@ -60,5 +58,4 @@ public interface EventSink {
 
     void emitCompliance(Consumer consumer, SystemPurposeComplianceStatus compliance);
 
-    List<QueueStatus> getQueueInfo();
 }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.audit.ActiveMQHealth;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.QueueStatus;
 import org.candlepin.auth.Principal;
@@ -56,15 +57,17 @@ public class AdminResource {
     private EventSink sink;
     private Configuration config;
     private CandlepinCache candlepinCache;
+    private ActiveMQHealth amqHealth;
 
     @Inject
     public AdminResource(UserServiceAdapter userService, UserCurator userCurator,
-        EventSink dispatcher, Configuration config, CandlepinCache candlepinCache) {
+        EventSink dispatcher, Configuration config, CandlepinCache candlepinCache, ActiveMQHealth amqHealth) {
         this.userService = userService;
         this.userCurator = userCurator;
         this.sink = dispatcher;
         this.config = config;
         this.candlepinCache = candlepinCache;
+        this.amqHealth = amqHealth;
     }
 
     @GET
@@ -108,6 +111,6 @@ public class AdminResource {
         notes = "Basic information on the ActiveMQ queues and how many messages are pending in each.",
         value = "Get Queue Stats")
     public List<QueueStatus> getQueueStats() {
-        return sink.getQueueInfo();
+        return amqHealth.getQueueInfo();
     }
 }

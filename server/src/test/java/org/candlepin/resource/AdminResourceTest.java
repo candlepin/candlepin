@@ -42,7 +42,7 @@ public class AdminResourceTest {
     public void init() {
         usa = mock(DefaultUserServiceAdapter.class);
         uc = mock(UserCurator.class);
-        ar = new AdminResource(usa, uc, null, config, null);
+        ar = new AdminResource(usa, uc, null, config, null, null);
     }
 
     @Test
@@ -54,7 +54,7 @@ public class AdminResourceTest {
 
     @Test
     public void initWithNonDefaultUserService() {
-        ar = new AdminResource(mock(UserServiceAdapter.class), uc, null, config, null);
+        ar = new AdminResource(mock(UserServiceAdapter.class), uc, null, config, null, null);
         assertEquals("Already initialized.", ar.initialize());
     }
 

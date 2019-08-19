@@ -14,19 +14,16 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -117,10 +114,4 @@ public class NoopEventSinkImpl implements EventSink {
     public void emitCompliance(Consumer consumer, SystemPurposeComplianceStatus compliance) {
         log.debug("emitCompliance: SystemPurposeComplianceStatus: {}", compliance);
     }
-
-    @Override
-    public List<QueueStatus> getQueueInfo() {
-        return null;
-    }
-
 }

@@ -14,30 +14,24 @@
  */
 package org.candlepin.audit;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.client.ClientMessage;
+import org.apache.activemq.artemis.api.core.client.ClientProducer;
+import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ModeManager;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.SimpleString;
-import org.apache.activemq.artemis.api.core.client.ClientMessage;
-import org.apache.activemq.artemis.api.core.client.ClientProducer;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -70,26 +64,6 @@ public class EventSinkImpl implements EventSink {
         this.modeManager = modeManager;
         this.config = config;
         this.connection = connection;
-    }
-
-    // FIXME This method really does not belong here. It should probably be moved
-    //       to its own class.
-    @Override
-    public List<QueueStatus> getQueueInfo() {
-        List<QueueStatus> results = new LinkedList<>();
-
-        try (ClientSession session = this.connection.createClientSession()) {
-            session.start();
-            for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
-                String queueName = "event." + listenerClassName;
-                long msgCount = session.queueQuery(new SimpleString(queueName)).getMessageCount();
-                results.add(new QueueStatus(queueName, msgCount));
-            }
-        }
-        catch (Exception e) {
-            log.error("Error looking up ActiveMQ queue info: ", e);
-        }
-        return results;
     }
 
     /**

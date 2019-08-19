@@ -27,10 +27,12 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
-import org.candlepin.audit.AMQPBusPublisher;
+import org.candlepin.audit.ActiveMQHealth;
+import org.candlepin.audit.ActiveMQHealthCheck;
+import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
-import org.candlepin.audit.NoopEventSinkImpl;
+import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.QpidConfigBuilder;
 import org.candlepin.audit.QpidConnection;
 import org.candlepin.auth.Principal;
@@ -444,6 +446,7 @@ public class CandlepinModule extends AbstractModule {
     private void configureEventSink() {
         if (config.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED)) {
             bind(EventSink.class).to(EventSinkImpl.class);
+            bind(ActiveMQHealth.class).to(ActiveMQHealthCheck.class);
         }
         else {
             bind(EventSink.class).to(NoopEventSinkImpl.class);
