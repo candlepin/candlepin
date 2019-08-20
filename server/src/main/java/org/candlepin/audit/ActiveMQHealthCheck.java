@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,25 +14,28 @@
  */
 package org.candlepin.audit;
 
-import com.google.inject.Inject;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.SimpleString;
+import org.apache.activemq.artemis.api.core.client.ClientConsumer;
+import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.candlepin.common.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * ActiveMQ Health Check Implementation Class.
  */
-public class ActiveMQHealthCheck implements ActiveMQHealth {
+public class ActiveMQHealthCheck implements ActiveMQHealth, Callable<HashMap<String, QueueStatus>> {
     private static Logger log = LoggerFactory.getLogger(ActiveMQHealthCheck.class);
     private Configuration config;
     private EventSinkConnection connection;
 
-    @Inject
     public ActiveMQHealthCheck(Configuration config, EventSinkConnection connection) {
         this.config = config;
         this.connection = connection;
@@ -53,5 +56,40 @@ public class ActiveMQHealthCheck implements ActiveMQHealth {
             log.error("Error looking up ActiveMQ queue info: ", e);
         }
         return results;
+    }
+
+    @Override
+    public HashMap<String, QueueStatus> queueHealth() {
+        HashMap<String, QueueStatus> queueHealthStatus = new HashMap<>();
+        try (ClientSession session = this.connection.createClientSession()) {
+            session.start();
+            for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
+                String queueName = "event." + listenerClassName;
+                long msgCount = session.queueQuery(new SimpleString(queueName)).getMessageCount();
+                String msgId = getMessageId(session, queueName);
+                queueHealthStatus.put(queueName, new QueueStatus(queueName, msgCount, msgId));
+            }
+        }
+        catch (ActiveMQException e) {
+            log.error("Error collecting data points for queue health: ", e);
+        }
+        return queueHealthStatus;
+    }
+
+    private String getMessageId(ClientSession session, String queueName) throws ActiveMQException {
+        try {
+            ClientConsumer consumer = session.createConsumer(queueName, true);
+            ClientMessage clientMsg = consumer.receive(1000);
+            return String.valueOf(clientMsg.getMessageID());
+        }
+        catch (ActiveMQException exp) {
+            log.error("Unable to get message from queue {}", queueName);
+            throw exp;
+        }
+    }
+
+    @Override
+    public HashMap<String, QueueStatus> call() throws Exception {
+        return queueHealth();
     }
 }
