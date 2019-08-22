@@ -484,7 +484,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.clear();
 
         consumer = consumerCurator.get(cid);
-        assertNull(consumer.getRole());
+        assertTrue(consumer.getRole().isEmpty());
     }
 
     @Test
@@ -512,6 +512,6 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.clear();
 
         consumer = consumerCurator.get(cid);
-        assertNull(consumer.getUsage());
+        assertTrue(consumer.getUsage().isEmpty());
     }
 }
