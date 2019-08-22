@@ -562,8 +562,8 @@ describe 'System purpose compliance' do
       @user2.update_consumer(update_args)
       consumer = @user2.get_consumer(consumer['uuid'])
       consumer['serviceLevel'].should == ''
-      consumer['usage'].should be_nil
-      consumer['role'].should be_nil
+      expect(consumer['usage']).to eq('')
+      expect(consumer['role']).to eq('')
 
       add_ons = consumer['addOns']
       add_ons.size.should == 0

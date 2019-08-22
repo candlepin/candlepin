@@ -460,7 +460,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testRoleConvertedToNull() throws Exception {
+    public void testRoleConvertedToEmpty() throws Exception {
         Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
         consumerCurator.create(consumer);
 
@@ -484,11 +484,11 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.clear();
 
         consumer = consumerCurator.get(cid);
-        assertNull(consumer.getRole());
+        assertTrue(consumer.getRole().isEmpty());
     }
 
     @Test
-    public void testUsageConvertedToNull() throws Exception {
+    public void testUsageConvertedToEmpty() throws Exception {
         Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
         consumerCurator.create(consumer);
 
@@ -512,6 +512,6 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.clear();
 
         consumer = consumerCurator.get(cid);
-        assertNull(consumer.getUsage());
+        assertTrue(consumer.getUsage().isEmpty());
     }
 }
