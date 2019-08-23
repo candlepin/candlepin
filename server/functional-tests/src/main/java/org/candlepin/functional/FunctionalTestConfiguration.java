@@ -14,11 +14,14 @@
  */
 package org.candlepin.functional;
 
+import org.candlepin.client.ApiClient;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.TypeExcludeFilter;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +37,14 @@ import org.springframework.context.annotation.PropertySource;
 @EnableConfigurationProperties({ FunctionalTestProperties.class, ApiClientProperties.class})
 @PropertySource("classpath:/functional-tests.properties")
 public class FunctionalTestConfiguration {
+    public static final String ADMIN = "admin";
+
     @Autowired private FunctionalTestProperties functionalTestProperties;
 
     @Autowired private ApiClientProperties apiClientProperties;
+
+    @Bean
+    public ApiClient adminApiClient(ApiClientBuilder apiClientBuilder) {
+        return apiClientBuilder.withUsername(ADMIN).withPassword(ADMIN).build();
+    }
 }

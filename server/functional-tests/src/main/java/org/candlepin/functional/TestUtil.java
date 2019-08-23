@@ -16,23 +16,35 @@ package org.candlepin.functional;
 
 import org.candlepin.client.ApiClient;
 import org.candlepin.client.ApiException;
+import org.candlepin.client.model.NestedOwnerDTO;
 import org.candlepin.client.model.OwnerDTO;
+import org.candlepin.client.model.PermissionBlueprintDTO;
+import org.candlepin.client.model.RoleDTO;
+import org.candlepin.client.model.UserDTO;
 import org.candlepin.client.resources.OwnersApi;
+import org.candlepin.client.resources.RolesApi;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
 
 /** Utility class to perform rote tasks like owner creation */
+@Component
 public class TestUtil {
     private static final String ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static SecureRandom rnd = new SecureRandom();
 
-    @Autowired private static ApiClientFactory clientFactory;
+    private ApiClient apiClient;
 
+    public TestUtil(ApiClientBuilder apiClientBuilder) {
+        this.apiClient = apiClientBuilder.build();
+    }
 
-    private TestUtil() {
-        // static methods only in this class
+    @Autowired
+    public TestUtil(@Qualifier("adminApiClient") ApiClient adminApiClient) {
+        this.apiClient = adminApiClient;
     }
 
     /**
@@ -66,34 +78,83 @@ public class TestUtil {
     public static String randomString(int length) {
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-            sb.append(ALPHABET.charAt(rnd.nextInt(length)));
+            sb.append(ALPHABET.charAt(rnd.nextInt(ALPHABET.length())));
         }
         return sb.toString();
     }
 
-    public static OwnerDTO trivialOwner() throws Exception {
-        return trivialOwner(clientFactory.getObject(), true);
-    }
-
-    public static OwnerDTO trivialOwner(String ownerKey) throws Exception {
-        return trivialOwner(clientFactory.getObject(), ownerKey);
-    }
-
-    public static OwnerDTO trivialOwner(ApiClient client) throws ApiException {
-        return trivialOwner(client, true);
-    }
-
-    public static OwnerDTO trivialOwner(ApiClient client, boolean randomize) throws ApiException {
+    public OwnerDTO trivialOwner() throws ApiException {
         String ownerKey = randomString();
-        return trivialOwner(client, ownerKey);
+        return trivialOwner(ownerKey);
     }
 
-    public static OwnerDTO trivialOwner(ApiClient client, String ownerKey) throws ApiException {
-        OwnersApi ownersApi = new OwnersApi(client);
+    public OwnerDTO trivialOwner(String ownerKey) throws ApiException {
+        OwnersApi ownersApi = new OwnersApi();
         OwnerDTO owner = new OwnerDTO();
         owner.setKey(ownerKey);
         owner.setDisplayName("Display Name " + ownerKey);
         return ownersApi.createOwner(owner);
     }
 
+    public RoleDTO createRole(String ownerKey, String access) throws ApiException {
+        return createRoleForUser(ownerKey, null, access);
+    }
+
+    public RoleDTO createAllAccessRoleForUser(String ownerKey, UserDTO user) throws ApiException {
+        return createRoleForUser(ownerKey, user, "ALL");
+    }
+
+    public RoleDTO createRoleForUser(String ownerKey, UserDTO user, String access)
+        throws ApiException {
+        PermissionBlueprintDTO permission = createOwnerPermission(ownerKey, access);
+        RolesApi rolesApi = new RolesApi(apiClient);
+        RoleDTO role = new RoleDTO();
+        role.setName(ownerKey + "_" + access);
+
+        if (user != null) {
+            role.addUsersItem(user);
+        }
+        role.addPermissionsItem(permission);
+
+        return rolesApi.createRole(role);
+    }
+
+    public PermissionBlueprintDTO createOwnerPermission(String ownerKey, String access) throws ApiException {
+        return createPermission(ownerKey, access, "OWNER");
+    }
+
+    public PermissionBlueprintDTO createPermission(String ownerKey, String access, String type)
+        throws ApiException {
+        NestedOwnerDTO nestedOwner = new NestedOwnerDTO();
+        nestedOwner.setKey(ownerKey);
+
+        PermissionBlueprintDTO permission = new PermissionBlueprintDTO();
+        permission.setOwner(nestedOwner);
+        permission.setType(type);
+        permission.setAccess(access);
+
+        return permission;
+    }
+
+    /*
+    public RoleDTO addUserToRole(String rolename, UserDTO user) throws ApiException {
+        return addUserToRole(rolename, user.getUsername());
+    }
+
+    public RoleDTO addUserToRole(RoleDTO role, String username) throws ApiException {
+        return addUserToRole(role.getName(), username);
+    }
+
+    public RoleDTO addUserToRole(RoleDTO role, UserDTO user) throws ApiException {
+        return addUserToRole(role.getName(), user.getUsername());
+    }
+
+    public RoleDTO addUserToRole(String roleName, String username) throws ApiException {
+        RolesApi rolesApi = new RolesApi(apiClient);
+        // FIXME: this doesn't work right now.  The generated client is sending in a Object as the
+        //  POST body even though the API spec doesn't define a POST body.  Jackson then chokes on
+        //  serializing an empty Object. Need to figure that out.
+        return rolesApi.addUserToRole(roleName, username);
+    }
+*/
 }

@@ -16,12 +16,13 @@ package org.candlepin.functional.user;
 
 import org.candlepin.client.ApiClient;
 import org.candlepin.client.model.OwnerDTO;
-import org.candlepin.functional.ApiClientBuilder;
+import org.candlepin.functional.ClientUtil;
 import org.candlepin.functional.FunctionalTestCase;
 import org.candlepin.functional.TestUtil;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Test the /owners resource
@@ -29,16 +30,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 @FunctionalTestCase
 public class UserResourceTest {
 
-    @Autowired private ApiClient adminApiClient;
-    @Autowired private ApiClientBuilder clientBuilder;
+    @Autowired @Qualifier("adminApiClient") private ApiClient adminApiClient;
+    @Autowired private ClientUtil clientUtil;
+    @Autowired private TestUtil testUtil;
 
     @Test
     public void shouldListOwnersForUser() throws Exception {
-        OwnerDTO owner = TestUtil.trivialOwner(adminApiClient);
-//        // TODO assign user to owner!
-//        String username = TestUtil.randomString("user1");
-//        ApiClient userClient = new ClientUtil(adminApiClient).userClient(username, clientBuilder);
-//
+        OwnerDTO owner = testUtil.trivialOwner();
+        String username = TestUtil.randomString("user1");
+        ApiClient userClient = clientUtil.newUserAndClient(username, owner.getKey());
+
 //        UsersApi usersApi = new UsersApi(userClient);
 //        usersApi.listUsersOwners(username);
     }

@@ -16,20 +16,37 @@ package org.candlepin.functional;
 
 import org.candlepin.client.ApiClient;
 import org.candlepin.client.ApiException;
+import org.candlepin.client.model.NestedOwnerDTO;
+import org.candlepin.client.model.Owner;
+import org.candlepin.client.model.OwnerDTO;
+import org.candlepin.client.model.PermissionBlueprintDTO;
+import org.candlepin.client.model.RoleDTO;
 import org.candlepin.client.model.UserCreationRequest;
+import org.candlepin.client.model.UserDTO;
+import org.candlepin.client.resources.OwnersApi;
+import org.candlepin.client.resources.RolesApi;
 import org.candlepin.client.resources.UsersApi;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 
 /**
  * Utility for creating various ApiClients
  */
+@Component
 public class ClientUtil {
-    private final ApiClient adminApiClient;
+    private final ApiClientBuilder apiClientBuilder;
 
-    public ClientUtil(ApiClient adminApiClient) {
-        this.adminApiClient = adminApiClient;
+    @Autowired
+    @Qualifier("adminApiClient")
+    private ApiClient adminApiClient;
+
+    public ClientUtil(ApiClientBuilder apiClientBuilder) {
+        this.apiClientBuilder = apiClientBuilder;
     }
 
-    public ApiClient userClient(String username, String owner, ApiClientBuilder apiClientBuilder)
+    public ApiClient newUserAndClient(String username, String ownerKey)
         throws ApiException {
         String password = TestUtil.randomString(10);
         UserCreationRequest userReq = new UserCreationRequest();
@@ -37,10 +54,12 @@ public class ClientUtil {
         userReq.setPassword(password);
 
         UsersApi usersApi = new UsersApi(adminApiClient);
-        usersApi.createUser(userReq);
+        UserDTO user = usersApi.createUser(userReq);
 
-        // TODO associate with an owner
+        TestUtil testUtil = new TestUtil(apiClientBuilder);
+        testUtil.createAllAccessRoleForUser(ownerKey, user);
 
         return apiClientBuilder.withUsername(username).withPassword(password).build();
     }
+
 }
