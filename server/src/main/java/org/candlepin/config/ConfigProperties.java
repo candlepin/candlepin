@@ -21,7 +21,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
-import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
@@ -188,8 +187,6 @@ public class ConfigProperties {
     public static final String MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES =
         "pinsetter.org.candlepin.pinsetter.tasks.ManifestCleanerJob.max_age_in_minutes";
 
-    public static final String ENTITLER_JOB_THROTTLE =
-        "pinsetter." + EntitlerJob.class.getName() + ".throttle";
     public static final String ENTITLER_BULK_SIZE = "entitler.bulk.size";
 
     public static final String BATCH_BIND_NUMBER_OF_POOLS_LIMIT =
@@ -348,7 +345,6 @@ public class ConfigProperties {
             this.put("org.quartz.threadPool.threadCount", "15");
             this.put("org.quartz.threadPool.threadPriority", "5");
             this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
-            this.put(ENTITLER_JOB_THROTTLE, "7");
             this.put(ENTITLER_BULK_SIZE, "1000");
             this.put(BATCH_BIND_NUMBER_OF_POOLS_LIMIT, "100");
 

@@ -16,14 +16,11 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.newJob;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.common.filter.LoggingFilter;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.JobCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Pool;
@@ -43,9 +40,6 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -61,8 +55,6 @@ import java.util.Map;
  */
 public class EntitlerJob extends KingpinJob {
     private static Logger log = LoggerFactory.getLogger(EntitlerJob.class);
-
-    @Inject private static Configuration conf;
 
     protected I18n i18n;
     protected Entitler entitler;
@@ -149,34 +141,4 @@ public class EntitlerJob extends KingpinJob {
         return detail;
     }
 
-    public static boolean isSchedulable(JobCurator jobCurator, JobStatus status) {
-
-        Class<? extends KingpinJob> jobClass;
-        try {
-            jobClass = (Class<? extends KingpinJob>) Class.forName(status.getJobClass());
-        }
-        catch (ClassNotFoundException cnfe) {
-            log.warn("Could not schedule job of class {}. The class was not found.", status.getJobClass());
-            return false;
-        }
-
-        long running = jobCurator.findNumRunningByClassAndTarget(status.getTargetId(), jobClass);
-        // We can start the job if there are less than N others running
-        int throttle = conf.getInt(ConfigProperties.ENTITLER_JOB_THROTTLE);
-        return running < throttle;
-    }
-
-    public static JobStatus scheduleJob(JobCurator jobCurator,
-        Scheduler scheduler, JobDetail detail, Trigger trigger) throws SchedulerException {
-
-        JobStatus status = jobCurator.getByClassAndTarget(
-            detail.getJobDataMap().getString(JobStatus.TARGET_ID),
-            EntitlerJob.class);
-
-        // Insert as a waiting job if a bunch of EntitlerJobs are already running
-        if (status != null && !isSchedulable(jobCurator, status)) {
-            trigger = null;
-        }
-        return KingpinJob.scheduleJob(jobCurator, scheduler, detail, trigger);
-    }
 }
