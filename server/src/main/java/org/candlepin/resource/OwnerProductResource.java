@@ -227,7 +227,6 @@ public class OwnerProductResource {
     @Transactional
     public ProductCertificateDTO getProductCertificate(
         @PathParam("owner_key") String ownerKey,
-        @ApiParam(name = "productId", required = true, value = "Numeric product identifier")
         @PathParam("product_id") String productId) {
 
         if (!productId.matches("\\d+")) {

@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "org.openapitools:openapi-generator-gradle-plugin:4.0.0-beta"
+        classpath "org.openapitools:openapi-generator-gradle-plugin:4.1.0"
     }
 }
 
@@ -23,6 +23,7 @@ openApiGenerate {
     generatorName = "java"
     // TODO get a valid spec
     validateSpec = false
+    skipValidateSpec = true
     // TODO version = "$version"
 }
 
@@ -39,6 +40,8 @@ ext.client = [
 ]
 
 dependencies {
+    implementation libraries.collections
+
     implementation "io.swagger:swagger-annotations:$client.swagger_annotations_version"
     implementation "org.jboss.resteasy:resteasy-client:$client.resteasy_version"
     implementation "org.jboss.resteasy:resteasy-multipart-provider:$client.resteasy_version"

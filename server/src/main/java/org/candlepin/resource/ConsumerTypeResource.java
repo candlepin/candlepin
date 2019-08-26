@@ -14,10 +14,10 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -29,6 +29,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -38,13 +45,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
 
 
 
@@ -153,7 +153,8 @@ public class ConsumerTypeResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public ConsumerTypeDTO update(
-        @ApiParam(name = "consumerType", required = true) ConsumerTypeDTO dto) throws BadRequestException {
+        @ApiParam(name = "consumerType", required = true) ConsumerTypeDTO dto,
+        @PathParam("id") String consumerTypeId) throws BadRequestException {
         ConsumerType type = consumerTypeCurator.get(dto.getId());
 
         if (type == null) {

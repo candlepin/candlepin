@@ -120,7 +120,8 @@ public class SubscriptionResource {
         throw new ResourceMovedException("pools/{pool_id}/cert");
     }
 
-    @ApiOperation(notes = "Retrieves a Subscription Certificate", value = "getSubCert")
+    @ApiOperation(notes = "Retrieves a Subscription Certificate", value = "getSubCert",
+        nickname = "getSubscriptionCertificate")
     @GET
     @Path("{subscription_id}/cert")
     @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
