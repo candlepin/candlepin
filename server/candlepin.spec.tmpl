@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.8.0
+Version: 2.8.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,32 @@ fi
 
 #raw
 %changelog
+* Tue Aug 27 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.8.1-1
+- Update the POM files for gradle library updates. (bcourt@redhat.com)
+- Update CandlepinModule with HypervisorHeartbeatUpdateJob (wpoteat@redhat.com)
+- Switch EntitlerTest to JUnit5 (ojanus@redhat.com)
+- 1561798 - Split transaction of unmapped cleaner job into multiple
+  transactions (ojanus@redhat.com)
+- Changed how file-based hsqldb is managed (crog@redhat.com)
+- Fixed incorrect wording in the deleted consumer changeset (crog@redhat.com)
+- Cleaned up close logic with use of try-with-resource statements
+  (crog@redhat.com)
+- 1740877: Added principal to consumer deletion records (crog@redhat.com)
+- 1734521: Consumer returning duplicate guests [ENT-1535]  - Ignore duplicate
+  guest ids if available in request  - Ingore duplicate guest ids if available
+  in cp_consumer_guests table (abhiskum@localhost.localdomain)
+- Moved testing HSQLDB instance to a file rather than memory (crog@redhat.com)
+- 1569133:Entitlements Removed from Source when transfer fails [ENT-526]
+  (abhiskum@localhost.localdomain)
+- [ENT-288] Need a better way to identify pools as being 'custom' (#2398)
+  (prakgupt@redhat.com)
+- ENT-1408: Candlepin RHEL 8 support (nmoumoul@redhat.com)
+- Handling for bad hypervisor json (wpoteat@redhat.com)
+- 1713420: Load JSS jar from file system - Make JSS a compile only dependency -
+  Add JSS to classloader through candlepin's context.xml (ojanus@redhat.com)
+- 1731779: Correct test of hypervisor id use to account for current consumer
+  (wpoteat@redhat.com)
+
 * Mon Jul 22 2019 Kevin Howell <khowell@redhat.com> 2.8.0-1
 - 1722477: Remove storage of events and resources that access the stored events
   (wpoteat@redhat.com)
