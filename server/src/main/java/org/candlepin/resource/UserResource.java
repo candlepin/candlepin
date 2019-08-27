@@ -114,7 +114,8 @@ public class UserResource {
         return user;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Users", value = "list", nickname = "listUsers")
+    @ApiOperation(notes = "Retrieves a list of Users", value = "list", nickname = "listUsers",
+        response = UserDTO.class, responseContainer = "List")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Stream<UserDTO> list() {
@@ -138,7 +139,8 @@ public class UserResource {
      * getUserRoles will only return roles for one user. If you want a
      * full view of a role, use /roles/ instead.
      */
-    @ApiOperation(notes = "Retrieves a list of Roles by User", value = "getUserRoles")
+    @ApiOperation(notes = "Retrieves a list of Roles by User", value = "getUserRoles",
+        response = RoleDTO.class, responseContainer = "List")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Path("/{username}/roles")
@@ -221,7 +223,11 @@ public class UserResource {
         "client uses this API call to list the owners a user can register to, when " +
         "we introduced 'my systems' administrator, we have to change its meaning to " +
         "listing the owners that can be registered to by default to maintain " +
-        "compatability with released clients.", value = "listUsersOwners")
+        "compatability with released clients.",
+        value = "listUsersOwners",
+        response = OwnerDTO.class,
+        responseContainer = "List"
+    )
     // TODO: should probably accept access level and sub-resource query params someday
     @GET
     @Path("/{username}/owners")

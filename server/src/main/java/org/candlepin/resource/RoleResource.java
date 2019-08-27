@@ -273,7 +273,8 @@ public class RoleResource {
         return this.modelTranslator.translate(role, RoleDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves a list of Roles", value = "getRoles")
+    @ApiOperation(notes = "Retrieves a list of Roles", value = "getRoles", response = RoleDTO.class,
+        responseContainer = "List")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "roles")

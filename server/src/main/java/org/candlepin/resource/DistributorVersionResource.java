@@ -116,7 +116,8 @@ public class DistributorVersionResource {
 
     }
 
-    @ApiOperation(notes = "Retrieves list of Distributor Versions", value = "getVersions")
+    @ApiOperation(notes = "Retrieves list of Distributor Versions", value = "getVersions",
+        response = DistributorVersionDTO.class, responseContainer = "List")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Stream<DistributorVersionDTO> getVersions(
