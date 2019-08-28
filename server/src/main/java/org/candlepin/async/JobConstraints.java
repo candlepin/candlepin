@@ -14,6 +14,7 @@
  */
 package org.candlepin.async;
 
+import org.candlepin.async.impl.ThrottledByJobKeyConstraint;
 import org.candlepin.async.impl.UniqueByArgConstraint;
 
 import java.util.List;
@@ -56,5 +57,21 @@ public class JobConstraints {
      */
     public static JobConstraint uniqueByArguments(List<String> params) {
         return new UniqueByArgConstraint(params);
+    }
+
+    /**
+     * Creates a new throttling constraint, using the specified job key as the target of
+     * the constraint and limit for the throttling.
+     *
+     * @param key
+     *  The job key by which you want to throttle jobs
+     * @param limit
+     *  The maximum number of jobs running with the given key
+     *
+     * @return
+     *  a new throttling constraint
+     */
+    public static JobConstraint throttledByJobKey(String key, int limit) {
+        return new ThrottledByJobKeyConstraint(key, limit);
     }
 }

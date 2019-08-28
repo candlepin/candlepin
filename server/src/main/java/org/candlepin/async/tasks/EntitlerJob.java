@@ -118,8 +118,8 @@ public class EntitlerJob implements AsyncJob {
         return poolErrors;
     }
 
-    public static EntitlerJobConfig createConfig() {
-        return new EntitlerJobConfig();
+    public static EntitlerJobConfig createConfig(int limit) {
+        return new EntitlerJobConfig(limit);
     }
 
     /**
@@ -127,11 +127,10 @@ public class EntitlerJob implements AsyncJob {
      */
     public static class EntitlerJobConfig extends JobConfig {
 
-        public EntitlerJobConfig() {
+        public EntitlerJobConfig(int limit) {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
-                // TODO Replace with throttling constraint
-                .addConstraint(JobConstraints.uniqueByArguments(CONSUMER_UUID_KEY));
+                .addConstraint(JobConstraints.throttledByJobKey(JOB_KEY, limit));
         }
 
         public EntitlerJobConfig setOwner(final Owner owner) {

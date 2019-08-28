@@ -81,7 +81,6 @@ import javax.transaction.Synchronization;
 import javax.transaction.Status;
 
 
-
 /**
  * The JobManager manages the queueing, execution and general bookkeeping on jobs
  */
