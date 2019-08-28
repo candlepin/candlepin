@@ -96,6 +96,16 @@ public class TestUtil {
         return ownersApi.createOwner(owner);
     }
 
+    public void destroyOwner(String ownerKey) throws ApiException {
+        OwnersApi ownersApi = new OwnersApi();
+        ownersApi.deleteOwner(ownerKey, true, true);
+    }
+
+    public void destroyOwner(OwnerDTO owner) throws ApiException {
+        destroyOwner(owner.getKey());
+    }
+
+
     public RoleDTO createRole(String ownerKey, String access) throws ApiException {
         return createRoleForUser(ownerKey, null, access);
     }

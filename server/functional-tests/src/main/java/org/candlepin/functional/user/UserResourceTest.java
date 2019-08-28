@@ -14,15 +14,22 @@
  */
 package org.candlepin.functional.user;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.candlepin.client.ApiClient;
 import org.candlepin.client.model.OwnerDTO;
+import org.candlepin.client.resources.UsersApi;
 import org.candlepin.functional.ClientUtil;
 import org.candlepin.functional.FunctionalTestCase;
 import org.candlepin.functional.TestUtil;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+
+import java.util.List;
 
 /**
  * Test the /owners resource
@@ -34,14 +41,36 @@ public class UserResourceTest {
     @Autowired private ClientUtil clientUtil;
     @Autowired private TestUtil testUtil;
 
+    private OwnerDTO owner;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        // TODO
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        // TODO
+    }
+
     @Test
     public void shouldListOwnersForUser() throws Exception {
         OwnerDTO owner = testUtil.trivialOwner();
         String username = TestUtil.randomString("user1");
         ApiClient userClient = clientUtil.newUserAndClient(username, owner.getKey());
 
-//        UsersApi usersApi = new UsersApi(userClient);
-//        usersApi.listUsersOwners(username);
+        UsersApi usersApi = new UsersApi(userClient);
+        List<OwnerDTO> users = usersApi.listUsersOwners(username);
+        assertEquals(1, users.size());
+        assertEquals(owner, users.get(0));
     }
+
+    @Test
+    public void shouldRaise404DeletingUnknownUser() throws Exception {
+        UsersApi usersApi = new UsersApi(adminApiClient);
+        usersApi.deleteUser("does_not_exist");
+    }
+
+
 
 }
