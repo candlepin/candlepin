@@ -87,6 +87,7 @@ import org.candlepin.pinsetter.core.PinsetterTriggerListener;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
+import org.candlepin.pinsetter.tasks.HypervisorHeartbeatUpdateJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.pinsetter.tasks.SweepBarJob;
@@ -284,6 +285,7 @@ public class CandlepinModule extends AbstractModule {
         bind(EntitlerJob.class);
         requestStaticInjection(EntitlerJob.class);
         bind(HypervisorUpdateJob.class);
+        bind(HypervisorHeartbeatUpdateJob.class);
 
         // UeberCerts
         bind(UeberCertificateGenerator.class);
