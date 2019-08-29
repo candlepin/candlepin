@@ -22,7 +22,6 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.async.JobConstraints;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -64,7 +63,7 @@ public class UndoImportsJob implements AsyncJob {
     /**
      * Job configuration object for the undo imports job
      */
-    public static class UndoImportsJobConfig extends JobConfig {
+    public static class UndoImportsJobConfig extends JobConfig<UndoImportsJobConfig> {
         public UndoImportsJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
@@ -85,9 +84,8 @@ public class UndoImportsJob implements AsyncJob {
                 throw new IllegalArgumentException("owner is null");
             }
 
-            this.setJobArgument(OWNER_KEY, owner.getKey())
-                .setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
-                .setLogLevel(owner.getLogLevel());
+            this.setContextOwner(owner)
+                .setJobArgument(OWNER_KEY, owner.getKey());
 
             return this;
         }

@@ -25,7 +25,6 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 
 import com.google.inject.Inject;
 
@@ -91,32 +90,11 @@ public class EntitleByProductsJob implements AsyncJob {
     /**
      * Job configuration object for the entitle by products job
      */
-    public static class EntitleByProductsJobConfig extends JobConfig {
+    public static class EntitleByProductsJobConfig extends JobConfig<EntitleByProductsJobConfig> {
 
         public EntitleByProductsJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME);
-        }
-
-        /**
-         * Sets the owner for this job. The owner is not required, but provides the org
-         * context in which the job will be executed.
-         *
-         * @param owner
-         *  the owner to set for this job
-         *
-         * @return
-         *  a reference to this job config
-         */
-        public EntitleByProductsJobConfig setOwner(final Owner owner) {
-            if (owner == null) {
-                throw new IllegalArgumentException("owner is null");
-            }
-
-            this.setJobMetadata(OWNER_KEY, owner.getKey())
-                .setLogLevel(owner.getLogLevel());
-
-            return this;
         }
 
         public EntitleByProductsJobConfig setConsumer(final Consumer consumer) {

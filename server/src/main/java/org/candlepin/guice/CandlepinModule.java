@@ -34,10 +34,9 @@ import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.async.tasks.RefreshPoolsForProductJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
+import org.candlepin.async.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
-import org.candlepin.async.temp.AsyncJobResource;
-import org.candlepin.async.temp.TestJob1;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ArtemisMessageSource;
 import org.candlepin.audit.ArtemisMessageSourceReceiverFactory;
@@ -325,7 +324,6 @@ public class CandlepinModule extends AbstractModule {
         bind(ActivationKeyContentOverrideResource.class);
         bind(ActivationKeyResource.class);
         bind(AdminResource.class);
-        bind(AsyncJobResource.class);
         bind(CdnResource.class);
         bind(CertificateSerialResource.class);
         bind(CrlResource.class);
@@ -354,8 +352,6 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void miscConfigurations() {
-        // Temporary bindings
-        bindTempAsynJobClasses();
         configureInterceptors();
         configureAuth();
         configureActiveMQComponents();
@@ -377,10 +373,6 @@ public class CandlepinModule extends AbstractModule {
             .configure()
             .messageInterpolator(interpolatorProvider.get())
             .buildValidatorFactory();
-    }
-
-    private void bindTempAsynJobClasses() {
-        bind(TestJob1.class);
     }
 
     protected void configureJPA() {
@@ -422,8 +414,6 @@ public class CandlepinModule extends AbstractModule {
         bind(JobMessageDispatcher.class).to(ArtemisJobMessageDispatcher.class);
         bind(SchedulerFactory.class).to(StdSchedulerFactory.class);
 
-        JobManager.registerJob(TestJob1.JOB_KEY, TestJob1.class);
-
         JobManager.registerJob(ActiveEntitlementJob.JOB_KEY, ActiveEntitlementJob.class);
         JobManager.registerJob(CRLUpdateJob.JOB_KEY, CRLUpdateJob.class);
         JobManager.registerJob(EntitlerJob.JOB_KEY, EntitlerJob.class);
@@ -441,6 +431,8 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(RefreshPoolsForProductJob.JOB_KEY, RefreshPoolsForProductJob.class);
         JobManager.registerJob(RefreshPoolsJob.JOB_KEY, RefreshPoolsJob.class);
         JobManager.registerJob(RegenEnvEntitlementCertsJob.JOB_KEY, RegenEnvEntitlementCertsJob.class);
+        JobManager.registerJob(RegenProductEntitlementCertsJob.JOB_KEY,
+            RegenProductEntitlementCertsJob.class);
         JobManager.registerJob(UndoImportsJob.JOB_KEY, UndoImportsJob.class);
         JobManager.registerJob(UnmappedGuestEntitlementCleanerJob.JOB_KEY,
             UnmappedGuestEntitlementCleanerJob.class);

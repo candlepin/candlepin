@@ -465,9 +465,7 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
      * @return the URL path of this AsyncJobStatusDTO object.
      */
     public String getStatusPath() {
-        //TODO: The `/async` resource is temporary for testing ONLY. This should change to `/jobs` once that
-        // resource has been converted to use the new job framework!
-        return this.getId() != null ? String.format("/async/%s", this.getId()) : null;
+        return this.getId() != null ? String.format("/jobs/%s", this.getId()) : null;
     }
 
     /**

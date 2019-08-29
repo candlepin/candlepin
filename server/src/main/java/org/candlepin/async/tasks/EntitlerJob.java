@@ -26,7 +26,6 @@ import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.dto.PoolIdAndErrors;
@@ -125,24 +124,13 @@ public class EntitlerJob implements AsyncJob {
     /**
      * Job configuration object for the entitle by pool job
      */
-    public static class EntitlerJobConfig extends JobConfig {
+    public static class EntitlerJobConfig extends JobConfig<EntitlerJobConfig> {
 
         public EntitlerJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
                 // TODO Replace with throttling constraint
                 .addConstraint(JobConstraints.uniqueByArguments(CONSUMER_UUID_KEY));
-        }
-
-        public EntitlerJobConfig setOwner(final Owner owner) {
-            if (owner == null) {
-                throw new IllegalArgumentException("Owner is null");
-            }
-
-            this.setJobMetadata(OWNER_KEY, owner.getKey())
-                .setLogLevel(owner.getLogLevel());
-
-            return this;
         }
 
         public EntitlerJobConfig setConsumer(final Consumer consumer) {

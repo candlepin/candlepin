@@ -17,14 +17,9 @@ describe 'Job Status' do
     @cp.list_jobs('totaly_made_up').should be_empty
   end
 
-  it 'should return an error if no owner key is supplied' do
-    lambda do
-      @cp.list_jobs('')
-    end.should raise_exception(RestClient::BadRequest)
-  end
-
   it 'should cancel a job' do
-    skip("test will be fixed in an upcoming task")
+    skip("Reenable once scheduler state management is fully implemented")
+
     @cp.set_scheduler_status(false)
     job = @cp.autoheal_org(@owner['key'])
     #make sure we see a job waiting to go
@@ -51,34 +46,33 @@ describe 'Job Status' do
 
     status['principal'].should == system.uuid
 
-    wait_for_async_job(status['id'], 15)
+    wait_for_job(status['id'], 15)
   end
 
   it 'should allow admin to view any job status' do
     job = @cp.autoheal_org(@owner['key'])
-    wait_for_async_job(job['id'], 15)
-    status = @cp.get_async_job(job['id'])
+    wait_for_job(job['id'], 15)
+    status = @cp.get_job(job['id'])
     status['id'].should == job['id']
   end
 
   it 'should allow user to view status of own job' do
     job = @user.autoheal_org(@owner['key'])
-    wait_for_async_job(job['id'], 15)
-    status = @user.get_async_job(job['id'])
+    wait_for_job(job['id'], 15)
+    status = @user.get_job(job['id'])
     status['id'].should == job['id']
   end
 
   it 'should allow user to view job status of consumer in managed org' do
     system = consumer_client(@user, 's1')
     job = system.consume_product(@monitoring.id, { :async => true })
-    status = @user.get_async_job(job['id'])
+    status = @user.get_job(job['id'])
     status['id'].should == job['id']
     # wait for job to complete, or test clean up will conflict with the asynchronous job.
-    wait_for_async_job(status['id'], 15)
+    wait_for_job(status['id'], 15)
   end
 
   it 'should not allow user to cancel job from another user' do
-    skip("test will be fixed in an upcoming task")
     other_user = user_client(@owner,  random_string("other_user"))
     job = @user.autoheal_org(@owner['key'])
     lambda do
@@ -87,7 +81,7 @@ describe 'Job Status' do
   end
 
   it 'should allow user to cancel a job it initiated' do
-    skip("test will be fixed in an upcoming task")
+    skip("Reenable once scheduler state management is fully implemented")
     @cp.set_scheduler_status(false)
     job = @user.autoheal_org(@owner['key'])
     #make sure we see a job waiting to go
@@ -107,38 +101,34 @@ describe 'Job Status' do
   end
 
   it 'should not allow user to cancel a job it did not initiate' do
-    # TODO Should be re-enabled when job cancelling is implemented
-    skip('Should be re-enabled when job cancelling is implemented')
-
     system = consumer_client(@user, 'system7')
     job = system.consume_product(@monitoring.id, { :async => true })
-    status = system.get_async_job(job['id'])
+    status = system.get_job(job['id'])
     lambda do
-      @user.cancel_async_job(job['id'])
+      @user.cancel_job(job['id'])
     end.should raise_exception(RestClient::Forbidden)
   end
 
   it 'should not allow user to view job status outside of managed org' do
-    # TODO Reenable after we decide how to check for access from outside of managed org
-    skip('Reenable after we decide how to check for access from outside of managed org')
+    skip("Reenable once scheduler state management is fully implemented")
 
     other_user = user_client(@owner2, random_string("other_user"))
     system = consumer_client(other_user, random_string("another_system"))
     job = system.consume_product(@monitoring.id, { :async => true })
     # wait for job to complete, or test clean up will conflict with the asynchronous job.
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     lambda do
-      @user.get_async_job(job['id'])
+      @user.get_job(job['id'])
     end.should raise_exception(RestClient::Forbidden)
   end
 
   it 'should allow consumer to view status of own job' do
     system = consumer_client(@user, 'system7')
     job = system.consume_product(@monitoring.id, { :async => true })
-    status = system.get_async_job(job['id'])
+    status = system.get_job(job['id'])
     status['id'].should eq(job['id'])
     # wait for job to complete, or test clean up will conflict with the asynchronous job.
-    wait_for_async_job(status['id'], 15)
+    wait_for_job(status['id'], 15)
   end
 
   it 'should not allow consumer to access another consumers job status' do
@@ -146,54 +136,45 @@ describe 'Job Status' do
     system2 = consumer_client(@user, 's2')
 
     job = system1.consume_product(@monitoring.id, { :async => true })
-    status = system1.get_async_job(job['id'])
+    status = system1.get_job(job['id'])
     # wait for job to complete, or test clean up will conflict with the asynchronous job.
-    wait_for_async_job(status['id'], 15)
+    wait_for_job(status['id'], 15)
 
     lambda do
-      system2.get_async_job(job['id'])
+      system2.get_job(job['id'])
     end.should raise_exception(RestClient::Forbidden)
   end
 
   it 'should allow consumer to cancel own job' do
-    # TODO Should be re-enabled when job cancelling is implemented
-    skip('Should be re-enabled when job cancelling is implemented')
-
-    @cp.set_async_scheduler_status(false)
+    @cp.set_scheduler_status(false)
     system = consumer_client(@user, 'system7', :system,  nil,  {}, @owner['key'])
     job = system.consume_product(@monitoring.id, { :async => true })
-    status = system.get_async_job(job['id'])
-    system.cancel_async_job(job['id'])
+    status = system.get_job(job['id'])
+    system.cancel_job(job['id'])
     # wait for job to complete, or test clean up will conflict with the asynchronous job.
-    wait_for_async_job(status['id'], 15)
-    @cp.set_async_scheduler_status(true)
+    wait_for_job(status['id'], 15)
+    @cp.set_scheduler_status(true)
   end
 
-  it 'should fail to cancel completed job' do
-    # TODO Should be re-enabled when job cancelling is implemented
-    skip('Should be re-enabled when job cancelling is implemented')
-
+  it 'should fail to cancel terminal job' do
     system = consumer_client(@user, 'system7', :system,  nil,  {}, @owner['key'])
     job = system.consume_product(@monitoring.id, { :async => true })
-    status = system.get_async_job(job['id'])
-    wait_for_async_job(status['id'], 15)
+    status = system.get_job(job['id'])
+    wait_for_job(status['id'], 15)
 
     lambda do
-      system.cancel_async_job(job['id'])
+      system.cancel_job(job['id'])
     end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'should not allow consumer to cancel another consumers job' do
-    # TODO Should be re-enabled when job cancelling is implemented
-    skip('Should be re-enabled when job cancelling is implemented')
-
     system1 = consumer_client(@user, 's1')
     system2 = consumer_client(@user, 's2')
 
     job = system1.consume_product(@monitoring.id, { :async => true })
-    status = system1.get_async_job(job['id'])
+    status = system1.get_job(job['id'])
     lambda do
-      system2.cancel_async_job(job['id'])
+      system2.cancel_job(job['id'])
     end.should raise_exception(RestClient::Forbidden)
   end
 

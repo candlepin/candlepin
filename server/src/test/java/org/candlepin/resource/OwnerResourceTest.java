@@ -146,6 +146,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Inject private UeberCertificateGenerator ueberCertGenerator;
     @Inject private UeberCertificateCurator ueberCertCurator;
 
+    private JobManager jobManager;
+
     private Owner owner;
     private List<Owner> owners;
     private Product product;
@@ -156,6 +158,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
+        this.jobManager = mock(JobManager.class);
+
         owner = ownerCurator.create(new Owner(OWNER_NAME));
         owners = new ArrayList<>();
         owners.add(owner);

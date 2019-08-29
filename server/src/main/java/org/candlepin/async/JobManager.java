@@ -30,6 +30,7 @@ import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.model.Owner;
 import org.candlepin.util.Util;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -61,6 +62,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -88,6 +90,10 @@ import javax.transaction.Status;
 @Singleton
 public class JobManager implements ModeChangeListener {
     private static final Logger log = LoggerFactory.getLogger(JobManager.class);
+
+    private static final String MDC_REQUEST_TYPE_KEY = "requestType";
+    private static final String MDC_REQUEST_UUID_KEY = "requestUuid";
+    private static final String MDC_LOG_LEVEL_KEY = "logLevel";
 
     private static final String QRTZ_GROUP_CONFIG = "cp_async_config";
     private static final String QRTZ_GROUP_MANUAL = "cp_async_manual";
@@ -318,6 +324,7 @@ public class JobManager implements ModeChangeListener {
         this.modeManager = Objects.requireNonNull(modeManager);
         this.jobCurator = Objects.requireNonNull(jobCurator);
         this.dispatcher = Objects.requireNonNull(dispatcher);
+        // this.receiver = Objects.requireNonNull(receiver);
         this.synchronizer = new JobMessageSynchronizer(this.dispatcher);
         this.candlepinRequestScope = Objects.requireNonNull(scope);
         this.principalProvider = Objects.requireNonNull(principalProvider);
@@ -376,7 +383,7 @@ public class JobManager implements ModeChangeListener {
      *  if this JobManager has already been initialized, or is otherwise in a state where
      *  initialization cannot be performed
      */
-    public synchronized void initialize() {
+    public synchronized void initialize() throws StateManagementException {
         // TODO: We're probably going to want to add some bits to avoid queuing/scheduling new jobs
         // during shutdown. We probably also want to have a means of closing the message listeners
         // backing all of this as well, so we don't try to execute jobs before we're initialized or
@@ -402,7 +409,9 @@ public class JobManager implements ModeChangeListener {
             this.state = ManagerState.INITIALIZED;
         }
         catch (Exception e) {
-            log.error("Unexpected exception occurred during initialization", e);
+            String errmsg = "Unexpected exception occurred during initialization";
+
+            log.error(errmsg, e);
 
             try {
                 if (this.scheduler != null) {
@@ -414,8 +423,7 @@ public class JobManager implements ModeChangeListener {
                 log.error("Unable to shutdown quartz scheduler while processing other exceptions", se);
             }
 
-            // TODO: Change this to something a bit nicer. Maybe a JobException?
-            throw new RuntimeException(e);
+            throw new StateManagementException(this.state, ManagerState.INITIALIZED, errmsg, e);
         }
     }
 
@@ -427,7 +435,7 @@ public class JobManager implements ModeChangeListener {
      *  if this JobManager has not been initialized, has already shutdown or Candlepin is
      *  in suspend mode
      */
-    public synchronized void start() {
+    public synchronized void start() throws StateManagementException {
         log.trace("Start request received");
 
         this.validateStateTransition(ManagerState.RUNNING);
@@ -447,7 +455,10 @@ public class JobManager implements ModeChangeListener {
             this.state = ManagerState.RUNNING;
         }
         catch (Exception e) {
-            log.error("Unexpected exception occurred while starting job manager", e);
+            String errmsg = "Unexpected exception occurred while starting job manager";
+
+            log.error(errmsg, e);
+            throw new StateManagementException(this.state, ManagerState.SHUTDOWN, errmsg, e);
         }
     }
 
@@ -457,7 +468,7 @@ public class JobManager implements ModeChangeListener {
      * @throws IllegalStateException
      *  if this JobManager has not been initialized or has already shutdown
      */
-    public void resume() {
+    public void resume() throws StateManagementException {
         this.start();
     }
 
@@ -474,7 +485,7 @@ public class JobManager implements ModeChangeListener {
      * @throws IllegalStateException
      *  if this JobManager has not been initialized or has already shutdown
      */
-    public synchronized void pause() {
+    public synchronized void pause() throws StateManagementException {
         log.trace("Pause request received");
 
         this.validateStateTransition(ManagerState.PAUSED);
@@ -488,7 +499,10 @@ public class JobManager implements ModeChangeListener {
             this.state = ManagerState.PAUSED;
         }
         catch (Exception e) {
-            log.error("Unexpected exception occurred while pausing job manager", e);
+            String errmsg = "Unexpected exception occurred while pausing job manager";
+
+            log.error(errmsg, e);
+            throw new StateManagementException(this.state, ManagerState.PAUSED, errmsg, e);
         }
     }
 
@@ -501,7 +515,7 @@ public class JobManager implements ModeChangeListener {
      *  if this JobManager has already been shutdown, or is otherwise in a state where a shut
      *  down cannot be performed
      */
-    public synchronized void shutdown() {
+    public synchronized void shutdown() throws StateManagementException {
         // TODO: actually do something with this
 
         this.validateStateTransition(ManagerState.SHUTDOWN);
@@ -517,8 +531,21 @@ public class JobManager implements ModeChangeListener {
             this.state = ManagerState.SHUTDOWN;
         }
         catch (Exception e) {
-            log.error("Unexpected exception occurred while shutting down job manager", e);
+            String errmsg = "Unexpected exception occurred while shutting down job manager";
+
+            log.error(errmsg, e);
+            throw new StateManagementException(this.state, ManagerState.SHUTDOWN, errmsg, e);
         }
+    }
+
+    /**
+     * Fetches the current state of this job manager.
+     *
+     * @return
+     *  the current state of this job manager
+     */
+    public synchronized ManagerState getManagerState() {
+        return this.state;
     }
 
     /**
@@ -713,10 +740,12 @@ public class JobManager implements ModeChangeListener {
         }
 
         AsyncJobStatus job = new AsyncJobStatus();
+        job.setState(JobState.CREATED);
 
         job.setJobKey(builder.getJobKey());
         job.setName(builder.getJobName() != null ? builder.getJobName() : builder.getJobKey());
         job.setGroup(builder.getJobGroup());
+        job.setContextOwner(builder.getContextOwner());
 
         // Add environment-specific metadata...
         job.setOrigin(Util.getHostname());
@@ -742,6 +771,64 @@ public class JobManager implements ModeChangeListener {
     }
 
     /**
+     * Performs a job state transition after validating the transition is a valid one.
+     *
+     * @param status
+     *  the job status to update
+     *
+     * @param state
+     *  the job state to transition to
+     *
+     * @throws IllegalStateException
+     *  if the state transition is not valid
+     *
+     * @return
+     *  a refrence to the provided job status
+     */
+    private AsyncJobStatus setJobState(AsyncJobStatus status, JobState state) {
+        JobState currentState = status.getState();
+
+        if (!currentState.isValidTransition(state)) {
+            String errmsg = String.format("Cannot transition from state %s to %s",
+                currentState.name(), state.name());
+
+            throw new IllegalStateException(errmsg);
+        }
+
+        return status.setState(state);
+    }
+
+    /**
+     * Fetches the job status associated with the specified job ID. If no such job status could be
+     * found, this method returns null.
+     *
+     * @param jobId
+     *  the ID of the job to fetch
+     *
+     * @return
+     *  the job status associated with the specified job ID, or null if no such job status could be
+     *  found
+     */
+    public AsyncJobStatus findJob(String jobId) {
+        return this.jobCurator.get(jobId);
+    }
+
+    /**
+     * Fetches a collection of jobs based on the provided filter data in the query builder. If the
+     * query builder is null or contains no arguments, this method will return all known async jobs.
+     *
+     * @param queryBuilder
+     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
+     *  to select jobs
+     *
+     * @return
+     *  a list of jobs matching the provided query arguments/filters
+     */
+    public List<AsyncJobStatus> findJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
+        return this.jobCurator.findJobs(queryBuilder);
+    }
+
+    /**
      * Queues a job to be run on any Candlepin node backed by the same database as this node, and
      * is configured to process jobs matching the type of the specified job. If multiple nodes are
      * able to process a given job, there is no mechanism to guarantee consistently repeatable
@@ -759,7 +846,17 @@ public class JobManager implements ModeChangeListener {
      *  existing job if it already exists
      */
     public synchronized AsyncJobStatus queueJob(JobConfig config) throws JobException {
-        // TODO: Check manager state
+
+        ManagerState state = this.getManagerState();
+        if (this.getManagerState() != ManagerState.RUNNING) {
+            // Check if we're paused. If so, and if the "queue while paused" config is not set,
+            // throw our usual ISE
+
+            // TODO: config check
+
+            String msg = String.format("Jobs cannot be queued while the manager is in the %s state", state);
+            throw new IllegalStateException(msg);
+        }
 
         if (config == null) {
             throw new IllegalArgumentException("job config is null");
@@ -772,7 +869,6 @@ public class JobManager implements ModeChangeListener {
         // runnable by this node?
 
         AsyncJobStatus status = this.buildJobStatus(config);
-        status.setState(JobState.CREATED);
 
         try {
             // Check if the queueing is blocked by constraints
@@ -810,7 +906,7 @@ public class JobManager implements ModeChangeListener {
                     .map(AsyncJobStatus::getId)
                     .collect(Collectors.joining(", "));
 
-                status.setState(JobState.ABORTED);
+                this.setJobState(status, JobState.ABORTED);
                 status.setJobResult(String.format("Job queuing blocked by the following jobs: %s", jobIds));
 
                 log.info("Unable to queue job: {}; blocked by the following existing jobs: {}",
@@ -834,7 +930,7 @@ public class JobManager implements ModeChangeListener {
 
             // Manually update the state just to be certain. This won't persist, but at least our
             // output will be consistent.
-            status.setState(JobState.QUEUED);
+            this.setJobState(status, JobState.QUEUED);
         }
         catch (JobMessageDispatchException e) { // Temporary exception branch
             log.error("Unable to dispatch job message for new job: {}; deleting job and returning",
@@ -847,7 +943,7 @@ public class JobManager implements ModeChangeListener {
 
             this.jobCurator.delete(status);
 
-            status.setState(JobState.FAILED);
+            this.setJobState(status, JobState.FAILED);
             status.setJobResult(e.toString());
         }
         catch (Exception e) {
@@ -861,7 +957,7 @@ public class JobManager implements ModeChangeListener {
             // If this occurs do to some other unexpected failure, we'll have some state cleanup
             // to deal with, probably.
 
-            status.setState(JobState.FAILED);
+            this.setJobState(status, JobState.FAILED);
             status.setJobResult(e.toString());
         }
 
@@ -941,18 +1037,25 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  a JobStatus instance representing the job's status
      */
-    public synchronized AsyncJobStatus executeJob(final JobMessage message) throws JobException {
-        // TODO: Check manager state
+    public synchronized AsyncJobStatus executeJob(JobMessage message) throws JobException {
+
+        ManagerState state = this.getManagerState();
+        if (this.getManagerState() != ManagerState.RUNNING) {
+            String msg = String.format("Jobs cannot be executed while the manager is in the %s state", state);
+            throw new IllegalStateException(msg);
+        }
 
         AsyncJobStatus status = this.fetchJobStatus(message);
 
-        final Class<? extends AsyncJob> jobClass = getJobClass(message.getJobKey());
+        final Class<? extends AsyncJob> jobClass = getJobClass(status.getJobKey());
 
         // Maybe in this case it'd be better to attempt to use the job key as the job class
         // rather than failing directly. This would allow use of aliases and explicit job
         // classes.
         if (jobClass == null) {
-            String errmsg = String.format("No registered job class for job: %s", message.getJobKey());
+            String errmsg = String.format("No registered job class for job: %s", status.getJobKey());
+
+            this.updateJobStatus(status, JobState.FAILED, errmsg);
 
             log.error(errmsg);
             throw new JobInitializationException(errmsg, true);
@@ -964,17 +1067,16 @@ public class JobManager implements ModeChangeListener {
 
         try {
             uow.begin();
-            this.setupLogging(status);
-            this.setupPrincipal(status);
+            this.setupJobRuntimeEnvironment(status);
 
             final AsyncJob job = injector.getInstance(jobClass);
 
             if (job == null) {
-                log.error("Unable to instantiate job class \"{}\" for job: {}",
-                    jobClass.getName(), message.getJobKey());
+                String errmsg = String.format("Unable to instantiate job class \"{}\" for job: {}",
+                    jobClass.getName(), status.getJobKey());
 
-                throw new JobInitializationException("Unable to instantiate job class: " +
-                    jobClass.getName());
+                log.error(errmsg);
+                throw new JobInitializationException(errmsg);
             }
 
             status.setExecutor(Util.getHostname());
@@ -1024,34 +1126,137 @@ public class JobManager implements ModeChangeListener {
     }
 
     /**
-     * Configures the logging environment and injects metadata for the specified job
+     * Cancels the job associated with the specified job ID. If no such job status could be found,
+     * this method returns null.
+     *
+     * @param jobId
+     *  the ID of the job to cancel
+     *
+     * @throws IllegalStateException
+     *  if the job is already in a terminal state
+     *
+     * @return
+     *  the updated job status associated with the canceled job, or null if no such job status
+     *  could be found
+     */
+    @Transactional
+    public synchronized AsyncJobStatus cancelJob(String jobId) {
+        if (jobId == null || jobId.isEmpty()) {
+            throw new IllegalArgumentException("jobId is null or empty");
+        }
+
+        AsyncJobStatus status = this.jobCurator.lockAndLoad(jobId);
+        if (status != null) {
+            if (status.getState().isTerminal()) {
+                throw new IllegalStateException("job is already in a terminal state: " + status);
+            }
+
+            if (status.getState() != JobState.RUNNING) {
+                this.setJobState(status, JobState.CANCELED);
+            }
+            else {
+                // Impl note: With the locking, we probably shouldn't cancel a job that's in a
+                // running state, since the state change is almost guaranteed to get clobbered. For
+                // now, we'll just make sure it's not set to retry if it fails; ensuring the current
+                // run is the last run.
+                log.warn("Attempting to cancel job that's already running: {}", status);
+
+                if (status.getMaxAttempts() > 1) {
+                    log.warn("Setting max attempts to: 1");
+                    status.setMaxAttempts(1);
+                }
+
+                // TODO: Also set retry behavior to default to false here if that's added in
+                // the future
+            }
+
+            status = this.jobCurator.merge(status);
+        }
+
+        return status;
+    }
+
+    /**
+     * Cleans up all jobs in the given terminal states within the date range provided. If no states
+     * are provided, this method defaults to all terminal states. If non-terminal states are
+     * provided, they will be ignored.
+     *
+     * @param queryBuilder
+     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
+     *  to select jobs
+     *
+     * @return
+     *  the number of jobs deleted as a result of this operation
+     */
+    public synchronized int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
+        // Prepare for the defaults...
+        if (queryBuilder == null) {
+            queryBuilder = new AsyncJobStatusCurator.AsyncJobStatusQueryBuilder();
+        }
+
+        Collection<JobState> states = queryBuilder.getJobStates();
+        if (states != null && !states.isEmpty()) {
+            // Make sure we don't attempt to blast some non-terminal jobs.
+            states = states.stream()
+                .filter(state -> state != null && state.isTerminal())
+                .collect(Collectors.toSet());
+        }
+        else {
+            // Set the default: all terminal states
+            states = Arrays.stream(JobState.values())
+                .filter(state -> state.isTerminal())
+                .collect(Collectors.toSet());
+        }
+
+        queryBuilder.setJobStates(states);
+
+        // TODO: any other sanity restrictions deemed necessary
+
+        return this.jobCurator.deleteJobs(queryBuilder);
+    }
+
+    /**
+     * Configures the job's runtime environment, performing the following operations:
+     *
+     *  - Setting up the logging level
+     *  - Injecting the job's metadata to the logging backend
+     *  - Setting up the principal to use during job runtime
      *
      * @param status
-     *  the job status to use to configure the logging environment
+     *  the job status to use to configure the runtime environment
      */
-    private void setupLogging(final AsyncJobStatus status) {
-        MDC.put("requestType", "job");
-        MDC.put("requestUuid", status.getId());
+    private void setupJobRuntimeEnvironment(AsyncJobStatus status) {
+        MDC.put(MDC_REQUEST_TYPE_KEY, "job");
+        MDC.put(MDC_REQUEST_UUID_KEY, status.getId());
 
         // Inject all of our metadata...
         for (Map.Entry<String, String> entry : status.getMetadata().entrySet()) {
             MDC.put(entry.getKey(), entry.getValue());
         }
 
-        // Update the logging level if we've one set...
-        String logLevel = status.getLogLevel();
-        if (logLevel != null && !logLevel.isEmpty()) {
-            MDC.put("logLevel", logLevel);
-        }
-    }
+        // If we have an owner, override whatever metadata we've set with the actual owner's key.
+        // Owner contextOwner = status.getContextOwner();
+        Owner contextOwner = new Owner();
+        contextOwner.setKey("TEST KEY");
 
-    /**
-     * Configures and injects the principal to be used during the execution of the specified job.
-     *
-     * @param status
-     *  the job status to use to configure the principal
-     */
-    private void setupPrincipal(AsyncJobStatus status) {
+        if (contextOwner != null) {
+            MDC.put(LoggingFilter.OWNER_KEY, contextOwner.getKey());
+        }
+
+        // Set our logging level according to the following:
+        // - If the job has an explicit log level set, use that
+        // - If the job is running in the context of an owner and the owner has a log level set, use that
+        String logLevel = status.getLogLevel();
+
+        if ((logLevel == null || logLevel.isEmpty()) && contextOwner != null) {
+            logLevel = contextOwner.getLogLevel();
+        }
+
+        if (logLevel != null && !logLevel.isEmpty()) {
+            MDC.put(MDC_LOG_LEVEL_KEY, logLevel);
+        }
+
+        // Setup and inject the principal
         String name = status.getPrincipalName();
         Principal principal = name != null ? new JobPrincipal(name) : new SystemPrincipal();
 
@@ -1070,7 +1275,9 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the AsyncJobStatus instance associated with the given message
      */
-    private AsyncJobStatus fetchJobStatus(JobMessage message) throws JobInitializationException {
+    private AsyncJobStatus fetchJobStatus(JobMessage message)
+        throws JobInitializationException {
+
         AsyncJobStatus status;
 
         try {
@@ -1094,8 +1301,8 @@ public class JobManager implements ModeChangeListener {
         }
 
         if (status.getState() == null || status.getState().isTerminal()) {
-            String errmsg = String.format("Job \"%s\" is in an unknown or terminal state: %s",
-                status.getName(), status.getState());
+            String errmsg = String.format("Job \"%s\" (%s) is in an unknown or terminal state: %s",
+                status.getId(), status.getJobKey(), status.getState());
 
             log.error(errmsg);
             throw new JobInitializationException(errmsg, true);
@@ -1106,10 +1313,19 @@ public class JobManager implements ModeChangeListener {
         // message queue, but if that fails, we'll fall back to failing non-terminally.
         if (status.getJobKey() == null || !this.isJobEnabled(status.getJobKey())) {
             String errmsg = String.format("Job \"%s\" (%s) is not enabled on this node",
-                status.getName(), status.getJobKey());
+                status.getId(), status.getJobKey());
 
             log.error(errmsg);
             throw new JobInitializationException(errmsg, false);
+        }
+
+        // Warn if we're about to execute a job that's not queued for execution (this is likely
+        // just state recovery and is probably okay).
+        if (status.getState() != JobState.QUEUED) {
+            log.warn("Job \"{}\" ({}) is in an unexpected, non-terminal state: {}", status.getId(),
+                status.getJobKey(), status.getState());
+
+            log.warn("Recovering state and executing...");
         }
 
         return status;
@@ -1144,7 +1360,7 @@ public class JobManager implements ModeChangeListener {
         JobState initState = status.getState();
 
         try {
-            status.setState(state);
+            this.setJobState(status, state);
             status.setJobResult(result);
 
             status = this.jobCurator.merge(status);
@@ -1242,19 +1458,6 @@ public class JobManager implements ModeChangeListener {
                     log.warn("Received an unexpected mode change notice: {}", mode);
             }
         }
-    }
-
-    /**
-     * Lookup job status by job id.
-     *
-     * @param jobId
-     *  Id of the requested job
-     *
-     * @return
-     *  {@link AsyncJobStatus} of the requested job or null
-     */
-    public AsyncJobStatus getJob(final String jobId) {
-        return this.jobCurator.get(jobId);
     }
 
 }

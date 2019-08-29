@@ -277,6 +277,20 @@ public class ConfigProperties {
     public static final String ASYNC_JOBS_JOB_ENABLED = "enabled";
     public static final String ASYNC_JOBS_JOB_SCHEDULE = "schedule";
 
+    // "Temporary" configuration to limit the scope of the jobs/schedule endpoint. Only job keys
+    // specified in this property will be allowed to be triggered via the schedule endpoint.
+    public static final String ASYNC_JOBS_TRIGGERABLE_JOBS = "candlepin.async.triggerable_jobs";
+    public static final String[] ASYNC_JOBS_TRIGGERABLE_JOBS_LIST = new String[] {
+        ActiveEntitlementJob.JOB_KEY,
+        CRLUpdateJob.JOB_KEY,
+        ExpiredPoolsCleanupJob.JOB_KEY,
+        ImportRecordCleanerJob.JOB_KEY,
+        JobCleaner.JOB_KEY,
+        ManifestCleanerJob.JOB_KEY,
+        OrphanCleanupJob.JOB_KEY,
+        UnmappedGuestEntitlementCleanerJob.JOB_KEY
+    };
+
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
@@ -460,6 +474,9 @@ public class ConfigProperties {
                 OrphanCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
+
+            // Set the triggerable jobs list
+            this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
 
             // Old Pinsetter job configs
 

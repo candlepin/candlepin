@@ -32,7 +32,7 @@ describe 'Environments Certificate V3' do
           :contentId => content['id'],
           :enabled => false,
         }])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
@@ -66,7 +66,7 @@ describe 'Environments Certificate V3' do
         [{
           :contentId => content['id']
         }])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
 
     pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
@@ -85,7 +85,7 @@ describe 'Environments Certificate V3' do
         [{
           :contentId => content2['id']
         }])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     ent = consumer_cp.list_entitlements()[0]
 
     json_body = extract_payload(ent['certificates'][0]['cert'])
@@ -99,7 +99,7 @@ describe 'Environments Certificate V3' do
 
     # Demote it and check again:
     job = @org_admin.demote_content(@env['id'], [content2['id']])
-    wait_for_async_job(job['id'], 15)
+    wait_for_job(job['id'], 15)
     ent = consumer_cp.list_entitlements()[0]
 
     json_body = extract_payload(ent['certificates'][0]['cert'])

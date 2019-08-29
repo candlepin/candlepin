@@ -14,6 +14,8 @@
  */
 package org.candlepin.async;
 
+import org.candlepin.model.Owner;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,11 +28,42 @@ import java.util.Set;
 /**
  * The JobConfig object collects the configuration for a job, which can be provided to the
  * JobManager to queue a new instance of that job.
+ * <p></p>
+ * This class allows for a generic type definition, which subclasses should use to specify
+ * the exact subclass or subclass type represents this class. This function is purely to
+ * facilitate method chaining with mutators that return a self reference.
+ *
+ * For example, if we have a JobConfig subclass named TestJobConfig, it should be declared as
+ * follows:
+ *
+ *      public TestJobConfig extends JobConfig<TestJobConfig>
+ *
+ * While redundant, this signals the specific JobConfig subclass to return by mutators implemented
+ * by the base JobConfig class. Similarly, if the TestJobConfig was designed such that it is
+ * intended to be further subclassed, it should be declared as follows:
+ *
+ *      public [abstract] TestJobConfig<T extends TestJobConfig> extends JobConfig<T>
+ *
+ * Mutators implemented in TestJobConfig then would have declarations as such:
+ *
+ *      public T setSomeValue(String value) {
+ *          this.value = value; // Assign the value
+ *
+ *          return (T) this;
+ *      }
+ *
+ * Subclasses would then follow one of these patterns as necessary according to their design and
+ * intent.
+ *
+ * @param <T>
+ *  the concrete JobConfig class being implemented
  */
-public class JobConfig {
+public class JobConfig<T extends JobConfig> {
+
     private String key;
     private String name;
     private String group;
+    private Owner owner;
     private Map<String, String> metadata;
     private Map<String, String> arguments;
     private Set<JobConstraint> constraints;
@@ -79,13 +112,13 @@ public class JobConfig {
      * @return
      *  this JobConfig instance
      */
-    public JobConfig setJobKey(String jobKey) {
+    public T setJobKey(String jobKey) {
         if (jobKey == null || jobKey.isEmpty()) {
             throw new IllegalArgumentException("jobKey is null or empty");
         }
 
         this.key = jobKey;
-        return this;
+        return (T) this;
     }
 
     /**
@@ -111,13 +144,13 @@ public class JobConfig {
      * @return
      *  this JobConfig instance
      */
-    public JobConfig setJobName(String jobName) {
+    public T setJobName(String jobName) {
         if (jobName == null || jobName.isEmpty()) {
             throw new IllegalArgumentException("jobName is null or empty");
         }
 
         this.name = jobName;
-        return this;
+        return (T) this;
     }
 
     /**
@@ -140,9 +173,9 @@ public class JobConfig {
      * @return
      *  this JobConfig instance
      */
-    public JobConfig setJobGroup(String jobGroup) {
+    public T setJobGroup(String jobGroup) {
         this.group = jobGroup != null && !jobGroup.isEmpty() ? jobGroup : null;
-        return this;
+        return (T) this;
     }
 
     /**
@@ -154,6 +187,55 @@ public class JobConfig {
      */
     public String getJobGroup() {
         return this.group;
+    }
+
+    /**
+     * Sets the owner for the context of this job. The context owner will be used for the following
+     * purposes if set:
+     *
+     *  - owner-specific job queries/lookups
+     *  - setting the log level if an explicit log level is not set and one is present at the org
+     *    level
+     *  - setting the owner metadata if present; overriding any value set for the owner metadata
+     *    key if applicable
+     *
+     * Note that the context owner is not available via job arguments unless it is also explicitly
+     * set as an argument.
+     *
+     * @param owner
+     *  the owner to set for this job's context
+     *
+     * @return
+     *  this JobConfig instance
+     */
+    public T setContextOwner(Owner owner) {
+        this.owner = owner;
+        return (T) this;
+    }
+
+    /**
+     * Alias of setContextOwner which may be overridden to by subclasses to set the owner in both
+     * the job context and job arguments.
+     *
+     * @param owner
+     *  the owner to set for this job's context
+     *
+     * @return
+     *  this JobConfig instance
+     */
+    public T setOwner(Owner owner) {
+        return this.setContextOwner(owner);
+    }
+
+    /**
+     * Fetches the context owner for this job. If this job is not run in the context of an owner,
+     * this method returns null.
+     *
+     * @return
+     *  this job's context owner, or null if this job is not run in the context of a specific owner
+     */
+    public Owner getContextOwner() {
+        return this.owner;
     }
 
     /**
@@ -170,13 +252,13 @@ public class JobConfig {
      * @return
      *  this JobConfig instance
      */
-    public JobConfig setJobArgument(String arg, Object value) {
+    public T setJobArgument(String arg, Object value) {
         if (arg == null) {
             throw new IllegalArgumentException("arg is null");
         }
 
         this.arguments.put(arg, JobArguments.serialize(value));
-        return this;
+        return (T) this;
     }
 
     /**
@@ -202,13 +284,13 @@ public class JobConfig {
      * @return
      *  this JobConfig instance
      */
-    public JobConfig addConstraint(JobConstraint constraint) {
+    public T addConstraint(JobConstraint constraint) {
         if (constraint == null) {
             throw new IllegalArgumentException("constraint is null");
         }
 
         this.constraints.add(constraint);
-        return this;
+        return (T) this;
     }
 
     /**
@@ -232,9 +314,9 @@ public class JobConfig {
      * @return
      *  this JobConfig instance
      */
-    public JobConfig setRetryCount(int count) {
+    public T setRetryCount(int count) {
         this.retries = Math.max(0, count);
-        return this;
+        return (T) this;
     }
 
     /**
@@ -268,9 +350,9 @@ public class JobConfig {
      * @return
      *  this JobConfig instance
      */
-    public JobConfig setLogLevel(String logLevel) {
+    public T setLogLevel(String logLevel) {
         this.logLevel = logLevel != null && !logLevel.isEmpty() ? logLevel : null;
-        return this;
+        return (T) this;
     }
 
     /**
@@ -294,9 +376,9 @@ public class JobConfig {
      * @return
      *  this JobConfig instance
      */
-    public JobConfig logExecutionDetails(boolean enabled) {
+    public T logExecutionDetails(boolean enabled) {
         this.logExecutionDetails = enabled;
-        return this;
+        return (T) this;
     }
 
     /**
@@ -311,13 +393,13 @@ public class JobConfig {
      * @return
      *  this JobConfig instance
      */
-    public JobConfig setJobMetadata(String key, String value) {
+    public T setJobMetadata(String key, String value) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
         }
 
         this.metadata.put(key, value);
-        return this;
+        return (T) this;
     }
 
     /**
@@ -345,6 +427,5 @@ public class JobConfig {
             throw new JobConfigValidationException("Job key is null or empty");
         }
     }
-
 
 }

@@ -24,7 +24,6 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
@@ -214,7 +213,7 @@ public class HypervisorUpdateJob implements AsyncJob {
     /**
      * Job configuration object for the hypervisor update job
      */
-    public static class HypervisorUpdateJobConfig extends JobConfig {
+    public static class HypervisorUpdateJobConfig extends JobConfig<HypervisorUpdateJobConfig> {
 
         public HypervisorUpdateJobConfig() {
             this.setJobKey(JOB_KEY)
@@ -236,9 +235,8 @@ public class HypervisorUpdateJob implements AsyncJob {
                 throw new IllegalArgumentException("owner is null");
             }
 
-            this.setJobArgument(OWNER_KEY, owner.getKey())
-                .setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
-                .setLogLevel(owner.getLogLevel());
+            this.setContextOwner(owner)
+                .setJobArgument(OWNER_KEY, owner.getKey());
 
             return this;
         }

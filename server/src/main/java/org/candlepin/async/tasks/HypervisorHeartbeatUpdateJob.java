@@ -22,7 +22,6 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 
@@ -53,7 +52,9 @@ public class HypervisorHeartbeatUpdateJob implements AsyncJob {
     /**
      * Job configuration object for the export job
      */
-    public static class HypervisorHeartbeatUpdateJobConfig extends JobConfig {
+    public static class HypervisorHeartbeatUpdateJobConfig extends
+        JobConfig<HypervisorHeartbeatUpdateJobConfig> {
+
         public HypervisorHeartbeatUpdateJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
@@ -74,9 +75,8 @@ public class HypervisorHeartbeatUpdateJob implements AsyncJob {
                 throw new IllegalArgumentException("owner is null");
             }
 
-            this.setJobArgument(OWNER_KEY, owner.getKey())
-                .setJobMetadata(LoggingFilter.OWNER_KEY, owner.getKey())
-                .setLogLevel(owner.getLogLevel());
+            this.setContextOwner(owner)
+                .setJobArgument(OWNER_KEY, owner.getKey());
 
             return this;
         }

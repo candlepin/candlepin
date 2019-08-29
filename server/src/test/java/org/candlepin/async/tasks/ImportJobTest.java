@@ -46,11 +46,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Map;
+
 
 @ExtendWith(MockitoExtension.class)
 public class ImportJobTest {
-
     @Mock private ManifestManager manifestManager;
     @Mock private JobExecutionContext ctx;
     @Mock private OwnerCurator ownerCurator;
@@ -81,12 +80,9 @@ public class ImportJobTest {
         JobConfig config = ImportJob.createJobConfig()
             .setOwner(owner);
 
-        Map<String, String> metadata = config.getJobMetadata();
         JobArguments args = config.getJobArguments();
 
-        assertTrue(metadata.containsKey(ImportJob.OWNER_KEY));
-        assertEquals(owner.getKey(), metadata.get(ImportJob.OWNER_KEY));
-        assertEquals(owner.getLogLevel(), config.getLogLevel());
+        assertEquals(owner, config.getContextOwner());
         assertEquals(owner.getKey(), args.getAsString(ImportJob.OWNER_KEY));
     }
 

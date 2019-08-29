@@ -458,14 +458,14 @@ describe 'Owner Resource' do
     system.update_consumer({:installedProducts => installed})
 
     job = user.autoheal_org(owner['key'])
-    wait_for_async_job(job['id'], 30)
+    wait_for_job(job['id'], 30)
     c = @cp.get_consumer(system.uuid)
     c['entitlementCount'].should == 1
 
     create_pool_and_subscription(owner['key'], product.id, 10)
 
     job = user.autoheal_org(owner['key'])
-    wait_for_async_job(job['id'], 30)
+    wait_for_job(job['id'], 30)
     c = @cp.get_consumer(system.uuid)
     c['entitlementCount'].should == 1
   end

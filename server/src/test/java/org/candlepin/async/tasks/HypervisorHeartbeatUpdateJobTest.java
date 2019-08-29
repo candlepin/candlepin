@@ -28,7 +28,6 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 
@@ -40,7 +39,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Date;
-import java.util.Map;
 
 /**
  * Test suite for the HypervisorHeartbeatUpdateJob class
@@ -68,10 +66,7 @@ public class HypervisorHeartbeatUpdateJobTest {
     @Test
     public void testConfigSetOwner() {
         String ownerKey = "test_owner";
-        String logLevel = "test_log_level";
-
-        Owner owner = new Owner(ownerKey, "ownerName");
-        owner.setLogLevel(logLevel);
+        Owner owner = new Owner(ownerKey, ownerKey);
 
         JobConfig config = HypervisorHeartbeatUpdateJob.createJobConfig()
             .setOwner(owner);
@@ -90,16 +85,7 @@ public class HypervisorHeartbeatUpdateJobTest {
         assertFalse(argKey.isEmpty());
         assertEquals(ownerKey, args.getAsString(argKey));
 
-        // Check that the metadata key was set
-        Map<String, String> metadata = config.getJobMetadata();
-
-        assertNotNull(metadata);
-        assertEquals(1, metadata.size());
-        assertTrue(metadata.containsKey(LoggingFilter.OWNER_KEY));
-        assertEquals(ownerKey, metadata.get(LoggingFilter.OWNER_KEY));
-
-        // Check that the log level was set
-        assertEquals(logLevel, config.getLogLevel());
+        assertEquals(owner, config.getContextOwner());
     }
 
     @Test
