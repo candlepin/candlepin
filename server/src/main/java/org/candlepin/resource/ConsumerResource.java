@@ -443,7 +443,7 @@ public class ConsumerResource {
     @Produces(MediaType.WILDCARD)
     @Path("{consumer_uuid}/exists")
     public void consumerExists(
-        @PathParam("consumer_uuid") String uuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
         if (!consumerCurator.doesConsumerExist(uuid)) {
             throw new NotFoundException(i18n.tr("Consumer with id {0} could not be found.", uuid));
         }
