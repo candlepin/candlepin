@@ -42,7 +42,8 @@ import java.util.Set;
  * attempt may be no-op if no transition is required.
  *
  */
-public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStatusListener {
+public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStatusListener,
+    ActiveMQQueueHealthListener {
     private static Logger log = LoggerFactory.getLogger(SuspendModeTransitioner.class);
 
     private ModeManager modeManager;

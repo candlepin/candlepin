@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
 import com.google.inject.Singleton;
+import org.candlepin.controller.ActiveMQQueueHealthListener;
 import org.candlepin.controller.ActiveMQStatusListener;
 import org.candlepin.controller.QpidStatusListener;
 import org.slf4j.Logger;
@@ -30,7 +31,8 @@ import java.util.List;
  * EventSource
  */
 @Singleton
-public class EventSource implements QpidStatusListener, ActiveMQStatusListener {
+public class EventSource implements QpidStatusListener, ActiveMQStatusListener,
+        ActiveMQQueueHealthListener {
     private static Logger log = LoggerFactory.getLogger(EventSource.class);
 
     private ObjectMapper mapper;

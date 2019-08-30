@@ -35,6 +35,10 @@ public enum ActiveMQStatus {
      * candlepin startup and should be updated accordingly when the candlepin
      * context is loaded and all listeners have been registered.
      */
-    UNKNOWN
+    UNKNOWN,
+
+    HEALTHY,
+
+    UNHEALTHY
 
 }
