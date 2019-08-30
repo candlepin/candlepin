@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -29,12 +29,17 @@ import org.keycloak.adapters.spi.KeycloakAccount;
 import java.util.Set;
 
 /**
- * Modifications for RequestAuthenticator
+ * Handles interactions between Candlepin and the Keycloak Adapter code.
+ *
+ * Namely, this class is responsible for storing the resulting security context from Keycloak as an attribute
+ * named "org.keycloak.KeycloakSecurityContext" in the {@link HttpRequest}. This is consistent with
+ * other Java-based integration with Keycloak (e.g. org.keycloak.adapters.servlet.FilterRequestAuthenticator).
+ *
+ * Because we don't directly support any interactive flows, the oauth-named methods are stubbed out.
  */
 public class CandlepinKeycloakRequestAuthenticator extends RequestAuthenticator {
 
     private final HttpRequest httpRequest;
-
 
     public CandlepinKeycloakRequestAuthenticator(KeycloakOIDCFacade keycloakOIDCFacade,
         HttpRequest httpRequest, KeycloakDeployment keycloakDeployment) {
@@ -86,6 +91,6 @@ public class CandlepinKeycloakRequestAuthenticator extends RequestAuthenticator 
 
     @Override
     protected String changeHttpSessionId(boolean create) {
-        return null;
+        return null; // candlepin does not support sessions for keycloak
     }
 }

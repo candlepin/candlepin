@@ -148,6 +148,30 @@ public class CandlepinContextListenerTest {
     }
 
     @Test
+    void keycloakCapabilityPresentWhenKeycloakEnabled() {
+        when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(true);
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        CandlepinCapabilities expected = new CandlepinCapabilities();
+        expected.add("keycloak_auth");
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void keycloakCapabilityAbsentWhenKeycloakDisabled() {
+        when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(false);
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertFalse(actual.contains("keycloak_auth"), "keycloak_auth present but not expected");
+    }
+
+    @Test
     public void activeMQDisabled() {
         when(config.getBoolean(eq(ConfigProperties.ACTIVEMQ_ENABLED))).thenReturn(false);
         prepareForInitialization();

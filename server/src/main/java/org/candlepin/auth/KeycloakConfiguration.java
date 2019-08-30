@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -32,19 +32,23 @@ import java.io.InputStream;
 
 
 /**
- * KeycloakAdapterConfiguration to load contents from keycloak file
+ * Provides convenient access to keycloak {@link AdapterConfig} and some objects that depend on it.
+ *
+ * The config is loaded from a file (path is configurable by setting candlepin.keycloak.config), default
+ * path is /etc/candlepin/keycloak.json.
+ *
+ * This file can be exported from a Keycloak Admin console client configuration.
  */
-public class KeycloakAdapterConfiguration {
+public class KeycloakConfiguration {
 
     private AdapterConfig adapterConfig;
-    private static Logger log = LoggerFactory.getLogger(KeycloakAdapterConfiguration.class);
+    private static Logger log = LoggerFactory.getLogger(KeycloakConfiguration.class);
     private KeycloakDeployment keycloakDeployment;
 
     @Inject
-    public KeycloakAdapterConfiguration(Configuration configuration) throws Exception {
-        if (configuration.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION, false)) {
-            String configFile = configuration.getString(ConfigProperties.KEYCLOAK_FILEPATH, null);
-
+    public KeycloakConfiguration(Configuration configuration) throws Exception {
+        if (configuration.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
+            String configFile = configuration.getString(ConfigProperties.KEYCLOAK_FILEPATH);
             try (InputStream cfgStream = new FileInputStream(configFile)) {
                 adapterConfig = KeycloakDeploymentBuilder.loadAdapterConfig(cfgStream);
                 this.keycloakDeployment = KeycloakDeploymentBuilder.build(adapterConfig);
@@ -54,7 +58,7 @@ public class KeycloakAdapterConfiguration {
                 throw e;
             }
             catch (RuntimeException e) {
-                log.warn("Unable to read keycloak.json", e);
+                log.warn("Keycloak configuration file invalid", e);
                 throw e;
             }
             catch (Exception e) {
@@ -66,15 +70,31 @@ public class KeycloakAdapterConfiguration {
         }
     }
 
+    /**
+     * Get the {@link KeycloakDeployment} that was built from the configuration.
+     *
+     * @return the {@link KeycloakDeployment} singleton
+     */
     public KeycloakDeployment getKeycloakDeployment() {
         return keycloakDeployment;
     }
 
+    /**
+     * Get the {@link AdapterConfig} itself.
+     *
+     * @return the loaded {@link AdapterConfig}
+     */
     public AdapterConfig getAdapterConfig() {
         return adapterConfig;
     }
 
-    public RequestAuthenticator getRequestAuthenticator(HttpRequest httpRequest) {
+    /**
+     * Create and return a new {@link RequestAuthenticator} for the given request.
+     *
+     * @param httpRequest the request to attempt authentication against
+     * @return an instance of {@link CandlepinKeycloakRequestAuthenticator}
+     */
+    public RequestAuthenticator createRequestAuthenticator(HttpRequest httpRequest) {
         KeycloakOIDCFacade keycloakOIDCFacade = new KeycloakOIDCFacade(httpRequest);
         return new CandlepinKeycloakRequestAuthenticator(keycloakOIDCFacade, httpRequest, keycloakDeployment);
     }

@@ -16,8 +16,6 @@
     <suppress files="[\\/]src[\\/]main[\\/].*" id="JavadocVariableTest" />
     <!-- suppress all checks in the build directory -->
     <suppress files="[\\/]build[\\/].*" checks="[a-zA-Z0-9]*" />
-    <!--Allow Long tokens for testing-->
-    <suppress files="[\\/]src/test/java/org/candlepin/resteasy/filter/AuthenticationFilterTest.java*" id="LineLength" />
 </suppressions>
 
 <!-- vim: set expandtab sts=2 sw=2 ai: -->

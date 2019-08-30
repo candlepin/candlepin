@@ -277,9 +277,12 @@ public class ConfigProperties {
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
 
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
+    /**
+     * Enabled dev page used to interactively login to a Keycloak instance and generate offline token.
+     */
     public static final String TOKENPAGE_ENABLED = "candlepin.tokenpage.enabled";
     /**
-     * Keycloak Filepath needed for authentication
+     * Path to keycloak.json
      */
     public static final String KEYCLOAK_FILEPATH = "candlepin.keycloak.config";
     public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {

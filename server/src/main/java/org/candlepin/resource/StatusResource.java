@@ -15,7 +15,7 @@
 package org.candlepin.resource;
 
 
-import org.candlepin.auth.KeycloakAdapterConfiguration;
+import org.candlepin.auth.KeycloakConfiguration;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.common.auth.SecurityHole;
@@ -63,22 +63,20 @@ public class StatusResource {
      */
     private String release = "Unknown";
     private boolean standalone = true;
+    private boolean keycloakEnabled = true;
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
     private ModeManager modeManager;
-    private String keycloakResource = null;
-    private String keycloakAuthUrl = null;
-    private String keycloakRealm = null;
-    private AdapterConfig adapterConfig;
+    private KeycloakConfiguration keycloakConfig;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
-        CandlepinCache candlepinCache, ModeManager modeManager,
-        KeycloakAdapterConfiguration keycloakAdapterConfiguration) {
+        CandlepinCache candlepinCache, ModeManager modeManager, KeycloakConfiguration keycloakConfig) {
         this.modeManager = modeManager;
         this.rulesCurator = rulesCurator;
         this.candlepinCache = candlepinCache;
+        this.keycloakConfig = keycloakConfig;
         Map<String, String> map = VersionUtil.getVersionMap();
         version = map.get("version");
         release = map.get("release");
@@ -86,12 +84,11 @@ public class StatusResource {
         if (config == null || !config.getBoolean(ConfigProperties.STANDALONE)) {
             standalone = false;
         }
-        adapterConfig = keycloakAdapterConfiguration.getAdapterConfig();
-        if (adapterConfig != null) {
-            keycloakRealm = adapterConfig.getRealm();
-            keycloakAuthUrl = adapterConfig.getAuthServerUrl();
-            keycloakResource = adapterConfig.getResource();
+
+        if (config == null || !config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
+            keycloakEnabled = false;
         }
+
         this.jsProvider = jsProvider;
     }
 
@@ -156,30 +153,31 @@ public class StatusResource {
         CandlepinCapabilities caps = CandlepinCapabilities.getCapabilities();
 
         RulesSourceEnum rulesSource = jsProvider.getRulesSource();
-        StatusDTO status = null;
 
-        if (adapterConfig != null) {
-            KeycloakStatusDTO keycloakstatus = new KeycloakStatusDTO()
-                .setKeycloakResource(keycloakResource)
-                .setKeycloakAuthUrl(keycloakAuthUrl)
-                .setKeycloakRealm(keycloakRealm);
-            status = keycloakstatus;
+        StatusDTO status;
+        if (keycloakEnabled) {
+            AdapterConfig adapterConfig = keycloakConfig.getAdapterConfig();
+            status = new KeycloakStatusDTO()
+                .setKeycloakResource(adapterConfig.getResource())
+                .setKeycloakAuthUrl(adapterConfig.getAuthServerUrl())
+                .setKeycloakRealm(adapterConfig.getRealm());
         }
         else {
             status = new StatusDTO();
         }
 
-        status.setResult(good)
-              .setVersion(version)
-              .setRelease(release)
-              .setStandalone(standalone)
-              .setRulesVersion(jsProvider.getRulesVersion())
-              .setRulesSource(rulesSource != null ? rulesSource.toString() : null)
-              .setMode(mode != null ? mode.toString() : null)
-              .setModeReason(modeChangeReason != null ? modeChangeReason.toString() : null)
-              .setModeChangeTime(modeChange.getChangeTime())
-              .setManagerCapabilities(caps)
-              .setTimeUTC(new Date());
+        status
+            .setResult(good)
+            .setVersion(version)
+            .setRelease(release)
+            .setStandalone(standalone)
+            .setRulesVersion(jsProvider.getRulesVersion())
+            .setRulesSource(rulesSource != null ? rulesSource.toString() : null)
+            .setMode(mode != null ? mode.toString() : null)
+            .setModeReason(modeChangeReason != null ? modeChangeReason.toString() : null)
+            .setModeChangeTime(modeChange.getChangeTime())
+            .setManagerCapabilities(caps)
+            .setTimeUTC(new Date());
 
         statusCache.setStatus(status);
 

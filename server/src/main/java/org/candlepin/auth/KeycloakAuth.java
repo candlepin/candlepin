@@ -15,8 +15,6 @@
 
 package org.candlepin.auth;
 
-
-import org.candlepin.common.config.Configuration;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.TokenVerifier;
 import javax.inject.Inject;
@@ -31,7 +29,6 @@ import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.keycloak.KeycloakSecurityContext;
 import org.candlepin.service.UserServiceAdapter;
-import org.keycloak.adapters.AdapterDeploymentContext;
 import org.keycloak.adapters.RequestAuthenticator;
 import org.keycloak.adapters.ServerRequest;
 import org.keycloak.adapters.RefreshableKeycloakSecurityContext;
@@ -41,7 +38,6 @@ import org.keycloak.common.VerificationException;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.JsonWebToken;
-import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.keycloak.util.TokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +45,12 @@ import org.xnap.commons.i18n.I18n;
 import javax.inject.Provider;
 
 /**
- * KeycloakAuth
+ * AuthenticationProvider that accepts an {@link AccessToken} or
+ * {@link org.keycloak.representations.RefreshToken} as an HTTP Bearer token, and then verifies the token
+ * against a configured Keycloak server.
+ *
+ * This provider is skipped if BASIC auth is present in the request or if the Authorization header is
+ * empty/missing.
  */
 public class KeycloakAuth extends UserAuth implements AuthProvider {
 
@@ -57,25 +58,13 @@ public class KeycloakAuth extends UserAuth implements AuthProvider {
     @Context private ServletResponse servletResponse;
 
     private static Logger log = LoggerFactory.getLogger(KeycloakAuth.class);
-    protected AdapterDeploymentContext deploymentContext;
-    private AccessTokenResponse response = null;
-    private KeycloakDeployment kd;
-    private KeycloakAdapterConfiguration keycloakAdapterConfiguration;
-    private RefreshableKeycloakSecurityContext securityContext = null;
-    private static AdapterConfig adapterConfig = null;
-    private Configuration configuration;
+    private KeycloakConfiguration keycloakConfig;
 
     @Inject
     public KeycloakAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18nProvider,
-        PermissionFactory permissionFactory, Configuration configuration,
-        KeycloakAdapterConfiguration keycloakAdapterConfiguration) {
+        PermissionFactory permissionFactory, KeycloakConfiguration keycloakConfig) {
         super(userServiceAdapter, i18nProvider, permissionFactory);
-        this.configuration = configuration;
-        adapterConfig = keycloakAdapterConfiguration.getAdapterConfig();
-        kd = keycloakAdapterConfiguration.getKeycloakDeployment();
-        this.keycloakAdapterConfiguration = keycloakAdapterConfiguration;
-        deploymentContext = new AdapterDeploymentContext(kd);
-
+        this.keycloakConfig = keycloakConfig;
     }
 
     @Override
@@ -84,9 +73,9 @@ public class KeycloakAuth extends UserAuth implements AuthProvider {
             String auth = AuthUtil.getHeader(httpRequest, "Authorization");
 
             if (!auth.isEmpty()) {
-
                 String[] authArray = auth.split(" ");
-                if (authArray[0].toUpperCase().equals("BASIC")) {
+
+                if (authArray[0].equalsIgnoreCase("basic")) {
                     return null;
                 }
                 else {
@@ -97,18 +86,20 @@ public class KeycloakAuth extends UserAuth implements AuthProvider {
                             handleBearerToken(httpRequest);
                             break;
                         case TokenUtil.TOKEN_TYPE_REFRESH:
-                            handleRefreshToken(httpRequest, auth);
+                            handleRefreshToken(httpRequest, authArray[1]);
                             break;
                         default:
+                            log.warn("Not authenticating as token type is unsupported: {}", tokenType);
                             break;
                     }
                 }
+
                 KeycloakSecurityContext keycloakSecurityContext = (KeycloakSecurityContext)
                     httpRequest.getAttribute(KeycloakSecurityContext.class.getName());
-                if (keycloakSecurityContext != null) {
+
+                if (keycloakSecurityContext != null && keycloakSecurityContext.getToken() != null) {
                     String userName = keycloakSecurityContext.getToken().getPreferredUsername();
-                    Principal principal = createPrincipal(userName);
-                    return principal;
+                    return createPrincipal(userName);
                 }
             }
             else {
@@ -122,24 +113,41 @@ public class KeycloakAuth extends UserAuth implements AuthProvider {
         catch (Exception e) {
             throw new ServiceUnavailableException(i18nProvider.get().tr("Keycloak Authentication failed"));
         }
+
         return null;
     }
 
-
-    public void handleBearerToken(HttpRequest httpRequest) {
-        RequestAuthenticator requestAuthenticator = keycloakAdapterConfiguration.
-            getRequestAuthenticator(httpRequest);
+    /**
+     * Verify the access token directly.
+     *
+     * @param httpRequest the request to authenticate
+     */
+    private void handleBearerToken(HttpRequest httpRequest) {
+        RequestAuthenticator requestAuthenticator = keycloakConfig.
+            createRequestAuthenticator(httpRequest);
         requestAuthenticator.authenticate();
     }
 
-    private void handleRefreshToken(HttpRequest httpRequest, String auth) throws IOException,
+    /**
+     * Exchange the refresh token for an access token, and verify the resulting access token.
+     *
+     * @param httpRequest the request to authenticate
+     * @param authCredentials the authorization credentials
+     * @throws IOException if the token can't be decoded
+     * @throws ServerRequest.HttpFailure if the refresh exchange fails
+     * @throws VerificationException if the resulting token fails verification
+     */
+    private void handleRefreshToken(HttpRequest httpRequest, String authCredentials) throws IOException,
         ServerRequest.HttpFailure, VerificationException {
-        String[] arrAut = auth.split(" ");
-        response = ServerRequest.invokeRefresh(kd, arrAut[1]);
+        KeycloakDeployment keycloakDeployment = keycloakConfig.getKeycloakDeployment();
+
+        AccessTokenResponse response = ServerRequest.invokeRefresh(keycloakDeployment, authCredentials);
         String tokenString = response.getToken();
         AccessToken token = TokenVerifier.create(response.getToken(), AccessToken.class).getToken();
+
         RefreshableKeycloakSecurityContext refreshableKeycloakSecurityContext = new
-            RefreshableKeycloakSecurityContext(kd, null, tokenString, token, null, null, arrAut[1]);
+            RefreshableKeycloakSecurityContext(keycloakDeployment, null, tokenString, token, null, null,
+            authCredentials);
         httpRequest.setAttribute(KeycloakSecurityContext.class.getName(), refreshableKeycloakSecurityContext);
     }
 }

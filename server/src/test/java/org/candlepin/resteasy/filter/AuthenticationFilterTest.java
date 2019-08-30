@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.CandlepinKeycloakRequestAuthenticator;
-import org.candlepin.auth.KeycloakAdapterConfiguration;
+import org.candlepin.auth.KeycloakConfiguration;
 import org.candlepin.auth.KeycloakOIDCFacade;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
@@ -77,13 +77,24 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
     @Mock private CandlepinSecurityContext mockSecurityContext;
     @Mock private ResourceInfo mockInfo;
     @Mock private UserServiceAdapter usa;
-    @Mock private KeycloakAdapterConfiguration keycloakAdapterConfiguration;
+    @Mock private KeycloakConfiguration keycloakAdapterConfiguration;
     @Mock private AdapterConfig adapterConfig;
     @Mock private BearerTokenRequestAuthenticator bearerTokenRequestAuthenticator;
     @Mock private KeycloakDeployment keycloakDeployment;
 
-    @SuppressWarnings("LineLength")
-    private static final String TESTTOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJiNzJiZDlkNi00MDczLTQ2NWUtYTY5YS05NDA2MGZiMjY4Y2QiLCJleHAiOjE1NjQ1MjA3MjIsIm5iZiI6MCwiaWF0IjoxNTY0NTE2MjAzLCJpc3MiOiJodHRwczovL3Nzby5kZXYxL3JlZGhhdC1leHRlcm5hbCIsImF1ZCI6ImNhbmRsZXBpbi10ZXN0Iiwic3ViIjoiZjplNDRhYTg0ZS0zYjc2LTQwMjgtOTUzNS1hNTQwMDM5MWQwMGY6YmNvdXJ0QHJlZGhhdC5jb20iLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJjYW5kbGVwaW4tdGVzdCIsIm5vbmNlIjoiNWNjZGRhZTUtMWJhMS00MTM2LWEzODgtNTc2ZDNjMGQzNWY4IiwiYXV0aF90aW1lIjoxNTY0NDkzODU3LCJzZXNzaW9uX3N0YXRlIjoiMjk1MTA5ZTYtYjU0MC00MmJjLTlkMGQtYzgzZjE2YTY2MzJiIiwiYWNyIjoiMCIsImFsbG93ZWQtb3JpZ2lucyI6WyIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJhdXRoZW50aWNhdGVkIiwiY2FuZGxlcGluX3N5c3RlbV9hY2Nlc3Nfdmlld19lZGl0X3BlcnNvbmFsIiwicmVkaGF0OmVtcGxveWVlcyIsInBvcnRhbF9tYW5hZ2Vfc3Vic2NyaXB0aW9ucyIsInVtYV9hdXRob3JpemF0aW9uIiwicG9ydGFsX21hbmFnZV9jYXNlcyIsImNsb3VkX2FjY2Vzc18xIiwicG9ydGFsX3N5c3RlbV9tYW5hZ2VtZW50IiwicG9ydGFsX2Rvd25sb2FkIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwibmFtZSI6InRlc3QiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJxYUByZWRoYXQuY29tIiwiZ2l2ZW5fbmFtZSI6IkFCQyIsImZhbWlseV9uYW1lIjoiREVGIiwiZW1haWwiOiJ0ZXN0QHJlZGhhdC5jb20ifQ.nYtcY8XQHb8UXnYeORQhE9lObFljVfuWtNQXMtqmi_M";
+    /* Note: this token can be easily decoded using any JWT-compatible tool (e.g. jwt.io) */
+    private static final String TESTTOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9." +
+        "eyJqdGkiOiJiNzJiZDlkNi00MDczLTQ2NWUtYTY5YS05NDA2MGZiMjY4Y2QiLCJleHAiOjE1NjQ1MjA3MjIsIm5iZiI6MCwiaW" +
+        "F0IjoxNTY0NTE2MjAzLCJpc3MiOiJodHRwczovL3Nzby5kZXYxL3JlZGhhdC1leHRlcm5hbCIsImF1ZCI6ImNhbmRsZXBpbi10" +
+        "ZXN0Iiwic3ViIjoiZjplNDRhYTg0ZS0zYjc2LTQwMjgtOTUzNS1hNTQwMDM5MWQwMGY6cWFAcmVkaGF0LmNvbSIsInR5cCI6Ik" +
+        "JlYXJlciIsImF6cCI6ImNhbmRsZXBpbi10ZXN0Iiwibm9uY2UiOiI1Y2NkZGFlNS0xYmExLTQxMzYtYTM4OC01NzZkM2MwZDM1" +
+        "ZjgiLCJhdXRoX3RpbWUiOjE1NjQ0OTM4NTcsInNlc3Npb25fc3RhdGUiOiIyOTUxMDllNi1iNTQwLTQyYmMtOWQwZC1jODNmMT" +
+        "ZhNjYzMmIiLCJhY3IiOiIwIiwiYWxsb3dlZC1vcmlnaW5zIjpbIioiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbXX0sInJl" +
+        "c291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbXX19LCJuYW1lIjoidGVzdCIsInByZWZlcnJlZF91c2VybmFtZS" +
+        "I6InFhQHJlZGhhdC5jb20iLCJnaXZlbl9uYW1lIjoiSmFuZSIsImZhbWlseV9uYW1lIjoiRG9lIiwiZW1haWwiOiJ0ZXN0QHJl" +
+        "ZGhhdC5jb20ifQ." +
+        "82Qt5tnh85-klwBNkYpC3QX-hHKIiFv0L8GHSYOjAgM";
+
     private AuthenticationFilter interceptor;
     private MockHttpRequest mockReq;
 
@@ -110,7 +121,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.KEYCLOAK_AUTHENTICATION, "true");
 
         when(keycloakAdapterConfiguration.getAdapterConfig()).thenReturn(adapterConfig);
-        when(adapterConfig.getAuthServerUrl()).thenReturn("https://redhat.com/auth");
+        when(adapterConfig.getAuthServerUrl()).thenReturn("https://example.com/auth");
         when(adapterConfig.getResource()).thenReturn("candlepin");
         when(adapterConfig.getRealm()).thenReturn("redhat");
         when(keycloakAdapterConfiguration.getKeycloakDeployment()).thenReturn(keycloakDeployment);
@@ -118,8 +129,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         when(bearerTokenRequestAuthenticator.getToken()).
             thenReturn(TokenVerifier.create(TESTTOKEN, AccessToken.class).getToken());
 
-        interceptor = new AuthenticationFilter(config, consumerCurator, deletedConsumerCurator,
-           injector, keycloakAdapterConfiguration);
+        interceptor = new AuthenticationFilter(config, consumerCurator, deletedConsumerCurator, injector);
         interceptor.setHttpServletRequest(mockHttpServletRequest);
     }
 
@@ -136,12 +146,11 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
             }
 
             protected BearerTokenRequestAuthenticator createBearerTokenAuthenticator() {
-                // return new BearerTokenRequestAuthenticator(keycloakDeployment);
                 this.deployment = keycloakDeployment;
                 return bearerTokenRequestAuthenticator;
             }
         };
-        when(keycloakAdapterConfiguration.getRequestAuthenticator(mockReq)).
+        when(keycloakAdapterConfiguration.createRequestAuthenticator(mockReq)).
             thenReturn(keycloakRequestAuthenticator);
     }
 
@@ -263,8 +272,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         keycloakSetup();
         interceptor.filter(getContext());
         Principal p = ResteasyProviderFactory.getContextData(Principal.class);
-        System.out.println(p.getName());
-        assertTrue(p.getName().equals("qa@redhat.com"));
+        assertEquals("qa@redhat.com", p.getName());
     }
 
     /**
@@ -298,7 +306,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
             bind(PermissionFactory.class).toInstance(mock(PermissionFactory.class));
             bind(ConsumerCurator.class).toInstance(mock(ConsumerCurator.class));
             bind(UserServiceAdapter.class).toInstance(usa);
-            bind(KeycloakAdapterConfiguration.class).toInstance(keycloakAdapterConfiguration);
+            bind(KeycloakConfiguration.class).toInstance(keycloakAdapterConfiguration);
         }
     }
 }

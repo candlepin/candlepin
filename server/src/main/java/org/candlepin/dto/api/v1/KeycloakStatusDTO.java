@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2018 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -18,7 +18,10 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
- * Keycloak parameters needed in status endpoint when enabled in configuration file
+ * Keycloak parameters needed by a client in order to use OIDC-based authentication.
+ *
+ * This lets a client retrieve the relevant configuration from Candlepin, which are then used to exchange
+ * offline token for access token (or any other flow supported by Keycloak and implemented on the client).
  */
 public class KeycloakStatusDTO extends StatusDTO {
 

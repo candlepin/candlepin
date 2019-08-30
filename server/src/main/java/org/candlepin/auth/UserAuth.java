@@ -20,7 +20,6 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.UserInfo;
 
-import org.keycloak.adapters.KeycloakConfigResolver;
 import org.xnap.commons.i18n.I18n;
 
 import javax.inject.Inject;
@@ -36,7 +35,7 @@ public abstract class UserAuth implements AuthProvider {
     protected UserServiceAdapter userServiceAdapter;
     protected Provider<I18n> i18nProvider;
     protected PermissionFactory permissionFactory;
-    protected KeycloakConfigResolver definedconfigResolver;
+
     @Inject
     public UserAuth(UserServiceAdapter userServiceAdapter, Provider<I18n> i18nProvider,
         PermissionFactory permissionFactory) {

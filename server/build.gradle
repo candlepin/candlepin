@@ -198,8 +198,8 @@ dependencies {
 
     // Javascript engine
     implementation "org.mozilla:rhino:1.7R3"
-    
-    // Keycloak 
+
+    // Keycloak
     compile group: 'org.keycloak', name: 'keycloak-servlet-filter-adapter', version: '6.0.1'
     compile group: 'org.keycloak', name: 'keycloak-adapter-core', version: '6.0.1'
     compile group: 'org.keycloak', name: 'keycloak-common', version: '6.0.1'
@@ -236,7 +236,6 @@ dependencies {
 
     // Testing DB Drivers
     testRuntime "org.hsqldb:hsqldb:2.3.2"
-    
 }
 
 task pom {

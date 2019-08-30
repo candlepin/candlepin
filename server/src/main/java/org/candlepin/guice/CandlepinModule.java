@@ -33,7 +33,6 @@ import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.audit.QpidConfigBuilder;
 import org.candlepin.audit.QpidConnection;
-import org.candlepin.auth.KeycloakAdapterConfiguration;
 import org.candlepin.auth.Principal;
 import org.candlepin.bind.BindChainFactory;
 import org.candlepin.bind.BindContextFactory;
@@ -280,7 +279,11 @@ public class CandlepinModule extends AbstractModule {
         miscConfigurations();
 
         // Async Jobs
-        configureAsyncJobs();
+        bind(RefreshPoolsJob.class);
+        bind(EntitlerJob.class);
+        requestStaticInjection(EntitlerJob.class);
+        bind(HypervisorUpdateJob.class);
+        bind(HypervisorHeartbeatUpdateJob.class);
 
         // UeberCerts
         bind(UeberCertificateGenerator.class);
@@ -288,7 +291,6 @@ public class CandlepinModule extends AbstractModule {
         // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
-
         // only initialize if we've enabled AMQP integration
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             configureAmqp();
@@ -298,9 +300,6 @@ public class CandlepinModule extends AbstractModule {
 
         // Configure model translators
         this.configureModelTranslator();
-
-        // Keycloak Config File Load
-        configureKeycloak();
     }
 
     private void resources() {
@@ -332,20 +331,6 @@ public class CandlepinModule extends AbstractModule {
         bind(DeletedConsumerResource.class);
         bind(CdnResource.class);
         bind(GuestIdResource.class);
-    }
-
-    private void configureAsyncJobs() {
-        bind(RefreshPoolsJob.class);
-        bind(EntitlerJob.class);
-        requestStaticInjection(EntitlerJob.class);
-        bind(HypervisorUpdateJob.class);
-        bind(HypervisorHeartbeatUpdateJob.class);
-    }
-
-    private void configureKeycloak() {
-        if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
-            bind(KeycloakAdapterConfiguration.class);
-        }
     }
 
     private void miscConfigurations() {

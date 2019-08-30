@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,12 +17,13 @@ package org.candlepin.auth;
 
 import org.candlepin.common.exceptions.CandlepinException;
 import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.keycloak.adapters.OIDCHttpFacade;
 import org.keycloak.adapters.spi.AuthenticationError;
 import org.keycloak.adapters.spi.HttpFacade;
 import org.keycloak.adapters.spi.LogoutError;
-import org.keycloak.common.util.HostUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.security.cert.X509Certificate;
@@ -33,7 +34,10 @@ import java.io.OutputStream;
 import java.util.List;
 
 /**
- * KeycloakOIDCFacade for KeycloakAuth
+ * Facade to allow the Keycloak classes to interface with RestEasy's HttpRequest and ResponseBuilder.
+ *
+ * Note that since we are not supporting stateful interactions (e.g. sessions), some methods (e.g.
+ * getCookie) are stubbed out.
  */
 public class KeycloakOIDCFacade implements HttpFacade {
 
@@ -49,8 +53,6 @@ public class KeycloakOIDCFacade implements HttpFacade {
      * RequestFacade for Keycloak Requests
      */
     protected class RequestFacade implements OIDCHttpFacade.Request {
-
-        private InputStream inputStream;
 
         @Override
         public String getFirstParam(String param) {
@@ -74,7 +76,7 @@ public class KeycloakOIDCFacade implements HttpFacade {
 
         @Override
         public boolean isSecure() {
-            return false;
+            return requestContext.getUri().getAbsolutePath().getScheme().equals("https");
         }
 
         @Override
@@ -94,7 +96,6 @@ public class KeycloakOIDCFacade implements HttpFacade {
 
         @Override
         public String getHeader(String name) {
-
             HttpHeaders httpHeaders = requestContext.getHttpHeaders();
             return httpHeaders.getHeaderString(name);
         }
@@ -103,7 +104,6 @@ public class KeycloakOIDCFacade implements HttpFacade {
         public List<String> getHeaders(String name) {
             MultivaluedMap<String, String> headers = requestContext.getMutableHeaders();
             return headers.get(name);
-
         }
 
         @Override
@@ -113,14 +113,12 @@ public class KeycloakOIDCFacade implements HttpFacade {
 
         @Override
         public InputStream getInputStream(boolean buffered) {
-            InputStream inputStream = requestContext.getInputStream();
-            return inputStream;
+            return requestContext.getInputStream();
         }
 
         @Override
         public String getRemoteAddr() {
-            // TODO: implement properly
-            return HostUtils.getIpAddress();
+            return ResteasyProviderFactory.getContextData(HttpServletRequest.class).getRemoteAddr();
         }
 
         @Override
