@@ -18,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.client.ApiClient;
 import org.candlepin.client.model.OwnerDTO;
+import org.candlepin.client.model.UserCreationRequest;
+import org.candlepin.client.model.UserDTO;
 import org.candlepin.client.resources.UsersApi;
 import org.candlepin.functional.ClientUtil;
 import org.candlepin.functional.FunctionalTestCase;
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.client.HttpClientErrorException.Conflict;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 
 import java.util.List;
@@ -55,8 +58,8 @@ public class UserResourceTest {
     }
 
     @Test
-    public void shouldListOwnersForUser() throws Exception {
-        String username = TestUtil.randomString("user1");
+    public void listsOwnersForUser() throws Exception {
+        String username = TestUtil.randomString("user");
         ApiClient userClient = clientUtil.newUserAndClient(username, owner.getKey());
 
         UsersApi usersApi = new UsersApi(userClient);
@@ -66,11 +69,20 @@ public class UserResourceTest {
     }
 
     @Test
-    public void shouldRaise404DeletingUnknownUser() throws Exception {
+    public void raises404DeletingUnknownUser() throws Exception {
         UsersApi usersApi = new UsersApi(adminApiClient);
         assertThrows(NotFound.class, () -> usersApi.deleteUser("does_not_exist"));
     }
 
+    @Test
+    public void raises409WhenCreatingAnAlreadyExistingUser() throws Exception {
+        UserCreationRequest userReq = new UserCreationRequest();
+        userReq.setUsername(TestUtil.randomString("user"));
+        userReq.setPassword(TestUtil.randomString());
 
+        UsersApi usersApi = new UsersApi(adminApiClient);
+        UserDTO user = usersApi.createUser(userReq);
 
+        assertThrows(Conflict.class, () -> usersApi.createUser(userReq));
+    }
 }
