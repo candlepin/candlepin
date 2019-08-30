@@ -16,9 +16,14 @@ package org.candlepin.functional;
 
 import org.candlepin.client.ApiClient;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.InputStream;
 
 /**
@@ -26,24 +31,21 @@ import java.io.InputStream;
  */
 @Component
 public class ApiClientBuilder {
-    private ApiClientFactory apiClientFactory;
-    private ApiClientProperties apiClientProperties;
+    private static final Logger log = LoggerFactory.getLogger(ApiClientBuilder.class);
+
+    private final RestTemplateBuilder templateBuilder;
+    private final ApiClientProperties apiClientProperties;
 
     @Autowired
-    public ApiClientBuilder(ApiClientProperties coreProperties) {
-        this.apiClientFactory = new ApiClientFactory();
-        this.apiClientProperties = new ApiClientProperties();
-
-        // Set a few properties by default that people will not be overriding in most cases
-        this.apiClientProperties.setUrl(coreProperties.getUrl());
-        this.apiClientProperties.setInsecure(coreProperties.isInsecure());
-        this.apiClientProperties.setTruststoreFile(coreProperties.getTruststoreFile());
-        this.apiClientProperties.setTruststorePassword(coreProperties.getTruststorePassword());
+    public ApiClientBuilder(ApiClientProperties coreProperties, RestTemplateBuilder templateBuilder) {
+        // Seed the apiClientProperties with the default properties coming from the application configuration
+        this.apiClientProperties = new ApiClientProperties(coreProperties);
+        this.templateBuilder = templateBuilder;
     }
 
     public ApiClientBuilder withUsername(String username) {
         if (apiClientProperties.usesClientAuth()) {
-            throw new IllegalStateException("X509 Client auth is already configured");
+            throw new IllegalStateException("X509 client auth is already configured");
         }
         apiClientProperties.setUsername(username);
         return this;
@@ -51,7 +53,7 @@ public class ApiClientBuilder {
 
     public ApiClientBuilder withPassword(String password) {
         if (apiClientProperties.usesClientAuth()) {
-            throw new IllegalStateException("X509 Client auth is already configured");
+            throw new IllegalStateException("X509 client auth is already configured");
         }
         apiClientProperties.setPassword(password);
         return this;
@@ -59,6 +61,17 @@ public class ApiClientBuilder {
 
     public ApiClientBuilder withUrl(String url) {
         apiClientProperties.setUrl(url);
+        return this;
+    }
+
+    public ApiClientBuilder withDebug(boolean isDebug) {
+        apiClientProperties.setDebug(isDebug);
+        return this;
+    }
+
+    public ApiClientBuilder withTruststore(String truststoreFile, String truststorePassword) {
+        apiClientProperties.setTruststoreFile(truststoreFile);
+        apiClientProperties.setTruststorePassword(truststorePassword);
         return this;
     }
 
@@ -75,13 +88,12 @@ public class ApiClientBuilder {
     }
 
     public ApiClient build() {
-        apiClientFactory.setApiClientProperties(apiClientProperties);
-
         try {
-            return apiClientFactory.getObject();
+            return new ApiClientFactory(apiClientProperties, templateBuilder).getObject();
         }
         catch (Exception e) {
-            throw new RuntimeException("Could not create ApiClient");
+            log.error("Could not create ApiClient", e);
+            throw new BeanCreationException("Could not create ApiClient");
         }
     }
 }

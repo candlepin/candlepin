@@ -211,6 +211,7 @@ public class UserResource {
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @DELETE
     @Path("/{username}")
+    @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteUser(@PathParam("username") String username) {
         UserInfo user = this.fetchUserByUsername(username);

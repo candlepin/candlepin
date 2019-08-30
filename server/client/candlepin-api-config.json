@@ -5,6 +5,6 @@
   "groupId": "org.candlepin",
   "artifactId": "candlepin-client",
   "java8": true,
-  "library": "resteasy",
+  "library": "resttemplate",
   "dateLibrary": "java8"
 }

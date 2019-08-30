@@ -9,6 +9,7 @@ buildscript {
     }
 }
 
+apply plugin:"io.spring.dependency-management"
 apply plugin: "org.openapi.generator"
 
 description = "Candlepin Client Library"
@@ -31,24 +32,32 @@ sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/main/java"]
 compileJava.dependsOn tasks.openApiGenerate
 
 ext.client = [
+    spring_boot_version: "2.1.7.RELEASE",
     swagger_annotations_version: "1.5.21",
-    jackson_version: "2.8.11",
-    jackson_databind_version: "2.8.11.2",
-    threetenbp_version: "2.6.4",
-    resteasy_version: "3.1.3.Final",
-    junit_version: "4.12",
 ]
+
+dependencyManagement {
+    imports {
+        // See https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies to
+        // get listings of the contents of this BOM
+        mavenBom "org.springframework.boot:spring-boot-dependencies:$client.spring_boot_version"
+    }
+    dependencies{
+        dependency "io.swagger:swagger-annotations:$client.swagger_annotations_version"
+//        dependency "org.codehaus.cargo:cargo-core-container-tomcat:1.7.4"
+//        dependency "org.jboss.shrinkwrap:shrinkwrap-api:1.2.6"
+    }
+}
 
 dependencies {
     implementation libraries.collections
 
     implementation "io.swagger:swagger-annotations:$client.swagger_annotations_version"
-    implementation "org.jboss.resteasy:resteasy-client:$client.resteasy_version"
-    implementation "org.jboss.resteasy:resteasy-multipart-provider:$client.resteasy_version"
-    implementation "org.jboss.resteasy:resteasy-jackson2-provider:$client.resteasy_version"
-    implementation "com.fasterxml.jackson.core:jackson-core:$client.jackson_version"
-    implementation "com.fasterxml.jackson.core:jackson-annotations:$client.jackson_version"
-    implementation "com.fasterxml.jackson.core:jackson-databind:$client.jackson_databind_version"
-    implementation "com.github.joschi.jackson:jackson-datatype-threetenbp:$client.threetenbp_version"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$client.jackson_version"
+    implementation "org.springframework:spring-beans"
+    implementation "org.springframework:spring-context"
+    implementation "org.springframework:spring-test"
+    implementation "org.springframework:spring-web"
+
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
 }

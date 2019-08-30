@@ -2,10 +2,6 @@
 import groovy.text.GStringTemplateEngine
 import org.yaml.snakeyaml.Yaml
 
-plugins {
-    id "io.spring.dependency-management" version "1.0.8.RELEASE"
-}
-
 description = "Candlepin Server"
 
 apply plugin: "war"

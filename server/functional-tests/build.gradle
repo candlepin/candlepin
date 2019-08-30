@@ -7,6 +7,7 @@ apply plugin:"io.spring.dependency-management"
 description = "Candlepin Functional Tests"
 
 ext.functional = [
+    commons_lang_version: "3.9",
     spring_version: "5.1.4.RELEASE",
     spring_boot_version: "2.1.7.RELEASE",
     resteasy_version: "3.1.3.Final",
@@ -22,6 +23,7 @@ dependencyManagement {
     }
     dependencies{
         dependency "org.jboss.resteasy:resteasy-client:$functional.resteasy_version"
+        dependency "org.apache.commons:commons-lang3:$functional.commons_lang_version"
 //        dependency "org.codehaus.cargo:cargo-core-container-tomcat:1.7.4"
 //        dependency "org.jboss.shrinkwrap:shrinkwrap-api:1.2.6"
     }
@@ -37,6 +39,8 @@ dependencies {
 
     implementation libraries.core_testing
     implementation libraries.qpid
+    implementation "org.apache.httpcomponents:httpclient"
+    implementation "org.apache.commons:commons-lang3"
     implementation "org.junit.platform:junit-platform-runner"
     implementation "org.springframework.boot:spring-boot-starter"
     implementation "org.springframework.boot:spring-boot-test"
@@ -44,7 +48,7 @@ dependencies {
     implementation "org.springframework:spring-context"
     implementation "org.springframework:spring-context-support"
     implementation "org.springframework:spring-test"
-    implementation "org.jboss.resteasy:resteasy-client"
+    implementation "org.springframework:spring-web"
 
     testImplementation project(":candlepin")
 

@@ -15,21 +15,14 @@
 package org.candlepin.functional;
 
 import org.candlepin.client.ApiClient;
-import org.candlepin.client.ApiException;
-import org.candlepin.client.model.NestedOwnerDTO;
-import org.candlepin.client.model.Owner;
-import org.candlepin.client.model.OwnerDTO;
-import org.candlepin.client.model.PermissionBlueprintDTO;
-import org.candlepin.client.model.RoleDTO;
 import org.candlepin.client.model.UserCreationRequest;
 import org.candlepin.client.model.UserDTO;
-import org.candlepin.client.resources.OwnersApi;
-import org.candlepin.client.resources.RolesApi;
 import org.candlepin.client.resources.UsersApi;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 
 /**
  * Utility for creating various ApiClients
@@ -38,16 +31,20 @@ import org.springframework.stereotype.Component;
 public class ClientUtil {
     private final ApiClientBuilder apiClientBuilder;
 
-    @Autowired
-    @Qualifier("adminApiClient")
     private ApiClient adminApiClient;
+    private ApiClientProperties coreProperties;
 
-    public ClientUtil(ApiClientBuilder apiClientBuilder) {
+    @Autowired
+    public ClientUtil(@Qualifier("adminApiClient") ApiClient adminApiClient,
+        ApiClientProperties coreProperties,
+        ApiClientBuilder apiClientBuilder) {
+        this.adminApiClient = adminApiClient;
+        this.coreProperties = coreProperties;
         this.apiClientBuilder = apiClientBuilder;
     }
 
     public ApiClient newUserAndClient(String username, String ownerKey)
-        throws ApiException {
+        throws RestClientException {
         String password = TestUtil.randomString(10);
         UserCreationRequest userReq = new UserCreationRequest();
         userReq.setUsername(username);
@@ -59,7 +56,11 @@ public class ClientUtil {
         TestUtil testUtil = new TestUtil(apiClientBuilder);
         testUtil.createAllAccessRoleForUser(ownerKey, user);
 
-        return apiClientBuilder.withUsername(username).withPassword(password).build();
+        return apiClientBuilder
+            .withUsername(username)
+            .withPassword(password)
+            .withDebug(coreProperties.getDebug())
+            .build();
     }
 
 }

@@ -14,9 +14,11 @@
  */
 package org.candlepin.functional;
 
+import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -35,8 +37,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = FunctionalTestConfiguration.class)
+@SpringJUnitConfig(classes = FunctionalTestConfiguration.class)
+@DisplayNameGeneration(CamelCaseDisplayNameGenerator.class)
 public @interface FunctionalTestCase {
 
 }

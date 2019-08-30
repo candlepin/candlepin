@@ -13,6 +13,7 @@ buildscript {
 }
 
 plugins {
+    id "io.spring.dependency-management" version "1.0.8.RELEASE"
     id "nebula.lint" version "11.5.0"
     id "checkstyle"
 }

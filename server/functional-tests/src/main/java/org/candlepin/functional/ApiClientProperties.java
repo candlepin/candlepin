@@ -14,6 +14,7 @@
  */
 package org.candlepin.functional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.io.IOException;
@@ -25,8 +26,30 @@ public class ApiClientProperties {
     private String url;
     private String username;
     private String password;
+    private boolean debug;
 
     private X509ClientProperties x509Config = new X509ClientProperties();
+
+    @Autowired
+    public ApiClientProperties() {
+    }
+
+    /**
+     * A copy constructor.
+     * @param properties values from this object will be copied into the new ApiClientProperties object.
+     */
+    public ApiClientProperties(ApiClientProperties properties) {
+        this.url = properties.getUrl();
+        this.debug = properties.getDebug();
+        this.username = properties.getUsername();
+        this.password = properties.getPassword();
+
+        setInsecure(properties.isInsecure());
+        setKeystoreFile(properties.getKeystoreFile());
+        setKeystorePassword(properties.getKeystorePassword());
+        setTruststoreFile(properties.getTruststoreFile());
+        setTruststorePassword(properties.getTruststorePassword());
+    }
 
     public String getUrl() {
         return url;
@@ -50,6 +73,14 @@ public class ApiClientProperties {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean getDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 
     public X509ClientProperties getX509Config() {

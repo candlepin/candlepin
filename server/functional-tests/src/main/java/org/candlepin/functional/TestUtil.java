@@ -15,7 +15,6 @@
 package org.candlepin.functional;
 
 import org.candlepin.client.ApiClient;
-import org.candlepin.client.ApiException;
 import org.candlepin.client.model.NestedOwnerDTO;
 import org.candlepin.client.model.OwnerDTO;
 import org.candlepin.client.model.PermissionBlueprintDTO;
@@ -27,6 +26,7 @@ import org.candlepin.client.resources.RolesApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 
 import java.security.SecureRandom;
 
@@ -83,39 +83,39 @@ public class TestUtil {
         return sb.toString();
     }
 
-    public OwnerDTO trivialOwner() throws ApiException {
+    public OwnerDTO trivialOwner() throws RestClientException {
         String ownerKey = randomString();
         return trivialOwner(ownerKey);
     }
 
-    public OwnerDTO trivialOwner(String ownerKey) throws ApiException {
-        OwnersApi ownersApi = new OwnersApi();
+    public OwnerDTO trivialOwner(String ownerKey) throws RestClientException {
+        OwnersApi ownersApi = new OwnersApi(apiClient);
         OwnerDTO owner = new OwnerDTO();
         owner.setKey(ownerKey);
         owner.setDisplayName("Display Name " + ownerKey);
         return ownersApi.createOwner(owner);
     }
 
-    public void destroyOwner(String ownerKey) throws ApiException {
-        OwnersApi ownersApi = new OwnersApi();
+    public void destroyOwner(String ownerKey) throws RestClientException {
+        OwnersApi ownersApi = new OwnersApi(apiClient);
         ownersApi.deleteOwner(ownerKey, true, true);
     }
 
-    public void destroyOwner(OwnerDTO owner) throws ApiException {
+    public void destroyOwner(OwnerDTO owner) throws RestClientException {
         destroyOwner(owner.getKey());
     }
 
 
-    public RoleDTO createRole(String ownerKey, String access) throws ApiException {
+    public RoleDTO createRole(String ownerKey, String access) throws RestClientException {
         return createRoleForUser(ownerKey, null, access);
     }
 
-    public RoleDTO createAllAccessRoleForUser(String ownerKey, UserDTO user) throws ApiException {
+    public RoleDTO createAllAccessRoleForUser(String ownerKey, UserDTO user) throws RestClientException {
         return createRoleForUser(ownerKey, user, "ALL");
     }
 
     public RoleDTO createRoleForUser(String ownerKey, UserDTO user, String access)
-        throws ApiException {
+        throws RestClientException {
         PermissionBlueprintDTO permission = createOwnerPermission(ownerKey, access);
         RolesApi rolesApi = new RolesApi(apiClient);
         RoleDTO role = new RoleDTO();
@@ -129,12 +129,13 @@ public class TestUtil {
         return rolesApi.createRole(role);
     }
 
-    public PermissionBlueprintDTO createOwnerPermission(String ownerKey, String access) throws ApiException {
+    public PermissionBlueprintDTO createOwnerPermission(String ownerKey, String access)
+        throws RestClientException {
         return createPermission(ownerKey, access, "OWNER");
     }
 
     public PermissionBlueprintDTO createPermission(String ownerKey, String access, String type)
-        throws ApiException {
+        throws RestClientException {
         NestedOwnerDTO nestedOwner = new NestedOwnerDTO();
         nestedOwner.setKey(ownerKey);
 
@@ -146,25 +147,20 @@ public class TestUtil {
         return permission;
     }
 
-    /*
-    public RoleDTO addUserToRole(String rolename, UserDTO user) throws ApiException {
+    public RoleDTO addUserToRole(String rolename, UserDTO user) throws RestClientException {
         return addUserToRole(rolename, user.getUsername());
     }
 
-    public RoleDTO addUserToRole(RoleDTO role, String username) throws ApiException {
+    public RoleDTO addUserToRole(RoleDTO role, String username) throws RestClientException {
         return addUserToRole(role.getName(), username);
     }
 
-    public RoleDTO addUserToRole(RoleDTO role, UserDTO user) throws ApiException {
+    public RoleDTO addUserToRole(RoleDTO role, UserDTO user) throws RestClientException {
         return addUserToRole(role.getName(), user.getUsername());
     }
 
-    public RoleDTO addUserToRole(String roleName, String username) throws ApiException {
+    public RoleDTO addUserToRole(String roleName, String username) throws RestClientException {
         RolesApi rolesApi = new RolesApi(apiClient);
-        // FIXME: this doesn't work right now.  The generated client is sending in a Object as the
-        //  POST body even though the API spec doesn't define a POST body.  Jackson then chokes on
-        //  serializing an empty Object. Need to figure that out.
         return rolesApi.addUserToRole(roleName, username);
     }
-*/
 }

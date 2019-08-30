@@ -16,6 +16,8 @@ package org.candlepin.functional;
 
 import org.candlepin.client.ApiClient;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -37,14 +39,15 @@ import org.springframework.context.annotation.PropertySource;
 @EnableConfigurationProperties({ FunctionalTestProperties.class, ApiClientProperties.class})
 @PropertySource("classpath:/functional-tests.properties")
 public class FunctionalTestConfiguration {
+    private static final Logger log = LoggerFactory.getLogger(FunctionalTestConfiguration.class);
     public static final String ADMIN = "admin";
 
     @Autowired private FunctionalTestProperties functionalTestProperties;
 
     @Autowired private ApiClientProperties apiClientProperties;
 
-    @Bean
-    public ApiClient adminApiClient(ApiClientBuilder apiClientBuilder) {
-        return apiClientBuilder.withUsername(ADMIN).withPassword(ADMIN).build();
+    @Bean({"adminApiClient"})
+    public ApiClient apiClient(ApiClientBuilder apiClientBuilder) {
+        return apiClientBuilder.build();
     }
 }

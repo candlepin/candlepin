@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.client.HttpClientErrorException.NotFound;
 
 import java.util.List;
 
@@ -45,17 +46,16 @@ public class UserResourceTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        // TODO
+        owner = testUtil.trivialOwner();
     }
 
     @AfterEach
     public void tearDown() throws Exception {
-        // TODO
+        testUtil.destroyOwner(owner);
     }
 
     @Test
     public void shouldListOwnersForUser() throws Exception {
-        OwnerDTO owner = testUtil.trivialOwner();
         String username = TestUtil.randomString("user1");
         ApiClient userClient = clientUtil.newUserAndClient(username, owner.getKey());
 
@@ -68,7 +68,7 @@ public class UserResourceTest {
     @Test
     public void shouldRaise404DeletingUnknownUser() throws Exception {
         UsersApi usersApi = new UsersApi(adminApiClient);
-        usersApi.deleteUser("does_not_exist");
+        assertThrows(NotFound.class, () -> usersApi.deleteUser("does_not_exist"));
     }
 
 

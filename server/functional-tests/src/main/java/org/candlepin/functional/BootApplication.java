@@ -44,6 +44,10 @@ public class BootApplication {
     }
 
     public static void main(String[] args) {
+        /* NB: These arguments will not make it to the ApplicationContext that the tests are using.
+         * Instead, define properties using the JVM -D syntax.  For example
+         * "-Dfunctional-tests.client.debug=true" will display debug information
+         */
         SpringApplication.run(BootApplication.class, args);
     }
 }

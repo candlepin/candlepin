@@ -19,3 +19,10 @@ necessary to get JUnit up off the ground.  The other is created for each test by
 virtue of the FunctionalTestCase class and consists of beans defined in
 FunctionalTestConfiguration **and every class annotated with @Component
 (or equivalent)**.
+
+## Setting Arguments
+
+Arguments can be sent in to the tests that will set values in the
+various Properties classes. Just use the "-D" JVM syntax. For example
+`-Dfunctional-tests.client.debug=true` will display debug information
+detailing the HTTP requests and responses that tests are sending.
