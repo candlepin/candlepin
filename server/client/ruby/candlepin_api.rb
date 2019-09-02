@@ -965,6 +965,11 @@ class Candlepin
     get("/consumers/#{consumer_id}")
   end
 
+  def consumer_exists(consumer_uuid=nil)
+    consumer_uuid ||= @uuid
+    head("/consumers/#{consumer_uuid}/exists")
+  end
+
   def get_consumer_release(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}/release")
@@ -1516,6 +1521,21 @@ class Candlepin
     end
 
     return (response.body)
+  end
+
+  def head(uri, params={})
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # execute
+    puts ("HEAD #{euri}") if @verbose
+    response = get_client(uri, Net::HTTP::Head, :head)[euri].head
+
+    return response
   end
 
   def post(uri, params={}, data=nil)

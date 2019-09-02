@@ -45,7 +45,6 @@ describe 'Consumer Resource' do
   end
 
   it 'should not allow copying id cert to other consumers' do
-
      consumer_old = @user2.register(random_string('consumer1'))
      id_cert = consumer_old['idCert']
 
@@ -265,10 +264,48 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::BadRequest)
   end
 
-  it 'returns a 404 for a non-existant consumer' do
+  it 'returns a 404 for a non-existent consumer' do
     lambda do
       @cp.get_consumer('fake-uuid')
     end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
+  it 'returns a 404 when checking if a non-existent consumer exists' do
+    expect {
+      @cp.consumer_exists('fake-uuid')
+    }.to raise_error(RestClient::ResourceNotFound)
+  end
+
+  it 'returns a 204 when checking if a real consumer exists' do
+    response = @cp.head("/consumers/#{@consumer1.uuid}/exists")
+    expect(response.code).to eq(204)
+  end
+
+  it 'returns a 410 when checking if a deleted consumer exists' do
+    @consumer1.unregister(@consumer1.uuid)
+
+    expect {
+      @cp.consumer_exists(@consumer1.uuid)
+    }.to raise_error(RestClient::Gone)
+  end
+
+  it 'allows consumer to check for self-existence' do
+    @consumer1.consumer_exists(@consumer1.uuid)
+  end
+
+  it 'does not allow consumer to check existence of other consumers' do
+    # This test should expect a 404 rather than a 503, as we're explicitly minimizing the amount
+    # of information provided in the no-permission case. Consumer 1 has no access to consumer 2,
+    # and should not be able to determine whether or not consumer 2 even exists.
+
+    expect {
+      @consumer1.consumer_exists(@consumer2.uuid)
+    }.to raise_error(RestClient::ResourceNotFound)
+  end
+
+  it 'allows an admin to check if any consumer exists' do
+    @cp.consumer_exists(@consumer1.uuid)
+    @cp.consumer_exists(@consumer2.uuid)
   end
 
   it 'lets a consumer view their own information' do
