@@ -37,8 +37,10 @@ public enum ActiveMQStatus {
      */
     UNKNOWN,
 
-    HEALTHY,
-
+    /**
+     * This state signifies the unhealthy state of queue. There can be huge amount
+     * of pending messages in queue or could be slow rate of message consumption.
+     */
     UNHEALTHY
 
 }

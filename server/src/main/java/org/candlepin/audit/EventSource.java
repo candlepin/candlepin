@@ -32,7 +32,7 @@ import java.util.List;
  */
 @Singleton
 public class EventSource implements QpidStatusListener, ActiveMQStatusListener,
-        ActiveMQQueueHealthListener {
+    ActiveMQQueueHealthListener {
     private static Logger log = LoggerFactory.getLogger(EventSource.class);
 
     private ObjectMapper mapper;
@@ -102,11 +102,14 @@ public class EventSource implements QpidStatusListener, ActiveMQStatusListener,
     @Override
     public void onStatusUpdate(ActiveMQStatus oldStatus, ActiveMQStatus newStatus) {
         log.debug("ActiveMQ status has been updated: {}:{}", oldStatus, newStatus);
-        if (ActiveMQStatus.DOWN.equals(newStatus) && !ActiveMQStatus.DOWN.equals(oldStatus)) {
+        if ((ActiveMQStatus.DOWN.equals(newStatus) && !ActiveMQStatus.DOWN.equals(oldStatus)) ||
+            (ActiveMQStatus.UNHEALTHY.equals(newStatus) && !ActiveMQStatus.CONNECTED.equals(oldStatus))) {
             log.info("Shutting down all message receivers because the broker went down.");
             shutDown();
         }
-        else if (ActiveMQStatus.CONNECTED.equals(newStatus) && !ActiveMQStatus.CONNECTED.equals(oldStatus)) {
+        else if ((ActiveMQStatus.CONNECTED.equals(newStatus) &&
+            !ActiveMQStatus.CONNECTED.equals(oldStatus)) || (ActiveMQStatus.CONNECTED.equals(newStatus) &&
+            !ActiveMQStatus.UNHEALTHY.equals(oldStatus))) {
             log.info("Connecting to message broker and initializing all message listeners.");
 
             // Attempt a shutdown to be sure that all resources are cleared.

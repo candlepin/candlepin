@@ -120,6 +120,9 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
         else if (ActiveMQStatus.DOWN.equals(newStatus)) {
             reason = Reason.ACTIVEMQ_DOWN;
         }
+        else if (ActiveMQStatus.UNHEALTHY.equals(newStatus)) {
+            reason = Reason.ACTIVEMQ_UNHEALTHY;
+        }
         else {
             String msg = String.format("Could not transition candlepin mode: Unknown ActiveMQ status: %s",
                 newStatus);
@@ -174,6 +177,7 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
                 case ACTIVEMQ_UP:
                     resetActiveMQReasons(lastReasons);
                     break;
+                case ACTIVEMQ_UNHEALTHY:
                 case ACTIVEMQ_DOWN:
                     resetActiveMQReasons(lastReasons, reason);
                     break;
@@ -199,6 +203,7 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
                 case QPID_MISSING_EXCHANGE:
                 case QPID_DOWN:
                 case ACTIVEMQ_DOWN:
+                case ACTIVEMQ_UNHEALTHY:
                     log.debug("Will need to transition Candlepin into SUSPEND Mode: {}", reason);
                     modeManager.enterMode(Mode.SUSPEND, reason);
                     cleanStatusCache();

@@ -131,6 +131,7 @@ public class ActiveMQContextListener {
         // Initialize the ActiveMQ status monitor so that client sessions can be established
         // if the broker is active.
         activeMQStatusMonitor.initialize();
+        activeMQQueueHealthMonitor.initialize();
     }
 
     private void setupAmqp(Injector injector, org.candlepin.common.config.Configuration candlepinConfig,

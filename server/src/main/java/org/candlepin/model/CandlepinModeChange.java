@@ -72,6 +72,11 @@ public class CandlepinModeChange implements Serializable {
         ACTIVEMQ_DOWN,
 
         /**
+         * The ActiveMQ broker is un-healthy.
+         */
+        ACTIVEMQ_UNHEALTHY,
+
+        /**
          * Qpid event queue is missing the appropriate exchange.
          */
         QPID_MISSING_EXCHANGE,
