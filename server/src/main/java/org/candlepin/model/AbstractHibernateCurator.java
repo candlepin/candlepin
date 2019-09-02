@@ -60,6 +60,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
@@ -600,6 +601,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public EntityManager getEntityManager() {
         return entityManager.get();
     }
+
+    public EntityTransaction getTransaction() {
+        EntityManager manager = this.getEntityManager();
+        return manager != null ? manager.getTransaction() : null;
+    }
+
 
     /**
      * Fetches the natural ID loader for this entity. This loader can be used and reused to

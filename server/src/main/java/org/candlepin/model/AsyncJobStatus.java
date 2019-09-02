@@ -23,6 +23,8 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import org.hibernate.annotations.GenericGenerator;
 
+import org.slf4j.event.Level;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -38,6 +40,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -159,6 +162,9 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @NotNull
     private String id;
+
+    @Version
+    private int version;
 
     @Column(name = "job_key")
     private String jobKey;
@@ -535,6 +541,20 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     public AsyncJobStatus setLogLevel(String logLevel) {
         this.logLevel = logLevel != null && !logLevel.isEmpty() ? logLevel : null;
         return this;
+    }
+
+    /**
+     * Sets the log level with which this job will be executed. If the log level is null or empty,
+     * any existing log level will be cleared.
+     *
+     * @param logLevel
+     *  the log level to set for this job, or null to clear it
+     *
+     * @return
+     *  this job status instance
+     */
+    public AsyncJobStatus setLogLevel(Level logLevel) {
+        return this.setLogLevel(logLevel != null ? logLevel.name() : null);
     }
 
     /**
