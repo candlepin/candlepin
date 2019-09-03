@@ -69,6 +69,7 @@ public class EntitlerJobTest {
 
     private static final String CONSUMER_UUID = "49bd6a8f-e9f8-40cc-b8d7-86cafd687a0e";
     private static final String POOL_ID = "pool10";
+    private static final int LIMIT = 5;
 
     @BeforeEach
     public void init() {
@@ -91,7 +92,7 @@ public class EntitlerJobTest {
 
     @Test
     void allArgsOk() {
-        final JobConfig config = EntitlerJob.createConfig()
+        final JobConfig config = EntitlerJob.createConfig(LIMIT)
             .setOwner(owner)
             .setConsumer(consumer)
             .setPoolQuantity(POOL_ID, 1);
@@ -101,7 +102,7 @@ public class EntitlerJobTest {
 
     @Test
     void consumerMustBePresent() {
-        final JobConfig config = EntitlerJob.createConfig()
+        final JobConfig config = EntitlerJob.createConfig(LIMIT)
             .setOwner(owner)
             .setPoolQuantity(POOL_ID, 1);
 
@@ -112,7 +113,7 @@ public class EntitlerJobTest {
     void consumerCannotBeBlank() {
         consumer.setUuid("");
 
-        final JobConfig config = EntitlerJob.createConfig()
+        final JobConfig config = EntitlerJob.createConfig(LIMIT)
             .setOwner(owner)
             .setConsumer(consumer)
             .setPoolQuantity(POOL_ID, 1);
@@ -122,7 +123,7 @@ public class EntitlerJobTest {
 
     @Test
     void poolQuantitiesMustBePresent() {
-        final JobConfig config = EntitlerJob.createConfig()
+        final JobConfig config = EntitlerJob.createConfig(LIMIT)
             .setOwner(owner)
             .setConsumer(consumer);
 
@@ -132,13 +133,13 @@ public class EntitlerJobTest {
     @Test
     void poolQuantityIdCannotBeBlank() {
         assertThrows(IllegalArgumentException.class,
-            () -> EntitlerJob.createConfig().setPoolQuantity("", 1));
+            () -> EntitlerJob.createConfig(LIMIT).setPoolQuantity("", 1));
     }
 
     @Test
     void poolQuantitiesCannotNegative() {
         assertThrows(IllegalArgumentException.class,
-            () -> EntitlerJob.createConfig().setPoolQuantity(POOL_ID, -1));
+            () -> EntitlerJob.createConfig(LIMIT).setPoolQuantity(POOL_ID, -1));
     }
 
     @Test
@@ -215,7 +216,7 @@ public class EntitlerJobTest {
     }
 
     private JobConfig createJobConfig() {
-        return EntitlerJob.createConfig()
+        return EntitlerJob.createConfig(LIMIT)
             .setOwner(owner)
             .setConsumer(consumer)
             .setPoolQuantity(POOL_ID, 1);
