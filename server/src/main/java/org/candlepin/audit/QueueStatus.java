@@ -28,6 +28,7 @@ public class QueueStatus {
 
     private String queueName;
     private long pendingMessageCount;
+    private String lastMsgId;
 
     public QueueStatus() {
     }
@@ -36,6 +37,13 @@ public class QueueStatus {
         this.queueName = queueName;
         this.pendingMessageCount = pendingMessageCount;
     }
+
+    public QueueStatus(String queueName, long pendingMessageCount, String lastMsgId) {
+        this.queueName = queueName;
+        this.pendingMessageCount = pendingMessageCount;
+        this.lastMsgId = lastMsgId;
+    }
+
     public String getQueueName() {
         return queueName;
     }
@@ -47,6 +55,14 @@ public class QueueStatus {
     }
     public void setPendingMessageCount(long pendingMessageCount) {
         this.pendingMessageCount = pendingMessageCount;
+    }
+
+    public String getLastMsgId() {
+        return lastMsgId;
+    }
+
+    public void setLastMsgId(String lastMsgId) {
+        this.lastMsgId = lastMsgId;
     }
 
 }

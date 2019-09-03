@@ -21,7 +21,7 @@ import com.google.inject.Injector;
 
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 
-import org.candlepin.controller.ActiveMQQueueHealthMonitor;
+import org.candlepin.controller.ActiveMQHealthMonitor;
 import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
@@ -91,8 +91,8 @@ public class ActiveMQContextListener {
         }
 
         ActiveMQStatusMonitor activeMQStatusMonitor = injector.getInstance(ActiveMQStatusMonitor.class);
-        ActiveMQQueueHealthMonitor activeMQQueueHealthMonitor =
-            injector.getInstance(ActiveMQQueueHealthMonitor.class);
+        ActiveMQHealthMonitor activeMQQueueHealthMonitor =
+            injector.getInstance(ActiveMQHealthMonitor.class);
         // If suspend mode is enabled, we need the transitioner to listen for connection drops.
         if (candlepinConfig.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
             activeMQStatusMonitor.registerListener(injector.getInstance(SuspendModeTransitioner.class));
