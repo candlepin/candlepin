@@ -343,7 +343,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // These don't all necessarily belong to this owner
         List<Pool> subscriptionPools;
-
+        pool.setLocked(true);
         if (pool.getSubscriptionId() != null) {
             subscriptionPools = this.poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
         }
@@ -860,7 +860,6 @@ public class CandlepinPoolManager implements PoolManager {
         pool.setUpstreamPoolId(sub.getUpstreamPoolId());
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
         pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
-        pool.setLocked(true);
 
         // Resolve CDN
         if (sub.getCdn() != null) {
