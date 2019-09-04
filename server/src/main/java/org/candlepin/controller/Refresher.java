@@ -155,6 +155,7 @@ public class Refresher {
              * dirty, they will never get regenerated
              */
             Pool masterPool = poolManager.convertToMasterPool(subscription);
+            masterPool.setLocked(true);
             poolManager.refreshPoolsForMasterPool(masterPool, true, lazy,
                 Collections.<String, Product>emptyMap());
         }
