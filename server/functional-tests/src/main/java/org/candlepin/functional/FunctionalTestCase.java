@@ -15,9 +15,10 @@
 package org.candlepin.functional;
 
 import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.annotation.DirtiesContext.ClassMode;
+import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.TestExecutionListeners.MergeMode;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.lang.annotation.Documented;
@@ -37,8 +38,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
-@SpringJUnitConfig(classes = FunctionalTestConfiguration.class)
 @DisplayNameGeneration(CamelCaseDisplayNameGenerator.class)
+@SpringJUnitConfig(classes = FunctionalTestConfiguration.class)
+@TestExecutionListeners(value = {CleanupListener.class},
+    inheritListeners = true, mergeMode = MergeMode.MERGE_WITH_DEFAULTS)
+@DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 public @interface FunctionalTestCase {
 
 }

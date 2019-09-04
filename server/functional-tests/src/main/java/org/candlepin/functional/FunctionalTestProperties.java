@@ -20,6 +20,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "functional-tests")
 public class FunctionalTestProperties {
     private boolean verbose;
+    private boolean cleanUp;
 
     public boolean isVerbose() {
         return verbose;
@@ -27,5 +28,13 @@ public class FunctionalTestProperties {
 
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
+    }
+
+    public boolean isCleanUp() {
+        return cleanUp;
+    }
+
+    public void setCleanUp(boolean cleanUp) {
+        this.cleanUp = cleanUp;
     }
 }

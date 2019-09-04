@@ -15,9 +15,7 @@
 package org.candlepin.functional;
 
 import org.candlepin.client.ApiClient;
-import org.candlepin.client.model.UserCreationRequest;
 import org.candlepin.client.model.UserDTO;
-import org.candlepin.client.resources.UsersApi;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,27 +31,23 @@ public class ClientUtil {
 
     private ApiClient adminApiClient;
     private ApiClientProperties coreProperties;
+    private TestUtilFactory testUtilFactory;
 
     @Autowired
     public ClientUtil(@Qualifier("adminApiClient") ApiClient adminApiClient,
-        ApiClientProperties coreProperties,
-        ApiClientBuilder apiClientBuilder) {
+        ApiClientProperties coreProperties, ApiClientBuilder apiClientBuilder,
+        TestUtilFactory testUtilFactory) {
         this.adminApiClient = adminApiClient;
         this.coreProperties = coreProperties;
         this.apiClientBuilder = apiClientBuilder;
+        this.testUtilFactory = testUtilFactory;
     }
 
     public ApiClient newUserAndClient(String username, String ownerKey)
         throws RestClientException {
+        TestUtil testUtil = testUtilFactory.createInstance(apiClientBuilder);
         String password = TestUtil.randomString(10);
-        UserCreationRequest userReq = new UserCreationRequest();
-        userReq.setUsername(username);
-        userReq.setPassword(password);
-
-        UsersApi usersApi = new UsersApi(adminApiClient);
-        UserDTO user = usersApi.createUser(userReq);
-
-        TestUtil testUtil = new TestUtil(apiClientBuilder);
+        UserDTO user = testUtil.createUser(username, password);
         testUtil.createAllAccessRoleForUser(ownerKey, user);
 
         return apiClientBuilder

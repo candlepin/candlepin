@@ -23,6 +23,7 @@ import org.candlepin.client.model.UserDTO;
 import org.candlepin.client.resources.UsersApi;
 import org.candlepin.functional.ClientUtil;
 import org.candlepin.functional.FunctionalTestCase;
+import org.candlepin.functional.TestManifest;
 import org.candlepin.functional.TestUtil;
 
 import org.junit.jupiter.api.AfterEach;
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.client.HttpClientErrorException.Conflict;
+import org.springframework.web.client.HttpClientErrorException.Forbidden;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 
 import java.util.List;
@@ -44,6 +46,7 @@ public class UserResourceTest {
     @Autowired @Qualifier("adminApiClient") private ApiClient adminApiClient;
     @Autowired private ClientUtil clientUtil;
     @Autowired private TestUtil testUtil;
+    @Autowired private TestManifest manifest;
 
     private OwnerDTO owner;
 
@@ -52,14 +55,9 @@ public class UserResourceTest {
         owner = testUtil.trivialOwner();
     }
 
-    @AfterEach
-    public void tearDown() throws Exception {
-        testUtil.destroyOwner(owner);
-    }
-
     @Test
     public void listsOwnersForUser() throws Exception {
-        String username = TestUtil.randomString("user");
+        String username = TestUtil.randomString("user-lists");
         ApiClient userClient = clientUtil.newUserAndClient(username, owner.getKey());
 
         UsersApi usersApi = new UsersApi(userClient);
@@ -77,12 +75,49 @@ public class UserResourceTest {
     @Test
     public void raises409WhenCreatingAnAlreadyExistingUser() throws Exception {
         UserCreationRequest userReq = new UserCreationRequest();
-        userReq.setUsername(TestUtil.randomString("user"));
+        userReq.setUsername(TestUtil.randomString("user-409"));
         userReq.setPassword(TestUtil.randomString());
 
         UsersApi usersApi = new UsersApi(adminApiClient);
         UserDTO user = usersApi.createUser(userReq);
 
         assertThrows(Conflict.class, () -> usersApi.createUser(userReq));
+    }
+
+    @Test
+    public void allowsUsersToUpdateInformation() throws Exception {
+        String username = TestUtil.randomString("user-allows");
+        ApiClient userClient = clientUtil.newUserAndClient(username, owner.getKey());
+
+        UsersApi usersApi = new UsersApi(userClient);
+        UserDTO original = usersApi.getUserInfo(username);
+
+        String updatedUserName = TestUtil.randomString("user-updated");
+
+        UserDTO updated = new UserDTO();
+        updated.setUsername(updatedUserName);
+
+        updated = usersApi.updateUser(username, updated);
+        /* Changing the name means we have to update the TestManfest so we don't try
+         * to delete something that no longer exists.
+         */
+        manifest.pop(original);
+        manifest.push(updated);
+
+        assertEquals(original.getId(), updated.getId());
+        assertNotEquals(original.getUsername(), updated.getUsername());
+    }
+
+    @Test
+    public void preventsUserFromListingAnotherUsersOwners() throws Exception {
+        String user1 = TestUtil.randomString("user1");
+        ApiClient user1Client = clientUtil.newUserAndClient(user1, owner.getKey());
+
+        String user2 = TestUtil.randomString("user2");
+        OwnerDTO owner2 = testUtil.trivialOwner();
+        ApiClient user2Client = clientUtil.newUserAndClient(user2, owner2.getKey());
+
+        UsersApi usersApi = new UsersApi(user1Client);
+        assertThrows(Forbidden.class, () -> usersApi.listUsersOwners(user2));
     }
 }

@@ -19,32 +19,27 @@ import org.candlepin.client.model.NestedOwnerDTO;
 import org.candlepin.client.model.OwnerDTO;
 import org.candlepin.client.model.PermissionBlueprintDTO;
 import org.candlepin.client.model.RoleDTO;
+import org.candlepin.client.model.UserCreationRequest;
 import org.candlepin.client.model.UserDTO;
 import org.candlepin.client.resources.OwnersApi;
 import org.candlepin.client.resources.RolesApi;
+import org.candlepin.client.resources.UsersApi;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 
 import java.security.SecureRandom;
 
 /** Utility class to perform rote tasks like owner creation */
-@Component
 public class TestUtil {
     private static final String ALPHABET = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static SecureRandom rnd = new SecureRandom();
 
     private ApiClient apiClient;
+    private TestManifest manifest;
 
-    public TestUtil(ApiClientBuilder apiClientBuilder) {
-        this.apiClient = apiClientBuilder.build();
-    }
-
-    @Autowired
-    public TestUtil(@Qualifier("adminApiClient") ApiClient adminApiClient) {
-        this.apiClient = adminApiClient;
+    public TestUtil(ApiClient apiClient, TestManifest manifest) {
+        this.apiClient = apiClient;
+        this.manifest = manifest;
     }
 
     /**
@@ -93,18 +88,10 @@ public class TestUtil {
         OwnerDTO owner = new OwnerDTO();
         owner.setKey(ownerKey);
         owner.setDisplayName("Display Name " + ownerKey);
-        return ownersApi.createOwner(owner);
+        owner = ownersApi.createOwner(owner);
+        manifest.push(owner);
+        return owner;
     }
-
-    public void destroyOwner(String ownerKey) throws RestClientException {
-        OwnersApi ownersApi = new OwnersApi(apiClient);
-        ownersApi.deleteOwner(ownerKey, true, true);
-    }
-
-    public void destroyOwner(OwnerDTO owner) throws RestClientException {
-        destroyOwner(owner.getKey());
-    }
-
 
     public RoleDTO createRole(String ownerKey, String access) throws RestClientException {
         return createRoleForUser(ownerKey, null, access);
@@ -126,7 +113,9 @@ public class TestUtil {
         }
         role.addPermissionsItem(permission);
 
-        return rolesApi.createRole(role);
+        role = rolesApi.createRole(role);
+        manifest.push(role);
+        return role;
     }
 
     public PermissionBlueprintDTO createOwnerPermission(String ownerKey, String access)
@@ -162,5 +151,25 @@ public class TestUtil {
     public RoleDTO addUserToRole(String roleName, String username) throws RestClientException {
         RolesApi rolesApi = new RolesApi(apiClient);
         return rolesApi.addUserToRole(roleName, username);
+    }
+
+    public UserDTO createUser(String username) {
+        String password = TestUtil.randomString(10);
+
+        return createUser(username, password);
+    }
+
+    public UserDTO createUser(String username, String password) {
+        UserCreationRequest userReq = new UserCreationRequest();
+        userReq.setUsername(username);
+        userReq.setPassword(password);
+        return createUser(userReq);
+    }
+
+    public UserDTO createUser(UserCreationRequest userReq) {
+        UsersApi usersApi = new UsersApi(apiClient);
+        UserDTO user = usersApi.createUser(userReq);
+        manifest.push(user);
+        return user;
     }
 }

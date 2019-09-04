@@ -26,3 +26,21 @@ Arguments can be sent in to the tests that will set values in the
 various Properties classes. Just use the "-D" JVM syntax. For example
 `-Dfunctional-tests.client.debug=true` will display debug information
 detailing the HTTP requests and responses that tests are sending.
+
+## Cleaning Up
+
+The test framework has a bean of type TestManifest that is
+thread-scoped. Throughout the run of a test, if you ask for a
+TestManifest, you will get the same instance. When you create owners,
+users, etc. during a test, they should be added to the TestManifest.
+Using the TestUtil methods for creation is a simple way to ensure that
+the objects are tracked. When the test completes, a Spring test
+execution listener will load the TestManifest and execute a command
+telling it to delete every test object. The `DirtiesContext` annotation
+which is on our `FunctionalTest` annotation then instructs Spring to
+reload the application context, thus giving you a new TestManifest
+instance for the next test.
+
+If you don't want the clean-up to be run, you can set
+`functional-tests.cleanup=false` using either the `-D` syntax or by
+editing `functional-tests.properties`.

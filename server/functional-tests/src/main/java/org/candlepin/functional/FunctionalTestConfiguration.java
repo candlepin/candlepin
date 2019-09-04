@@ -19,6 +19,7 @@ import org.candlepin.client.ApiClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.context.TypeExcludeFilter;
@@ -29,6 +30,7 @@ import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.support.SimpleThreadScope;
 
 /** Class to hold configuration beans */
 @EnableAutoConfiguration
@@ -49,5 +51,12 @@ public class FunctionalTestConfiguration {
     @Bean({"adminApiClient"})
     public ApiClient apiClient(ApiClientBuilder apiClientBuilder) {
         return apiClientBuilder.build();
+    }
+
+    @Bean
+    public static CustomScopeConfigurer customScopeConfigurer() {
+        CustomScopeConfigurer configurer = new CustomScopeConfigurer();
+        configurer.addScope("thread", new SimpleThreadScope());
+        return configurer;
     }
 }
