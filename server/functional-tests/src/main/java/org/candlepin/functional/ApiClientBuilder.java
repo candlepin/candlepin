@@ -23,11 +23,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.InputStream;
 
 /**
- * Allows tests to build a custom ApiClient using a fluent interface.
+ * Allows tests to build a custom ApiClient using a fluent interface.  The ApiClientProperties object that
+ * is sent in should *never* be altered itself.  Each method should create a copy, alter the copy as
+ * necessary, and then return a new ApiClientBuilder.  This strategy will ensure that test classes can
+ * inject a single ApiClientBuilder instance and then use that instance across multiple tests without tests
+ * interfering with one another.
  */
 @Component
 public class ApiClientBuilder {
@@ -47,32 +50,37 @@ public class ApiClientBuilder {
         if (apiClientProperties.usesClientAuth()) {
             throw new IllegalStateException("X509 client auth is already configured");
         }
-        apiClientProperties.setUsername(username);
-        return this;
+        ApiClientProperties newProperties = new ApiClientProperties(apiClientProperties);
+        newProperties.setUsername(username);
+        return new ApiClientBuilder(newProperties, templateBuilder);
     }
 
     public ApiClientBuilder withPassword(String password) {
         if (apiClientProperties.usesClientAuth()) {
             throw new IllegalStateException("X509 client auth is already configured");
         }
-        apiClientProperties.setPassword(password);
-        return this;
+        ApiClientProperties newProperties = new ApiClientProperties(apiClientProperties);
+        newProperties.setPassword(password);
+        return new ApiClientBuilder(newProperties, templateBuilder);
     }
 
     public ApiClientBuilder withUrl(String url) {
-        apiClientProperties.setUrl(url);
-        return this;
+        ApiClientProperties newProperties = new ApiClientProperties(apiClientProperties);
+        newProperties.setUrl(url);
+        return new ApiClientBuilder(newProperties, templateBuilder);
     }
 
     public ApiClientBuilder withDebug(boolean isDebug) {
-        apiClientProperties.setDebug(isDebug);
-        return this;
+        ApiClientProperties newProperties = new ApiClientProperties(apiClientProperties);
+        newProperties.setDebug(isDebug);
+        return new ApiClientBuilder(newProperties, templateBuilder);
     }
 
     public ApiClientBuilder withTruststore(String truststoreFile, String truststorePassword) {
-        apiClientProperties.setTruststoreFile(truststoreFile);
-        apiClientProperties.setTruststorePassword(truststorePassword);
-        return this;
+        ApiClientProperties newProperties = new ApiClientProperties(apiClientProperties);
+        newProperties.setTruststoreFile(truststoreFile);
+        newProperties.setTruststorePassword(truststorePassword);
+        return new ApiClientBuilder(newProperties, templateBuilder);
     }
 
     public ApiClientBuilder withX509ClientAuth(InputStream certificate, InputStream key) {
