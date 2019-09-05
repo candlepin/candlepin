@@ -730,13 +730,12 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> pools = poolRules.createAndEnrichPools(pool, existingPools);
         log.debug("Creating {} pools: ", pools.size());
 
-        boolean isPoolLocked = pool.isLocked();
         for (Pool p : pools) {
             createPool(p);
         }
 
         for (Pool tempPool : pools) {
-            if (isPoolLocked) {
+            if (pool.isLocked()) {
                 tempPool.setLocked(true);
             }
         }
