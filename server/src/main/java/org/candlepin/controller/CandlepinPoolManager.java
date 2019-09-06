@@ -2268,7 +2268,9 @@ public class CandlepinPoolManager implements PoolManager {
             // Revoke/delete entitlements
             if (!entitlements.isEmpty()) {
                 log.info("Revoking {} entitlements...", entitlements.size());
-                this.entitlementCurator.batchDelete(entitlements);
+                this.entitlementCurator.unlinkEntitlements(entitlements);
+                this.entitlementCertificateCurator.deleteByEntitlementIds(entitlementIds);
+                this.entitlementCurator.batchDeleteByIds(entitlementIds);
                 this.entitlementCurator.flush();
                 this.entitlementCurator.batchDetach(entitlements);
                 log.info("Entitlements successfully revoked");
