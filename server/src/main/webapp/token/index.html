@@ -1,0 +1,70 @@
+<!--
+  ~  Copyright (c) 2009 - 2019 Red Hat, Inc.
+  ~
+  ~  This software is licensed to you under the GNU General Public License,
+  ~  version 2 (GPLv2). There is NO WARRANTY for this software, express or
+  ~  implied, including the implied warranties of MERCHANTABILITY or FITNESS
+  ~  FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+  ~  along with this software; if not, see
+  ~  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+  ~
+  ~  Red Hat trademarks are not licensed under GPLv2. No permission is
+  ~  granted to use or replicate Red Hat trademarks that are incorporated
+  ~  in this software or its documentation.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+</head>
+<body>
+    <script src="keycloak.js"></script>
+    <script>
+        const request = new XMLHttpRequest();
+        request.open('GET', "../status", true);
+        request.onreadystatechange = function() {
+            if (request.readyState === 4) {
+                if (request.status === 200) {
+                    const status = JSON.parse(request.responseText);
+                    const realm = status['keycloakRealm'];
+                    const authUrl = status['keycloakAuthUrl'];
+                    const clientId = status['keycloakResource'];
+                    if (realm === undefined || authUrl === undefined || clientId === undefined) {
+                        document.getElementById("printToken").innerHTML = 'Candlepin does not appear to be ' +
+                            'configured for Keycloak integration... Hint: add /etc/candlepin/keycloak.json ' +
+                            'and ensure candlepin.auth.keycloak.enable=true in /etc/candlepin/candlepin.conf';
+                    }
+                    const keycloak = Keycloak({
+                        url: authUrl,
+                        realm: realm,
+                        clientId: clientId
+                    });
+                    keycloak.init().success(function(authenticated) {
+                        if (!authenticated) {
+                            keycloak.login();
+                        }
+                        else {
+                            document.getElementById("printToken").innerHTML = keycloak.refreshToken;
+                            document.cookie = "Keycloak_Token=Authorization: Bearer " + keycloak.token;
+                        }
+                    }).error(function() {
+                        alert('failed to initialize');
+                    });
+                }
+            }
+            else {
+                console.log("Error", request.statusText);
+            }
+        };
+        request.send();
+
+    </script>
+    <p>
+        This page serves as a reference implementation for how to retrieve a refresh token from Keycloak, and
+        should not be used in production!
+    </p>
+    <h1> REFRESH TOKEN: </h1>
+    <p id ="printToken" ></p>
+</body>
+</html>

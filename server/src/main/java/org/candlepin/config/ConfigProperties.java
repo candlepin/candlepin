@@ -127,6 +127,7 @@ public class ConfigProperties {
     public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enable";
     public static final String OAUTH_AUTHENTICATION = "candlepin.auth.oauth.enable";
     public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enable";
+    public static final String KEYCLOAK_AUTHENTICATION = "candlepin.auth.keycloak.enable";
 
     // AMQP stuff
     public static final String AMQP_INTEGRATION_ENABLED = "candlepin.amqp.enable";
@@ -276,7 +277,14 @@ public class ConfigProperties {
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
 
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
-
+    /**
+     * Enabled dev page used to interactively login to a Keycloak instance and generate offline token.
+     */
+    public static final String TOKENPAGE_ENABLED = "candlepin.tokenpage.enabled";
+    /**
+     * Path to keycloak.json
+     */
+    public static final String KEYCLOAK_FILEPATH = "candlepin.keycloak.config";
     public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {
         private static final long serialVersionUID = 1L;
 
@@ -330,6 +338,7 @@ public class ConfigProperties {
             this.put(TRUSTED_AUTHENTICATION, "false");
             this.put(SSL_AUTHENTICATION, "true");
             this.put(OAUTH_AUTHENTICATION, "false");
+            this.put(KEYCLOAK_AUTHENTICATION, "false");
             this.put(BASIC_AUTHENTICATION, "true");
             this.put(AUTH_OVER_HTTP, "false");
             // By default, environments should be hidden so clients do not need to
@@ -385,6 +394,7 @@ public class ConfigProperties {
             this.put(PREFIX_WEBURL, "localhost:8443/candlepin");
             this.put(PREFIX_APIURL, "localhost:8443/candlepin");
             this.put(PASSPHRASE_SECRET_FILE, "/etc/katello/secure/passphrase");
+            this.put(KEYCLOAK_FILEPATH, "/etc/candlepin/keycloak.json");
 
             /**
              *  Defines the maximum number of products allowed in the product cache.
@@ -410,6 +420,7 @@ public class ConfigProperties {
             this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
             this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
             this.put(SWAGGER_ENABLED, Boolean.toString(true));
+            this.put(TOKENPAGE_ENABLED, Boolean.toString(true));
 
             // ManifestCleanerJob config
             // Max Age: 24 hours

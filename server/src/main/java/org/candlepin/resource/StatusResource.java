@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+
+import org.candlepin.auth.KeycloakConfiguration;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.common.auth.SecurityHole;
@@ -21,6 +23,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ModeManager;
+import org.candlepin.dto.api.v1.KeycloakStatusDTO;
 import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.CandlepinModeChange;
@@ -29,23 +32,18 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
-
+import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-
 
 /**
  * Status Resource
@@ -64,20 +62,21 @@ public class StatusResource {
      * The current git release
      */
     private String release = "Unknown";
-
     private boolean standalone = true;
-
+    private boolean keycloakEnabled = true;
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
     private ModeManager modeManager;
+    private KeycloakConfiguration keycloakConfig;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
-        CandlepinCache candlepinCache, ModeManager modeManager) {
+        CandlepinCache candlepinCache, ModeManager modeManager, KeycloakConfiguration keycloakConfig) {
         this.modeManager = modeManager;
         this.rulesCurator = rulesCurator;
         this.candlepinCache = candlepinCache;
+        this.keycloakConfig = keycloakConfig;
         Map<String, String> map = VersionUtil.getVersionMap();
         version = map.get("version");
         release = map.get("release");
@@ -85,6 +84,11 @@ public class StatusResource {
         if (config == null || !config.getBoolean(ConfigProperties.STANDALONE)) {
             standalone = false;
         }
+
+        if (config == null || !config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
+            keycloakEnabled = false;
+        }
+
         this.jsProvider = jsProvider;
     }
 
@@ -150,7 +154,19 @@ public class StatusResource {
 
         RulesSourceEnum rulesSource = jsProvider.getRulesSource();
 
-        StatusDTO status = new StatusDTO()
+        StatusDTO status;
+        if (keycloakEnabled) {
+            AdapterConfig adapterConfig = keycloakConfig.getAdapterConfig();
+            status = new KeycloakStatusDTO()
+                .setKeycloakResource(adapterConfig.getResource())
+                .setKeycloakAuthUrl(adapterConfig.getAuthServerUrl())
+                .setKeycloakRealm(adapterConfig.getRealm());
+        }
+        else {
+            status = new StatusDTO();
+        }
+
+        status
             .setResult(good)
             .setVersion(version)
             .setRelease(release)

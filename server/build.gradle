@@ -199,6 +199,19 @@ dependencies {
     // Javascript engine
     implementation "org.mozilla:rhino:1.7R3"
 
+    // Keycloak
+    compile group: 'org.keycloak', name: 'keycloak-servlet-filter-adapter', version: '6.0.1'
+    compile group: 'org.keycloak', name: 'keycloak-adapter-core', version: '6.0.1'
+    compile group: 'org.keycloak', name: 'keycloak-common', version: '6.0.1'
+    compile group: 'org.keycloak', name: 'keycloak-core', version: '6.0.1'
+    compile group: 'org.keycloak', name: 'keycloak-adapter-spi', version: '6.0.1'
+    compile group: 'org.keycloak', name: 'keycloak-servlet-adapter-spi', version: '6.0.1'
+    compile 'org.apache.httpcomponents:httpcore:4.4.7'
+    compile 'org.bouncycastle:bcpkix-jdk15on:1.60'
+    compile 'org.bouncycastle:bcprov-jdk15on:1.60'
+    compile group: 'org.keycloak', name: 'keycloak-jaxrs-oauth-client', version: '6.0.1'
+    compile group: 'org.keycloak', name: 'keycloak-authz-client', version: '6.0.1'
+
     // Listed twice due to design decision by the Gradle team: https://discuss.gradle.org/t/compileonly-dependencies-are-not-available-in-tests/15366/3
     compileOnly libraries.javax_servlet
     testCompile libraries.javax_servlet
