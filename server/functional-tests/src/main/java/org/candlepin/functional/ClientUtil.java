@@ -17,6 +17,8 @@ package org.candlepin.functional;
 import org.candlepin.client.ApiClient;
 import org.candlepin.client.model.UserDTO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -27,6 +29,7 @@ import org.springframework.web.client.RestClientException;
  */
 @Component
 public class ClientUtil {
+    private static final Logger log = LoggerFactory.getLogger(ClientUtil.class);
     private final ApiClientBuilder apiClientBuilder;
 
     private ApiClient adminApiClient;
@@ -43,10 +46,24 @@ public class ClientUtil {
         this.testUtilFactory = testUtilFactory;
     }
 
+    public ApiClient newReadOnlyUserAndClient(String username, String ownerKey)
+        throws RestClientException {
+        TestUtil testUtil = testUtilFactory.createInstance(apiClientBuilder);
+        String password = TestUtil.randomString();
+        UserDTO user = testUtil.createUser(username, password);
+        testUtil.createReadOnlyAccessRoleForUser(ownerKey, user);
+
+        return apiClientBuilder
+            .withUsername(username)
+            .withPassword(password)
+            .withDebug(coreProperties.getDebug())
+            .build();
+    }
+
     public ApiClient newUserAndClient(String username, String ownerKey)
         throws RestClientException {
         TestUtil testUtil = testUtilFactory.createInstance(apiClientBuilder);
-        String password = TestUtil.randomString(10);
+        String password = TestUtil.randomString();
         UserDTO user = testUtil.createUser(username, password);
         testUtil.createAllAccessRoleForUser(ownerKey, user);
 
@@ -57,4 +74,17 @@ public class ClientUtil {
             .build();
     }
 
+    public ApiClient newSuperadminAndClient(String username, String ownerKey)
+        throws RestClientException {
+        TestUtil testUtil = testUtilFactory.createInstance(apiClientBuilder);
+        String password = TestUtil.randomString();
+        UserDTO superadmin = testUtil.createSuperadminUser(username, password);
+        testUtil.createAllAccessRoleForUser(ownerKey, superadmin);
+
+        return apiClientBuilder
+            .withUsername(username)
+            .withPassword(password)
+            .withDebug(coreProperties.getDebug())
+            .build();
+    }
 }

@@ -33,8 +33,9 @@ public class CleanupListener extends AbstractTestExecutionListener {
             testContext.getApplicationContext().getBean(FunctionalTestProperties.class);
 
         if (properties.isCleanUp()) {
+            log.debug("Begin Candlepin clean-up");
             myManifest.clearManifest();
-            log.debug("Candlepin clean-up complete");
+            log.debug("Completed Candlepin clean-up");
         }
         else {
             log.debug("No clean-up performed");

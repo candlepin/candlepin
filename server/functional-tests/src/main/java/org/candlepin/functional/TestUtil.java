@@ -79,7 +79,7 @@ public class TestUtil {
     }
 
     public OwnerDTO trivialOwner() throws RestClientException {
-        String ownerKey = randomString();
+        String ownerKey = "owner-" + randomString();
         return trivialOwner(ownerKey);
     }
 
@@ -93,24 +93,36 @@ public class TestUtil {
         return owner;
     }
 
+    public RoleDTO createRole(String ownerKey, String access, String roleName) throws RestClientException {
+        PermissionBlueprintDTO permission = createOwnerPermission(ownerKey, access);
+        RolesApi rolesApi = new RolesApi(apiClient);
+        RoleDTO role = new RoleDTO();
+        role.addPermissionsItem(permission);
+        role.setName(roleName);
+        role = rolesApi.createRole(role);
+        manifest.push(role);
+        return role;
+    }
+
     public RoleDTO createRole(String ownerKey, String access) throws RestClientException {
-        return createRoleForUser(ownerKey, null, access);
+        return createRole(ownerKey, access, TestUtil.randomString());
     }
 
     public RoleDTO createAllAccessRoleForUser(String ownerKey, UserDTO user) throws RestClientException {
-        return createRoleForUser(ownerKey, user, "ALL");
+        return createRoleForUser(user, ownerKey, "ALL");
     }
 
-    public RoleDTO createRoleForUser(String ownerKey, UserDTO user, String access)
+    public RoleDTO createReadOnlyAccessRoleForUser(String ownerKey, UserDTO user) throws RestClientException {
+        return createRoleForUser(user, ownerKey, "READ_ONLY");
+    }
+
+    public RoleDTO createRoleForUser(UserDTO user, String ownerKey, String access)
         throws RestClientException {
         PermissionBlueprintDTO permission = createOwnerPermission(ownerKey, access);
         RolesApi rolesApi = new RolesApi(apiClient);
         RoleDTO role = new RoleDTO();
-        role.setName(ownerKey + "_" + access);
-
-        if (user != null) {
-            role.addUsersItem(user);
-        }
+        role.setName(ownerKey + "_" + user.getUsername() + "_" + access);
+        role.addUsersItem(user);
         role.addPermissionsItem(permission);
 
         role = rolesApi.createRole(role);
@@ -154,8 +166,7 @@ public class TestUtil {
     }
 
     public UserDTO createUser(String username) {
-        String password = TestUtil.randomString(10);
-
+        String password = TestUtil.randomString();
         return createUser(username, password);
     }
 
@@ -163,6 +174,20 @@ public class TestUtil {
         UserCreationRequest userReq = new UserCreationRequest();
         userReq.setUsername(username);
         userReq.setPassword(password);
+        userReq.setSuperAdmin(false);
+        return createUser(userReq);
+    }
+
+    public UserDTO createSuperadminUser(String username) {
+        String password = TestUtil.randomString();
+        return createSuperadminUser(username, password);
+    }
+
+    public UserDTO createSuperadminUser(String username, String password) {
+        UserCreationRequest userReq = new UserCreationRequest();
+        userReq.setUsername(username);
+        userReq.setPassword(password);
+        userReq.setSuperAdmin(true);
         return createUser(userReq);
     }
 
