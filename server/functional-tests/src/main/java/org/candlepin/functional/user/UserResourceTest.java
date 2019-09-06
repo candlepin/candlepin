@@ -14,21 +14,26 @@
  */
 package org.candlepin.functional.user;
 
+import static org.hamcrest.MatcherAssert.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.client.ApiClient;
 import org.candlepin.client.model.OwnerDTO;
+import org.candlepin.client.model.RoleDTO;
 import org.candlepin.client.model.UserCreationRequest;
 import org.candlepin.client.model.UserDTO;
+import org.candlepin.client.resources.RolesApi;
 import org.candlepin.client.resources.UsersApi;
 import org.candlepin.functional.ClientUtil;
 import org.candlepin.functional.FunctionalTestCase;
 import org.candlepin.functional.TestManifest;
 import org.candlepin.functional.TestUtil;
 
-import org.junit.jupiter.api.AfterEach;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.client.HttpClientErrorException.Conflict;
@@ -36,12 +41,14 @@ import org.springframework.web.client.HttpClientErrorException.Forbidden;
 import org.springframework.web.client.HttpClientErrorException.NotFound;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Test the /owners resource
  */
 @FunctionalTestCase
 public class UserResourceTest {
+    private static final Logger log = LoggerFactory.getLogger(UserResourceTest.class);
 
     @Autowired @Qualifier("adminApiClient") private ApiClient adminApiClient;
     @Autowired private ClientUtil clientUtil;
@@ -53,17 +60,6 @@ public class UserResourceTest {
     @BeforeEach
     public void setUp() throws Exception {
         owner = testUtil.trivialOwner();
-    }
-
-    @Test
-    public void listsOwnersForUser() throws Exception {
-        String username = TestUtil.randomString("user-lists");
-        ApiClient userClient = clientUtil.newUserAndClient(username, owner.getKey());
-
-        UsersApi usersApi = new UsersApi(userClient);
-        List<OwnerDTO> users = usersApi.listUsersOwners(username);
-        assertEquals(1, users.size());
-        assertEquals(owner, users.get(0));
     }
 
     @Test
@@ -109,6 +105,23 @@ public class UserResourceTest {
     }
 
     @Test
+    public void returnsNonEmptyListOfUsers() throws Exception {
+        UsersApi api = new UsersApi(adminApiClient);
+        assertThat(api.listUsers().size(), Matchers.greaterThan(0));
+    }
+
+    @Test
+    public void listsOwnersForUser() throws Exception {
+        String username = TestUtil.randomString("user-lists");
+        ApiClient userClient = clientUtil.newUserAndClient(username, owner.getKey());
+
+        UsersApi usersApi = new UsersApi(userClient);
+        List<OwnerDTO> users = usersApi.listUsersOwners(username);
+        assertEquals(1, users.size());
+        assertEquals(owner, users.get(0));
+    }
+
+    @Test
     public void preventsUserFromListingAnotherUsersOwners() throws Exception {
         String user1 = TestUtil.randomString("user1");
         ApiClient user1Client = clientUtil.newUserAndClient(user1, owner.getKey());
@@ -119,5 +132,55 @@ public class UserResourceTest {
 
         UsersApi usersApi = new UsersApi(user1Client);
         assertThrows(Forbidden.class, () -> usersApi.listUsersOwners(user2));
+    }
+
+    @Test
+    public void retrievesUserRoles() throws Exception {
+        String alice = TestUtil.randomString("alice-retrieves-roles");
+        ApiClient aliceClient = clientUtil.newUserAndClient(alice, owner.getKey());
+        UsersApi aliceApi = new UsersApi(aliceClient);
+        List<RoleDTO> aliceUserRoles = aliceApi.getUserRoles(alice);
+        assertEquals(1, aliceUserRoles.size());
+
+        RoleDTO newRole = testUtil.createRole(owner.getKey(), "READ_ONLY");
+        testUtil.addUserToRole(newRole, alice);
+
+        // Ensure we see the new role
+        aliceUserRoles = aliceApi.getUserRoles(alice);
+        assertEquals(2, aliceUserRoles.size());
+
+        String bob = TestUtil.randomString("bob-retrieves-roles");
+        ApiClient bobClient = clientUtil.newUserAndClient(bob, owner.getKey());
+        UsersApi bobApi = new UsersApi(bobClient);
+        testUtil.addUserToRole(newRole, bob);
+
+        List<RoleDTO> bobUserRoles = bobApi.getUserRoles(bob);
+        assertEquals(2, bobUserRoles.size());
+        for (RoleDTO r : bobUserRoles) {
+            // Bob should not see Alice's user on his role
+            assertThat(
+                r.getUsers().stream().filter(u -> u.getUsername().equals(alice)).collect(Collectors.toList()),
+                Matchers.is(Matchers.empty())
+            );
+        }
+
+        // Admin should see both users on the role
+        RolesApi adminRolesApi = new RolesApi(adminApiClient);
+        RoleDTO adminViewOfNewRole = adminRolesApi.getRole(newRole.getName());
+        List<String> usernames =
+            adminViewOfNewRole.getUsers().stream().map(UserDTO::getUsername).collect(Collectors.toList());
+        assertThat(usernames, Matchers.containsInAnyOrder(alice, bob));
+    }
+
+    @Test
+    public void unableToViewRoleForAnotherUser() throws Exception {
+        String alice = TestUtil.randomString("alice-roles");
+        UserDTO user = testUtil.createUser(alice);
+        testUtil.createAllAccessRoleForUser(owner.getKey(), user);
+
+        String mallory = TestUtil.randomString("mallory-roles");
+        ApiClient malloryClient = clientUtil.newUserAndClient(mallory, owner.getKey());
+        UsersApi malloryApi = new UsersApi(malloryClient);
+        assertThrows(Forbidden.class, () -> malloryApi.getUserRoles(alice));
     }
 }
