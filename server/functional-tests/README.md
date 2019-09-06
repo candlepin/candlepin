@@ -21,14 +21,12 @@ FunctionalTestConfiguration **and every class annotated with @Component
 (or equivalent)**.
 
 ## Setting Arguments
-
 Arguments can be sent in to the tests that will set values in the
 various Properties classes. Just use the "-D" JVM syntax. For example
 `-Dfunctional-tests.client.debug=true` will display debug information
 detailing the HTTP requests and responses that tests are sending.
 
 ## Cleaning Up
-
 The test framework has a bean of type TestManifest that is
 thread-scoped. Throughout the run of a test, if you ask for a
 TestManifest, you will get the same instance. When you create owners,
@@ -44,3 +42,18 @@ instance for the next test.
 If you don't want the clean-up to be run, you can set
 `functional-tests.cleanup=false` using either the `-D` syntax or by
 editing `functional-tests.properties`.
+
+## Creating Clients
+If all you need to do is act as an admin, have your test autowire the
+`adminApiClient` bean.  This bean will give you an `ApiClient` instance using
+Basic Auth with admin credentials (as defined in `functional-tests.properties`).
+
+For the basics, the `ClientUtil` class offers methods to handle common cases:
+create a new user and return a client, create a superadmin and return a client,
+etc.
+
+For other cases, use the `ApiClientBuilder` class.  Autowire in an instance of
+`ApiClientBuilder`.  The builder will be pre-configured with the values set in
+`functional-tests.properties`.  You can then use a fluent interface to override
+some or all of these values.  The class is quite militant about being immutable
+to avoid one test interfering with another.
