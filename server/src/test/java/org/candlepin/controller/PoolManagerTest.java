@@ -1291,7 +1291,7 @@ public class PoolManagerTest {
         this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
 
         verify(mockPoolCurator).batchDelete(eq(pools), anyCollectionOf(String.class));
-        verify(entitlementCurator).batchDelete(eq(new HashSet<Entitlement>(poolEntitlements)));
+        verify(entitlementCurator).batchDeleteByIds(eq(new HashSet<>(Arrays.asList(ent.getId()))));
     }
 
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {
