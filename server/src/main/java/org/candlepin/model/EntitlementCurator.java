@@ -788,6 +788,43 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
     }
 
+    /**
+     * Deletes the entitlements with the given collection of ids, using a SQL delete.
+     *
+     * WARNING: This method does not maintain runtime consistency for any of the entitlements it is deleting,
+     * so the caller should take care of that manually for any of those entitlements that are loaded,
+     * preferably by calling {@link #unlinkEntitlements} first.
+     *
+     * @param entitlementIds The collection of ids of the entitlements to be deleted.
+     */
+    public void batchDeleteByIds(Collection<String> entitlementIds) {
+        Map<String, Object> criteria = new HashMap<>();
+        criteria.put("id", entitlementIds);
+        this.bulkSQLDelete(Entitlement.DB_TABLE, criteria);
+    }
+
+    /**
+     * Maintains the runtime consistency of the given collection of entitlements, by removing references to
+     * themselves and their certificates. This method is supposed to be run before performing the deletion
+     * of the given list of entitlements.
+     *
+     * @param entitlements The collection of entitlements whose references are to be removed.
+     */
+    public void unlinkEntitlements(Collection<Entitlement> entitlements) {
+        for (Entitlement entitlement : entitlements) {
+            // Maintain runtime consistency.
+            entitlement.setCertificates(null);
+
+            if (Hibernate.isInitialized(entitlement.getConsumer().getEntitlements())) {
+                entitlement.getConsumer().getEntitlements().remove(entitlement);
+            }
+
+            if (Hibernate.isInitialized(entitlement.getPool().getEntitlements())) {
+                entitlement.getPool().getEntitlements().remove(entitlement);
+            }
+        }
+    }
+
     private void deleteImpl(Entitlement entity) {
         log.debug("Deleting entitlement: {}", entity);
         EntityManager entityManager = this.getEntityManager();
