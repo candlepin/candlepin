@@ -28,6 +28,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -62,8 +63,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-
 
 /**
  * entitler
@@ -246,6 +245,12 @@ public class Entitler {
                  * a guest is switching hosts */
                 consumer = consumerCurator.get(consumer.getId());
                 data.setConsumer(consumer);
+            }
+            else {
+                // Revoke host specific entitlements
+                EntitlementFilterBuilder filter = new EntitlementFilterBuilder();
+                filter.addAttributeFilter(Pool.Attributes.REQUIRES_HOST);
+                poolManager.revokeEntitlements(entitlementCurator.listByConsumer(consumer, filter));
             }
         }
 
