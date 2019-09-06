@@ -383,6 +383,7 @@ public class CandlepinPoolManager implements PoolManager {
                     subPool.setDerivedProduct(update);
                 }
             }
+
             if (pool.isLocked()) {
                 subPool.setLocked(true);
             }
@@ -732,12 +733,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Pool p : pools) {
             createPool(p);
-        }
-
-        for (Pool tempPool : pools) {
-            if (pool.isLocked()) {
-                tempPool.setLocked(true);
-            }
         }
 
         return pool;

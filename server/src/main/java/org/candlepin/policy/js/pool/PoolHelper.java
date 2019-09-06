@@ -252,6 +252,10 @@ public class PoolHelper {
             pool.getBranding().add(new Branding(brand.getProductId(), brand.getType(), brand.getName()));
         }
 
+        if (sourcePool.isLocked()) {
+            pool.setLocked(true);
+        }
+
         // Copy upstream fields
         // Impl note/TODO:
         // We are only doing this to facilitate marking pools derived from an upstream source/manifest
