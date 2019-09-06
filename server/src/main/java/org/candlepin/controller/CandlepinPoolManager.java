@@ -286,6 +286,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             log.debug("Processing subscription: {}", sub);
             Pool pool = this.convertToMasterPoolImpl(sub, owner, importedProducts);
+            pool.setLocked(true);
             this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts);
         }
 
@@ -381,6 +382,10 @@ public class CandlepinPoolManager implements PoolManager {
                 if (update != null) {
                     subPool.setDerivedProduct(update);
                 }
+            }
+
+            if (pool.isLocked()) {
+                subPool.setLocked(true);
             }
         }
 
@@ -860,7 +865,6 @@ public class CandlepinPoolManager implements PoolManager {
         pool.setUpstreamPoolId(sub.getUpstreamPoolId());
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
         pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
-        pool.setLocked(true);
 
         // Resolve CDN
         if (sub.getCdn() != null) {
