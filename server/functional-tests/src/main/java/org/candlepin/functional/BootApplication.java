@@ -14,7 +14,10 @@
  */
 package org.candlepin.functional;
 
+import org.candlepin.functional.JUnitBootstrap.JUnitFailureExitCodeGenerator;
+
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -43,11 +46,23 @@ public class BootApplication {
         return new JUnitBootstrap();
     }
 
+    /**
+     * SpringApplication.exit will automatically load beans of type ExitCodeGenerator, ask each one to
+     * generate an exit code, and then pick the highest value code from the results.
+     * @return an ExitCodeGenerator that picks the exit code based on the JUnit results
+     */
+    @Bean
+    public ExitCodeGenerator failureExitCodeGenerator() {
+        return new JUnitFailureExitCodeGenerator();
+    }
+
     public static void main(String[] args) {
         /* NB: These arguments will not make it to the ApplicationContext that the tests are using.
          * Instead, define properties using the JVM -D syntax.  For example
          * "-Dfunctional-tests.client.debug=true" will display debug information
          */
-        SpringApplication.run(BootApplication.class, args);
+        System.exit(SpringApplication.exit(
+            SpringApplication.run(BootApplication.class, args)
+        ));
     }
 }

@@ -27,7 +27,6 @@
   arguments aren't supported by the Gradle Spring Boot plugin.
 * Colored output
 * Being able to filter tests based on class and method name
-* Failed tests result in the application terminating with a non-zero exit code
 
 # Bugs
 * When running via IntelliJ, the root logger is set to DEBUG mode resulting in
