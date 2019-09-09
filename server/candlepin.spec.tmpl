@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.7.5
+Version: 2.7.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,13 @@ fi
 
 #raw
 %changelog
+* Mon Sep 09 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.6-1
+- 1748406: When deleting pools, delete entitlements using ids - Now, when
+  deleting pools, the revocation of entitlements of those   pools will use a
+  delete query instead of a hibernate batch detach,   in order to avoid memory
+  overuse. (nmoumoul@redhat.com)
+- Update CandlepinModule with HypervisorHeartbeatUpdateJob (wpoteat@redhat.com)
+
 * Thu Aug 15 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.5-1
 - Added an additional null check during entitlement revocation
   (crog@redhat.com)
