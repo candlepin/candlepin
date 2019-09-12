@@ -1113,6 +1113,14 @@ public class ConsumerResource {
             log.warn("User {} does not have access to create consumers in org {}",
                 principal.getPrincipalName(), owner.getKey());
 
+            List<Owner> owners = ((UserPrincipal) principal).getOwners();
+            boolean isOwnerContained = owners != null && owners.stream()
+                .anyMatch(t -> t != null && t.getOwnerId().equals(owner.getOwnerId()));
+            if (isOwnerContained) {
+                throw new ForbiddenException(i18n.tr("{0} is not authorized to register with " +
+                    "organization {1}", principal.getName(), owner.getKey()));
+            }
+
             throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", owner.getKey()));
         }
 
