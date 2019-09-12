@@ -188,6 +188,17 @@ describe 'Owner Resource' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
+  it "does not let users register system when owner belong to principal" do
+    first_owner = create_owner random_string('test_owner_1')
+    second_owner = create_owner random_string('test_owner_2')
+    owner_client = user_client(first_owner, random_string('testuser'), true)
+
+    lambda do
+      owner_client.register('systemFoo', type=:system, uuid=nil, facts={}, username=nil,
+                            owner_key=second_owner['key'])
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
   it "does not let the owner key get updated" do
     owner = create_owner random_string("test_owner2")
     original_key = owner['key']
