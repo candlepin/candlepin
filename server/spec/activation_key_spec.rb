@@ -61,6 +61,33 @@ describe 'Activation Keys' do
     }.should raise_exception(RestClient::ResourceNotFound)
   end
 
+  it 'should not allow updating special character as name' do
+    @activation_key['name'] = "foo%%Bar$$"
+    owner_client = user_client(@owner, random_string('dummyUser'))
+
+    expect {
+      @activation_key = owner_client.update_activation_key(@activation_key)
+    }.to raise_exception(RestClient::BadRequest)
+  end
+
+  it 'should not allow updating empty string as name' do
+    @activation_key['name'] = ""
+    owner_client = user_client(@owner, random_string('dummyUser'))
+
+    expect {
+      @activation_key = owner_client.update_activation_key(@activation_key)
+    }.to raise_exception(RestClient::BadRequest)
+  end
+
+  it 'should allow updating hypen and underscore string as name' do
+    @activation_key['name'] = "test_activation-1"
+    owner_client = user_client(@owner, random_string('dummyUser'))
+
+    @activation_key = owner_client.update_activation_key(@activation_key)
+
+    expect(@activation_key['name']).to eq('test_activation-1')
+  end
+
   it 'should allow updating of descriptions' do
     @activation_key['description'] = "very descriptive text"
     @activation_key = @cp.update_activation_key(@activation_key)
