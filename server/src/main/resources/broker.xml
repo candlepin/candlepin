@@ -24,7 +24,7 @@
 
         <acceptors>
             <acceptor name="in-vm">vm://0</acceptor>
-            <!-- <acceptor name="netty">tcp://localhost:61617</acceptor> -->
+            <!-- <acceptor name="netty">tcp://localhost:61617?sslEnabled=true;keyStorePath=${artemis.instance}/certs/artemis-server.ks;keyStorePassword=securepassword;needClientAuth=true;trustStorePath=${artemis.instance}/certs/artemis-server.ts;trustStorePassword=securepassword</acceptor> -->
         </acceptors>
 
         <security-enabled>false</security-enabled>

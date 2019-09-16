@@ -159,8 +159,8 @@ create_var_cache_candlepin() {
 
 autoconf() {
   printf "\nGenerating candlepin.conf\n"
-  echo $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID  -Pdb_host=${DBHOSTNAME:-localhost}
-  $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID  -Pdb_host=${DBHOSTNAME:-localhost}
+  echo $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID $EXTERNAL_BROKER -Pdb_host=${DBHOSTNAME:-localhost}
+  $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID $EXTERNAL_BROKER  -Pdb_host=${DBHOSTNAME:-localhost}
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"
@@ -402,7 +402,7 @@ create_var_log_candlepin
 create_var_cache_candlepin
 
 if [ "$AUTOCONF" == "1" ]; then
-  autoconf $ENV_BUILDR $LOGDRIVER $HOSTEDTEST $QPID $EXTERNAL_BROKER
+  autoconf
 fi
 
 # deploy the webapp

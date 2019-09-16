@@ -43,6 +43,7 @@ SELINUX_BUILD_DIR = os.path.join(SELINUX_BASE_DIR, "build")
 SERVICE_TEMPLATE_PATH = os.path.join(BASE_DIR, "service", "artemis.service");
 SERVICE_FILE_TARGET_PATH = "/usr/lib/systemd/system/artemis.service"
 
+
 @contextmanager
 def open_xml(filename):
     """libxml2 does not handle cleaning up memory automatically. This
@@ -51,8 +52,10 @@ def open_xml(filename):
     yield doc
     doc.freeDoc()
 
+
 def is_debug():
     return logger.level == logging.DEBUG
+
 
 def download_artemis(version, target_dir):
     filename = "apache-artemis-%s-bin.tar.gz" % (version)
@@ -92,9 +95,11 @@ def extract_artemis(basedir, path_to_file):
         logger.debug("File already extracted.")
     return file_path
 
+
 def install_artemis(version, install_path="/opt"):
     dl_file_path = download_artemis(version, install_path)
     return extract_artemis(install_path, dl_file_path)
+
 
 def create_broker(artemis_install_path, broker_root_path):
     if not os.path.exists(broker_root_path):
@@ -111,6 +116,7 @@ def create_broker(artemis_install_path, broker_root_path):
     call(cmd, "Failed to create broker.")
     return broker_path
 
+
 def call(cmd, error_msg, allow_failure=False):
     logger.debug("Calling '%s'" % cmd)
     with open(os.devnull, 'w') as dnull:
@@ -118,6 +124,16 @@ def call(cmd, error_msg, allow_failure=False):
         ret = subprocess.call(cmd.split(" "), stdout=std_out, stderr=subprocess.STDOUT)
         if not allow_failure and ret:
             raise RuntimeError(error_msg)
+
+
+def call_with_array(cmd, error_msg, allow_failure=False):
+    logger.debug("Calling '%s'" % " ".join(cmd))
+    with open(os.devnull, 'w') as dnull:
+        std_out = None if is_debug() else dnull
+        ret = subprocess.call(cmd, stdout=std_out, stderr=subprocess.STDOUT)
+        if not allow_failure and ret:
+            raise RuntimeError(error_msg)
+
 
 def install_artemis_service():
     logger.info("Setting up artemis service.")
@@ -139,6 +155,7 @@ def install_artemis_service():
 
     setup_selinux()
 
+
 def setup_selinux():
     logger.debug("Setting up SELinux policy.")
 
@@ -153,6 +170,50 @@ def setup_selinux():
     call("sudo semodule -vi %s/artemis.pp" % SELINUX_BUILD_DIR,
          "Failed to load SELinux policy for artemis service")
 
+
+def generate_certs(broker_path):
+    logger.debug("Creating the certs/ directory.")
+    certs_dir = os.path.join(broker_path, "certs/")
+    if not os.path.exists(certs_dir):
+        logger.debug("%s does not exist. Creating it now." % certs_dir)
+        os.mkdir(certs_dir)
+
+    logger.debug("Setting file permissions on certs directory for artemis user.")
+    call("sudo chown -R artemis:artemis %s" % certs_dir, "Failed to set permissions on certs directory.")
+
+    logger.debug("Generating a server keystore.")
+    call_with_array(["sudo", "keytool", "-genkey", "-keystore", "%s/artemis-server.ks" % certs_dir,
+                     "-storepass", "securepassword", "-keypass", "securepassword", "-dname",
+                     "CN=$HOSTNAME, L=Brno, S=South Moravia, C=CZ", "-keyalg", "RSA", "-storetype",
+                     "pkcs12"], "Failed to generate a server keystore...")
+
+    logger.debug("Exporting the server certificate from the server keystore.")
+    call("sudo keytool -export -keystore {0}/artemis-server.ks -file {0}/artemis-server.crt "
+         "-storepass securepassword".format(certs_dir),
+         "Failed to export the server certificate from the server keystore...")
+
+    logger.debug("Importing the server certificate to a client trust store.")
+    call("sudo keytool -import -keystore {0}/artemis-client.ts -file {0}/artemis-server.crt "
+         "-storepass securepassword -keypass securepassword -noprompt".format(certs_dir),
+         "Failed to import the server certificate to a client truststore...")
+
+    logger.debug("Generating a client keystore.")
+    call_with_array(["sudo", "keytool", "-genkey", "-keystore", "%s/artemis-client.ks" % certs_dir,
+                     "-storepass", "securepassword", "-keypass", "securepassword", "-dname",
+                     "CN=$HOSTNAME, L=Brno, S=South Moravia, C=CZ", "-keyalg", "RSA", "-storetype",
+                     "pkcs12"], "Failed to generate a client keystore...")
+
+    logger.debug("Exporting the client certificate from the client keystore.")
+    call("sudo keytool -export -keystore {0}/artemis-client.ks -file {0}/artemis-client.crt "
+         "-storepass securepassword".format(certs_dir),
+         "Failed to export the client certificate from the client keystore...")
+
+    logger.debug("Importing the client certificate to a server trust store.")
+    call("sudo keytool -import -keystore {0}/artemis-server.ts -file {0}/artemis-client.crt "
+         "-storepass securepassword -keypass securepassword -noprompt".format(certs_dir),
+         "Failed to import the client certificate to a server truststore...")
+
+
 def modify_broker_xml(broker_xml_path):
     logger.info("Updating broker configuration...")
     broker_data_dir = "./data"
@@ -165,7 +226,15 @@ def modify_broker_xml(broker_xml_path):
         # Update the acceptor configuration
         acceptor_nodes = ctx.xpathEval("//activemq:configuration/core:core/core:acceptors/core:acceptor")
         acceptor_nodes[0].setProp("name", "netty")
-        acceptor_nodes[0].setContent("tcp://localhost:61617")
+
+        certs_dir = os.path.join(BROKER_ROOT, BROKER_NAME, "certs")
+        connector_string = ("tcp://localhost:61617?sslEnabled=true;"
+                            "keyStorePath={0}/artemis-server.ks;"
+                            "keyStorePassword=securepassword;"
+                            "needClientAuth=true;"
+                            "trustStorePath={0}/artemis-server.ts;"
+                            "trustStorePassword=securepassword".format(certs_dir))
+        acceptor_nodes[0].setContent(connector_string)
 
         # Update the data store locations
         bindings = ctx.xpathEval("//activemq:configuration/core:core/core:bindings-directory")[0]
@@ -182,6 +251,7 @@ def modify_broker_xml(broker_xml_path):
 
         doc.saveFile(broker_xml_path)
 
+
 def update_broker_config(broker_path, candlepin_broker_conf):
     # Move the generated conf file if it needs to be referenced later.
     broker_xml = os.path.join(broker_path, "etc/broker.xml")
@@ -195,8 +265,11 @@ def update_broker_config(broker_path, candlepin_broker_conf):
                  (candlepin_broker_conf, new_location))
     shutil.copy(candlepin_broker_conf, new_location)
 
+    generate_certs(broker_path)
+
     # Update the Acceptor configuration.
     modify_broker_xml(broker_xml)
+
 
 def cleanup(version, install_dir, broker_root):
     logger.info("Cleaning up artemis installation.")
@@ -212,6 +285,7 @@ def cleanup(version, install_dir, broker_root):
         logger.debug("Removing artemis installation: %s" % (artemis_install_path))
         shutil.rmtree(artemis_install_path)
 
+
 def uninstall_service():
     call("sudo semodule -vr artemisservice", "", allow_failure=True)
     if os.path.exists(SERVICE_FILE_TARGET_PATH):
@@ -222,6 +296,7 @@ def uninstall_service():
 
     if os.path.exists(SELINUX_BUILD_DIR):
         shutil.rmtree(SELINUX_BUILD_DIR)
+
 
 def parse_options():
     usage = "usage: %prog"
@@ -236,6 +311,7 @@ def parse_options():
     parser.add_option("--debug", action="store_true", help="enables debug logging")
 
     return parser.parse_args()
+
 
 def main():
     (options, args) = parse_options()
@@ -257,6 +333,7 @@ def main():
     if options.start:
         logger.info("Starting the Artemis server.")
         call("sudo systemctl restart artemis", "Unable to start the artemis service.")
+
 
 if __name__ == "__main__":
     main()
