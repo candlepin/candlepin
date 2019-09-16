@@ -9,7 +9,8 @@ To install artemis, this script will:
 * install the broker according to recommendations from the Artemis docs
 * create a service runnable by systemctl
 * set up the appropriate SELinux policy for the service.
-* configure the broker according to candlepin reqirements.
+* configure the broker according to candlepin requirements.
+* generate certificates and configure the broker to use SSL.
 * provide a means to clean up an existing installation of the broker.
 
 
