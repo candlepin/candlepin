@@ -7,6 +7,7 @@ This script is used for generating testing RPM repositories
 
 import sys
 import os
+import re
 import stat
 import json
 import string
@@ -46,6 +47,8 @@ GPG_NAME_EMAIL = "noreply@candlepinproject.org"
 
 GPG_PASSPHRASE = "secret"
 
+GPG_KYEGRIP = None
+
 # When Fedora is used or gpg 2.1 is used, then it will be possible
 # to use following options and not to use passphrase and expect script
 #
@@ -71,11 +74,15 @@ expect eof
 
 GPG_EXPORTED_CANDLEPIN_KEY = os.path.expanduser("~") + "/RPM-GPG-KEY-candlepin"
 
-RPMMACROS_CONTENT = """
-%%_signature gpg
-%%_gpg_name %s
-%%_gpgbin /usr/bin/gpg2
-""" % GPG_NAME_REAL
+# Single source of rpmmacros
+RPMMACROS_KEY_VALUE = {
+    "%_signature": "gpg",
+    "%_gpg_name": GPG_NAME_REAL,
+    "%_gpgbin": "/usr/bin/gpg2"
+}
+
+# Create content from dictionary
+RPMMACROS_CONTENT = "\n".join([ key + " " + value for key,value in RPMMACROS_KEY_VALUE.items()])
 
 RPMBUILD_ROOT_DIR = os.path.expanduser("~") + "/rpmbuild"
 
@@ -99,15 +106,19 @@ def run_command(command, verbose=False):
     # Run command in subprocess
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
+    output = []
     # Print output of command
+    for line in process.stdout.readlines():
+        if verbose is True:
+            print(line, end='')
+        output.append(line)
     if verbose is True:
-        for line in process.stdout.readlines():
-            print(line)
+        sys.stdout.flush()
 
     # Wait for result of process
     ret = process.wait()
 
-    return ret
+    return ret, output
 
 
 def read_test_data(filename):
@@ -422,9 +433,10 @@ def get_package_definitions(test_data):
     return package_definitions
 
 
-def create_dummy_package(package, expect_script_path):
+def create_dummy_package(package, expect_script_path, keygrip):
     """
-    This function tries to create dummy RPM package
+    This function tries to create dummy RPM package. It returns True,
+    when package was created correctly. Otherwise it returns False.
     """
     global TEST_DATA_JSON_MTIME
     
@@ -444,7 +456,7 @@ def create_dummy_package(package, expect_script_path):
         rpm_mtime = os.path.getmtime(rpm_file_path)
         if rpm_mtime > TEST_DATA_JSON_MTIME:
             print("RPM %s already exist" % name)
-            return
+            return True
 
     print("creating RPM %s" % name)
 
@@ -461,12 +473,29 @@ def create_dummy_package(package, expect_script_path):
         fp.write(rpm_spec_content)
 
     # Generate RPM package using rpmbuild
-    run_command('rpmbuild -bb %s' % spec_file_path)
+    ret,_ = run_command('rpmbuild -bb %s' % spec_file_path)
 
-    run_command('%s %s' % (expect_script_path, rpm_file_path))
+    if ret != 0:
+        print("Error: creating RPM %s FAILED" % name)
+        return False
+
+    print("signing RPM %s" % name)
+    if keygrip is None:
+        ret,_ = run_command('%s %s' % (expect_script_path, rpm_file_path), verbose=True)
+    else:
+        ret,_ = run_command('%s %s' % ("rpm --addsign", rpm_file_path), verbose=True)
+
+    # RPM has to be signed. Otherwise it will not be able to install it from testing repository
+    if ret != 0:
+        print("Error: signing of RPM %s FAILED" % name)
+        # Unsigned RPM file is useless. Delete it.
+        os.remove(rpm_file_path)
+        return False
+
+    return True
     
 
-def generate_packages(package_definitions):
+def generate_packages(package_definitions, keygrip):
     """
     This function tries to generate dummy packages from the list of package definitions
     """
@@ -500,11 +529,18 @@ def generate_packages(package_definitions):
     # Change permission to be able to execute the script
     os.chmod(expect_script_path, stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
+    results = []
     for pkg in package_definitions.values():
-        create_dummy_package(pkg, expect_script_path)
+        ret = create_dummy_package(pkg, expect_script_path, keygrip)
+        results.append(ret)
 
     # Remove temporary directory containing script for entering passphrase
     shutil.rmtree(temp_dir_path)
+
+    if not all(results):
+        return False
+
+    return True
 
 def create_gpg_batch_gen_script():
     """
@@ -531,7 +567,20 @@ def does_gpg_key_exist():
     key_id = '"%s <%s>"' % (GPG_NAME_REAL, GPG_NAME_EMAIL)
 
     # Try to get list of GPG key with given key ID
-    return run_command('gpg --list-keys %s' % key_id)
+    ret,_ = run_command('gpg --list-keys %s' % key_id)
+
+    return ret
+
+
+def gpg_key_keygrip():
+    """
+    This function tries to get keygrip from key used for signing RPMs
+    """
+    key_id = '"%s <%s>"' % (GPG_NAME_REAL, GPG_NAME_EMAIL)
+
+    ret,output = run_command('gpg2 --list-keys --with-keygrip %s' % key_id, verbose=False)
+
+    return ret, output
 
 
 def create_gpg_key():
@@ -552,19 +601,22 @@ def create_gpg_key():
     script_path, temp_dir_path = create_gpg_batch_gen_script()
     
     # Generate GPG key for signing RPM packages
-    ret = run_command('gpg --batch --gen-key %s' % script_path)
+    ret,_ = run_command('gpg --batch --gen-key %s' % script_path)
 
     # Remove temporary directory containing script for generating GPG key
     shutil.rmtree(temp_dir_path)
 
     # Export gpg key
-    ret += run_command('gpg --export -a %s > %s' % (GPG_NAME_REAL, GPG_EXPORTED_CANDLEPIN_KEY))
+    res,_ = run_command('gpg --export -a %s > %s' % (GPG_NAME_REAL, GPG_EXPORTED_CANDLEPIN_KEY))
+    ret += res
 
     # Import GPG key to rpm db (not necessary), but "rpm -K signed_file.rpm" can be used
-    ret += run_command('rpm --import %s' % GPG_EXPORTED_CANDLEPIN_KEY)
+    res,_ = run_command('rpm --import %s' % GPG_EXPORTED_CANDLEPIN_KEY)
+    ret += res
 
     # Copy exported GPG key to root dir of static content provided by tomcat
-    ret += run_command('cp %s %s' % (GPG_EXPORTED_CANDLEPIN_KEY, REPO_ROOT_DIR))
+    res,_ = run_command('cp %s %s' % (GPG_EXPORTED_CANDLEPIN_KEY, REPO_ROOT_DIR))
+    ret += res
 
     return ret
 
@@ -595,8 +647,20 @@ def modify_rpmmacros():
         with open(rpmmacros_path, "w") as fp:
             fp.write(RPMMACROS_CONTENT)
     else:
-        # TODO: check for macros and add them to the rpmmacros in needed
-        pass
+        # Read existing ~/.rpmmacros file
+        with open(rpmmacros_path, "r") as fp:
+            content = fp.read()
+        update_required = False
+        # Check if the file contains all keys
+        for key,value in RPMMACROS_KEY_VALUE.items():
+            if key not in content:
+                # If not update the content
+                content += "\n" + key + " " + value
+                update_required = True
+        # write new content, whe content was updated
+        if update_required is True:
+            with open(rpmmacros_path, "w") as fp:
+                fp.write(content)
 
 
 def main():
@@ -613,6 +677,28 @@ def main():
         print("Creating GPG key...")
         create_gpg_key()
 
+    # Try to find keygrip in output of gpg command
+    keygrip = None
+    ret,pgp_output = gpg_key_keygrip()
+    if ret == 0:
+        pattern = re.compile(r'^ *Keygrip = (.*)$')
+        for line in pgp_output:
+            result = pattern.search(line)
+            # When gpg supported keygrip, then preset passphrase has to be used
+            if result is not None:
+                keygrip = result.groups()[0]
+                # Make sure that preset passphrases are allowed
+                ret,_ = run_command("grep 'allow-preset-passphrase' /root/.gnupg/gpg-agent.conf")
+                if ret != 0:
+                    print("Updating gpg-agent.conf")
+                    run_command("echo 'allow-preset-passphrase' >> /root/.gnupg/gpg-agent.conf")
+                # Make sure that gpg-agent is running
+                run_command('gpg-connect-agent reloadagent /bye')
+                print("Using GPG keygrip: %s" % keygrip)
+                run_command('/usr/libexec/gpg-preset-passphrase --passphrase %s --preset %s' %
+                    (GPG_PASSPHRASE, keygrip))
+                break
+
     modify_rpmmacros()
 
     print("")
@@ -620,7 +706,12 @@ def main():
 
     package_definitions = get_package_definitions(test_data)
 
-    generate_packages(package_definitions)
+    ret = generate_packages(package_definitions, keygrip)
+
+    if ret is False:
+        print("")
+        print("Error: unable to generate all packages")
+        return 1
 
     print("")
     print("Creating repositories...")
