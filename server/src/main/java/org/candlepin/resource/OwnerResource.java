@@ -147,6 +147,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.PersistenceException;
 import javax.ws.rs.Consumes;
@@ -204,6 +206,7 @@ public class OwnerResource {
     private ConsumerTypeValidator consumerTypeValidator;
     private OwnerProductCurator ownerProductCurator;
     private ModelTranslator translator;
+    private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -1205,9 +1208,9 @@ public class OwnerResource {
             throw new BadRequestException(i18n.tr("Must provide a name for activation key."));
         }
 
-        String testName = dto.getName().replace("-", "0").replace("_", "0");
+        Matcher keyMatcher = AK_CHAR_FILTER.matcher(dto.getName());
 
-        if (!testName.matches("[a-zA-Z0-9]*")) {
+        if (!keyMatcher.matches()) {
             throw new BadRequestException(
                 i18n.tr("The activation key name \"{0}\" must be alphanumeric or " +
                     "include the characters \"-\" or \"_\"", dto.getName()));

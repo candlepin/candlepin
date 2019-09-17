@@ -42,6 +42,8 @@ import org.xnap.commons.i18n.I18n;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -76,6 +78,7 @@ public class ActivationKeyResource {
     private ActivationKeyRules activationKeyRules;
     private ProductCachedSerializationModule productCachedModule;
     private ModelTranslator translator;
+    private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
@@ -161,7 +164,16 @@ public class ActivationKeyResource {
         @ApiParam(name = "update", required = true) ActivationKeyDTO update) {
 
         ActivationKey toUpdate = this.fetchActivationKey(activationKeyId);
+
         if (update.getName() != null) {
+            Matcher keyMatcher = AK_CHAR_FILTER.matcher(update.getName());
+
+            if (!keyMatcher.matches()) {
+                throw new BadRequestException(
+                    i18n.tr("The activation key name \"{0}\" must be alphanumeric or " +
+                        "include the characters \"-\" or \"_\"", update.getName()));
+            }
+
             toUpdate.setName(update.getName());
         }
 
