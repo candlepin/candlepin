@@ -1170,6 +1170,26 @@ describe 'Hypervisor Resource', :type => :virt do
     @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_2
   end
 
+  it 'should allow the hypervisor id update on the consumer with no existing hypervisor id' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    host_name = "test_hypevisor_host_name"
+    host_hyp_id = "test_hypervisor_id"
+    host_system_id = "test_system_id"
+    guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
+    guests = ['g1', 'g2']
+
+    test_host = user.register(host_name, :hypervisor, nil, {"virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [])
+    @cp.update_consumer({:uuid => test_host.uuid, :guestIds => guest_set, :facts => {"dmi.system.uuid" => host_system_id, "virt.is_guest"=>"false"}})
+    expect(@cp.get_consumer(test_host.uuid)['hypervisorId']).to be_nil
+
+    async_update_hypervisor(owner, user, host_name, host_hyp_id, guests, true,nil, {"dmi.system.uuid" => host_system_id})
+    test_host = @cp.get_consumer(test_host.uuid)
+    expect(@cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId']).to eq(host_hyp_id)
+  end
+
+
   it 'check in will fail when json does not have the proper structure' do
     owner = create_owner random_string('test_owner1')
     user = user_client(owner, random_string("user"))

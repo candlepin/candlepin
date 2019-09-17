@@ -149,13 +149,8 @@ public class HypervisorUpdateAction {
                 }
             }
             else {
-                boolean hypervisorIdUpdated = false;
-                if (knownHost.getHypervisorId() != null && !hypervisorId.equalsIgnoreCase(knownHost
-                    .getHypervisorId().getHypervisorId())) {
-                    hypervisorIdUpdated = true;
-                    log.debug("Changing hypervisor id to [" + hypervisorId + "]");
-                    knownHost.getHypervisorId().setHypervisorId(hypervisorId);
-                }
+                boolean hypervisorIdUpdated = updateHypervisorId(knownHost, owner, jobReporterId,
+                    hypervisorId);
 
                 reportedOnConsumer = knownHost;
                 if (jobReporterId != null && knownHost.getHypervisorId() != null &&
@@ -201,6 +196,26 @@ public class HypervisorUpdateAction {
             }
         }
         return new Result(result, hypervisorKnownConsumersMap);
+    }
+
+    private boolean updateHypervisorId(Consumer consumer, Owner owner, String reporterId,
+        String hypervisorId) {
+
+        boolean hypervisorIdUpdated = true;
+
+        if (consumer.getHypervisorId() == null) {
+            log.debug("Existing hypervisor id is null, changing hypervisor id to [" + hypervisorId + "]");
+            consumer.setHypervisorId(new HypervisorId(consumer, owner, hypervisorId,
+                reporterId));
+        }
+        else if (!hypervisorId.equalsIgnoreCase(consumer.getHypervisorId().getHypervisorId())) {
+            log.debug("New hypervisor id is different, Changing hypervisor id to [" + hypervisorId + "]");
+            consumer.getHypervisorId().setHypervisorId(hypervisorId);
+        }
+        else {
+            hypervisorIdUpdated = false;
+        }
+        return hypervisorIdUpdated;
     }
 
     private void parseHypervisorList(HypervisorUpdateJob.HypervisorList hypervisorList, Set<String> hosts,
