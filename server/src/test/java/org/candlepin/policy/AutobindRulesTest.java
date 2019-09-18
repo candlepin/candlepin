@@ -4130,4 +4130,49 @@ public class AutobindRulesTest {
         PoolQuantity q = bestPools.get(0);
         assertEquals(new Integer(2), q.getQuantity());
     }
+
+    /*
+     * This test demonstrates that a pool that satisfies a guest consumer's usage should be selected
+     * during autoattach even if another pools that doesn't satisfy the usage satisfies the virt_only
+     * attribute.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testShouldSelectPoolWhenUsageMatchesButSystemTypeMismatches() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setUsage("Production");
+        consumer.setFact(Consumer.Facts.SYSTEM_UUID, "my_uuid");
+        consumer.setFact("virt.is_guest", "True");
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00559 = createSysPurposeProduct(null, "random_role", null, "random_sla", "Production");
+        Pool RH00559 = TestUtil.createPool(owner, prodRH00559);
+        RH00559.setId("RH00559");
+        RH00559.addProvidedProduct(product69);
+        RH00559.setQuantity(1L);
+
+        Product prodRH3387200 = createSysPurposeProduct(null, null, null, "random_sla", null);
+        Pool RH3387200 = TestUtil.createPool(owner, prodRH3387200);
+        RH3387200.setId("RH3387200");
+        RH3387200.setQuantity(1L);
+        RH3387200.addProvidedProduct(product69);
+        RH3387200.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(RH00559);
+        pools.add(RH3387200);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer, new String[]{"compliant-69"},
+            pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(RH00559, 1)));
+    }
 }
