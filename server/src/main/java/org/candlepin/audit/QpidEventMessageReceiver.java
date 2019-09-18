@@ -70,12 +70,10 @@ public class QpidEventMessageReceiver extends MessageReceiver {
         }
         catch (Exception e) {
             log.debug("Message listener {} processed message: {} [{}]: FAILED", listener, msgId, origMsgId);
-            // Log a small message instead of a full stack trace to reduce log size.
-            String reason = (e.getCause() == null) ? e.getMessage() : e.getCause().getMessage();
-            log.error("Unable to process message {}[{}]: {}", msgId, origMsgId, reason);
+            log.error("Unable to process message {}[{}]: {}", msgId, origMsgId, e);
 
             // If debugging is enabled log a more in depth message.
-            log.debug("Unable to process message. Rolling back client session.\n{}", body, e);
+            log.debug("Unable to process message. Rolling back client session.\n{}", body);
 
             // Since we are closing the Consumer whenever Qpid is in trouble (when notified)
             // we do not want to roll back as the message will get resent when the Client
