@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.8
+Version: 2.6.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,12 @@ fi
 
 #raw
 %changelog
+* Thu Sep 19 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.9-1
+- 1753255: ActiveMQContextListener no longer attempts to load DatabaseListener
+  (crog@redhat.com)
+- 1746912: update new hypervisorid when existing hypervisorid is null
+  (abhiskum@localhost.localdomain)
+
 * Fri Jun 28 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.8-1
 - 1724115: Initialize the NSS db when loading a JSS provider
   (nmoumoul@redhat.com)
