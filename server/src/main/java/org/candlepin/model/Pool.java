@@ -399,7 +399,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      */
     @Column(name = "locked")
     @Type(type = "org.hibernate.type.NumericBooleanType")
-    private boolean locked;
+    private Boolean locked;
 
     public Pool() {
         this.activeSubscription = Boolean.TRUE;
@@ -423,6 +423,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         this.derivedProvidedProductDtos = null;
 
         this.markedForDelete = false;
+        this.locked = false;
 
         this.setExported(0L);
         this.setConsumed(0L);
@@ -1498,7 +1499,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     public boolean isLocked() {
-        return locked;
+        return this.locked != null && locked.booleanValue();
     }
 
     public void setLocked(boolean locked) {
