@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.8.1
+Version: 2.9.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,36 @@ fi
 
 #raw
 %changelog
+* Fri Sep 20 2019 Chris Rog <crog@redhat.com> 2.9.0-1
+- 1667952: QPID Exception logging modified (prakgupt@redhat.com)
+- Enable creating test repositories on Fedora 30 (jhnidek@redhat.com)
+- 1751727: update new hypervisorid when existing hypervisorid is null
+  (abhiskum@localhost.localdomain)
+- 1665277:Special Char not allowed in AK (prakhargupta@localhost.localdomain)
+- Update mina libraries (bcourt@redhat.com)
+- spec test added (prakhargupta@localhost.localdomain)
+- Rspec fix (root@localhost.localdomain)
+- improved logic (root@localhost.localdomain)
+- Modified msg (prakhargupta@localhost.localdomain)
+- 1402945: Guests should be eligible for the temporary guest pool after
+  migration (ojanus@redhat.com)
+- 1742806: When deleting pools, delete entitlements using ids - Now, when
+  deleting pools, the revocation of entitlements of those   pools will use a
+  delete query instead of a hibernate batch detach,   in order to avoid memory
+  overuse. (nmoumoul@redhat.com)
+- CodeReviewComments (prakhargupta@localhost.localdomain)
+- Improve KeycloakAuth and related code/javadoc (khowell@redhat.com)
+- refactoring (root@localhost.localdomain)
+- Pool Creation handled (root@localhost.localdomain)
+- resetting locked flag (root@localhost.localdomain)
+- subpool lock (prakhargupta@localhost.localdomain)
+- Restricting Locked Pool Scope (root@localhost.localdomain)
+- Added the @Verify annotation to ConsumerResource.consumerExists
+  (crog@redhat.com)
+- (ENT-1377) Port logic from KeycloakOIDCServletFilter to KeycloakAuth
+  (skalyana@redhat.com)
+- set role and usages default to blank (sdhome@localhost.localdomain)
+
 * Tue Aug 27 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.8.1-1
 - Update the POM files for gradle library updates. (bcourt@redhat.com)
 - Update CandlepinModule with HypervisorHeartbeatUpdateJob (wpoteat@redhat.com)
