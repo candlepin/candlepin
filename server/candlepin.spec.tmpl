@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.0
+Version: 2.9.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Fri Sep 20 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.1-1
+- Update the version of org.hibernate.validator (bcourt@redhat.com)
+- 1753750: Added a default value for Pool.locked (crog@redhat.com)
+
 * Fri Sep 20 2019 Chris Rog <crog@redhat.com> 2.9.0-1
 - 1667952: QPID Exception logging modified (prakgupt@redhat.com)
 - Enable creating test repositories on Fedora 30 (jhnidek@redhat.com)
