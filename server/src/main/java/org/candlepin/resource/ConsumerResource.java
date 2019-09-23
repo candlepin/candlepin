@@ -449,6 +449,36 @@ public class ConsumerResource {
         }
     }
 
+    @ApiOperation(
+        notes = "Checks for the existence of a Consumer in bulk. This API return UUIDs of non-existing" +
+        "consumer",
+        value = "")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Returns all consumer UUIDs that doesn't exist or " +
+        "cannot be accessed"),
+        @ApiResponse(code = 204, message = "If all consumer UUIDs exists and can be accessed"),
+        @ApiResponse(code = 400, message = "When no UUIDs are provided") })
+    @POST
+    @Consumes(MediaType.WILDCARD)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("exists")
+    public Response consumerExistsBulk(Set<String> consumerUuids) throws BadRequestException {
+        if (consumerUuids != null && !consumerUuids.isEmpty()) {
+            Set<String> existingUuids = consumerCurator.getExistingConsumerUuids(consumerUuids);
+            consumerUuids.removeAll(existingUuids);
+
+            if (consumerUuids.isEmpty()) {
+                return Response.status(Response.Status.NO_CONTENT).build();
+            }
+            else {
+                return Response.status(Response.Status.NOT_FOUND)
+                    .entity(consumerUuids).build();
+            }
+        }
+        else {
+            throw new BadRequestException(i18n.tr("No UUIDs provided."));
+        }
+    }
+
     @ApiOperation(notes = "Retrieves a single Consumer", value = "getConsumer")
     @ApiResponses({ @ApiResponse(code = 404, message = "") })
     @GET

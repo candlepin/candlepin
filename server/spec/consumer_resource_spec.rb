@@ -308,6 +308,35 @@ describe 'Consumer Resource' do
     @cp.consumer_exists(@consumer2.uuid)
   end
 
+  it 'does not allow to check existence when nil input is provided' do
+    expect {
+      @cp.consumer_exists_bulk(nil)
+    }.to raise_error(RestClient::BadRequest)
+  end
+
+  it 'return empty body when all consumer uuid exists for bulk consumer existence check' do
+    post_data = [@consumer1.uuid]
+    response = @cp.consumer_exists_bulk(post_data)
+    expect(response).to be(nil)
+  end
+
+  it 'should raise resource not found when consumer does not exists for bulk consumer existence check' do
+    post_data = [@consumer1.uuid, "test_uuid", "more_test_uuid"]
+    expect {
+      @cp.consumer_exists_bulk(post_data)
+    }.to raise_error(RestClient::ResourceNotFound)
+  end
+
+  it 'should return non existing ids for bulk consumer existence check' do
+    post_data = [@consumer1.uuid, "test_uuid", "more_test_uuid"]
+    begin
+      @cp.consumer_exists_bulk(post_data)
+    rescue RestClient::ResourceNotFound => e
+      json = JSON.parse(e.http_body)
+      expect(json).to include("test_uuid", "more_test_uuid")
+    end
+  end
+
   it 'lets a consumer view their own information' do
     owner1 = create_owner random_string('test_owner1')
     user1 = user_client(owner1, random_string("user1"))

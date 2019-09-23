@@ -960,6 +960,29 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return result != 0;
     }
 
+    /**
+     * Given the Consumer UUIDs it returns unique consumer UUIDs that exists.
+     *
+     * @param consumerUuids consumer UUIDs.
+     * @return set of consumer UUIDs that exists.
+     */
+    public Set<String> getExistingConsumerUuids(Iterable<String> consumerUuids) {
+        Set<String> existingUuids = new HashSet<>();
+
+        if (consumerUuids != null && consumerUuids.iterator().hasNext()) {
+            int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
+
+            String querySql = "SELECT C.uuid FROM Consumer C WHERE C.uuid IN (:uuids)";
+            javax.persistence.Query query = this.getEntityManager().createQuery(querySql);
+
+            for (List<String> block : Iterables.partition(consumerUuids, blockSize)) {
+                existingUuids.addAll(query.setParameter("uuids", block).getResultList());
+            }
+        }
+
+        return existingUuids;
+    }
+
     public Consumer verifyAndLookupConsumer(String consumerUuid) {
         Consumer consumer = this.findByUuid(consumerUuid);
 

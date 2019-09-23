@@ -970,6 +970,10 @@ class Candlepin
     head("/consumers/#{consumer_uuid}/exists")
   end
 
+  def consumer_exists_bulk(data)
+    post("/consumers/exists", {}, data)
+  end
+
   def get_consumer_release(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}/release")
