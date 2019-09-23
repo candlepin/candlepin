@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.7.6
+Version: 2.7.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,14 @@ fi
 
 #raw
 %changelog
+* Mon Sep 23 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.7-1
+- 1753256: ActiveMQContextListener no longer attempts to load DatabaseListener
+  (crog@redhat.com)
+- 1753201: Initialize the NSS db when loading a JSS provider
+  (nmoumoul@redhat.com)
+- 1752001: prefer virtual pool and conusmer match over syspurpose null_rule
+  (abhiskum@abhiskum.usersys.redhat.com)
+
 * Mon Sep 09 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.6-1
 - 1748406: When deleting pools, delete entitlements using ids - Now, when
   deleting pools, the revocation of entitlements of those   pools will use a
