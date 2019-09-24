@@ -22,8 +22,7 @@ version = "2.0"
 ext.versions = [
     artemis: "2.4.0",
     resteasy: "3.5.1.Final",
-    jackson: "2.9.9",
-    jackson_patch: "2.9.9.3",
+    jackson: "2.9.10",
     swagger: "1.5.7",
     logback: "1.2.3",
     guice: "4.1.0",
@@ -55,7 +54,7 @@ ext.libraries = [
     jackson: [
         "com.fasterxml.jackson.core:jackson-annotations:${versions.jackson}",
         "com.fasterxml.jackson.core:jackson-core:${versions.jackson}",
-        "com.fasterxml.jackson.core:jackson-databind:${versions.jackson_patch}",
+        "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:${versions.jackson}",
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${versions.jackson}",
         "com.fasterxml.jackson.module:jackson-module-jsonSchema:${versions.jackson}",
