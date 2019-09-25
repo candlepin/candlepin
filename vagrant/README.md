@@ -1,7 +1,7 @@
 # Testing Candlepin with Vagrant
 The vagrant test setup performs the following actions:
 * Deploy a Centos 7 vm
-* NFS mount your local source directory into the VM
+* sshfs mount your local source directory into the VM
 * Configure Tomcat remote debugging
 * Install Postgres and configure the candlepin user
   without an external messaging broker).
@@ -12,27 +12,9 @@ The vagrant test setup performs the following actions:
 * Optionally, setup yourkit profiler to enable profiling of the vm
 
 ## Prerequisites
-Running the Candlepin Vagrant deployer needs an up to date version of Vagrant
+Running the Candlepin Vagrant deployer needs an up to date version of Vagrant, vagrant-sshfs, 
 and Ansible. If the vagrant-hostmanager pluign is installed then the hostname
 for the development candlepin box will automatically be added to your hosts file.
-
-The NFS service requires +x attribute on all parent directories in order to mount
-the source directory. If you are running into problems with the NFS mount this would
-be the first thing to check.  
-
-Make sure NFS is enabled on firewall using:
-
-    $ firewall-cmd --list-all
-
-To enable NFS on firewall for vagrant network (192.168.121.0/24 in this case) you will
-have to type following commands (Fedora/RHEL7) on host:
-
-    $ firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
-      source address="192.168.121.0/24" service name="rpc-bind" accept'
-    $ firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
-      source address="192.168.121.0/24" service name="nfs" accept'
-    $ firewall-cmd --permanent --add-rich-rule='rule family="ipv4" \
-      source address="192.168.121.0/24" service name="mountd" accept'
 
 If you have other services running on ports 8000, 8080, or 8443 they will either have
 to be stopped or you will have to edit the Vagrantfile and choose different ports.
