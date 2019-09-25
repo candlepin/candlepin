@@ -63,6 +63,7 @@ import java.util.stream.Collectors;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.LockModeType;
+import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
 
 /**
@@ -568,10 +569,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     @Transactional
-    public void heartbeatUpdate(final String reporterId, final Date checkIn, final String ownerKey) {
+    public void heartbeatUpdate(final String reporterId, final Date checkIn, final String ownerKey)
+        throws PersistenceException {
         final String query;
-        final String db = config.getProperty("jpa.config.hibernate.connection.driver_class");
-        if (db.contains("mysql")) {
+        final String db = ((String) this.currentSession().getSessionFactory().getProperties()
+            .get("hibernate.dialect")).toLowerCase();
+        if (db.contains("mysql") || db.contains("maria")) {
             query = "" +
                 "UPDATE cp_consumer a" +
                 " JOIN cp_consumer_hypervisor b on a.id = b.consumer_id " +
@@ -591,7 +594,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 " AND c.account = :ownerKey";
         }
         else {
-            query = "";
+            throw new PersistenceException(
+                "The HypervisorHearbeatUpdate cannot execute as the database dialect is not recognized.");
         }
 
         this.currentSession().createSQLQuery(query)
