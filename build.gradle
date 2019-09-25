@@ -247,6 +247,5 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
 }
 
 wrapper {
-    gradleVersion = "5.3"
     distributionType = Wrapper.DistributionType.ALL
 }
