@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20190919132617-1" author="nmoumoul">
+        <comment>Create table for product branding.</comment>
+
+        <createTable tableName="cp2_product_branding">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp2_product_branding_pkey"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="product_uuid" type="VARCHAR(32)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="cp2_product_branding"
+                baseColumnNames="product_uuid"
+                constraintName="cp2_product_branding_fk1"
+                deferrable="false"
+                initiallyDeferred="false"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cp2_products"
+                referencesUniqueColumn="false" />
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

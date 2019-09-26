@@ -364,5 +364,54 @@ describe 'Owner Product Resource' do
       end.should raise_exception(RestClient::BadRequest)
     end
   end
+
+  it 'should create and delete products with branding correctly' do
+    b1 = {:productId => 'prodid1',
+      :type => 'type1', :name => 'branding1'}
+    b2 = {:productId => 'prodid2',
+      :type => 'type2', :name => 'branding2'}
+
+    owner = create_owner random_string('some-owner')
+    name = random_string("product-")
+
+    prod = create_product(name, name, :owner => owner['key'], :branding => [b1, b2])
+    prod.branding.size.should == 2
+
+    prod = @cp.get_product(owner['key'], prod['id'])
+    prod.branding.size.should == 2
+
+    @cp.delete_product(owner['key'], prod['id'])
+    lambda do
+      @cp.get_product(owner['key'], prod['id'])
+    end.should raise_exception(RestClient::ResourceNotFound)
+
+    # The shared product data should not get removed until the OrphanCleanupJob runs.
+    product = @cp.get_product_by_uuid(prod['uuid'])
+    product.branding.size.should == 2
+  end
+
+  it 'should create new product version when updating branding' do
+    b1 = {:productId => 'prodid1',
+      :type => 'type1', :name => 'branding1'}
+
+    owner = create_owner random_string('some-owner')
+    name = random_string("product-")
+
+    prod = create_product(name, name, :owner => owner['key'], :branding => [ b1 ])
+    prod.branding.size.should == 1
+
+    prod = @cp.get_product(owner['key'], prod['id'])
+    prod.branding.size.should == 1
+    original_prod_uuid = prod.uuid
+
+    b1.name = 'new_branding_name1'
+    updated_prod = @cp.update_product(owner['key'], prod['id'], :branding => [ b1 ])
+    updated_prod.branding.size.should == 1
+    updated_prod_uuid = updated_prod.uuid
+    expect(updated_prod.branding[0].name).to eq('new_branding_name1')
+
+    # A new product version should have been created during an update of branding
+    expect(updated_prod_uuid).not_to eq(original_prod_uuid)
+  end
 end
 

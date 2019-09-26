@@ -36,6 +36,8 @@ public class ProductCertificateTranslatorTest extends
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.productTranslatorTest.initModelTranslator(modelTranslator);
+
         modelTranslator.registerTranslator(
             this.translator, ProductCertificate.class, ProductCertificateDTO.class);
         modelTranslator.registerTranslator(new ProductTranslator(), Product.class, ProductDTO.class);

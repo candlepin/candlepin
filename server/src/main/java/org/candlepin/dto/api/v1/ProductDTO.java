@@ -166,6 +166,8 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
     @ApiModelProperty(hidden = true)
     protected Boolean locked;
 
+    protected Set<BrandingDTO> branding;
+
     /**
      * Initializes a new ProductDTO instance with null values.
      */
@@ -835,6 +837,86 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
         return this;
     }
 
+    /**
+     * Retrieves a view of the branding for the product represented by this DTO. If the branding items
+     * have not yet been defined, this method returns null.
+     * <p></p>
+     * Note that the collection returned by this method is a view of the collection backing this
+     * set of branding items. Elements cannot be added to the collection, but elements may be removed.
+     * Changes made to the collection will be reflected by this product DTO instance.
+     *
+     * @return
+     *  the branding items associated with this key, or null if they have not yet been defined
+     */
+    public Set<BrandingDTO> getBranding() {
+        return this.branding != null ? new SetView<>(this.branding) : null;
+    }
+
+    /**
+     * Adds the collection of branding items to this Product DTO.
+     *
+     * @param branding
+     *  A set of branding items to attach to this DTO, or null to clear the existing ones
+     *
+     * @return
+     *  A reference to this DTO
+     */
+    public ProductDTO setBranding(Set<BrandingDTO> branding) {
+        if (branding != null) {
+            if (this.branding == null) {
+                this.branding = new HashSet<>();
+            }
+            else {
+                this.branding.clear();
+            }
+
+            for (BrandingDTO dto : branding) {
+                if (isNullOrIncomplete(dto)) {
+                    throw new IllegalArgumentException(
+                        "collection contains null or incomplete branding objects");
+                }
+            }
+
+            this.branding.addAll(branding);
+        }
+        else {
+            this.branding = null;
+        }
+        return this;
+    }
+
+    /**
+     * Adds the given branding to this product DTO.
+     *
+     * @param branding
+     *  The branding to add to this product DTO.
+     *
+     * @return
+     *  true if this branding was not already contained in this product DTO.
+     */
+    @JsonIgnore
+    public boolean addBranding(BrandingDTO branding) {
+        if (isNullOrIncomplete(branding)) {
+            throw new IllegalArgumentException("branding is null or incomplete");
+        }
+
+        if (this.branding == null) {
+            this.branding = new HashSet<>();
+        }
+
+        return this.branding.add(branding);
+    }
+
+    /**
+     * Utility method to validate BrandingDTO input
+     */
+    private boolean isNullOrIncomplete(BrandingDTO branding) {
+        return branding == null ||
+            branding.getProductId() == null || branding.getProductId().isEmpty() ||
+            branding.getName() == null || branding.getName().isEmpty() ||
+            branding.getType() == null || branding.getType().isEmpty();
+    }
+
     @Override
     public String toString() {
         return String.format("ProductDTO [id = %s, name = %s]", this.id, this.name);
@@ -857,7 +939,8 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
                 .append(this.getAttributes(), that.getAttributes())
                 .append(this.getDependentProductIds(), that.getDependentProductIds())
                 .append(this.getHref(), that.getHref())
-                .append(this.isLocked(), that.isLocked());
+                .append(this.isLocked(), that.isLocked())
+                .append(this.getBranding(), that.getBranding());
 
             // As with many collections here, we need to explicitly check the elements ourselves,
             // since it seems very common for collection implementations to not properly implement
@@ -898,6 +981,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
             .append(this.getAttributes())
             .append(this.getDependentProductIds())
             .append(this.isLocked())
+            .append(this.getBranding())
             .append(pcHashCode);
 
         return builder.toHashCode();
@@ -910,6 +994,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
         copy.setAttributes(this.getAttributes());
         copy.setProductContent(this.getProductContent());
         copy.setDependentProductIds(this.getDependentProductIds());
+        copy.setBranding(this.getBranding());
 
         return copy;
     }
@@ -940,6 +1025,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
         this.setDependentProductIds(source.getDependentProductIds());
         this.setHref(source.getHref());
         this.setLocked(source.isLocked());
+        this.setBranding(source.getBranding());
 
         return this;
     }

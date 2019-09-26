@@ -28,6 +28,7 @@ import org.candlepin.util.PropertyValidationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.hibernate.HibernateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -529,5 +530,124 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testDerivedPoolProvidedProducts() {
         Set<String> uuids = productCurator.getDerivedPoolProvidedProductUuids(pool.getId());
         assertEquals(new HashSet<>(Arrays.asList(derivedProvidedProduct.getUuid())), uuids);
+    }
+
+    @Test
+    public void testProductWithBrandingCRUDOperations() {
+        Product marketingProduct = createTestProduct();
+        marketingProduct.addBranding(
+            new ProductBranding("eng_prod_id_1", "OS", "Brand No 1", marketingProduct));
+        marketingProduct.addBranding(
+            new ProductBranding("eng_prod_id_2", "OS", "Brand No 2", marketingProduct));
+
+        // Create
+        marketingProduct = productCurator.create(marketingProduct);
+        productCurator.flush();
+
+        // Detach
+        productCurator.detach(marketingProduct);
+
+        // Get
+        marketingProduct = productCurator.get(marketingProduct.getUuid());
+
+        // Merge
+        marketingProduct.setMultiplier(3L);
+        productCurator.merge(marketingProduct);
+
+        // Delete
+        productCurator.delete(marketingProduct);
+    }
+
+    @Test
+    public void testProductCannotUpdateImmutableBrandingCollectionByAddingItems() {
+        Product marketingProduct = createTestProduct();
+        marketingProduct.addBranding(
+            new ProductBranding("eng_prod_id_1", "OS", "Brand No 1", marketingProduct));
+        marketingProduct.addBranding(
+            new ProductBranding("eng_prod_id_2", "OS", "Brand No 2", marketingProduct));
+
+        productCurator.create(marketingProduct);
+        productCurator.flush();
+
+        marketingProduct.addBranding(
+            new ProductBranding("eng_prod_id_3", "OS", "Brand No 3", marketingProduct));
+        productCurator.merge(marketingProduct);
+
+        PersistenceException pe = assertThrows(PersistenceException.class, () -> productCurator.flush());
+        assertEquals(HibernateException.class, pe.getCause().getClass());
+        assertTrue(pe.getCause().getMessage().contains("changed an immutable collection instance"));
+    }
+
+    @Test
+    public void testProductCannotUpdateImmutableBrandingCollectionByRemovingItems() {
+        Product marketingProduct = createTestProduct();
+        marketingProduct.addBranding(
+            new ProductBranding("eng_prod_id_1", "OS", "Brand No 1", marketingProduct));
+        marketingProduct.addBranding(
+            new ProductBranding("eng_prod_id_2", "OS", "Brand No 2", marketingProduct));
+
+        productCurator.create(marketingProduct);
+        productCurator.flush();
+
+        marketingProduct.getBranding().clear();
+        productCurator.merge(marketingProduct);
+
+        PersistenceException pe = assertThrows(PersistenceException.class, () -> productCurator.flush());
+        assertEquals(HibernateException.class, pe.getCause().getClass());
+        assertTrue(pe.getCause().getMessage().contains("changed an immutable collection instance"));
+    }
+
+    @Test
+    public void testProductCannotUpdateImmutableBrandingCollectionByUpdatingItem() {
+        Product marketingProduct = createTestProduct();
+        marketingProduct.addBranding(
+            new ProductBranding("eng_prod_id_1", "OS", "Brand No 1", marketingProduct));
+
+        productCurator.create(marketingProduct);
+        productCurator.flush();
+
+        ((ProductBranding) marketingProduct.getBranding().toArray()[0]).setName("new name");
+        productCurator.merge(marketingProduct);
+        productCurator.flush();
+        productCurator.evict(marketingProduct);
+
+        Product lookedUp = productCurator.get(marketingProduct.getUuid());
+        assertNotEquals("new name", ((ProductBranding) lookedUp.getBranding().toArray()[0]).getName());
+    }
+
+    @Test
+    public void testCannotCreateProductWithBrandingWithNullId() {
+        Product marketingProduct = createTestProduct();
+        marketingProduct.addBranding(new ProductBranding(null, "OS", "Brand No 1", marketingProduct));
+
+        IllegalStateException ise = assertThrows(IllegalStateException.class,
+            () -> productCurator.create(marketingProduct));
+        assertEquals(ise.getMessage(),
+            "Product contains a Branding with a null product id, name or type.",
+            "The exception should have a different message.");
+    }
+
+    @Test
+    public void testCannotCreateProductWithBrandingWithNullType() {
+        Product marketingProduct = createTestProduct();
+        marketingProduct.addBranding(new ProductBranding("prod_id", null, "Brand No 1", marketingProduct));
+
+        IllegalStateException ise = assertThrows(IllegalStateException.class,
+            () -> productCurator.create(marketingProduct));
+        assertEquals(ise.getMessage(),
+            "Product contains a Branding with a null product id, name or type.",
+            "The exception should have a different message.");
+    }
+
+    @Test
+    public void testCannotCreateProductWithBrandingWithNullName() {
+        Product marketingProduct = createTestProduct();
+        marketingProduct.addBranding(new ProductBranding("prod_id", "OS", null, marketingProduct));
+
+        IllegalStateException ise = assertThrows(IllegalStateException.class,
+            () -> productCurator.create(marketingProduct));
+        assertEquals(ise.getMessage(),
+            "Product contains a Branding with a null product id, name or type.",
+            "The exception should have a different message.");
     }
 }
