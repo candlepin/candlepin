@@ -791,6 +791,7 @@ class Candlepin
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
     dependentProductIds = params[:dependentProductIds] || []
+    branding = params[:branding] || []
     relies_on = params[:relies_on] || []
 
     #if product don't have type attributes, create_product will fail on server
@@ -802,6 +803,7 @@ class Candlepin
       'multiplier' => multiplier,
       'attributes' => attributes,
       'dependentProductIds' => dependentProductIds,
+      'branding' => branding,
       'reliesOn' => relies_on
     }
 
@@ -817,6 +819,7 @@ class Candlepin
     product[:multiplier] = params[:multiplier] if params[:multiplier]
     product[:attributes] = params[:attributes] if params[:attributes]
     product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
+    product[:branding] = params[:branding] if params[:branding]
     product[:relies_on] = params[:relies_on] if params[:relies_on]
 
     put("/owners/#{owner_key}/products/#{product_id}", {}, product)

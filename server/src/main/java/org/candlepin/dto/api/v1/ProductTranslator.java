@@ -17,9 +17,9 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
-import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.model.ProductContent;
 
 import java.util.Collection;
@@ -74,7 +74,7 @@ public class ProductTranslator extends TimestampedEntityTranslator<Product, Prod
 
         if (modelTranslator != null) {
             Collection<ProductContent> productContent = source.getProductContent();
-            destination.setProductContent(Collections.<ProductContentDTO>emptyList());
+            destination.setProductContent(Collections.emptyList());
 
             if (productContent != null) {
                 ObjectTranslator<Content, ContentDTO> contentTranslator = modelTranslator
@@ -90,9 +90,22 @@ public class ProductTranslator extends TimestampedEntityTranslator<Product, Prod
                     }
                 }
             }
+
+            Collection<ProductBranding> branding = source.getBranding();
+            if (branding != null && !branding.isEmpty()) {
+                for (ProductBranding brand : branding) {
+                    if (brand != null) {
+                        destination.addBranding(modelTranslator.translate(brand, BrandingDTO.class));
+                    }
+                }
+            }
+            else {
+                destination.setBranding(Collections.emptySet());
+            }
         }
         else {
-            destination.setProductContent(Collections.<ProductContentDTO>emptyList());
+            destination.setProductContent(Collections.emptyList());
+            destination.setBranding(Collections.emptySet());
         }
 
         return destination;
