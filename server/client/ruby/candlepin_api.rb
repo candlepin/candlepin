@@ -80,7 +80,7 @@ class Candlepin
               content_tags=[], created_date=nil, last_checkin_date=nil,
               annotations=nil, recipient_owner_key=nil, user_agent=nil,
               entitlement_count=0, id_cert=nil, serviceLevel=nil, role=nil, usage=nil,
-              addOns=nil, reporter_id=nil)
+              addOns=nil, reporter_id=nil, autoheal=nil)
 
     consumer = {
       :type => {:label => type},
@@ -103,6 +103,7 @@ class Candlepin
     consumer[:idCert] = id_cert if id_cert
 
     consumer[:serviceLevel] = serviceLevel if serviceLevel
+    consumer[:autoheal] = autoheal if not autoheal.nil?
     consumer[:role] = role if role
     consumer[:usage] = usage if usage
     consumer[:addOns] = addOns if addOns

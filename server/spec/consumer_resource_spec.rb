@@ -399,6 +399,22 @@ describe 'Consumer Resource' do
     expect(consumer['serviceLevel']).to eq(service_level)
   end
 
+  it 'should let a consumer register and disable autoheal' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+                               owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil,
+                               nil, nil, nil, nil, false)
+
+    expect(consumer['autoheal']).to eq(false)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['autoheal']).to eq(false)
+  end
+
   it 'should let a consumer register and set system purpose role' do
     owner = create_owner(random_string('owner'))
     user_name = random_string('user')
