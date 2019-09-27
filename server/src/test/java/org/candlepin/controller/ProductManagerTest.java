@@ -17,12 +17,14 @@ package org.candlepin.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -49,7 +51,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
 
         this.productManager = new ProductManager(this.mockEntCertGenerator, this.ownerContentCurator,
-            this.ownerProductCurator, this.productCurator, this.modelTranslator);
+            this.ownerProductCurator, this.productCurator);
     }
 
     @Test
@@ -411,6 +413,103 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
+    @Test
+    public void testCreateProductWithBranding() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
+        BrandingDTO brandingDTO = new BrandingDTO();
+        brandingDTO.setProductId("eng_prod_id");
+        brandingDTO.setName("brand_name");
+        brandingDTO.setType("OS");
+        dto.addBranding(brandingDTO);
+
+        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
+
+        Product output = this.productManager.createProduct(dto, owner);
+
+        assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
+        assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
+    }
+
+    @Test
+    public void testUpdateProductWithBranding() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
+        BrandingDTO brandingDTO = new BrandingDTO();
+        brandingDTO.setProductId("eng_prod_id");
+        brandingDTO.setName("brand_name");
+        brandingDTO.setType("OS");
+        dto.addBranding(brandingDTO);
+
+        Product output = this.productManager.createProduct(dto, owner);
+
+        assertEquals(1, output.getBranding().size());
+
+        ProductDTO pdto = this.modelTranslator.translate(output, ProductDTO.class);
+        BrandingDTO brandingDTO2 = new BrandingDTO();
+        brandingDTO2.setProductId("eng_prod_id2");
+        brandingDTO2.setName("brand_name2");
+        brandingDTO2.setType("OS");
+        pdto.addBranding(brandingDTO2);
+
+        output = this.productManager.updateProduct(pdto, owner, false);
+        assertEquals(2, output.getBranding().size());
+    }
+
+    @Test
+    public void testIsChangedByDTOIsTrueWhenBrandingAdded() {
+        Product product = this.createProduct("p1", "prod1");
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+        BrandingDTO brand1 = new BrandingDTO();
+        brand1.setProductId("prod_id");
+        brand1.setName("Brand Name");
+        brand1.setType("OS");
+        pdto.addBranding(brand1);
+
+        assertTrue(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testIsChangedByDTOIsTrueWhenBrandingUpdated() {
+        Product product = this.createProduct("p1", "prod1");
+        product.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", product));
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+        ((BrandingDTO) pdto.getBranding().toArray()[0]).setName("New Name!");
+
+        assertTrue(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testIsChangedByDTOIsTrueWhenBrandingRemoved() {
+        Product product = this.createProduct("p1", "prod1");
+        product.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", product));
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+        pdto.getBranding().clear();
+
+        assertTrue(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testIsChangedByDTOIsFalseWithoutAnyBranding() {
+        Product product = this.createProduct("p1", "prod1");
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+
+        assertFalse(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testIsChangedByDTOIsFalseWhenBrandingWasNotRemovedOrAdded() {
+        Product product = this.createProduct("p1", "prod1");
+        product.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", product));
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+
+        assertFalse(ProductManager.isChangedBy(product, pdto));
+    }
 
     // Move this to ContentManagerTest
 

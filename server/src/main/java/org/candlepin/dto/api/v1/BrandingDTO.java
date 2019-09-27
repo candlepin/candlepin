@@ -24,8 +24,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 
 /**
- * A DTO representation of the Branding entity used internally by
- * other DTO entities, like PoolDTO and SubscriptionDTO.
+ * A DTO representation of the Branding entity used internally by ProductDTO.
  */
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> {
