@@ -752,7 +752,12 @@ public class ConsumerResource {
 
         validateViaConsumerType(consumer, type, keys, owner, userName, principal);
 
-        consumer.setAutoheal(true); // this is the default
+        if (consumer.getAutoheal() != null) {
+            consumer.setAutoheal(consumer.getAutoheal());
+        }
+        else {
+            consumer.setAutoheal(true); // this is the default
+        }
 
         // Sanitize the inbound facts
         this.sanitizeConsumerFacts(consumer);
