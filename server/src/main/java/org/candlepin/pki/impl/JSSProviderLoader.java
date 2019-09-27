@@ -28,11 +28,9 @@ import java.security.Security;
 import java.util.Arrays;
 
 /**
- * When this class is loaded, the JSS provider will be installed into the JVM.  The
- * provider can also be added via a call to a static method if needed in a test for example.  The
- * addProvider() method can be called more than once without ill effect (-1 will be returned if the provider
- * is already installed).
- * */
+ * Provides the addProvider() method, which, when called, initializes the JSS CryptoManager (which in turn
+ * initializes the NSS DB) and loads the JSS Provider into the JVM.
+ */
 public class JSSProviderLoader {
     private static JSSProvider jssProvider = null;
     private static final String NSS_DB_LOCATION = "/etc/pki/nssdb";
@@ -42,7 +40,6 @@ public class JSSProviderLoader {
         // Satellite 6 is only supported on 64 bit architectures
         addLibraryPath("/usr/lib64/jss");
         System.loadLibrary("jss4");
-        addProvider();
     }
 
     /**
@@ -106,7 +103,7 @@ public class JSSProviderLoader {
             CryptoManager.initialize(ivs);
         }
         catch (AlreadyInitializedException e) {
-            log.warn("CryptoManager was already initialized.", e);
+            log.warn("CryptoManager was already initialized.");
         }
         catch (KeyDatabaseException | CertDatabaseException | GeneralSecurityException e) {
             log.error("Could not initialize CryptoManager!", e);
