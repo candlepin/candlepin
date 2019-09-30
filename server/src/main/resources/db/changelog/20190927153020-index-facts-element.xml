@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~  Copyright (c) 2009 - ${YEAR} Red Hat, Inc.
+  ~
+  ~  This software is licensed to you under the GNU General Public License,
+  ~  version 2 (GPLv2). There is NO WARRANTY for this software, express or
+  ~  implied, including the implied warranties of MERCHANTABILITY or FITNESS
+  ~  FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+  ~  along with this software; if not, see
+  ~  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+  ~
+  ~  Red Hat trademarks are not licensed under GPLv2. No permission is
+  ~  granted to use or replicate Red Hat trademarks that are incorporated
+  ~  in this software or its documentation.
+  -->
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+
+    <changeSet id="20190927153020-1"  dbms="postgresql" author="sdhome">
+
+        <comment>Index consumer_fact_element_idx on cp_consumer_facts table for lower case of elements</comment>
+        <createIndex indexName="consumer_fact_element_idx"
+                     tableName="cp_consumer_facts"
+                     unique="false">
+            <column name="lower(element)" type="varchar(255)" />
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
