@@ -250,7 +250,7 @@ public class HypervisorUpdateJob extends KingpinJob {
             for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
                 if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
                     systemUuidKnownConsumersMap.put(
-                        consumer.getFact(Consumer.Facts.SYSTEM_UUID), consumer);
+                        consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(), consumer);
                 }
             }
 
@@ -260,8 +260,10 @@ public class HypervisorUpdateJob extends KingpinJob {
                 Consumer knownHost = hypervisorKnownConsumersMap.get(hypervisorId);
                 // HypervisorId might be different in candlepin
                 if (knownHost == null && incoming.hasFact(Consumer.Facts.SYSTEM_UUID) &&
-                    systemUuidKnownConsumersMap.get(incoming.getFact(Consumer.Facts.SYSTEM_UUID)) != null) {
-                    knownHost = systemUuidKnownConsumersMap.get(incoming.getFact(Consumer.Facts.SYSTEM_UUID));
+                    systemUuidKnownConsumersMap.get(
+                        incoming.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase()) != null) {
+                    knownHost = systemUuidKnownConsumersMap.get(incoming.getFact(
+                        Consumer.Facts.SYSTEM_UUID).toLowerCase());
                     if (knownHost != null) {
                         log.debug("Found a known host by system uuid");
                     }

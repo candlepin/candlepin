@@ -1085,6 +1085,48 @@ describe 'Hypervisor Resource', :type => :virt do
     hypervisor_uuid.should == test_host['uuid']
   end
 
+  it 'should merge hypervisor into consumer with the same uuid ignore casing - async' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "TEST-UUID", "virt.is_guest"=>"false"}, nil, owner['key'])
+
+    host_hyp_id = "hypervisor"
+    guests = ['g1', 'g2']
+    host_facts = {
+        "dmi.system.uuid" => "test-uuid"}
+    job_detail = async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests, nil, nil, host_facts)
+    result_data = job_detail['resultData']
+    result_data.updated.size.should == 1
+    hypervisor_uuid = result_data.updated[0].uuid
+
+    @cp.list_consumers({:owner=>owner['key']}).length.should == 1
+    test_host = @cp.get_consumer(test_host['uuid'])
+    test_host['type']['label'].should == 'hypervisor'
+    hypervisor_uuid.should == test_host['uuid']
+  end
+
+  it 'should merge hypervisor into consumer with the same uuid ignore casing reverse - async' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
+
+    host_hyp_id = "hypervisor"
+    guests = ['g1', 'g2']
+    host_facts = {
+        "dmi.system.uuid" => "TEST-UUID"}
+    job_detail = async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests, nil, nil, host_facts)
+    result_data = job_detail['resultData']
+    result_data.updated.size.should == 1
+    hypervisor_uuid = result_data.updated[0].uuid
+
+    @cp.list_consumers({:owner=>owner['key']}).length.should == 1
+    test_host = @cp.get_consumer(test_host['uuid'])
+    test_host['type']['label'].should == 'hypervisor'
+    hypervisor_uuid.should == test_host['uuid']
+  end
+
   it 'should not fail when facts change but not the guest list' do
     # test for BZ 1651651
     # if facts or hypervisor id changes, the migration was attempted
