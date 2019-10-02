@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.14
+Version: 2.9.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,17 @@ fi
 
 #raw
 %changelog
+* Wed Oct 02 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.15-1
+- Use more reliable method for detecting the hibernate dialect
+  (wpoteat@redhat.com)
+- ENT:290 Bulk consumer exists api (prakgupt@redhat.com)
+- 1702035 - [RFE] Set autoheal as part of consumer creation.
+  (bcourt@redhat.com)
+- 1615405: Candlepin should have index on cp_consumer_facts for
+  ((lower(element))) column (sonalidhome@gmail.com)
+- Update the version of jackson libraries (bcourt@redhat.com)
+- Update c3p0 version (bcourt@redhat.com)
+
 * Fri Sep 20 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.14-1
 - 
 
