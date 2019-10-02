@@ -522,7 +522,7 @@ public class PoolManagerTest {
     }
 
     private void mockProductImport(Owner owner, final Map<String, Product> products) {
-        when(mockProductManager.importProducts(eq(owner), any(Map.class), any(Map.class)))
+        when(mockProductManager.importProducts(eq(owner), any(Map.class), any(Map.class), any(Map.class)))
             .thenAnswer(new Answer<ImportResult<Product>>() {
                 @Override
                 public ImportResult<Product> answer(InvocationOnMock invocation) throws Throwable {

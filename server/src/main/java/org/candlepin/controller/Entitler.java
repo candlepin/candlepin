@@ -376,7 +376,7 @@ public class Entitler {
 
         log.debug("Importing {} product(s)...", productMap.size());
         Map<String, Product> importedProducts = this.productManager
-            .importProducts(owner, productMap, importedContent)
+            .importProducts(owner, productMap, importedContent, null)
             .getImportedEntities();
 
         log.debug("Resolved {} dev product(s) for sku: {}", productMap.size(), sku);

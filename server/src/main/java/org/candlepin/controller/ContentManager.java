@@ -538,7 +538,7 @@ public class ContentManager {
             }
 
             // Perform a micro-import for these products using the content map we just built
-            this.productManager.importProducts(owner, affectedProductData, affectedProductsContent);
+            this.productManager.importProducts(owner, affectedProductData, affectedProductsContent, null);
         }
 
         // Perform bulk reference update
@@ -707,7 +707,7 @@ public class ContentManager {
 
                 // Perform a micro-import for these products using the content map we just built
                 log.debug("Performing micro-import for products: {}", affectedProductData);
-                this.productManager.importProducts(owner, affectedProductData, affectedProductsContent);
+                this.productManager.importProducts(owner, affectedProductData, affectedProductsContent, null);
 
                 if (regenerateEntitlementCerts) {
                     this.entitlementCertGenerator.regenerateCertificatesOf(

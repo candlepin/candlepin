@@ -129,7 +129,7 @@ public class EntitlerTest {
     }
 
     private void mockProductImport(Map<String, Product> products) {
-        when(productManager.importProducts(any(Owner.class), anyMap(), anyMap()))
+        when(productManager.importProducts(any(Owner.class), anyMap(), anyMap(), nullable(Map.class)))
             .thenAnswer(invocation -> {
                 Object[] args = invocation.getArguments();
                 Map<String, ProductData> productData = (Map<String, ProductData>) args[1];

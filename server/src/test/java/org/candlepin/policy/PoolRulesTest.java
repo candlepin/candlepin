@@ -24,13 +24,13 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -212,52 +212,45 @@ public class PoolRulesTest {
     }
 
     @Test
-    public void brandingChanged() {
+    public void productBrandingChanged() {
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct());
 
         Pool p1 = TestUtil.clone(p);
 
-        // Add some branding to the pool and do an update:
-        Branding b1 = new Branding("8000", "OS", "Awesome OS Branded");
-        Branding b2 = new Branding("8001", "OS", "Awesome OS Branded 2");
-        p.getBranding().add(b1);
-        p.getBranding().add(b2);
+        // Add some branding to the pool's product and do an update:
+        ProductBranding b1 = new ProductBranding("8000", "OS", "Awesome OS Branded", p.getProduct());
+        ProductBranding b2 = new ProductBranding("8001", "OS", "Awesome OS Branded 2", p.getProduct());
+        p.getProduct().addBranding(b1);
+        p.getProduct().addBranding(b2);
 
         List<Pool> existingPools = Arrays.asList(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.<String, Product>emptyMap());
+            TestUtil.stubChangedProducts(p.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
-
-        assertFalse(update.getProductsChanged());
+        assertTrue(update.getProductsChanged());
         assertFalse(update.getDatesChanged());
         assertFalse(update.getQuantityChanged());
-
-        assertTrue(update.getBrandingChanged());
-        assertTrue(update.changed());
-
-        assertEquals(2, update.getPool().getBranding().size());
-        assertTrue(update.getPool().getBranding().contains(b1));
-        assertTrue(update.getPool().getBranding().contains(b2));
+        assertEquals(p.getProduct().getBranding().size(), update.getPool().getProduct().getBranding().size());
     }
 
     @Test
-    public void brandingDidntChange() {
+    public void productBrandingDidntChange() {
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct());
 
         // Add some branding to the subscription and do an update:
-        Branding b1 = new Branding("8000", "OS", "Awesome OS Branded");
-        Branding b2 = new Branding("8001", "OS", "Awesome OS Branded 2");
-        p.getBranding().add(b1);
-        p.getBranding().add(b2);
+        ProductBranding b1 = new ProductBranding("8000", "OS", "Awesome OS Branded", p.getProduct());
+        ProductBranding b2 = new ProductBranding("8001", "OS", "Awesome OS Branded 2", p.getProduct());
+        p.getProduct().addBranding(b1);
+        p.getProduct().addBranding(b2);
 
         // Copy the pool with the branding to begin with:
         Pool p1 = TestUtil.clone(p);
 
         List<Pool> existingPools = Arrays.asList(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.<String, Product>emptyMap());
+            Collections.emptyMap());
 
         assertEquals(0, updates.size());
     }

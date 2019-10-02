@@ -37,7 +37,7 @@ public interface ProductServiceAdapter {
      * When this method is called by candlepin, candlepin has already verified that
      * the specified owner is known to candlepin and should not be null. If an
      * implementation receives a null owner, a RuntimeException should be thrown.
-     * If the owner is unknown to the service, an empty list of products should
+     * If the owner is unknown to the service, an empty list of products shouldbrand
      * be returned.
      *
      * If the ids param is null or empty, an empty list of products will be

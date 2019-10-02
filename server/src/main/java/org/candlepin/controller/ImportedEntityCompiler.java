@@ -14,23 +14,26 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ContentInfo;
+import org.candlepin.util.Util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
 
 
 /**
- * The ImportedEntityCompiler builds collections of subscriptions, products and content to import.
+ * The ImportedEntityCompiler builds collections of subscriptions, products, content, and branding to import.
  */
 public class ImportedEntityCompiler {
     private static Logger log = LoggerFactory.getLogger(ImportedEntityCompiler.class);
@@ -38,6 +41,7 @@ public class ImportedEntityCompiler {
     protected Map<String, SubscriptionInfo> subscriptions;
     protected Map<String, ProductInfo> products;
     protected Map<String, ContentInfo> content;
+    protected Map<String, Collection<? extends BrandingInfo>> branding;
 
     /**
      * Creates a new ImportedEntityCompiler
@@ -47,6 +51,7 @@ public class ImportedEntityCompiler {
         this.subscriptions = new HashMap<>();
         this.products = new HashMap<>();
         this.content = new HashMap<>();
+        this.branding = new HashMap<>();
     }
 
     /**
@@ -68,7 +73,7 @@ public class ImportedEntityCompiler {
     /**
      * Adds the specified subscriptions to this entity compiler. If a given subscription has already
      * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced. Products and content attached to the subscriptions will be
+     * previous entry will be replaced. Products, content and branding attached to the subscriptions will be
      * mapped by this compiler. Null subscriptions will be silently ignored.
      *
      * @param subscriptions
@@ -100,12 +105,62 @@ public class ImportedEntityCompiler {
 
                 this.subscriptions.put(subscription.getId(), subscription);
 
+                // Add any branding
+                this.addBranding(subscription);
+
                 // Add any products attached to this subscription...
                 this.addProducts(subscription.getProduct());
                 this.addProducts(subscription.getDerivedProduct());
                 this.addProducts(subscription.getProvidedProducts());
                 this.addProducts(subscription.getDerivedProvidedProducts());
             }
+        }
+    }
+
+    /**
+     * Adds the set of brandings from the specified subscription to this entity compiler.
+     *
+     * The set of brandings will be mapped to the marketing product of the subscription.
+     * Null or empty branding sets will be silently ignored. Subscriptions with null product will also be
+     * silently ignored. If a branding set has already been added for the same product, but differs from
+     * the newer version, a warning will be generated and the previous set will be replaced with the new.
+     *
+     * @throws IllegalArgumentException
+     *  if the main product of the subscription does not contain a valid product ID
+     *
+     * @param subscription
+     *  The subscription whose branding set is to be added to this compiler
+     */
+    public void addBranding(SubscriptionInfo subscription) {
+        if (subscription.getBranding() == null || subscription.getBranding().isEmpty() ||
+            subscription.getProduct() == null) {
+            return;
+        }
+
+        if (subscription.getProduct().getId() == null || subscription.getProduct().getId().isEmpty()) {
+            String msg = String.format("product does not contain a mappable Red Hat ID: %s",
+                subscription.getProduct());
+
+            log.error(msg);
+            throw new IllegalArgumentException(msg);
+        }
+
+        Collection<? extends BrandingInfo> newBranding = subscription.getBranding();
+        String marketingProductId = subscription.getProduct().getId();
+
+        // Check if we already have a branding set for this marketing product, and
+        // if we do and they're not the same as the new ones, replace them.
+        Collection<? extends BrandingInfo> existingBranding = this.branding.get(marketingProductId);
+
+        Comparator<BrandingInfo> comparator = BrandingInfo.getBrandingInfoComparator();
+
+        if (!Util.collectionsAreEqual((Collection) existingBranding, (Collection) newBranding, comparator)) {
+            log.warn("Multiple versions of branding received for the same product during refresh; " +
+                "discarding previous: {} => {}, {}", marketingProductId, existingBranding, newBranding);
+        }
+
+        if (!newBranding.isEmpty()) {
+            this.branding.put(marketingProductId, newBranding);
         }
     }
 
@@ -310,4 +365,14 @@ public class ImportedEntityCompiler {
         return this.content;
     }
 
+    /**
+     * Fetches the compiled sets of branding, mapped by product ID. If no branding have been
+     * added, this method returns an empty map.
+     *
+     * @return
+     *  A mapping of product ids to the compiled, imported sets of branding
+     */
+    public Map<String, Collection<? extends BrandingInfo>> getBranding() {
+        return this.branding;
+    }
 }

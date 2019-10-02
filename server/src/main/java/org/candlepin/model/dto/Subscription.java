@@ -608,8 +608,8 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
         this.setUpstreamConsumerId(source.getUpstreamConsumerId());
 
-        //Pool.getBranding should return entity Branding. The Branding
-        //entity has no futher relationships so everything should be ok.
+        //TODO: This should get updated to populate the branding from the pool's main product once Pool
+        // stops having a reference to it. (ENT-1616)
         this.setBranding(source.getBranding());
 
         // Attempt to calculate the quantity from the pool and its product:

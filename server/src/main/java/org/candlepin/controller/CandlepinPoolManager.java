@@ -242,6 +242,7 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, ? extends SubscriptionInfo> subscriptionMap = compiler.getSubscriptions();
         Map<String, ? extends ProductInfo> productMap = compiler.getProducts();
         Map<String, ? extends ContentInfo> contentMap = compiler.getContent();
+        Map<String, Collection<? extends BrandingInfo>> brandingMap = compiler.getBranding();
 
         // If trace output is enabled, dump some JSON representing the subscriptions we received so
         // we can simulate this in a testing environment.
@@ -268,7 +269,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.debug("Importing {} product(s)...", productMap.size());
         ImportResult<Product> importResult = this.productManager
-            .importProducts(owner, productMap, importedContent);
+            .importProducts(owner, productMap, importedContent, brandingMap);
 
         Map<String, Product> importedProducts = importResult.getImportedEntities();
         Map<String, Product> updatedProducts = importResult.getUpdatedEntities();
@@ -594,9 +595,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             // dates changed. regenerate all entitlement certificates
-            if (updatedPool.getDatesChanged() || updatedPool.getProductsChanged() ||
-                updatedPool.getBrandingChanged()) {
-
+            if (updatedPool.getDatesChanged() || updatedPool.getProductsChanged()) {
                 poolsToRegenEnts.add(existingPool);
             }
 
@@ -943,7 +942,10 @@ public class CandlepinPoolManager implements PoolManager {
             pool.setCertificate(cert);
         }
 
-        // Add in branding
+        //TODO: This block should get removed since we don't need to populate branding on the pool once Pool
+        // stops having a reference to it. Any branding needed by the pool will already have been present
+        // in the main product. (ENT-1616)
+        //Add in branding
         if (sub.getBranding() != null) {
             Set<Branding> branding = new HashSet<>();
 

@@ -17,7 +17,6 @@ package org.candlepin.policy.js.pool;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -348,8 +347,6 @@ public class PoolRules {
                 }
 
                 update.setOrderChanged(checkForOrderDataChanges(masterPool, existingPool));
-
-                update.setBrandingChanged(checkForBrandingChanges(masterPool, existingPool));
             }
 
             // All done, see if we found any changes and return an update object if so:
@@ -522,39 +519,6 @@ public class PoolRules {
             existingPool.setContractNumber(pool.getContractNumber());
         }
         return orderDataChanged;
-    }
-
-    private boolean checkForBrandingChanges(Pool pool, Pool existingPool) {
-        boolean brandingChanged = false;
-
-        if (pool.getBranding().size() != existingPool.getBranding().size()) {
-            brandingChanged = true;
-        }
-        else {
-            for (Branding b : pool.getBranding()) {
-                if (!existingPool.getBranding().contains(b)) {
-                    brandingChanged = true;
-                    break;
-                }
-            }
-        }
-
-        if (brandingChanged) {
-            syncBranding(pool, existingPool);
-        }
-
-        return brandingChanged;
-    }
-
-    /*
-     * Something has changed, sync the branding.
-     */
-    private void syncBranding(Pool pool, Pool existingPool) {
-        existingPool.getBranding().clear();
-        for (Branding b : pool.getBranding()) {
-            existingPool.getBranding().add(new Branding(b.getProductId(), b.getType(),
-                b.getName()));
-        }
     }
 
     private Set<Product> getExpectedProvidedProducts(Pool pool, boolean useDerived) {
