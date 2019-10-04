@@ -231,8 +231,11 @@ describe 'Pool Resource' do
       owner = create_owner random_string('some-owner')
       name = random_string("product-")
 
-      product = create_product(name, name, :owner => owner['key'])
+      # In standalone mode, branding needs to be added to the create_product call directly.
+      product = create_product(name, name, :owner => owner['key'], :branding => [b1, b2])
 
+      # In hosted mode, branding needs to be added to the create subscription call, in order for it to be
+      # mapped by refresh to the product.
       created = create_pool_and_subscription(owner['key'], product.id, 11,
         [], '', '', '', nil, nil, false, :branding => [b1, b2])
 

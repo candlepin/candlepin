@@ -124,15 +124,12 @@ describe 'Refresh Pools' do
 
     @cp.refresh_pools(owner_key)
 
-    #TODO: Uncomment this block once the PoolDTO gets properly populated with branding from its main product
-    # (ENT-1617)
-    #
-    # # Check the updated branding is visible on the pool response.
-    # pools = @cp.list_pools({:owner => owner.id})
-    #
-    # expect(pools.length).to eq(1)
-    # expect(pools[0].branding.length).to eq(2)
-    # expect('branding2').to eq(pools[0].branding[0].name).or(eq(pools[0].branding[1].name))
+    # Check the updated branding is visible on the pool response.
+    pools = @cp.list_pools({:owner => owner.id})
+
+    expect(pools.length).to eq(1)
+    expect(pools[0].branding.length).to eq(2)
+    expect('branding2').to eq(pools[0].branding[0].name).or(eq(pools[0].branding[1].name))
 
     # Check the updated branding set is visible on the product.
     products = @cp.list_products_by_owner(owner_key)
