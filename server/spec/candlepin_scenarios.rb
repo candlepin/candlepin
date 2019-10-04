@@ -497,11 +497,19 @@ class StandardExporter < Exporter
     @products = {}
     @content = {}
 
-    # the before(:each) is not initialized yet, call create_product sans wrapper
-    @products[:product1] = create_product(random_string('prod1'), random_string(), {
-      :multiplier => 2
-    })
+    # Create an engineering product:
+    @products[:eng_product] = create_product(rand(10000000).to_s, random_string('engproduct'))
 
+    brandings = [
+        {
+            :productId => @products[:eng_product]['id'],
+            :type => "OS",
+            :name => "Branded Eng Product"
+        }
+    ]
+    # the before(:each) is not initialized yet, call create_product sans wrapper
+    @products[:product1] = create_product(random_string('prod1'), random_string(),
+                              {:multiplier => 2, :branding => brandings})
     @products[:product2] = create_product(random_string('prod2'), random_string())
     @products[:virt_product] = create_product(random_string('virt_product'), random_string('virt_product'), {
       :attributes => {
@@ -538,20 +546,12 @@ class StandardExporter < Exporter
     #this is for the update process
     @products[:product_up] = create_product(random_string('product_up'), random_string('product_up'))
 
-    # Create an engineering product:
-    @products[:eng_product] = create_product(rand(10000000).to_s, random_string('engproduct'))
-
-    @content[:content1] = create_content({
-      :metadata_expire => 6000,
-      :required_tags => "TAG1,TAG2"
-    })
-
-    @content[:arch_content] = create_content({
-      :metadata_expire => 6000,
-      :content_url => "/path/to/arch/specific/content",
-      :required_tags => "TAG1,TAG2",
-      :arches => "i386,x86_64"
-    })
+    @content[:product1] = create_content({:metadata_expire => 6000,
+                              :required_tags => "TAG1,TAG2"})
+    @content[:arch_content] = create_content({:metadata_expire => 6000,
+                                   :content_url => "/path/to/arch/specific/content",
+                                   :required_tags => "TAG1,TAG2",
+                                   :arches => "i386,x86_64"})
 
     @cp.add_content_to_product(@owner['key'], @products[:product1].id, @content[:content1].id)
     @cp.add_content_to_product(@owner['key'], @products[:product2].id, @content[:content1].id)
@@ -559,14 +559,6 @@ class StandardExporter < Exporter
     @cp.add_content_to_product(@owner['key'], @products[:derived_product].id, @content[:content1].id)
 
     end_date = Date.new(2025, 5, 29)
-
-    brandings = [
-      {
-        :productId => @products[:eng_product]['id'],
-        :type => "OS",
-        :name => "Branded Eng Product"
-      }
-    ]
 
     @cp.create_pool(@owner['key'], @products[:product1].id, {
       :quantity => 2,
