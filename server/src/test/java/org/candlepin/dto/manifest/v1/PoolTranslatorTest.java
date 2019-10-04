@@ -23,6 +23,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
@@ -55,6 +56,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
     private ProductTranslatorTest productTranslatorTest = new ProductTranslatorTest();
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private BrandingTranslatorTest brandingTranslatorTest = new BrandingTranslatorTest();
+    private ProductBrandingTranslatorTest productBrandingTranslatorTest = new ProductBrandingTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
 
     @Override
@@ -62,6 +64,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         this.productTranslatorTest.initModelTranslator(modelTranslator);
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
         this.brandingTranslatorTest.initModelTranslator(modelTranslator);
+        this.productBrandingTranslatorTest.initModelTranslator(modelTranslator);
         this.certificateTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(this.translator, Pool.class, PoolDTO.class);
@@ -213,14 +216,17 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
                     assertNull(destSourceEntitlement);
                 }
 
-                for (Branding brandingSource : source.getBranding()) {
+                assertEquals(source.getProduct().getBranding().size(), dest.getBranding().size());
+
+                for (ProductBranding productBranding : source.getProduct().getBranding()) {
                     for (BrandingDTO brandingDTO : dest.getBranding()) {
 
                         assertNotNull(brandingDTO);
                         assertNotNull(brandingDTO.getProductId());
 
-                        if (brandingDTO.getProductId().equals(brandingSource.getProductId())) {
-                            this.brandingTranslatorTest.verifyOutput(brandingSource, brandingDTO, true);
+                        if (brandingDTO.getProductId().equals(productBranding.getProductId())) {
+                            this.productBrandingTranslatorTest
+                                .verifyOutput(productBranding, brandingDTO, true);
                         }
                     }
                 }

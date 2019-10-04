@@ -38,6 +38,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.User;
@@ -586,6 +587,17 @@ public class TestUtil {
             .setAttributes(Collections.<String, String>emptyMap());
 
         return dto;
+    }
+
+    public static ProductBranding createProductBranding(Product product) {
+        ProductBranding productBranding = new ProductBranding();
+        String suffix = randomString();
+        productBranding.setId("test-id-" + suffix);
+        productBranding.setProduct(product);
+        productBranding.setName("test-name-" + suffix);
+        productBranding.setType("test-type-" + suffix);
+        productBranding.setProductId("test-product-id-" + suffix);
+        return productBranding;
     }
 
     public void addPermissionToUser(User u, Access role, Owner o) {
