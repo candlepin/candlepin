@@ -232,6 +232,9 @@ public class StandardTranslator extends SimpleModelTranslator {
             new org.candlepin.dto.manifest.v1.BrandingTranslator(),
             Branding.class, org.candlepin.dto.manifest.v1.BrandingDTO.class);
         this.registerTranslator(
+            new org.candlepin.dto.manifest.v1.ProductBrandingTranslator(),
+            ProductBranding.class, org.candlepin.dto.manifest.v1.BrandingDTO.class);
+        this.registerTranslator(
             new org.candlepin.dto.manifest.v1.CdnTranslator(),
             Cdn.class, org.candlepin.dto.manifest.v1.CdnDTO.class);
         this.registerTranslator(

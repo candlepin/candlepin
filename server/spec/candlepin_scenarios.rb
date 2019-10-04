@@ -494,9 +494,21 @@ class StandardExporter < Exporter
     @cdn_label = random_string("test-cdn")
     super({:cdn_label => @cdn_label, :webapp_prefix => "webapp1", :api_url => "api1"})
     @products = {}
+
+    # Create an engineering product:
+    @products[:eng_product] = create_product(rand(10000000).to_s, random_string('engproduct'))
+
+    brandings = [
+      {
+        :productId => @products[:eng_product]['id'],
+        :type => "OS",
+        :name => "Branded Eng Product"
+      }
+    ]
+
     # the before(:each) is not initialized yet, call create_product sans wrapper
     @products[:product1] = create_product(random_string('prod1'), random_string(),
-                              {:multiplier => 2})
+                              {:multiplier => 2, :branding => brandings})
     @products[:product2] = create_product(random_string('prod2'), random_string())
     @products[:virt_product] = create_product(random_string('virt_product'),
                                   random_string('virt_product'),
@@ -519,9 +531,6 @@ class StandardExporter < Exporter
     #this is for the update process
     @products[:product_up] = create_product(random_string('product_up'), random_string('product_up'))
 
-    # Create an engineering product:
-    @products[:eng_product] = create_product(rand(10000000).to_s, random_string('engproduct'))
-
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
     arch_content = create_content({:metadata_expire => 6000,
@@ -536,13 +545,6 @@ class StandardExporter < Exporter
 
     end_date = Date.new(2025, 5, 29)
 
-    brandings = [
-      {
-        :productId => @products[:eng_product]['id'],
-        :type => "OS",
-        :name => "Branded Eng Product"
-      }
-    ]
     create_pool_and_subscription(@owner['key'], @products[:product1].id, 2,
       [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date, true,
       {:branding => brandings})
