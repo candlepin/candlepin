@@ -46,5 +46,23 @@
                 referencesUniqueColumn="false" />
     </changeSet>
 
+    <changeSet id="20190919132617-2" author="sdhome">
+        <comment>Migrate data from CP_POOL_BRANDING to CP_PRODUCT_BRANDING.</comment>
+
+        <!--Reusing the banding ID as the primary key for cp2_product_branding table.
+            There are duplicate entries in banding table with different branding UUIDs.
+            Hence selecting the maximum UUID among that group.-->
+        <sql>
+            INSERT INTO cp2_product_branding
+                SELECT      max(cp_branding.id), current_timestamp, current_timestamp,
+                            cp_branding.product_id, cp_branding.type, cp_branding.name, cp.product_uuid
+                FROM        cp_pool_branding cpb
+                INNER JOIN  cp_pool cp on cpb.pool_id = cp.id
+                INNER JOIN  cp_branding on cpb.branding_id = cp_branding.id
+                GROUP BY    cp.product_uuid,cp_branding.name,cp_branding.product_id,cp_branding.type
+                ORDER BY    cp.product_uuid
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->
