@@ -185,6 +185,19 @@ def create_product(cp, owner, product)
   derived_product_id = product['derived_product_id']
   derived_provided_products = product['derived_provided_products'] || []
 
+  # To create branding information for marketing product
+  if !provided_products.empty? && product['name'].include?('OS') && type == 'MKT'
+    branding = [
+        {
+            :productId => product['provided_products'][0],
+            :type => 'OS',
+            :name => 'Branded ' + product['name']
+        }
+    ]
+  else
+    branding = []
+  end
+
   attrs['version'] = version
   attrs['variant'] = variant
   attrs['arch'] = arch
@@ -193,7 +206,8 @@ def create_product(cp, owner, product)
     :multiplier => multiplier,
     :attributes => attrs,
     :dependentProductIds => dependent_products,
-    :relies_on => relies_on
+    :relies_on => relies_on,
+    :branding => branding
   })
 
   print "product name: #{name} version: #{version} arch: #{arch} type: #{type}\n"
@@ -268,16 +282,6 @@ def create_mkt_product_and_pools(cp, owner, product)
   # Create a SMALL and a LARGE with the slightly similar begin/end dates.
 
   params[:branding] = []
-
-  if !params[:provided_products].empty? && product_ret['name'].include?('OS')
-    params[:branding] = [
-      {
-        :productId => params[:provided_products][0],
-        :type => 'OS',
-        :name => 'Branded ' + product_ret['name']
-      }
-    ]
-  end
 
   contract_number = 0
   account_number = '12331131231'
