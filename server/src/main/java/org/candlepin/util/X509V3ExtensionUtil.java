@@ -333,7 +333,7 @@ public class X509V3ExtensionUtil extends X509Util {
      */
     private Branding getBranding(Pool pool, String productId) {
         Branding resultBranding = null;
-        for (Branding b : pool.getBranding()) {
+        for (Branding b : pool.getProduct().getBranding()) {
             if (b.getProductId().equals(productId)) {
                 if (resultBranding == null) {
                     resultBranding = b;
@@ -348,7 +348,7 @@ public class X509V3ExtensionUtil extends X509Util {
         }
         // If none exist, use null strings
         return resultBranding != null ? resultBranding :
-            new Branding(productId, null, null);
+            new Branding(null, productId, null, null);
     }
 
     /*

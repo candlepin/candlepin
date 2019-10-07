@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -30,7 +30,7 @@ public class BrandingTranslatorTest extends
     protected BrandingTranslator translator = new BrandingTranslator();
 
     @Override
-    protected void initModelTranslator(ModelTranslator modelTranslator) {
+    public void initModelTranslator(ModelTranslator modelTranslator) {
         modelTranslator.registerTranslator(this.translator, Branding.class, BrandingDTO.class);
     }
 
@@ -40,7 +40,7 @@ public class BrandingTranslatorTest extends
     }
 
     @Override
-    protected Branding initSourceObject() {
+    public Branding initSourceObject() {
         Branding source = new Branding();
 
         source.setProductId("test-product-id");
@@ -56,7 +56,7 @@ public class BrandingTranslatorTest extends
     }
 
     @Override
-    protected void verifyOutput(Branding source, BrandingDTO dest, boolean childrenGenerated) {
+    public void verifyOutput(Branding source, BrandingDTO dest, boolean childrenGenerated) {
         if (source != null) {
             assertEquals(source.getProductId(), dest.getProductId());
             assertEquals(source.getName(), dest.getName());

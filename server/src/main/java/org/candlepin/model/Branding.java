@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -19,14 +19,20 @@ import org.candlepin.service.model.BrandingInfo;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Immutable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+
 
 /**
  * Brand mapping is carried on subscription data and passed to clients through entitlement
@@ -36,14 +42,14 @@ import javax.validation.constraints.Size;
  *
  * NOTE: Presently only type "OS" is supported client side.
  *
- * See sub-classes for actual implementations tying this to a subscription or pool.
  */
 @Entity
+@Immutable
 @Table(name = Branding.DB_TABLE)
 public class Branding extends AbstractHibernateObject<Branding> implements BrandingInfo {
 
     /** Name of the table backing this object in the database */
-    public static final String DB_TABLE = "cp_branding";
+    public static final String DB_TABLE = "cp2_product_branding";
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -67,14 +73,19 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
     @Size(max = 32)
     private String type;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_uuid")
+    private Product product;
+
     public Branding() {
         // Intentionally left empty
     }
 
-    public Branding(String productId, String type, String name) {
+    public Branding(Product parent, String productId, String name, String type) {
         this.productId = productId;
         this.type = type;
         this.name = name;
+        this.product = parent;
     }
 
     public String getId() {
@@ -86,6 +97,7 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
     }
 
     /**
+     * Returns the engineering product ID we are rebranding.
      *
      * @return The engineering product ID we are rebranding, *if* it is installed on the
      * client. Candlepin will always send down the brand mapping for a subscription, the
@@ -126,6 +138,22 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
         this.type = type;
     }
 
+    /**
+     * Returns the parent marketing product that this branding belongs to.
+     *
+     * @return A reference to the marketing product who is the parent of this branding.
+     */
+    public Product getProduct() {
+        return product;
+    }
+
+    /**
+     * Sets the parent marketing product that this branding belongs to.
+     */
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
     @Override
     public boolean equals(Object anObject) {
         if (this == anObject) {
@@ -138,15 +166,26 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
 
         Branding that = (Branding) anObject;
 
-        return new EqualsBuilder().append(this.name, that.name)
+        // We're only interested in ensuring the mapping between the two objects is the same.
+        String thisProductUuid = this.getProduct() != null ? this.getProduct().getUuid() : null;
+        String thatProductUuid = that.getProduct() != null ? that.getProduct().getUuid() : null;
+
+        return new EqualsBuilder()
+            .append(this.name, that.name)
             .append(this.productId, that.productId)
-            .append(this.type, that.type).isEquals();
+            .append(this.type, that.type)
+            .append(thisProductUuid, thatProductUuid)
+            .isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(129, 15).append(this.name)
-            .append(this.productId).append(this.type).toHashCode();
+        return new HashCodeBuilder(129, 15)
+            .append(this.name)
+            .append(this.productId)
+            .append(this.type)
+            .append(this.getProduct() != null ? this.getProduct().getUuid() : null)
+            .toHashCode();
     }
 
     @Override

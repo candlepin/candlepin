@@ -47,8 +47,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-
+import java.util.LinkedList;
 
 /**
  * X509V3ExtensionUtilTest
@@ -154,7 +153,10 @@ public class X509V3ExtensionUtilTest {
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
         Pool pool = TestUtil.createPool(mktProd);
-        pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
+
+        Product product = pool.getProduct();
+        product.setBranding(Arrays.asList(new Branding(null, engProdId, brandedName, "OS")));
+
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, owner, 10);
 
@@ -176,11 +178,16 @@ public class X509V3ExtensionUtilTest {
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
         Pool pool = TestUtil.createPool(mktProd);
-        pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
-        pool.getBranding().add(new Branding(engProdId, "OS", "another brand name"));
-        pool.getBranding().add(new Branding(engProdId, "OS", "number 3"));
+
+        Product product = pool.getProduct();
+        List<Branding> branding = new LinkedList<>();
+        branding.add(new Branding(null, engProdId, brandedName, "OS"));
+        branding.add(new Branding(null, engProdId, "another brand name", "OS"));
+        branding.add(new Branding(null, engProdId, "number 3", "OS"));
+        product.setBranding(branding);
+
         Set<String> possibleBrandNames = new HashSet<>();
-        for (Branding b : pool.getBranding()) {
+        for (Branding b : pool.getProduct().getBranding()) {
             possibleBrandNames.add(b.getName());
         }
 

@@ -71,16 +71,16 @@ public class ProductTest {
             new ProductContent(null, content[5], true)
         );
 
-        Set<ProductBranding> brandings1 = Stream.of(
-            new ProductBranding("eng_prod_id_1", "OS", "eng_prod_name_1", null),
-            new ProductBranding("eng_prod_id_2", "OS", "eng_prod_name_2", null),
-            new ProductBranding("eng_prod_id_3", "OS", "eng_prod_name_3", null)
+        Set<Branding> brandings1 = Stream.of(
+            new Branding(null, "eng_prod_id_1", "eng_prod_name_1", "OS"),
+            new Branding(null, "eng_prod_id_2", "eng_prod_name_2", "OS"),
+            new Branding(null, "eng_prod_id_3", "eng_prod_name_3", "OS")
         ).collect(Collectors.toSet());
 
-        Set<ProductBranding> brandings2 = Stream.of(
-            new ProductBranding("eng_prod_id_4", "OS", "eng_prod_name_4", null),
-            new ProductBranding("eng_prod_id_5", "OS", "eng_prod_name_5", null),
-            new ProductBranding("eng_prod_id_6", "OS", "eng_prod_name_6", null)
+        Set<Branding> brandings2 = Stream.of(
+            new Branding(null, "eng_prod_id_4", "eng_prod_name_4", "OS"),
+            new Branding(null, "eng_prod_id_5", "eng_prod_name_5", "OS"),
+            new Branding(null, "eng_prod_id_6", "eng_prod_name_6", "OS")
         ).collect(Collectors.toSet());
 
         return Stream.of(

@@ -24,7 +24,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -478,7 +478,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByDTOIsTrueWhenBrandingUpdated() {
         Product product = TestUtil.createProduct("p1", "prod1");
-        product.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", product));
+        product.addBranding(new Branding(product, "prod_id", "Brand Name", "OS"));
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
         ((BrandingDTO) pdto.getBranding().toArray()[0]).setName("New Name!");
@@ -489,7 +489,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByDTOIsTrueWhenBrandingRemoved() {
         Product product = TestUtil.createProduct("p1", "prod1");
-        product.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", product));
+        product.addBranding(new Branding(product, "prod_id", "Brand Name", "OS"));
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
         pdto.getBranding().clear();
@@ -509,7 +509,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByDTOIsFalseWhenBrandingWasNotRemovedOrAdded() {
         Product product = TestUtil.createProduct("p1", "prod1");
-        product.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", product));
+        product.addBranding(new Branding(product, "prod_id", "Brand Name", "OS"));
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
 
@@ -525,8 +525,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Map<String, Product> productData = new HashMap<>();
         productData.put("p1", product);
 
-        ProductBranding branding = new ProductBranding("eng_prod_id", "OS", "brand_name", null);
-        Collection<ProductBranding> brandingsForProduct = new HashSet<>();
+        Branding branding = new Branding(null, "eng_prod_id", "brand_name", "OS");
+        Collection<Branding> brandingsForProduct = new HashSet<>();
         brandingsForProduct.add(branding);
 
         Map<String, Collection<? extends BrandingInfo>> productBrandingMapping = new HashMap<>();
@@ -556,7 +556,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // Create existing product with a single branding in the db
         Product product = TestUtil.createProduct("p1", "prod1");
         product.setLocked(true);
-        product.addBranding(new ProductBranding("eng_prod_id_1", "OS", "brand_name_1", null));
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
         this.createProduct(product, owner);
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
@@ -565,9 +565,9 @@ public class ProductManagerTest extends DatabaseTestFixture {
         productData.put("p1", product);
 
         // Create branding map with the existing branding, and a second, new branding
-        ProductBranding existingBranding = new ProductBranding("eng_prod_id_1", "OS", "brand_name_1", null);
-        ProductBranding newBranding = new ProductBranding("eng_prod_id_2", "OS", "brand_name_2", null);
-        Collection<ProductBranding> brandingsForProduct = new HashSet<>();
+        Branding existingBranding = new Branding(null, "eng_prod_id_1", "brand_name_1", "OS");
+        Branding newBranding = new Branding(null, "eng_prod_id_2", "brand_name_2", "OS");
+        Collection<Branding> brandingsForProduct = new HashSet<>();
         brandingsForProduct.add(existingBranding);
         brandingsForProduct.add(newBranding);
 
@@ -596,7 +596,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // Create existing product with a single branding in the db
         Product product = TestUtil.createProduct("p1", "prod1");
         product.setLocked(true);
-        product.addBranding(new ProductBranding("eng_prod_id_1", "OS", "brand_name_1", null));
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
         this.createProduct(product, owner);
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
@@ -605,7 +605,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         productData.put("p1", product);
 
         // Create empty branding map, signifying removal of any existing brandings for the product
-        Collection<ProductBranding> brandingsForProduct = new HashSet<>();
+        Collection<Branding> brandingsForProduct = new HashSet<>();
 
         Map<String, Collection<? extends BrandingInfo>> productBrandingMapping = new HashMap<>();
         productBrandingMapping.put("p1", brandingsForProduct);
@@ -632,7 +632,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // Create existing product with a single branding in the db
         Product product = TestUtil.createProduct("p1", "prod1");
         product.setLocked(true);
-        product.addBranding(new ProductBranding("eng_prod_id_1", "OS", "brand_name_1", null));
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
         this.createProduct(product, owner);
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
@@ -641,9 +641,9 @@ public class ProductManagerTest extends DatabaseTestFixture {
         productData.put("p1", product);
 
         // Create a branding map, with a single branding, slightly different than the existing one.
-        ProductBranding newVersionOfExistingBranding =
-            new ProductBranding("eng_prod_id_1", "OS", "Brand New Name!", null);
-        Collection<ProductBranding> brandingsForProduct = new HashSet<>();
+        Branding newVersionOfExistingBranding =
+            new Branding(null, "eng_prod_id_1", "Brand New Name!", "OS");
+        Collection<Branding> brandingsForProduct = new HashSet<>();
         brandingsForProduct.add(newVersionOfExistingBranding);
 
         Map<String, Collection<? extends BrandingInfo>> productBrandingMapping = new HashMap<>();
@@ -663,7 +663,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
             this.ownerProductCurator.getProductById(owner, "p1"));
         assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
         assertEquals("Brand New Name!",
-            ((ProductBranding) this.ownerProductCurator.getProductById(owner, "p1")
+            ((Branding) this.ownerProductCurator.getProductById(owner, "p1")
             .getBranding().toArray()[0]).getName());
     }
 
@@ -674,7 +674,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // Create existing product with a single branding in the db
         Product product = TestUtil.createProduct("p1", "prod1");
         product.setLocked(true);
-        product.addBranding(new ProductBranding("eng_prod_id_1", "OS", "brand_name_1", null));
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
         this.createProduct(product, owner);
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
@@ -708,7 +708,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product existingProduct = TestUtil.createProduct("p1", "prod1");
         Product newProduct = (Product) existingProduct.clone();
 
-        ProductBranding brand1 = new ProductBranding("prod_id", "OS", "Brand Name", null);
+        Branding brand1 = new Branding(null, "prod_id", "Brand Name", "OS");
         Collection<BrandingInfo> brandingInfos = new HashSet<>();
         brandingInfos.add(brand1);
 
@@ -718,11 +718,11 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByProductInfoIsTrueWhenBrandingUpdated() {
         Product existingProduct = TestUtil.createProduct("p1", "prod1");
-        existingProduct.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", existingProduct));
+        existingProduct.addBranding(new Branding(existingProduct, "prod_id", "Brand Name", "OS"));
 
         Product newProduct = (Product) existingProduct.clone();
 
-        ProductBranding brand1 = new ProductBranding("prod_id", "OS", "New Brand Name", null);
+        Branding brand1 = new Branding(null, "prod_id", "New Brand Name", "OS");
         Collection<BrandingInfo> brandingInfos = new HashSet<>();
         brandingInfos.add(brand1);
 
@@ -732,7 +732,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByProductInfosTrueWhenBrandingRemoved() {
         Product existingProduct = TestUtil.createProduct("p1", "prod1");
-        existingProduct.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", existingProduct));
+        existingProduct.addBranding(new Branding(existingProduct, "prod_id", "Brand Name", "OS"));
 
         Product newProduct = (Product) existingProduct.clone();
 
@@ -764,12 +764,12 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByProductInfoIsFalseWhenBrandingWasNotRemovedAddedOrUpdated() {
         Product existingProduct = TestUtil.createProduct("p1", "prod1");
-        existingProduct.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", existingProduct));
+        existingProduct.addBranding(new Branding(existingProduct, "prod_id", "Brand Name", "OS"));
 
         Product newProduct = (Product) existingProduct.clone();
 
         Collection<BrandingInfo> brandingInfos = new HashSet<>();
-        brandingInfos.add(new ProductBranding("prod_id", "OS", "Brand Name", null));
+        brandingInfos.add(new Branding(null, "prod_id", "Brand Name", "OS"));
 
         assertFalse(ProductManager.isChangedBy(existingProduct, newProduct, brandingInfos));
     }

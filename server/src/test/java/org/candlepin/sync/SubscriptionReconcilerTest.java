@@ -25,7 +25,6 @@ import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -61,7 +60,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 
 
@@ -190,13 +188,6 @@ public class SubscriptionReconcilerTest {
         pool.setUpstreamPoolId(sub.getUpstreamPoolId());
         pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
-
-        if (sub.getBranding() != null) {
-            pool.setBranding(pool.getBranding().stream()
-                .filter(elem -> elem != null)
-                .map(elem -> new Branding(elem.getProductId(), elem.getType(), elem.getName()))
-                .collect(Collectors.toSet()));
-        }
 
         return pool;
     }

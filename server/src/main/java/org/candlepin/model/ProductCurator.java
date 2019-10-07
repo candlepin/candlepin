@@ -331,7 +331,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
 
         if (entity.getBranding() != null) {
-            for (ProductBranding brand : entity.getBranding()) {
+            for (Branding brand : entity.getBranding()) {
                 if (brand.getProductId() == null ||
                     brand.getName() == null ||
                     brand.getType() == null) {

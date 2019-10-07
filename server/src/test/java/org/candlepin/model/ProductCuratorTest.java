@@ -536,9 +536,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductWithBrandingCRUDOperations() {
         Product marketingProduct = createTestProduct();
         marketingProduct.addBranding(
-            new ProductBranding("eng_prod_id_1", "OS", "Brand No 1", marketingProduct));
+            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
         marketingProduct.addBranding(
-            new ProductBranding("eng_prod_id_2", "OS", "Brand No 2", marketingProduct));
+            new Branding(marketingProduct, "eng_prod_id_2", "Brand No 2", "OS"));
 
         // Create
         marketingProduct = productCurator.create(marketingProduct);
@@ -562,15 +562,15 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductCannotUpdateImmutableBrandingCollectionByAddingItems() {
         Product marketingProduct = createTestProduct();
         marketingProduct.addBranding(
-            new ProductBranding("eng_prod_id_1", "OS", "Brand No 1", marketingProduct));
+            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
         marketingProduct.addBranding(
-            new ProductBranding("eng_prod_id_2", "OS", "Brand No 2", marketingProduct));
+            new Branding(marketingProduct, "eng_prod_id_2", "Brand No 2", "OS"));
 
         productCurator.create(marketingProduct);
         productCurator.flush();
 
         marketingProduct.addBranding(
-            new ProductBranding("eng_prod_id_3", "OS", "Brand No 3", marketingProduct));
+            new Branding(marketingProduct, "eng_prod_id_3", "Brand No 3", "OS"));
         productCurator.merge(marketingProduct);
 
         PersistenceException pe = assertThrows(PersistenceException.class, () -> productCurator.flush());
@@ -582,9 +582,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductCannotUpdateImmutableBrandingCollectionByRemovingItems() {
         Product marketingProduct = createTestProduct();
         marketingProduct.addBranding(
-            new ProductBranding("eng_prod_id_1", "OS", "Brand No 1", marketingProduct));
+            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
         marketingProduct.addBranding(
-            new ProductBranding("eng_prod_id_2", "OS", "Brand No 2", marketingProduct));
+            new Branding(marketingProduct, "eng_prod_id_2", "Brand No 2", "OS"));
 
         productCurator.create(marketingProduct);
         productCurator.flush();
@@ -601,25 +601,25 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testProductCannotUpdateImmutableBrandingCollectionByUpdatingItem() {
         Product marketingProduct = createTestProduct();
         marketingProduct.addBranding(
-            new ProductBranding("eng_prod_id_1", "OS", "Brand No 1", marketingProduct));
+            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
 
         productCurator.create(marketingProduct);
         productCurator.flush();
 
-        ((ProductBranding) marketingProduct.getBranding().toArray()[0]).setName("new name");
+        ((Branding) marketingProduct.getBranding().toArray()[0]).setName("new name");
         productCurator.merge(marketingProduct);
         productCurator.flush();
         productCurator.evict(marketingProduct);
 
         Product lookedUp = productCurator.get(marketingProduct.getUuid());
-        assertNotEquals("new name", ((ProductBranding) lookedUp.getBranding().toArray()[0]).getName());
+        assertNotEquals("new name", ((Branding) lookedUp.getBranding().toArray()[0]).getName());
     }
 
     @Test
     public void testCannotCreateProductWithBrandingWithNullId() {
         Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(new ProductBranding(null, "OS", "Brand No 1", marketingProduct));
-
+        marketingProduct.addBranding(new Branding(marketingProduct, null,
+            "Brand No 1", "OS"));
         IllegalStateException ise = assertThrows(IllegalStateException.class,
             () -> productCurator.create(marketingProduct));
         assertEquals(ise.getMessage(),
@@ -630,8 +630,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testCannotCreateProductWithBrandingWithNullType() {
         Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(new ProductBranding("prod_id", null, "Brand No 1", marketingProduct));
-
+        marketingProduct.addBranding(new Branding(marketingProduct, "prod_id", "Brand No 1",
+            null));
         IllegalStateException ise = assertThrows(IllegalStateException.class,
             () -> productCurator.create(marketingProduct));
         assertEquals(ise.getMessage(),
@@ -642,8 +642,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testCannotCreateProductWithBrandingWithNullName() {
         Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(new ProductBranding("prod_id", "OS", null, marketingProduct));
-
+        marketingProduct.addBranding(new Branding(marketingProduct, "prod_id",
+            null, "OS"));
         IllegalStateException ise = assertThrows(IllegalStateException.class,
             () -> productCurator.create(marketingProduct));
         assertEquals(ise.getMessage(),

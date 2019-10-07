@@ -24,9 +24,10 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+
 import org.candlepin.pinsetter.tasks.OrphanCleanupJob;
 import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.ContentInfo;
@@ -733,14 +734,14 @@ public class ProductManager {
                 entity.setBranding(Collections.emptySet());
             }
             else {
-                Set<ProductBranding> branding = new HashSet<>();
+                Set<Branding> branding = new HashSet<>();
                 for (BrandingDTO brandingDTO : update.getBranding()) {
                     if (brandingDTO != null) {
-                        branding.add(new ProductBranding(
+                        branding.add(new Branding(entity,
                             brandingDTO.getProductId(),
-                            brandingDTO.getType(),
                             brandingDTO.getName(),
-                            entity));
+                            brandingDTO.getType()
+                        ));
                     }
                 }
                 entity.setBranding(branding);
@@ -1059,14 +1060,14 @@ public class ProductManager {
                 entity.setBranding(Collections.emptySet());
             }
             else {
-                Set<ProductBranding> branding = new HashSet<>();
+                Set<Branding> branding = new HashSet<>();
                 for (BrandingInfo brandingInfo : brandingUpdate) {
                     if (brandingInfo != null) {
-                        branding.add(new ProductBranding(
+                        branding.add(new Branding(entity,
                             brandingInfo.getProductId(),
-                            brandingInfo.getType(),
                             brandingInfo.getName(),
-                            entity));
+                            brandingInfo.getType()
+                        ));
                     }
                 }
                 entity.setBranding(branding);

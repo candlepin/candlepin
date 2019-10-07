@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
+import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.DateSource;
 
@@ -328,14 +329,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @NotNull
     private Long exported;
 
-    @OneToMany
-    @JoinTable(name = "cp_pool_branding",
-        joinColumns = @JoinColumn(name = "pool_id"),
-        inverseJoinColumns = @JoinColumn(name = "branding_id"))
-    @Cascade({org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @BatchSize(size = 1000)
-    private Set<Branding> branding;
-
     // Impl note:
     // These properties are only used as temporary stores to hold information that's only present
     // in the pool JSON due to the product itself not being serialized with it. These will be
@@ -406,7 +399,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         this.providedProducts = new HashSet<>();
         this.derivedProvidedProducts = new HashSet<>();
         this.attributes = new HashMap<>();
-        this.branding = new HashSet<>();
         this.entitlements = new HashSet<>();
 
         // TODO:
@@ -1341,14 +1333,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return "true".equalsIgnoreCase(this.getAttributeValue(Attributes.DEVELOPMENT_POOL));
     }
 
-    public Set<Branding> getBranding() {
-        return branding;
-    }
-
-    public void setBranding(Set<Branding> branding) {
-        this.branding = branding;
-    }
-
     @JsonIgnore
     public SourceSubscription getSourceSubscription() {
         return sourceSubscription;
@@ -1483,6 +1467,12 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     public Cdn getCdn() {
         return cdn;
+    }
+
+    @Override
+    public Collection<? extends BrandingInfo> getBranding() {
+        // Caution - Branding is now removed from pool. Avoid Using this method.
+        return null;
     }
 
     public void setCdn(Cdn cdn) {

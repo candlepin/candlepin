@@ -29,7 +29,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -940,24 +939,6 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             pool.setCertificate(cert);
-        }
-
-        //TODO: This block should get removed since we don't need to populate branding on the pool once Pool
-        // stops having a reference to it. Any branding needed by the pool will already have been present
-        // in the main product. (ENT-1616)
-        //Add in branding
-        if (sub.getBranding() != null) {
-            Set<Branding> branding = new HashSet<>();
-
-            for (BrandingInfo brand : sub.getBranding()) {
-                // Impl note:
-                // We create a new instance here since we don't have a separate branding DTO (yet),
-                // and we need to be certain that we don't try to move or change a branding object
-                // associated with another pool.
-                branding.add(new Branding(brand.getProductId(), brand.getType(), brand.getName()));
-            }
-
-            pool.setBranding(branding);
         }
 
         if (sub.getProduct() == null || sub.getProduct().getId() == null) {

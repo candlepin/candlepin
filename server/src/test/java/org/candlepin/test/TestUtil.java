@@ -38,7 +38,6 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.User;
@@ -589,8 +588,8 @@ public class TestUtil {
         return dto;
     }
 
-    public static ProductBranding createProductBranding(Product product) {
-        ProductBranding productBranding = new ProductBranding();
+    public static Branding createProductBranding(Product product) {
+        Branding productBranding = new Branding();
         String suffix = randomString();
         productBranding.setId("test-id-" + suffix);
         productBranding.setProduct(product);
@@ -650,8 +649,8 @@ public class TestUtil {
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
         for (Branding branding : sub.getBranding()) {
-            pool.getBranding().add(
-                new Branding(branding.getProductId(), branding.getType(), branding.getName())
+            pool.getProduct().getBranding().add(
+                new Branding(null, branding.getProductId(), branding.getName(), branding.getType())
             );
         }
 
@@ -678,10 +677,6 @@ public class TestUtil {
 
         // Copy sub-product data if there is any:
         p.setDerivedProduct(pool.getDerivedProduct());
-
-        for (Branding b : pool.getBranding()) {
-            p.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
-        }
 
         return p;
     }
@@ -771,7 +766,6 @@ public class TestUtil {
         assertEquals(pool1.getEntitlements(), pool2.getEntitlements());
         assertEquals(pool1.getConsumed(), pool2.getConsumed());
         assertEquals(pool1.getExported(), pool2.getExported());
-        assertEquals(pool1.getBranding(), pool2.getBranding());
         assertEquals(pool1.getCalculatedAttributes(), pool2.getCalculatedAttributes());
         assertEquals(pool1.isMarkedForDelete(), pool2.isMarkedForDelete());
         assertEquals(pool1.getUpstreamConsumerId(), pool2.getUpstreamConsumerId());

@@ -688,11 +688,11 @@ public class PoolManagerTest {
     public void brandingCopiedWhenCreatingPools() {
         Product product = TestUtil.createProduct();
 
+        Branding b1 = new Branding(null, "8000", "Branded Awesome OS", "OS");
+        Branding b2 = new Branding(null, "8001", "Branded Awesome OS 2", "OS");
+        product.setBranding(new HashSet<>(Arrays.asList(b1, b2)));
+
         Subscription sub = TestUtil.createSubscription(owner, product);
-        Branding b1 = new Branding("8000", "OS", "Branded Awesome OS");
-        Branding b2 = new Branding("8001", "OS", "Branded Awesome OS 2");
-        sub.getBranding().add(b1);
-        sub.getBranding().add(b2);
 
         this.mockProducts(owner, product);
 
@@ -702,9 +702,9 @@ public class PoolManagerTest {
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
-        assertEquals(2, resultPool.getBranding().size());
-        assertTrue(resultPool.getBranding().contains(b1));
-        assertTrue(resultPool.getBranding().contains(b2));
+        assertEquals(2, resultPool.getProduct().getBranding().size());
+        assertTrue(resultPool.getProduct().getBranding().contains(b1));
+        assertTrue(resultPool.getProduct().getBranding().contains(b2));
     }
 
     @Test

@@ -23,7 +23,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
@@ -56,7 +55,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
     private ProductTranslatorTest productTranslatorTest = new ProductTranslatorTest();
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private BrandingTranslatorTest brandingTranslatorTest = new BrandingTranslatorTest();
-    private ProductBrandingTranslatorTest productBrandingTranslatorTest = new ProductBrandingTranslatorTest();
+    private BrandingTranslatorTest productBrandingTranslatorTest = new BrandingTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
 
     @Override
@@ -86,10 +85,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
 
         source.setProduct(this.productTranslatorTest.initSourceObject());
         source.setDerivedProduct(this.productTranslatorTest.initSourceObject());
-
-        Set<Branding> brandingSet = new HashSet<>();
-        brandingSet.add(this.brandingTranslatorTest.initSourceObject());
-        source.setBranding(brandingSet);
 
         Entitlement entitlement = new Entitlement();
         entitlement.setId("ent-id");
@@ -218,7 +213,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
 
                 assertEquals(source.getProduct().getBranding().size(), dest.getBranding().size());
 
-                for (ProductBranding productBranding : source.getProduct().getBranding()) {
+                for (Branding productBranding : source.getProduct().getBranding()) {
                     for (BrandingDTO brandingDTO : dest.getBranding()) {
 
                         assertNotNull(brandingDTO);

@@ -65,7 +65,7 @@ public class ImportedEntityCompilerTest {
 
     @Test
     public void shouldAddNoBrandingWhenSubscriptionProductIsNull() {
-        Branding branding = new Branding("eng_prod_1", "OS", "brand_name_1");
+        Branding branding = new Branding(null, "eng_prod_1", "brand_name_1", "OS");
         Set<Branding> brandingInfos = new HashSet<>();
         brandingInfos.add(branding);
 
@@ -79,7 +79,7 @@ public class ImportedEntityCompilerTest {
 
     @Test
     public void shouldThrowExceptionWhenSubscriptionProductIdIsNull() {
-        Branding branding = new Branding("eng_prod_1", "OS", "brand_name_1");
+        Branding branding = new Branding(null, "eng_prod_1", "brand_name_1", "OS");
         Set<Branding> brandingInfos = new HashSet<>();
         brandingInfos.add(branding);
 
@@ -93,7 +93,7 @@ public class ImportedEntityCompilerTest {
 
     @Test
     public void shouldThrowExceptionWhenSubscriptionProductIdIsEmpty() {
-        Branding branding = new Branding("eng_prod_1", "OS", "brand_name_1");
+        Branding branding = new Branding(null, "eng_prod_1", "brand_name_1", "OS");
         Set<Branding> brandingInfos = new HashSet<>();
         brandingInfos.add(branding);
 
@@ -107,8 +107,8 @@ public class ImportedEntityCompilerTest {
 
     @Test
     public void shouldAddAllBrandingWhenSubscriptionProductIsPresentAndComplete() {
-        Branding branding = new Branding("eng_prod_1", "OS", "brand_name_1");
-        Branding branding2 = new Branding("eng_prod_2", "OS", "brand_name_2");
+        Branding branding = new Branding(null, "eng_prod_1", "brand_name_1", "OS");
+        Branding branding2 = new Branding(null, "eng_prod_2", "brand_name_2", "OS");
         Set<Branding> brandingInfos = new HashSet<>();
         brandingInfos.add(branding);
         brandingInfos.add(branding2);
@@ -128,7 +128,7 @@ public class ImportedEntityCompilerTest {
      */
     @Test
     public void shouldApplyLatestBrandingWhenExistingDerivedProductHasMultipleBrandingsAppliedToIt() {
-        Branding branding = new Branding("eng_prod_1", "OS", "brand_name_1");
+        Branding branding = new Branding(null, "eng_prod_1", "brand_name_1", "OS");
         Set<Branding> brandingInfos = new HashSet<>();
         brandingInfos.add(branding);
 
@@ -140,7 +140,7 @@ public class ImportedEntityCompilerTest {
         // Add a second subscription to the compiler, which provides the same derived marketing product and
         // derived provided products, but has a different branding for the same derived provided product.
         SubscriptionInfo secondSubscription = mock(SubscriptionInfo.class);
-        Branding secondBranding = new Branding("eng_prod_1", "non-OS", "Brand New Name");
+        Branding secondBranding = new Branding(null, "eng_prod_1", "Brand New Name", "non-OS");
         Set<Branding> brandingInfos2 = new HashSet<>();
         brandingInfos2.add(secondBranding);
 

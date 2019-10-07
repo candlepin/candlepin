@@ -58,7 +58,6 @@ import org.candlepin.dto.api.v1.PermissionBlueprintTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintInfoTranslator;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.v1.PoolQuantityTranslator;
-import org.candlepin.dto.api.v1.ProductBrandingTranslator;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductCertificateTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -105,7 +104,6 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.Role;
 import org.candlepin.model.UeberCertificate;
@@ -141,8 +139,6 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ActivationKeyTranslator(), ActivationKey.class, ActivationKeyDTO.class);
         this.registerTranslator(
             new BrandingTranslator(), Branding.class, BrandingDTO.class);
-        this.registerTranslator(
-            new ProductBrandingTranslator(), ProductBranding.class, BrandingDTO.class);
         this.registerTranslator(
             new CapabilityTranslator(), ConsumerCapability.class, CapabilityDTO.class);
         this.registerTranslator(
@@ -231,9 +227,6 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.BrandingTranslator(),
             Branding.class, org.candlepin.dto.manifest.v1.BrandingDTO.class);
-        this.registerTranslator(
-            new org.candlepin.dto.manifest.v1.ProductBrandingTranslator(),
-            ProductBranding.class, org.candlepin.dto.manifest.v1.BrandingDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.CdnTranslator(),
             Cdn.class, org.candlepin.dto.manifest.v1.CdnDTO.class);

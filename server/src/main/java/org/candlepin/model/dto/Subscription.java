@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.Collections;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -608,9 +609,20 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
         this.setUpstreamConsumerId(source.getUpstreamConsumerId());
 
-        //TODO: This should get updated to populate the branding from the pool's main product once Pool
-        // stops having a reference to it. (ENT-1616)
-        this.setBranding(source.getBranding());
+        Collection<Branding> brand = source.getProduct() != null ? source.getProduct().getBranding() : null;
+
+        if (brand != null && !brand.isEmpty()) {
+            HashSet<Branding> brandingSet = new HashSet<>();
+
+            for (Branding br : brand) {
+                brandingSet.add(new Branding(null, br.getProductId(), br.getName(), br.getType()));
+            }
+
+            this.setBranding(brandingSet);
+        }
+        else {
+            this.setBranding(Collections.emptySet());
+        }
 
         // Attempt to calculate the quantity from the pool and its product:
         this.setQuantityFromPool(source);
