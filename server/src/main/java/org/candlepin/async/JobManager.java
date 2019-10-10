@@ -21,15 +21,14 @@ import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.ModeChangeListener;
-import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.controller.mode.ModeChangeListener;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
-import org.candlepin.model.CandlepinModeChange;
-import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
@@ -84,6 +83,7 @@ import javax.transaction.Synchronization;
 import javax.transaction.Status;
 
 
+
 /**
  * The JobManager manages the queueing, execution and general bookkeeping on jobs
  */
@@ -100,6 +100,9 @@ public class JobManager implements ModeChangeListener {
     private static final String QRTZ_GROUP_CONFIG = "cp_async_config";
     private static final String QRTZ_GROUP_MANUAL = "cp_async_manual";
 
+    private static final Object SUSPEND_KEY_DEFAULT = "default_suspend_key";
+    private static final Object SUSPEND_KEY_TRIGGERED = "triggered_suspend_key";
+
     /** Stores our mapping of job keys to job classes */
     private static final Map<String, Class<? extends AsyncJob>> JOB_KEY_MAP = new HashMap<>();
 
@@ -110,9 +113,9 @@ public class JobManager implements ModeChangeListener {
         // Impl note: We have to use strings here since we can't reference enums that haven't yet
         // been defined. This is slightly less efficient than I'd like, but whatever.
         CREATED("INITIALIZED", "SHUTDOWN"),
-        INITIALIZED("RUNNING", "PAUSED", "SHUTDOWN"),
-        RUNNING("RUNNING", "PAUSED", "SHUTDOWN"),
-        PAUSED("RUNNING", "PAUSED", "SHUTDOWN"),
+        INITIALIZED("RUNNING", "SUSPENDED", "SHUTDOWN"),
+        RUNNING("RUNNING", "SUSPENDED", "SHUTDOWN"),
+        SUSPENDED("RUNNING", "SUSPENDED", "SHUTDOWN"),
         SHUTDOWN();
 
         private final String[] transitions;
@@ -289,19 +292,21 @@ public class JobManager implements ModeChangeListener {
 
     private final Configuration configuration;
     private final SchedulerFactory schedulerFactory;
-    private final ModeManager modeManager;
+    private final CandlepinModeManager modeManager;
     private final AsyncJobStatusCurator jobCurator;
     private final OwnerCurator ownerCurator;
     private final JobMessageDispatcher dispatcher;
-    private final JobMessageSynchronizer synchronizer;
+    private final JobMessageReceiver receiver;
     private final CandlepinRequestScope candlepinRequestScope;
     private final PrincipalProvider principalProvider;
     private final Injector injector;
 
     private ManagerState state;
+    private JobMessageSynchronizer synchronizer;
     private QuartzJobExecutor qrtzExecutor;
     private Scheduler scheduler;
     private ThreadLocal<Map<String, String>> mdcState;
+    private Set<Object> suspendKeys;
 
     private boolean clustered;
     private Set<String> whitelist;
@@ -316,10 +321,11 @@ public class JobManager implements ModeChangeListener {
     public JobManager(
         Configuration configuration,
         SchedulerFactory schedulerFactory,
-        ModeManager modeManager,
+        CandlepinModeManager modeManager,
         AsyncJobStatusCurator jobCurator,
         OwnerCurator ownerCurator,
         JobMessageDispatcher dispatcher,
+        JobMessageReceiver receiver,
         PrincipalProvider principalProvider,
         CandlepinRequestScope scope,
         Injector injector) {
@@ -330,8 +336,7 @@ public class JobManager implements ModeChangeListener {
         this.jobCurator = Objects.requireNonNull(jobCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.dispatcher = Objects.requireNonNull(dispatcher);
-        // this.receiver = Objects.requireNonNull(receiver);
-        this.synchronizer = new JobMessageSynchronizer(this.dispatcher);
+        this.receiver = Objects.requireNonNull(receiver);
         this.candlepinRequestScope = Objects.requireNonNull(scope);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.injector = Objects.requireNonNull(injector);
@@ -339,6 +344,9 @@ public class JobManager implements ModeChangeListener {
         this.state = ManagerState.CREATED;
         this.qrtzExecutor = new QuartzJobExecutor(this);
         this.mdcState = new ThreadLocal<>();
+        this.suspendKeys = new HashSet<>();
+
+        this.synchronizer = new JobMessageSynchronizer(this.dispatcher);
 
         this.readJobConfiguration(this.configuration);
     }
@@ -407,9 +415,19 @@ public class JobManager implements ModeChangeListener {
                     this.scheduler = this.schedulerFactory.getScheduler();
                 }
 
+                if (!this.receiver.isInitialized()) {
+                    this.receiver.initialize(this);
+                }
+
                 this.synchronizeJobSchedule();
                 this.scheduler.setJobFactory(this.qrtzExecutor);
                 this.modeManager.registerModeChangeListener(this);
+
+                // Check if Candlepin's current operating mode would prevent us from starting
+                // normally.
+                if (this.modeManager.getCurrentMode() == Mode.SUSPEND) {
+                    this.suspendKeys.add(SUSPEND_KEY_TRIGGERED);
+                }
             }
 
             log.info("Job manager initialization complete");
@@ -435,81 +453,168 @@ public class JobManager implements ModeChangeListener {
     }
 
     /**
-     * Starts or resumes this job manager if it is currently not running, allowing jobs to be
-     * executed. If the job manager is already running, this method silently returns.
+     * Attempts to start or resume this job manager by lifting the default suspend key. If all
+     * suspend keys have been lifted, the job manager will be resumed. If the job manager is not
+     * currently in a suspended state, this method silently returns.
+     *
+     * @throws IllegalStateException
+     *  if this JobManager has not been initialized or has already shutdown
+     */
+    public void start() throws StateManagementException {
+        this.start(SUSPEND_KEY_DEFAULT);
+    }
+
+    /**
+     * Attempts to start or resume this job manager by lifting the specified suspend key. If all
+     * suspend keys have been lifted, the job manager will be resumed. If the job manager is not
+     * currently in a suspended state, this method silently returns.
+     *
+     * @param key
+     *  the suspend key to lift; must not be null
+     *
+     * @throws IllegalArgumentException
+     *  if the specified suspend key is null
      *
      * @throws IllegalStateException
      *  if this JobManager has not been initialized, has already shutdown or Candlepin is
      *  in suspend mode
      */
-    public synchronized void start() throws StateManagementException {
-        log.trace("Start request received");
+    public synchronized void start(Object key) throws StateManagementException {
+        log.trace("Start request received with suspend key: {}", key);
+
+        if (key == null) {
+            throw new IllegalArgumentException("suspend key is null");
+        }
 
         this.validateStateTransition(ManagerState.RUNNING);
 
-        // Check that we're not in suspend mode
-        CandlepinModeChange lastMode = this.modeManager.getLastCandlepinModeChange();
-        if (lastMode != null && lastMode.getMode() != Mode.NORMAL) {
-            throw new IllegalStateException("Candlepin must be in NORMAL mode to start the job manager");
-        }
-
         try {
-            if (this.state == ManagerState.INITIALIZED || this.state == ManagerState.PAUSED) {
-                this.scheduler.start();
-            }
+            if (this.state == ManagerState.INITIALIZED || this.state == ManagerState.SUSPENDED) {
+                if (this.suspendKeys.remove(key)) {
+                    log.debug("Lifted job manager suspend key: {} ({} remaining)", key,
+                        this.suspendKeys.size());
+                }
 
-            log.info("Job manager started");
-            this.state = ManagerState.RUNNING;
+                if (this.suspendKeys.isEmpty()) {
+                    String startType = (this.state == ManagerState.INITIALIZED ? "started" : "resumed");
+                    log.info("Job manager {}", startType);
+
+                    this.scheduler.start();
+                    this.receiver.start();
+
+                    this.state = ManagerState.RUNNING;
+                }
+                else {
+                    log.debug("Job manager still suspended by {} keys", this.suspendKeys.size());
+                    this.state = ManagerState.SUSPENDED;
+                }
+            }
         }
         catch (Exception e) {
             String errmsg = "Unexpected exception occurred while starting job manager";
 
             log.error(errmsg, e);
-            throw new StateManagementException(this.state, ManagerState.SHUTDOWN, errmsg, e);
+            throw new StateManagementException(this.state, ManagerState.RUNNING, errmsg, e);
         }
     }
 
     /**
-     * Synonym of the start operation.
+     * Attempts to resume this job manager by lifting the default suspend key. If all suspend keys
+     * have been lifted, the job manager will be resumed. If the job manager is not currently in a
+     * suspended state, this method silently returns.
      *
      * @throws IllegalStateException
      *  if this JobManager has not been initialized or has already shutdown
      */
     public void resume() throws StateManagementException {
-        this.start();
+        this.start(SUSPEND_KEY_DEFAULT);
     }
 
+    /**
+     * Attempts to resume this job manager by lifting the specified suspend key. If all suspend keys
+     * have been lifted, the job manager will be resumed. If the job manager is not currently in a
+     * suspended state, this method silently returns.
+     *
+     * @param key
+     *  the suspend key to lift; cannot be null
+     *
+     * @throws IllegalArgumentException
+     *  if the specified suspend key is null
+     *
+     * @throws IllegalStateException
+     *  if this JobManager has not been initialized, has already shutdown or Candlepin is
+     *  in suspend mode
+     */
+    public void resume(Object key) throws StateManagementException {
+        this.start(key);
+    }
 
     /**
-     * Pauses this job manager, preventing jobs from being executed until the manager is resumed.
-     * If the job manager is already paused, this method silently returns.
+     * Suspends this job manager with the default suspend key, preventing jobs from being executed
+     * until the manager is resumed by lifting all applied suspend keys. If the job manager is
+     * already suspended, this method silently returns.
      * <p></p>
-     * Pausing will not stop currently executing jobs, nor will it prevent new jobs from being
+     * Suspending will not stop currently executing jobs, nor will it prevent new jobs from being
      * scheduled or queued for later execution. If a scheduled job's next appointed time occurs
-     * while the manager is paused, the collision will be resolved according to the job's
+     * while the manager is suspended, the collision will be resolved according to the job's
      * constraints.
      *
      * @throws IllegalStateException
      *  if this JobManager has not been initialized or has already shutdown
      */
-    public synchronized void pause() throws StateManagementException {
-        log.trace("Pause request received");
+    public void suspend() throws StateManagementException {
+        this.suspend(SUSPEND_KEY_DEFAULT);
+    }
 
-        this.validateStateTransition(ManagerState.PAUSED);
+    /**
+     * Suspends this job manager with the specified suspend key, preventing jobs from being executed
+     * until the manager is resumed by lifting all applied suspend keys. If the job manager is
+     * already suspended, this method silently returns.
+     * <p></p>
+     * Suspending will not stop currently executing jobs, nor will it prevent new jobs from being
+     * scheduled or queued for later execution. If a scheduled job's next appointed time occurs
+     * while the manager is suspended, the collision will be resolved according to the job's
+     * constraints.
+     * <p></p>
+     * The key provided to suspend job execution can be any object except those with non-standard,
+     * or inconsistent implementations of equals and/or hashCode.
+     *
+     * @param key
+     *  the suspend key to apply; cannot be null
+     *
+     * @throws IllegalArgumentException
+     *  if the specified suspend key is null
+     *
+     * @throws IllegalStateException
+     *  if this JobManager has not been initialized or has already shutdown
+     */
+    public synchronized void suspend(Object key) throws StateManagementException {
+        log.trace("Suspend request received with key: {}", key);
+
+        if (key == null) {
+            throw new IllegalArgumentException("suspend key is null");
+        }
+
+        this.validateStateTransition(ManagerState.SUSPENDED);
 
         try {
-            if (this.state == ManagerState.RUNNING) {
-                this.scheduler.standby();
+            if (this.suspendKeys.add(key)) {
+                log.debug("Suspending job manager with key: {}", key);
             }
 
-            log.info("Job manager paused");
-            this.state = ManagerState.PAUSED;
+            if (this.state == ManagerState.INITIALIZED || this.state == ManagerState.RUNNING) {
+                this.receiver.suspend();
+                this.scheduler.standby();
+
+                log.info("Job manager suspended");
+                this.state = ManagerState.SUSPENDED;
+            }
         }
         catch (Exception e) {
             String errmsg = "Unexpected exception occurred while pausing job manager";
 
             log.error(errmsg, e);
-            throw new StateManagementException(this.state, ManagerState.PAUSED, errmsg, e);
+            throw new StateManagementException(this.state, ManagerState.SUSPENDED, errmsg, e);
         }
     }
 
@@ -530,7 +635,9 @@ public class JobManager implements ModeChangeListener {
         try {
             log.info("Shutting down job manager");
 
-            if (this.state == ManagerState.RUNNING || this.state == ManagerState.PAUSED) {
+            if (this.state == ManagerState.RUNNING || this.state == ManagerState.SUSPENDED) {
+                this.dispatcher.shutdown();
+                this.receiver.shutdown();
                 this.scheduler.shutdown(true);
             }
 
@@ -854,14 +961,17 @@ public class JobManager implements ModeChangeListener {
     public synchronized AsyncJobStatus queueJob(JobConfig config) throws JobException {
 
         ManagerState state = this.getManagerState();
-        if (this.getManagerState() != ManagerState.RUNNING) {
+        if (state != ManagerState.RUNNING) {
             // Check if we're paused. If so, and if the "queue while paused" config is not set,
             // throw our usual ISE
+            if (state != ManagerState.SUSPENDED ||
+                !this.configuration.getBoolean(ConfigProperties.ASYNC_JOBS_QUEUE_WHILE_SUSPENDED)) {
 
-            // TODO: config check
+                String msg = String.format("Jobs cannot be queued while the manager is in the %s state",
+                    state);
 
-            String msg = String.format("Jobs cannot be queued while the manager is in the %s state", state);
-            throw new IllegalStateException(msg);
+                throw new IllegalStateException(msg);
+            }
         }
 
         if (config == null) {
@@ -1547,19 +1657,19 @@ public class JobManager implements ModeChangeListener {
      * @{inheritDoc}
      */
     @Override
-    public void modeChanged(Mode mode) {
-        if (mode != null) {
-            switch (mode) {
+    public void handleModeChange(CandlepinModeManager modeManager, Mode previousMode, Mode currentMode) {
+        if (currentMode != null) {
+            switch (currentMode) {
                 case SUSPEND:
-                    this.pause();
+                    this.suspend(SUSPEND_KEY_TRIGGERED);
                     break;
 
                 case NORMAL:
-                    this.start();
+                    this.resume(SUSPEND_KEY_TRIGGERED);
                     break;
 
                 default:
-                    log.warn("Received an unexpected mode change notice: {}", mode);
+                    log.warn("Received an unexpected mode change notice: {}", currentMode);
             }
         }
     }

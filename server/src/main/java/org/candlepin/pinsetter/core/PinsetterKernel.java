@@ -25,9 +25,9 @@ import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.ModeChangeListener;
-import org.candlepin.controller.ModeManager;
-import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.controller.mode.ModeChangeListener;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.KingpinJob;
@@ -91,7 +91,7 @@ public class PinsetterKernel implements ModeChangeListener {
     private Scheduler scheduler;
     private Configuration config;
     private JobCurator jobCurator;
-    private ModeManager modeManager;
+    private CandlepinModeManager modeManager;
 
     /**
      * Kernel main driver behind Pinsetter
@@ -104,7 +104,7 @@ public class PinsetterKernel implements ModeChangeListener {
         JobListener listener, JobCurator jobCurator,
         StdSchedulerFactory fact,
         TriggerListener triggerListener,
-        ModeManager modeManager) throws InstantiationException {
+        CandlepinModeManager modeManager) throws InstantiationException {
 
         this.config = conf;
         this.jobCurator = jobCurator;
@@ -630,19 +630,24 @@ public class PinsetterKernel implements ModeChangeListener {
     }
 
     @Override
-    public void modeChanged(Mode newMode) {
-
+    public void handleModeChange(CandlepinModeManager manager, Mode previousMode, Mode currentMode) {
         /* 1510082: Pause and un pause scheduler, never pause all jobs.
            cause when we do, quartz pauses the thread group itself.
            Later it does not resume the async thread group correctly, and as a result
            no async jobs will run.
          */
         try {
-            if (newMode == Mode.SUSPEND) {
-                pauseScheduler();
-            }
-            else if (newMode == Mode.NORMAL) {
-                unpauseScheduler();
+            switch (currentMode) {
+                case SUSPEND:
+                    this.pauseScheduler();
+                    break;
+
+                case NORMAL:
+                    this.unpauseScheduler();
+                    break;
+
+                default:
+                    log.warn("Received an unexpected mode change: {}", currentMode);
             }
         }
         catch (PinsetterException e) {

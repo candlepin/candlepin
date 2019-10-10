@@ -49,8 +49,8 @@ public class UserPrincipal extends Principal {
         addPermission(new UserUserPermission(username));
 
         // Allow users to check the status of their own jobs.
-        addPermission(new JobStatusPermission(getData(), getOwnerKeys()));
-        addPermission(new AsyncJobStatusPermission(getData()));
+        addPermission(new JobStatusPermission(getData(), this.getOwnerKeys()));
+        addPermission(new AsyncJobStatusPermission(getData(), this.getOwnerIds()));
     }
 
     public String getUsername() {
@@ -63,14 +63,17 @@ public class UserPrincipal extends Principal {
         if (obj == null) {
             return false;
         }
+
         if (getClass() != obj.getClass()) {
             return false;
         }
+
         final UserPrincipal other = (UserPrincipal) obj;
         if ((this.username == null) ?
             (other.username != null) : !this.username.equals(other.username)) {
             return false;
         }
+
         return true;
     }
 

@@ -14,7 +14,6 @@
  */
 package org.candlepin.async.impl;
 
-import org.apache.activemq.artemis.core.remoting.CloseListener;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 
@@ -23,6 +22,7 @@ import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
+import org.apache.activemq.artemis.core.remoting.CloseListener;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

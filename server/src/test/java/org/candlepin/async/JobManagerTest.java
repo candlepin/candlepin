@@ -26,19 +26,19 @@ import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.async.JobManager.ManagerState;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
-import org.candlepin.model.CandlepinModeChange;
-import org.candlepin.model.CandlepinModeChange.Mode;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
@@ -122,32 +122,6 @@ public class JobManagerTest {
         }
     }
 
-    /**
-     * A JobMessageDispatcher implementation that collects the messages sent for verification
-     */
-    private static class CollectingJobMessageDispatcher implements JobMessageDispatcher {
-        private List<JobMessage> messages = new ArrayList<>();
-
-        @Override
-        public void postJobMessage(JobMessage jobMessage) {
-            this.messages.add(jobMessage);
-        }
-
-        public List<JobMessage> getSentMessages() {
-            return this.messages;
-        }
-
-        @Override
-        public void commit() {
-            // Intentionally left empty
-        }
-
-        @Override
-        public void rollback() {
-            // Intentionally left empty
-        }
-    }
-
     /** Job class to use for testing */
     private static class TestJob implements AsyncJob {
         public static final String JOB_KEY = "TestJob";
@@ -163,12 +137,13 @@ public class JobManagerTest {
 
     private Configuration config;
     private SchedulerFactory schedulerFactory;
-    private ModeManager modeManager;
+    private CandlepinModeManager modeManager;
     private AsyncJobStatusCurator jobCurator;
     private OwnerCurator ownerCurator;
+    private JobMessageDispatcher dispatcher;
+    private JobMessageReceiver receiver;
     private PrincipalProvider principalProvider;
     private CandlepinRequestScope requestScope;
-    private CollectingJobMessageDispatcher dispatcher;
     private Injector injector;
     private EventSink eventSink;
 
@@ -184,12 +159,13 @@ public class JobManagerTest {
 
         this.config = new CandlepinCommonTestConfig();
         this.schedulerFactory = mock(SchedulerFactory.class);
-        this.modeManager = mock(ModeManager.class);
+        this.modeManager = mock(CandlepinModeManager.class);
         this.ownerCurator = mock(OwnerCurator.class);
+        this.dispatcher = mock(JobMessageDispatcher.class);
+        this.receiver = mock(JobMessageReceiver.class);
         this.jobCurator = mock(AsyncJobStatusCurator.class);
         this.principalProvider = mock(PrincipalProvider.class);
         this.requestScope = mock(CandlepinRequestScope.class);
-        this.dispatcher = new CollectingJobMessageDispatcher();
         this.injector = mock(Injector.class);
         this.eventSink = mock(EventSink.class);
 
@@ -263,7 +239,8 @@ public class JobManagerTest {
 
     private JobManager createJobManager(JobMessageDispatcher dispatcher) {
         return new JobManager(this.config, this.schedulerFactory, this.modeManager, this.jobCurator,
-            this.ownerCurator, dispatcher, this.principalProvider, this.requestScope, this.injector);
+            this.ownerCurator, dispatcher, this.receiver, this.principalProvider, this.requestScope,
+            this.injector);
     }
 
     private JobArguments buildJobArguments(Map<String, Object> args) {
@@ -773,7 +750,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testFailingWithRetryGeneratesNewJobMessage() {
+    public void testFailingWithRetryGeneratesNewJobMessage() throws Exception  {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
         AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
@@ -783,7 +760,7 @@ public class JobManagerTest {
         doReturn(job).when(this.injector).getInstance(TestJob.class);
         this.injectMockedJobStatus(status);
 
-        assertEquals(0, this.dispatcher.getSentMessages().size());
+        ArgumentCaptor<JobMessage> captor = ArgumentCaptor.forClass(JobMessage.class);
 
         try {
             JobManager manager = this.createJobManager();
@@ -799,9 +776,13 @@ public class JobManagerTest {
             assertEquals("kaboom", e.getMessage());
         }
 
-        assertEquals(1, this.dispatcher.getSentMessages().size());
+        JobManager manager = this.createJobManager();
 
-        JobMessage message = this.dispatcher.getSentMessages().get(0);
+        // Verify input is passed through, unmodified
+        verify(this.dispatcher, times(1)).postJobMessage(captor.capture());
+        JobMessage message = captor.getValue();
+
+        assertNotNull(message);
         assertEquals(JOB_ID, message.getJobId());
         assertEquals(TestJob.JOB_KEY, message.getJobKey());
 
@@ -809,7 +790,7 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testFailingWithRetryDoesNotRetryWhenAttemptsExhaused() {
+    public void testFailingWithRetryDoesNotRetryWhenAttemptsExhaused() throws Exception  {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom"); };
         AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
@@ -820,7 +801,7 @@ public class JobManagerTest {
         doReturn(job).when(this.injector).getInstance(TestJob.class);
         this.injectMockedJobStatus(status);
 
-        assertEquals(0, this.dispatcher.getSentMessages().size());
+        verify(this.dispatcher, never()).postJobMessage(Mockito.any(JobMessage.class));
 
         try {
             JobManager manager = this.createJobManager();
@@ -836,12 +817,12 @@ public class JobManagerTest {
             assertEquals("kaboom", e.getMessage());
         }
 
-        assertEquals(0, this.dispatcher.getSentMessages().size());
+        verify(this.dispatcher, never()).postJobMessage(Mockito.any(JobMessage.class));
         assertEquals(JobState.FAILED, status.getState());
     }
 
     @Test
-    public void testFailingWithRetryDoesNotRetryOnTerminalFailure() {
+    public void testFailingWithRetryDoesNotRetryOnTerminalFailure() throws Exception {
         AsyncJob job = jdata -> { throw new JobExecutionException("kaboom", true); };
         AsyncJobStatus status = spy(new AsyncJobStatus()
             .setJobKey(TestJob.JOB_KEY)
@@ -854,7 +835,7 @@ public class JobManagerTest {
         doReturn(job).when(this.injector).getInstance(TestJob.class);
         this.injectMockedJobStatus(status);
 
-        assertEquals(0, this.dispatcher.getSentMessages().size());
+        verify(this.dispatcher, never()).postJobMessage(Mockito.any(JobMessage.class));
 
         try {
             JobManager manager = this.createJobManager();
@@ -870,7 +851,7 @@ public class JobManagerTest {
             assertEquals("kaboom", e.getMessage());
         }
 
-        assertEquals(0, this.dispatcher.getSentMessages().size());
+        verify(this.dispatcher, never()).postJobMessage(Mockito.any(JobMessage.class));
         assertEquals(JobState.FAILED, status.getState());
     }
 
@@ -1122,14 +1103,15 @@ public class JobManagerTest {
     }
 
     @Test
-    public void verifyModeChangePausesSchedulerOnSuspendMode() throws Exception {
+    public void verifyModeChangeSuspendsSchedulerOnSuspendMode() throws Exception {
         JobManager manager = this.createJobManager();
         manager.initialize();
         manager.start();
 
-        manager.modeChanged(Mode.SUSPEND);
+        manager.handleModeChange(this.modeManager, Mode.NORMAL, Mode.SUSPEND);
 
         verify(this.scheduler, times(1)).standby();
+        verify(this.receiver, times(1)).suspend();
     }
 
     @Test
@@ -1137,9 +1119,13 @@ public class JobManagerTest {
         JobManager manager = this.createJobManager();
         manager.initialize();
 
-        manager.modeChanged(Mode.NORMAL);
+        reset(this.scheduler);
+        reset(this.receiver);
+
+        manager.handleModeChange(this.modeManager, Mode.SUSPEND, Mode.NORMAL);
 
         verify(this.scheduler, times(1)).start();
+        verify(this.receiver, times(1)).start();
     }
 
     @Test
@@ -1155,10 +1141,10 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testManagerCannotBePausedBeforeInit() {
+    public void testManagerCannotBeSuspendedBeforeInit() {
         JobManager manager = this.createJobManager();
 
-        assertThrows(IllegalStateException.class, manager::pause);
+        assertThrows(IllegalStateException.class, manager::suspend);
     }
 
     @Test
@@ -1185,11 +1171,11 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testManagerCannotBePausedAfterShutdown() {
+    public void testManagerCannotBeSuspendedAfterShutdown() {
         JobManager manager = this.createJobManager();
         manager.shutdown();
 
-        assertThrows(IllegalStateException.class, manager::pause);
+        assertThrows(IllegalStateException.class, manager::suspend);
     }
 
     @Test
@@ -1197,18 +1183,20 @@ public class JobManagerTest {
         JobManager manager = this.createJobManager();
         manager.shutdown();
 
-        assertThrows(IllegalStateException.class, manager::pause);
+        assertThrows(IllegalStateException.class, manager::resume);
     }
 
     @Test
-    public void testManagerCannotBeStartedInSuspendMode() {
+    public void testManagerStartsInSuspendModeWhenCandlepinIsSuspended() {
         JobManager manager = this.createJobManager();
+
+        doReturn(Mode.SUSPEND).when(this.modeManager).getCurrentMode();
+
         manager.initialize();
+        manager.start();
 
-        CandlepinModeChange mode = new CandlepinModeChange(new Date(), Mode.SUSPEND);
-        doReturn(mode).when(this.modeManager).getLastCandlepinModeChange();
-
-        assertThrows(IllegalStateException.class, manager::start);
+        ManagerState state = manager.getManagerState();
+        assertEquals(ManagerState.SUSPENDED, state);
     }
 
     @Test

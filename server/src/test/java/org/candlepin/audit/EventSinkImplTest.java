@@ -20,7 +20,8 @@ import static org.mockito.Mockito.*;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
@@ -68,7 +69,7 @@ public class EventSinkImplTest {
     @Mock private ClientMessage mockClientMessage;
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Mock private ServerLocator mockLocator;
-    @Mock private ModeManager mockModeManager;
+    @Mock private CandlepinModeManager mockModeManager;
 
     private ActiveMQSessionFactory amqSessionFactory;
     private EventFactory factory;
@@ -83,6 +84,7 @@ public class EventSinkImplTest {
         this.factory = new EventFactory(mockPrincipalProvider, mapper);
         this.principal = TestUtil.createOwnerPrincipal();
         eventFilter = new EventFilter(new CandlepinCommonTestConfig());
+
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         when(mockSessionFactory.createSession()).thenReturn(mockClientSession);
         when(mockClientSession.createProducer(anyString())).thenReturn(mockClientProducer);
@@ -90,6 +92,7 @@ public class EventSinkImplTest {
         when(mockClientSession.createMessage(anyByte(), anyBoolean())).thenReturn(mockClientMessage);
         when(mockClientMessage.getBodyBuffer()).thenReturn(ActiveMQBuffers.fixedBuffer(2000));
         when(mockSessionFactory.getServerLocator()).thenReturn(mockLocator);
+        doReturn(Mode.NORMAL).when(this.mockModeManager).getCurrentMode();
 
         this.amqSessionFactory = new TestingActiveMQSessionFactory(null, mockSessionFactory);
         this.mapper = spy(new ObjectMapper());

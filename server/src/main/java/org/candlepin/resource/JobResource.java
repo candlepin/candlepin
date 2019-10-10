@@ -148,10 +148,10 @@ public class JobResource {
             // or an IllegalStateException
 
             if (running) {
-                this.jobManager.start();
+                this.jobManager.resume();
             }
             else {
-                this.jobManager.pause();
+                this.jobManager.suspend();
             }
         }
         catch (IllegalStateException | StateManagementException e) {
@@ -365,7 +365,7 @@ public class JobResource {
         // Impl note: At the time of writing, we don't have any other details to add here.
         JobConfig config = JobConfig.forJob(jobKey);
 
-        // TODO: figure out a relatively safe way of adding arbitrary parameters tot he job
+        // TODO: figure out a relatively safe way of adding arbitrary parameters to the job
         // for (Object entry : request.getParameterMap().entrySet()) {
         //     Map.Entry<String, String[]> queryParam = (Map.Entry<String, String[]>) entry;
 

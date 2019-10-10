@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,13 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.controller;
+package org.candlepin.messaging;
 
-import org.candlepin.model.CandlepinModeChange.Mode;
+
 
 /**
- * Listener for Mode change events.
+ * The CPMProducerConfig class provides standardized configuration options to be provided to the
+ * session when creating producers.
  */
-public interface ModeChangeListener {
-    void modeChanged(Mode newMode);
+public class CPMProducerConfig {
+
+    /**
+     * Creates a new CPMProducerConfig instance with the default producer configuration.
+     */
+    public CPMProducerConfig() {
+        // Add defaults here as necessary
+    }
+
 }

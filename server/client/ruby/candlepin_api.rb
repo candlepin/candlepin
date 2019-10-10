@@ -478,7 +478,7 @@ class Candlepin
   end
 
   def set_scheduler_status(status)
-    post("/jobs/scheduler", {}, status)
+    post("/jobs/scheduler", { "running" => status })
   end
 
   def trigger_job(job, async=false)

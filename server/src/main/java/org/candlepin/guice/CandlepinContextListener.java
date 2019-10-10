@@ -34,6 +34,7 @@ import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
+import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.resteasy.ResourceLocatorMap;
@@ -84,6 +85,8 @@ import javax.servlet.ServletContextEvent;
  */
 public class CandlepinContextListener extends GuiceResteasyBootstrapServletContextListener {
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
+
+    private CPMContextListener cpmContextListener;
 
     private ActiveMQContextListener activeMQContextListener;
     private PinsetterContextListener pinsetterListener;
@@ -141,13 +144,26 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
     @Override
     public void withInjector(Injector injector) {
+        try {
+            this.initializeSubsystems(injector);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void initializeSubsystems(Injector injector) throws Exception {
         // Must call super.contextInitialized() before accessing injector
         insertValidationEventListeners(injector);
         ResourceLocatorMap map = injector.getInstance(ResourceLocatorMap.class);
         map.init();
 
-        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+        // make sure our session factory is initialized before we attempt to start something
+        // that relies upon it
+        this.cpmContextListener = injector.getInstance(CPMContextListener.class);
+        this.cpmContextListener.initialize(injector);
 
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             if (!config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
                 QpidQmf qmf = injector.getInstance(QpidQmf.class);
                 QpidStatus status = qmf.getStatus();
@@ -215,20 +231,34 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     @Override
     public void contextDestroyed(ServletContextEvent event) {
         super.contextDestroyed(event);
-        if (config.getBoolean(ACTIVEMQ_ENABLED)) {
-            activeMQContextListener.contextDestroyed();
+
+        try {
+            this.destroySubsystems();
         }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-        // Tear down the job manager
+    private void destroySubsystems() throws Exception {
+        // Tear down the job system(s)
         this.jobManager.shutdown();
-
-        pinsetterListener.contextDestroyed();
-        loggerListener.contextDestroyed();
+        this.pinsetterListener.contextDestroyed();
 
         // if amqp is enabled, close all connections.
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             Util.closeSafely(injector.getInstance(AMQPBusPublisher.class), "AMQPBusPublisher");
         }
+
+        if (config.getBoolean(ACTIVEMQ_ENABLED)) {
+            activeMQContextListener.contextDestroyed();
+        }
+
+        // Make sure this is called after everything else, as other objects may rely on the
+        // messaging subsystem
+        this.cpmContextListener.destroy();
+
+        this.loggerListener.contextDestroyed();
     }
 
     protected void setCapabilities(Configuration config) {

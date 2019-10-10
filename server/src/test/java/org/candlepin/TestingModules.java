@@ -28,8 +28,6 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
-import org.candlepin.async.JobMessageDispatcher;
-import org.candlepin.async.impl.ArtemisJobMessageDispatcher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -45,9 +43,8 @@ import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.controller.ModeManager;
-import org.candlepin.controller.ModeManagerImpl;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
@@ -62,6 +59,10 @@ import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.messaging.CPMContextListener;
+import org.candlepin.messaging.CPMSessionFactory;
+import org.candlepin.messaging.impl.noop.NoopContextListener;
+import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterTriggerListener;
@@ -342,7 +343,7 @@ public class TestingModules {
 
             bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
                 .to(ExpiryDateFunction.class).in(Singleton.class);
-            bind(ModeManager.class).to(ModeManagerImpl.class).asEagerSingleton();
+            bind(CandlepinModeManager.class).asEagerSingleton();
             bind(TriggerListener.class).to(PinsetterTriggerListener.class);
             install(new FactoryModuleBuilder().build(BindChainFactory.class));
             install(new FactoryModuleBuilder().build(BindContextFactory.class));
@@ -352,8 +353,11 @@ public class TestingModules {
             bind(ModelTranslator.class).to(StandardTranslator.class).asEagerSingleton();
 
             // Async job stuff
-            bind(JobMessageDispatcher.class).to(ArtemisJobMessageDispatcher.class);
             bind(SchedulerFactory.class).to(StdSchedulerFactory.class);
+
+            // Messaging
+            bind(CPMSessionFactory.class).to(NoopSessionFactory.class).in(Singleton.class);
+            bind(CPMContextListener.class).to(NoopContextListener.class).in(Singleton.class);
         }
 
         @Provides @Singleton @Named("EventFactoryObjectMapper")
