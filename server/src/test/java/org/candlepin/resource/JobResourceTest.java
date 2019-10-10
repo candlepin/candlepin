@@ -139,12 +139,12 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNotNull(output);
         assertTrue(output.isRunning());
 
-        verify(this.jobManager, times(1)).start();
+        verify(this.jobManager, times(1)).resume();
     }
 
     @Test
     public void testSetSchedulerStatusToPaused() {
-        doReturn(ManagerState.PAUSED).when(this.jobManager).getManagerState();
+        doReturn(ManagerState.SUSPENDED).when(this.jobManager).getManagerState();
 
         JobResource resource = this.buildJobResource();
         SchedulerStatusDTO output = resource.setSchedulerStatus(false);
@@ -152,14 +152,14 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNotNull(output);
         assertFalse(output.isRunning());
 
-        verify(this.jobManager, times(1)).pause();
+        verify(this.jobManager, times(1)).suspend();
     }
 
     @ParameterizedTest
     @ValueSource(strings = { "true", "false" })
     public void testSetSchedulerIllegalStateExceptionsAreMaskedWithIseExceptions(boolean running) {
-        doThrow(new IllegalStateException("testing start op failure")).when(this.jobManager).start();
-        doThrow(new IllegalStateException("testing pause op failure")).when(this.jobManager).pause();
+        doThrow(new IllegalStateException("testing start op failure")).when(this.jobManager).resume();
+        doThrow(new IllegalStateException("testing suspend op failure")).when(this.jobManager).suspend();
 
         JobResource resource = this.buildJobResource();
         assertThrows(IseException.class, () -> resource.setSchedulerStatus(running));
@@ -168,10 +168,10 @@ public class JobResourceTest extends DatabaseTestFixture {
     @ParameterizedTest
     @ValueSource(strings = { "true", "false" })
     public void testSetSchedulerStateManagementExceptionsAreMaskedWithIseExceptions(boolean running) {
-        doThrow(new StateManagementException(ManagerState.PAUSED, ManagerState.RUNNING,
-            "testing start op failure")).when(this.jobManager).start();
-        doThrow(new StateManagementException(ManagerState.RUNNING, ManagerState.PAUSED,
-            "testing pause op failure")).when(this.jobManager).pause();
+        doThrow(new StateManagementException(ManagerState.SUSPENDED, ManagerState.RUNNING,
+            "testing start op failure")).when(this.jobManager).resume();
+        doThrow(new StateManagementException(ManagerState.RUNNING, ManagerState.SUSPENDED,
+            "testing suspend op failure")).when(this.jobManager).suspend();
 
         JobResource resource = this.buildJobResource();
         assertThrows(IseException.class, () -> resource.setSchedulerStatus(running));

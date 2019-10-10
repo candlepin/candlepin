@@ -16,7 +16,8 @@ package org.candlepin.audit;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
@@ -42,6 +43,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+
+
 /**
  * EventSink - Queues events to be sent after request/job completes, and handles actual
  * sending of events on successful job or API request, as well as rollback if either fails.
@@ -55,7 +58,7 @@ public class EventSinkImpl implements EventSink {
     private EventFactory eventFactory;
     private ObjectMapper mapper;
     private EventFilter eventFilter;
-    private ModeManager modeManager;
+    private CandlepinModeManager modeManager;
     private Configuration config;
 
     private ActiveMQSessionFactory sessionFactory;
@@ -64,7 +67,8 @@ public class EventSinkImpl implements EventSink {
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
         ObjectMapper mapper, Configuration config, ActiveMQSessionFactory sessionFactory,
-        ModeManager modeManager) throws ActiveMQException {
+        CandlepinModeManager modeManager) throws ActiveMQException {
+
         this.eventFactory = eventFactory;
         this.mapper = mapper;
         this.eventFilter = eventFilter;
@@ -111,7 +115,10 @@ public class EventSinkImpl implements EventSink {
             return;
         }
 
-        modeManager.throwRestEasyExceptionIfInSuspendMode();
+        if (this.modeManager.getCurrentMode() != Mode.NORMAL) {
+            throw new IllegalStateException("Candlepin is in suspend mode");
+        }
+
         log.debug("Queuing event: {}", event);
 
         try {

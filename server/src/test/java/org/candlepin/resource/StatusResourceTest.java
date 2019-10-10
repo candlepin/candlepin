@@ -20,11 +20,9 @@ import static org.mockito.Mockito.*;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.dto.api.v1.StatusDTO;
-import org.candlepin.model.CandlepinModeChange;
-import org.candlepin.model.CandlepinModeChange.Mode;
-import org.candlepin.model.CandlepinModeChange.Reason;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -46,7 +44,6 @@ import ch.qos.logback.core.Appender;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Date;
 
 
 /**
@@ -59,22 +56,20 @@ public class StatusResourceTest {
     @Mock private JsRunnerProvider jsProvider;
     @Mock private CandlepinCache candlepinCache;
     @Mock private StatusCache mockedStatusCache;
-    @Mock private ModeManager modeManager;
+    @Mock private CandlepinModeManager modeManager;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
-        CandlepinModeChange mockModeChange =
-            new CandlepinModeChange(new Date(), Mode.NORMAL, Reason.STARTUP);
         CandlepinQuery mockCPQuery = mock(CandlepinQuery.class);
         when(mockCPQuery.list()).thenReturn(new ArrayList<Rules>());
-
         when(rulesCurator.listAll()).thenReturn(mockCPQuery);
+
         when(rulesCurator.getRules()).thenReturn(new Rules("// Version: 2.0\nBLAH"));
         when(mockedStatusCache.getStatus()).thenReturn(null);
         when(candlepinCache.getStatusCache()).thenReturn(mockedStatusCache);
-        when(modeManager.getLastCandlepinModeChange()).thenReturn(mockModeChange);
+        when(modeManager.getCurrentMode()).thenReturn(Mode.NORMAL);
     }
 
     @Test

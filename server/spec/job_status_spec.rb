@@ -18,24 +18,27 @@ describe 'Job Status' do
   end
 
   it 'should cancel a job' do
-    skip("Reenable once scheduler state management is fully implemented")
+    begin
+      @cp.set_scheduler_status(false)
 
-    @cp.set_scheduler_status(false)
-    job = @cp.autoheal_org(@owner['key'])
-    #make sure we see a job waiting to go
-    joblist = @cp.list_jobs(@owner['key'])
-    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CREATED'
+      job = @cp.autoheal_org(@owner['key'])
+      #make sure we see a job waiting to go
+      joblist = @cp.list_jobs(@owner['key'])
+      joblist.find { |j| j['id'] == job['id'] }['state'].should == 'QUEUED'
 
-    @cp.cancel_job(job['id'])
-    #make sure we see a job canceled
-    joblist = @cp.list_jobs(@owner['key'])
-    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
+      @cp.cancel_job(job['id'])
+      #make sure we see a job canceled
+      joblist = @cp.list_jobs(@owner['key'])
+      joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
 
-    @cp.set_scheduler_status(true)
-    sleep 1 #let the job queue drain..
-    #make sure job didn't flip to FINISHED
-    joblist = @cp.list_jobs(@owner['key'])
-    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
+      @cp.set_scheduler_status(true)
+      sleep 1 #let the job queue drain..
+      #make sure job didn't flip to FINISHED
+      joblist = @cp.list_jobs(@owner['key'])
+      joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
+    ensure
+      @cp.set_scheduler_status(true)
+    end
   end
 
   it 'should contain the system id for async binds' do
@@ -81,23 +84,27 @@ describe 'Job Status' do
   end
 
   it 'should allow user to cancel a job it initiated' do
-    skip("Reenable once scheduler state management is fully implemented")
-    @cp.set_scheduler_status(false)
-    job = @user.autoheal_org(@owner['key'])
-    #make sure we see a job waiting to go
-    joblist = @cp.list_jobs(@owner['key'])
-    expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CREATED')
+    begin
+      @cp.set_scheduler_status(false)
 
-    @user.cancel_job(job['id'])
-    #make sure we see a job canceled
-    joblist = @cp.list_jobs(@owner['key'])
-    expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
+      job = @user.autoheal_org(@owner['key'])
+      #make sure we see a job waiting to go
+      joblist = @cp.list_jobs(@owner['key'])
+      expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('QUEUED')
 
-    @cp.set_scheduler_status(true)
-    sleep 1 #let the job queue drain..
-    #make sure job didn't flip to FINISHED
-    joblist = @cp.list_jobs(@owner['key'])
-    expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
+      @user.cancel_job(job['id'])
+      #make sure we see a job canceled
+      joblist = @cp.list_jobs(@owner['key'])
+      expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
+
+      @cp.set_scheduler_status(true)
+      sleep 1 #let the job queue drain..
+      #make sure job didn't flip to FINISHED
+      joblist = @cp.list_jobs(@owner['key'])
+      expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
+    ensure
+      @cp.set_scheduler_status(true)
+    end
   end
 
   it 'should not allow user to cancel a job it did not initiate' do
@@ -110,8 +117,6 @@ describe 'Job Status' do
   end
 
   it 'should not allow user to view job status outside of managed org' do
-    skip("Reenable once scheduler state management is fully implemented")
-
     other_user = user_client(@owner2, random_string("other_user"))
     system = consumer_client(other_user, random_string("another_system"))
     job = system.consume_product(@monitoring.id, { :async => true })
@@ -146,14 +151,18 @@ describe 'Job Status' do
   end
 
   it 'should allow consumer to cancel own job' do
-    @cp.set_scheduler_status(false)
-    system = consumer_client(@user, 'system7', :system,  nil,  {}, @owner['key'])
-    job = system.consume_product(@monitoring.id, { :async => true })
-    status = system.get_job(job['id'])
-    system.cancel_job(job['id'])
-    # wait for job to complete, or test clean up will conflict with the asynchronous job.
-    wait_for_job(status['id'], 15)
-    @cp.set_scheduler_status(true)
+    begin
+      @cp.set_scheduler_status(false)
+
+      system = consumer_client(@user, 'system7', :system,  nil,  {}, @owner['key'])
+      job = system.consume_product(@monitoring.id, { :async => true })
+      status = system.get_job(job['id'])
+      system.cancel_job(job['id'])
+      # wait for job to complete, or test clean up will conflict with the asynchronous job.
+      wait_for_job(status['id'], 15)
+    ensure
+      @cp.set_scheduler_status(true)
+    end
   end
 
   it 'should fail to cancel terminal job' do

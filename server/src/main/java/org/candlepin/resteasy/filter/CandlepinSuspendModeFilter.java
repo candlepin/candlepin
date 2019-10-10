@@ -16,10 +16,8 @@ package org.candlepin.resteasy.filter;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.SuspendedException;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.ModeManager;
-import org.candlepin.model.CandlepinModeChange;
-import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,14 +36,15 @@ import javax.ws.rs.ext.Provider;
  */
 @PreMatching
 @Provider
-public class CandlepinSuspendModeFilter implements ContainerRequestFilter{
-    private ModeManager modeManager;
+public class CandlepinSuspendModeFilter implements ContainerRequestFilter {
+    private CandlepinModeManager modeManager;
     private Configuration config;
     private I18n i18n;
 
     @Inject
-    public CandlepinSuspendModeFilter(ModeManager modeManager, ObjectMapper mapper,
+    public CandlepinSuspendModeFilter(CandlepinModeManager modeManager, ObjectMapper mapper,
         Configuration config, I18n i18n) {
+
         this.modeManager = modeManager;
         this.config = config;
         this.i18n = i18n;
@@ -59,19 +58,12 @@ public class CandlepinSuspendModeFilter implements ContainerRequestFilter{
     public void filter(ContainerRequestContext requestContext)
         throws JsonProcessingException {
 
-        if (!config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
-            return;
-        }
-
-        /**
-         * Allow status every time
-         */
+        // Allow status every time
         if (requestContext.getUriInfo().getPath().startsWith("/status")) {
             return;
         }
 
-        CandlepinModeChange mode = modeManager.getLastCandlepinModeChange();
-        if (mode.getMode() == Mode.SUSPEND) {
+        if (this.modeManager.getCurrentMode() == Mode.SUSPEND) {
             throw new SuspendedException(i18n.tr("Candlepin is in Suspend mode, " +
                 "please check /status resource to get more details"));
         }

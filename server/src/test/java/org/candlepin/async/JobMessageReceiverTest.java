@@ -14,61 +14,127 @@
  */
 package org.candlepin.async;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.messaging.CPMConsumer;
+import org.candlepin.messaging.CPMConsumerConfig;
+import org.candlepin.messaging.CPMException;
+import org.candlepin.messaging.CPMMessage;
+import org.candlepin.messaging.CPMMessageListener;
+import org.candlepin.messaging.CPMSession;
+import org.candlepin.messaging.CPMSessionConfig;
+import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
-import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
-import org.apache.activemq.artemis.api.core.client.ClientConsumer;
-import org.apache.activemq.artemis.api.core.client.ClientMessage;
-import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.junit.Before;
 import org.junit.Test;
 
+
+
+/**
+ * Test suite for the JobMessageReceiver class
+ */
 public class JobMessageReceiverTest {
 
-    private String filter;
     private JobManager jobManager;
-    private ObjectMapper objMapper;
+    private Configuration config;
+    private CPMSessionFactory cpmSessionFactory;
+    private ObjectMapper mapper;
 
-    private ActiveMQSessionFactory sessionFactory;
-    private ClientSession session;
-    private ClientConsumer consumer;
+    // Collected state issued on a per-test basis
+    private CPMSession session;
+    private CPMConsumer consumer;
+    private ThreadLocal<CPMMessageListener> listenerContainer;
 
     @Before
     public void setUp() throws Exception {
-        this.filter = "test filter";
+        this.config = new CandlepinCommonTestConfig();
         this.jobManager = mock(JobManager.class);
-        this.objMapper = new ObjectMapper();
+        this.mapper = new ObjectMapper();
 
-        // Prep the session factory...
-        this.sessionFactory = mock(ActiveMQSessionFactory.class);
-        this.session = mock(ClientSession.class);
-        this.consumer = mock(ClientConsumer.class);
+        // Set the number of threads/consumers to 1 so we don't have to worry about
+        // clobbering any collected state during consumer creation
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_THREADS, "1");
 
-        doReturn(this.session).when(this.sessionFactory).getIngressSession(anyBoolean());
-        doReturn(this.consumer).when(this.session).createConsumer(anyString(), anyString());
+        // Reset collected state between tests
+        this.listenerContainer = new ThreadLocal<>();
+        this.consumer = this.createMockCPMConsumer(this.listenerContainer);
+        this.session = this.createMockCPMSession(this.consumer);
+        doReturn(this.session).when(this.consumer).getSession();
+
+        this.cpmSessionFactory = this.createMockCPMSessionFactory(this.session);
+    }
+
+    private CPMSessionFactory createMockCPMSessionFactory(CPMSession session) throws CPMException {
+        CPMSessionFactory factory = mock(CPMSessionFactory.class);
+        CPMSessionConfig config = new CPMSessionConfig();
+
+        doReturn(true).when(factory).isInitialized();
+        doReturn(config).when(factory).createSessionConfig();
+
+        doAnswer(iom -> session)
+            .when(factory)
+            .createSession();
+
+        doAnswer(iom -> session)
+            .when(factory)
+            .createSession(any(CPMSessionConfig.class));
+
+        return factory;
+    }
+
+    private CPMSession createMockCPMSession(CPMConsumer consumer) throws CPMException {
+        CPMSession session = mock(CPMSession.class);
+        CPMConsumerConfig cconfig = new CPMConsumerConfig();
+
+        doReturn(cconfig).when(session).createConsumerConfig();
+        doReturn(consumer).when(session).createConsumer();
+        doReturn(consumer).when(session).createConsumer(any(CPMConsumerConfig.class));
+
+        return session;
+    }
+
+    @SuppressWarnings("indentation")
+    private CPMConsumer createMockCPMConsumer(ThreadLocal<CPMMessageListener> container) throws CPMException {
+        CPMConsumer consumer = mock(CPMConsumer.class);
+
+        doAnswer(iom -> {
+                CPMMessageListener prev = container.get();
+                container.set((CPMMessageListener) iom.getArguments()[0]);
+                return prev;
+            })
+            .when(consumer)
+            .setMessageListener(any(CPMMessageListener.class));
+
+        doAnswer(iom -> container.get())
+            .when(consumer)
+            .getMessageListener();
+
+        return consumer;
+    }
+
+    private CPMMessage createCPMMessage(String jobId, String jobKey) {
+        CPMMessage message = mock(CPMMessage.class);
+        String body = String.format("{ \"jobId\": \"%s\", \"jobKey\": \"%s\" }", jobId, jobKey);
+
+        doReturn(body).when(message).getBody();
+
+        return message;
     }
 
     private JobMessageReceiver buildJobMessageReceiver() {
         try {
-            JobMessageReceiver receiver = new JobMessageReceiver(this.filter, this.jobManager,
-                this.sessionFactory, this.objMapper);
+            JobMessageReceiver receiver = new JobMessageReceiver(this.config, this.cpmSessionFactory,
+                this.mapper);
 
-            receiver.initialize();
+            receiver.initialize(this.jobManager);
 
             return receiver;
         }
@@ -77,30 +143,15 @@ public class JobMessageReceiverTest {
         }
     }
 
-    private ClientMessage buildClientMessage(String jobId, String jobKey) {
-        try {
-            String body = String.format("{ \"jobId\": \"%s\", \"jobKey\": \"%s\" }", jobId, jobKey);
-
-            ClientMessage message = mock(ClientMessage.class);
-            ActiveMQBuffer buffer = ActiveMQBuffers.dynamicBuffer(body.length());
-            buffer.writeString(body);
-
-            doReturn(buffer).when(message).getBodyBuffer();
-            // Mock more of this thing here as necessary. Yeesh...
-
-            return message;
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unexpected exception occurred while building ClientMessage", e);
-        }
-    }
 
     @Test
     public void testMessageAckAndSessionCommitOnSuccess() throws Exception {
-        ClientMessage message = this.buildClientMessage("test_id", "test_key");
+        CPMMessage message = this.createCPMMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        CPMMessageListener listener = this.listenerContainer.get();
+        assertNotNull(listener);
 
-        receiver.onMessage(message);
+        listener.handleMessage(this.session, this.consumer, message);
 
         verify(message, times(1)).acknowledge();
         verify(this.session, times(1)).commit();
@@ -109,12 +160,15 @@ public class JobMessageReceiverTest {
 
     @Test
     public void testMessageCommitOnJobExecutionException() throws Exception {
-        ClientMessage message = this.buildClientMessage("test_id", "test_key");
+        CPMMessage message = this.createCPMMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        CPMMessageListener listener = this.listenerContainer.get();
+        assertNotNull(listener);
+
 
         doThrow(new JobExecutionException()).when(this.jobManager).executeJob(any(JobMessage.class));
 
-        receiver.onMessage(message);
+        listener.handleMessage(this.session, this.consumer, message);
 
         verify(message, times(1)).acknowledge();
         verify(this.session, times(1)).commit();
@@ -123,15 +177,18 @@ public class JobMessageReceiverTest {
 
     @Test
     public void testMessageCommitOnTerminalJobStateManagementException() throws Exception {
-        ClientMessage message = this.buildClientMessage("test_id", "test_key");
+        CPMMessage message = this.createCPMMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        CPMMessageListener listener = this.listenerContainer.get();
+        assertNotNull(listener);
+
 
         JobStateManagementException exception = new JobStateManagementException(new AsyncJobStatus(),
             JobState.RUNNING, JobState.FAILED, true);
 
         doThrow(exception).when(this.jobManager).executeJob(any(JobMessage.class));
 
-        receiver.onMessage(message);
+        listener.handleMessage(this.session, this.consumer, message);
 
         verify(message, times(1)).acknowledge();
         verify(this.session, times(1)).commit();
@@ -140,15 +197,18 @@ public class JobMessageReceiverTest {
 
     @Test
     public void testMessageRollbackOnNonTerminalJobStateManagementException() throws Exception {
-        ClientMessage message = this.buildClientMessage("test_id", "test_key");
+        CPMMessage message = this.createCPMMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        CPMMessageListener listener = this.listenerContainer.get();
+        assertNotNull(listener);
+
 
         JobStateManagementException exception = new JobStateManagementException(new AsyncJobStatus(),
             JobState.RUNNING, JobState.FAILED_WITH_RETRY, false);
 
         doThrow(exception).when(this.jobManager).executeJob(any(JobMessage.class));
 
-        receiver.onMessage(message);
+        listener.handleMessage(this.session, this.consumer, message);
 
         verify(message, times(1)).acknowledge();
         verify(this.session, never()).commit();
@@ -157,12 +217,15 @@ public class JobMessageReceiverTest {
 
     @Test
     public void testMessageRollbackOnMessageDispatchException() throws Exception {
-        ClientMessage message = this.buildClientMessage("test_id", "test_key");
+        CPMMessage message = this.createCPMMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        CPMMessageListener listener = this.listenerContainer.get();
+        assertNotNull(listener);
+
 
         doThrow(new JobMessageDispatchException()).when(this.jobManager).executeJob(any(JobMessage.class));
 
-        receiver.onMessage(message);
+        listener.handleMessage(this.session, this.consumer, message);
 
         verify(message, times(1)).acknowledge();
         verify(this.session, never()).commit();
@@ -171,12 +234,15 @@ public class JobMessageReceiverTest {
 
     @Test
     public void testMessageCommitOnTerminalJobException() throws Exception {
-        ClientMessage message = this.buildClientMessage("test_id", "test_key");
+        CPMMessage message = this.createCPMMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        CPMMessageListener listener = this.listenerContainer.get();
+        assertNotNull(listener);
+
 
         doThrow(new JobException(true)).when(this.jobManager).executeJob(any(JobMessage.class));
 
-        receiver.onMessage(message);
+        listener.handleMessage(this.session, this.consumer, message);
 
         verify(message, times(1)).acknowledge();
         verify(this.session, times(1)).commit();
@@ -185,12 +251,14 @@ public class JobMessageReceiverTest {
 
     @Test
     public void testMessageRollbackOnNonTerminalJobException() throws Exception {
-        ClientMessage message = this.buildClientMessage("test_id", "test_key");
+        CPMMessage message = this.createCPMMessage("test_id", "test_key");
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        CPMMessageListener listener = this.listenerContainer.get();
+        assertNotNull(listener);
 
         doThrow(new JobException(false)).when(this.jobManager).executeJob(any(JobMessage.class));
 
-        receiver.onMessage(message);
+        listener.handleMessage(this.session, this.consumer, message);
 
         verify(message, times(1)).acknowledge();
         verify(this.session, never()).commit();
@@ -199,14 +267,16 @@ public class JobMessageReceiverTest {
 
     @Test
     public void testMessageRollbackOnMessageProcessingException() throws Exception {
-        ClientMessage message = this.buildClientMessage("test_id", "test_key");
+        CPMMessage message = this.createCPMMessage("test_id", "test_key");
 
-        this.objMapper = mock(ObjectMapper.class);
-        doThrow(new RuntimeException("kaboom")).when(this.objMapper).readValue(anyString(), any(Class.class));
+        this.mapper = mock(ObjectMapper.class);
+        doThrow(new RuntimeException("kaboom")).when(this.mapper).readValue(anyString(), any(Class.class));
 
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
+        CPMMessageListener listener = this.listenerContainer.get();
+        assertNotNull(listener);
 
-        receiver.onMessage(message);
+        listener.handleMessage(this.session, this.consumer, message);
 
         verify(message, times(1)).acknowledge();
         verify(this.session, never()).commit();

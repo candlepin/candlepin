@@ -55,7 +55,7 @@ public class ConsumerPrincipal extends Principal {
 
         // Allow consumers to check the status of their own jobs.
         addPermission(new JobStatusPermission(getData(), Collections.singletonList(owner.getKey())));
-        addPermission(new AsyncJobStatusPermission(getData()));
+        addPermission(new AsyncJobStatusPermission(getData(), Collections.singleton(owner.getId())));
     }
 
     public Consumer getConsumer() {

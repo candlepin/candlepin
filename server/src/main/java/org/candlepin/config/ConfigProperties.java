@@ -131,6 +131,20 @@ public class ConfigProperties {
     public static final String OAUTH_AUTHENTICATION = "candlepin.auth.oauth.enable";
     public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enable";
 
+    /**
+     * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
+     */
+    public static final String SUSPEND_MODE_ENABLED = "candlepin.suspend_mode_enabled";
+
+    // Messaging
+    public static final String CPM_PROVIDER = "candlepin.messaging.provider";
+
+    // TODO:
+    // Clean up all the messaging configuration. We have all sorts of prefixes and definitions for
+    // common broker options, and stuff which is unique to specific brokers. We should be defining
+    // them as "candlepin.<broker type>.<setting>" instead of the various sections we have now.
+
+
     // AMQP stuff
     public static final String AMQP_INTEGRATION_ENABLED = "candlepin.amqp.enable";
     public static final String AMQP_CONNECT_STRING = "candlepin.amqp.connect";
@@ -141,13 +155,6 @@ public class ConfigProperties {
     public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
     public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
 
-    // Quartz configurations
-    public static final String QUARTZ_CLUSTERED_MODE = "org.quartz.jobStore.isClustered";
-
-    /**
-     * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
-     */
-    public static final String SUSPEND_MODE_ENABLED = "candlepin.suspend_mode_enabled";
     /**
      * Timeout that is used for QpidQmf while receiving messages. It shouldn't be necessary
      * to modify this unless the environment and Qpid Broker is so heavily utilized, that
@@ -159,6 +166,10 @@ public class ConfigProperties {
      * Period to wait between attempts to reconnect to Qpid.
      */
     public static final String QPID_MODE_TRANSITIONER_DELAY = "candlepin.amqp.suspend.transitioner_delay";
+
+
+    // Quartz configurations
+    public static final String QUARTZ_CLUSTERED_MODE = "org.quartz.jobStore.isClustered";
 
     // Hibernate
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
@@ -274,6 +285,9 @@ public class ConfigProperties {
     public static final String ASYNC_JOBS_WHITELIST = "candlepin.async.whitelist";
     public static final String ASYNC_JOBS_BLACKLIST = "candlepin.async.blacklist";
 
+    // Whether or not we should allow queuing new jobs on this node while the job manager is suspended/paused
+    public static final String ASYNC_JOBS_QUEUE_WHILE_SUSPENDED = "candlepin.async.queue_while_suspended";
+
     // Used for per-job configuration. The full syntax is "PREFIX.{job_key}.SUFFIX". For instance,
     // to configure the schedule flag for the job TestJob1, the full configuration would be:
     // candlepin.async.jobs.TestJob1.schedule=0 0 0/3 * * ?
@@ -344,6 +358,8 @@ public class ConfigProperties {
 
             this.put(ACTIVATION_DEBUG_PREFIX, "");
 
+            this.put(CPM_PROVIDER, "artemis");
+
             this.put(ACTIVEMQ_ENABLED, "true");
             this.put(ACTIVEMQ_EMBEDDED, "true");
             // By default, connect to embedded artemis (InVM)
@@ -352,6 +368,19 @@ public class ConfigProperties {
             this.put(ACTIVEMQ_SERVER_CONFIG_PATH, "");
             this.put(ACTIVEMQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
             this.put(ACTIVEMQ_CONNECTION_MONITOR_INTERVAL, "5000"); // milliseconds
+
+            // AMQP (Qpid) configuration used by events
+            this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
+            this.put(AMQP_CONNECT_STRING, "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'");
+            this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/candlepin.jks");
+            this.put(AMQP_KEYSTORE_PASSWORD, "password");
+            this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
+            this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
+            this.put(QPID_QMF_RECEIVE_TIMEOUT, "5000");
+            this.put(QPID_MODE_TRANSITIONER_DELAY, "10");
+
+            this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
+            this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "1"); // Try for 10 seconds (1*10s)
 
             this.put(AUDIT_LISTENERS,
                 "org.candlepin.audit.LoggingListener," +
@@ -396,6 +425,8 @@ public class ConfigProperties {
 
             this.put(CACHE_JMX_STATS, "false");
 
+            this.put(SUSPEND_MODE_ENABLED, "true");
+
             // Pinsetter
             // prevent Quartz from checking for updates
             this.put("org.quartz.scheduler.skipUpdateCheck", "true");
@@ -405,20 +436,6 @@ public class ConfigProperties {
             this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
             this.put(ENTITLER_JOB_THROTTLE, "7");
             this.put(BATCH_BIND_NUMBER_OF_POOLS_LIMIT, "100");
-
-            // AMQP (Qpid) configuration used by events
-            this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
-            this.put(AMQP_CONNECT_STRING, "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'");
-            this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/candlepin.jks");
-            this.put(AMQP_KEYSTORE_PASSWORD, "password");
-            this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
-            this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
-            this.put(SUSPEND_MODE_ENABLED, "true");
-            this.put(QPID_QMF_RECEIVE_TIMEOUT, "5000");
-            this.put(QPID_MODE_TRANSITIONER_DELAY, "10");
-
-            this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
-            this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "1"); // Try for 10 seconds (1*10s)
 
             this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
             this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
@@ -461,6 +478,7 @@ public class ConfigProperties {
 
             // Async job defaults and scheduling
             this.put(ASYNC_JOBS_THREADS, "10");
+            this.put(ASYNC_JOBS_QUEUE_WHILE_SUSPENDED, "true");
 
             this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ActiveEntitlementJob.DEFAULT_SCHEDULE);

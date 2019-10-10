@@ -16,7 +16,7 @@ package org.candlepin.pinsetter.core;
 
 import static org.mockito.Mockito.*;
 
-import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
@@ -33,12 +33,12 @@ import java.util.Date;
  */
 public class PinsetterTriggerListenerTest {
 
-    private ModeManager modeManager;
+    private CandlepinModeManager modeManager;
     private JobCurator jobCurator;
 
     @Before
     public void init() throws SchedulerException {
-        modeManager = mock(ModeManager.class);
+        modeManager = mock(CandlepinModeManager.class);
         jobCurator = mock(JobCurator.class);
     }
 
