@@ -143,4 +143,5 @@
     <include file="db/changelog/20190729122218-add-locked-column-to-cp-pool.xml"/>
     <include file="db/changelog/20190813155224-add-principal-to-deleted-consumers.xml"/>
     <include file="db/changelog/20190927153020-index-facts-element.xml"/>
+    <include file="db/changelog/20191009160315-remove-duplicate-indexes.xml"/>
 </databaseChangeLog>
