@@ -14,18 +14,33 @@
  */
 package org.candlepin.cache;
 
+import static org.candlepin.config.ConfigProperties.CACHE_CONFIG_FILE_URI;
+
+import org.candlepin.common.config.Configuration;
+
+import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import java.net.URISyntaxException;
+
+import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
 
 /**
  * Provides object cache by indexed by String.
- * @author fnguyen
  *
+ * @author fnguyen
  */
 public class JCacheManagerProvider implements Provider<CacheManager> {
+
+    private Configuration config;
+
+    @Inject
+    JCacheManagerProvider(Configuration config) {
+        this.config = config;
+    }
 
     /**
      * It is safe to bind this as singleton, the CacheManager is supposed to
@@ -34,9 +49,20 @@ public class JCacheManagerProvider implements Provider<CacheManager> {
      */
     @Override
     public CacheManager get() {
-        CachingProvider cachingProvider = Caching.getCachingProvider();
-        CacheManager cacheManager = cachingProvider.getCacheManager();
-        return cacheManager;
-    }
+        CacheManager cacheManager = null;
 
+        CachingProvider cachingProvider = Caching.getCachingProvider();
+        String cacheManagerUri = config.getString(CACHE_CONFIG_FILE_URI);
+
+        try {
+            ClassLoader defaultClassLoader = cachingProvider.getDefaultClassLoader();
+            cacheManager = cachingProvider
+                .getCacheManager(defaultClassLoader.getResource(cacheManagerUri).toURI(), defaultClassLoader);
+
+            return cacheManager;
+        }
+        catch (URISyntaxException e) {
+            throw new CacheException("Couldn't load URI from " + cacheManagerUri, e);
+        }
+    }
 }
