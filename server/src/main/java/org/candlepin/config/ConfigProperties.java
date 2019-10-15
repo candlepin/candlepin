@@ -159,6 +159,7 @@ public class ConfigProperties {
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
     // Cache
     public static final String CACHE_JMX_STATS = "cache.jmx.statistics";
+    public static final String CACHE_CONFIG_FILE_URI = JPA_CONFIG_PREFIX + "hibernate.javax.cache.uri";
 
     public static final String[] ENCRYPTED_PROPERTIES = new String[] {
         DB_PASSWORD,
@@ -349,6 +350,7 @@ public class ConfigProperties {
             this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
             this.put(CACHE_JMX_STATS, "false");
+            this.put(CACHE_CONFIG_FILE_URI, "ehcache.xml");
 
             // Pinsetter
             // prevent Quartz from checking for updates

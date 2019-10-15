@@ -1099,20 +1099,8 @@
     </dependency>
     <dependency>
       <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-ehcache</artifactId>
-      <version>5.3.8.Final</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>*</artifactId>
-          <groupId>*</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.ehcache</groupId>
-      <artifactId>ehcache</artifactId>
-      <version>2.10.3</version>
+      <artifactId>hibernate-jcache</artifactId>
+      <version>5.4.6.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -1123,8 +1111,8 @@
     </dependency>
     <dependency>
       <groupId>org.ehcache</groupId>
-      <artifactId>jcache</artifactId>
-      <version>1.0.0</version>
+      <artifactId>ehcache</artifactId>
+      <version>3.8.0</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>

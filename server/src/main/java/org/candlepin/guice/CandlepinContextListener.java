@@ -57,20 +57,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.management.ManagementService;
-
 import io.swagger.converter.ModelConverters;
 
 import java.io.File;
-import java.lang.management.ManagementFactory;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import javax.management.MBeanServer;
+import javax.cache.CacheManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -180,9 +176,13 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         }
 
         if (config.getBoolean(ConfigProperties.CACHE_JMX_STATS)) {
-            MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-            ManagementService.registerMBeans(CacheManager.getInstance(), mBeanServer,
-                true, true, true, true);
+            CacheManager cacheManager = injector.getInstance(CacheManager.class);
+            cacheManager.getCacheNames().forEach(cacheName -> {
+                log.info("Enabling management and statistics for {} cache", cacheName);
+                cacheManager.enableManagement(cacheName, true);
+                cacheManager.enableStatistics(cacheName, true);
+            });
+
         }
 
         pinsetterListener = injector.getInstance(PinsetterContextListener.class);
