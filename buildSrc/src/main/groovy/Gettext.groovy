@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2009 - ${YEAR} Red Hat, Inc.
+ *  Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  *  This software is licensed to you under the GNU General Public License,
  *  version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,6 +15,7 @@
 
 import org.gradle.api.Project
 import org.gradle.api.Plugin
+import org.gradle.api.GradleException
 
 class GettextExtension {
     String keys_project_dir
@@ -78,6 +79,31 @@ class Gettext implements Plugin<Project> {
                         args msgmerge_args
                         workingDir project.getRootDir()
                     }
+                }
+            }
+        }
+
+        def validate_translation = project.task('validate_translation') {
+            description = 'Validate translation PO files to check for unescaped single quotes'
+            group = 'verification'
+            doLast {
+                def po_files = new FileNameFinder().getFileNames("${extension.keys_project_dir}/po/", '*.po')
+                // Search for all lines that start with msgstr that contain an unescaped single quote.
+                def regex = ~/^msgstr(.*([^'])'([^']).*)/
+                def failed = false
+                po_files.each {
+                    def line_number = 1
+                    new File(it).eachLine { line ->
+                        def matcher = regex.matcher(line)
+                        while (matcher.find()) {
+                            println(String.format("Found unescaped single quote in %s line %s: %s",it, line_number, matcher.group(1)))
+                            failed = true
+                        }
+                        line_number++
+                    }
+                }
+                if (failed) {
+                    throw new GradleException("failed validating translation files")
                 }
             }
         }
