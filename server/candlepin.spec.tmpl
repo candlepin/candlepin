@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.7.7
+Version: 2.7.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,10 @@ fi
 
 #raw
 %changelog
+* Thu Oct 17 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.8-1
+- Use more reliable method for detecting the hibernate dialect
+  (wpoteat@redhat.com)
+
 * Mon Sep 23 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.7.7-1
 - 1753256: ActiveMQContextListener no longer attempts to load DatabaseListener
   (crog@redhat.com)
