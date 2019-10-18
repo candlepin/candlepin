@@ -17,6 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.service.model.BrandingInfo;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -27,7 +28,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
  * A DTO representation of the Branding entity used internally by ProductDTO.
  */
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> {
+public class BrandingDTO extends TimestampedCandlepinDTO<BrandingDTO> implements BrandingInfo {
 
     public static final long serialVersionUID = 1L;
 

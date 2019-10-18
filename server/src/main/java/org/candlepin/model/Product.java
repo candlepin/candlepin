@@ -68,6 +68,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+
 
 
 /**
@@ -422,7 +424,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
 
         copy.branding = new HashSet<>();
-        copy.setBranding(this.branding);
+        copy.setBranding(this.branding.stream()
+            .map(ProductBranding::clone)
+            .peek(brand -> brand.setProduct(copy))
+            .collect(Collectors.toSet()));
 
         return copy;
     }

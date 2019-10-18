@@ -28,6 +28,7 @@ import org.candlepin.model.ProductBranding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.pinsetter.tasks.OrphanCleanupJob;
+import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
@@ -38,7 +39,6 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -825,22 +825,7 @@ public class ProductManager {
 
         Collection<BrandingDTO> brandingDTOs = dto.getBranding();
         if (brandingDTOs != null) {
-            Comparator comparator = (lhs, rhs) -> {
-                ProductBranding existing = (ProductBranding) lhs;
-                BrandingDTO update = (BrandingDTO) rhs;
-
-                if (existing != null && update != null) {
-                    boolean equals = new EqualsBuilder()
-                        .append(existing.getProductId(), update.getProductId())
-                        .append(existing.getName(), update.getName())
-                        .append(existing.getType(), update.getType())
-                        .isEquals();
-                    return equals ? 0 : 1;
-                }
-
-                return 1;
-            };
-
+            Comparator<BrandingInfo> comparator = BrandingInfo.getBrandingInfoComparator();
             if (!Util.collectionsAreEqual((Collection) entity.getBranding(), (Collection) brandingDTOs,
                 comparator)) {
                 return true;
@@ -867,6 +852,7 @@ public class ProductManager {
      *  true if this product would be changed by the given product info; false otherwise
      */
     public static boolean isChangedBy(Product entity, ProductInfo update) {
+
         // Check simple properties first
         if (update.getId() != null && !update.getId().equals(entity.getId())) {
             return true;
@@ -932,6 +918,14 @@ public class ProductManager {
             }
         }
 
+        if (update.getBranding() != null) {
+            Comparator<BrandingInfo> comparator = BrandingInfo.getBrandingInfoComparator();
+            if (!Util.collectionsAreEqual((Collection) entity.getBranding(),
+                (Collection) update.getBranding(), comparator)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -954,6 +948,7 @@ public class ProductManager {
      *  The updated product entity
      */
     private Product applyProductChanges(Product entity, ProductInfo update, Map<String, Content> contentMap) {
+
         // TODO:
         // Eventually content should be considered a property of products (ala attributes), so we
         // don't have to do this annoying, nested projection and owner passing. Also, it would
@@ -1038,6 +1033,25 @@ public class ProductManager {
 
         if (update.getDependentProductIds() != null) {
             entity.setDependentProductIds(update.getDependentProductIds());
+        }
+
+        if (update.getBranding() != null) {
+            if (update.getBranding().isEmpty()) {
+                entity.setBranding(Collections.emptySet());
+            }
+            else {
+                Set<ProductBranding> branding = new HashSet<>();
+                for (BrandingInfo brandingInfo : update.getBranding()) {
+                    if (brandingInfo != null) {
+                        branding.add(new ProductBranding(
+                            brandingInfo.getProductId(),
+                            brandingInfo.getType(),
+                            brandingInfo.getName(),
+                            entity));
+                    }
+                }
+                entity.setBranding(branding);
+            }
         }
 
         return entity;

@@ -14,15 +14,16 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.dto.AbstractDTOTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -61,6 +62,15 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
             dependentProductIds.add("dependentProdId" + i);
         }
 
+        Collection<BrandingDTO> brandings = new HashSet<>();
+        for (int i = 0; i < 5; ++i) {
+            BrandingDTO branding = new BrandingDTO();
+            branding.setProductId("prod_id_" + i);
+            branding.setType("OS");
+            branding.setName("Brand Name" + i);
+            brandings.add(branding);
+        }
+
         this.values = new HashMap<>();
         this.values.put("Id", "test_value");
         this.values.put("Uuid", "test_value");
@@ -70,6 +80,7 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         this.values.put("ProductContent", productContent);
         this.values.put("Attributes", attributes);
         this.values.put("DependentProductIds", dependentProductIds);
+        this.values.put("Branding", brandings);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
     }
@@ -133,27 +144,94 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         assertNull(value);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testGetAttributeWithNullAttribute() {
         ProductDTO dto = new ProductDTO();
-        dto.getAttributeValue(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.getAttributeValue(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSetAttributeWithNullAttribute() {
         ProductDTO dto = new ProductDTO();
-        dto.setAttribute(null, "value");
+        assertThrows(IllegalArgumentException.class, () -> dto.setAttribute(null, "value"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testHasAttributeWithNullAttribute() {
         ProductDTO dto = new ProductDTO();
-        dto.hasAttribute(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.hasAttribute(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testRemoveAttributeWithNullAttribute() {
         ProductDTO dto = new ProductDTO();
-        dto.removeAttribute(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.removeAttribute(null));
+    }
+
+    @Test
+    public void testAddBrandingWithAbsentBranding() {
+        ProductDTO dto = new ProductDTO();
+
+        BrandingDTO branding = new BrandingDTO();
+        branding.setProductId("test-branding-product-id-1");
+        branding.setName("test-branding-name-1");
+        branding.setType("test-branding-type-1");
+        assertTrue(dto.addBranding(branding));
+    }
+
+    @Test
+    public void testAddBrandingWithPresentBranding() {
+        ProductDTO dto = new ProductDTO();
+
+        BrandingDTO branding = new BrandingDTO();
+        branding.setProductId("test-branding-product-id-2");
+        branding.setName("test-branding-name-2");
+        branding.setType("test-branding-type-2");
+        assertTrue(dto.addBranding(branding));
+
+        BrandingDTO branding2 = new BrandingDTO();
+        branding2.setProductId("test-branding-product-id-2");
+        branding2.setName("test-branding-name-2");
+        branding2.setType("test-branding-type-2");
+        assertFalse(dto.addBranding(branding2));
+    }
+
+    @Test
+    public void testAddBrandingWithNullInput() {
+        ProductDTO dto = new ProductDTO();
+        assertThrows(IllegalArgumentException.class, () -> dto.addBranding(null));
+    }
+
+    @Test
+    public void testAddBrandingWithEmptyProductId() {
+        ProductDTO dto = new ProductDTO();
+
+        BrandingDTO branding = new BrandingDTO();
+        branding.setProductId("");
+        branding.setName("test-branding-name-3");
+        branding.setType("test-branding-type-3");
+        assertThrows(IllegalArgumentException.class, () -> dto.addBranding(branding));
+    }
+
+    @Test
+    public void testAddBrandingWithEmptyName() {
+        ProductDTO dto = new ProductDTO();
+
+        BrandingDTO branding = new BrandingDTO();
+        branding.setProductId("test-branding-product-id-4");
+        branding.setName("");
+        branding.setType("test-branding-type-4");
+        assertThrows(IllegalArgumentException.class, () -> dto.addBranding(branding));
+    }
+
+    @Test
+    public void testAddBrandingWithEmptyType() {
+        ProductDTO dto = new ProductDTO();
+
+        BrandingDTO branding = new BrandingDTO();
+        branding.setProductId("test-branding-product-id-5");
+        branding.setName("test-branding-name-5");
+        branding.setType("");
+        assertThrows(IllegalArgumentException.class, () -> dto.addBranding(branding));
     }
 }

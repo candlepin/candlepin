@@ -30,17 +30,17 @@ public class ProductBrandingTranslatorTest extends
     protected ProductBrandingTranslator translator = new ProductBrandingTranslator();
 
     @Override
-    protected void initModelTranslator(ModelTranslator modelTranslator) {
+    public void initModelTranslator(ModelTranslator modelTranslator) {
         modelTranslator.registerTranslator(this.translator, ProductBranding.class, BrandingDTO.class);
     }
 
     @Override
-    protected ProductBrandingTranslator initObjectTranslator() {
+    public ProductBrandingTranslator initObjectTranslator() {
         return this.translator;
     }
 
     @Override
-    protected ProductBranding initSourceObject() {
+    public ProductBranding initSourceObject() {
         ProductBranding source = new ProductBranding();
 
         source.setProductId("test-product-id");
@@ -56,7 +56,7 @@ public class ProductBrandingTranslatorTest extends
     }
 
     @Override
-    protected void verifyOutput(ProductBranding source, BrandingDTO dest, boolean childrenGenerated) {
+    public void verifyOutput(ProductBranding source, BrandingDTO dest, boolean childrenGenerated) {
         if (source != null) {
             assertEquals(source.getProductId(), dest.getProductId());
             assertEquals(source.getName(), dest.getName());

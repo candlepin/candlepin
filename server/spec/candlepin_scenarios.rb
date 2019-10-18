@@ -507,8 +507,6 @@ class StandardExporter < Exporter
     ]
 
     # the before(:each) is not initialized yet, call create_product sans wrapper
-    @products[:product1] = create_product(random_string('prod1'), random_string(),
-                              {:multiplier => 2, :branding => brandings})
     @products[:product2] = create_product(random_string('prod2'), random_string())
     @products[:virt_product] = create_product(random_string('virt_product'),
                                   random_string('virt_product'),
@@ -538,7 +536,21 @@ class StandardExporter < Exporter
                                    :required_tags => "TAG1,TAG2",
                                    :arches => "i386,x86_64"})
 
-    @cp.add_content_to_product(@owner['key'], @products[:product1].id, content.id)
+    # This is to avoid hibernate NonUniqueObjectExceptions in hosted mode during refresh, which happens later
+    # in this method, where the product is being updated because it is not locked. That exception is thrown
+    # due to the fact that the product's branding set is immutable. By creating the product upstream in the
+    # first place we avoid any such issues.
+    if is_hosted?
+      @products[:product1] = create_upstream_product(random_string('prod1'),
+                              {:multiplier => 2, :branding => brandings})
+      upstream_content_id = create_upstream_content(content.id, content)
+      add_content_to_product_upstream(@products[:product1].id, upstream_content_id.id)
+    else
+      @products[:product1] = create_product(random_string('prod1'), random_string(),
+                              {:multiplier => 2, :branding => brandings})
+      @cp.add_content_to_product(@owner['key'], @products[:product1].id, content.id)
+    end
+
     @cp.add_content_to_product(@owner['key'], @products[:product2].id, content.id)
     @cp.add_content_to_product(@owner['key'], @products[:product2].id, arch_content.id)
     @cp.add_content_to_product(@owner['key'], @products[:derived_product].id, content.id)
@@ -546,8 +558,7 @@ class StandardExporter < Exporter
     end_date = Date.new(2025, 5, 29)
 
     create_pool_and_subscription(@owner['key'], @products[:product1].id, 2,
-      [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date, true,
-      {:branding => brandings})
+      [@products[:eng_product]['id']], '', '12345', '6789', nil, end_date, true)
     create_pool_and_subscription(@owner['key'], @products[:product2].id, 4, [], '', '12345', '6789', nil, end_date, true)
     create_pool_and_subscription(@owner['key'], @products[:virt_product].id, 10, [], '', '12345', '6789', nil, end_date, true)
     create_pool_and_subscription(@owner['key'], @products[:product3].id, 5, [], '', '12345', '6789', nil, end_date, true,
