@@ -13,8 +13,22 @@ describe 'Import Update', :serial => true do
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_username = random_string("import-user")
     @import_owner_client = user_client(@import_owner, @import_username)
+
+    # Create a pre-existing content instance that will get overwritten by the content from the manifest
+    content = @exporter.content[:content1]
+
+    preexisting_content = @cp.create_content(@import_owner['key'], content['name'], content['id'], content['label'], content['type'], content['vendor'], {
+      :required_tags => "dummy tags"
+    })
+
     @cp.import(@import_owner['key'], base_export.export_filename)
     @sublist = @cp.list_subscriptions(@import_owner['key'])
+
+    # Verify the manifest changed our content
+    content = @cp.get_content(@import_owner['key'], preexisting_content.id)
+
+    expect(content).to_not be_nil
+    expect(content).to_not eq(preexisting_content)
   end
 
   after(:all) do
@@ -24,6 +38,12 @@ describe 'Import Update', :serial => true do
   end
 
   it 'should successfully update the import' do
+    product = @cp.get_product(@import_owner['key'], @exporter.products[:product1].id)
+    content = @cp.get_content(@import_owner['key'], @exporter.content[:content1].id)
+
+    expect(product).to_not be_nil
+    expect(content).to_not be_nil
+
     updated_export = @exporter.create_candlepin_export_update()
 
     @cp.import(@import_owner['key'], updated_export.export_filename)
@@ -39,8 +59,17 @@ describe 'Import Update', :serial => true do
         end
       end
     end
-  end
 
+    # Verify various updated entities have changed
+    updated_product = @cp.get_product(@import_owner['key'], @exporter.products[:product1].id)
+    updated_content = @cp.get_content(@import_owner['key'], @exporter.content[:content1].id)
+
+    expect(updated_product).to_not be_nil
+    expect(updated_content).to_not be_nil
+
+    expect(updated_product).to_not eq(product)
+    expect(updated_content).to_not eq(content)
+  end
 
   it 'should remove all imported subscriptions if import has no entitlements' do
     no_ent_export = @exporter.create_candlepin_export_update_no_ent()
