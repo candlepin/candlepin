@@ -46,7 +46,8 @@ import javax.validation.constraints.Size;
 @Entity
 @Immutable
 @Table(name = ProductBranding.DB_TABLE)
-public class ProductBranding extends AbstractHibernateObject<ProductBranding> implements BrandingInfo {
+public class ProductBranding extends AbstractHibernateObject<ProductBranding> implements BrandingInfo,
+    Cloneable {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_product_branding";
@@ -186,6 +187,20 @@ public class ProductBranding extends AbstractHibernateObject<ProductBranding> im
             .append(this.type)
             .append(this.getProduct() != null ? this.getProduct().getUuid() : null)
             .toHashCode();
+    }
+
+    @Override
+    public ProductBranding clone() {
+        ProductBranding copy;
+
+        try {
+            copy = (ProductBranding) super.clone();
+        }
+        catch (CloneNotSupportedException e) {
+            // This should never happen.
+            throw new RuntimeException("Clone not supported", e);
+        }
+        return copy;
     }
 
     @Override

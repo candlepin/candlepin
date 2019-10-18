@@ -508,8 +508,6 @@ class StandardExporter < Exporter
         }
     ]
     # the before(:each) is not initialized yet, call create_product sans wrapper
-    @products[:product1] = create_product(random_string('prod1'), random_string(),
-                              {:multiplier => 2, :branding => brandings})
     @products[:product2] = create_product(random_string('prod2'), random_string())
     @products[:virt_product] = create_product(random_string('virt_product'), random_string('virt_product'), {
       :attributes => {
@@ -567,7 +565,6 @@ class StandardExporter < Exporter
       :account_number => '12345',
       :order_number => '6789',
       :end_date => end_date,
-      :branding => brandings,
       :subscription_id => random_str('source_sub'),
       :upstream_pool_id => random_str('upstream')
     })

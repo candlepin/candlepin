@@ -17,12 +17,12 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
@@ -52,7 +52,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
 
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private ProductTranslatorTest productTranslatorTest = new ProductTranslatorTest();
-    private BrandingTranslatorTest brandingTranslatorTest = new BrandingTranslatorTest();
+    private ProductBrandingTranslatorTest brandingTranslatorTest = new ProductBrandingTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
 
     @Override
@@ -80,10 +80,6 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
         source.setOwner(this.ownerTranslatorTest.initSourceObject());
         source.setProduct(this.productTranslatorTest.initSourceObject());
         source.setDerivedProduct(this.productTranslatorTest.initSourceObject());
-
-        Set<Branding> brandingSet = new HashSet<>();
-        brandingSet.add(this.brandingTranslatorTest.initSourceObject());
-        source.setBranding(brandingSet);
 
         Entitlement entitlement = new Entitlement();
         entitlement.setId("ent-id");
@@ -221,14 +217,17 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
                     assertNull(destSourceEntitlement);
                 }
 
-                for (Branding brandingSource : source.getBranding()) {
-                    for (BrandingDTO brandingDTO : dest.getBranding()) {
+                Product product = source.getProduct();
+                if (product != null) {
+                    for (ProductBranding brandingSource : product.getBranding()) {
+                        for (BrandingDTO brandingDTO : dest.getBranding()) {
 
-                        assertNotNull(brandingDTO);
-                        assertNotNull(brandingDTO.getProductId());
+                            assertNotNull(brandingDTO);
+                            assertNotNull(brandingDTO.getProductId());
 
-                        if (brandingDTO.getProductId().equals(brandingSource.getProductId())) {
-                            this.brandingTranslatorTest.verifyOutput(brandingSource, brandingDTO, true);
+                            if (brandingDTO.getProductId().equals(brandingSource.getProductId())) {
+                                this.brandingTranslatorTest.verifyOutput(brandingSource, brandingDTO, true);
+                            }
                         }
                     }
                 }

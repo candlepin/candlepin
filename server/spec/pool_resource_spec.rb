@@ -231,10 +231,14 @@ describe 'Pool Resource' do
       owner = create_owner random_string('some-owner')
       name = random_string("product-")
 
-      product = create_product(name, name, :owner => owner['key'])
+      if is_hosted?
+        product = create_upstream_product(name, { :branding => [b1, b2] })
+      else
+        product = create_product(name, name, :owner => owner['key'], :branding => [b1, b2])
+      end
 
       created = create_pool_and_subscription(owner['key'], product.id, 11,
-        [], '', '', '', nil, nil, false, :branding => [b1, b2])
+        [], '', '', '', nil, nil, false)
 
       pool = @cp.get_pool(created['id'])
       pool.quantity.should == 11

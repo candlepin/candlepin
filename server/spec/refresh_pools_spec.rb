@@ -90,6 +90,51 @@ describe 'Refresh Pools' do
     expect(pools[0].providedProducts[0].productId).to eq(provided[2].id)
   end
 
+  it 'detects changes in branding' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    b1 = {:productId => 'prodid1',
+      :type => 'type1', :name => 'branding1'}
+    b2 = {:productId => 'prodid2',
+      :type => 'type2', :name => 'branding2'}
+    product = create_upstream_product(random_string('test_prod'), { :branding => [b1] })
+
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, product.id)
+
+    @cp.refresh_pools(owner_key)
+
+    # Check the branding is visible on the pool.
+    pools = @cp.list_pools({:owner => owner.id})
+
+    expect(pools.length).to eq(1)
+    expect(pools[0].branding.length).to eq(1)
+    expect(pools[0].branding[0].name).to eq('branding1')
+
+    # Check the branding set is visible on the product.
+    products = @cp.list_products_by_owner(owner_key)
+    expect(products[0].branding.length).to eq(1)
+    expect(products[0].branding[0].name).to eq('branding1')
+
+    # Add an additional branding to the upstream product than the one we had initially...
+    product.branding = [b1, b2]
+    update_upstream_product(product.id, :branding => product.branding)
+
+    @cp.refresh_pools(owner_key)
+
+    # Check the updated branding is visible on the pool response.
+    pools = @cp.list_pools({:owner => owner.id})
+
+    expect(pools.length).to eq(1)
+    expect(pools[0].branding.length).to eq(2)
+    expect('branding2').to eq(pools[0].branding[0].name).or(eq(pools[0].branding[1].name))
+
+    # Check the updated branding set is visible on the product.
+    products = @cp.list_products_by_owner(owner_key)
+    expect(products[0].branding.length).to eq(2)
+    expect('branding2').to eq(products[0].branding[0].name).or(eq(products[0].branding[1].name))
+  end
+
   it 'deletes expired subscriptions\' pools and entitlements' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)
@@ -630,6 +675,63 @@ describe 'Refresh Pools' do
     expect(payload.products.first.content.length).to eq(1)
     expect(payload.products.first.content.first.id).to eq(content2.id)
     expect(payload.products.first.content.first.path).to eq(content2.contentUrl)
+  end
+
+  it 'regenerates entitlements when branding for a product of an entitled pool changes' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    b1 = {:productId => 'prodid1',
+      :type => 'type1', :name => 'branding1'}
+    product = create_upstream_product(random_string('test_prod'), { :branding => [b1] })
+
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, product.id)
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+
+    # Verify the product exists in its initial state
+    ds_product = @cp.get_product(owner_key, product.id)
+    expect(ds_product).to_not be_nil
+    expect(ds_product.branding.length).to eq(1)
+    expect(ds_product.branding[0].name).to eq('branding1')
+
+    # Consume the pool so we have an entitlement
+    user = user_client(owner, random_string('test_user'))
+    consumer_client = consumer_client(user, random_string('test_consumer'), :system, nil,
+      { 'system.certificate_version' => '3.0' })
+
+    entitlements = consumer_client.consume_pool(pools.first.id, { :quantity => 1 })
+    expect(entitlements.length).to eq(1)
+
+    consumer = @cp.get_consumer(consumer_client.uuid)
+    expect(consumer.entitlementCount).to eq(1)
+
+    entitlement = entitlements.first
+    ent_cert = entitlement['certificates'].first
+    ent_cert_serial = ent_cert['serial']['serial']
+
+    # Update the name of the branding of the upstream product...
+    product.branding[0].name = 'new branding name!'
+    update_upstream_product(product.id, :branding => product.branding)
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+
+    # Verify the branding change on the product has been pulled down
+    ds_product = @cp.get_product(owner_key, product.id)
+    expect(ds_product).to_not be_nil
+    expect(ds_product.branding.length).to eq(1)
+    expect(ds_product.branding[0].name).to eq('new branding name!')
+
+    # Verify the entitlement cert has changed as a result
+    updated_ent = @cp.get_entitlement(entitlement['id'])
+    updated_cert = updated_ent['certificates'].first
+    updated_cert_serial = updated_cert['serial']['serial']
+
+    expect(updated_cert_serial).to_not eq(ent_cert_serial)
   end
 
   it 'invalidates entitlements when pool quantity is reduced' do
