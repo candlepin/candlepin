@@ -29,7 +29,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -73,7 +72,6 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.CertificateSerialInfo;
 import org.candlepin.service.model.CdnInfo;
@@ -594,9 +592,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             // dates changed. regenerate all entitlement certificates
-            if (updatedPool.getDatesChanged() || updatedPool.getProductsChanged() ||
-                updatedPool.getBrandingChanged()) {
-
+            if (updatedPool.getDatesChanged() || updatedPool.getProductsChanged()) {
                 poolsToRegenEnts.add(existingPool);
             }
 
@@ -941,21 +937,6 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             pool.setCertificate(cert);
-        }
-
-        // Add in branding
-        if (sub.getBranding() != null) {
-            Set<Branding> branding = new HashSet<>();
-
-            for (BrandingInfo brand : sub.getBranding()) {
-                // Impl note:
-                // We create a new instance here since we don't have a separate branding DTO (yet),
-                // and we need to be certain that we don't try to move or change a branding object
-                // associated with another pool.
-                branding.add(new Branding(brand.getProductId(), brand.getType(), brand.getName()));
-            }
-
-            pool.setBranding(branding);
         }
 
         if (sub.getProduct() == null || sub.getProduct().getId() == null) {

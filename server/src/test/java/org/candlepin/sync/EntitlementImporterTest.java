@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
@@ -151,6 +152,13 @@ public class EntitlementImporterTest {
         ent.setQuantity(3);
         EntitlementDTO dtoEnt = this.translator.translate(ent, EntitlementDTO.class);
 
+        BrandingDTO brandingDTO = new BrandingDTO();
+        brandingDTO.setName("brand_name");
+        brandingDTO.setProductId("eng_id_1");
+        brandingDTO.setType("OS");
+        brandingDTO.setId("db_id");
+        dtoEnt.getPool().addBranding(brandingDTO);
+
         when(om.readValue(reader, EntitlementDTO.class)).thenReturn(dtoEnt);
 
         // Create our expected products
@@ -190,6 +198,8 @@ public class EntitlementImporterTest {
         assertEquals(cert.getSerial().getUpdated(), serial.getUpdated());
 
         assertEquals(sub.getCdn().getLabel(), meta.getCdnLabel());
+
+        assertEquals(brandingDTO, sub.getProduct().getBranding().toArray()[0]);
     }
 
     private Map<String, ProductDTO> buildProductCache(Product... products) {

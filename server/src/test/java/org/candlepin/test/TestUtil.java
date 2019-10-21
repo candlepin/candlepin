@@ -649,12 +649,6 @@ public class TestUtil {
         pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
-        for (Branding branding : sub.getBranding()) {
-            pool.getBranding().add(
-                new Branding(branding.getProductId(), branding.getType(), branding.getName())
-            );
-        }
-
         return pool;
     }
 

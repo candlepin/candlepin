@@ -14,7 +14,6 @@
  */
 package org.candlepin.model.dto;
 
-import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
@@ -63,7 +62,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     private ProductData derivedProduct;
     private Set<ProductData> providedProducts = new HashSet<>();
     private Set<ProductData> derivedProvidedProducts = new HashSet<>();
-    private Set<Branding> branding = new HashSet<>();
     private Long quantity;
     private Date startDate;
     private Date endDate;
@@ -395,14 +393,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.cdn = cdn;
     }
 
-    public Set<Branding> getBranding() {
-        return branding;
-    }
-
-    public void setBranding(Set<Branding> branding) {
-        this.branding = branding;
-    }
-
     public boolean isStacked() {
         return !StringUtils.isBlank(this.product.getAttributeValue(Product.Attributes.STACKING_ID));
     }
@@ -450,7 +440,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
             .append(this.derivedProduct, that.derivedProduct)
             .append(this.providedProducts, that.providedProducts)
             .append(this.derivedProvidedProducts, that.derivedProvidedProducts)
-            .append(this.branding, that.branding)
             .append(this.quantity, that.quantity)
             .append(this.startDate, that.startDate)
             .append(this.endDate, that.endDate)
@@ -477,7 +466,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
             .append(this.derivedProduct)
             .append(this.providedProducts)
             .append(this.derivedProvidedProducts)
-            .append(this.branding)
             .append(this.quantity)
             .append(this.startDate)
             .append(this.endDate)
@@ -520,11 +508,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
             }
         }
 
-        if (this.branding != null) {
-            copy.branding = new HashSet<>();
-            copy.branding.addAll(this.branding);
-        }
-
         return copy;
     }
 
@@ -565,7 +548,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setDerivedProduct(source.getDerivedProduct());
         this.setDerivedProvidedProducts(source.getDerivedProvidedProducts());
         this.setCdn(source.getCdn());
-        this.setBranding(source.getBranding());
 
         return this;
     }
@@ -607,10 +589,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setUpstreamPoolId(source.getUpstreamPoolId());
         this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
         this.setUpstreamConsumerId(source.getUpstreamConsumerId());
-
-        //Pool.getBranding should return entity Branding. The Branding
-        //entity has no futher relationships so everything should be ok.
-        this.setBranding(source.getBranding());
 
         // Attempt to calculate the quantity from the pool and its product:
         this.setQuantityFromPool(source);

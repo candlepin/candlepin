@@ -547,7 +547,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
     /**
      * {@inheritDoc}
      */
-    @Override
     public Collection<BrandingDTO> getBranding() {
         return this.branding != null ? new ListView<>(this.branding) : null;
     }

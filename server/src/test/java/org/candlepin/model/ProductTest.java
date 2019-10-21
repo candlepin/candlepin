@@ -16,6 +16,8 @@ package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.candlepin.util.Util;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -198,4 +200,31 @@ public class ProductTest {
         assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
         assertNotEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
     }
+
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
+    public void testClone(String valueName, Object value1, Object value2) throws Exception {
+        Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
+        Method accessor = methods[0];
+        Method mutator = methods[1];
+
+        Product base = new Product();
+
+        mutator.invoke(base, value1);
+
+        Product clone = (Product) base.clone();
+
+        if (value1 instanceof Collection) {
+            assertTrue(Util.collectionsAreEqual(
+                (Collection) accessor.invoke(base), (Collection) accessor.invoke(clone)
+            ));
+        }
+        else {
+            assertEquals(accessor.invoke(base), accessor.invoke(clone));
+        }
+
+        assertEquals(base, clone);
+        assertEquals(base.hashCode(), clone.hashCode());
+    }
+
 }

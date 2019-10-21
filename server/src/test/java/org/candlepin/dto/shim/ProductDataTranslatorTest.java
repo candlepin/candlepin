@@ -15,13 +15,18 @@
 package org.candlepin.dto.shim;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductBrandingTranslator;
+import org.candlepin.dto.api.v1.ProductBrandingTranslatorTest;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Content;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
@@ -29,10 +34,10 @@ import org.candlepin.test.TestUtil;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
-
-
+import java.util.Set;
 
 /**
  * Test suite for the UpstreamConsumerTranslator class
@@ -42,13 +47,19 @@ public class ProductDataTranslatorTest extends
 
     protected ContentDataTranslator contentTranslator = new ContentDataTranslator();
     protected ProductDataTranslator productTranslator = new ProductDataTranslator();
+    protected ProductBrandingTranslator brandingTranslator = new ProductBrandingTranslator();
 
     protected ContentDataTranslatorTest contentDataTranslatorTest = new ContentDataTranslatorTest();
+    protected ProductBrandingTranslatorTest productBrandingTranslatorTest =
+        new ProductBrandingTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         modelTranslator.registerTranslator(this.contentTranslator, ContentData.class, ContentDTO.class);
         modelTranslator.registerTranslator(this.productTranslator, ProductData.class, ProductDTO.class);
+        modelTranslator.registerTranslator(this.brandingTranslator, ProductBranding.class, BrandingDTO.class);
+
+        this.productBrandingTranslatorTest.initModelTranslator(modelTranslator);
     }
 
     @Override
@@ -84,6 +95,10 @@ public class ProductDataTranslatorTest extends
 
             source.addContent(content, true);
         }
+
+        Set<ProductBranding> brandingSet = new HashSet<>();
+        brandingSet.add(this.productBrandingTranslatorTest.initSourceObject());
+        source.setBranding(brandingSet);
 
         return source;
     }
@@ -125,9 +140,25 @@ public class ProductDataTranslatorTest extends
                         }
                     }
                 }
+
+                assertNotNull(dto.getBranding());
+                assertEquals(dto.getBranding().size(), source.getBranding().size());
+                for (ProductBranding brandingSource : source.getBranding()) {
+                    for (BrandingDTO brandingDTO : dto.getBranding()) {
+
+                        assertNotNull(brandingDTO);
+                        assertNotNull(brandingDTO.getProductId());
+
+                        if (brandingDTO.getProductId().equals(brandingSource.getProductId())) {
+                            this.productBrandingTranslatorTest.verifyOutput(brandingSource, brandingDTO,
+                                true);
+                        }
+                    }
+                }
             }
             else {
                 assertNull(dto.getProductContent());
+                assertNull(dto.getBranding());
             }
         }
         else {

@@ -14,11 +14,11 @@
  */
 package org.candlepin.hostedtest;
 
-import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Owner;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.dto.ContentData;
@@ -142,7 +142,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         sdata.setUpstreamConsumerId(sinfo.getUpstreamConsumerId());
         sdata.setCertificate(this.convertSubscriptionCertificate(sinfo.getCertificate()));
         sdata.setCdn(this.convertCdn(sinfo.getCdn()));
-        sdata.setBranding(this.resolveBranding(sinfo.getBranding()));
 
         // Update mappings
         this.subscriptionMap.put(sdata.getId(), sdata);
@@ -240,10 +239,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
         sdata.setCdn(this.convertCdn(sinfo.getCdn()));
 
-        if (sinfo.getBranding() != null) {
-            sdata.setBranding(this.resolveBranding(sinfo.getBranding()));
-        }
-
         // Update mappings...
         this.updateSubscriptionProductMappings(sdata);
 
@@ -294,6 +289,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         pdata.setDependentProductIds(pinfo.getDependentProductIds());
         pdata.setCreated(new Date());
         pdata.setUpdated(new Date());
+        pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
 
         // Create our mappings...
         this.productMap.put(pdata.getId(), pdata);
@@ -342,6 +338,10 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
         if (pinfo.getDependentProductIds() != null) {
             pdata.setDependentProductIds(pinfo.getDependentProductIds());
+        }
+
+        if (pinfo.getBranding() != null) {
+            pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
         }
 
         // Update product=>content mappings
@@ -789,9 +789,9 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         return null;
     }
 
-    protected Set<Branding> resolveBranding(Collection<? extends BrandingInfo> branding) {
+    protected Set<ProductBranding> resolveBranding(Collection<? extends BrandingInfo> branding) {
         if (branding != null) {
-            Map<String, Branding> brandMap = new HashMap<>();
+            Map<String, ProductBranding> brandMap = new HashMap<>();
 
             // We don't bother keeping cross-subscription references here, so the only thing
             // we are really concerned with is making sure we don't end up with two brands
@@ -804,7 +804,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
                         throw new IllegalArgumentException("Branding lacks a product ID: " + binfo);
                     }
 
-                    Branding bdata = new Branding();
+                    ProductBranding bdata = new ProductBranding();
 
                     bdata.setProductId(binfo.getProductId());
                     bdata.setType(binfo.getType());

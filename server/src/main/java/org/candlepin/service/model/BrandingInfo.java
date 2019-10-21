@@ -14,7 +14,9 @@
  */
 package org.candlepin.service.model;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
+import java.util.Comparator;
 
 /**
  * The BrandingInfo represents a minimal set of branding information used by the service adapters.
@@ -52,4 +54,23 @@ public interface BrandingInfo {
      */
     String getProductId();
 
+    /**
+     * Utility method that returns a Comparator for objects that implement BrandingInfo.
+     *
+     * @return A comparator for BrandingInfo objects.
+     */
+    static Comparator<BrandingInfo> getBrandingInfoComparator() {
+        return (lhs, rhs) -> {
+            if (lhs != null && rhs != null) {
+                boolean equals = new EqualsBuilder()
+                    .append(lhs.getProductId(), rhs.getProductId())
+                    .append(lhs.getName(), rhs.getName())
+                    .append(lhs.getType(), rhs.getType())
+                    .isEquals();
+                return equals ? 0 : 1;
+            }
+
+            return 1;
+        };
+    }
 }

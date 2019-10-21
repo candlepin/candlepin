@@ -42,7 +42,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Consumer;
@@ -66,6 +65,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
@@ -689,10 +689,10 @@ public class PoolManagerTest {
         Product product = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
-        Branding b1 = new Branding("8000", "OS", "Branded Awesome OS");
-        Branding b2 = new Branding("8001", "OS", "Branded Awesome OS 2");
-        sub.getBranding().add(b1);
-        sub.getBranding().add(b2);
+        ProductBranding b1 = new ProductBranding("8000", "OS", "Branded Awesome OS", null);
+        ProductBranding b2 = new ProductBranding("8001", "OS", "Branded Awesome OS 2", null);
+        product.addBranding(b1);
+        product.addBranding(b2);
 
         this.mockProducts(owner, product);
 
@@ -702,9 +702,9 @@ public class PoolManagerTest {
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
-        assertEquals(2, resultPool.getBranding().size());
-        assertTrue(resultPool.getBranding().contains(b1));
-        assertTrue(resultPool.getBranding().contains(b2));
+        assertEquals(2, resultPool.getProduct().getBranding().size());
+        assertTrue(resultPool.getProduct().getBranding().contains(b1));
+        assertTrue(resultPool.getProduct().getBranding().contains(b2));
     }
 
     @Test

@@ -16,15 +16,16 @@ package org.candlepin.dto.shim;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.model.ProductBranding;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
 
 import java.util.Collection;
-
-
+import java.util.Collections;
 
 /**
  * The ProductDataTranslator provides translation from ProductData DTO objects to the new
@@ -81,18 +82,33 @@ public class ProductDataTranslator implements ObjectTranslator<ProductData, Prod
         dest.setHref(source.getHref());
         dest.setLocked(source.isLocked());
 
-        Collection<ProductContentData> productContentData = source.getProductContent();
-        dest.setProductContent(null);
 
-        if (modelTranslator != null && productContentData != null) {
-            ObjectTranslator<ContentData, ContentDTO> contentTranslator = modelTranslator
-                .findTranslatorByClass(ContentData.class, ContentDTO.class);
+        if (modelTranslator != null) {
+            Collection<ProductContentData> productContentData = source.getProductContent();
+            dest.setProductContent(null);
+            if (productContentData != null) {
+                ObjectTranslator<ContentData, ContentDTO> contentTranslator = modelTranslator
+                    .findTranslatorByClass(ContentData.class, ContentDTO.class);
 
-            for (ProductContentData pcd : productContentData) {
-                if (pcd != null && pcd.getContent() != null) {
-                    ContentDTO dto = contentTranslator.translate(modelTranslator, pcd.getContent());
-                    dest.addContent(dto, pcd.isEnabled());
+                for (ProductContentData pcd : productContentData) {
+                    if (pcd != null && pcd.getContent() != null) {
+                        ContentDTO dto = contentTranslator.translate(modelTranslator, pcd.getContent());
+                        dest.addContent(dto, pcd.isEnabled());
+                    }
                 }
+            }
+
+            Collection<ProductBranding> productBrandings = source.getBranding();
+            dest.setBranding(null);
+            if (productBrandings != null) {
+                for (ProductBranding brand : productBrandings) {
+                    if (brand != null) {
+                        dest.addBranding(modelTranslator.translate(brand, BrandingDTO.class));
+                    }
+                }
+            }
+            else {
+                dest.setBranding(Collections.emptySet());
             }
         }
 
