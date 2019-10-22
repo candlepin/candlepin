@@ -30,7 +30,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -218,8 +218,8 @@ public class PoolRulesTest {
         Pool p1 = TestUtil.clone(p);
 
         // Add some branding to the pool's product and do an update:
-        ProductBranding b1 = new ProductBranding("8000", "OS", "Awesome OS Branded", p.getProduct());
-        ProductBranding b2 = new ProductBranding("8001", "OS", "Awesome OS Branded 2", p.getProduct());
+        Branding b1 = new Branding(p.getProduct(), "8000", "Awesome OS Branded", "OS");
+        Branding b2 = new Branding(p.getProduct(), "8001", "Awesome OS Branded 2", "OS");
         p.getProduct().addBranding(b1);
         p.getProduct().addBranding(b2);
 
@@ -240,10 +240,11 @@ public class PoolRulesTest {
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct());
 
         // Add some branding to the subscription and do an update:
-        ProductBranding b1 = new ProductBranding("8000", "OS", "Awesome OS Branded", p.getProduct());
-        ProductBranding b2 = new ProductBranding("8001", "OS", "Awesome OS Branded 2", p.getProduct());
-        p.getProduct().addBranding(b1);
-        p.getProduct().addBranding(b2);
+        Branding b1 = new Branding(p.getProduct(), "8000", "Awesome OS Branded", "OS");
+        Branding b2 = new Branding(p.getProduct(), "8001", "Awesome OS Branded 2", "OS");
+        Product product = p.getProduct();
+        product.setBranding(Arrays.asList(b1, b2));
+        p.setProduct(product);
 
         // Copy the pool with the branding to begin with:
         Pool p1 = TestUtil.clone(p);

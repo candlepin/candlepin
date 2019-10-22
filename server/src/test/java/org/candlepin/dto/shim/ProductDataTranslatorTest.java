@@ -21,12 +21,12 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.ProductBrandingTranslator;
-import org.candlepin.dto.api.v1.ProductBrandingTranslatorTest;
+import org.candlepin.dto.api.v1.BrandingTranslator;
+import org.candlepin.dto.api.v1.BrandingTranslatorTest;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Content;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
@@ -47,17 +47,17 @@ public class ProductDataTranslatorTest extends
 
     protected ContentDataTranslator contentTranslator = new ContentDataTranslator();
     protected ProductDataTranslator productTranslator = new ProductDataTranslator();
-    protected ProductBrandingTranslator brandingTranslator = new ProductBrandingTranslator();
+    protected BrandingTranslator brandingTranslator = new BrandingTranslator();
 
     protected ContentDataTranslatorTest contentDataTranslatorTest = new ContentDataTranslatorTest();
-    protected ProductBrandingTranslatorTest productBrandingTranslatorTest =
-        new ProductBrandingTranslatorTest();
+    protected BrandingTranslatorTest productBrandingTranslatorTest =
+        new BrandingTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         modelTranslator.registerTranslator(this.contentTranslator, ContentData.class, ContentDTO.class);
         modelTranslator.registerTranslator(this.productTranslator, ProductData.class, ProductDTO.class);
-        modelTranslator.registerTranslator(this.brandingTranslator, ProductBranding.class, BrandingDTO.class);
+        modelTranslator.registerTranslator(this.brandingTranslator, Branding.class, BrandingDTO.class);
 
         this.productBrandingTranslatorTest.initModelTranslator(modelTranslator);
     }
@@ -96,7 +96,7 @@ public class ProductDataTranslatorTest extends
             source.addContent(content, true);
         }
 
-        Set<ProductBranding> brandingSet = new HashSet<>();
+        Set<Branding> brandingSet = new HashSet<>();
         brandingSet.add(this.productBrandingTranslatorTest.initSourceObject());
         source.setBranding(brandingSet);
 
@@ -143,7 +143,7 @@ public class ProductDataTranslatorTest extends
 
                 assertNotNull(dto.getBranding());
                 assertEquals(dto.getBranding().size(), source.getBranding().size());
-                for (ProductBranding brandingSource : source.getBranding()) {
+                for (Branding brandingSource : source.getBranding()) {
                     for (BrandingDTO brandingDTO : dto.getBranding()) {
 
                         assertNotNull(brandingDTO);

@@ -16,7 +16,6 @@ package org.candlepin.policy.js.pool;
 
 import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -246,10 +245,6 @@ public class PoolHelper {
         // Add in the new attributes
         for (Entry<String, String> entry : attributes.entrySet()) {
             pool.setAttribute(entry.getKey(), entry.getValue());
-        }
-
-        for (Branding brand : sourcePool.getBranding()) {
-            pool.getBranding().add(new Branding(brand.getProductId(), brand.getType(), brand.getName()));
         }
 
         if (sourcePool.isLocked()) {

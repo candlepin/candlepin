@@ -62,7 +62,7 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
@@ -647,7 +647,7 @@ public class DatabaseTestFixture {
         return this.createProduct(product, owners);
     }
 
-    protected Product createProductWithBranding(String id, String name, ProductBranding branding,
+    protected Product createProductWithBranding(String id, String name, Branding branding,
         Owner... owners) {
 
         Product product = TestUtil.createProduct(id, name);

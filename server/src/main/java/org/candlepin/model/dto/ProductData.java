@@ -18,7 +18,7 @@ import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.MapView;
@@ -89,7 +89,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
 
     protected Set<String> dependentProductIds;
 
-    protected Set<ProductBranding> branding;
+    protected Set<Branding> branding;
 
     @ApiModelProperty(example = "/products/ff808081554a3e4101554a3e9033005d")
     protected String href;
@@ -828,7 +828,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
      * @return
      *  the branding of the product, or null if the content not yet been defined
      */
-    public Collection<ProductBranding> getBranding() {
+    public Collection<Branding> getBranding() {
         return this.branding != null ? new SetView(this.branding) : null;
     }
 
@@ -841,7 +841,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
      * @return
      *  a reference to this DTO
      */
-    public ProductData setBranding(Collection<ProductBranding> branding) {
+    public ProductData setBranding(Collection<Branding> branding) {
         if (branding != null) {
             if (this.branding == null) {
                 this.branding = new HashSet<>();
@@ -850,7 +850,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
                 this.branding.clear();
             }
 
-            for (ProductBranding brand : branding) {
+            for (Branding brand : branding) {
                 this.addBranding(brand);
             }
         }
@@ -874,7 +874,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
      * @return
      *  true if the branding was added successfully; false otherwise
      */
-    public boolean addBranding(ProductBranding branding) {
+    public boolean addBranding(Branding branding) {
         if (branding == null) {
             throw new IllegalArgumentException("branding is null");
         }
@@ -901,7 +901,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
      * @return
      *  true if the branding was removed successfully; false otherwise
      */
-    public boolean removeBranding(ProductBranding branding) {
+    public boolean removeBranding(Branding branding) {
         return this.branding != null ? this.branding.remove(branding) : false;
     }
 
@@ -1031,7 +1031,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         if (this.branding != null) {
             copy.branding = new HashSet<>();
             copy.branding.addAll(
-                this.branding.stream().map(ProductBranding::clone).collect(Collectors.toSet()));
+                this.branding.stream().map(Branding::clone).collect(Collectors.toSet()));
         }
 
         return copy;

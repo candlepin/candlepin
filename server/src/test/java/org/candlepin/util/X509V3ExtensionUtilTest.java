@@ -31,7 +31,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.Owner;
 import org.candlepin.model.dto.TinySubscription;
@@ -153,7 +153,7 @@ public class X509V3ExtensionUtilTest {
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
-        mktProd.addBranding(new ProductBranding(engProdId, "OS", brandedName, mktProd));
+        mktProd.addBranding(new Branding(null, engProdId, brandedName, "OS"));
         Pool pool = TestUtil.createPool(mktProd);
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, owner, 10);
@@ -174,12 +174,12 @@ public class X509V3ExtensionUtilTest {
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
-        mktProd.addBranding(new ProductBranding(engProdId, "OS", brandedName, mktProd));
-        mktProd.addBranding(new ProductBranding(engProdId, "OS", "another brand name", mktProd));
-        mktProd.addBranding(new ProductBranding(engProdId, "OS", "number 3", mktProd));
+        mktProd.addBranding(new Branding(null, engProdId, brandedName, "OS"));
+        mktProd.addBranding(new Branding(null, engProdId, "another brand name", "OS"));
+        mktProd.addBranding(new Branding(null, engProdId, "number 3", "OS"));
         Pool pool = TestUtil.createPool(mktProd);
         Set<String> possibleBrandNames = new HashSet<>();
-        for (ProductBranding b : mktProd.getBranding()) {
+        for (Branding b : mktProd.getBranding()) {
             possibleBrandNames.add(b.getName());
         }
 

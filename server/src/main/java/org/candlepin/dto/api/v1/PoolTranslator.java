@@ -20,7 +20,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.SubscriptionsCertificate;
 
 import java.util.Collection;
@@ -109,10 +109,10 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
             dest.setSourceEntitlement(sourceEntitlement != null ?
                 modelTranslator.translate(sourceEntitlement, EntitlementDTO.class) : null);
 
-            Collection<ProductBranding> branding = source.getProduct() != null ?
+            Collection<Branding> branding = source.getProduct() != null ?
                 source.getProduct().getBranding() : null;
             if (branding != null && !branding.isEmpty()) {
-                for (ProductBranding brand : branding) {
+                for (Branding brand : branding) {
                     if (brand != null) {
                         dest.addBranding(modelTranslator.translate(brand, BrandingDTO.class));
                     }

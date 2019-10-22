@@ -22,7 +22,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
@@ -52,7 +52,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
 
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private ProductTranslatorTest productTranslatorTest = new ProductTranslatorTest();
-    private ProductBrandingTranslatorTest brandingTranslatorTest = new ProductBrandingTranslatorTest();
+    private BrandingTranslatorTest brandingTranslatorTest = new BrandingTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
 
     @Override
@@ -219,7 +219,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
 
                 Product product = source.getProduct();
                 if (product != null) {
-                    for (ProductBranding brandingSource : product.getBranding()) {
+                    for (Branding brandingSource : product.getBranding()) {
                         for (BrandingDTO brandingDTO : dest.getBranding()) {
 
                             assertNotNull(brandingDTO);

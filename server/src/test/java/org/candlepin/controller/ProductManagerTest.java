@@ -24,7 +24,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -475,7 +475,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByDTOIsTrueWhenBrandingUpdated() {
         Product product = TestUtil.createProduct("p1", "prod1");
-        product.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", product));
+        product.addBranding(new Branding(product, "prod_id", "Brand Name", "OS"));
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
         ((BrandingDTO) pdto.getBranding().toArray()[0]).setName("New Name!");
@@ -486,7 +486,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByDTOIsTrueWhenBrandingRemoved() {
         Product product = TestUtil.createProduct("p1", "prod1");
-        product.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", product));
+        product.addBranding(new Branding(product, "prod_id", "Brand Name", "OS"));
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
         pdto.getBranding().clear();
@@ -506,7 +506,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByDTOIsFalseWhenBrandingWasNotRemovedOrAdded() {
         Product product = TestUtil.createProduct("p1", "prod1");
-        product.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", product));
+        product.addBranding(new Branding(product, "prod_id", "Brand Name", "OS"));
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
 
@@ -520,7 +520,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct("p1", "prod1");
         product.setLocked(true);
 
-        product.addBranding(new ProductBranding("eng_prod_id", "OS", "brand_name", null));
+        product.addBranding(new Branding(product, "eng_prod_id", "Brand Name", "OS"));
         Map<String, Product> productData = new HashMap<>();
         productData.put("p1", product);
 
@@ -548,14 +548,14 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // Create existing product with a single branding in the db
         Product product = TestUtil.createProduct("p1", "prod1");
         product.setLocked(true);
-        product.addBranding(new ProductBranding("eng_prod_id_1", "OS", "brand_name_1", null));
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
         this.createProduct(product, owner);
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
 
         // Add a second, new branding
         Product updatedProduct = (Product) product.clone();
-        updatedProduct.addBranding(new ProductBranding("eng_prod_id_2", "OS", "brand_name_2", null));
+        updatedProduct.addBranding(new Branding(null, "eng_prod_id_2", "brand_name_2", "OS"));
 
         Map<String, Product> productData = new HashMap<>();
         productData.put("p1", updatedProduct);
@@ -582,7 +582,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // Create existing product with a single branding in the db
         Product product = TestUtil.createProduct("p1", "prod1");
         product.setLocked(true);
-        product.addBranding(new ProductBranding("eng_prod_id_1", "OS", "brand_name_1", null));
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
         this.createProduct(product, owner);
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
@@ -616,14 +616,14 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // Create existing product with a single branding in the db
         Product product = TestUtil.createProduct("p1", "prod1");
         product.setLocked(true);
-        product.addBranding(new ProductBranding("eng_prod_id_1", "OS", "brand_name_1", null));
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
         this.createProduct(product, owner);
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
 
         // Remove the existing branding and add a similar, but slightly different one.
-        ProductBranding newVersionOfExistingBranding =
-            new ProductBranding("eng_prod_id_1", "OS", "Brand New Name!", null);
+        Branding newVersionOfExistingBranding =
+            new Branding(null, "eng_prod_id_1", "Brand New Name!", "OS");
         Product updatedProduct = (Product) product.clone();
         updatedProduct.getBranding().clear();
         updatedProduct.addBranding(newVersionOfExistingBranding);
@@ -645,7 +645,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
             this.ownerProductCurator.getProductById(owner, "p1"));
         assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
         assertEquals("Brand New Name!",
-            ((ProductBranding) this.ownerProductCurator.getProductById(owner, "p1")
+            ((Branding) this.ownerProductCurator.getProductById(owner, "p1")
             .getBranding().toArray()[0]).getName());
     }
 
@@ -654,7 +654,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product existingProduct = TestUtil.createProduct("p1", "prod1");
         Product newProduct = (Product) existingProduct.clone();
 
-        newProduct.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", null));
+        newProduct.addBranding(new Branding(null, "prod_id", "Brand Name", "OS"));
 
         assertTrue(ProductManager.isChangedBy(existingProduct, newProduct));
     }
@@ -662,14 +662,14 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByProductInfoIsTrueWhenBrandingUpdated() {
         Product existingProduct = TestUtil.createProduct("p1", "prod1");
-        ProductBranding oldBranding = new ProductBranding("prod_id", "OS", "Brand Name", existingProduct);
+        Branding oldBranding = new Branding(existingProduct, "prod_id", "Brand Name", "OS");
         oldBranding.setId("db_id");
         existingProduct.addBranding(oldBranding);
 
         Product newProduct = (Product) existingProduct.clone();
 
         newProduct.removeBranding(oldBranding);
-        newProduct.addBranding(new ProductBranding("prod_id", "OS", "Brand New Name", existingProduct));
+        newProduct.addBranding(new Branding(existingProduct, "prod_id", "Brand New Name", "OS"));
 
         assertTrue(ProductManager.isChangedBy(existingProduct, newProduct));
     }
@@ -677,7 +677,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByProductInfosTrueWhenBrandingRemoved() {
         Product existingProduct = TestUtil.createProduct("p1", "prod1");
-        ProductBranding oldBranding = new ProductBranding("prod_id", "OS", "Brand Name", existingProduct);
+        Branding oldBranding = new Branding(existingProduct, "prod_id", "Brand Name", "OS");
         oldBranding.setId("db_id");
         existingProduct.addBranding(oldBranding);
 
@@ -710,14 +710,14 @@ public class ProductManagerTest extends DatabaseTestFixture {
     @Test
     public void testIsChangedByProductInfoIsFalseWhenBrandingWasNotRemovedAddedOrUpdated() {
         Product existingProduct = TestUtil.createProduct("p1", "prod1");
-        ProductBranding oldBranding = new ProductBranding("prod_id", "OS", "Brand Name", existingProduct);
+        Branding oldBranding = new Branding(existingProduct, "prod_id", "Brand Name", "OS");
         oldBranding.setId("db_id");
         existingProduct.addBranding(oldBranding);
 
         Product newProduct = (Product) existingProduct.clone();
 
         newProduct.removeBranding(oldBranding);
-        newProduct.addBranding(new ProductBranding("prod_id", "OS", "Brand Name", existingProduct));
+        newProduct.addBranding(new Branding(existingProduct, "prod_id", "Brand Name", "OS"));
 
         assertFalse(ProductManager.isChangedBy(existingProduct, newProduct));
     }

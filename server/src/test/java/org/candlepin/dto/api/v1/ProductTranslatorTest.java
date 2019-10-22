@@ -21,7 +21,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.test.TestUtil;
 
@@ -42,7 +42,7 @@ public class ProductTranslatorTest extends
     protected ProductTranslator productTranslator = new ProductTranslator();
 
     protected ContentTranslatorTest contentTranslatorTest = new ContentTranslatorTest();
-    protected ProductBrandingTranslatorTest brandingTranslatorTest = new ProductBrandingTranslatorTest();
+    protected BrandingTranslatorTest brandingTranslatorTest = new BrandingTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
@@ -87,7 +87,7 @@ public class ProductTranslatorTest extends
             source.addContent(content, true);
         }
 
-        Set<ProductBranding> brandingSet = new HashSet<>();
+        Set<Branding> brandingSet = new HashSet<>();
         brandingSet.add(this.brandingTranslatorTest.initSourceObject());
         source.setBranding(brandingSet);
 
@@ -132,7 +132,7 @@ public class ProductTranslatorTest extends
                     }
                 }
 
-                for (ProductBranding brandingSource : source.getBranding()) {
+                for (Branding brandingSource : source.getBranding()) {
                     for (BrandingDTO brandingDTO : dto.getBranding()) {
 
                         assertNotNull(brandingDTO);
