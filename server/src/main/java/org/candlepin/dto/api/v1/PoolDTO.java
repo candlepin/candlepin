@@ -595,6 +595,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      * @return
      *  the branding items associated with this key, or null if they have not yet been defined
      */
+    @JsonProperty
     public Set<BrandingDTO> getBranding() {
         return this.branding != null ? new SetView<>(this.branding) : null;
     }
@@ -608,6 +609,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      * @return
      *  A reference to this DTO
      */
+    @JsonIgnore
     public PoolDTO setBranding(Set<BrandingDTO> branding) {
         if (branding != null) {
             if (this.branding == null) {

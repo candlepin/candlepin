@@ -252,7 +252,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @BatchSize(size = 1000)
     @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     @Immutable
-    private Set<ProductBranding> branding;
+    private Set<Branding> branding;
 
     public Product() {
         this.attributes = new HashMap<>();
@@ -425,7 +425,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         copy.branding = new HashSet<>();
         copy.setBranding(this.branding.stream()
-            .map(ProductBranding::clone)
+            .map(Branding::clone)
             .peek(brand -> brand.setProduct(copy))
             .collect(Collectors.toSet()));
 
@@ -669,7 +669,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  the brandings of this product
      */
-    public Collection<ProductBranding> getBranding() {
+    public Collection<Branding> getBranding() {
         return new SetView<>(branding);
     }
 
@@ -682,11 +682,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  a reference to this product
      */
-    public Product setBranding(Collection<ProductBranding> branding) {
+    public Product setBranding(Collection<Branding> branding) {
         this.branding.clear();
 
         if (branding != null) {
-            for (ProductBranding brand : branding) {
+            for (Branding brand : branding) {
                 this.addBranding(brand);
             }
         }
@@ -707,7 +707,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  true if the branding was added successfully; false otherwise
      */
-    public boolean addBranding(ProductBranding branding) {
+    public boolean addBranding(Branding branding) {
         if (branding == null) {
             throw new IllegalArgumentException("branding is null");
         }
@@ -729,7 +729,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  true if the branding was removed successfully; false otherwise
      */
-    public boolean removeBranding(ProductBranding branding) {
+    public boolean removeBranding(Branding branding) {
         if (branding == null) {
             throw new IllegalArgumentException("branding is null");
         }
@@ -738,9 +738,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("branding id is null");
         }
 
-        Collection<ProductBranding> remove = new LinkedList<>();
+        Collection<Branding> remove = new LinkedList<>();
 
-        for (ProductBranding pb : this.branding) {
+        for (Branding pb : this.branding) {
 
             if (pb != null && branding.getId().equals(pb.getId())) {
                 pb.setProduct(null);
@@ -1249,7 +1249,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         if (!this.branding.isEmpty()) {
             accumulator = 0;
-            for (ProductBranding branding : this.branding) {
+            for (Branding branding : this.branding) {
                 accumulator += (branding != null ? branding.hashCode() : 0);
             }
 

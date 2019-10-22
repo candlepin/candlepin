@@ -19,7 +19,7 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
@@ -98,10 +98,10 @@ public class ProductDataTranslator implements ObjectTranslator<ProductData, Prod
                 }
             }
 
-            Collection<ProductBranding> productBrandings = source.getBranding();
+            Collection<Branding> productBrandings = source.getBranding();
             dest.setBranding(null);
             if (productBrandings != null) {
-                for (ProductBranding brand : productBrandings) {
+                for (Branding brand : productBrandings) {
                     if (brand != null) {
                         dest.addBranding(modelTranslator.translate(brand, BrandingDTO.class));
                     }

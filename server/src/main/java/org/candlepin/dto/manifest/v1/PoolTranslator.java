@@ -20,7 +20,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.SubscriptionsCertificate;
 
 import java.util.Collection;
@@ -114,7 +114,7 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
             dest.setSourceEntitlement(sourceEntitlement != null ?
                 modelTranslator.translate(sourceEntitlement, EntitlementDTO.class) : null);
 
-            Collection<ProductBranding> productBrandings =
+            Collection<Branding> productBrandings =
                 source.getProduct() != null ? source.getProduct().getBranding() : null;
             if (productBrandings != null && !productBrandings.isEmpty()) {
                 dest.setBranding(productBrandings.stream().filter(productBranding -> productBranding != null)

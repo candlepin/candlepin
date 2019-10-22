@@ -19,7 +19,7 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 
 import java.util.Collection;
@@ -91,9 +91,9 @@ public class ProductTranslator extends TimestampedEntityTranslator<Product, Prod
                 }
             }
 
-            Collection<ProductBranding> branding = source.getBranding();
+            Collection<Branding> branding = source.getBranding();
             if (branding != null && !branding.isEmpty()) {
-                for (ProductBranding brand : branding) {
+                for (Branding brand : branding) {
                     if (brand != null) {
                         destination.addBranding(modelTranslator.translate(brand, BrandingDTO.class));
                     }
