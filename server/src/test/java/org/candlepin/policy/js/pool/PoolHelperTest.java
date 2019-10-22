@@ -40,6 +40,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -264,9 +265,9 @@ public class PoolHelperTest {
         for (int i = 0; i < 3; i++) {
             attributes.put("a" + i, "b" + i);
         }
-        Branding branding = new Branding("id", "type", "name");
+        Branding branding = new Branding(null, "id", "name", "type");
+        product2.setBranding(Arrays.asList(branding));
         Pool pool = TestUtil.createPool(owner, product);
-        pool.getBranding().add(branding);
         String quant = "unlimited";
         Pool clone = PoolHelper.clonePool(pool, product2, quant, attributes, "TaylorSwift", null,
             ent, TestUtil.createConsumer(), productCurator);
@@ -284,8 +285,8 @@ public class PoolHelperTest {
         assertEquals("TaylorSwift",
             clone.getSourceSubscription().getSubscriptionSubKey());
 
-        assertEquals(1, clone.getBranding().size());
-        Branding brandingClone = clone.getBranding().iterator().next();
+        assertEquals(1, clone.getProduct().getBranding().size());
+        Branding brandingClone = clone.getProduct().getBranding().iterator().next();
         assertEquals(branding, brandingClone);
     }
 }

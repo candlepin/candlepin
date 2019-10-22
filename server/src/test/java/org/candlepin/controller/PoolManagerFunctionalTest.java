@@ -39,7 +39,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -302,16 +302,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 masterPool = pool;
             }
         }
-        Collection<ProductBranding> brandingSet =
+        Collection<Branding> brandingSet =
             poolManager.fabricateSubscriptionFromPool(masterPool).getProduct().getBranding();
 
         assertNotNull(brandingSet);
         assertEquals(2, brandingSet.size());
-        ArrayList<ProductBranding> list = new ArrayList<>(brandingSet);
-        list.sort(new Comparator<ProductBranding>() {
+        ArrayList<Branding> list = new ArrayList<>(brandingSet);
+        list.sort(new Comparator<Branding>() {
 
             @Override
-            public int compare(ProductBranding o1, ProductBranding o2) {
+            public int compare(Branding o1, Branding o2) {
                 return o1.getName().compareTo(o2.getName());
             }
         });

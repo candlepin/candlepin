@@ -18,7 +18,7 @@ import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Owner;
-import org.candlepin.model.ProductBranding;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.dto.ContentData;
@@ -789,9 +789,9 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         return null;
     }
 
-    protected Set<ProductBranding> resolveBranding(Collection<? extends BrandingInfo> branding) {
+    protected Set<Branding> resolveBranding(Collection<? extends BrandingInfo> branding) {
         if (branding != null) {
-            Map<String, ProductBranding> brandMap = new HashMap<>();
+            Map<String, Branding> brandMap = new HashMap<>();
 
             // We don't bother keeping cross-subscription references here, so the only thing
             // we are really concerned with is making sure we don't end up with two brands
@@ -804,7 +804,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
                         throw new IllegalArgumentException("Branding lacks a product ID: " + binfo);
                     }
 
-                    ProductBranding bdata = new ProductBranding();
+                    Branding bdata = new Branding();
 
                     bdata.setProductId(binfo.getProductId());
                     bdata.setType(binfo.getType());
