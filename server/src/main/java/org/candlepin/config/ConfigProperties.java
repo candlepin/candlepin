@@ -82,6 +82,16 @@ public class ConfigProperties {
      * e.g. 1 000 0000 will effectively disable the
      * functionality. This is handy when you expect a lot of
      * messages and you do not want to run out of disk space.
+     *
+     * NOTE: Increasing this property to more than 501760 could cause the following issue:
+     *  https://access.redhat.com/solutions/2203791
+     * As the article explains, this issue could occur only when the value of journal-buffer-size is less
+     * than the value of min-large-message-size, in bytes. We do not currently alter the
+     * journal-buffer-size on the artemis broker, which uses the default value (501760 bytes), while the
+     * default value of this property (which is used to set the min-large-message-size) is set to 102400
+     * bytes. As such, the issue will not occur with our default settings, but only if we set this property
+     * to a value larger than 501760 (or if the journal-buffer-size property in broker.xml is changed to be
+     * less than the value of this property).
      */
     public static final String ACTIVEMQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
 
