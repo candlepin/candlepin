@@ -64,5 +64,13 @@
         </sql>
     </changeSet>
 
+    <changeSet id="20190919132617-3" author="sdhome">
+        <comment>Remove CP_POOL_BRANDING and CP BRANDING as they are no longer needed.</comment>
+
+        <!--Removing table and related constraints-->
+        <dropTable tableName="cp_pool_branding" cascadeConstraints="true"/>
+        <dropTable tableName="cp_branding" cascadeConstraints="true"/>
+    </changeSet>
+
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->
