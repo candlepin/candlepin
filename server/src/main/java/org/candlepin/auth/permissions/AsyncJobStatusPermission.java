@@ -22,6 +22,13 @@ import org.candlepin.model.Owner;
 
 import org.hibernate.criterion.Criterion;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+
+
 /**
  * Determines users and consumers specific access to AsyncJobStatus.
  *
@@ -32,10 +39,18 @@ public class AsyncJobStatusPermission extends TypedPermission<AsyncJobStatus> {
 
     private final String principalName;
     private final String principalType;
+    private final Set<String> ownerIds;
 
-    public AsyncJobStatusPermission(PrincipalData principalData) {
+    public AsyncJobStatusPermission(PrincipalData principalData, Collection<String> ownerIds) {
+        Objects.requireNonNull(principalData);
+
         this.principalName = principalData.getName();
         this.principalType = principalData.getType();
+
+        this.ownerIds = new HashSet<>();
+        if (ownerIds != null) {
+            this.ownerIds.addAll(ownerIds);
+        }
     }
 
     @Override
@@ -60,13 +75,20 @@ public class AsyncJobStatusPermission extends TypedPermission<AsyncJobStatus> {
         String principal = target.getPrincipalName();
         boolean principalMatch = principal != null && principal.equals(this.principalName);
 
+        // If the job was created within the context of an org, access is only granted if
+        // the principal owning this permission has access to that org
+        String contextOwnerId = target.getContextOwnerId();
+        if (contextOwnerId != null && !this.ownerIds.contains(contextOwnerId)) {
+            return false;
+        }
+
         if ("user".equalsIgnoreCase(principalType)) {
             // a user can only cancel the job if it started it
             Access allowed = principalMatch ? Access.ALL : Access.READ_ONLY;
             return allowed.provides(required);
         }
         else if ("consumer".equalsIgnoreCase(principalType)) {
-            // if this is a consumer it must match the principle name access
+            // if this is a consumer, it must match the principle name access
             return principalMatch && Access.ALL.provides(required);
         }
 

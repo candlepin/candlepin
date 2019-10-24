@@ -19,8 +19,6 @@ import org.candlepin.config.ConfigProperties;
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
-import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
-
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.candlepin.controller.QpidStatusMonitor;
@@ -28,8 +26,8 @@ import org.candlepin.controller.SuspendModeTransitioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.List;
+
 
 
 /**
@@ -39,54 +37,16 @@ import java.util.List;
 public class ActiveMQContextListener {
     private static  Logger log = LoggerFactory.getLogger(ActiveMQContextListener.class);
 
-    private EmbeddedActiveMQ activeMQServer;
     private ArtemisMessageSource messageSource;
 
     public void contextDestroyed() {
-        if (activeMQServer != null) {
-            messageSource.shutDown();
-            try {
-                activeMQServer.stop();
-                log.info("ActiveMQ server stopped.");
-            }
-            catch (Exception e) {
-                log.error("Error stopping ActiveMQ server", e);
-            }
-
+        if (this.messageSource != null) {
+            this.messageSource.shutDown();
         }
     }
 
     public void contextInitialized(Injector injector) {
         Configuration candlepinConfig = injector.getInstance(Configuration.class);
-
-        boolean embedded = candlepinConfig.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED);
-        if (embedded) {
-            log.info("Candlepin will connect to an embedded Artemis server.");
-            if (activeMQServer == null) {
-                activeMQServer = new EmbeddedActiveMQ();
-
-                // If the Artemis config file is specified in the config use it. Otherwise
-                // the broker.xml file distributed via the WAR file will be used.
-                String artemisConfigFilePath = candlepinConfig.getProperty(
-                    ConfigProperties.ACTIVEMQ_SERVER_CONFIG_PATH);
-                if (artemisConfigFilePath != null && !artemisConfigFilePath.isEmpty()) {
-                    log.info("Loading Artemis config file: {}", artemisConfigFilePath);
-                    activeMQServer.setConfigResourcePath(new File(artemisConfigFilePath).toURI().toString());
-                }
-            }
-
-            try {
-                activeMQServer.start();
-                log.info("ActiveMQ server started");
-            }
-            catch (Exception e) {
-                log.error("Failed to start ActiveMQ message server:", e);
-                throw new RuntimeException(e);
-            }
-        }
-        else {
-            log.info("Candlepin will connect to a remote Artemis server.");
-        }
 
         ActiveMQStatusMonitor activeMQStatusMonitor = injector.getInstance(ActiveMQStatusMonitor.class);
         // If suspend mode is enabled, we need the transitioner to listen for connection drops.
@@ -128,6 +88,7 @@ public class ActiveMQContextListener {
         if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             listeners.add(AMQPBusPublisher.class.getName());
         }
+
         return listeners;
     }
 

@@ -26,8 +26,8 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.CandlepinModeChange;
-import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
@@ -55,7 +55,6 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -79,7 +78,7 @@ public class PinsetterKernelTest {
     private Configuration config;
     private Scheduler sched;
     private ListenerManager lm;
-    private ModeManager modeManager;
+    private CandlepinModeManager modeManager;
     private TriggerListener triggerListener;
 
     @Before
@@ -90,14 +89,13 @@ public class PinsetterKernelTest {
         jlistener = mock(JobListener.class);
         sfactory = mock(StdSchedulerFactory.class);
         lm = mock(ListenerManager.class);
-        modeManager = mock(ModeManager.class);
+        modeManager = mock(CandlepinModeManager.class);
         triggerListener = mock(PinsetterTriggerListener.class);
 
         config = new MapConfiguration(
             new HashMap<String, String>() {
                 {
-                    put("org.quartz.threadPool.class",
-                        "org.quartz.simpl.SimpleThreadPool");
+                    put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
                     put("org.quartz.threadPool.threadCount", "25");
                     put("org.quartz.threadPool.threadPriority", "5");
                     put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
@@ -106,10 +104,8 @@ public class PinsetterKernelTest {
             });
         when(sfactory.getScheduler()).thenReturn(sched);
         when(sched.getListenerManager()).thenReturn(lm);
-        when(modeManager.getLastCandlepinModeChange()).thenReturn(
-            new CandlepinModeChange(new Date(System.currentTimeMillis()),
-            CandlepinModeChange.Mode.NORMAL,
-            CandlepinModeChange.Reason.STARTUP));
+
+        doReturn(Mode.NORMAL).when(this.modeManager).getCurrentMode();
     }
 
     @Test(expected = InstantiationException.class)

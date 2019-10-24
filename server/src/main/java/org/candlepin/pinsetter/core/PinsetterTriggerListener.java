@@ -15,8 +15,8 @@
 package org.candlepin.pinsetter.core;
 
 import com.google.inject.Inject;
-import org.candlepin.controller.ModeManager;
-import org.candlepin.model.CandlepinModeChange.Mode;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.quartz.JobExecutionContext;
@@ -34,11 +34,11 @@ import java.text.SimpleDateFormat;
  */
 public class PinsetterTriggerListener extends TriggerListenerSupport {
     private static Logger log = LoggerFactory.getLogger(PinsetterTriggerListener.class);
-    private ModeManager modeManager;
+    private CandlepinModeManager modeManager;
     private JobCurator jobCurator;
 
     @Inject
-    public PinsetterTriggerListener(ModeManager modeManager, JobCurator jobCurator) {
+    public PinsetterTriggerListener(CandlepinModeManager modeManager, JobCurator jobCurator) {
         this.modeManager = modeManager;
         this.jobCurator =  jobCurator;
     }
@@ -50,11 +50,11 @@ public class PinsetterTriggerListener extends TriggerListenerSupport {
 
     @Override
     public boolean vetoJobExecution(Trigger trigger, JobExecutionContext context) {
-        if (modeManager.getLastCandlepinModeChange().getMode() == Mode.SUSPEND) {
-            log.debug("Pinsetter trigger listener detected SUSPEND mode, " +
-                "vetoing job to be executed");
+        if (this.modeManager.getCurrentMode() == Mode.SUSPEND) {
+            log.debug("Pinsetter trigger listener detected SUSPEND mode; vetoing job execution");
             return true;
         }
+
         return false;
     }
 

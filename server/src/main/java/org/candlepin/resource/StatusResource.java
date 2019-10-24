@@ -20,10 +20,11 @@ import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.controller.ModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.controller.mode.ModeChangeReason;
 import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.guice.CandlepinCapabilities;
-import org.candlepin.model.CandlepinModeChange;
 import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -36,9 +37,10 @@ import org.slf4j.LoggerFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
+import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -70,22 +72,24 @@ public class StatusResource {
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
-    private ModeManager modeManager;
+    private CandlepinModeManager modeManager;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
-        CandlepinCache candlepinCache, ModeManager modeManager) {
-        this.modeManager = modeManager;
-        this.rulesCurator = rulesCurator;
-        this.candlepinCache = candlepinCache;
+        CandlepinCache candlepinCache, CandlepinModeManager modeManager) {
+
+        this.rulesCurator = Objects.requireNonNull(rulesCurator);
+        this.jsProvider = Objects.requireNonNull(jsProvider);
+        this.candlepinCache = Objects.requireNonNull(candlepinCache);
+        this.modeManager = Objects.requireNonNull(modeManager);
+
         Map<String, String> map = VersionUtil.getVersionMap();
         version = map.get("version");
         release = map.get("release");
 
-        if (config == null || !config.getBoolean(ConfigProperties.STANDALONE)) {
-            standalone = false;
+        if (config != null && !config.getBoolean(ConfigProperties.STANDALONE)) {
+            this.standalone = false;
         }
-        this.jsProvider = jsProvider;
     }
 
     /**
@@ -121,6 +125,9 @@ public class StatusResource {
             return cached;
         }
 
+        CandlepinCapabilities caps = CandlepinCapabilities.getCapabilities();
+        RulesSourceEnum rulesSource = this.jsProvider.getRulesSource();
+
         /*
          * Originally this was used to indicate database connectivity being good/bad.
          * In reality it could never be false, the request would fail. This check has
@@ -136,19 +143,10 @@ public class StatusResource {
             good = false;
         }
 
-        CandlepinModeChange modeChange = modeManager.getLastCandlepinModeChange();
-        CandlepinModeChange.Mode mode = modeChange.getMode();
+        Mode mode = this.modeManager.getCurrentMode();
+        ModeChangeReason mcr = this.getOldestReason(this.modeManager.getModeChangeReasons());
 
-        Iterator<CandlepinModeChange.Reason> reasonItr = modeChange.getReasons().iterator();
-        CandlepinModeChange.Reason modeChangeReason = reasonItr.hasNext() ? reasonItr.next() : null;
-
-        if (mode != CandlepinModeChange.Mode.NORMAL) {
-            good = false;
-        }
-
-        CandlepinCapabilities caps = CandlepinCapabilities.getCapabilities();
-
-        RulesSourceEnum rulesSource = jsProvider.getRulesSource();
+        good = good && (mode == Mode.NORMAL);
 
         StatusDTO status = new StatusDTO()
             .setResult(good)
@@ -158,13 +156,36 @@ public class StatusResource {
             .setRulesVersion(jsProvider.getRulesVersion())
             .setRulesSource(rulesSource != null ? rulesSource.toString() : null)
             .setMode(mode != null ? mode.toString() : null)
-            .setModeReason(modeChangeReason != null ? modeChangeReason.toString() : null)
-            .setModeChangeTime(modeChange.getChangeTime())
+            .setModeReason(mcr != null ? mcr.toString() : null)
+            .setModeChangeTime(mcr != null ? mcr.getTime() : null)
             .setManagerCapabilities(caps)
             .setTimeUTC(new Date());
 
         statusCache.setStatus(status);
 
         return status;
+    }
+
+    /**
+     * Fetches the oldest reason in the provided collection of reasons. If the collection is empty,
+     * or only contains null values, this method returns null.
+     *
+     * @param reasons
+     *  The collection of reasons to evaluate
+     *
+     * @return
+     *  the oldest reason from the provided collection, or null if the collection does not contain
+     *  any reasons
+     */
+    private ModeChangeReason getOldestReason(Collection<ModeChangeReason> reasons) {
+        try {
+            return reasons.stream()
+                .filter(Objects::nonNull)
+                .min((lhs, rhs) -> lhs.getTime().compareTo(rhs.getTime()))
+                .orElse(null);
+        }
+        catch (NullPointerException e) {
+            return null;
+        }
     }
 }

@@ -16,7 +16,7 @@ package org.candlepin.guice;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.async.JobMessageDispatcher;
-import org.candlepin.async.impl.ArtemisJobMessageDispatcher;
+import org.candlepin.async.JobMessageReceiver;
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.JobCleaner;
@@ -83,15 +83,21 @@ import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
-import org.candlepin.controller.ModeManager;
-import org.candlepin.controller.ModeManagerImpl;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ScheduledExecutorServiceProvider;
 import org.candlepin.controller.SuspendModeTransitioner;
+import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.PoolEventFilter;
+import org.candlepin.messaging.CPMSessionFactory;
+import org.candlepin.messaging.CPMContextListener;
+import org.candlepin.messaging.impl.artemis.ArtemisContextListener;
+import org.candlepin.messaging.impl.artemis.ArtemisSessionFactory;
+import org.candlepin.messaging.impl.artemis.ArtemisUtil;
+import org.candlepin.messaging.impl.noop.NoopContextListener;
+import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
@@ -254,7 +260,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(EntitlementRules.class);
         bind(EntitlementRulesTranslator.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
-        bind(ModeManager.class).to(ModeManagerImpl.class).asEagerSingleton();
+        bind(CandlepinModeManager.class).asEagerSingleton();
         bind(SuspendModeTransitioner.class).asEagerSingleton();
         bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);
         bind(HypervisorUpdateAction.class);
@@ -354,6 +360,7 @@ public class CandlepinModule extends AbstractModule {
     private void miscConfigurations() {
         configureInterceptors();
         configureAuth();
+        configureMessaging();
         configureActiveMQComponents();
         configureAsyncJobs();
         configurePinsetter();
@@ -373,6 +380,21 @@ public class CandlepinModule extends AbstractModule {
             .configure()
             .messageInterpolator(interpolatorProvider.get())
             .buildValidatorFactory();
+    }
+
+    protected void configureMessaging() {
+        String provider = this.config.getString(ConfigProperties.CPM_PROVIDER);
+
+        // TODO: Change this to a map lookup as we get more providers
+
+        if (ArtemisUtil.PROVIDER.equalsIgnoreCase(provider)) {
+            bind(CPMContextListener.class).to(ArtemisContextListener.class).asEagerSingleton();
+            bind(CPMSessionFactory.class).to(ArtemisSessionFactory.class).asEagerSingleton();
+        }
+        else {
+            bind(CPMContextListener.class).to(NoopContextListener.class).asEagerSingleton();
+            bind(CPMSessionFactory.class).to(NoopSessionFactory.class).asEagerSingleton();
+        }
     }
 
     protected void configureJPA() {
@@ -399,7 +421,6 @@ public class CandlepinModule extends AbstractModule {
 
     private void configureInterceptors() {
         bind(ConsumerCheckInFilter.class);
-        bind(CandlepinSuspendModeFilter.class);
         bind(PageRequestFilter.class);
         bind(PinsetterAsyncFilter.class);
         bind(CandlepinQueryInterceptor.class);
@@ -407,12 +428,19 @@ public class CandlepinModule extends AbstractModule {
         bind(LinkHeaderResponseFilter.class);
         bind(DynamicJsonFilter.class);
 
+        // Only bind the suspend mode filter if configured to do so
+        if (this.config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+            bind(CandlepinSuspendModeFilter.class);
+        }
+
         bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY")).to(ConfigProperties.PREFIX_APIURL);
     }
 
     private void configureAsyncJobs() {
-        bind(JobMessageDispatcher.class).to(ArtemisJobMessageDispatcher.class);
         bind(SchedulerFactory.class).to(StdSchedulerFactory.class);
+
+        bind(JobMessageDispatcher.class);
+        bind(JobMessageReceiver.class);
 
         JobManager.registerJob(ActiveEntitlementJob.JOB_KEY, ActiveEntitlementJob.class);
         JobManager.registerJob(CRLUpdateJob.JOB_KEY, CRLUpdateJob.class);
