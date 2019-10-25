@@ -133,7 +133,7 @@ class PostgresqlSetup(DbSetup):
         self.jdbc_url = "%s%s" % (self.jdbc_url, db)
 
         # Appending SSL connection details
-        if ssl == True:
+        if ssl is not None and ssl.lower() == "true":
             if sslfactory is None:
                 if sslcertpath is None:
                     self.jdbc_url = "%s%s" % (self.jdbc_url, "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory")
@@ -229,16 +229,16 @@ if __name__ == "__main__":
             help="enables verbose logging/output")
 
     parser.add_option("--ssl",
-            dest="ssl", action="store_true", default=False,
+            dest="ssl",
             help="true if ssl connection needed (optional)")
 
     parser.add_option("--sslfactory",
             dest="sslfactory",
-            help="ssl validation factory for ssl connection (optional)")
+            help="ssl validation factory for ssl connection (optional); used with --ssl true")
 
     parser.add_option("--sslcertpath",
             dest="sslcertpath",
-            help="ssl cert filepath for ssl connection (optional if sslfactory is provided)")
+            help="ssl cert filepath for ssl connection (optional); used with --ssl true")
 
     (options, args) = parser.parse_args()
 
@@ -262,8 +262,12 @@ if __name__ == "__main__":
         print("ERROR: --drop can not be used with --schema-only")
         sys.exit(1)
 
-    if options.ssl and options.sslfactory and options.sslcertpath:
-        print("ERROR: ssl, sslfactory, and sslcertpath are not supported together.")
+    if options.ssl:
+        if options.sslfactory and options.sslcertpath:
+            print("ERROR: --ssl, --sslfactory, and --sslcertpath are not supported together.")
+            sys.exit(1)
+    elif options.sslfactory or options.sslcertpath:
+        print("ERROR: --sslfactory or --sslcertpath must only be specified with --ssl.")
         sys.exit(1)
 
     dbsetup = PostgresqlSetup(options.dbhost, options.dbport, options.dbuser, options.dbpassword,
