@@ -25,6 +25,8 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -74,6 +76,7 @@ public class Entitler {
 
     private Configuration config;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private ContentManager contentManager;
     private EventFactory evtFactory;
     private EventSink sink;
@@ -91,7 +94,8 @@ public class Entitler {
         EventSink sink, EntitlementRulesTranslator messageTranslator,
         EntitlementCurator entitlementCurator, Configuration config,
         OwnerCurator ownerCurator, PoolCurator poolCurator,
-        ProductManager productManager, ProductServiceAdapter productAdapter, ContentManager contentManager) {
+        ProductManager productManager, ProductServiceAdapter productAdapter, ContentManager contentManager,
+        ConsumerTypeCurator ctc) {
 
         this.poolManager = pm;
         this.i18n = i18n;
@@ -106,6 +110,7 @@ public class Entitler {
         this.productManager = productManager;
         this.productAdapter = productAdapter;
         this.contentManager = contentManager;
+        this.consumerTypeCurator = ctc;
     }
 
     public List<Entitlement> bindByPoolQuantity(Consumer consumer, String poolId, Integer quantity) {
@@ -160,7 +165,7 @@ public class Entitler {
 
     public List<Entitlement> bindByProducts(String[] productIds,
         String consumeruuid, Date entitleDate, Collection<String> fromPools)
-        throws AutobindDisabledForOwnerException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
         Owner o = ownerCurator.findOwnerById(c.getOwnerId());
         AutobindData data = AutobindData.create(c, o).on(entitleDate)
@@ -177,8 +182,11 @@ public class Entitler {
      * @return List of Entitlements
      * @throws AutobindDisabledForOwnerException when an autobind attempt is made and the owner
      *         has it disabled.
+     * @throws AutobindHypervisorDisabledException when an autobind attempt is made on a hypervisor
+     *         and the owner has it disabled.
      */
-    public List<Entitlement> bindByProducts(AutobindData data) throws AutobindDisabledForOwnerException {
+    public List<Entitlement> bindByProducts(AutobindData data)
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
         return bindByProducts(data, false);
     }
 
@@ -191,21 +199,37 @@ public class Entitler {
      * @return List of Entitlements
      * @throws AutobindDisabledForOwnerException when an autobind attempt is made and the owner
      *         has it disabled.
+     * @throws AutobindHypervisorDisabledException when an autobind attempt is made on a hypervisor
+     *         and the owner has it disabled.
      */
     @Transactional
     public List<Entitlement> bindByProducts(AutobindData data, boolean force)
-        throws AutobindDisabledForOwnerException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
         Consumer consumer = data.getConsumer();
         Owner owner = data.getOwner();
+        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+        boolean autobindHypervisorDisabled = owner.isAutobindHypervisorDisabled() &&
+            type != null &&
+            type.isType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
 
-        if ((!consumer.isDev() && owner.isAutobindDisabled()) || owner.isContentAccessEnabled()) {
+        if (!consumer.isDev() &&
+            (owner.isAutobindDisabled() || owner.isContentAccessEnabled() || autobindHypervisorDisabled)) {
             String caMessage = owner.isContentAccessEnabled() ?
                 " because of the content access mode setting" : "";
-            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}",
-                consumer.getUuid(), owner.getKey(), caMessage);
-            throw new AutobindDisabledForOwnerException(i18n.tr(
-                "Auto-attach is disabled for owner \"{0}\"{1}.",
-                owner.getKey(), caMessage));
+            String hypMessage = owner.isAutobindHypervisorDisabled() ?
+                " because of the hypervisor autobind setting" : "";
+            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}{}",
+                consumer.getUuid(), owner.getKey(), caMessage, hypMessage);
+            if (autobindHypervisorDisabled) {
+                throw new AutobindHypervisorDisabledException(i18n.tr(
+                    "Auto-attach is disabled for owner \"{0}\"{1}.",
+                    owner.getKey(), hypMessage));
+            }
+            else {
+                throw new AutobindDisabledForOwnerException(i18n.tr(
+                    "Auto-attach is disabled for owner \"{0}\"{1}.",
+                    owner.getKey(), caMessage));
+            }
         }
 
         // If the consumer is a guest, and has a host, try to heal the host first

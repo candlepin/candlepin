@@ -40,6 +40,7 @@ public class OwnerDTOTest extends AbstractDTOTest<OwnerDTO> {
         parent.setDefaultServiceLevel("service_level");
         parent.setLogLevel("log_level");
         parent.setAutobindDisabled(true);
+        parent.setAutobindHypervisorDisabled(true);
         parent.setContentAccessMode("content_access_mode");
         parent.setContentAccessModeList("content_access_mode_list");
 
@@ -61,6 +62,7 @@ public class OwnerDTOTest extends AbstractDTOTest<OwnerDTO> {
         this.values.put("UpstreamConsumer", consumer);
         this.values.put("LogLevel", "test-log-level");
         this.values.put("AutobindDisabled", true);
+        this.values.put("AutobindHypervisorDisabled", true);
         this.values.put("ContentAccessMode", "test-access-mode");
         this.values.put("ContentAccessModeList", "test-access-mode-list");
         this.values.put("Created", new Date());
