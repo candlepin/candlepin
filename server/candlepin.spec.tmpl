@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.17
+Version: 2.10.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,23 @@ fi
 
 #raw
 %changelog
+* Wed Oct 30 2019 Kevin Howell <khowell@redhat.com> 2.10.0-1
+- 1698469: Add options for cpdb command  - Corrected the value for ssl option.
+  - Improvements in error messages, help options for newly added options.
+  (sonalidhome@gmail.com)
+- Clarify large_msg_size artemis property usage (nmoumoul@redhat.com)
+- 1762815: Fixed NPE during system purpose status calculation (crog@redhat.com)
+- Added additional tests for verifying content changes on import and refresh
+  (crog@redhat.com)
+- 1698469: [RFE] Add options for cpdb command Bug suggested to pass ssl and
+  sslfactory in case of external database. - Added ssl, sslfactory, and
+  sslcertpath options in cpdb - Connection with the database can be with or
+  without SSL validations (sonalidhome@gmail.com)
+- ENT-797: Update ehcache version from 2.10.3 to 3.8.0
+  (abhiskum@abhiskum.usersys.redhat.com)
+- 1752975: Duplicate indexes on cp_dist_version & cp_pool_source_stack
+  (sonalidhome@gmail.com)
+
 * Fri Oct 11 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.17-1
 - 
 
