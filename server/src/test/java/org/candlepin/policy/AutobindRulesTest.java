@@ -155,6 +155,29 @@ public class AutobindRulesTest {
     }
 
     @Test
+    public void singleProductSinglePoolShouldFindBestWithCorrectQuantity() {
+        final Product product = TestUtil.createProduct(productId, "A test product");
+        product.setAttribute("stacking_id", productId);
+        product.setAttribute("multi-entitlement", "yes");
+        product.setAttribute("cores", "2");
+        final Pool pool = TestUtil.createPool(owner, product, 20);
+        pool.setId("DEAD-BEEF");
+        final List<Pool> pools = new LinkedList<>();
+        pools.add(pool);
+
+        consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("cpu.cpu_socket(s)", "12");
+        consumer.setFact("cpu.core(s)_per_socket", "1");
+
+        final List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
+            false);
+
+        assertEquals(1, bestPools.size());
+        assertEquals(6, bestPools.get(0).getQuantity().intValue());
+    }
+
+    @Test
     public void testSelectBestPoolsFiltersTooMuchContent() {
         Pool pool = createV3OnlyPool();
 
