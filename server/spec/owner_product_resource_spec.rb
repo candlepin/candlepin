@@ -380,6 +380,10 @@ describe 'Owner Product Resource' do
     prod = @cp.get_product(owner['key'], prod['id'])
     prod.branding.size.should == 2
 
+    prod = @cp.update_product(owner['key'], prod['id'], { :name => "new_product_name" })
+    expect(prod.name).to eq('new_product_name')
+    prod.branding.size.should == 2
+
     @cp.delete_product(owner['key'], prod['id'])
     lambda do
       @cp.get_product(owner['key'], prod['id'])

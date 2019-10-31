@@ -425,8 +425,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         copy.branding = new HashSet<>();
         copy.setBranding(this.branding.stream()
-            .map(Branding::clone)
-            .peek(brand -> brand.setProduct(copy))
+            .map(brand -> new Branding(copy, brand.getProductId(), brand.getName(), brand.getType()))
             .collect(Collectors.toSet()));
 
         return copy;
@@ -742,7 +741,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         for (Branding pb : this.branding) {
 
-            if (pb != null && branding.getId().equals(pb.getId())) {
+            if (branding.equals(pb)) {
                 pb.setProduct(null);
                 remove.add(pb);
             }
