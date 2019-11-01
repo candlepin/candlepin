@@ -140,8 +140,6 @@ public class CandlepinAttributeDeserializer extends StdDeserializer<Map<String, 
             }
         }
         else {
-            log.debug("Processing attributes as an array of attribute objects");
-
             // Uh oh.
             throw new CandlepinJsonProcessingException(
                 "Unexpected attribute value type: " + node.asToken(),

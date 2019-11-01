@@ -34,6 +34,14 @@ import javax.persistence.AttributeConverter;
  *   public MyTypeJsonConverter() {
  *     super(MyType.class);
  *   }
+ *
+ *   protected String serialize(JsonFactory factory, T entity) {
+ *     ...
+ *   }
+ *
+ *   protected T deserialize(JsonFactory factory, String json) {
+ *     ...
+ *   }
  * }
  * </pre>
  *
@@ -59,10 +67,8 @@ import javax.persistence.AttributeConverter;
  */
 public abstract class AbstractJsonConverter<T> implements AttributeConverter<T, String> {
 
-    /** A shared ObjectMapper to be used by all JSON-serialized types */
-    private static ObjectMapper mapper = ObjectMapperFactory.getObjectMapper();
-
     private Class<T> type;
+    private JsonFactory jsonFactory;
 
     /**
      * Creates a new JsonConverter that converts attributes of the specified type to JSON strings.
@@ -79,17 +85,7 @@ public abstract class AbstractJsonConverter<T> implements AttributeConverter<T, 
         }
 
         this.type = type;
-    }
-
-    /**
-     * Fetches the ObjectMapper instance to use for serializing and deserializing data for this
-     * type.
-     *
-     * @return
-     *  the ObjectMapper instance to use for serialization and deserialization
-     */
-    protected ObjectMapper getObjectMapper() {
-        return mapper;
+        this.jsonFactory = new JsonFactory();
     }
 
     /**
@@ -103,13 +99,35 @@ public abstract class AbstractJsonConverter<T> implements AttributeConverter<T, 
     }
 
     /**
+     * Performs the actual serialization of the specified entity. The JsonFactory provided can be
+     * used to create a JsonGenerator or ObjectMapper as necessary for the entity being serialized.
+     *
+     * @param factory
+     *  A JsonFactory instance that can be used to create a JsonGenerator or ObjectMapper for entity
+     *  serialization
+     *
+     * @param entity
+     *  The entity to serialize
+     *
+     * @return
+     *  JSON representing the serialized entity
+     */
+    protected String serialize(JsonFactory factory, T entity);
+
+    /**
+     * Deserializes the provided JSON into an entity.
+     *
+     *
+     */
+    protected T deserialize(JsonFactory factory, String json);
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public String convertToDatabaseColumn(T entity) {
         try {
-            ObjectMapper mapper = this.getObjectMapper();
-            return entity != null ? mapper.writeValueAsString(entity) : null;
+            return this.serialize(this.factory, entity);
         }
         catch (Exception e) {
             throw new TypeConversionException(e);
@@ -122,8 +140,7 @@ public abstract class AbstractJsonConverter<T> implements AttributeConverter<T, 
     @Override
     public T convertToEntityAttribute(String data) {
         try {
-            ObjectMapper mapper = this.getObjectMapper();
-            return data != null ? mapper.readValue(data, this.getEntityType()) : null;
+            return this.deserialize(this.factory, data);
         }
         catch (Exception e) {
             throw new TypeConversionException(e);

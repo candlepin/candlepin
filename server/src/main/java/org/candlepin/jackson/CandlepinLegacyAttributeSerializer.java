@@ -51,5 +51,6 @@ public class CandlepinLegacyAttributeSerializer extends JsonSerializer<Map<Strin
         }
 
         generator.writeEndArray();
+        generator.flush();
     }
 }
