@@ -9,6 +9,7 @@ describe 'Derived Products' do
 
   before(:each) do
     @owner = create_owner random_string('instance_owner')
+    @owner_key = @owner['key']
     @user = user_client(@owner, random_string('virt_user'))
 
     #create_product() creates products with numeric IDs by default
@@ -296,6 +297,111 @@ describe 'Derived Products' do
     product['content'].size.should == 0
   end
 
+  it 'regenerates entitlements when updating derived content' do
+    skip("candlepin running in standalone mode") if not is_hosted?
+
+    # Create a subscription with an upstream product with a derived product that provides content
+    datacenter_product = create_upstream_product(random_string('dc_prod'), {
+        :attributes => {
+            :virt_limit => "unlimited",
+            :stacking_id => "stackme",
+            :sockets => "2",
+            'multi-entitlement' => "yes"
+        }
+    })
+    derived_product = create_upstream_product(random_string('derived_prod'), {
+        :attributes => {
+            :cores => 2,
+            :sockets=>4
+        }
+    })
+
+    derived_eng_product = create_upstream_product(random_string(nil, true))
+    derived_content = create_upstream_content("twentyTwo", {
+        :type => "yum",
+        :label => "teardropsOnMyGuitar",
+        :name => "swiftrocks",
+        :vendor => "fifteen",
+        :releaseVer => nil
+    })
+    add_content_to_product_upstream(derived_eng_product.id, derived_content.id)
+
+    sub = create_upstream_subscription(random_string('dc_sub'), @owner_key, datacenter_product.id, {
+        :quantity => 10,
+        :derived_product => derived_product,
+        :derived_provided_products => [derived_eng_product]
+    })
+
+    @cp.refresh_pools(@owner_key)
+    @cp.get_product(@owner_key, derived_eng_product.id)['productContent'].size.should == 1
+    main_pools = @cp.list_pools({:owner => @owner.id, :product => datacenter_product.id})
+    expect(main_pools.length).to eq(1) # We're expecting the base pool
+
+    dist_name = random_string("CP Distributor")
+    create_distributor_version(dist_name, "Subscription Asset Manager", ["cert_v3", "derived_product"])
+    @distributor_client.update_consumer({:facts => {'distributor_version' => dist_name}})
+    entitlement = @distributor_client.consume_pool main_pools.first['id']
+    json_body = extract_payload(@distributor_client.list_certificates[0]['cert'])
+    products = json_body['products']
+    products.size.should == 1
+
+    found = false;
+    products.each do |cert_product|
+      if cert_product['id'] == derived_eng_product.id
+        found = true;
+        content_sets = cert_product['content']
+        content_sets.size.should == 1
+        content_sets[0].id.should == derived_content.id
+      end
+    end
+    found.should == true
+
+    # Add content to the derived product upstream
+    new_derived_content = create_upstream_content("twentyFour", {
+        :type => "yum",
+        :label => "teardropsOnMyUkelele",
+        :name => "slowrocks",
+        :vendor => "fifteen",
+        :releaseVer => nil
+    })
+    add_content_to_product_upstream(derived_eng_product.id, new_derived_content.id)
+
+    # Refresh the account
+    @cp.refresh_pools(@owner_key)
+    @cp.get_product(@owner_key, derived_eng_product.id)['productContent'].size.should == 2
+    json_body = extract_payload(@distributor_client.list_certificates[0]['cert'])
+    products = json_body['products']
+    products.size.should == 1
+
+    found = false;
+    products.each do |cert_product|
+      if cert_product['id'] == derived_eng_product.id
+        found = true;
+        content_sets = cert_product['content']
+        content_sets.size.should == 2
+        expect(content_sets[0].id).to eq(derived_content.id).or eq(new_derived_content.id)
+        expect(content_sets[1].id).to eq(derived_content.id).or eq(new_derived_content.id)
+      end
+    end
+    found.should == true
+
+    @distributor_client.unbind_entitlement(entitlement[0].id)
+    entitlement = @distributor_client.consume_pool main_pools.first['id']
+    json_body = extract_payload(@distributor_client.list_certificates[0]['cert'])
+    products = json_body['products']
+
+    found = false;
+    products.each do |cert_product|
+      if cert_product['id'] == derived_eng_product.id
+        found = true;
+        content_sets = cert_product['content']
+        content_sets.size.should == 2
+        expect(content_sets[0].id).to eq(derived_content.id).or eq(new_derived_content.id)
+        expect(content_sets[1].id).to eq(derived_content.id).or eq(new_derived_content.id)
+      end
+    end
+    found.should == true
+  end
 
   def setup_modifier_test
     # Content for modified product is only included if it provides the modified product
