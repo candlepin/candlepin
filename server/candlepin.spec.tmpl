@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.17
+Version: 2.9.18
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Tue Nov 05 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.18-1
+- 1768473 - Unable to enable the tools repository for Satellite 6.6
+  (wpoteat@redhat.com)
+
 * Fri Oct 11 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.17-1
 - 
 
