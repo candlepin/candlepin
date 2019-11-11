@@ -14,11 +14,11 @@
  */
 package org.candlepin.hostedtest;
 
-import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.dto.ContentData;
@@ -142,7 +142,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         sdata.setUpstreamConsumerId(sinfo.getUpstreamConsumerId());
         sdata.setCertificate(this.convertSubscriptionCertificate(sinfo.getCertificate()));
         sdata.setCdn(this.convertCdn(sinfo.getCdn()));
-        sdata.setBranding(this.resolveBranding(sinfo.getBranding()));
 
         // Update mappings
         this.subscriptionMap.put(sdata.getId(), sdata);
@@ -240,10 +239,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
         sdata.setCdn(this.convertCdn(sinfo.getCdn()));
 
-        if (sinfo.getBranding() != null) {
-            sdata.setBranding(this.resolveBranding(sinfo.getBranding()));
-        }
-
         // Update mappings...
         this.updateSubscriptionProductMappings(sdata);
 
@@ -294,6 +289,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         pdata.setDependentProductIds(pinfo.getDependentProductIds());
         pdata.setCreated(new Date());
         pdata.setUpdated(new Date());
+        pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
 
         // Create our mappings...
         this.productMap.put(pdata.getId(), pdata);
@@ -342,6 +338,10 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
         if (pinfo.getDependentProductIds() != null) {
             pdata.setDependentProductIds(pinfo.getDependentProductIds());
+        }
+
+        if (pinfo.getBranding() != null) {
+            pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
         }
 
         // Update product=>content mappings

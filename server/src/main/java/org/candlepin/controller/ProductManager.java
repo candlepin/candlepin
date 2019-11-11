@@ -14,7 +14,7 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
@@ -24,8 +24,11 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.pinsetter.tasks.OrphanCleanupJob;
+import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
@@ -44,11 +47,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Set;
 
 
 /**
@@ -66,18 +70,16 @@ public class ProductManager {
     private OwnerContentCurator ownerContentCurator;
     private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
-    private ModelTranslator modelTranslator;
 
     @Inject
     public ProductManager(EntitlementCertificateGenerator entitlementCertGenerator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
-        ProductCurator productCurator, ModelTranslator modelTranslator) {
+        ProductCurator productCurator) {
 
         this.entitlementCertGenerator = entitlementCertGenerator;
         this.ownerContentCurator = ownerContentCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.productCurator = productCurator;
-        this.modelTranslator = modelTranslator;
     }
 
     /**
@@ -122,7 +124,7 @@ public class ProductManager {
 
         // Check if we have an alternate version we can use instead.
         List<Product> alternateVersions = this.ownerProductCurator.getProductsByVersions(
-            owner, Collections.<String, Integer>singletonMap(entity.getId(), entity.getEntityVersion()))
+            owner, Collections.singletonMap(entity.getId(), entity.getEntityVersion()))
             .list();
 
         for (Product alt : alternateVersions) {
@@ -190,7 +192,7 @@ public class ProductManager {
         }
 
         // Make sure we actually have a change to apply
-        if (!this.isChangedBy(entity, update)) {
+        if (!isChangedBy(entity, update)) {
             return entity;
         }
 
@@ -203,7 +205,7 @@ public class ProductManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Product> alternateVersions = this.ownerProductCurator.getProductsByVersions(
-            owner, Collections.<String, Integer>singletonMap(updated.getId(), updated.getEntityVersion()))
+            owner, Collections.singletonMap(updated.getId(), updated.getEntityVersion()))
             .list();
 
         log.debug("Checking {} alternate product versions", alternateVersions.size());
@@ -317,7 +319,7 @@ public class ProductManager {
         for (Product product : this.ownerProductCurator.getProductsByIds(owner, productData.keySet())) {
             ProductInfo update = productData.get(product.getId());
 
-            if (product.isLocked() && !this.isChangedBy(product, update)) {
+            if (product.isLocked() && !isChangedBy(product, update)) {
                 // This product won't be changing, so we'll just pretend it's not being imported at all
                 skippedProducts.put(product.getId(), product);
                 continue;
@@ -451,6 +453,9 @@ public class ProductManager {
      * owners, the product will not actually be deleted, but, instead, will simply by removed from
      * the given owner's visibility.
      *
+     * If the product is/ends up not being shared by any owners, then it will be removed by the
+     * {@link OrphanCleanupJob} which runs periodically.
+     *
      * @param owner
      *  The owner for which to remove the product
      *
@@ -484,8 +489,10 @@ public class ProductManager {
     }
 
     /**
-     * Removes all products from the specified owner. Products which are shared will have any
-     * references to the owner removed, while unshared products will be deleted entirely.
+     * Removes all products from the specified owner.
+     *
+     * Products will have any references to the owner removed. Unreferenced products are not removed by
+     * this method, but by the {@link OrphanCleanupJob} which runs periodically.
      *
      * @param owner
      *  The owner from which to remove all products
@@ -499,8 +506,10 @@ public class ProductManager {
     }
 
     /**
-     * Removes the specified products from the given owner. Products which are shared will have any
-     * references to the owner removed, while unshared products will be deleted entirely.
+     * Removes the specified products from the given owner.
+     *
+     * Products will have any references to the owner removed. Unreferenced products are not removed by
+     * this method, but by the {@link OrphanCleanupJob} which runs periodically.
      *
      * @param owner
      *  The owner from which to remove products
@@ -526,8 +535,10 @@ public class ProductManager {
     }
 
     /**
-     * Removes the specified products from the given owner. Products which are shared will have any
-     * references to the owner removed, while unshared products will be deleted entirely.
+     * Removes the specified products from the given owner.
+     *
+     * Products will have any references to the owner removed. Unreferenced products are not removed by
+     * this method, but by the {@link OrphanCleanupJob} which runs periodically.
      *
      * @param owner
      *  The owner from which to remove products
@@ -562,8 +573,8 @@ public class ProductManager {
      * @param update
      *  The DTO containing the modifications to apply
      *
-     * @param content
-     *  A mapping of Red Hat content ID to content entities to use for content resolution
+     * @param owner
+     *  An owner to use for resolving entity references
      *
      * @throws IllegalArgumentException
      *  if entity, update or owner is null
@@ -607,7 +618,7 @@ public class ProductManager {
      * @param update
      *  The DTO containing the modifications to apply
      *
-     * @param content
+     * @param contentMap
      *  A mapping of Red Hat content ID to content entities to use for content resolution
      *
      * @throws IllegalArgumentException
@@ -706,6 +717,26 @@ public class ProductManager {
             entity.setDependentProductIds(update.getDependentProductIds());
         }
 
+        if (update.getBranding() != null) {
+            if (update.getBranding().isEmpty()) {
+                entity.setBranding(Collections.emptySet());
+            }
+            else {
+                Set<Branding> branding = new HashSet<>();
+                for (BrandingDTO brandingDTO : update.getBranding()) {
+                    if (brandingDTO != null) {
+                        branding.add(new Branding(
+                            entity,
+                            brandingDTO.getProductId(),
+                            brandingDTO.getName(),
+                            brandingDTO.getType()
+                        ));
+                    }
+                }
+                entity.setBranding(branding);
+            }
+        }
+
         return entity;
     }
 
@@ -713,6 +744,9 @@ public class ProductManager {
     /**
      * Determines whether or not this entity would be changed if the given DTO were applied to this
      * object.
+     *
+     * @param entity
+     *  The product entity that would be changed
      *
      * @param dto
      *  The product DTO to check for changes
@@ -757,37 +791,44 @@ public class ProductManager {
 
         Collection<ProductContentDTO> productContent = dto.getProductContent();
         if (productContent != null) {
-            Comparator comparator = new Comparator() {
-                public int compare(Object lhs, Object rhs) {
-                    ProductContent existing = (ProductContent) lhs;
-                    ProductContentDTO update = (ProductContentDTO) rhs;
+            Comparator comparator = (lhs, rhs) -> {
+                ProductContent existing = (ProductContent) lhs;
+                ProductContentDTO update = (ProductContentDTO) rhs;
 
-                    if (existing != null && update != null) {
-                        Content content = existing.getContent();
-                        ContentDTO cdto = update.getContent();
+                if (existing != null && update != null) {
+                    Content content = existing.getContent();
+                    ContentDTO cdto = update.getContent();
 
-                        if (content != null && cdto != null) {
-                            if (cdto.getUuid() != null ?
-                                cdto.getUuid().equals(content.getUuid()) :
-                                (cdto.getId() != null && cdto.getId().equals(content.getId()))) {
-                                // At this point, we've either matched the UUIDs (which means we're
-                                // referencing identical products) or the UUID isn't present on the DTO, but
-                                // the IDs match (which means we're pointing toward the same product).
+                    if (content != null && cdto != null) {
+                        if (cdto.getUuid() != null ?
+                            cdto.getUuid().equals(content.getUuid()) :
+                            (cdto.getId() != null && cdto.getId().equals(content.getId()))) {
+                            // At this point, we've either matched the UUIDs (which means we're
+                            // referencing identical products) or the UUID isn't present on the DTO, but
+                            // the IDs match (which means we're pointing toward the same product).
 
-                                return (update.isEnabled() != null &&
-                                    !update.isEnabled().equals(existing.isEnabled())) ||
-                                    ContentManager.isChangedBy(content, cdto) ? 1 : 0;
-                            }
+                            return (update.isEnabled() != null &&
+                                !update.isEnabled().equals(existing.isEnabled())) ||
+                                ContentManager.isChangedBy(content, cdto) ? 1 : 0;
                         }
                     }
-
-                    return 1;
                 }
+
+                return 1;
             };
 
             if (!Util.collectionsAreEqual((Collection) entity.getProductContent(),
                 (Collection) productContent, comparator)) {
 
+                return true;
+            }
+        }
+
+        Collection<BrandingDTO> brandingDTOs = dto.getBranding();
+        if (brandingDTOs != null) {
+            Comparator<BrandingInfo> comparator = BrandingInfo.getBrandingInfoComparator();
+            if (!Util.collectionsAreEqual((Collection) entity.getBranding(), (Collection) brandingDTOs,
+                comparator)) {
                 return true;
             }
         }
@@ -799,6 +840,9 @@ public class ProductManager {
      * Determines whether or not this entity would be changed if the given update were applied to
      * this object.
      *
+     * @param entity
+     *  The product entity that would be changed
+     *
      * @param update
      *  The product info to check for changes
      *
@@ -809,6 +853,7 @@ public class ProductManager {
      *  true if this product would be changed by the given product info; false otherwise
      */
     public static boolean isChangedBy(Product entity, ProductInfo update) {
+
         // Check simple properties first
         if (update.getId() != null && !update.getId().equals(entity.getId())) {
             return true;
@@ -874,6 +919,14 @@ public class ProductManager {
             }
         }
 
+        if (update.getBranding() != null) {
+            Comparator<BrandingInfo> comparator = BrandingInfo.getBrandingInfoComparator();
+            if (!Util.collectionsAreEqual((Collection) entity.getBranding(),
+                (Collection) update.getBranding(), comparator)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -886,7 +939,7 @@ public class ProductManager {
      * @param update
      *  The ProductInfo containing the modifications to apply
      *
-     * @param content
+     * @param contentMap
      *  A mapping of Red Hat content ID to content entities to use for content resolution
      *
      * @throws IllegalArgumentException
@@ -896,6 +949,7 @@ public class ProductManager {
      *  The updated product entity
      */
     private Product applyProductChanges(Product entity, ProductInfo update, Map<String, Content> contentMap) {
+
         // TODO:
         // Eventually content should be considered a property of products (ala attributes), so we
         // don't have to do this annoying, nested projection and owner passing. Also, it would
@@ -980,6 +1034,26 @@ public class ProductManager {
 
         if (update.getDependentProductIds() != null) {
             entity.setDependentProductIds(update.getDependentProductIds());
+        }
+
+        if (update.getBranding() != null) {
+            if (update.getBranding().isEmpty()) {
+                entity.setBranding(Collections.emptySet());
+            }
+            else {
+                Set<Branding> branding = new HashSet<>();
+                for (BrandingInfo brandingInfo : update.getBranding()) {
+                    if (brandingInfo != null) {
+                        branding.add(new Branding(
+                            entity,
+                            brandingInfo.getProductId(),
+                            brandingInfo.getName(),
+                            brandingInfo.getType()
+                        ));
+                    }
+                }
+                entity.setBranding(branding);
+            }
         }
 
         return entity;

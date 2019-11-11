@@ -17,12 +17,12 @@ package org.candlepin.util;
 import com.google.inject.name.Named;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.Content;
 import org.candlepin.model.dto.EntitlementBody;
@@ -333,7 +333,7 @@ public class X509V3ExtensionUtil extends X509Util {
      */
     private Branding getBranding(Pool pool, String productId) {
         Branding resultBranding = null;
-        for (Branding b : pool.getBranding()) {
+        for (Branding b : pool.getProduct().getBranding()) {
             if (b.getProductId().equals(productId)) {
                 if (resultBranding == null) {
                     resultBranding = b;
@@ -348,7 +348,7 @@ public class X509V3ExtensionUtil extends X509Util {
         }
         // If none exist, use null strings
         return resultBranding != null ? resultBranding :
-            new Branding(productId, null, null);
+            new Branding(null, productId, null, null);
     }
 
     /*

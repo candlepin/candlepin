@@ -196,17 +196,6 @@ public interface SubscriptionInfo {
     CdnInfo getCdn();
 
     /**
-     * Fetches the branding associated with this subscription. If the branding has not been set,
-     * this method returns null. If this subscription does not have any custom branding, this method
-     * returns an empty collection.
-     *
-     * @return
-     *  A collection of custom branding associated with this subscription, or null if the branding
-     *  has not been set
-     */
-    Collection<? extends BrandingInfo> getBranding();
-
-    /**
      * Fetches the certificate for this subscription. If the certificate has not been set, this
      * method returns null.
      * <p></p>

@@ -16,16 +16,17 @@ package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.SubscriptionsCertificate;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-
+import java.util.stream.Collectors;
 
 /**
  * The PoolTranslator provides translation from Pool model objects to PoolDTOs
@@ -113,13 +114,12 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
             dest.setSourceEntitlement(sourceEntitlement != null ?
                 modelTranslator.translate(sourceEntitlement, EntitlementDTO.class) : null);
 
-            Set<Branding> branding = source.getBranding();
-            if (branding != null && !branding.isEmpty()) {
-                for (Branding brand : branding) {
-                    if (brand != null) {
-                        dest.addBranding(modelTranslator.translate(brand, BrandingDTO.class));
-                    }
-                }
+            Collection<Branding> productBrandings =
+                source.getProduct() != null ? source.getProduct().getBranding() : null;
+            if (productBrandings != null && !productBrandings.isEmpty()) {
+                dest.setBranding(productBrandings.stream().filter(productBranding -> productBranding != null)
+                    .map(productBranding -> modelTranslator.translate(productBranding, BrandingDTO.class))
+                    .collect(Collectors.toSet()));
             }
             else {
                 dest.setBranding(Collections.emptySet());

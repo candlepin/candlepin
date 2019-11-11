@@ -16,13 +16,14 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
-import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.SubscriptionsCertificate;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -108,7 +109,8 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
             dest.setSourceEntitlement(sourceEntitlement != null ?
                 modelTranslator.translate(sourceEntitlement, EntitlementDTO.class) : null);
 
-            Set<Branding> branding = source.getBranding();
+            Collection<Branding> branding = source.getProduct() != null ?
+                source.getProduct().getBranding() : null;
             if (branding != null && !branding.isEmpty()) {
                 for (Branding brand : branding) {
                     if (brand != null) {
@@ -117,7 +119,7 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
                 }
             }
             else {
-                dest.setBranding(Collections.<BrandingDTO>emptySet());
+                dest.setBranding(Collections.emptySet());
             }
 
             Set<Product> products = source.getProvidedProducts();

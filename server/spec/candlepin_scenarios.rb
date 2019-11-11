@@ -117,7 +117,7 @@ module CandlepinMethods
     (0..count).each do |i|
       random_str = random_string(nil, true).to_i
       contents << @cp.create_content(owner, random_str, random_str, random_str, "yum",
-        random_str, {:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}"}, false)
+                                     random_str, {:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}"}, false)
     end
 
     @cp.create_batch_content(owner, contents)
@@ -134,7 +134,7 @@ module CandlepinMethods
   def update_distributor_version(id, dist_name, display_name, capabilities=[])
     dist_version = @cp.update_distributor_version(id, dist_name, display_name, capabilities)
     if not @dist_versions.map { |dv| dist_version['id'] }.include?(id)
-        @dist_versions << dist_version
+      @dist_versions << dist_version
     end
     return dist_version
   end
@@ -150,7 +150,7 @@ module CandlepinMethods
   def update_cdn(key, name, url, cert=nil)
     cdn = @cp.update_cdn(key, name, url, cert)
     if not @cdns.map { |item| cdn['label'] }.include?(key)
-        @cdns << cdn
+      @cdns << cdn
     end
 
     return cdn
@@ -190,10 +190,10 @@ module CandlepinMethods
   def create_role(name, owner_key, access_type)
     name ||= random_string 'test_role'
     perms = [{
-      :type => "OWNER",
-      :owner => {:key => owner_key},
-      :access => access_type,
-    }]
+                 :type => "OWNER",
+                 :owner => {:key => owner_key},
+                 :access => access_type,
+             }]
     role = @cp.create_role(name, perms)
 
     # Only append to the list of things to clean up if the @roles exists.
@@ -303,11 +303,11 @@ class Export
   class << self
     def unzip_export_file(filename, dest_dir)
       Zip::File::open(filename) do |zf|
-         zf.each do |e|
-           fpath = File.join(dest_dir, e.name)
-           FileUtils.mkdir_p(File.dirname(fpath))
-           zf.extract(e, fpath)
-         end
+        zf.each do |e|
+          fpath = File.join(dest_dir, e.name)
+          FileUtils.mkdir_p(File.dirname(fpath))
+          zf.extract(e, fpath)
+        end
       end
       filename.split('.zip')[0]
     end
@@ -430,7 +430,7 @@ class ImportUpdateBrandingExporter < Exporter
       params = {:branding => b, :quantity => 2}
       end_date = Date.new(2025, 5, 29)
       pool = create_pool_and_subscription(owner['key'], product.id, 200 ,
-              [] , '', '', '', nil, end_date, false, params)
+                                          [] , '', '', '', nil, end_date, false, params)
       candlepin_client.consume_pool(pool.id, {:quantity => 1})
       pools[i] = pool
       i += 1
@@ -438,23 +438,23 @@ class ImportUpdateBrandingExporter < Exporter
     return pools
   end
 
-    def createBrandings(productId, countOfBrandings)
-      brandings = Array.new
-      i = 0
-      begin
-        brandings[i] = createBranding(productId)
-        i += 1
-      end while i < countOfBrandings
-      return brandings
-    end
+  def createBrandings(productId, countOfBrandings)
+    brandings = Array.new
+    i = 0
+    begin
+      brandings[i] = createBranding(productId)
+      i += 1
+    end while i < countOfBrandings
+    return brandings
+  end
 
-      def createBranding(productId, type=nil, name=nil)
-        b = Hash.new
-        b[:productId] = productId
-        b[:type] = type || random_string("BrandingType")
-        b[:name] = name || random_string("BrandingName")
-        return b
-      end
+  def createBranding(productId, type=nil, name=nil)
+    b = Hash.new
+    b[:productId] = productId
+    b[:type] = type || random_string("BrandingType")
+    b[:name] = name || random_string("BrandingName")
+    return b
+  end
 
   def update_pools_or_subs_on_brandings(pools)
     pools.each do |pool|
@@ -497,40 +497,48 @@ class StandardExporter < Exporter
     @products = {}
     @content = {}
 
-    # the before(:each) is not initialized yet, call create_product sans wrapper
-    @products[:product1] = create_product(random_string('prod1'), random_string(), {
-      :multiplier => 2
-    })
+    # Create an engineering product:
+    @products[:eng_product] = create_product(rand(10000000).to_s, random_string('engproduct'))
 
+    brandings = [
+        {
+            :productId => @products[:eng_product]['id'],
+            :type => "OS",
+            :name => "Branded Eng Product"
+        }
+    ]
+
+    @products[:product1] = create_product(random_string('prod1'), random_string, {
+        :multiplier => 2, :branding => brandings})
     @products[:product2] = create_product(random_string('prod2'), random_string())
     @products[:virt_product] = create_product(random_string('virt_product'), random_string('virt_product'), {
-      :attributes => {
-        :virt_only => true
-      }
+        :attributes => {
+            :virt_only => true
+        }
     })
 
     @products[:product3] = create_product(random_string('sub-prod'), random_string(), {
-      :attributes => {
-        :arch => "x86_64",
-        :virt_limit => "unlimited"
-      }
+        :attributes => {
+            :arch => "x86_64",
+            :virt_limit => "unlimited"
+        }
     })
 
     @products[:product_vdc] = create_product(random_string('prod-vdc'), random_string(), {
-      :attributes => {
-        :arch => "x86_64",
-        :virt_limit => "unlimited", 'stacking_id' => 'stack-vdc'
-      }
+        :attributes => {
+            :arch => "x86_64",
+            :virt_limit => "unlimited", 'stacking_id' => 'stack-vdc'
+        }
     })
 
     @products[:product_dc] = create_product(random_string('prod-dc'), random_string(), {
-      :attributes => {
-        :arch => "x86_64", 'stacking_id' => 'stack-dc'
-      }
+        :attributes => {
+            :arch => "x86_64", 'stacking_id' => 'stack-dc'
+        }
     })
 
     @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(), {
-      "sockets" => "2"
+        "sockets" => "2"
     })
 
     @products[:derived_provided_prod] = create_product(random_string(nil, true), random_string());
@@ -538,20 +546,12 @@ class StandardExporter < Exporter
     #this is for the update process
     @products[:product_up] = create_product(random_string('product_up'), random_string('product_up'))
 
-    # Create an engineering product:
-    @products[:eng_product] = create_product(rand(10000000).to_s, random_string('engproduct'))
-
-    @content[:content1] = create_content({
-      :metadata_expire => 6000,
-      :required_tags => "TAG1,TAG2"
-    })
-
-    @content[:arch_content] = create_content({
-      :metadata_expire => 6000,
-      :content_url => "/path/to/arch/specific/content",
-      :required_tags => "TAG1,TAG2",
-      :arches => "i386,x86_64"
-    })
+    @content[:content1] = create_content({:metadata_expire => 6000,
+                              :required_tags => "TAG1,TAG2"})
+    @content[:arch_content] = create_content({:metadata_expire => 6000,
+                                   :content_url => "/path/to/arch/specific/content",
+                                   :required_tags => "TAG1,TAG2",
+                                   :arches => "i386,x86_64"})
 
     @cp.add_content_to_product(@owner['key'], @products[:product1].id, @content[:content1].id)
     @cp.add_content_to_product(@owner['key'], @products[:product2].id, @content[:content1].id)
@@ -560,82 +560,74 @@ class StandardExporter < Exporter
 
     end_date = Date.new(2025, 5, 29)
 
-    brandings = [
-      {
-        :productId => @products[:eng_product]['id'],
-        :type => "OS",
-        :name => "Branded Eng Product"
-      }
-    ]
-
     @cp.create_pool(@owner['key'], @products[:product1].id, {
-      :quantity => 2,
-      :provided_products => [@products[:eng_product]['id']],
-      :contract_number => '',
-      :account_number => '12345',
-      :order_number => '6789',
-      :end_date => end_date,
-      :branding => brandings,
-      :subscription_id => random_str('source_sub'),
-      :upstream_pool_id => random_str('upstream')
+        :quantity => 2,
+        :provided_products => [@products[:eng_product]['id']],
+        :contract_number => '',
+        :account_number => '12345',
+        :order_number => '6789',
+        :end_date => end_date,
+        :branding => brandings,
+        :subscription_id => random_str('source_sub'),
+        :upstream_pool_id => random_str('upstream')
     })
 
     @cp.create_pool(@owner['key'], @products[:product2].id, {
-      :quantity => 4,
-      :provided_products => [],
-      :contract_number => '',
-      :account_number => '12345',
-      :order_number => '6789',
-      :end_date => end_date,
-      :subscription_id => random_str('source_sub'),
-      :upstream_pool_id => random_str('upstream')
+        :quantity => 4,
+        :provided_products => [],
+        :contract_number => '',
+        :account_number => '12345',
+        :order_number => '6789',
+        :end_date => end_date,
+        :subscription_id => random_str('source_sub'),
+        :upstream_pool_id => random_str('upstream')
     })
 
     @cp.create_pool(@owner['key'], @products[:virt_product].id, {
-      :quantity => 2,
-      :provided_products => [],
-      :contract_number => '',
-      :account_number => '12345',
-      :order_number => '6789',
-      :end_date => end_date,
-      :subscription_id => random_str('source_sub'),
-      :upstream_pool_id => random_str('upstream')
+        :quantity => 2,
+        :provided_products => [],
+        :contract_number => '',
+        :account_number => '12345',
+        :order_number => '6789',
+        :end_date => end_date,
+        :subscription_id => random_str('source_sub'),
+        :upstream_pool_id => random_str('upstream')
     })
 
     @cp.create_pool(@owner['key'], @products[:product3].id, {
-      :quantity => 5,
-      :provided_products => [],
-      :contract_number => '',
-      :account_number => '12345',
-      :order_number => '6789',
-      :end_date => end_date,
-      :derived_product_id => @products[:derived_product]['id'],
-      :derived_provided_products => [@products[:derived_provided_prod]['id']],
-      :subscription_id => random_str('source_sub'),
-      :upstream_pool_id => random_str('upstream')
+        :quantity => 5,
+        :provided_products => [],
+        :contract_number => '',
+        :account_number => '12345',
+        :order_number => '6789',
+        :end_date => end_date,
+        :derived_product_id => @products[:derived_product]['id'],
+        :derived_provided_products => [@products[:derived_provided_prod]['id']],
+        :subscription_id => random_str('source_sub'),
+        :upstream_pool_id => random_str('upstream')
     })
 
     @cp.create_pool(@owner['key'], @products[:product_up].id, {
-      :quantity => 10,
-      :provided_products => [],
-      :contract_number => '',
-      :account_number => '12345',
-      :order_number => '6789',
-      :end_date => end_date,
-      :subscription_id => random_str('source_sub'),
-      :upstream_pool_id => random_str('upstream')
+        :quantity => 10,
+        :provided_products => [],
+        :contract_number => '',
+        :account_number => '12345',
+        :order_number => '6789',
+        :end_date => end_date,
+        :subscription_id => random_str('source_sub'),
+        :upstream_pool_id => random_str('upstream')
     })
 
     @cp.create_pool(@owner['key'], @products[:product_vdc].id, {
-      :quantity => 5,
-      :provided_products => [],
-      :contract_number => '',
-      :account_number => '12345',
-      :order_number => '6789',
-      :end_date => end_date,
-      :derived_product_id => @products[:product_dc]['id'],
-      :subscription_id => random_str('source_sub'),
-      :upstream_pool_id => random_str('upstream')
+        :quantity => 5,
+        :provided_products => [],
+        :contract_number => '',
+        :account_number => '12345',
+        :order_number => '6789',
+        :end_date => end_date,
+        :derived_product_id => @products[:product_dc]['id'],
+        :subscription_id => random_str('source_sub'),
+        :upstream_pool_id => random_str('upstream')
     })
 
     # Pool names is a list of names of instance variables that will be created
@@ -670,14 +662,14 @@ class StandardExporter < Exporter
     product1 = create_product(random_string(nil, true), random_string())
     product2 = create_product(random_string(nil, true), random_string())
     content = create_content({
-      :metadata_expire => 6000,
-      :required_tags => "TAG1,TAG2"
+        :metadata_expire => 6000,
+        :required_tags => "TAG1,TAG2"
     })
 
     arch_content = create_content({
-      :metadata_expire => 6000,
-      :required_tags => "TAG3",
-      :arches => "i686,x86_64"
+        :metadata_expire => 6000,
+        :required_tags => "TAG3",
+        :arches => "i686,x86_64"
     })
 
     @cp.add_content_to_product(@owner['key'], product1.id, content.id)
@@ -686,25 +678,25 @@ class StandardExporter < Exporter
 
     end_date = Date.new(2025, 5, 29)
     pool1 = @cp.create_pool(@owner['key'], product1.id, {
-      :quantity => 12,
-      :provided_products => [],
-      :contract_number => '',
-      :account_number => '12345',
-      :order_number => '6789',
-      :end_date => end_date,
-      :subscription_id => random_str('source_sub'),
-      :upstream_pool_id => random_str('upstream')
+        :quantity => 12,
+        :provided_products => [],
+        :contract_number => '',
+        :account_number => '12345',
+        :order_number => '6789',
+        :end_date => end_date,
+        :subscription_id => random_str('source_sub'),
+        :upstream_pool_id => random_str('upstream')
     })
 
     pool2 = @cp.create_pool(@owner['key'], product2.id, {
-      :quantity => 14,
-      :provided_products => [],
-      :contract_number => '',
-      :account_number => '12345',
-      :order_number => '6789',
-      :end_date => end_date,
-      :subscription_id => random_str('source_sub'),
-      :upstream_pool_id => random_str('upstream')
+        :quantity => 14,
+        :provided_products => [],
+        :contract_number => '',
+        :account_number => '12345',
+        :order_number => '6789',
+        :end_date => end_date,
+        :subscription_id => random_str('source_sub'),
+        :upstream_pool_id => random_str('upstream')
     })
 
     @candlepin_client.consume_pool(pool1.id, {:quantity => 1})
@@ -717,11 +709,11 @@ class StandardExporter < Exporter
 
     # Make changes to existing entities to verify they are updated as well
     @cp.update_product(@owner['key'], @products[:product1].id, {
-      :name => "#{@products[:product1].name}-updated"
+        :name => "#{@products[:product1].name}-updated"
     })
 
     @cp.update_content(@owner['key'], @content[:content1].id, {
-      :requiredTags => "TAG2,TAG4,TAG6"
+        :requiredTags => "TAG2,TAG4,TAG6"
     })
 
     create_candlepin_export()
@@ -753,7 +745,7 @@ class VirtLimitExporter < Exporter
     })
     end_date = Date.new(2025, 5, 29)
     create_pool_and_subscription(@owner['key'], @product3.id, 2, [], '', '12345', '6789', nil, end_date, false,
-      {})
+                                 {})
     # Pool names is a list of names of instance variables that will be created
     @pools = @cp.list_pools(:owner => @owner.id, :product => @product3.id)
     @pool3 = @pools.select{|i| i['type']=='NORMAL'}[0]
@@ -798,7 +790,7 @@ class CandlepinQpid
     @address = address
     @qpid_crt = cert
     @qpid_key = key
-   end
+  end
 
   def no_keys?
     !File.file?(@qpid_crt) or !File.file?(@qpid_key)

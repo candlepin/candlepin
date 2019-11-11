@@ -17,12 +17,14 @@ package org.candlepin.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -33,6 +35,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 
 
@@ -49,7 +53,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
 
         this.productManager = new ProductManager(this.mockEntCertGenerator, this.ownerContentCurator,
-            this.ownerProductCurator, this.productCurator, this.modelTranslator);
+            this.ownerProductCurator, this.productCurator);
     }
 
     @Test
@@ -411,6 +415,312 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
+    @Test
+    public void testCreateProductWithBranding() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
+        BrandingDTO brandingDTO = new BrandingDTO();
+        brandingDTO.setProductId("eng_prod_id");
+        brandingDTO.setName("brand_name");
+        brandingDTO.setType("OS");
+        dto.addBranding(brandingDTO);
+
+        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
+
+        Product output = this.productManager.createProduct(dto, owner);
+
+        assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
+        assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
+    }
+
+    @Test
+    public void testUpdateProductWithBranding() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
+        BrandingDTO brandingDTO = new BrandingDTO();
+        brandingDTO.setProductId("eng_prod_id");
+        brandingDTO.setName("brand_name");
+        brandingDTO.setType("OS");
+        dto.addBranding(brandingDTO);
+
+        Product output = this.productManager.createProduct(dto, owner);
+
+        assertEquals(1, output.getBranding().size());
+
+        ProductDTO pdto = this.modelTranslator.translate(output, ProductDTO.class);
+        BrandingDTO brandingDTO2 = new BrandingDTO();
+        brandingDTO2.setProductId("eng_prod_id2");
+        brandingDTO2.setName("brand_name2");
+        brandingDTO2.setType("OS");
+        pdto.addBranding(brandingDTO2);
+
+        output = this.productManager.updateProduct(pdto, owner, false);
+        assertEquals(2, output.getBranding().size());
+    }
+
+    @Test
+    public void testIsChangedByDTOIsTrueWhenBrandingAdded() {
+        Product product = TestUtil.createProduct("p1", "prod1");
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+        BrandingDTO brand1 = new BrandingDTO();
+        brand1.setProductId("prod_id");
+        brand1.setName("Brand Name");
+        brand1.setType("OS");
+        pdto.addBranding(brand1);
+
+        assertTrue(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testIsChangedByDTOIsTrueWhenBrandingUpdated() {
+        Product product = TestUtil.createProduct("p1", "prod1");
+        product.addBranding(new Branding(product, "prod_id", "Brand Name", "OS"));
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+        ((BrandingDTO) pdto.getBranding().toArray()[0]).setName("New Name!");
+
+        assertTrue(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testIsChangedByDTOIsTrueWhenBrandingRemoved() {
+        Product product = TestUtil.createProduct("p1", "prod1");
+        product.addBranding(new Branding(product, "prod_id", "Brand Name", "OS"));
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+        pdto.getBranding().clear();
+
+        assertTrue(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testIsChangedByDTOIsFalseWithoutAnyBranding() {
+        Product product = TestUtil.createProduct("p1", "prod1");
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+
+        assertFalse(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testIsChangedByDTOIsFalseWhenBrandingWasNotRemovedOrAdded() {
+        Product product = TestUtil.createProduct("p1", "prod1");
+        product.addBranding(new Branding(product, "prod_id", "Brand Name", "OS"));
+
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+
+        assertFalse(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testImportProductsCreatesNewProductWithBranding() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+
+        Product product = TestUtil.createProduct("p1", "prod1");
+        product.setLocked(true);
+
+        product.addBranding(new Branding(product, "eng_prod_id", "Brand Name", "OS"));
+        Map<String, Product> productData = new HashMap<>();
+        productData.put("p1", product);
+
+        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
+
+        ImportResult<Product> result =
+            this.productManager.importProducts(owner, productData, new HashMap<>());
+
+        Map<String, Product> importedProducts = result.getImportedEntities();
+        Map<String, Product> createdProducts = result.getCreatedEntities();
+        Map<String, Product> updatedProducts = result.getUpdatedEntities();
+
+        assertEquals(1, importedProducts.size());
+        assertEquals(1, createdProducts.size());
+        assertEquals(0, updatedProducts.size());
+        assertEquals(importedProducts.get("p1"),
+            this.ownerProductCurator.getProductById(owner, "p1"));
+        assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
+    }
+
+    @Test
+    public void testImportProductsUpdatesProductWhenAddingBranding() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+
+        // Create existing product with a single branding in the db
+        Product product = TestUtil.createProduct("p1", "prod1");
+        product.setLocked(true);
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
+        this.createProduct(product, owner);
+
+        assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
+
+        // Add a second, new branding
+        Product updatedProduct = (Product) product.clone();
+        updatedProduct.addBranding(new Branding(null, "eng_prod_id_2", "brand_name_2", "OS"));
+
+        Map<String, Product> productData = new HashMap<>();
+        productData.put("p1", updatedProduct);
+
+        ImportResult<Product> result =
+            this.productManager.importProducts(owner, productData, new HashMap<>());
+
+        Map<String, Product> importedProducts = result.getImportedEntities();
+        Map<String, Product> createdProducts = result.getCreatedEntities();
+        Map<String, Product> updatedProducts = result.getUpdatedEntities();
+
+        assertEquals(1, importedProducts.size());
+        assertEquals(0, createdProducts.size());
+        assertEquals(1, updatedProducts.size());
+        assertEquals(updatedProducts.get("p1"),
+            this.ownerProductCurator.getProductById(owner, "p1"));
+        assertEquals(2, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
+    }
+
+    @Test
+    public void testImportProductsUpdatesProductWhenRemovingBranding() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+
+        // Create existing product with a single branding in the db
+        Product product = TestUtil.createProduct("p1", "prod1");
+        product.setLocked(true);
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
+        this.createProduct(product, owner);
+
+        assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
+
+
+        // Remove the branding
+        Product updatedProduct = (Product) product.clone();
+        updatedProduct.getBranding().clear();
+        Map<String, Product> productData = new HashMap<>();
+        productData.put("p1", updatedProduct);
+
+        ImportResult<Product> result =
+            this.productManager.importProducts(owner, productData, new HashMap<>());
+
+        Map<String, Product> importedProducts = result.getImportedEntities();
+        Map<String, Product> createdProducts = result.getCreatedEntities();
+        Map<String, Product> updatedProducts = result.getUpdatedEntities();
+
+        assertEquals(1, importedProducts.size());
+        assertEquals(0, createdProducts.size());
+        assertEquals(1, updatedProducts.size());
+        assertEquals(updatedProducts.get("p1"),
+            this.ownerProductCurator.getProductById(owner, "p1"));
+        assertEquals(0, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
+    }
+
+    @Test
+    public void testImportProductsUpdatesProductWhenUpdatingBranding() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+
+        // Create existing product with a single branding in the db
+        Product product = TestUtil.createProduct("p1", "prod1");
+        product.setLocked(true);
+        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
+        this.createProduct(product, owner);
+
+        assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
+
+        // Remove the existing branding and add a similar, but slightly different one.
+        Branding newVersionOfExistingBranding =
+            new Branding(null, "eng_prod_id_1", "Brand New Name!", "OS");
+        Product updatedProduct = (Product) product.clone();
+        updatedProduct.getBranding().clear();
+        updatedProduct.addBranding(newVersionOfExistingBranding);
+
+        Map<String, Product> productData = new HashMap<>();
+        productData.put("p1", updatedProduct);
+
+        ImportResult<Product> result =
+            this.productManager.importProducts(owner, productData, new HashMap<>());
+
+        Map<String, Product> importedProducts = result.getImportedEntities();
+        Map<String, Product> createdProducts = result.getCreatedEntities();
+        Map<String, Product> updatedProducts = result.getUpdatedEntities();
+
+        assertEquals(1, importedProducts.size());
+        assertEquals(0, createdProducts.size());
+        assertEquals(1, updatedProducts.size());
+        assertEquals(updatedProducts.get("p1"),
+            this.ownerProductCurator.getProductById(owner, "p1"));
+        assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
+        assertEquals("Brand New Name!",
+            ((Branding) this.ownerProductCurator.getProductById(owner, "p1")
+            .getBranding().toArray()[0]).getName());
+    }
+
+    @Test
+    public void testIsChangedByProductInfoIsTrueWhenBrandingAdded() {
+        Product existingProduct = TestUtil.createProduct("p1", "prod1");
+        Product newProduct = (Product) existingProduct.clone();
+
+        newProduct.addBranding(new Branding(null, "prod_id", "Brand Name", "OS"));
+
+        assertTrue(ProductManager.isChangedBy(existingProduct, newProduct));
+    }
+
+    @Test
+    public void testIsChangedByProductInfoIsTrueWhenBrandingUpdated() {
+        Product existingProduct = TestUtil.createProduct("p1", "prod1");
+        Branding oldBranding = new Branding(existingProduct, "prod_id", "Brand Name", "OS");
+        oldBranding.setId("db_id");
+        existingProduct.addBranding(oldBranding);
+
+        Product newProduct = (Product) existingProduct.clone();
+
+        newProduct.removeBranding(oldBranding);
+        newProduct.addBranding(new Branding(existingProduct, "prod_id", "Brand New Name", "OS"));
+
+        assertTrue(ProductManager.isChangedBy(existingProduct, newProduct));
+    }
+
+    @Test
+    public void testIsChangedByProductInfosTrueWhenBrandingRemoved() {
+        Product existingProduct = TestUtil.createProduct("p1", "prod1");
+        Branding oldBranding = new Branding(existingProduct, "prod_id", "Brand Name", "OS");
+        oldBranding.setId("db_id");
+        existingProduct.addBranding(oldBranding);
+
+        Product newProduct = (Product) existingProduct.clone();
+
+        newProduct.removeBranding(oldBranding);
+
+        assertTrue(ProductManager.isChangedBy(existingProduct, newProduct));
+    }
+
+    @Test
+    public void testIsChangedByProductInfoIsFalseWithEmptyBranding() {
+        Product existingProduct = TestUtil.createProduct("p1", "prod1");
+
+        Product newProduct = (Product) existingProduct.clone();
+
+        assertFalse(ProductManager.isChangedBy(existingProduct, newProduct));
+    }
+
+    @Test
+    public void testIsChangedByProductInfoIsFalseWithNullBranding() {
+        Product existingProduct = TestUtil.createProduct("p1", "prod1");
+
+        Product newProduct = (Product) existingProduct.clone();
+        newProduct.setBranding(null);
+
+        assertFalse(ProductManager.isChangedBy(existingProduct, newProduct));
+    }
+
+    @Test
+    public void testIsChangedByProductInfoIsFalseWhenBrandingWasNotRemovedAddedOrUpdated() {
+        Product existingProduct = TestUtil.createProduct("p1", "prod1");
+        Branding oldBranding = new Branding(existingProduct, "prod_id", "Brand Name", "OS");
+        oldBranding.setId("db_id");
+        existingProduct.addBranding(oldBranding);
+
+        Product newProduct = (Product) existingProduct.clone();
+
+        newProduct.removeBranding(oldBranding);
+        newProduct.addBranding(new Branding(existingProduct, "prod_id", "Brand Name", "OS"));
+
+        assertFalse(ProductManager.isChangedBy(existingProduct, newProduct));
+    }
 
     // Move this to ContentManagerTest
 

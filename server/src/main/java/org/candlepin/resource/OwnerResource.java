@@ -40,7 +40,6 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -51,7 +50,6 @@ import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -788,24 +786,6 @@ public class OwnerResource {
                     }
                 }
                 entity.setDerivedProvidedProducts(derivedProducts);
-            }
-        }
-
-        if (dto.getBranding() != null) {
-            if (dto.getBranding().isEmpty()) {
-                entity.setBranding(Collections.emptySet());
-            }
-            else {
-                Set<Branding> branding = new HashSet<>();
-                for (BrandingDTO brandingDTO : dto.getBranding()) {
-                    if (brandingDTO != null) {
-                        branding.add(new Branding(
-                            brandingDTO.getProductId(),
-                            brandingDTO.getType(),
-                            brandingDTO.getName()));
-                    }
-                }
-                entity.setBranding(branding);
             }
         }
     }
@@ -1812,10 +1792,6 @@ public class OwnerResource {
 
         if (newPoolDTO.getDerivedProvidedProducts() == null) {
             newPool.setDerivedProvidedProducts(currentPool.getDerivedProvidedProducts());
-        }
-
-        if (newPoolDTO.getBranding() == null) {
-            newPool.setBranding(currentPool.getBranding());
         }
 
         // Apply changes to the pool and its derived pools

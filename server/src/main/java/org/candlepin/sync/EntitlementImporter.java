@@ -103,8 +103,6 @@ public class EntitlementImporter {
 
         subscription.setQuantity(entitlement.getQuantity().longValue());
 
-        subscription.setBranding(entitlement.getPool().getBranding());
-
         // This is a bit of an odd duck. We shouldn't be checking this here, but instead at the point
         // where we actually import it for use.
         String cdnLabel = meta.getCdnLabel();
@@ -166,6 +164,9 @@ public class EntitlementImporter {
         // Product
         ProductDTO productDTO = this.findProduct(productsById, upstreamPoolDTO.getProductId());
         subscription.setProduct(productDTO);
+        if (upstreamPoolDTO.getBranding() != null) {
+            productDTO.setBranding(upstreamPoolDTO.getBranding());
+        }
 
         // Provided products
         Set<ProductDTO> providedProducts = new HashSet<>();

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2018 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,17 +14,14 @@
  */
 package org.candlepin.dto.manifest.v1;
 
+import static org.junit.Assert.*;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Branding;
 
-import java.util.Date;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 /**
- * Test suite for the BrandingTranslator class
+ * Test suite for the BrandingTranslator (manifest import/export) class
  */
 public class BrandingTranslatorTest extends
     AbstractTranslatorTest<Branding, BrandingDTO, BrandingTranslator> {
@@ -45,12 +42,9 @@ public class BrandingTranslatorTest extends
     protected Branding initSourceObject() {
         Branding source = new Branding();
 
-        source.setProductId("test-id");
         source.setProductId("test-product-id");
         source.setName("test-name");
         source.setType("test-type");
-        source.setCreated(new Date());
-        source.setUpdated(new Date());
 
         return source;
     }
@@ -66,8 +60,8 @@ public class BrandingTranslatorTest extends
             assertEquals(source.getProductId(), dest.getProductId());
             assertEquals(source.getName(), dest.getName());
             assertEquals(source.getType(), dest.getType());
-            assertEquals(source.getUpdated(), dest.getUpdated());
             assertEquals(source.getCreated(), dest.getCreated());
+            assertEquals(source.getUpdated(), dest.getUpdated());
         }
         else {
             assertNull(dest);

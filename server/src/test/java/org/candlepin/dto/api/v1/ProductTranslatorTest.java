@@ -14,22 +14,23 @@
  */
 package org.candlepin.dto.api.v1;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.test.TestUtil;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
-
-
+import java.util.Set;
 
 /**
  * Test suite for the ProductTranslator class
@@ -41,9 +42,13 @@ public class ProductTranslatorTest extends
     protected ProductTranslator productTranslator = new ProductTranslator();
 
     protected ContentTranslatorTest contentTranslatorTest = new ContentTranslatorTest();
+    protected BrandingTranslatorTest brandingTranslatorTest = new BrandingTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
+        this.contentTranslatorTest.initModelTranslator(modelTranslator);
+        this.brandingTranslatorTest.initModelTranslator(modelTranslator);
+
         modelTranslator.registerTranslator(this.contentTranslator, Content.class, ContentDTO.class);
         modelTranslator.registerTranslator(this.productTranslator, Product.class, ProductDTO.class);
     }
@@ -81,6 +86,10 @@ public class ProductTranslatorTest extends
 
             source.addContent(content, true);
         }
+
+        Set<Branding> brandingSet = new HashSet<>();
+        brandingSet.add(this.brandingTranslatorTest.initSourceObject());
+        source.setBranding(brandingSet);
 
         return source;
     }
@@ -122,9 +131,22 @@ public class ProductTranslatorTest extends
                         }
                     }
                 }
+
+                for (Branding brandingSource : source.getBranding()) {
+                    for (BrandingDTO brandingDTO : dto.getBranding()) {
+
+                        assertNotNull(brandingDTO);
+                        assertNotNull(brandingDTO.getProductId());
+
+                        if (brandingDTO.getProductId().equals(brandingSource.getProductId())) {
+                            this.brandingTranslatorTest.verifyOutput(brandingSource, brandingDTO, true);
+                        }
+                    }
+                }
             }
             else {
                 assertTrue(dto.getProductContent().isEmpty());
+                assertTrue(dto.getBranding().isEmpty());
             }
         }
         else {

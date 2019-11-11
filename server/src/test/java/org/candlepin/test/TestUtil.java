@@ -588,6 +588,17 @@ public class TestUtil {
         return dto;
     }
 
+    public static Branding createProductBranding(Product product) {
+        Branding productBranding = new Branding();
+        String suffix = randomString();
+        productBranding.setId("test-id-" + suffix);
+        productBranding.setProduct(product);
+        productBranding.setName("test-name-" + suffix);
+        productBranding.setType("test-type-" + suffix);
+        productBranding.setProductId("test-product-id-" + suffix);
+        return productBranding;
+    }
+
     public void addPermissionToUser(User u, Access role, Owner o) {
         // Check if a permission already exists for this verb and owner:
     }
@@ -637,12 +648,6 @@ public class TestUtil {
         pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
-        for (Branding branding : sub.getBranding()) {
-            pool.getBranding().add(
-                new Branding(branding.getProductId(), branding.getType(), branding.getName())
-            );
-        }
-
         return pool;
     }
 
@@ -666,10 +671,6 @@ public class TestUtil {
 
         // Copy sub-product data if there is any:
         p.setDerivedProduct(pool.getDerivedProduct());
-
-        for (Branding b : pool.getBranding()) {
-            p.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
-        }
 
         return p;
     }
@@ -759,7 +760,6 @@ public class TestUtil {
         assertEquals(pool1.getEntitlements(), pool2.getEntitlements());
         assertEquals(pool1.getConsumed(), pool2.getConsumed());
         assertEquals(pool1.getExported(), pool2.getExported());
-        assertEquals(pool1.getBranding(), pool2.getBranding());
         assertEquals(pool1.getCalculatedAttributes(), pool2.getCalculatedAttributes());
         assertEquals(pool1.isMarkedForDelete(), pool2.isMarkedForDelete());
         assertEquals(pool1.getUpstreamConsumerId(), pool2.getUpstreamConsumerId());
