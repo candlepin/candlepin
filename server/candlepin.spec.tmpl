@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.10.0
+Version: 2.11.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,44 @@ fi
 
 #raw
 %changelog
+* Mon Nov 11 2019 Ondrej Janus <ojanus@redhat.com> 2.11.0-1
+- Fix detached Branding entity (ojanus@redhat.com)
+- ENT-1615: Remove the cp_pool_branding and cp_branding table
+  (sonalidhome@gmail.com)
+- ENT-1616:Remove Branding from pool (prakgupt@redhat.com)
+- ENT-1612, ENT-1617: Branding to Product on Refresh (nmoumoul@redhat.com)
+- ENT-1611 - Migration branding info to cp2_product_branding table
+  (sonalidhome@gmail.com)
+- ENT-1692: Generate test data to populate product branding
+  (sonalidhome@gmail.com)
+- ENT-1614:use branding from product in manifest export   - Populate branding
+  information from marketing product instead of pool
+  (abhiskum@abhiskum.usersys.redhat.com)
+- ENT-1610: Add Branding to Product model (nmoumoul@redhat.com)
+- 1767981: Unable to enable the tools repository for Satellite 6.6
+  (wpoteat@redhat.com)
+- 1691897: Candlepin should use cores as a default if vcpu is not set & cores
+  is (ojanus@redhat.com)
+
+* Mon Nov 11 2019 Ondrej Janus <ojanus@redhat.com>
+- Fix detached Branding entity (ojanus@redhat.com)
+- ENT-1615: Remove the cp_pool_branding and cp_branding table
+  (sonalidhome@gmail.com)
+- ENT-1616:Remove Branding from pool (prakgupt@redhat.com)
+- ENT-1612, ENT-1617: Branding to Product on Refresh (nmoumoul@redhat.com)
+- ENT-1611 - Migration branding info to cp2_product_branding table
+  (sonalidhome@gmail.com)
+- ENT-1692: Generate test data to populate product branding
+  (sonalidhome@gmail.com)
+- ENT-1614:use branding from product in manifest export   - Populate branding
+  information from marketing product instead of pool
+  (abhiskum@abhiskum.usersys.redhat.com)
+- ENT-1610: Add Branding to Product model (nmoumoul@redhat.com)
+- 1767981: Unable to enable the tools repository for Satellite 6.6
+  (wpoteat@redhat.com)
+- 1691897: Candlepin should use cores as a default if vcpu is not set & cores
+  is (ojanus@redhat.com)
+
 * Wed Oct 30 2019 Kevin Howell <khowell@redhat.com> 2.10.0-1
 - 1698469: Add options for cpdb command  - Corrected the value for ssl option.
   - Improvements in error messages, help options for newly added options.
