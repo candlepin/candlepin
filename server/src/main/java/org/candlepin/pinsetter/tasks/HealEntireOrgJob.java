@@ -18,6 +18,7 @@ import static org.quartz.JobBuilder.*;
 
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
+import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -108,7 +109,7 @@ public class HealEntireOrgJob extends UniqueByEntityJob {
      */
     @Transactional
     private void healSingleConsumer(Consumer consumer, Owner owner, Date date)
-        throws AutobindDisabledForOwnerException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
 
         List<Entitlement> ents = entitler.bindByProducts(AutobindData.create(consumer, owner).on(date), true);
         entitler.sendEvents(ents);

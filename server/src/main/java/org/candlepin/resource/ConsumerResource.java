@@ -40,6 +40,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
+import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -1641,6 +1642,9 @@ public class ConsumerResource {
                 catch (AutobindDisabledForOwnerException e) {
                     log.warn("Guest auto-attach skipped. {}", e.getMessage());
                 }
+                catch (AutobindHypervisorDisabledException e) {
+                    log.warn("Guest auto-attach skipped. {}", e.getMessage());
+                }
             }
         }
     }
@@ -2050,7 +2054,13 @@ public class ConsumerResource {
             }
             catch (AutobindDisabledForOwnerException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\".", owner.getKey()));
+                    "It is disabled for org \"{0}\" because of the content access mode setting."
+                    , owner.getKey()));
+            }
+            catch (AutobindHypervisorDisabledException e) {
+                throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting."
+                    , owner.getKey()));
             }
         }
 

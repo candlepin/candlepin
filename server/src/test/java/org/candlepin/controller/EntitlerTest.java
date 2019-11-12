@@ -40,6 +40,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -106,6 +107,7 @@ public class EntitlerTest {
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private ProductManager productManager;
     @Mock private ContentManager contentManager;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
 
     private ValidationResult fakeOutResult(String msg) {
         ValidationResult result = new ValidationResult();
@@ -125,7 +127,7 @@ public class EntitlerTest {
 
         entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator, config,
             ownerCurator, poolCurator, productManager, productAdapter,
-            contentManager);
+            contentManager, consumerTypeCurator);
     }
 
     private void mockProductImport(Map<String, Product> products) {
@@ -380,7 +382,8 @@ public class EntitlerTest {
     }
 
     private void bindByProductErrorTest(String msg)
-        throws EntitlementRefusedException, AutobindDisabledForOwnerException {
+        throws EntitlementRefusedException, AutobindDisabledForOwnerException,
+        AutobindHypervisorDisabledException {
         String[] pids = {"prod1", "prod2", "prod3"};
         Map<String, ValidationResult> fakeResult = new HashMap<>();
         fakeResult.put("blah", fakeOutResult(msg));

@@ -65,6 +65,7 @@ public class OwnerInfoTranslatorTest extends
             owner.setUpstreamConsumer(this.upstreamConsumerTranslatorTest.initSourceObject());
             owner.setLogLevel("log_level-" + i);
             owner.setAutobindDisabled(true);
+            owner.setAutobindHypervisorDisabled(true);
             owner.setContentAccessModeList(String.format("cam%1$d-a,cam%1$d-b,cam%1$d-c", i));
             owner.setContentAccessMode(String.format("cam%d-b", i));
             owner.setLastRefreshed(new Date());

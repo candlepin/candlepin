@@ -1218,4 +1218,27 @@ describe 'Hypervisor Resource', :type => :virt do
     job_detail = send_host_guest_mapping(owner, user, report.to_json())
     job_detail["state"].should == "FINISHED"
   end
+
+  it 'will allow the hardware id to change while the hypervisor id stays constant' do
+      owner = create_owner random_string('owner')
+      user = user_client(owner, random_string('user'))
+
+      host_name = random_string("test_hypevisor_host_name").downcase
+      host_hyp_id = random_string("test_hypervisor_id").downcase
+      host_system_id = random_string("test_system_id").downcase
+      host_system_id_2 = random_string("second_test_system_id").downcase
+      guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
+      guests = ['g1', 'g2']
+
+      test_host = user.register(host_name, :hypervisor, nil, {"virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [])
+      @cp.update_consumer({:uuid => test_host.uuid, :guestIds => guest_set, :hypervisorId => host_hyp_id, :facts => {"dmi.system.uuid" => host_system_id, "virt.is_guest"=>"false"}})
+      stored_host = @cp.get_consumer(test_host.uuid)
+      expect(stored_host['hypervisorId']['hypervisorId']).to eq(host_hyp_id)
+      expect(stored_host['facts']['dmi.system.uuid' ]== host_system_id)
+
+      async_update_hypervisor(owner, user, host_name, host_hyp_id, guests, true, nil, {"dmi.system.uuid" => host_system_id_2})
+      stored_host = @cp.get_consumer(test_host.uuid)
+      expect(stored_host['hypervisorId']['hypervisorId']).to eq(host_hyp_id)
+      expect(stored_host['facts']['dmi.system.uuid' ]== host_system_id_2)
+  end
 end
