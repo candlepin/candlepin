@@ -181,7 +181,7 @@ dependencies {
     implementation "org.apache.activemq:artemis-commons:${versions.artemis}"
     implementation "org.apache.activemq:artemis-selector:${versions.artemis}"
     implementation "org.apache.activemq:artemis-journal:${versions.artemis}"
-    implementation "io.netty:netty-all:4.1.16.Final"
+    implementation "io.netty:netty-all:4.1.42.Final"
     implementation "commons-beanutils:commons-beanutils:1.9.3"
     implementation "org.jgroups:jgroups:3.6.13.Final"
     implementation "org.apache.geronimo.specs:geronimo-json_1.0_spec:1.0-alpha-1"
@@ -198,17 +198,17 @@ dependencies {
     implementation "org.mozilla:rhino:1.7R3"
 
     // Keycloak
-    compile group: 'org.keycloak', name: 'keycloak-servlet-filter-adapter', version: '6.0.1'
-    compile group: 'org.keycloak', name: 'keycloak-adapter-core', version: '6.0.1'
-    compile group: 'org.keycloak', name: 'keycloak-common', version: '6.0.1'
-    compile group: 'org.keycloak', name: 'keycloak-core', version: '6.0.1'
-    compile group: 'org.keycloak', name: 'keycloak-adapter-spi', version: '6.0.1'
-    compile group: 'org.keycloak', name: 'keycloak-servlet-adapter-spi', version: '6.0.1'
+    compile group: 'org.keycloak', name: 'keycloak-servlet-filter-adapter', version: '7.0.0'
+    compile group: 'org.keycloak', name: 'keycloak-adapter-core', version: '7.0.0'
+    compile group: 'org.keycloak', name: 'keycloak-common', version: '7.0.0'
+    compile group: 'org.keycloak', name: 'keycloak-core', version: '7.0.0'
+    compile group: 'org.keycloak', name: 'keycloak-adapter-spi', version: '7.0.0'
+    compile group: 'org.keycloak', name: 'keycloak-servlet-adapter-spi', version: '7.0.0'
     compile 'org.apache.httpcomponents:httpcore:4.4.7'
     compile 'org.bouncycastle:bcpkix-jdk15on:1.60'
     compile 'org.bouncycastle:bcprov-jdk15on:1.60'
-    compile group: 'org.keycloak', name: 'keycloak-jaxrs-oauth-client', version: '6.0.1'
-    compile group: 'org.keycloak', name: 'keycloak-authz-client', version: '6.0.1'
+    compile group: 'org.keycloak', name: 'keycloak-jaxrs-oauth-client', version: '7.0.0'
+    compile group: 'org.keycloak', name: 'keycloak-authz-client', version: '7.0.0'
 
     // Listed twice due to design decision by the Gradle team: https://discuss.gradle.org/t/compileonly-dependencies-are-not-available-in-tests/15366/3
     compileOnly libraries.javax_servlet
