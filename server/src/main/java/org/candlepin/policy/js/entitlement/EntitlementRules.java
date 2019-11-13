@@ -14,13 +14,10 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
@@ -31,15 +28,12 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
@@ -55,11 +49,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -69,6 +60,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 
 /**
  * Enforces entitlement rules for normal (non-manifest) consumers.
@@ -85,22 +77,13 @@ public class EntitlementRules implements Enforcer {
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
     private RulesObjectMapper objectMapper;
-    private OwnerCurator ownerCurator;
-    private OwnerProductCurator ownerProductCurator;
-    private ProductManager productManager;
-    private EventSink eventSink;
-    private EventFactory eventFactory;
     private ModelTranslator translator;
-
-    private static final String POST_PREFIX = "post_";
 
     @Inject
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, RulesObjectMapper mapper,
-        OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
-        ProductManager productManager, EventSink eventSink,
-        EventFactory eventFactory, ModelTranslator translator) {
+        ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
@@ -110,11 +93,6 @@ public class EntitlementRules implements Enforcer {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.objectMapper = mapper;
-        this.ownerCurator = ownerCurator;
-        this.ownerProductCurator = ownerProductCurator;
-        this.productManager = productManager;
-        this.eventSink = eventSink;
-        this.eventFactory = eventFactory;
         this.translator = translator;
 
         jsRules.init("entitlement_name_space");
@@ -153,8 +131,6 @@ public class EntitlementRules implements Enforcer {
         Collection<PoolQuantity> entitlementPoolQuantities, CallerType caller) {
 
         Map<String, ValidationResult> resultMap = new HashMap<>();
-
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         /* This document describes the java script portion of the pre entitlement rules check:
          * http://www.candlepinproject.org/docs/candlepin/pre_entitlement_rules_check.html
@@ -204,8 +180,6 @@ public class EntitlementRules implements Enforcer {
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll) {
         JsonJsContext args = new JsonJsContext(objectMapper);
         Map<String, ValidationResult> resultMap = new HashMap<>();
-
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
             pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
@@ -304,87 +278,6 @@ public class EntitlementRules implements Enforcer {
         return result;
     }
 
-    public List<Rule> rulesForAttributes(Set<String> attributes,
-        Map<String, Set<Rule>> rules) {
-        Set<Rule> possibleMatches = new HashSet<>();
-        for (String attribute : attributes) {
-            if (rules.containsKey(attribute)) {
-                possibleMatches.addAll(rules.get(attribute));
-            }
-        }
-
-        List<Rule> matches = new LinkedList<>();
-        for (Rule rule : possibleMatches) {
-            if (attributes.containsAll(rule.getAttributes())) {
-                matches.add(rule);
-            }
-        }
-
-        // Always run the global rule, and run it first
-        matches.add(new Rule("global", 0, new HashSet<>()));
-
-        Collections.sort(matches, new RuleOrderComparator());
-        return matches;
-    }
-
-    public Map<String, Set<Rule>> parseAttributeMappings(String mappings) {
-        Map<String, Set<Rule>> toReturn = new HashMap<>();
-        if (mappings.trim().isEmpty()) {
-            return toReturn;
-        }
-
-        String[] separatedMappings = mappings.split(",");
-
-        for (String mapping : separatedMappings) {
-            Rule rule = parseRule(mapping);
-            for (String attribute : rule.getAttributes()) {
-                if (!toReturn.containsKey(attribute)) {
-                    toReturn.put(attribute, new HashSet<>(Collections.singletonList(rule)));
-                }
-
-                toReturn.get(attribute).add(rule);
-            }
-        }
-
-        return toReturn;
-    }
-
-    public Rule parseRule(String toParse) {
-        String[] tokens = toParse.split(":");
-
-        if (tokens.length < 3) {
-            throw new IllegalArgumentException(
-                i18n.tr("\"{0}\" Should contain name, priority and at least one attribute", toParse));
-        }
-
-        Set<String> attributes = new HashSet<>();
-        for (int i = 2; i < tokens.length; i++) {
-            attributes.add(tokens[i].trim());
-        }
-
-        try {
-            return new Rule(tokens[0].trim(), Integer.parseInt(tokens[1]),
-                attributes);
-        }
-        catch (NumberFormatException e) {
-            throw new IllegalArgumentException(i18n.tr(
-                "second parameter should be the priority number.", e));
-        }
-    }
-
-    protected void callPostEntitlementRules(List<Rule> matchingRules) {
-        for (Rule rule : matchingRules) {
-            jsRules.invokeRule(POST_PREFIX + rule.getRuleName());
-        }
-    }
-
-    protected void callPostUnbindRules(List<Rule> matchingRules) {
-        for (Rule rule : matchingRules) {
-            jsRules.invokeRule(POST_PREFIX + rule.getRuleName());
-        }
-    }
-
-
     // Always ensure that we do not over consume.
     // FIXME for auto sub stacking, we need to be able to pull across multiple
     // pools eventually, so this would need to go away in that case
@@ -392,112 +285,6 @@ public class EntitlementRules implements Enforcer {
         int quantity) {
         if (!pool.entitlementsAvailable(quantity)) {
             result.addError(EntitlementRulesTranslator.PoolErrorKeys.NO_ENTITLEMENTS_AVAILABLE);
-        }
-    }
-
-    /**
-     * RuleOrderComparator
-     */
-    public static class RuleOrderComparator implements Comparator<Rule>, Serializable {
-        private static final long serialVersionUID = 7602679645721757886L;
-
-        @Override
-        public int compare(Rule o1, Rule o2) {
-            return Integer.valueOf(o2.getOrder()).compareTo(
-                Integer.valueOf(o1.getOrder()));
-        }
-    }
-
-    /**
-     * Rule represents a core concept in Candlepin which is a business rule used
-     * to determine system compliance as well as entitlement eligibility for a
-     * particular consumer.
-     */
-    public static class Rule {
-        private final String ruleName;
-        private final int order;
-        private final Set<String> attributes;
-
-        public Rule(String ruleName, int order, Set<String> attributes) {
-            this.ruleName = ruleName;
-            this.order = order;
-            this.attributes = attributes;
-        }
-
-        public String getRuleName() {
-            return ruleName;
-        }
-
-        public int getOrder() {
-            return order;
-        }
-
-        public Set<String> getAttributes() {
-            return attributes;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result +
-                ((attributes == null) ? 0 : attributes.hashCode());
-            result = prime * result + order;
-            result = prime * result +
-                ((ruleName == null) ? 0 : ruleName.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-
-            Rule other = (Rule) obj;
-            if (attributes == null) {
-                if (other.attributes != null) {
-                    return false;
-                }
-            }
-            else if (!attributes.equals(other.attributes)) {
-                return false;
-            }
-            if (order != other.order) {
-                return false;
-            }
-            if (ruleName == null) {
-                if (other.ruleName != null) {
-                    return false;
-                }
-            }
-            else if (!ruleName.equals(other.ruleName)) {
-                return false;
-            }
-            return true;
-        }
-
-        public String toString() {
-            return "'" + ruleName + "':" + order + ":" + attributes.toString();
-        }
-    }
-
-    protected void runPostUnbind(PoolManager poolManager, Entitlement entitlement) {
-        Pool pool = entitlement.getPool();
-
-        // Can this attribute appear on pools?
-        if (pool.hasAttribute(Product.Attributes.VIRT_LIMIT) ||
-            pool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT)) {
-
-            Map<String, String> attributes = PoolHelper.getFlattenedAttributes(pool);
-            Consumer c = entitlement.getConsumer();
-            postUnbindVirtLimit(poolManager, entitlement, pool, c, attributes);
         }
     }
 
@@ -763,19 +550,16 @@ public class EntitlementRules implements Enforcer {
         return poolOperationCallback;
     }
 
-    public void postUnbind(Consumer c, PoolManager poolManager, Entitlement ent) {
-        runPostUnbind(poolManager, ent);
-    }
+    public void postUnbind(PoolManager poolManager, Entitlement entitlement) {
+        Pool pool = entitlement.getPool();
 
-    protected void logResult(ValidationResult result) {
-        if (log.isDebugEnabled()) {
-            for (ValidationError error : result.getErrors()) {
-                log.debug("  Rule error: {}", error.getResourceKey());
-            }
+        // Can this attribute appear on pools?
+        if (pool.hasAttribute(Product.Attributes.VIRT_LIMIT) ||
+            pool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT)) {
 
-            for (ValidationWarning warning : result.getWarnings()) {
-                log.debug("  Rule warning: {}", warning.getResourceKey());
-            }
+            Map<String, String> attributes = PoolHelper.getFlattenedAttributes(pool);
+            Consumer c = entitlement.getConsumer();
+            postUnbindVirtLimit(poolManager, entitlement, pool, c, attributes);
         }
     }
 }

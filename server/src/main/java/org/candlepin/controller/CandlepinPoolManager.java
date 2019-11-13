@@ -1951,7 +1951,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // post unbind actions
         for (Entitlement ent : entsToRevoke) {
-            enforcer.postUnbind(ent.getConsumer(), this, ent);
+            enforcer.postUnbind(this, ent);
         }
 
         if (!regenCertsAndStatuses) {
@@ -2362,7 +2362,7 @@ public class CandlepinPoolManager implements PoolManager {
                 // Fire post-unbind events for revoked entitlements
                 log.info("Firing post-unbind events for {} entitlements...", entitlements.size());
                 for (Entitlement entitlement : entitlements) {
-                    this.enforcer.postUnbind(entitlement.getConsumer(), this, entitlement);
+                    this.enforcer.postUnbind(this, entitlement);
                 }
 
                 log.info("Recomputing status for {} consumers", consumerStackedEnts.keySet().size());

@@ -148,11 +148,10 @@ public interface Enforcer {
     /**
      * Run post-entitlement actions.
      *
-     * @param c the consumer to unbind on
      * @param poolManager
-     * @param ent The entitlement that needs to be revoked
+     * @param entitlement The entitlement that needs to be revoked
      */
-    void postUnbind(Consumer c, PoolManager poolManager, Entitlement ent);
+    void postUnbind(PoolManager poolManager, Entitlement entitlement);
 
     ValidationResult update(Consumer consumer, Entitlement entitlement, Integer change);
 

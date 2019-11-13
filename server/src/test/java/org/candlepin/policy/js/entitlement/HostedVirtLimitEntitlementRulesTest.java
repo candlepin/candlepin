@@ -129,7 +129,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals(virtBonusPool, poolUpdate.getKey());
         assertEquals(90L, poolUpdate.getValue().longValue());
 
-        enforcer.postUnbind(consumer, poolManagerMock, e);
+        enforcer.postUnbind(poolManagerMock, e);
         verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool), eq(110L));
     }
 
@@ -215,9 +215,9 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals((Long) 90L, (Long) poolUpdate.get(virtBonusPool));
         assertEquals((Long) 90L, (Long) poolUpdate.get(virtBonusPool2));
 
-        enforcer.postUnbind(consumer, poolManagerMock, e);
+        enforcer.postUnbind(poolManagerMock, e);
         verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool), eq(110L));
-        enforcer.postUnbind(consumer, poolManagerMock, e2);
+        enforcer.postUnbind(poolManagerMock, e2);
         verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool2), eq(110L));
     }
 
@@ -289,7 +289,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
             poolQuantityMap);
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
 
-        enforcer.postUnbind(consumer, poolManagerMock, e);
+        enforcer.postUnbind(poolManagerMock, e);
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
     }
 
@@ -331,7 +331,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         verify(poolManagerMock, never()).createPool(any(Pool.class));
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
 
-        enforcer.postUnbind(consumer, poolManagerMock, e);
+        enforcer.postUnbind(poolManagerMock, e);
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyLong());
     }
@@ -391,7 +391,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
 
         virtBonusPool.setQuantity(0L);
 
-        enforcer.postUnbind(consumer, poolManagerMock, e);
+        enforcer.postUnbind(poolManagerMock, e);
         verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool), eq(-1L));
     }
 
@@ -423,7 +423,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
             poolQuantityMap);
         verify(poolManagerMock, never()).setPoolQuantity(eq(virtBonusPool), eq(-10L));
 
-        enforcer.postUnbind(consumer, poolManagerMock, e);
+        enforcer.postUnbind(poolManagerMock, e);
         verify(poolManagerMock, never()).setPoolQuantity(eq(virtBonusPool), eq(10L));
     }
 

@@ -60,8 +60,7 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
-    public void postUnbind(Consumer consumer, PoolManager poolManager,
-        Entitlement ent) {
+    public void postUnbind(PoolManager poolManager, Entitlement entitlement) {
     }
 
     @Override
