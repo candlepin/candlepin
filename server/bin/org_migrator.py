@@ -15,6 +15,9 @@ import cp_connectors as cp
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(levelname)-7s %(name)-16s %(message)s")
 log = logging.getLogger('org_migrator')
 
+LOGLVL_TRACE = 5
+logging.addLevelName(LOGLVL_TRACE, 'TRACE')
+
 
 
 def get_cursor_columns(db, cursor):
@@ -159,18 +162,24 @@ class ModelManager(object):
         pblock = ', '.join(['%s'] * len(columns))
 
         validate_column_names(table, columns)
-        query = 'INSERT INTO ' + table + ' (' + ', '.join(columns) + ') VALUES (' + pblock + ')'
+        statement = 'INSERT INTO ' + table + ' (' + ', '.join(columns) + ') VALUES (' + pblock + ')'
 
         # TODO: optimize this so we can do like 10-25 rows at a time, rather than just one
 
         # try:
         cursor = self.db.cursor()
 
+        if len(rows) > 0:
+            log.log(LOGLVL_TRACE, 'Inserting using statement: %s', statement)
+        else:
+            log.log(LOGLVL_TRACE, 'No rows to insert; skipping insert')
+
         for row in rows:
             if callable(row_hook):
                 row = row_hook(columns, row)
 
-            cursor.execute(query, row)
+            log.log(LOGLVL_TRACE, '  row: %s', row)
+            cursor.execute(statement, row)
 
         cursor.close()
 
@@ -274,8 +283,32 @@ class ContentManager(ModelManager):
         if self.exported:
             return True
 
-        self._export_query('cp2_content.json', 'cp2_content', 'SELECT c.* FROM cp2_content c JOIN cp2_owner_content oc ON oc.content_uuid = c.uuid WHERE oc.owner_id = %s', (self.org_id,))
-        self._export_query('cp2_content_modified_products.json', 'cp2_content_modified_products', 'SELECT cmp.* FROM cp2_content_modified_products cmp JOIN cp2_owner_content oc ON oc.content_uuid = cmp.content_uuid WHERE oc.owner_id = %s', (self.org_id,))
+        content_query = 'SELECT DISTINCT * FROM ' + \
+            '(SELECT c.* FROM cp2_content c ' + \
+            'JOIN cp2_owner_content oc ON oc.content_uuid = c.uuid AND oc.owner_id = %s ' + \
+            'UNION ' + \
+            'SELECT c.* FROM cp2_content c ' + \
+            'JOIN cp2_product_content pc ON pc.content_uuid = c.uuid  ' + \
+            'JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid AND op.owner_id = %s ' + \
+            'UNION ' + \
+            'SELECT c.* FROM cp2_content c ' + \
+            'JOIN cp2_environment_content ec ON ec.content_uuid = c.uuid ' + \
+            'JOIN cp_environment e ON ec.environment_id = e.id AND e.owner_id = %s) AS content'
+
+        cmp_query = 'SELECT DISTINCT * FROM ' + \
+            '(SELECT cmp.* FROM cp2_content_modified_products cmp ' + \
+            'JOIN cp2_owner_content oc ON oc.content_uuid = cmp.content_uuid AND oc.owner_id = %s ' + \
+            'UNION ' + \
+            'SELECT cmp.* FROM cp2_content_modified_products cmp ' + \
+            'JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid  ' + \
+            'JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid AND op.owner_id = %s ' + \
+            'UNION ' + \
+            'SELECT cmp.* FROM cp2_content_modified_products cmp ' + \
+            'JOIN cp2_environment_content ec ON ec.content_uuid = cmp.content_uuid ' + \
+            'JOIN cp_environment e ON ec.environment_id = e.id AND e.owner_id = %s) AS content'
+
+        self._export_query('cp2_content.json', 'cp2_content', content_query, (self.org_id, self.org_id, self.org_id,))
+        self._export_query('cp2_content_modified_products.json', 'cp2_content_modified_products', cmp_query, (self.org_id, self.org_id, self.org_id,))
         self._export_query('cp2_owner_content.json', 'cp2_owner_content', 'SELECT * FROM cp2_owner_content WHERE owner_id=%s', (self.org_id,))
 
         self._exported = True
@@ -310,6 +343,7 @@ class ProductManager(ModelManager):
         self._export_query('cp2_product_certificates.json', 'cp2_product_certificates', 'SELECT pc.* FROM cp2_product_certificates pc JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid WHERE op.owner_id = %s', (self.org_id,))
         self._export_query('cp2_product_content.json', 'cp2_product_content', 'SELECT pc.* FROM cp2_product_content pc JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid WHERE op.owner_id = %s', (self.org_id,))
         self._export_query('cp2_owner_products.json', 'cp2_owner_products', 'SELECT * FROM cp2_owner_products WHERE owner_id=%s', (self.org_id,))
+        self._export_query('cp2_product_branding.json', 'cp2_product_branding', 'SELECT pb.* FROM cp2_product_branding pb JOIN cp2_owner_products op ON op.product_uuid = pb.product_uuid WHERE op.owner_id = %s', (self.org_id,))
 
         self._exported = True
         return True
@@ -323,6 +357,7 @@ class ProductManager(ModelManager):
         result = result and self._import_json('cp2_product_certificates.json', base64_decoder(['cert', 'privatekey']))
         result = result and self._import_json('cp2_product_content.json', boolean_converter(['enabled']))
         result = result and self._import_json('cp2_owner_products.json')
+        result = result and self._import_json('cp2_product_branding.json')
 
         self._imported = result
         return result
@@ -524,9 +559,6 @@ class PoolManager(ModelManager):
         self._export_query('cp_cdn_certificate.json', 'cp_cdn_certificate', 'SELECT cc.* FROM cp_cdn_certificate cc JOIN cp_cdn c ON c.certificate_id = cc.id JOIN cp_pool p ON p.cdn_id = c.id WHERE p.owner_id=%s', (self.org_id,))
         self._export_query('cp_cdn.json', 'cp_cdn', 'SELECT c.* FROM cp_cdn c JOIN cp_pool p ON p.cdn_id = c.id WHERE p.owner_id=%s', (self.org_id,))
 
-        # Branding
-        self._export_query('cp_branding.json', 'cp_branding', 'SELECT b.* FROM cp_branding b JOIN cp_pool_branding pb ON pb.branding_id = b.id JOIN cp_pool p ON pb.pool_id = p.id WHERE p.owner_id=%s', (self.org_id,))
-
         # Pool certs
         self._export_query('cp_cert_serial-pool.json', 'cp_cert_serial', 'SELECT cs.* FROM cp_cert_serial cs JOIN cp_certificate c ON c.serial_id = cs.id JOIN cp_pool p ON p.certificate_id = c.id WHERE p.owner_id=%s', (self.org_id,))
         self._export_query('cp_certificate.json', 'cp_certificate', 'SELECT c.* FROM cp_certificate c JOIN cp_pool p ON p.certificate_id = c.id WHERE p.owner_id=%s', (self.org_id,))
@@ -615,7 +647,6 @@ class PoolManager(ModelManager):
         # no longer worried about the circular referencing between pool and entitlement
 
         self._export_query('cp_pool_attribute.json', 'cp_pool_attribute', 'SELECT pa.* FROM cp_pool_attribute pa JOIN cp_pool p ON p.id = pa.pool_id WHERE p.owner_id=%s', (self.org_id,))
-        self._export_query('cp_pool_branding.json', 'cp_pool_branding', 'SELECT pb.* FROM cp_pool_branding pb JOIN cp_pool p ON p.id = pb.pool_id WHERE p.owner_id=%s', (self.org_id,))
         self._export_query('cp_pool_source_stack.json', 'cp_pool_source_stack', 'SELECT pss.* FROM cp_pool_source_stack pss JOIN cp_pool p ON p.id = pss.derivedpool_id WHERE p.owner_id=%s', (self.org_id,))
         self._export_query('cp2_pool_provided_products.json', 'cp2_pool_provided_products', 'SELECT ppp.* FROM cp2_pool_provided_products ppp JOIN cp_pool p ON p.id = ppp.pool_id WHERE p.owner_id=%s', (self.org_id,))
         self._export_query('cp2_pool_derprov_products.json', 'cp2_pool_derprov_products', 'SELECT pdpp.* FROM cp2_pool_derprov_products pdpp JOIN cp_pool p ON p.id = pdpp.pool_id WHERE p.owner_id=%s', (self.org_id,))
@@ -636,7 +667,6 @@ class PoolManager(ModelManager):
         result = self._import_json('cp_cert_serial-cdn.json', boolean_converter(['collected', 'revoked']))
         result = result and self._import_json('cp_cdn_certificate.json', base64_decoder(['cert', 'privatekey']))
         result = result and self._import_json('cp_cdn.json')
-        result = result and self._import_json('cp_branding.json')
         result = result and self._import_json('cp_cert_serial-pool.json', boolean_converter(['collected', 'revoked']))
         result = result and self._import_json('cp_certificate.json', base64_decoder(['cert', 'privatekey']))
 
@@ -653,7 +683,6 @@ class PoolManager(ModelManager):
             pass
 
         result = result and self._import_json('cp_pool_attribute.json')
-        result = result and self._import_json('cp_pool_branding.json')
         result = result and self._import_json('cp_pool_source_stack.json')
         result = result and self._import_json('cp2_pool_provided_products.json')
         result = result and self._import_json('cp2_pool_derprov_products.json')
@@ -797,6 +826,8 @@ def parse_options():
 
     parser.add_option("--debug", action="store_true", default=False,
         help="Enables debug output")
+    parser.add_option("--trace", action="store_true", default=False,
+        help="Enables trace output; implies --debug")
 
     parser.add_option("--dbtype", action="store", default='postgresql',
         help="The type of database to target. Can target MySQL, MariaDB or PostgreSQL; defaults to PostgreSQL")
@@ -842,6 +873,10 @@ def main():
     if options.debug:
         log.setLevel(logging.DEBUG)
         cp.set_log_level(logging.DEBUG)
+
+    if options.trace:
+        log.setLevel(LOGLVL_TRACE)
+        cp.set_log_level(LOGLVL_TRACE)
 
     db = None
 
