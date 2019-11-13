@@ -29,7 +29,7 @@ import org.candlepin.model.Release;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.policy.js.activationkey.ActivationKeyRules;
+import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.TransformedIterator;
 
@@ -227,8 +227,10 @@ public class ActivationKeyResource {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
 
-        // Throws a BadRequestException if adding pool to key is a bad idea
-        activationKeyRules.validatePoolForActKey(key, pool, quantity);
+        String message = activationKeyRules.validatePoolForActivationKey(key, pool, quantity);
+        if (message != null) {
+            throw new BadRequestException(message);
+        }
 
         // Make sure we don't try to register the pool twice.
         if (key.hasPool(pool)) {

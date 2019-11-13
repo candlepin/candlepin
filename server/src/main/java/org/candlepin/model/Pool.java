@@ -824,6 +824,49 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     /**
+     * Checks if the given attribute is defined on the product, and if not, then the pool.
+     *
+     * @param key
+     *  The key (name) of the attribute to check
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute is set on the product or the pool; false otherwise
+     */
+    public boolean hasMergedProductAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        return (this.product != null && this.product.hasAttribute(key)) || this.attributes.containsKey(key);
+    }
+
+    /**
+     * Retrieves the value for the given attribute on this pool's product. If the pool has an available
+     * product, and the attribute is not set on it, or the pool does not have a product, then the pool
+     * will be checked instead.
+     *
+     * @param key
+     *  The key (name) of the attribute for which to fetch the value
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the value of the attribute for this product or pool, or null if the attribute is not set on either
+     */
+    public String getMergedProductAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        String value = this.product != null ? this.product.getAttributeValue(key) : null;
+        return value == null ? this.attributes.get(key) : value;
+    }
+
+    /**
      * returns true if the pool is considered expired based on the given date.
      * @param dateSource date to compare to.
      * @return true if the pool is considered expired based on the given date.

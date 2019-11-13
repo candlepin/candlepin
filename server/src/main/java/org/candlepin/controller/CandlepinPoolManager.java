@@ -60,7 +60,7 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.activationkey.ActivationKeyRules;
+import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -2613,7 +2613,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> pools, boolean includeWarnings) {
         List<Pool> filteredPools = new LinkedList<>();
         for (Pool p : pools) {
-            ValidationResult result = activationKeyRules.runPreActKey(key, p, null);
+            ValidationResult result = activationKeyRules.runPoolValidationForActivationKey(key, p, null);
             if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
                 filteredPools.add(p);
             }
