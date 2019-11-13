@@ -52,6 +52,10 @@ public class PropertyConverter {
     }
 
     public static Boolean toBoolean(Object value) throws ConversionException {
+        if (value == null) {
+            return false;
+        }
+
         if (value instanceof Boolean) {
             return (Boolean) value;
         }

@@ -1,4 +1,4 @@
-// Version: 5.38
+// Version: 5.39
 
 /*
  * Default Candlepin rule set.
@@ -1491,10 +1491,14 @@ function isLevelExempt (level, exemptList) {
     return false;
 }
 
-/*
+/**
  * Code to validate pools before adding them to an activation key.
  * This way we can't create activation keys that can never successfully
  * register a consumer.
+ *
+ * DEPRECATED:
+ *  This functionality has been moved to ActivationKeyRules.java as of Candlepin 2.11.0. This method
+ *  will no longer be called by Candlepin and is considered deprecated.
  */
 var ActivationKey = {
 

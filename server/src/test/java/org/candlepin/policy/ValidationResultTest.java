@@ -14,15 +14,11 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * ValidationResultTest
@@ -30,7 +26,7 @@ import org.junit.Test;
 public class ValidationResultTest {
     private ValidationResult vr;
 
-    @Before
+    @BeforeEach
     public void init() {
         vr = new ValidationResult();
     }
@@ -61,6 +57,34 @@ public class ValidationResultTest {
         vr.addError(ve);
         assertFalse(vr.getErrors().isEmpty());
         assertEquals(ve, vr.getErrors().get(0));
+    }
+
+    @Test
+    public void emptyErrorKeys() {
+        assertNotNull(vr.getErrorKeys());
+        assertTrue(vr.getErrorKeys().isEmpty());
+    }
+
+    @Test
+    public void addErrorKeyNull() {
+        vr.addError((RulesValidationError) null);
+        assertFalse(vr.getErrorKeys().isEmpty());
+        assertNull(vr.getErrorKeys().get(0));
+    }
+
+    @Test
+    public void addErrorKey() {
+        RulesValidationError ve = mock(RulesValidationError.class);
+        vr.addError(ve);
+        assertFalse(vr.getErrorKeys().isEmpty());
+        assertEquals(ve, vr.getErrorKeys().get(0));
+    }
+
+    @Test
+    public void hasErrorKeys() {
+        assertFalse(vr.hasErrorKeys());
+        vr.addError(mock(RulesValidationError.class));
+        assertTrue(vr.hasErrorKeys());
     }
 
     @Test
