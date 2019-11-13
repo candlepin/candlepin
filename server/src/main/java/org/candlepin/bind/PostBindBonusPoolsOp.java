@@ -22,7 +22,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
-import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.entitlement.Enforcer;
 
 import com.google.inject.Inject;
 

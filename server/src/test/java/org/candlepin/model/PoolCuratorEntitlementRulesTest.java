@@ -16,8 +16,8 @@ package org.candlepin.model;
 
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.policy.entitlement.Enforcer;
+import org.candlepin.policy.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 

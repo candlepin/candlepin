@@ -15,7 +15,7 @@
 package org.candlepin.bind;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.entitlement.Enforcer;
 
 import java.util.Map;
 

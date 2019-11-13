@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.policy.js.entitlement;
+package org.candlepin.policy.entitlement;
 
 
 import org.candlepin.controller.PoolManager;
@@ -27,7 +27,7 @@ import org.candlepin.model.Product;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.ValidationWarning;
-import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
+import org.candlepin.policy.entitlement.Enforcer.CallerType;
 import org.candlepin.test.TestUtil;
 
 import org.junit.Test;

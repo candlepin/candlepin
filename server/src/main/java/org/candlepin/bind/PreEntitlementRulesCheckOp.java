@@ -18,8 +18,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
+import org.candlepin.policy.entitlement.Enforcer;
+import org.candlepin.policy.entitlement.Enforcer.CallerType;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;

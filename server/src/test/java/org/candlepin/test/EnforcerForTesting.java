@@ -22,8 +22,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.PreUnbindHelper;
+import org.candlepin.policy.entitlement.Enforcer;
+import org.candlepin.policy.entitlement.PreUnbindHelper;
 
 import java.util.Collection;
 import java.util.HashMap;

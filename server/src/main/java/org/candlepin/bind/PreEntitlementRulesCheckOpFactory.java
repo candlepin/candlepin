@@ -14,7 +14,7 @@
  */
 package org.candlepin.bind;
 
-import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.entitlement.Enforcer;
 
 /**
  * This is the factory interface to create a {@link PreEntitlementRulesCheckOp} via assisted

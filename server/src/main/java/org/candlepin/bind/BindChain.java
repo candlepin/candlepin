@@ -18,7 +18,7 @@ import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.entitlement.Enforcer;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;

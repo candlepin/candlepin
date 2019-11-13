@@ -39,7 +39,7 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
+import org.candlepin.policy.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;

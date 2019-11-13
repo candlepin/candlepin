@@ -41,9 +41,9 @@ import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Pool;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
-import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
+import org.candlepin.policy.entitlement.Enforcer;
+import org.candlepin.policy.entitlement.Enforcer.CallerType;
+import org.candlepin.policy.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 
