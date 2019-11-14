@@ -181,7 +181,7 @@ dependencies {
     implementation "org.apache.activemq:artemis-commons:${versions.artemis}"
     implementation "org.apache.activemq:artemis-selector:${versions.artemis}"
     implementation "org.apache.activemq:artemis-journal:${versions.artemis}"
-    implementation "io.netty:netty-all:4.1.16.Final"
+    implementation "io.netty:netty-all:4.1.42.Final"
     implementation "commons-beanutils:commons-beanutils:1.9.3"
     implementation "org.jgroups:jgroups:3.6.13.Final"
     implementation "org.apache.geronimo.specs:geronimo-json_1.0_spec:1.0-alpha-1"
