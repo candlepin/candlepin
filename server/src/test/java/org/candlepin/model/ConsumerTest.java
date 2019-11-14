@@ -67,7 +67,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerTypeRequired() {
-        Consumer newConsumer = new Consumer();
+        Consumer newConsumer = new Consumer().setUuid(Util.generateUUID());
         newConsumer.setName("cname");
         newConsumer.setOwner(owner);
 
@@ -81,7 +81,7 @@ public class ConsumerTest extends DatabaseTestFixture {
             name += "x";
         }
 
-        Consumer newConsumer = new Consumer();
+        Consumer newConsumer = new Consumer().setUuid(Util.generateUUID());
         newConsumer.setName(name);
         newConsumer.setOwner(owner);
         newConsumer.setType(consumerType);
@@ -96,7 +96,7 @@ public class ConsumerTest extends DatabaseTestFixture {
             name += "x";
         }
 
-        Consumer newConsumer = new Consumer();
+        Consumer newConsumer = new Consumer().setUuid(Util.generateUUID());
         newConsumer.setName(name);
         newConsumer.setOwner(owner);
         newConsumer.setType(consumerType);

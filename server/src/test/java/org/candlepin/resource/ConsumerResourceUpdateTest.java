@@ -504,8 +504,7 @@ public class ConsumerResourceUpdateTest {
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
         entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
-        Consumer guest1 = new Consumer();
-        guest1.setUuid("Guest 1");
+        Consumer guest1 = new Consumer().setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
         ConsumerInstalledProduct installed = mock(ConsumerInstalledProduct.class);
         guest1.addInstalledProduct(installed);
@@ -544,8 +543,7 @@ public class ConsumerResourceUpdateTest {
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
         entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
-        Consumer guest1 = new Consumer();
-        guest1.setUuid("Guest 1");
+        Consumer guest1 = new Consumer().setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
         guest1.setAutoheal(true);
 
@@ -582,8 +580,7 @@ public class ConsumerResourceUpdateTest {
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
         entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
-        Consumer guest1 = new Consumer();
-        guest1.setUuid("Guest 1");
+        Consumer guest1 = new Consumer().setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
         guest1.setAutoheal(true);
 
@@ -611,8 +608,7 @@ public class ConsumerResourceUpdateTest {
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
         entitlement.getPool().setAttribute(Pool.Attributes.REQUIRES_HOST, uuid);
 
-        Consumer guest1 = new Consumer();
-        guest1.setUuid("Guest 1");
+        Consumer guest1 = new Consumer().setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
         // Ensure that the guest was already reported by same host.
@@ -696,8 +692,7 @@ public class ConsumerResourceUpdateTest {
         Entitlement entitlement = TestUtil.createEntitlement();
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
 
-        Consumer guest1 = new Consumer();
-        guest1.setUuid("Guest 1");
+        Consumer guest1 = new Consumer().setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
         guest1.setAutoheal(true);
 

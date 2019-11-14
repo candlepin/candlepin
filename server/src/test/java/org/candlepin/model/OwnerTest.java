@@ -22,6 +22,7 @@ import org.candlepin.test.TestUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.candlepin.util.Util;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -77,7 +78,7 @@ public class OwnerTest extends DatabaseTestFixture {
         Product rhel = TestUtil.createProduct("Red Hat Enterprise Linux", "Red Hat Enterprise Linux");
 
         // Consumer
-        Consumer c = new Consumer();
+        Consumer c = new Consumer().setUuid(Util.generateUUID());
         c.setOwner(owner);
         owner.addConsumer(c);
         assertEquals(1, owner.getConsumers().size());

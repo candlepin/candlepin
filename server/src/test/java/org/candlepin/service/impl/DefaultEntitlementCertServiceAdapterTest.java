@@ -289,8 +289,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         ConsumerType type = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         type.setId("test-id");
 
-        consumer = new Consumer("Test Consumer", "bob", owner, type);
-        consumer.setUuid("test-consumer");
+        consumer = new Consumer("Test Consumer", "bob", owner, type).setUuid("test-consumer");
 
         when(this.mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(type);
         when(this.mockConsumerTypeCurator.get(eq(type.getId()))).thenReturn(type);

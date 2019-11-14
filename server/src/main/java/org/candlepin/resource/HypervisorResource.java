@@ -44,6 +44,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
+import org.candlepin.util.Util;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -360,7 +361,7 @@ public class HypervisorResource {
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId, Owner owner, Principal principal) {
-        Consumer consumer = new Consumer();
+        Consumer consumer = new Consumer().setUuid(Util.generateUUID());
         consumer.setName(incHypervisorId);
         consumer.setType(this.hypervisorType);
         consumer.setFact("uname.machine", "x86_64");

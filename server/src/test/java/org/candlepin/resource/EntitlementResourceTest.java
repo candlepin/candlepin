@@ -42,6 +42,7 @@ import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 
+import org.candlepin.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -96,7 +97,7 @@ public class EntitlementResourceTest {
         ConsumerType ctype = TestUtil.createConsumerType();
         this.mockConsumerType(ctype);
 
-        consumer = new Consumer("myconsumer", "bill", owner, ctype);
+        consumer = new Consumer("myconsumer", "bill", owner, ctype).setUuid(Util.generateUUID());
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
@@ -212,8 +213,10 @@ public class EntitlementResourceTest {
         this.mockConsumerType(ct);
 
         Entitlement e = TestUtil.createEntitlement();
-        Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct);
-        Consumer destConsumer = new Consumer("destination-consumer", "bill", owner, ct);
+        Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct)
+            .setUuid(Util.generateUUID());
+        Consumer destConsumer = new Consumer("destination-consumer", "bill", owner, ct)
+            .setUuid(Util.generateUUID());
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
@@ -233,7 +236,8 @@ public class EntitlementResourceTest {
         this.mockConsumerType(ct);
 
         Entitlement e = TestUtil.createEntitlement();
-        Consumer destConsumer = new Consumer("destination-consumer", "bill", owner, ct);
+        Consumer destConsumer = new Consumer("destination-consumer", "bill", owner, ct)
+            .setUuid(Util.generateUUID());
         e.setConsumer(consumer);
         e.setQuantity(25);
 
@@ -252,7 +256,8 @@ public class EntitlementResourceTest {
         this.mockConsumerType(ct);
 
         Entitlement e = TestUtil.createEntitlement();
-        Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct);
+        Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct)
+            .setUuid(Util.generateUUID());
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
@@ -274,8 +279,10 @@ public class EntitlementResourceTest {
         Owner owner2 = new Owner("admin2");
         owner.setId(TestUtil.randomString());
         owner2.setId(TestUtil.randomString());
-        Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct);
-        Consumer destConsumer = new Consumer("destination-consumer", "bill", owner2, ct);
+        Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct)
+            .setUuid(Util.generateUUID());
+        Consumer destConsumer = new Consumer("destination-consumer", "bill", owner2, ct)
+            .setUuid(Util.generateUUID());
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 

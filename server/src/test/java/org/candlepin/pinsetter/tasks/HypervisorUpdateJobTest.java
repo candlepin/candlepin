@@ -53,6 +53,7 @@ import org.candlepin.service.impl.HypervisorUpdateAction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.candlepin.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -188,7 +189,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     public void hypervisorUpdateExecUpdate() throws JobExecutionException {
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
-        Consumer hypervisor = new Consumer();
+        Consumer hypervisor = new Consumer().setUuid(Util.generateUUID());
         hypervisor.setName("hypervisor_name");
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
@@ -214,7 +215,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     public void reporterIdOnUpdateTest() throws JobExecutionException {
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
-        Consumer hypervisor = new Consumer();
+        Consumer hypervisor = new Consumer().setUuid(Util.generateUUID());
         hypervisor.setName("hypervisor_name");
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
@@ -240,7 +241,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     public void hypervisorIdIsOverridenDuringHypervisorReportTest() throws JobExecutionException {
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
-        Consumer hypervisor = new Consumer();
+        Consumer hypervisor = new Consumer().setUuid(Util.generateUUID());
         hypervisor.setName("hyper-name");
         hypervisor.setOwner(owner);
         hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
@@ -281,7 +282,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     public void hypervisorMatchOnUuidTurnedOffTest() throws JobExecutionException {
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
-        Consumer hypervisor = new Consumer();
+        Consumer hypervisor = new Consumer().setUuid(Util.generateUUID());
         hypervisor.setName("hyper-name");
         hypervisor.setOwner(owner);
         hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");

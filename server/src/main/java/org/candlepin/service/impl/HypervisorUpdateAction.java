@@ -38,6 +38,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
+import org.candlepin.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -299,7 +300,7 @@ public class HypervisorUpdateAction {
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId, String reporterId,
         Owner owner, Principal principal, Consumer incoming) {
-        Consumer consumer = new Consumer();
+        Consumer consumer = new Consumer().setUuid(Util.generateUUID());
         if (incoming.getName() != null) {
             consumer.setName(incoming.getName());
         }
