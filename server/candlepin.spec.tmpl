@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.11.0
+Version: 2.11.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,11 @@ fi
 
 #raw
 %changelog
+* Thu Nov 14 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.11.1-1
+- Move ActivationKeyRules to Java (nmoumoul@redhat.com)
+- 1466415: Candlepin should allow setting of default auto-attach value for
+  hypervisors (wpoteat@redhat.com)
+
 * Mon Nov 11 2019 Ondrej Janus <ojanus@redhat.com> 2.11.0-1
 - Fix detached Branding entity (ojanus@redhat.com)
 - ENT-1615: Remove the cp_pool_branding and cp_branding table
