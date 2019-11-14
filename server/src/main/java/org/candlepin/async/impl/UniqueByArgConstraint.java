@@ -132,8 +132,8 @@ public class UniqueByArgConstraint implements JobConstraint {
 
             for (String param : this.params) {
                 if (iArgs.containsKey(param) && eArgs.containsKey(param)) {
-                    String iValue = iArgs.getSerializedValue(param);
-                    String eValue = eArgs.getSerializedValue(param);
+                    Object iValue = iArgs.get(param);
+                    Object eValue = eArgs.get(param);
 
                     if (!(iValue != null ? iValue.equals(eValue) : eValue == null)) {
                         matched = false;

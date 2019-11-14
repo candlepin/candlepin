@@ -90,6 +90,7 @@ public class HypervisorUpdateJob implements AsyncJob {
         final HypervisorUpdateAction hypervisorUpdateAction,
         final I18n i18n,
         @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper objectMapper) {
+
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.translator = Objects.requireNonNull(translator);
@@ -278,27 +279,28 @@ public class HypervisorUpdateJob implements AsyncJob {
             super.validate();
 
             try {
-                final JobArguments arguments = this.getJobArguments();
+                Map<String, Object> arguments = this.getJobArguments();
 
-                final String ownerKey = arguments.getAsString(OWNER_KEY);
-                final Boolean create = arguments.getAsBoolean(CREATE);
-                final String data = arguments.getAsString(DATA);
+                final String ownerKey = (String) arguments.get(OWNER_KEY);
+                final Boolean create = (Boolean) arguments.get(CREATE);
+                final String data = (String) arguments.get(DATA);
 
                 if (ownerKey == null || ownerKey.isEmpty()) {
                     final String errmsg = "owner has not been set!";
                     throw new JobConfigValidationException(errmsg);
                 }
+
                 if (create == null) {
                     final String errmsg = "create flag has not been set!";
                     throw new JobConfigValidationException(errmsg);
                 }
+
                 if (data == null || data.isEmpty()) {
                     final String errmsg = "hypervisor data has not been set!";
                     throw new JobConfigValidationException(errmsg);
                 }
-
             }
-            catch (ArgumentConversionException e) {
+            catch (ClassCastException e) {
                 final String errmsg = "One or more required arguments are of the wrong type";
                 throw new JobConfigValidationException(errmsg, e);
             }

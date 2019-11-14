@@ -21,59 +21,33 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 
 
 /**
- * The JobArguments is a map-like view of the arguments provided to the job during construction.
- * Unlike a typical map, the types of the values must be known to properly fetch them.
+ * The JobArguments class is a map-like view of the arguments provided to the job during
+ * construction. Unlike a typical map, the types of the values must be known to properly fetch them.
  */
 @SuppressWarnings("checkstyle:JavadocMethodMain")
 public class JobArguments {
-    private static ObjectMapper mapper = ObjectMapperFactory.getObjectMapper();
 
-    @JsonProperty("data")
-    private Map<String, String> data;
+    private final Map<String, Object> data;
 
     /**
-     * Creates a new serialized map using the specified map as a data store.
+     * Creates a new JobArguments map view using the specified map as a data store.
      *
      * @param map
-     *  the map to use as the data store for this map
+     *  the map to use as the data store for this view
      */
-    @JsonCreator
-    public JobArguments(@JsonProperty("data") Map<String, String> map) {
-        if (map == null) {
-            throw new IllegalArgumentException("map is null");
+    public JobArguments(Map<String, Object> data) {
+        if (data == null) {
+            throw new IllegalArgumentException("data is null");
         }
 
-        this.data = map;
-    }
-
-    /**
-     * Serializes the given object into a JSON string using the JobArgument's serializer.
-     *
-     * @param value
-     *  the value to serialize
-     *
-     * @throws ArgumentConversionException
-     *  if serialization of the specified value fails for any reason
-     *
-     * @return
-     *  the JSON serialized value
-     */
-    public static String serialize(Object value) {
-        try {
-            return value != null ? mapper.writeValueAsString(value) : null;
-        }
-        catch (Exception e) {
-            Class type = value != null ? value.getClass() : null;
-            String errmsg = String.format("Unable to serialize value: %s (%s)", value, type);
-
-            throw new ArgumentConversionException(errmsg, e);
-        }
+        this.data = data;
     }
 
     /**
@@ -148,16 +122,17 @@ public class JobArguments {
     // Utility methods
 
     /**
-     * Fetches the raw, serialized value associated with the specified key.
+     * Fetches the data associated with the given key without casting it to any particular type. If
+     * the key is not currently associated with any value, this method returns null.
      *
      * @param key
-     *  the key for which to fetch the associated serialized value
+     *  the key for which to fetch the associated value
      *
      * @return
-     *  the serialized value associated with the specified key, or null if the key is not currently
-     *  associated with a value
+     *  the value associated with the specified key, or null if the key is not currently associated
+     *  with a value
      */
-    public String getSerializedValue(String key) {
+    public Object get(String key) {
         return this.data.get(key);
     }
 
@@ -175,22 +150,15 @@ public class JobArguments {
      *  the value to return if the key is not currently associated with a value
      *
      * @return
-     *  the deserialized value associated with the specified key, or the given default value if the
+     *  the value associated with the specified key, or the given default value if the
      *  key is not currently associated with a value
      */
     public <T> T getAs(String key, Class<T> type, T defaultValue) {
-        if (this.containsKey(key)) {
-            try {
-                String json = this.data.get(key);
-                return json != null ? mapper.readValue(json, type) : null;
-            }
-            catch (IOException e) {
-                String errmsg = String.format("Unable to deserialize key \"%s\" as type: %s", key, type);
-                throw new ArgumentConversionException(errmsg, e);
-            }
+        if (type == null) {
+            throw new IllegalArgumentException("type is null");
         }
 
-        return defaultValue;
+        return this.containsKey(key) ? type.cast(this.data.get(key)) : defaultValue;
     }
 
     /**

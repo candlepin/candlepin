@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.async.JobArguments;
+import org.candlepin.async.JobDataConverter;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.hibernate.AbstractJsonConverter;
 
@@ -110,9 +111,10 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      * A simple container object to collect all of the data to be stored in as a serialized field
      */
     @SuppressWarnings("checkstyle:VisibilityModifier")
-    private static class SerializedJobData {
+    public static class SerializedJobData {
         public Map<String, String> metadata;
-        public JobArguments arguments;
+        public Map<String, Map<String, Object>> constraints;
+        public Map<String, Object> arguments;
         public Object result;
 
         @Override
@@ -146,15 +148,15 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         }
     }
 
-    /**
-     * JSON converter class for the SerializedJobData type.
-     */
-    @Converter
-    public static class JobDataJsonConverter extends AbstractJsonConverter<SerializedJobData> {
-        public JobDataJsonConverter() {
-            super(SerializedJobData.class);
-        }
-    }
+    // /**
+    //  * JSON converter class for the SerializedJobData type.
+    //  */
+    // @Converter
+    // public static class JobDataJsonConverter extends AbstractJsonConverter<SerializedJobData> {
+    //     public JobDataJsonConverter() {
+    //         super(SerializedJobData.class);
+    //     }
+    // }
 
 
     @Id
@@ -218,7 +220,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     private Date endTime;
 
     @Column(name = "job_data")
-    @Convert(converter = JobDataJsonConverter.class)
+    @Convert(converter = JobDataConverter.class)
     private SerializedJobData jobData;
 
 
@@ -796,7 +798,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      *  the runtime arguments for this job
      */
     public JobArguments getJobArguments() {
-        return this.jobData.arguments;
+        return new JobArguments(this.jobData.arguments);
     }
 
     /**
@@ -808,7 +810,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      * @return
      *  this job status instance
      */
-    public AsyncJobStatus setJobArguments(JobArguments arguments) {
+    public AsyncJobStatus setJobArguments(Map<String, Object> arguments) {
         this.jobData.arguments = arguments;
         return this;
     }

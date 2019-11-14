@@ -16,7 +16,7 @@ package org.candlepin.hibernate;
 
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
 
 import javax.persistence.AttributeConverter;
 
@@ -27,7 +27,8 @@ import javax.persistence.AttributeConverter;
  * JSON strings using the JPA convert interface.
  *
  * To use this class, it must first be subclassed and given a default constructor which passes
- * the target attribute class to the parent class's constructor:
+ * the target attribute class to the parent class's constructor. The subclass must also implement
+ * the serialize and deserialize methods:
  *
  * <pre>
  * public class MyTypeJsonConverter extends AbstractJsonConverter<MyType> {
@@ -112,14 +113,14 @@ public abstract class AbstractJsonConverter<T> implements AttributeConverter<T, 
      * @return
      *  JSON representing the serialized entity
      */
-    protected String serialize(JsonFactory factory, T entity);
+    protected abstract String serialize(JsonFactory factory, T entity);
 
     /**
      * Deserializes the provided JSON into an entity.
      *
      *
      */
-    protected T deserialize(JsonFactory factory, String json);
+    protected abstract T deserialize(JsonFactory factory, String json);
 
     /**
      * {@inheritDoc}
@@ -127,7 +128,7 @@ public abstract class AbstractJsonConverter<T> implements AttributeConverter<T, 
     @Override
     public String convertToDatabaseColumn(T entity) {
         try {
-            return this.serialize(this.factory, entity);
+            return this.serialize(this.jsonFactory, entity);
         }
         catch (Exception e) {
             throw new TypeConversionException(e);
@@ -140,7 +141,7 @@ public abstract class AbstractJsonConverter<T> implements AttributeConverter<T, 
     @Override
     public T convertToEntityAttribute(String data) {
         try {
-            return this.deserialize(this.factory, data);
+            return this.deserialize(this.jsonFactory, data);
         }
         catch (Exception e) {
             throw new TypeConversionException(e);

@@ -65,7 +65,7 @@ public class JobConfig<T extends JobConfig> {
     private String group;
     private Owner owner;
     private Map<String, String> metadata;
-    private Map<String, String> arguments;
+    private Map<String, Object> arguments;
     private Set<JobConstraint> constraints;
     private int retries;
     private String logLevel;
@@ -257,7 +257,7 @@ public class JobConfig<T extends JobConfig> {
             throw new IllegalArgumentException("arg is null");
         }
 
-        this.arguments.put(arg, JobArguments.serialize(value));
+        this.arguments.put(arg, value);
         return (T) this;
     }
 
@@ -270,8 +270,8 @@ public class JobConfig<T extends JobConfig> {
      * @return
      *  a map of arguments to pass to the job at execution time
      */
-    public JobArguments getJobArguments() {
-        return new JobArguments(this.arguments != null ? this.arguments : Collections.emptyMap());
+    public Map<String, Object> getJobArguments() {
+        return this.arguments != null ? Collections.unmodifiableMap(this.arguments) : Collections.emptyMap();
     }
 
     /**
