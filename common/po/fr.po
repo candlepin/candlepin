@@ -4,8 +4,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-14 07:35-0500\n"
-"PO-Revision-Date: 2019-10-30 01:20+0000\n"
+"POT-Creation-Date: 2019-11-14 09:19-0500\n"
+"PO-Revision-Date: 2019-11-14 02:04+0000\n"
 "Last-Translator: Ondřej Januš <ojanus@redhat.com>\n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -360,7 +360,7 @@ msgstr "L’unité {0} a été supprimée"
 
 #: server/src/main/java/org/candlepin/auth/KeycloakAuth.java:114
 msgid "Keycloak Authentication failed"
-msgstr "Échec d''authentification Keycloak\n"
+msgstr "Échec d''authentification Keycloak"
 
 #: server/src/main/java/org/candlepin/auth/OAuth.java:117
 #: server/src/main/java/org/candlepin/auth/OAuth.java:153
