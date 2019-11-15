@@ -41,11 +41,16 @@ candlepin.audit.hornetq.keystore_password=securepassword
 <% } %>\
 candlepin.pretty_print=true
 
-candlepin.pinsetter.enable=<%= candlepin.pinsetter_enabled %>
+candlepin.async.scheduler.enabled=<%= candlepin.async_scheduler_enabled %>
+
 <% if (candlepin.hidden_resources) { %>\
 candlepin.hidden_resources=<%= candlepin.hidden_resources %>
-<% } %>\
 
+<% } %>\
+<% if (candlepin.hidden_capabilities) { %>\
+candlepin.hidden_capabilities=<%= candlepin.hidden_capabilities %>
+
+<% } %>\
 org.quartz.jobStore.misfireThreshold=60000
 org.quartz.jobStore.useProperties=false
 org.quartz.jobStore.dataSource=myDS

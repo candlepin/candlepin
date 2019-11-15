@@ -26,9 +26,6 @@ import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.pinsetter.tasks.EntitlerJob;
-
-import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -192,26 +189,6 @@ public class ConfigProperties {
         DB_PASSWORD,
     };
 
-    // Pinsetter
-    public static final String TASKS = "pinsetter.tasks";
-    public static final String DEFAULT_TASKS = "pinsetter.default_tasks";
-    public static final String ENABLE_PINSETTER = "candlepin.pinsetter.enable";
-    public static final String PINSETTER_ASYNC_JOB_TIMEOUT = "pinsetter.waiting.timeout.seconds";
-    public static final String PINSETTER_MAX_RETRIES = "pinsetter.retries.max";
-    public static final int PINSETTER_MAX_RETRIES_DEFAULT = 10;
-
-    public static final String[] DEFAULT_TASK_LIST = new String[] {};
-
-    public static final String MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES =
-        "pinsetter.org.candlepin.pinsetter.tasks.ManifestCleanerJob.max_age_in_minutes";
-
-    public static final String ENTITLER_JOB_THROTTLE =
-        "pinsetter." + EntitlerJob.class.getName() + ".throttle";
-    public static final String ENTITLER_BULK_SIZE = "entitler.bulk.size";
-
-    public static final String BATCH_BIND_NUMBER_OF_POOLS_LIMIT =
-        "candlepin.batch.bind.number_of_pools_limit";
-
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
 
     /**
@@ -304,6 +281,7 @@ public class ConfigProperties {
     public static final String ASYNC_JOBS_THREADS = "candlepin.async.threads";
     public static final String ASYNC_JOBS_WHITELIST = "candlepin.async.whitelist";
     public static final String ASYNC_JOBS_BLACKLIST = "candlepin.async.blacklist";
+    public static final String ASYNC_JOBS_SCHEDULER_ENABLED = "candlepin.async.scheduler.enabled";
 
     // Whether or not we should allow queuing new jobs on this node while the job manager is suspended/paused
     public static final String ASYNC_JOBS_QUEUE_WHILE_SUSPENDED = "candlepin.async.queue_while_suspended";
@@ -449,21 +427,9 @@ public class ConfigProperties {
 
             this.put(SUSPEND_MODE_ENABLED, "true");
 
-            // Pinsetter
-            // prevent Quartz from checking for updates
-            this.put("org.quartz.scheduler.skipUpdateCheck", "true");
-            this.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-            this.put("org.quartz.threadPool.threadCount", "15");
-            this.put("org.quartz.threadPool.threadPriority", "5");
-            this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
-            this.put(ENTITLER_JOB_THROTTLE, "7");
-            this.put(ENTITLER_BULK_SIZE, "1000");
-            this.put(BATCH_BIND_NUMBER_OF_POOLS_LIMIT, "100");
-
             this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
             this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
             this.put(SHARD_WEBAPP, "candlepin");
-            this.put(ENABLE_PINSETTER, "true");
 
             // defaults
             this.put(SHARD_USERNAME, "admin");
@@ -503,8 +469,15 @@ public class ConfigProperties {
             this.put(TOKENPAGE_ENABLED, Boolean.toString(true));
 
             // Async job defaults and scheduling
+            // Quartz scheduling bits
+            this.put("org.quartz.scheduler.skipUpdateCheck", "true");
+            this.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
+            this.put("org.quartz.threadPool.threadCount", "15");
+            this.put("org.quartz.threadPool.threadPriority", "5");
+
             this.put(ASYNC_JOBS_THREADS, "10");
             this.put(ASYNC_JOBS_QUEUE_WHILE_SUSPENDED, "true");
+            this.put(ASYNC_JOBS_SCHEDULER_ENABLED, "true");
 
             this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ActiveEntitlementJob.DEFAULT_SCHEDULE);
@@ -525,17 +498,6 @@ public class ConfigProperties {
 
             // Set the triggerable jobs list
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
-
-            // Old Pinsetter job configs
-
-            // Default 20 minutes
-            this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
-            this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
-
-            // ManifestCleanerJob config (note: this is for the Pinsetter version)
-            // Max Age: 24 hours
-            this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
-
 
         }
     };
