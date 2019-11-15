@@ -100,11 +100,6 @@ import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
-import org.candlepin.pinsetter.core.GuiceJobFactory;
-import org.candlepin.pinsetter.core.PinsetterJobListener;
-import org.candlepin.pinsetter.core.PinsetterKernel;
-import org.candlepin.pinsetter.core.PinsetterTriggerListener;
-import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
@@ -157,7 +152,6 @@ import org.candlepin.resteasy.filter.AuthorizationFeature;
 import org.candlepin.resteasy.filter.CandlepinQueryInterceptor;
 import org.candlepin.resteasy.filter.CandlepinSuspendModeFilter;
 import org.candlepin.resteasy.filter.ConsumerCheckInFilter;
-import org.candlepin.resteasy.filter.PinsetterAsyncFilter;
 import org.candlepin.resteasy.filter.SecurityHoleAuthorizationFilter;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.resteasy.filter.SuperAdminAuthorizationFilter;
@@ -205,11 +199,8 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
-import org.quartz.JobListener;
 import org.quartz.SchedulerFactory;
-import org.quartz.TriggerListener;
 import org.quartz.impl.StdSchedulerFactory;
-import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
 import io.swagger.jaxrs.config.BeanConfig;
@@ -363,7 +354,6 @@ public class CandlepinModule extends AbstractModule {
         configureMessaging();
         configureActiveMQComponents();
         configureAsyncJobs();
-        configurePinsetter();
         configureExporter();
         configureSwagger();
         configureBindFactories();
@@ -422,7 +412,6 @@ public class CandlepinModule extends AbstractModule {
     private void configureInterceptors() {
         bind(ConsumerCheckInFilter.class);
         bind(PageRequestFilter.class);
-        bind(PinsetterAsyncFilter.class);
         bind(CandlepinQueryInterceptor.class);
         bind(VersionResponseFilter.class);
         bind(LinkHeaderResponseFilter.class);
@@ -464,15 +453,6 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(UndoImportsJob.JOB_KEY, UndoImportsJob.class);
         JobManager.registerJob(UnmappedGuestEntitlementCleanerJob.JOB_KEY,
             UnmappedGuestEntitlementCleanerJob.class);
-    }
-
-    private void configurePinsetter() {
-        bind(JobFactory.class).to(GuiceJobFactory.class);
-        bind(JobListener.class).to(PinsetterJobListener.class);
-        bind(TriggerListener.class).to(PinsetterTriggerListener.class);
-        bind(PinsetterKernel.class);
-        bind(CertificateRevocationListTask.class);
-        bind(org.candlepin.pinsetter.tasks.JobCleaner.class);
     }
 
     private void configureExporter() {

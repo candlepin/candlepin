@@ -1528,4 +1528,35 @@ public class JobManagerTest {
         JobManager manager = this.createJobManager();
         assertThrows(IllegalStateException.class, () -> manager.cancelJob(expected.getId()));
     }
+
+    @Test
+    public void testSchedulerCanBeDisabled() {
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_SCHEDULER_ENABLED, "false");
+
+        JobManager manager = this.createJobManager();
+
+        // This should return false
+        assertFalse(manager.isSchedulerEnabled());
+
+        manager.initialize();
+        manager.start();
+
+        // Ensure the scheduler wasn't actually invoked
+        verifyZeroInteractions(this.schedulerFactory);
+        verifyZeroInteractions(this.scheduler);
+    }
+
+    @Test
+    public void testSchedulerDefaultsEnabled() throws Exception {
+        JobManager manager = this.createJobManager();
+
+        assertTrue(manager.isSchedulerEnabled());
+
+        manager.initialize();
+        manager.start();
+
+        // If mockito ever gets a way to verify the inverse of "zero interactions", do that here
+        // instead of specifically looking for the start op.
+        verify(this.scheduler, atLeastOnce()).start();
+    }
 }

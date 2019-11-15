@@ -411,16 +411,19 @@ public class JobManager implements ModeChangeListener {
             log.info("Initializing job manager");
 
             if (this.state == ManagerState.CREATED) {
-                if (this.scheduler == null || this.scheduler.isShutdown()) {
-                    this.scheduler = this.schedulerFactory.getScheduler();
+                if (this.isSchedulerEnabled()) {
+                    if (this.scheduler == null || this.scheduler.isShutdown()) {
+                        this.scheduler = this.schedulerFactory.getScheduler();
+                    }
+
+                    this.synchronizeJobSchedule();
+                    this.scheduler.setJobFactory(this.qrtzExecutor);
                 }
 
                 if (!this.receiver.isInitialized()) {
                     this.receiver.initialize(this);
                 }
 
-                this.synchronizeJobSchedule();
-                this.scheduler.setJobFactory(this.qrtzExecutor);
                 this.modeManager.registerModeChangeListener(this);
 
                 // Check if Candlepin's current operating mode would prevent us from starting
@@ -499,7 +502,10 @@ public class JobManager implements ModeChangeListener {
                     String startType = (this.state == ManagerState.INITIALIZED ? "started" : "resumed");
                     log.info("Job manager {}", startType);
 
-                    this.scheduler.start();
+                    if (this.isSchedulerEnabled()) {
+                        this.scheduler.start();
+                    }
+
                     this.receiver.start();
 
                     this.state = ManagerState.RUNNING;
@@ -604,7 +610,10 @@ public class JobManager implements ModeChangeListener {
 
             if (this.state == ManagerState.INITIALIZED || this.state == ManagerState.RUNNING) {
                 this.receiver.suspend();
-                this.scheduler.standby();
+
+                if (this.isSchedulerEnabled()) {
+                    this.scheduler.standby();
+                }
 
                 log.info("Job manager suspended");
                 this.state = ManagerState.SUSPENDED;
@@ -638,7 +647,10 @@ public class JobManager implements ModeChangeListener {
             if (this.state == ManagerState.RUNNING || this.state == ManagerState.SUSPENDED) {
                 this.dispatcher.shutdown();
                 this.receiver.shutdown();
-                this.scheduler.shutdown(true);
+
+                if (this.isSchedulerEnabled()) {
+                    this.scheduler.shutdown(true);
+                }
             }
 
             log.info("Job manager shut down");
@@ -734,6 +746,20 @@ public class JobManager implements ModeChangeListener {
         return true;
     }
 
+    /**
+     * Checks if the job scheduler is enabled.
+     * <p></p>
+     * The scheduler controls whether or jobs will be automatically fired at their scheduled times.
+     * Disabling the scheduler will *not* prevent jobs from being scheduled by other means (on event
+     * or manual execution), but it will prevent this node from triggering jobs according to any
+     * schedule set for them.
+     *
+     * @return
+     *  true if the scheduler is enabled; false otherwise
+     */
+    public boolean isSchedulerEnabled() {
+        return this.configuration.getBoolean(ConfigProperties.ASYNC_JOBS_SCHEDULER_ENABLED, true);
+    }
 
     /**
      * Ensures the jobs automatically scheduled according to the system configuration are in sync

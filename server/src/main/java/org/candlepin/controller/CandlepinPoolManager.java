@@ -55,7 +55,6 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
@@ -149,7 +148,6 @@ public class CandlepinPoolManager implements PoolManager {
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
     private CdnCurator cdnCurator;
-    private PinsetterKernel pinsetterKernel;
     private OwnerManager ownerManager;
     private BindChainFactory bindChainFactory;
 
@@ -186,7 +184,6 @@ public class CandlepinPoolManager implements PoolManager {
         OwnerProductCurator ownerProductCurator,
         OwnerManager ownerManager,
         CdnCurator cdnCurator,
-        PinsetterKernel pinsetterKernel,
         I18n i18n,
         BindChainFactory bindChainFactory) {
 
@@ -214,7 +211,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.ownerProductCurator = ownerProductCurator;
         this.ownerManager = ownerManager;
         this.cdnCurator = cdnCurator;
-        this.pinsetterKernel = pinsetterKernel;
         this.i18n = i18n;
         this.bindChainFactory = bindChainFactory;
     }

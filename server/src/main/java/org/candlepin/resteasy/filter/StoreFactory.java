@@ -25,7 +25,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.JobCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Persisted;
@@ -36,7 +35,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.pinsetter.core.model.JobStatus;
 import org.xnap.commons.i18n.I18n;
 
 import javax.inject.Inject;
@@ -65,7 +63,6 @@ public class StoreFactory {
         storeMap.put(User.class, new UserStore());
         storeMap.put(ActivationKey.class, new ActivationKeyStore());
         storeMap.put(Product.class, new ProductStore());
-        storeMap.put(JobStatus.class, new JobStatusStore());
         storeMap.put(AsyncJobStatus.class, new AsyncJobStatusStore());
 
         for (EntityStore<? extends Persisted> store : storeMap.values()) {
@@ -234,25 +231,6 @@ public class StoreFactory {
 
         @Override
         public Owner getOwner(Product entity) {
-            return null;
-        }
-    }
-
-    private class JobStatusStore implements EntityStore<JobStatus> {
-        @Inject private JobCurator jobCurator;
-
-        @Override
-        public JobStatus lookup(String jobId) {
-            return jobCurator.get(jobId);
-        }
-
-        @Override
-        public List<JobStatus> lookup(Collection<String> jobIds) {
-            return jobCurator.listAllByIds(jobIds).list();
-        }
-
-        @Override
-        public Owner getOwner(JobStatus entity) {
             return null;
         }
     }
