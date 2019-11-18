@@ -41,6 +41,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import static org.apache.activemq.artemis.api.core.Message.BYTES_TYPE;
+
 /**
  * EventSink - Queues events to be sent after request/job completes, and handles actual
  * sending of events on successful job or API request, as well as rollback if either fails.
@@ -241,7 +243,7 @@ public class EventSinkImpl implements EventSink {
         }
 
         public void queueMessage(String eventString) throws ActiveMQException {
-            ClientMessage message = session.createMessage(true);
+            ClientMessage message = session.createMessage(BYTES_TYPE, true);
             message.getBodyBuffer().writeString(eventString);
 
             // NOTE: not actually sent until we commit the session.

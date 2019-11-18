@@ -80,7 +80,7 @@ public class EventSinkImplTest {
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         when(mockSessionFactory.createTransactedSession()).thenReturn(mockClientSession);
         when(mockClientSession.createProducer(anyString())).thenReturn(mockClientProducer);
-        when(mockClientSession.createMessage(anyBoolean())).thenReturn(mockClientMessage);
+        when(mockClientSession.createMessage(anyByte(), anyBoolean())).thenReturn(mockClientMessage);
         when(mockClientMessage.getBodyBuffer()).thenReturn(
             ActiveMQBuffers.fixedBuffer(2000));
         when(mockSessionFactory.getServerLocator()).thenReturn(mockLocator);
