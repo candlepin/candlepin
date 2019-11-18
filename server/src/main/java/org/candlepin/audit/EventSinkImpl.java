@@ -249,7 +249,7 @@ public class EventSinkImpl implements EventSink {
         }
 
         public void queueMessage(String eventString) throws ActiveMQException {
-            ClientMessage message = session.createMessage(true);
+            ClientMessage message = session.createMessage(ClientMessage.BYTES_TYPE, true);
             message.getBodyBuffer().writeString(eventString);
 
             // NOTE: not actually sent until we commit the session.
