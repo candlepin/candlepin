@@ -956,7 +956,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-core</artifactId>
-      <version>5.3.8.Final</version>
+      <version>5.4.9.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -968,7 +968,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-c3p0</artifactId>
-      <version>5.3.8.Final</version>
+      <version>5.4.9.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
