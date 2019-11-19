@@ -896,10 +896,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 consumerIds.addAll(query.list());
             }
             for (Consumer consumer: this.getConsumers(consumerIds)) {
-                HypervisorId hypervisorId =
-                    systemUuidHypervisorMap.get(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase());
-                hypervisorMap.add(hypervisorId.getHypervisorId(), consumer);
-                remainingHypervisorIds.remove(hypervisorId.getHypervisorId());
+                if (consumer.getHypervisorId() != null) {
+                    hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
+                    remainingHypervisorIds.remove(consumer.getHypervisorId().getHypervisorId());
+                }
+                else {
+                    hypervisorMap.add(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(), consumer);
+                }
             }
         }
         if (!remainingHypervisorIds.isEmpty()) {
