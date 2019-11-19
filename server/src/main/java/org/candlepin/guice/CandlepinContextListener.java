@@ -35,7 +35,6 @@ import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.messaging.CPMContextListener;
-import org.candlepin.pinsetter.core.PinsetterContextListener;
 import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
@@ -93,7 +92,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     private CPMContextListener cpmContextListener;
 
     private ActiveMQContextListener activeMQContextListener;
-    private PinsetterContextListener pinsetterListener;
     private JobManager jobManager;
     private LoggerContextListener loggerListener;
 
@@ -203,10 +201,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
                 true, true, true, true);
         }
 
-        // TODO: Remove this once Pinsetter is fully replaced by the JobManager
-        pinsetterListener = injector.getInstance(PinsetterContextListener.class);
-        pinsetterListener.contextInitialized();
-
         // Setup the job manager
         this.jobManager = injector.getInstance(JobManager.class);
         this.jobManager.initialize();
@@ -214,9 +208,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         loggerListener = injector.getInstance(LoggerContextListener.class);
 
-        /**
-         * Custom ModelConverter to handle our specific serialization requirements
-         */
+        // Custom ModelConverter to handle our specific serialization requirements
         ModelConverters.getInstance()
             .addConverter(injector.getInstance(CandlepinSwaggerModelConverter.class));
 
@@ -236,9 +228,8 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     }
 
     private void destroySubsystems() throws Exception {
-        // Tear down the job system(s)
+        // Tear down the job system
         this.jobManager.shutdown();
-        this.pinsetterListener.contextDestroyed();
 
         // if amqp is enabled, close all connections.
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {

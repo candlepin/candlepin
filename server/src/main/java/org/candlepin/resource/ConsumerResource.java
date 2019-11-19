@@ -1987,7 +1987,9 @@ public class ConsumerResource {
             JobConfig jobConfig;
 
             if (poolIdString != null) {
-                int throttle = config.getInt(ConfigProperties.ENTITLER_JOB_THROTTLE);
+                String cfg = ConfigProperties.jobConfig(EntitlerJob.JOB_KEY, EntitlerJob.CFG_JOB_THROTTLE);
+                int throttle = config.getInt(cfg, EntitlerJob.DEFAULT_THROTTLE);
+
                 jobConfig = EntitlerJob.createConfig(throttle)
                     .setOwner(owner)
                     .setConsumer(consumer)

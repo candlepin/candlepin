@@ -60,6 +60,9 @@ public class EntitlerJob implements AsyncJob {
     private static final String POOL_ID_KEY = "pool_id";
     private static final String POOL_QUANTITY_KEY = "pool_quantity";
 
+    public static final String CFG_JOB_THROTTLE = "throttle";
+    public static final int DEFAULT_THROTTLE = 7;
+
     private final I18n i18n;
     private final Entitler entitler;
     private final PoolCurator poolCurator;

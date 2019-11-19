@@ -72,7 +72,6 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
@@ -163,7 +162,6 @@ public class PoolManagerTest {
     @Mock private OwnerProductCurator mockOwnerProductCurator;
     @Mock private OwnerManager mockOwnerManager;
     @Mock private CdnCurator mockCdnCurator;
-    @Mock private PinsetterKernel pinsetterKernel;
     @Mock private BindChainFactory mockBindChainFactory;
     @Mock private BindContextFactory mockBindContextFactory;
     @Mock private PreEntitlementRulesCheckOpFactory mockPreEntitlementRulesCheckFactory;
@@ -201,7 +199,7 @@ public class PoolManagerTest {
             mockECGenerator, complianceRules, systemPurposeComplianceRules, autobindRules,
             activationKeyRules, mockProductCurator, mockProductManager, mockContentManager,
             mockOwnerContentCurator, mockOwnerCurator, mockOwnerProductCurator, mockOwnerManager,
-            mockCdnCurator, pinsetterKernel, i18n, mockBindChainFactory
+            mockCdnCurator, i18n, mockBindChainFactory
         ));
 
         setupBindChain();

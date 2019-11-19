@@ -44,7 +44,6 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
-import org.candlepin.pinsetter.tasks.ManifestCleanerJob;
 import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ExportCreationException;

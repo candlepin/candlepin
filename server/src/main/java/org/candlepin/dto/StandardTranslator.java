@@ -52,8 +52,6 @@ import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.ImportRecordTranslator;
 import org.candlepin.dto.api.v1.ImportUpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.ImportUpstreamConsumerTranslator;
-import org.candlepin.dto.api.v1.JobStatusDTO;
-import org.candlepin.dto.api.v1.JobStatusTranslator;
 import org.candlepin.dto.api.v1.OwnerInfoTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.v1.PermissionBlueprintTranslator;
@@ -115,7 +113,6 @@ import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
-import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -190,8 +187,6 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ImportRecordTranslator(), ImportRecord.class, ImportRecordDTO.class);
         this.registerTranslator(new ImportUpstreamConsumerTranslator(),
             ImportUpstreamConsumer.class, ImportUpstreamConsumerDTO.class);
-        this.registerTranslator(
-            new JobStatusTranslator(), JobStatus.class, JobStatusDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.OwnerTranslator(),
             Owner.class, org.candlepin.dto.api.v1.OwnerDTO.class);

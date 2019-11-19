@@ -28,7 +28,6 @@ import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.junit.LiquibaseExtension;
-import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -61,7 +60,6 @@ public class CandlepinContextListenerTest {
     private Configuration config;
     private CandlepinContextListener listener;
     private ActiveMQContextListener hqlistener;
-    private PinsetterContextListener pinlistener;
     private AMQPBusPublisher buspublisher;
     private ScheduledExecutorService executorService;
     private ServletContextEvent evt;
@@ -79,7 +77,6 @@ public class CandlepinContextListenerTest {
         when(config.strippedSubset(eq(ConfigurationPrefixes.LOGGING_CONFIG_PREFIX)))
             .thenReturn(new MapConfiguration());
         hqlistener = mock(ActiveMQContextListener.class);
-        pinlistener = mock(PinsetterContextListener.class);
         buspublisher = mock(AMQPBusPublisher.class);
         executorService = mock(ScheduledExecutorService.class);
         configRead = mock(VerifyConfigRead.class);
@@ -119,7 +116,6 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
         verify(hqlistener).contextInitialized(any(Injector.class));
-        verify(pinlistener).contextInitialized();
         verify(ctx).setAttribute(eq(CandlepinContextListener.CONFIGURATION_NAME), eq(config));
         verify(configRead).verify(eq(ctx));
 
@@ -172,7 +168,6 @@ public class CandlepinContextListenerTest {
         verify(evt, atMost(5)).getServletContext();
         verifyNoMoreInteractions(evt); // destroy shouldn't use it
         verify(hqlistener).contextDestroyed();
-        verify(pinlistener).contextDestroyed();
         verifyZeroInteractions(buspublisher);
     }
 
@@ -232,7 +227,6 @@ public class CandlepinContextListenerTest {
         @SuppressWarnings("synthetic-access")
         @Override
         protected void configure() {
-            bind(PinsetterContextListener.class).toInstance(pinlistener);
             bind(ActiveMQContextListener.class).toInstance(hqlistener);
             bind(AMQPBusPublisher.class).toInstance(buspublisher);
             bind(ScheduledExecutorService.class).toInstance(executorService);
