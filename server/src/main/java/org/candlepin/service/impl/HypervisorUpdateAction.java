@@ -15,6 +15,8 @@
 package org.candlepin.service.impl;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
@@ -61,6 +63,7 @@ public class HypervisorUpdateAction {
     private ConsumerType hypervisorType;
     private SubscriptionServiceAdapter subAdapter;
     private ModelTranslator translator;
+    private Configuration config;
 
     public static final String CREATE = "create";
     protected static String prefix = "hypervisor_update_";
@@ -68,13 +71,14 @@ public class HypervisorUpdateAction {
     @Inject
     public HypervisorUpdateAction(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, ConsumerResource consumerResource,
-        SubscriptionServiceAdapter subAdapter, ModelTranslator translator) {
+        SubscriptionServiceAdapter subAdapter, ModelTranslator translator,
+        Configuration config) {
         this.consumerCurator = consumerCurator;
         this.consumerResource = consumerResource;
         this.subAdapter = subAdapter;
         this.translator = translator;
-        this.hypervisorType = consumerTypeCurator.getByLabel(
-            ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
+        this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
+        this.config = config;
     }
 
     @Transactional
@@ -101,10 +105,12 @@ public class HypervisorUpdateAction {
             .getHostConsumersMap(owner, hypervisors);
         HypervisorUpdateResultDTO result = new HypervisorUpdateResultDTO();
         Map<String, Consumer> systemUuidKnownConsumersMap = new HashMap<>();
-        for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
-            if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
-                systemUuidKnownConsumersMap.put(
-                    consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(), consumer);
+        if (config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING)) {
+            for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
+                if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
+                    systemUuidKnownConsumersMap.put(
+                        consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(), consumer);
+                }
             }
         }
 
@@ -113,16 +119,7 @@ public class HypervisorUpdateAction {
             Consumer incoming = incomingHosts.get(hypervisorId);
             Consumer knownHost = hypervisorKnownConsumersMap.get(hypervisorId);
             // HypervisorId might be different in candlepin
-            if (knownHost == null && incoming.hasFact(Consumer.Facts.SYSTEM_UUID) &&
-                systemUuidKnownConsumersMap.get(
-                incoming.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase()) != null) {
-                knownHost = systemUuidKnownConsumersMap.get(incoming.getFact(
-                    Consumer.Facts.SYSTEM_UUID).toLowerCase());
-                if (knownHost != null) {
-                    log.debug("Found a known host by system uuid");
-                }
-            }
-
+            knownHost = reconcileByUuid(knownHost, incoming, systemUuidKnownConsumersMap);
             Consumer reportedOnConsumer = null;
 
             if (knownHost == null) {
@@ -205,6 +202,21 @@ public class HypervisorUpdateAction {
         return new Result(result, hypervisorKnownConsumersMap);
     }
 
+    private Consumer reconcileByUuid(Consumer knownHost, Consumer incoming,
+        Map<String, Consumer> systemUuidKnownConsumersMap) {
+        if (knownHost == null && config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
+            incoming.hasFact(Consumer.Facts.SYSTEM_UUID) &&
+            systemUuidKnownConsumersMap.get(
+            incoming.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase()) != null) {
+
+            knownHost = systemUuidKnownConsumersMap.get(incoming.getFact(
+                    Consumer.Facts.SYSTEM_UUID).toLowerCase());
+            if (knownHost != null) {
+                log.debug("Found a known host by system uuid");
+            }
+        }
+        return knownHost;
+    }
     private boolean updateHypervisorId(Consumer consumer, Owner owner, String reporterId,
         String hypervisorId) {
 
