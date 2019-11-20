@@ -33,8 +33,7 @@ to be stopped or you will have to edit the Vagrantfile and choose different port
 1. From the root directory of your Candlepin checkout run `vagrant up`
 1. Run `vagrant ssh` to connect to the system.
 1. `cd /vagrant`
-1. `buildr clean test=no package`
-1. `./server/bin/deploy`
+1. `./server/bin/deploy` (this will automatically use gradle to recompile before deploying)
 
 ## Deploy with test data
 The Candlepin Vagrant deployer will deploy candlepin without any test data in database.
