@@ -70,6 +70,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -1640,10 +1641,22 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
+        when(serialCurator.saveOrUpdateAll(any(), anyBoolean(), anyBoolean()))
+            .then(new Answer<Iterable<CertificateSerial>>() {
 
-        when(mockedPKI.createX509Certificate(any(String.class), any(Set.class), any(Set.class),
-            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
-            nullable(String.class)))
+                @Override
+                public Iterable<CertificateSerial> answer(InvocationOnMock invocationOnMock)
+                    throws Throwable {
+                    Iterable<CertificateSerial> certificateSerials = invocationOnMock.getArgument(0);
+                    certificateSerials
+                        .forEach(certificateSerial -> certificateSerial.setId(Util.generateUniqueLong()));
+                    return certificateSerials;
+                }
+            });
+
+        when(mockedPKI
+            .createX509Certificate(any(String.class), any(Set.class), any(Set.class), any(Date.class),
+                any(Date.class), any(KeyPair.class), any(BigInteger.class), nullable(String.class)))
             .thenReturn(mock(X509Certificate.class));
         when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn("".getBytes());
         when(mockedPKI.getPemEncoded(any(PrivateKey.class))).thenReturn("".getBytes());

@@ -541,7 +541,6 @@ public class TestUtil {
     public static IdentityCertificate createIdCert(Date expiration) {
         IdentityCertificate idCert = new IdentityCertificate();
         CertificateSerial serial = new CertificateSerial(expiration);
-        serial.setId(Long.valueOf(new Random().nextInt(1000000)));
 
         // totally arbitrary
         idCert.setId(String.valueOf(new Random().nextInt(1000000)));

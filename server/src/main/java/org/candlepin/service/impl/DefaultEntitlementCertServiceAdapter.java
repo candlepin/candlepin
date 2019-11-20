@@ -443,11 +443,12 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         Map<String, CertificateSerial> serialMap = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-            // No need to persist the cert serial here as the IDs are generated on object creation.
             serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getPool().getEndDate()));
         }
 
-        log.debug("WE HAVE {} POOL QUANTITIES TO LOOP THROUGH", poolQuantities.size());
+        // Serials need to be saved to get generated ID.
+        log.debug("Persisting new certificate serials");
+        serialCurator.saveOrUpdateAll(serialMap.values(), false, false);
 
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
@@ -518,10 +519,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
             entitlementCerts.put(entry.getKey(), cert);
         }
-
-        // Serials need to be saved before the certs.
-        log.debug("Persisting new certificate serials");
-        serialCurator.saveOrUpdateAll(serialMap.values(), false, false);
 
         // Now that the serials have been saved, update the newly created
         // certs with their serials and add them to the entitlements.
