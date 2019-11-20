@@ -21,9 +21,11 @@ curl -k -u admin:admin https://subscription.rhsm.stage.redhat.com/subscription/s
 stage_version=$(python -c 'import json; fp = open("stage_status.json", "r"); obj = json.load(fp); fp.close(); print obj["version"]');
 rm stage_status.json
 
-# build & install candlepin rpm\
+# build & install candlepin rpm
 cd /candlepin
-buildr clean test=no package
+./gradlew --no-daemon clean war
 cd /candlepin/server
+
+echo "Building candlepin rpm with tito..."
 tito build --test --rpm
 yum install -y /tmp/tito/noarch/candlepin-${stage_version}-1.noarch.rpm /tmp/tito/noarch/candlepin-selinux-${stage_version}-1.noarch.rpm

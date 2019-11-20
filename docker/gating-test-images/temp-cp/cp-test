@@ -39,10 +39,10 @@ cleanup() {
         trap - $signals
         trap "" ERR EXIT
 
-        # Run buildr clean in our target CP directory
+        # Run gradle clean in our target CP directory
         if [ "$CLEAN_CP" == "1" ]; then
             cd $CP_HOME
-            buildr clean
+            ./gradlew clean
         fi
     fi
 }
@@ -138,7 +138,7 @@ CP_HOME="/candlepin"
 cd $CP_HOME
 
 # Make sure we update the ruby bundle:
-bundle install
+bundle install --without=proton
 mkdir -p /var/log/candlepin
 
 PROJECT_DIR="$CP_HOME/$PROJECT"

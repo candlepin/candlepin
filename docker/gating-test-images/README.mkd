@@ -1,7 +1,9 @@
 # Candlepin containers for gating tests
 This folder contains docker configurations for running Candlepin & Postgresql containers with preloaded test data.
 They are used for subscription-manager gating tests to be run against. The scripts here use docker stack, and podman, so docker-compose is not required to use this. The build script is supposed to be triggered automatically via jenkins [[1]](https://github.com/candlepin/candlepin-jobs).
-Note: The building/running scripts of these images are not configurable, because they are not supposed to be used as a development environment. 
+Notes:
+ * The building/running scripts of these images are not configurable, because they are not supposed to be used as a development environment.
+ * You need to first login to the registry [[1]](https://github.com/candlepin/candlepin-jobs) with your  kerberos credentials in order to run either the build or run scripts (for pushing/pulling images).
 
 ## Building
 The `build.sh` script is used for building a Candlepin image of the latest Candlepin version currently running in stage, and a corresponding postgresql image with preloaded test data.
@@ -26,3 +28,26 @@ Note: This requires sudo to run.
 ```bash
 sudo podman pod rm -f cp_pod
 ```
+
+### Troubleshooting
+You might encounter the following error when running the `run.sh` script on RHEL8+:
+```bash
+.curl: (35) error:1425F102:SSL routines:ssl_choose_client_version:unsupported protocol
+```
+This is due to RHEL8 enforcing a crypto policy that requires a minimum of TLSv1.2 to be used, while 
+candlepin was misconfigured by cpsetup to only support TLSv1 (this has since been fixed).
+To work around it, you need to:
+* ssh into the candlepin podman container
+    ```bash
+    sudo podman exec -it candlepin /bin/bash
+    ```
+* Edit the tomcat config:
+    ```bash
+    sudo vi /etc/tomcat/server.xml
+    # You need to remove the '+' characters from 'sslEnabledProtocols="TLSv1,+TLSv1.1,+TLSv1.2"'
+    ```
+* Restart tomcat:
+    ```bash
+    sudo supervisorctl restart tomcat
+    ```
+After exiting the container candlepin should be reachable without that error.
