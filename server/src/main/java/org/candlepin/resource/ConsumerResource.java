@@ -1316,27 +1316,7 @@ public class ConsumerResource {
 
         changesMade = updateSystemPurposeData(updated, toUpdate) || changesMade;
 
-        String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
-        if (environmentId != null && (toUpdate.getEnvironmentId() == null ||
-            !toUpdate.getEnvironmentId().equals(environmentId))) {
-            Environment e = environmentCurator.get(environmentId);
-            if (e == null) {
-                throw new NotFoundException(i18n.tr(
-                    "Environment with ID \"{0}\" could not be found.", environmentId));
-            }
-            log.info("Updating environment to: {}", environmentId);
-            toUpdate.setEnvironment(e);
-
-            // reset content access cert
-            Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
-            if (owner.isContentAccessEnabled()) {
-                toUpdate.setContentAccessCert(null);
-                contentAccessCertService.removeContentAccessCert(toUpdate);
-            }
-            // lazily regenerate certs, so the client can still work
-            poolManager.regenerateCertificatesOf(toUpdate, true);
-            changesMade = true;
-        }
+        changesMade = updateEnvironment(updated, toUpdate) || changesMade;
 
         // like the other values in an update, if consumer name is null, act as if
         // it should remain the same
@@ -1392,6 +1372,64 @@ public class ConsumerResource {
 
             Event event = eventBuilder.setEventData(toUpdate).buildEvent();
             sink.queueEvent(event);
+        }
+
+        return changesMade;
+    }
+
+    /**
+     * Updates consumer environment either by environment name or id, reset & re-generate CA certs.
+     * @return boolean status whether any updates are made or not.
+     */
+    private boolean updateEnvironment(ConsumerDTO updated, Consumer toUpdate) {
+        if (updated.getEnvironment() == null) {
+            return false;
+        }
+
+        boolean changesMade = false;
+        String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
+        String environmentName = updated.getEnvironment() == null ? null : updated.getEnvironment().getName();
+        String validatedEnvId = null;
+
+        if (environmentId != null) {
+            if (toUpdate.getEnvironmentId() == null || !toUpdate.getEnvironmentId().equals(environmentId)) {
+
+                if (!environmentCurator.exists(environmentId)) {
+                    throw new NotFoundException(i18n.tr(
+                        "Environment with ID \"{0}\" could not be found.", environmentId));
+                }
+
+                validatedEnvId = environmentId;
+            }
+
+        }
+        else if (environmentName != null) {
+            String envId = this.environmentCurator.
+                getEnvironmentIdByName(toUpdate.getOwnerId(), environmentName);
+
+            if (envId == null) {
+                throw new NotFoundException(i18n.tr(
+                    "Environment with name \"{0}\" could not be found.", environmentName));
+            }
+
+            if (toUpdate.getEnvironmentId() == null || !envId.equals(toUpdate.getEnvironmentId())) {
+                validatedEnvId = envId;
+            }
+        }
+
+        if (validatedEnvId != null) {
+            toUpdate.setEnvironmentId(validatedEnvId);
+            // reset content access cert
+            Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
+
+            if (owner.isContentAccessEnabled()) {
+                toUpdate.setContentAccessCert(null);
+                contentAccessCertService.removeContentAccessCert(toUpdate);
+            }
+
+            // lazily regenerate certs, so the client can still work
+            poolManager.regenerateCertificatesOf(toUpdate, true);
+            changesMade = true;
         }
 
         return changesMade;

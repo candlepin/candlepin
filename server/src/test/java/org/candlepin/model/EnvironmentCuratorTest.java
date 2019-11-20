@@ -127,4 +127,22 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         assertEquals(content3.getUuid(), environment3.getEnvironmentContent().iterator().next().getContent()
             .getUuid());
     }
+
+    @Test
+    public void testGetEnvironmentIdByName() {
+        Owner owner = this.createOwner("owner1");
+        Environment environment = this.createEnvironment(owner,
+            "SomeId", "fooBar", null, null, null);
+        String envName = this.envCurator.getEnvironmentIdByName(owner.getId(), environment.getName());
+
+        assertEquals("SomeId", envName);
+
+        String envNameWhenEnvIdNull = this.envCurator.getEnvironmentIdByName(owner.getId(), null);
+        String envNameWhenOwnerIdNull = this.envCurator
+            .getEnvironmentIdByName(null, environment.getName());
+
+        assertNull(envNameWhenOwnerIdNull);
+        assertNull(envNameWhenEnvIdNull);
+    }
+
 }

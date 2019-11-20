@@ -163,6 +163,58 @@ describe 'Consumer Resource' do
     results[@consumer1.uuid].should_not be_nil
   end
 
+  it 'should not let consumer update environment with incorrect env name' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    expect{
+      consumer_client.update_consumer({:environment => {:name => "abc"}})
+    }.to raise_error(RestClient::ResourceNotFound)
+  end
+
+  it 'should let consumer update environment with valid env name only' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+      consumer['idCert']['key'])
+    env = @cp.create_environment(@owner1['key'], random_string("env_id"), random_string("env_name"))
+
+    expect(consumer.environment).to be_nil
+
+    consumer_client.update_consumer({:environment => {:name => env.name}})
+    consumer = @cp.get_consumer(consumer['uuid'])
+
+    expect(consumer.environment).to_not be_nil
+  end
+
+  it 'should let consumer update environment with valid env id only' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    env = @cp.create_environment(@owner1['key'], random_string("env_id"), random_string("env_name"))
+
+    expect(consumer.environment).to be_nil
+
+    consumer_client.update_consumer({:environment => {:id => env.id}})
+    consumer = @cp.get_consumer(consumer['uuid'])
+
+    expect(consumer.environment).to_not be_nil
+  end
+
+  it 'should let not consumer update environment with incorrect env id' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    expect(consumer.environment).to be_nil
+
+    expect{
+      consumer_client.update_consumer({:environment => {:id => 'incorrect_id'}})
+    }.to raise_error(RestClient::ResourceNotFound)
+
+  end
+
   it 'should return a 410 for deleted consumers' do
     @consumer1.unregister(@consumer1.uuid)
     lambda do
