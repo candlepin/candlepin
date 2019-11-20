@@ -36,12 +36,11 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import static org.apache.activemq.artemis.api.core.Message.BYTES_TYPE;
 
 /**
  * EventSink - Queues events to be sent after request/job completes, and handles actual
@@ -121,7 +120,7 @@ public class EventSinkImpl implements EventSink {
             if (messageSender == null) {
                 messageSender = new EventMessageSender(this.connection);
             }
-            messageSender.queueMessage(mapper.writeValueAsString(event));
+            messageSender.queueMessage(mapper.writeValueAsString(event), event.getType(), event.getTarget());
         }
         catch (Exception e) {
             log.error("Error while trying to send event", e);
@@ -242,9 +241,18 @@ public class EventSinkImpl implements EventSink {
             log.debug("Created new message sender.");
         }
 
-        public void queueMessage(String eventString) throws ActiveMQException {
-            ClientMessage message = session.createMessage(BYTES_TYPE, true);
-            message.getBodyBuffer().writeString(eventString);
+        public void queueMessage(String eventString, Event.Type type,
+            Event.Target target) throws ActiveMQException {
+            ClientMessage message = session.createMessage(ClientMessage.BYTES_TYPE, true);
+            byte[] bytes = eventString.getBytes(StandardCharsets.UTF_8);
+            message.getBodyBuffer().writeBytes(bytes);
+            // Add Message type & target as message properties to allow better filtering/routing by consumers
+            if (type != null) {
+                message.putStringProperty("MESSAGE_TYPE", type.name());
+            }
+            if (target != null) {
+                message.putStringProperty("MESSAGE_TARGET", target.name());
+            }
 
             // NOTE: not actually sent until we commit the session.
             producer.send(message);

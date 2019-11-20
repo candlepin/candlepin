@@ -14,11 +14,10 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -146,8 +145,11 @@ public class EventSinkImplTest {
         eventSinkImpl.queueEvent(mock(Event.class));
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(argumentCaptor.capture());
-        assertEquals(content, argumentCaptor.getValue().getBodyBuffer()
-            .readString());
+        byte[] source = content.getBytes();
+        byte[] target = new byte[source.length];
+        ActiveMQBuffer bodyBuffer = argumentCaptor.getValue().getBodyBuffer();
+        bodyBuffer.getBytes(0, target);
+        assertArrayEquals(source, target);
     }
 
     @Test

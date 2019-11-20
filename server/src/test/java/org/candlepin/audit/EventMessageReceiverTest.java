@@ -57,6 +57,16 @@ public class EventMessageReceiverTest {
     private EventSourceConnection connection;
     private EventMessageReceiver receiver;
 
+    private void setupValidSentMessage() throws Exception {
+        byte[] sourceBytes = eventJson().getBytes();
+        doReturn(sourceBytes.length).when(clientMessage).getBodySize();
+        doAnswer(invocation -> {
+            byte[] targetBytes = (byte[]) invocation.getArguments()[0];
+            System.arraycopy(sourceBytes, 0, targetBytes, 0, sourceBytes.length);
+            return null; // void method, so return null
+        }).when(activeMQBuffer).readBytes(any(byte[].class));
+    }
+
     @Before
     public void init() throws Exception {
         when(clientMessage.getBodyBuffer()).thenReturn(activeMQBuffer);
@@ -83,7 +93,6 @@ public class EventMessageReceiverTest {
 
     @Test
     public void whenMapperReadThrowsExceptionThenMessageShouldBeAckedAndSessionRolledBack() throws Exception {
-        doReturn("test123").when(activeMQBuffer).readString();
         doThrow(new JsonMappingException("Induced exception"))
             .when(mapper).readValue(anyString(), eq(Event.class));
         receiver.onMessage(clientMessage);
@@ -96,7 +105,8 @@ public class EventMessageReceiverTest {
     @Test
     public void whenMsgAcknowledgeThrowsExceptionSessionIsRolledBack()
         throws Exception {
-        doReturn(eventJson()).when(activeMQBuffer).readString();
+        setupValidSentMessage();
+
         doThrow(new ActiveMQException(ActiveMQExceptionType.DISCONNECTED, "Induced exception for testing"))
             .when(clientMessage).acknowledge();
         receiver.onMessage(clientMessage);
@@ -107,7 +117,8 @@ public class EventMessageReceiverTest {
     @Test
     public void whenProperClientMsgPassedThenOnMessageShouldSucceed()
         throws Exception {
-        doReturn(eventJson()).when(activeMQBuffer).readString();
+        setupValidSentMessage();
+
         receiver.onMessage(clientMessage);
         verify(eventListener).onEvent(any(Event.class));
         verify(clientMessage).acknowledge();
@@ -117,7 +128,8 @@ public class EventMessageReceiverTest {
 
     @Test
     public void sessionIsRolledBackWhenAnyExceptionIsThrownFromEventListener() throws Exception {
-        doReturn(eventJson()).when(activeMQBuffer).readString();
+        setupValidSentMessage();
+
         doThrow(new RuntimeException("Forced")).when(eventListener).onEvent(any(Event.class));
         receiver.onMessage(clientMessage);
         verify(clientMessage).acknowledge();

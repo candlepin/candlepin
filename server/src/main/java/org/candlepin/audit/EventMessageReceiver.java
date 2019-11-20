@@ -45,8 +45,12 @@ public class EventMessageReceiver extends MessageReceiver {
             log.debug("ActiveMQ message {} acknowledged for listener: {}", msg.getMessageID(), listener);
 
             // Process the message via our EventListener framework.
-            body = msg.getBodyBuffer().readString();
+            int bodySize = msg.getBodySize();
+            byte[] bodyBytes = new byte[bodySize];
+            msg.getBodyBuffer().readBytes(bodyBytes);
+            body = new String(bodyBytes, 0, bodySize);
             log.debug("Got event: {}", body);
+
             Event event = mapper.readValue(body, Event.class);
             listener.onEvent(event);
 
