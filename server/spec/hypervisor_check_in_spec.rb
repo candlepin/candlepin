@@ -1220,25 +1220,93 @@ describe 'Hypervisor Resource', :type => :virt do
   end
 
   it 'will allow the hardware id to change while the hypervisor id stays constant' do
-      owner = create_owner random_string('owner')
-      user = user_client(owner, random_string('user'))
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
 
-      host_name = random_string("test_hypevisor_host_name").downcase
-      host_hyp_id = random_string("test_hypervisor_id").downcase
-      host_system_id = random_string("test_system_id").downcase
-      host_system_id_2 = random_string("second_test_system_id").downcase
-      guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
-      guests = ['g1', 'g2']
+    host_hyp_id = "hypervisor_id"
+    host_system_id_1 = "system_id_1"
+    host_system_id_2 = "system_id_2"
+    reporter_id = "reporter"
+    guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
+    guests = ['g1', 'g2']
 
-      test_host = user.register(host_name, :hypervisor, nil, {"virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [])
-      @cp.update_consumer({:uuid => test_host.uuid, :guestIds => guest_set, :hypervisorId => host_hyp_id, :facts => {"dmi.system.uuid" => host_system_id, "virt.is_guest"=>"false"}})
-      stored_host = @cp.get_consumer(test_host.uuid)
-      expect(stored_host['hypervisorId']['hypervisorId']).to eq(host_hyp_id)
-      expect(stored_host['facts']['dmi.system.uuid' ]== host_system_id)
+    test_host = user.register(host_hyp_id, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id)
+    @cp.update_consumer({:uuid => test_host.uuid, :guestIds => guest_set})
+    @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id
 
-      async_update_hypervisor(owner, user, host_name, host_hyp_id, guests, true, nil, {"dmi.system.uuid" => host_system_id_2})
-      stored_host = @cp.get_consumer(test_host.uuid)
-      expect(stored_host['hypervisorId']['hypervisorId']).to eq(host_hyp_id)
-      expect(stored_host['facts']['dmi.system.uuid' ]== host_system_id_2)
+    async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests, true, reporter_id, {"dmi.system.uuid" => host_system_id_1})
+    test_host = @cp.get_consumer(test_host.uuid)
+    @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id
+
+    async_update_hypervisor(owner, user, host_hyp_id, host_hyp_id, guests, true, reporter_id, {"dmi.system.uuid" => host_system_id_2})
+    test_host = @cp.get_consumer(test_host.uuid)
+    @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id
+  end
+
+  it 'can reconcile when hardware ids change across known hypervisors' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    host_hyp_id_1 = random_string("09h06").downcase
+    host_hyp_id_2 = random_string("09h07").downcase
+    host_hyp_id_3 = random_string("09h10").downcase
+    host_system_id_1 = random_string("bf").downcase
+    host_system_id_2 = random_string("c0").downcase
+    host_system_id_3 = random_string("c9").downcase
+    host_system_id_4 = random_string("c6").downcase
+    reporter_id = "reporter"
+    guest_set_1 = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
+    guests_1 = ['g1', 'g2']
+    guest_set_2 = [{"guestId"=>"g3"},{"guestId"=>"g4"}]
+    guests_2 = ['g3', 'g4']
+    guest_set_3 = [{"guestId"=>"g5"},{"guestId"=>"g6"}]
+    guests_3 = ['g5', 'g6']
+
+    test_host_1 = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_1)
+    @cp.update_consumer({:uuid => test_host_1.uuid, :guestIds => guest_set_1})
+    @cp.get_consumer(test_host_1.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_1
+
+    test_host_2 = user.register(host_hyp_id_2, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_2, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_2)
+    @cp.update_consumer({:uuid => test_host_2.uuid, :guestIds => guest_set_2})
+    @cp.get_consumer(test_host_2.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_2
+
+    test_host_3 = user.register(host_hyp_id_3, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_3, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_3)
+    @cp.update_consumer({:uuid => test_host_3.uuid, :guestIds => guest_set_3})
+    @cp.get_consumer(test_host_3.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_3
+
+    async_update_hypervisor(owner, user, host_hyp_id_1, host_hyp_id_1, guests_1, true, reporter_id, {"dmi.system.uuid" => host_system_id_2})
+    test_host_1 = @cp.get_consumer(test_host_1.uuid)
+    test_host_1['hypervisorId']['hypervisorId'].should == host_hyp_id_1
+    test_host_1['facts']['dmi.system.uuid'].should == host_system_id_2
+
+    async_update_hypervisor(owner, user, host_hyp_id_2, host_hyp_id_2, guests_2, true, reporter_id, {"dmi.system.uuid" => host_system_id_4})
+    test_host_2 = @cp.get_consumer(test_host_2.uuid)
+    test_host_2['hypervisorId']['hypervisorId'].should == host_hyp_id_2
+    test_host_2['facts']['dmi.system.uuid'].should == host_system_id_4
+
+    async_update_hypervisor(owner, user, host_hyp_id_3, host_hyp_id_3, guests_3, true, reporter_id, {"dmi.system.uuid" => host_system_id_1})
+    test_host_3 = @cp.get_consumer(test_host_3.uuid)
+    test_host_3['hypervisorId']['hypervisorId'].should == host_hyp_id_3
+    test_host_3['facts']['dmi.system.uuid'].should == host_system_id_1
+  end
+
+  it 'will update the consumer name from the hypervisor checkin' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    host_hyp_id_1 = random_string("09h06").downcase
+    host_system_id_1 = random_string("bf").downcase
+    reporter_id = "reporter"
+    new_name = random_string('new_name')
+    guest_set_1 = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
+    guests_1 = ['g1', 'g2']
+
+    test_host_1 = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_1)
+    @cp.update_consumer({:uuid => test_host_1.uuid, :guestIds => guest_set_1})
+    @cp.get_consumer(test_host_1.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_1
+
+    async_update_hypervisor(owner, user, new_name, host_hyp_id_1, guests_1, true, reporter_id, {"dmi.system.uuid" => host_system_id_1})
+    test_host_1 = @cp.get_consumer(test_host_1.uuid)
+    test_host_1['name'].should == new_name
   end
 end
