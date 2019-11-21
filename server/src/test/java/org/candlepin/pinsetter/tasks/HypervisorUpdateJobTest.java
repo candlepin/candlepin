@@ -29,6 +29,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
@@ -84,6 +86,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     private I18n i18n;
     private SubscriptionServiceAdapter subAdapter;
     private HypervisorUpdateAction hypervisorUpdateAction;
+    private Configuration config;
 
     private ModelTranslator translator;
 
@@ -104,6 +107,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         consumerTypeCurator = mock(ConsumerTypeCurator.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
         environmentCurator = mock(EnvironmentCurator.class);
+        config = mock(Configuration.class);
         objectMapper = new ObjectMapper();
         when(owner.getId()).thenReturn("joe");
 
@@ -128,7 +132,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
                 "}]}";
 
         hypervisorUpdateAction = new HypervisorUpdateAction(consumerCurator, consumerTypeCurator,
-            consumerResource, subAdapter, translator);
+            consumerResource, subAdapter, translator, config);
     }
 
     @Test
@@ -246,6 +250,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         vcm.add(hypervisorId, hypervisor);
         when(consumerCurator.getHostConsumersMap(eq(owner),
             any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+        when(config.getBoolean(eq(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING))).thenReturn(true);
 
         hypervisorJson =
             "{\"hypervisors\":" +
@@ -270,6 +275,47 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
         Consumer updated = updateCaptor.getValue().stream().findFirst().orElse(null);
         assertEquals("expectedhypervisorid", updated.getHypervisorId().getHypervisorId());
+    }
+
+    @Test
+    public void hypervisorMatchOnUuidTurnedOffTest() throws JobExecutionException {
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
+        Consumer hypervisor = new Consumer();
+        hypervisor.setName("hyper-name");
+        hypervisor.setOwner(owner);
+        hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
+        String hypervisorId = "existing_hypervisor_id";
+        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        VirtConsumerMap vcm = new VirtConsumerMap();
+        vcm.add(hypervisorId, hypervisor);
+        when(consumerCurator.getHostConsumersMap(eq(owner),
+                any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+        when(config.getBoolean(eq(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING))).thenReturn(false);
+
+        hypervisorJson =
+                "{\"hypervisors\":" +
+                        "[{" +
+                        "\"name\" : \"hypervisor_999\"," +
+                        "\"hypervisorId\" : {\"hypervisorId\":\"expectedHypervisorId\"}," +
+                        "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]," +
+                        "\"facts\" : {\"dmi.system.uuid\" : \"notMyUuid\"}" +
+                        "}]}";
+
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(
+            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
+        injector.injectMembers(job);
+        job.execute(ctx);
+
+        ArgumentCaptor<Set<Consumer>> updateCaptor = ArgumentCaptor.forClass(Set.class);
+        verify(consumerCurator, times(2)).bulkUpdate(updateCaptor.capture(), eq(false));
+
+        Consumer updated = updateCaptor.getValue().stream().findFirst().orElse(null);
+        assertEquals("existing_hypervisor_id", updated.getHypervisorId().getHypervisorId());
     }
 
     @Test

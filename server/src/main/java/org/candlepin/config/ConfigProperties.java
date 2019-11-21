@@ -221,6 +221,7 @@ public class ConfigProperties {
 
     public static final String STANDALONE = "candlepin.standalone";
     public static final String ENV_CONTENT_FILTERING = "candlepin.environment_content_filtering";
+    public static final String USE_SYSTEM_UUID_FOR_MATCHING = "candlepin.use_system_uuid_for_matching";
 
     public static final String CONSUMER_SYSTEM_NAME_PATTERN = "candlepin.consumer_system_name_pattern";
     public static final String CONSUMER_PERSON_NAME_PATTERN = "candlepin.consumer_person_name_pattern";
@@ -398,6 +399,7 @@ public class ConfigProperties {
             this.put(STANDALONE, "true");
 
             this.put(ENV_CONTENT_FILTERING, "true");
+            this.put(USE_SYSTEM_UUID_FOR_MATCHING, "true");
 
             // what constitutes a valid consumer name
             this.put(CONSUMER_SYSTEM_NAME_PATTERN, "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
