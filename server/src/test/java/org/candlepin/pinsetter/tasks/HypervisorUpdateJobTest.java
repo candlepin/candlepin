@@ -258,7 +258,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
                 "\"name\" : \"hypervisor_999\"," +
                 "\"hypervisorId\" : {\"hypervisorId\":\"expectedHypervisorId\"}," +
                 "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]," +
-                "\"facts\" : {\"dmi.system.uuid\" : \"myUuid\"}" +
+                "\"facts\" : {\"" + Consumer.Facts.SYSTEM_UUID + "\" : \"myUuid\"}" +
                 "}]}";
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
@@ -299,7 +299,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
                         "\"name\" : \"hypervisor_999\"," +
                         "\"hypervisorId\" : {\"hypervisorId\":\"expectedHypervisorId\"}," +
                         "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]," +
-                        "\"facts\" : {\"dmi.system.uuid\" : \"notMyUuid\"}" +
+                        "\"facts\" : {\"" + Consumer.Facts.SYSTEM_UUID + "\" : \"notMyUuid\"}" +
                         "}]}";
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
