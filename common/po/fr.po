@@ -1,11 +1,12 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
+# corina roe <croe@redhat.com>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-10-11 10:33-0400\n"
-"PO-Revision-Date: 2019-10-04 08:49+0000\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2019-11-14 02:04+0000\n"
+"Last-Translator: Ondřej Januš <ojanus@redhat.com>\n"
 "Language-Team: French\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -359,7 +360,7 @@ msgstr "L’unité {0} a été supprimée"
 
 #: server/src/main/java/org/candlepin/auth/KeycloakAuth.java:114
 msgid "Keycloak Authentication failed"
-msgstr ""
+msgstr "Échec d''authentification Keycloak"
 
 #: server/src/main/java/org/candlepin/auth/OAuth.java:117
 #: server/src/main/java/org/candlepin/auth/OAuth.java:153
@@ -562,31 +563,21 @@ msgid ""
 "Cannot add pools that are restricted to unit type \"person\" to activation "
 "keys."
 msgstr ""
-"Impossible d’ajouter les pools restreints au type d’unité « personne » aux "
-"clés d’activation."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:87
 #, java-format
 msgid "Multi-entitlement not supported for pool \"{0}\""
 msgstr ""
-"Les multiples droits d’accès ne sont pas pris en charge par le pool « {0} »."
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author samfreemanz
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"Erreur : seuls les pools avec des abonnements produits à multiples droits "
-"d’accès peuvent être ajoutés à la clé d’activation avec une quantité "
-"supérieure à 1."
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author samfreemanz
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:95
 msgid "The quantity must be greater than 0"
-msgstr "La quantité doit être supérieure à 0"
+msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
@@ -911,7 +902,7 @@ msgstr "Le consommateur avec l’ID {0} est introuvable."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:478
 msgid "No UUIDs provided."
-msgstr ""
+msgstr "Aucun UUID fourni."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:587
 #, java-format
@@ -1024,6 +1015,7 @@ msgstr "L’organisation {0} n’existe pas."
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
 msgstr ""
+"{0} n'est pas autorisé à s'enregistrer auprès de notre organisation {1}"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1261
 #, java-format
@@ -1087,7 +1079,7 @@ msgstr "Impossible de spécifier une quantité lors de la liaison automatique."
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2052
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr "Demande d’auto-attach ignorée. Désactivé pour org « {0} »."
+msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2102
 #, java-format

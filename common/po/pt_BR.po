@@ -554,21 +554,15 @@ msgstr ""
 msgid "Multi-entitlement not supported for pool \"{0}\""
 msgstr ""
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author rgyorfy
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"Erro: Somente conjuntos com subscrições de produtos multi-direitos podem ser "
-"adicionadas à chave de ativação com uma quantidade maior que um."
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author rgyorfy
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:95
 msgid "The quantity must be greater than 0"
-msgstr "A quantidade deve ser maior do que 0"
+msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
