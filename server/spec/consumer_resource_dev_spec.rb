@@ -64,7 +64,6 @@ describe 'Consumer Dev Resource' do
     new_pool = entitlements[0].pool
     new_pool.type.should eq("DEVELOPMENT")
     new_pool.productId.should eq(expected_product_id)
-    new_pool.providedProducts.length.should eq(2)
     return entitlements[0]
   end
 
@@ -78,7 +77,6 @@ describe 'Consumer Dev Resource' do
     ent_pool = ents[0].pool
     ent_pool.type.should eq("DEVELOPMENT")
     ent_pool.productId.should eq("dev_product")
-    ent_pool.providedProducts.length.should eq(2)
     ent_pool.id.should eq(pools[0].pool.id)
   end
 

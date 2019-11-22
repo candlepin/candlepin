@@ -77,7 +77,6 @@ describe 'Autobind Disabled On Owner' do
     new_pool = entitlements[0].pool
     new_pool.type.should == "DEVELOPMENT"
     new_pool.productId.should == dev_product['id']
-    new_pool.providedProducts.length.should == 2
   end
 
   it 'will still register when activation key has autobind enabled' do
