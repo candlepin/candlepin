@@ -14,17 +14,19 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.util.Util;
 import org.candlepin.service.model.CertificateSerialInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import org.hibernate.annotations.GenericGenerator;
 
 import java.math.BigInteger;
 import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -43,6 +45,9 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
 
     @Id
     @NotNull
+    @GeneratedValue(generator = "CertificateSerialIdGenerator")
+    @GenericGenerator(name = "CertificateSerialIdGenerator",
+        strategy = "org.candlepin.model.CertificateSerialIdGenerator")
     private Long id;
 
     @NotNull
@@ -61,11 +66,10 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
      * Default constructor for serialization - DO NOT REMOVE!
      */
     public CertificateSerial() {
-        this.id = Util.generateUniqueLong();
+
     }
 
     public CertificateSerial(Date expiration) {
-        this();
         this.expiration = expiration;
     }
 

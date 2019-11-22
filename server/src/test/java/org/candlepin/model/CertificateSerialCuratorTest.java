@@ -327,7 +327,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         CertificateSerial serial = new CertificateSerial(expectedSerialNumber, new Date());
         // When manually setting the id for an entity, hibernate requires that
         // we call merge instead of save/persist.
-        certSerialCurator.save(serial);
+        certSerialCurator.merge(serial);
         assertNotNull(serial);
         assertNotNull(serial.getId());
         assertEquals(expectedSerialNumber, serial.getId());
