@@ -15,10 +15,15 @@
 package org.candlepin.audit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+
 
 /**
  * A MessageReceiver implementation that on failure to handle an event, will put the message
@@ -45,7 +50,16 @@ public class EventMessageReceiver extends MessageReceiver {
             log.debug("ActiveMQ message {} acknowledged for listener: {}", msg.getMessageID(), listener);
 
             // Process the message via our EventListener framework.
-            body = msg.getBodyBuffer().readString();
+            if (msg.getType() == ClientMessage.TEXT_TYPE) {
+                SimpleString sstr = msg.getBodyBuffer().readNullableSimpleString();
+                if (sstr != null) {
+                    body = sstr.toString();
+                }
+            }
+            else {
+                body = msg.getBodyBuffer().readString();
+            }
+
             log.debug("Got event: {}", body);
             Event event = mapper.readValue(body, Event.class);
             listener.onEvent(event);
