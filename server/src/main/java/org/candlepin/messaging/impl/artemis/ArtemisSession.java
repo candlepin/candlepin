@@ -238,7 +238,7 @@ public class ArtemisSession implements CPMSession {
             config = this.createMessageConfig();
         }
 
-        ClientMessage message = this.session.createMessage(config.isDurable());
+        ClientMessage message = this.session.createMessage(ClientMessage.TEXT_TYPE, config.isDurable());
         return new ArtemisMessage(this, message);
     }
 

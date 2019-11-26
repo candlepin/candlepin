@@ -18,8 +18,6 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.controller.ActiveMQStatusMonitor;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -53,7 +53,7 @@ import java.util.stream.Stream;
 
 
 /**
- * Test suite for the EventMessageReceiver class
+ * Test suite for the DefaultEventMessageReceiverTest class
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
