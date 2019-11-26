@@ -16,31 +16,45 @@ package org.candlepin.audit;
 
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.auth.PrincipalData;
+
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQExceptionType;
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
-import org.candlepin.async.impl.ActiveMQSessionFactory;
-import org.candlepin.auth.PrincipalData;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.quality.Strictness;
+
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 
 import java.io.StringWriter;
+import java.util.stream.Stream;
+
+
 
 /**
- * QpidEventMessageReceiverTest
+ * Test suite for the QpidEventMessageReceiver class
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class QpidEventMessageReceiverTest {
 
     @Mock private ClientSessionFactory clientSessionFactory;
@@ -54,7 +68,7 @@ public class QpidEventMessageReceiverTest {
     private ActiveMQSessionFactory sessionFactory;
     private QpidEventMessageReceiver receiver;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         when(clientMessage.getBodyBuffer()).thenReturn(activeMQBuffer);
         when(clientSessionFactory.createSession()).thenReturn(clientSession);
@@ -67,17 +81,40 @@ public class QpidEventMessageReceiverTest {
         receiver.connect();
     }
 
+    private void primeBuffer(byte type, String value) {
+        doReturn(type).when(this.clientMessage).getType();
+
+        if (type == ClientMessage.TEXT_TYPE) {
+            this.activeMQBuffer.writeNullableSimpleString(SimpleString.toSimpleString(value));
+        }
+        else {
+            // Old method, injects extra sizes into the message which are not properly translated
+            // for other protocols like STOMP.
+            this.activeMQBuffer.writeString(value);
+        }
+    }
+
+    public static Stream<Arguments> testMsgTypes() {
+        return Stream.of(
+            Arguments.of(ClientMessage.DEFAULT_TYPE),
+            Arguments.of(ClientMessage.TEXT_TYPE)
+        );
+    }
+
     @Test
-    public void shouldCreateNewConsumer()
-        throws Exception {
+    public void shouldCreateNewConsumer() throws Exception {
         verify(clientSession).createConsumer(anyString());
         verify(clientConsumer).setMessageHandler(eq(receiver));
         verify(clientSession).start();
     }
 
-    @Test
-    public void whenMapperReadThrowsExceptionThenMessageShouldBeAckedAndSessionRolledBack() throws Exception {
-        doReturn("test123").when(activeMQBuffer).readString();
+    @ParameterizedTest
+    @MethodSource("testMsgTypes")
+    public void whenMapperReadThrowsExceptionThenMessageShouldBeAckedAndSessionRolledBack(byte msgType)
+        throws Exception {
+
+        this.primeBuffer(msgType, "test123");
+
         doThrow(new JsonMappingException("Induced exception"))
             .when(mapper).readValue(anyString(), eq(Event.class));
 
@@ -89,10 +126,11 @@ public class QpidEventMessageReceiverTest {
         verify(clientSession, never()).commit();
     }
 
-    @Test
-    public void whenMsgAcknowledgeThrowsExceptionSessionIsRolledBack()
-        throws Exception {
-        doReturn(eventJson()).when(activeMQBuffer).readString();
+    @ParameterizedTest
+    @MethodSource("testMsgTypes")
+    public void whenMsgAcknowledgeThrowsExceptionSessionIsRolledBack(byte msgType) throws Exception {
+        this.primeBuffer(msgType, eventJson());
+
         doThrow(new ActiveMQException(ActiveMQExceptionType.DISCONNECTED, "Induced exception for testing"))
             .when(clientMessage).acknowledge();
 
@@ -102,10 +140,10 @@ public class QpidEventMessageReceiverTest {
         verify(clientSession, never()).commit();
     }
 
-    @Test
-    public void whenProperClientMsgPassedThenOnMessageShouldSucceed()
-        throws Exception {
-        doReturn(eventJson()).when(activeMQBuffer).readString();
+    @ParameterizedTest
+    @MethodSource("testMsgTypes")
+    public void whenProperClientMsgPassedThenOnMessageShouldSucceed(byte msgType) throws Exception {
+        this.primeBuffer(msgType, eventJson());
 
         receiver.onMessage(clientMessage);
 
@@ -115,9 +153,11 @@ public class QpidEventMessageReceiverTest {
         verify(clientSession, never()).rollback();
     }
 
-    @Test
-    public void sessionIsRolledBackWhenAnyExceptionIsThrownFromEventListener() throws Exception {
-        doReturn(eventJson()).when(activeMQBuffer).readString();
+    @ParameterizedTest
+    @MethodSource("testMsgTypes")
+    public void sessionIsRolledBackWhenAnyExceptionIsThrownFromEventListener(byte msgType) throws Exception {
+        this.primeBuffer(msgType, eventJson());
+
         doThrow(new RuntimeException("Forced")).when(eventListener).onEvent(any(Event.class));
 
         receiver.onMessage(clientMessage);
@@ -127,9 +167,13 @@ public class QpidEventMessageReceiverTest {
         verify(clientSession, never()).commit();
     }
 
-    @Test
-    public void noRollbackOccursWhenQpidConnectionExceptionIsThrownFromListener() throws Exception {
-        doReturn(eventJson()).when(activeMQBuffer).readString();
+    @ParameterizedTest
+    @MethodSource("testMsgTypes")
+    public void noRollbackOccursWhenQpidConnectionExceptionIsThrownFromListener(byte msgType)
+        throws Exception {
+
+        this.primeBuffer(msgType, eventJson());
+
         doThrow(new QpidConnectionException("Forced")).when(eventListener).onEvent(any(Event.class));
 
         receiver.onMessage(clientMessage);

@@ -19,6 +19,7 @@ import org.candlepin.messaging.CPMMessage;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 
 import java.util.Objects;
@@ -129,7 +130,7 @@ public class ArtemisMessage implements CPMMessage {
         ActiveMQBuffer buffer = this.message.getBodyBuffer();
 
         buffer.clear();
-        buffer.writeString(body);
+        buffer.writeNullableSimpleString(SimpleString.toSimpleString(body));
 
         return this;
     }
@@ -144,7 +145,20 @@ public class ArtemisMessage implements CPMMessage {
 
         if (buffer.readableBytes() > 0) {
             int idx = buffer.readerIndex();
-            output = buffer.readString();
+
+            switch (this.message.getType()) {
+                case ClientMessage.TEXT_TYPE:
+                    SimpleString sstr = buffer.readNullableSimpleString();
+                    if (sstr != null) {
+                        output = sstr.toString();
+                    }
+                    break;
+
+                default:
+                    // This should probably try to read the whole body as a byte array and convert
+                    // that to a string. Change as necessary.
+                    output = buffer.readString();
+            }
 
             // Reset the reader index so we can repeat the read
             buffer.readerIndex(idx);
