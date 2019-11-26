@@ -99,8 +99,9 @@ public class TestUtil {
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
-        return new Consumer("TestConsumer" + randomInt(), "User", owner, type);
+        return new Consumer("TestConsumer" + randomInt(), "User", owner, type).setUuid(Util.generateUUID());
     }
+
     public static ConsumerDTO createConsumerDTO(ConsumerTypeDTO type, OwnerDTO owner) {
         return createConsumerDTO("TestConsumer" + randomInt(), "User", owner, type);
     }
@@ -154,8 +155,7 @@ public class TestUtil {
             "User",
             owner,
             createConsumerType()
-        );
-
+        ).setUuid(Util.generateUUID());
         consumer.setCreated(new Date());
         consumer.setFact("foo", "bar");
         consumer.setFact("foo1", "bar1");

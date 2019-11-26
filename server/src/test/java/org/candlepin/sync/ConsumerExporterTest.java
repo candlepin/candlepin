@@ -67,8 +67,7 @@ public class ConsumerExporterTest {
 
         StringWriter writer = new StringWriter();
 
-        Consumer consumer = new Consumer();
-        consumer.setUuid("test-uuid");
+        Consumer consumer = new Consumer().setUuid("test-uuid");
         consumer.setName("testy consumer");
         consumer.setType(ctype);
         consumer.setContentAccessMode("access_mode");
