@@ -767,6 +767,7 @@ public class ConsumerResourceUpdateTest {
 
         when(environmentCurator.get(changedEnvironment.getId())).thenReturn(changedEnvironment);
         when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(environmentCurator.exists(changedEnvironment.getId())).thenReturn(true);
 
         resource.updateConsumer(existing.getUuid(), updated, principal);
 

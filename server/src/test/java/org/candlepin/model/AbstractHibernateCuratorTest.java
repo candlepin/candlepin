@@ -70,13 +70,19 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     AbstractHibernateCurator<Owner> testOwnerCurator;
     AbstractHibernateCurator<Content> testContentCurator;
+    AbstractHibernateCurator<Environment> testEnvironmentCurator;
+    AbstractHibernateCurator<OwnerProduct> testOwnerProductCurator;
 
     @BeforeEach
     public void setup() {
         this.testOwnerCurator = new TestHibernateCurator<>(Owner.class);
         this.testContentCurator = new TestHibernateCurator<>(Content.class);
+        this.testEnvironmentCurator = new TestHibernateCurator<>(Environment.class);
+        this.testOwnerProductCurator = new TestHibernateCurator<>(OwnerProduct.class);
         this.injectMembers(this.testOwnerCurator);
         this.injectMembers(this.testContentCurator);
+        this.injectMembers(this.testEnvironmentCurator);
+        this.injectMembers(this.testOwnerProductCurator);
     }
 
     @Test
@@ -795,4 +801,32 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
             assertTrue(entity.getName().matches("owner-\\d"));
         }
     }
+
+    @Test
+    public void testGetPrimaryKeyName() {
+        String environmentPrimaryKeyName = this.testEnvironmentCurator.getPrimaryKeyName();
+        String ownerPrimaryKeyName = this.testOwnerCurator.getPrimaryKeyName();
+
+        assertEquals("id", environmentPrimaryKeyName);
+        assertEquals("id", ownerPrimaryKeyName);
+    }
+
+    @Test
+    public void testGetPrimaryKeyNameOnCompositeKey() {
+        assertNull(this.testOwnerProductCurator.getPrimaryKeyName());
+    }
+
+    @Test
+    public void testExists() {
+        Owner owner = this.createOwner("ownerPrimaryKey", "owner-1");
+        Environment environment = this.createEnvironment(owner,
+            "SomeId", "fooBar", null, null, null);
+
+        assertTrue(this.testOwnerCurator.exists(owner.getId()));
+        assertFalse(this.testOwnerCurator.exists("randomOwnerId"));
+        assertTrue(this.environmentCurator.exists(environment.getId()));
+        assertFalse(this.environmentCurator.exists("randomEnvId"));
+
+    }
+
 }
