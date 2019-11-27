@@ -81,7 +81,6 @@ public class HypervisorUpdateAction {
         this.config = config;
     }
 
-    @Transactional
     public Result update(
         final Owner owner,
         final HypervisorUpdateJob.HypervisorList hypervisors,
@@ -97,126 +96,122 @@ public class HypervisorUpdateAction {
         Set<String> hosts = new HashSet<>();
         Set<String> guests = new HashSet<>();
         Map<String, Consumer> incomingHosts = new HashMap<>();
-        parseHypervisorList(hypervisors, hosts, guests, incomingHosts);
-        // TODO Need to ensure that we retrieve existing guestIds from the DB before continuing.
-
-        // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
-        VirtConsumerMap hypervisorKnownConsumersMap = consumerCurator
-            .getHostConsumersMap(owner, hypervisors);
         HypervisorUpdateResultDTO result = new HypervisorUpdateResultDTO();
-        Map<String, Consumer> systemUuidKnownConsumersMap = new HashMap<>();
-        if (config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING)) {
-            for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
-                if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
-                    systemUuidKnownConsumersMap.put(
-                        consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(), consumer);
-                }
+        parseHypervisorList(hypervisors, hosts, guests, incomingHosts);
+        VirtConsumerMap hypervisorConsumersMap = new VirtConsumerMap();
+
+        for (String hypervisorId : hosts) {
+            Consumer knownHost = reconcileHost(owner, incomingHosts.get(hypervisorId), result, create,
+                principal, jobReporterId);
+            if (knownHost != null) {
+                hypervisorConsumersMap.add(knownHost.getHypervisorId().getHypervisorId(), knownHost);
             }
         }
+        return new Result(result, hypervisorConsumersMap);
+    }
 
-        Map<String, GuestId> guestIds = consumerCurator.getGuestIdMap(guests, owner);
-        for (String hypervisorId : hosts) {
-            Consumer incoming = incomingHosts.get(hypervisorId);
-            Consumer knownHost = hypervisorKnownConsumersMap.get(hypervisorId);
-            // HypervisorId might be different in candlepin
-            knownHost = reconcileByUuid(knownHost, incoming, systemUuidKnownConsumersMap);
-            Consumer reportedOnConsumer = null;
+    @Transactional
+    public Consumer reconcileHost(Owner owner, Consumer incomingHost, HypervisorUpdateResultDTO result,
+        boolean create, Principal principal, String jobReporterId) {
+        String systemUuid = incomingHost.getFact(Consumer.Facts.SYSTEM_UUID);
+        String hypervisorId = incomingHost.getHypervisorId().getHypervisorId();
+        Consumer resultHost = consumerCurator.getExistingConsumerByHypervisorIdOrUuid(owner.getId(),
+            hypervisorId,
+            config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) ? systemUuid : null);
 
-            if (knownHost == null) {
-                if (!create) {
-                    result.addFailed(hypervisorId,
-                        "Unable to find hypervisor with id " + hypervisorId + " in org " + ownerKey);
-                }
-                else {
-                    log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
-                    Consumer newHost = createConsumerForHypervisorId(hypervisorId, jobReporterId, owner,
-                        principal, incoming);
-
-                    // Since we just created this new consumer, we can migrate the guests immediately
-                    GuestMigration guestMigration = new GuestMigration(consumerCurator)
-                        .buildMigrationManifest(incoming, newHost);
-
-                    // Now that we have the new consumer persisted, immediately migrate the guests to it
-                    if (guestMigration.isMigrationPending()) {
-                        guestMigration.migrate(false);
-                    }
-
-                    hypervisorKnownConsumersMap.add(hypervisorId, newHost);
-                    result.addCreated(this.translator.translate(newHost, HypervisorConsumerDTO.class));
-                    reportedOnConsumer = newHost;
-                }
+        if (jobReporterId == null) {
+            log.debug("hypervisor checkin reported asynchronously without reporter id " +
+                "for hypervisor:{} of owner:{}", hypervisorId, owner.getKey());
+        }
+        if (resultHost == null) {
+            if (!create) {
+                result.addFailed(hypervisorId,
+                    "Unable to find hypervisor with id " + hypervisorId + " in org " + owner.getKey());
             }
             else {
-                boolean hypervisorIdUpdated = updateHypervisorId(knownHost, owner, jobReporterId,
-                    hypervisorId);
+                log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
+                resultHost = createConsumerForHypervisorId(hypervisorId,
+                    jobReporterId, owner, principal, incomingHost);
 
-                boolean nameUpdated = knownHost.getName() == null ||
-                    !knownHost.getName().equals(incoming.getName());
-                if (nameUpdated) {
-                    knownHost.setName(incoming.getName());
-                }
+                // Since we just created this new consumer, we can migrate the guests immediately
+                GuestMigration guestMigration = new GuestMigration(consumerCurator)
+                    .buildMigrationManifest(incomingHost, resultHost);
 
-                reportedOnConsumer = knownHost;
-                if (jobReporterId != null && knownHost.getHypervisorId() != null &&
-                    hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
-                    knownHost.getHypervisorId().getReporterId() != null &&
-                    !jobReporterId.equalsIgnoreCase(knownHost.getHypervisorId().getReporterId())) {
-                    log.debug("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
-                        hypervisorId, ownerKey, knownHost.getHypervisorId().getReporterId(),
-                        jobReporterId);
-                }
-                boolean typeUpdated = false;
-                if (!hypervisorType.getId().equals(knownHost.getTypeId())) {
-                    typeUpdated = true;
-                    knownHost.setType(hypervisorType);
-                }
-
-                final GuestMigration guestMigration = new GuestMigration(consumerCurator)
-                    .buildMigrationManifest(incoming, knownHost);
-
-                final boolean factsUpdated = consumerResource.checkForFactsUpdate(knownHost, incoming);
-
-                if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated ||
-                    hypervisorIdUpdated || nameUpdated) {
-                    knownHost.setLastCheckin(new Date());
+                // Now that we have the new consumer persisted, immediately migrate the guests to it
+                if (guestMigration.isMigrationPending()) {
                     guestMigration.migrate(false);
-                    result.addUpdated(this.translator.translate(knownHost, HypervisorConsumerDTO.class));
                 }
-                else {
-                    result.addUnchanged(
-                        this.translator.translate(knownHost, HypervisorConsumerDTO.class));
+                try {
+                    consumerCurator.create(resultHost);
+                    result.addCreated(this.translator.translate(resultHost, HypervisorConsumerDTO.class));
+                }
+                catch (Exception e) {
+                    result.addFailed(hypervisorId,
+                        "Unable to create hypervisor with id " + hypervisorId +
+                        " in org " + owner.getKey());
                 }
             }
+        }
+        else {
+            consumerCurator.lock(resultHost);
+            boolean hypervisorIdUpdated = updateHypervisorId(resultHost, owner, jobReporterId,
+                hypervisorId);
+
+            boolean nameUpdated = resultHost.getName() == null ||
+                !resultHost.getName().equals(incomingHost.getName());
+            if (nameUpdated) {
+                resultHost.setName(incomingHost.getName());
+            }
+
+            if (jobReporterId != null && resultHost.getHypervisorId() != null &&
+                hypervisorId.equalsIgnoreCase(resultHost.getHypervisorId().getHypervisorId()) &&
+                resultHost.getHypervisorId().getReporterId() != null &&
+                !jobReporterId.equalsIgnoreCase(resultHost.getHypervisorId().getReporterId())) {
+                log.debug("Reporter changed for Hypervisor {} of Owner {} from {} to {}",
+                    hypervisorId, owner.getKey(), resultHost.getHypervisorId().getReporterId(),
+                    jobReporterId);
+            }
+            boolean typeUpdated = false;
+            if (!hypervisorType.getId().equals(resultHost.getTypeId())) {
+                typeUpdated = true;
+                resultHost.setType(hypervisorType);
+            }
+
+            final GuestMigration guestMigration = new GuestMigration(consumerCurator)
+                .buildMigrationManifest(incomingHost, resultHost);
+
+            final boolean factsUpdated = consumerResource.checkForFactsUpdate(resultHost, incomingHost);
+
+            if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated ||
+                hypervisorIdUpdated || nameUpdated) {
+                resultHost.setLastCheckin(new Date());
+                guestMigration.migrate(false);
+                result.addUpdated(this.translator.translate(resultHost, HypervisorConsumerDTO.class));
+            }
+            else {
+                result.addUnchanged(
+                    this.translator.translate(resultHost, HypervisorConsumerDTO.class));
+            }
+
             // update reporter id if it changed
-            if (jobReporterId != null && reportedOnConsumer != null &&
-                reportedOnConsumer.getHypervisorId() != null &&
-                (reportedOnConsumer.getHypervisorId().getReporterId() == null ||
-                !jobReporterId.contentEquals(reportedOnConsumer.getHypervisorId().getReporterId()))) {
-                reportedOnConsumer.getHypervisorId().setReporterId(jobReporterId);
+            if (jobReporterId != null && resultHost != null &&
+                resultHost.getHypervisorId() != null &&
+                (resultHost.getHypervisorId().getReporterId() == null ||
+                !jobReporterId.contentEquals(resultHost.getHypervisorId().getReporterId()))) {
+                resultHost.getHypervisorId().setReporterId(jobReporterId);
             }
-            else if (jobReporterId == null) {
-                log.debug("hypervisor checkin reported asynchronously without reporter id " +
-                    "for hypervisor:{} of owner:{}", hypervisorId, ownerKey);
+            try {
+                consumerCurator.update(resultHost);
             }
-        }
-        return new Result(result, hypervisorKnownConsumersMap);
-    }
-
-    private Consumer reconcileByUuid(Consumer knownHost, Consumer incoming,
-        Map<String, Consumer> systemUuidKnownConsumersMap) {
-        if (knownHost == null && config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
-            incoming.hasFact(Consumer.Facts.SYSTEM_UUID) &&
-            systemUuidKnownConsumersMap.get(
-            incoming.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase()) != null) {
-
-            knownHost = systemUuidKnownConsumersMap.get(incoming.getFact(
-                    Consumer.Facts.SYSTEM_UUID).toLowerCase());
-            if (knownHost != null) {
-                log.debug("Found a known host by system uuid");
+            catch (Exception e) {
+                result.addFailed(hypervisorId,
+                    "Unable to update hypervisor with id " + hypervisorId +
+                    " in org " + owner.getKey());
             }
         }
-        return knownHost;
+        return resultHost;
     }
+
     private boolean updateHypervisorId(Consumer consumer, Owner owner, String reporterId,
         String hypervisorId) {
 

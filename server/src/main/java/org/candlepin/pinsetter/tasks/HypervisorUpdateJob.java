@@ -21,14 +21,12 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.JobCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.service.impl.HypervisorUpdateAction;
@@ -57,7 +55,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -167,23 +164,6 @@ public class HypervisorUpdateJob extends KingpinJob {
             final HypervisorUpdateAction.Result updateResult = hypervisorUpdateAction.update(
                 owner, hypervisors, create, principal, jobReporterId);
             final HypervisorUpdateResultDTO result = updateResult.getResult();
-            final VirtConsumerMap hypervisorKnownConsumersMap = updateResult.getKnownConsumers();
-
-            final List<Consumer> created = new ArrayList<>();
-            final List<Consumer> updated = new ArrayList<>();
-            for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
-                final HypervisorConsumerDTO translated = this.translator.translate(
-                    consumer, HypervisorConsumerDTO.class);
-                if (result.wasCreated(translated)) {
-                    created.add(consumer);
-                }
-                else {
-                    updated.add(consumer);
-                }
-            }
-
-            doInBulk(created, consumers -> consumerCurator.saveAll(consumers, false, false));
-            doInBulk(updated, consumers -> consumerCurator.bulkUpdate(consumers, false));
 
             log.info("Summary for report from {} by principal {}\n {}", jobReporterId, principal, result);
             context.setResult(result);

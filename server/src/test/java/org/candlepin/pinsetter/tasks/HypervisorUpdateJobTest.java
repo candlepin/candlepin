@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyString;
@@ -159,7 +160,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
             ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
-        verify(consumerCurator).saveAll(any(Set.class), eq(false), eq(false));
+        verify(consumerCurator).create(any(Consumer.class));
     }
 
     @Test
@@ -178,9 +179,9 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
             ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
         job.execute(ctx);
-        ArgumentCaptor<Set<Consumer>> argument = ArgumentCaptor.forClass(Set.class);
-        verify(consumerCurator).saveAll(argument.capture(), eq(false), eq(false));
-        Consumer created = argument.getValue().stream().findFirst().orElse(null);
+        ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerCurator).create(argument.capture());
+        Consumer created = argument.getValue();
         assertEquals("createReporterId", created.getHypervisorId().getReporterId());
     }
 
@@ -191,12 +192,11 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         Consumer hypervisor = new Consumer();
         hypervisor.setName("hypervisor_name");
         hypervisor.setOwner(owner);
+        hypervisor.setId("the-id");
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
-        VirtConsumerMap vcm = new VirtConsumerMap();
-        vcm.add(hypervisorId, hypervisor);
-        when(consumerCurator.getHostConsumersMap(eq(owner),
-            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
+            nullable(String.class))).thenReturn(hypervisor);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
@@ -207,7 +207,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         injector.injectMembers(job);
         job.execute(ctx);
         verify(consumerResource).checkForFactsUpdate(any(Consumer.class), any(Consumer.class));
-        verify(consumerCurator, times(2)).bulkUpdate(any(Set.class), eq(false));
+        verify(consumerCurator, times(1)).update(any(Consumer.class));
     }
 
     @Test
@@ -219,10 +219,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
-        VirtConsumerMap vcm = new VirtConsumerMap();
-        vcm.add(hypervisorId, hypervisor);
-        when(consumerCurator.getHostConsumersMap(eq(owner),
-            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
+            nullable(String.class))).thenReturn(hypervisor);
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal,
             "updateReporterId");
@@ -244,19 +242,18 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         hypervisor.setName("hyper-name");
         hypervisor.setOwner(owner);
         hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
+        hypervisor.setId("the-id");
         String hypervisorId = "existing_hypervisor_id";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
-        VirtConsumerMap vcm = new VirtConsumerMap();
-        vcm.add(hypervisorId, hypervisor);
-        when(consumerCurator.getHostConsumersMap(eq(owner),
-            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
+            any(String.class))).thenReturn(hypervisor);
         when(config.getBoolean(eq(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING))).thenReturn(true);
 
         hypervisorJson =
             "{\"hypervisors\":" +
                 "[{" +
                 "\"name\" : \"hypervisor_999\"," +
-                "\"hypervisorId\" : {\"hypervisorId\":\"expectedHypervisorId\"}," +
+                "\"hypervisorId\" : {\"hypervisorId\":\"expected_hypervisor_id\"}," +
                 "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]," +
                 "\"facts\" : {\"" + Consumer.Facts.SYSTEM_UUID + "\" : \"myUuid\"}" +
                 "}]}";
@@ -270,11 +267,11 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         injector.injectMembers(job);
         job.execute(ctx);
 
-        ArgumentCaptor<Set<Consumer>> updateCaptor = ArgumentCaptor.forClass(Set.class);
-        verify(consumerCurator, times(2)).bulkUpdate(updateCaptor.capture(), eq(false));
+        ArgumentCaptor<Consumer> updateCaptor = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerCurator, times(1)).update(updateCaptor.capture());
 
-        Consumer updated = updateCaptor.getValue().stream().findFirst().orElse(null);
-        assertEquals("expectedhypervisorid", updated.getHypervisorId().getHypervisorId());
+        Consumer updated = updateCaptor.getValue();
+        assertEquals("expected_hypervisor_id", updated.getHypervisorId().getHypervisorId());
     }
 
     @Test
@@ -287,19 +284,20 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
         String hypervisorId = "existing_hypervisor_id";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
-        VirtConsumerMap vcm = new VirtConsumerMap();
-        vcm.add(hypervisorId, hypervisor);
-        when(consumerCurator.getHostConsumersMap(eq(owner),
-                any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
+            isNull())).thenReturn(null);
+        // if it uses the uuid then it will return the hypervisor and update it. That will fail the test.
+        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
+            any(String.class))).thenReturn(hypervisor);
         when(config.getBoolean(eq(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING))).thenReturn(false);
 
         hypervisorJson =
                 "{\"hypervisors\":" +
                         "[{" +
                         "\"name\" : \"hypervisor_999\"," +
-                        "\"hypervisorId\" : {\"hypervisorId\":\"expectedHypervisorId\"}," +
+                        "\"hypervisorId\" : {\"hypervisorId\":\"expected_hypervisor_id\"}," +
                         "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]," +
-                        "\"facts\" : {\"" + Consumer.Facts.SYSTEM_UUID + "\" : \"notMyUuid\"}" +
+                        "\"facts\" : {\"" + Consumer.Facts.SYSTEM_UUID + "\" : \"myUuid\"}" +
                         "}]}";
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
@@ -311,11 +309,11 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         injector.injectMembers(job);
         job.execute(ctx);
 
-        ArgumentCaptor<Set<Consumer>> updateCaptor = ArgumentCaptor.forClass(Set.class);
-        verify(consumerCurator, times(2)).bulkUpdate(updateCaptor.capture(), eq(false));
+        ArgumentCaptor<Consumer> createCaptor = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerCurator, times(1)).create(createCaptor.capture());
 
-        Consumer updated = updateCaptor.getValue().stream().findFirst().orElse(null);
-        assertEquals("existing_hypervisor_id", updated.getHypervisorId().getHypervisorId());
+        Consumer created = createCaptor.getValue();
+        assertEquals("expected_hypervisor_id", created.getHypervisorId().getHypervisorId());
     }
 
     @Test
@@ -360,10 +358,8 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(HypervisorUpdateJob.HypervisorList.class)))
-            .thenReturn(new VirtConsumerMap());
-
+        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
+            any(String.class))).thenReturn(new Consumer());
         HypervisorUpdateJob job = new HypervisorUpdateJob(
             ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
         injector.injectMembers(job);
