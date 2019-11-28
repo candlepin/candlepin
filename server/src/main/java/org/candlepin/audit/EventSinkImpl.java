@@ -51,6 +51,9 @@ import javax.inject.Inject;
 public class EventSinkImpl implements EventSink {
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
 
+    public static final String EVENT_TYPE_KEY = "EVENT_TYPE";
+    public static final String EVENT_TARGET_KEY = "EVENT_TARGET";
+
     private EventFactory eventFactory;
     private ObjectMapper mapper;
     private EventFilter eventFilter;
@@ -64,6 +67,7 @@ public class EventSinkImpl implements EventSink {
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
         ObjectMapper mapper, Configuration config, EventSinkConnection connection,
         ModeManager modeManager) throws ActiveMQException {
+
         this.eventFactory = eventFactory;
         this.mapper = mapper;
         this.eventFilter = eventFilter;
@@ -82,13 +86,14 @@ public class EventSinkImpl implements EventSink {
             session.start();
             for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
                 String queueName = "event." + listenerClassName;
-                long msgCount = session.queueQuery(new SimpleString(queueName)).getMessageCount();
+                long msgCount = session.queueQuery(SimpleString.toSimpleString(queueName)).getMessageCount();
                 results.add(new QueueStatus(queueName, msgCount));
             }
         }
         catch (Exception e) {
             log.error("Error looking up ActiveMQ queue info: ", e);
         }
+
         return results;
     }
 
@@ -119,7 +124,8 @@ public class EventSinkImpl implements EventSink {
             if (messageSender == null) {
                 messageSender = new EventMessageSender(this.connection);
             }
-            messageSender.queueMessage(mapper.writeValueAsString(event));
+
+            messageSender.queueMessage(mapper.writeValueAsString(event), event.getType(), event.getTarget());
         }
         catch (Exception e) {
             log.error("Error while trying to send event", e);
@@ -240,9 +246,20 @@ public class EventSinkImpl implements EventSink {
             log.debug("Created new message sender.");
         }
 
-        public void queueMessage(String eventString) throws ActiveMQException {
-            ClientMessage message = session.createMessage(true);
-            message.getBodyBuffer().writeString(eventString);
+        public void queueMessage(String eventString, Event.Type type, Event.Target target)
+            throws ActiveMQException {
+
+            ClientMessage message = session.createMessage(ClientMessage.TEXT_TYPE, true);
+            message.getBodyBuffer().writeNullableSimpleString(SimpleString.toSimpleString(eventString));
+
+            // Set the event type and target if provided
+            if (type != null) {
+                message.putStringProperty(EVENT_TYPE_KEY, type.name());
+            }
+
+            if (target != null) {
+                message.putStringProperty(EVENT_TARGET_KEY, target.name());
+            }
 
             // NOTE: not actually sent until we commit the session.
             producer.send(message);
