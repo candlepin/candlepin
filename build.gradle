@@ -104,6 +104,7 @@ ext.libraries = [
         "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final",
         "javax.transaction:jta:1.1",
         "javax.persistence:javax.persistence-api:2.2",
+        "javax.xml.bind:jaxb-api:2.3.1",
     ],
     commons: [
         "commons-codec:commons-codec:1.11",
