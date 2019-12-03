@@ -14,7 +14,9 @@
  */
 package org.candlepin.test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
@@ -27,6 +29,7 @@ import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
+import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -47,6 +50,7 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.util.Transactional;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -55,6 +59,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,7 +79,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 
 /**
  * TestUtil for creating various testing objects. Objects backed by the database
@@ -768,5 +776,62 @@ public class TestUtil {
         assertEquals(pool1.getCertificate(), pool2.getCertificate());
         assertEquals(pool1.getCdn(), pool2.getCdn());
 
+    }
+
+    public static void mockTransactionalFunctionality(EntityManager mockEntityManager,
+        AbstractHibernateCurator mockCurator) {
+
+        EntityTransaction transaction = new EntityTransaction() {
+            private boolean active;
+            private boolean rollbackOnly;
+
+            @Override
+            public void begin() {
+                this.active = true;
+            }
+
+            @Override
+            public void commit() {
+                if (!this.active) {
+                    throw new IllegalStateException();
+                }
+
+                this.active = false;
+            }
+
+            @Override
+            public boolean getRollbackOnly() {
+                return this.rollbackOnly;
+            }
+
+            @Override
+            public boolean isActive() {
+                return this.active;
+            }
+
+            @Override
+            public void rollback() {
+                if (!this.active) {
+                    throw new IllegalStateException();
+                }
+
+                this.active = false;
+            }
+
+            @Override
+            public void setRollbackOnly() {
+                this.rollbackOnly = true;
+            }
+        };
+
+        doReturn(transaction).when(mockEntityManager).getTransaction();
+
+        doAnswer(new Answer<Transactional>() {
+            @Override
+            public Transactional answer(InvocationOnMock iom) throws Throwable {
+                Transactional.Action action = (Transactional.Action) iom.getArguments()[0];
+                return new Transactional(mockEntityManager).wrap(action);
+            }
+        }).when(mockCurator).transactional(any());
     }
 }
