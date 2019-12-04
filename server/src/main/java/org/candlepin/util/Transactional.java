@@ -70,7 +70,7 @@ public class Transactional<O> {
          * @return
          *  the output of the operation (optional)
          */
-        O execute(Object... args);
+        O execute(Object... args) throws Exception;
     }
 
     /**
@@ -81,14 +81,47 @@ public class Transactional<O> {
 
         /**
          * Called when a transaction this listener is registered to has completed.
+         *
+         * @param status
+         *  the status of the transaction, can be compared to the values provided by
+         *  javax.transaction.Status
          */
         void transactionComplete(int status);
+    }
+
+    /**
+     * A functional interface for validating the output of an action and either committing or
+     * rolling back the transaction as appropriate.
+     *
+     * @param <O>
+     *  The output type processed by this validator
+     */
+    @FunctionalInterface
+    public interface Validator<O> {
+
+        /**
+         * Called when the transaction action completes, and can be used to determine whether or
+         * not the transaction should be committed or rolled back based on the value.
+         * <p></p>
+         * When a validator is provided to the <tt>rollbackWhen</tt> method, the transaction will
+         * be rolled back if this method returns true and committed if it returns false. When
+         * provided to the <tt>commitWhen</tt> method, the transaction will be committed if this
+         * method returns true and rolled back if it returns false.
+         *
+         * @param output
+         *  the output of the transaction action; may be null
+         *
+         * @return
+         *  true if the registered transaction operation should be performed; false otherwise
+         */
+        boolean validate(O output);
     }
 
 
     private final EntityManager entityManager;
     private final List<Listener> commitListeners;
     private final List<Listener> rollbackListeners;
+    private final List<Validator<O>> validators;
 
     private Action<O> action;
     private boolean commitOnException;
@@ -113,6 +146,7 @@ public class Transactional<O> {
 
         this.commitListeners = new LinkedList<>();
         this.rollbackListeners = new LinkedList<>();
+        this.validators = new LinkedList<>();
 
         this.commitOnException = false;
         this.exclusive = true;
@@ -212,6 +246,58 @@ public class Transactional<O> {
     }
 
     /**
+     * Adds a result validator that will only allow the transaction to be committed if the result
+     * of the action passes validation. If the validation fails, the transaction will be rolled
+     * back instead.
+     * <p></p>
+     * Multiple validators may be added, and a given validator may be added multiple times.
+     *
+     * @param validator
+     *  a validator to use for testing the output of the transaction action
+     *
+     * @throws IllegalArgumentException
+     *  if validator is null
+     *
+     * @return
+     *  this transactional wrapper
+     */
+    public Transactional<O> commitIf(Validator<O> validator) {
+        if (validator == null) {
+            throw new IllegalArgumentException("validator is null");
+        }
+
+        this.validators.add(validator);
+        return this;
+    }
+
+    /**
+     * Adds a result validator that checks if the transaction should be rolled back upon completion
+     * of the transactional operation. Multiple validators may be added, and a given validator may
+     * be added multiple times.
+     * <p></p>
+     * <strong>Note:</strong> This method operates by wrapping the provided validator in another
+     * validator that simply negates its output. The method name is provided purely for code clarity
+     * purposes and should be avoided in favor of the <tt>commitIf</tt> method where appropriate.
+     *
+     * @param validator
+     *  a validator to use for testing the output of the transaction action
+     *
+     * @throws IllegalArgumentException
+     *  if validator is null
+     *
+     * @return
+     *  this transactional wrapper
+     */
+    public Transactional<O> rollbackIf(Validator<O> validator) {
+        if (validator == null) {
+            throw new IllegalArgumentException("validator is null");
+        }
+
+        this.validators.add(output -> !validator.validate(output));
+        return this;
+    }
+
+    /**
      * Sets this wrapper to automatically commit the transaction if an uncaught exception occurs.
      * By default, the wrapper will rollback the transaction on exception, but this method can be
      * used to specify the behavior.
@@ -269,7 +355,7 @@ public class Transactional<O> {
      * @return
      *  the output of the action
      */
-    public O execute(Object... args) {
+    public O execute(Object... args) throws Exception {
         if (this.action == null) {
             throw new IllegalStateException("no action provided");
         }
@@ -291,6 +377,15 @@ public class Transactional<O> {
 
         try {
             output = this.action.execute(args);
+
+            for (Validator<O> validator : this.validators) {
+                if (!validator.validate(output)) {
+                    log.debug("Transaction operation output failed validation: {}", output);
+
+                    transaction.setRollbackOnly();
+                    break;
+                }
+            }
         }
         catch (Exception e) {
             if (!this.commitOnException) {

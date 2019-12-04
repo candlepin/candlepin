@@ -60,7 +60,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
@@ -81,6 +80,8 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+
+
 
 /**
  * TestUtil for creating various testing objects. Objects backed by the database
@@ -825,12 +826,9 @@ public class TestUtil {
 
         doReturn(transaction).when(mockEntityManager).getTransaction();
 
-        doAnswer(new Answer<Transactional>() {
-            @Override
-            public Transactional answer(InvocationOnMock iom) throws Throwable {
-                Transactional.Action action = (Transactional.Action) iom.getArguments()[0];
-                return new Transactional(mockEntityManager).wrap(action);
-            }
+        doAnswer((Answer<Transactional>) iom -> {
+            Transactional.Action action = (Transactional.Action) iom.getArguments()[0];
+            return new Transactional(mockEntityManager).wrap(action);
         }).when(mockCurator).transactional(any());
     }
 }

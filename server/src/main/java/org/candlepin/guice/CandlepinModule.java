@@ -332,7 +332,6 @@ public class CandlepinModule extends AbstractModule {
         bind(DistributorVersionResource.class);
         bind(EntitlementResource.class);
         bind(EnvironmentResource.class);
-        bind(EventResource.class);
         bind(GuestIdResource.class);
         bind(HypervisorResource.class);
         bind(JobResource.class);

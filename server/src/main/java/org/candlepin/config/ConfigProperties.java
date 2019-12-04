@@ -278,6 +278,7 @@ public class ConfigProperties {
     /** Path to keycloak.json */
     public static final String KEYCLOAK_FILEPATH = "candlepin.keycloak.config";
 
+    // Async Job Properties and utilities
     public static final String ASYNC_JOBS_THREADS = "candlepin.async.threads";
     public static final String ASYNC_JOBS_WHITELIST = "candlepin.async.whitelist";
     public static final String ASYNC_JOBS_BLACKLIST = "candlepin.async.blacklist";
@@ -344,6 +345,8 @@ public class ConfigProperties {
         return builder.toString();
     }
 
+    public static final String ENTITLER_BULK_SIZE = "entitler.bulk.size";
+
     public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {
         private static final long serialVersionUID = 1L;
 
@@ -384,6 +387,8 @@ public class ConfigProperties {
                 "org.candlepin.audit.LoggingListener," +
                 "org.candlepin.audit.ActivationListener");
             this.put(AUDIT_FILTER_ENABLED, "false");
+
+            this.put(ENTITLER_BULK_SIZE, "1000");
 
             /**
             * These default DO_NOT_FILTER events are those events needed by
