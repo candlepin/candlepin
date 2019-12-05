@@ -38,6 +38,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -187,6 +191,9 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void contextDestroyed() {
+        // backup jdbc drivers before calling contextDestroyed method
+        Enumeration<Driver> drivers = DriverManager.getDrivers();
+
         when(config.getBoolean(eq(ConfigProperties.ACTIVEMQ_ENABLED))).thenReturn(true);
         prepareForInitialization();
 
@@ -201,12 +208,19 @@ public class CandlepinContextListenerTest {
         // make sure we only call it 5 times all from init code
         verify(evt, atMost(5)).getServletContext();
         verifyNoMoreInteractions(evt); // destroy shouldn't use it
-        verify(hqlistener).contextDestroyed();
+        verify(hqlistener).contextDestroyed(any(Injector.class));
         verifyZeroInteractions(buspublisher);
+
+        // re-register drivers
+        registerDrivers(drivers);
     }
 
     @Test
     public void ensureAMQPClosedProperly() {
+
+        // backup jdbc drivers before calling contextDestroyed method
+        Enumeration<Driver> drivers = DriverManager.getDrivers();
+
         when(config.getBoolean(
                 eq(ConfigProperties.AMQP_INTEGRATION_ENABLED))).thenReturn(true);
         when(config.getBoolean(eq(ConfigProperties.SUSPEND_MODE_ENABLED))).thenReturn(true);
@@ -219,6 +233,9 @@ public class CandlepinContextListenerTest {
         // test & verify
         listener.contextDestroyed(evt);
         verify(buspublisher).close();
+
+        // re-register drivers
+        registerDrivers(drivers);
     }
 
     @Test
@@ -255,6 +272,18 @@ public class CandlepinContextListenerTest {
         when(ctx.getAttribute(eq(ResteasyDeployment.class.getName()))).thenReturn(resteasyDeployment);
         when(resteasyDeployment.getRegistry()).thenReturn(registry);
         when(qmf.getStatus()).thenReturn(QpidStatus.CONNECTED);
+    }
+
+    private void registerDrivers(Enumeration<Driver> drivers) {
+        while (drivers.hasMoreElements()) {
+            Driver driver = drivers.nextElement();
+            try {
+                DriverManager.registerDriver(driver);
+            }
+            catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public class ContextListenerTestModule extends AbstractModule {
