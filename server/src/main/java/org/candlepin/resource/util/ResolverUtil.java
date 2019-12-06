@@ -14,8 +14,8 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;

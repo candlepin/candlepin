@@ -14,8 +14,8 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;

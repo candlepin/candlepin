@@ -16,8 +16,8 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.FactValidator;

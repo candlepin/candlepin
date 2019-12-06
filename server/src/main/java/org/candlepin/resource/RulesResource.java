@@ -15,8 +15,8 @@
 package org.candlepin.resource;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ServiceUnavailableException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.ServiceUnavailableException;
 import org.candlepin.model.CuratorException;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;

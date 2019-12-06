@@ -31,15 +31,15 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.CandlepinException;
-import org.candlepin.common.exceptions.ConflictException;
-import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.common.exceptions.IseException;
-import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.exceptions.ResourceMovedException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.ConflictException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
+import org.candlepin.common.resource.exceptions.IseException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.ResourceMovedException;
+import org.candlepin.common.resource.exceptions.RestApiException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
@@ -1917,7 +1917,7 @@ public class OwnerResource {
         }
         // Grab candlepin exceptions to record the error and then rethrow
         // to pass on the http return code
-        catch (CandlepinException e) {
+        catch (RestApiException e) {
             log.error("Recording import failure", e);
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw e;
@@ -1982,7 +1982,7 @@ public class OwnerResource {
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw new IseException(i18n.tr("Error storing uploaded archive for asynchronous processing."), e);
         }
-        catch (CandlepinException e) {
+        catch (RestApiException e) {
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
             throw e;
         }

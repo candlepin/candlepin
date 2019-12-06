@@ -15,7 +15,7 @@
 package org.candlepin.audit;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.common.exceptions.IseException;
+import org.candlepin.common.resource.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Pool;
 

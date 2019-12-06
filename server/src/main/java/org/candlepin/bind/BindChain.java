@@ -14,7 +14,7 @@
  */
 package org.candlepin.bind;
 
-import org.candlepin.common.exceptions.ServiceUnavailableException;
+import org.candlepin.common.resource.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.policy.EntitlementRefusedException;

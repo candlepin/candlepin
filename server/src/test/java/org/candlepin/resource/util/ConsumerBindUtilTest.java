@@ -14,8 +14,9 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.exceptions.RuleValidationException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -32,11 +33,11 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -47,22 +48,18 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 
-/**
- *
- */
-@RunWith(MockitoJUnitRunner.class)
-/*
- *
- */
-public class ConsumerBindUtilTest {
 
-    private static final String USER = "testuser";
+@ExtendWith(MockitoExtension.class)
+public class ConsumerBindUtilTest {
 
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private OwnerCurator ownerCurator;
@@ -77,7 +74,7 @@ public class ConsumerBindUtilTest {
 
     private ConsumerBindUtil consumerBindUtil;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
@@ -179,8 +176,8 @@ public class ConsumerBindUtilTest {
         verify(entitler).bindByProducts(eq(ad));
     }
 
-    @Test(expected = BadRequestException.class)
-    public void registerFailWithKeyServiceLevelNotExist() throws Exception {
+    @Test
+    public void registerFailWithKeyServiceLevelNotExist() {
         List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
@@ -189,7 +186,8 @@ public class ConsumerBindUtilTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
             .validate(eq(owner.getId()), eq(key1.getServiceLevel()));
-        consumerBindUtil.handleActivationKeys(consumer, keys, false);
+        assertThrows(BadRequestException.class,
+            () -> consumerBindUtil.handleActivationKeys(consumer, keys, false));
     }
 
     @Test
@@ -200,13 +198,13 @@ public class ConsumerBindUtilTest {
         key1.setServiceLevel("I don't exist");
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
+        doThrow(new RuleValidationException("exception")).when(serviceLevelValidator)
             .validate(eq(owner.getId()), eq(key1.getServiceLevel()));
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 
-    @Test(expected = BadRequestException.class)
-    public void registerFailWithNoGoodKeyPool() throws Exception {
+    @Test
+    public void registerFailWithNoGoodKeyPool() {
         List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
         keys.add(key1);
@@ -219,7 +217,8 @@ public class ConsumerBindUtilTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         when(entitler.bindByPoolQuantity(eq(consumer), eq(ghost.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
-        consumerBindUtil.handleActivationKeys(consumer, keys, false);
+        assertThrows(BadRequestException.class,
+            () -> consumerBindUtil.handleActivationKeys(consumer, keys, false));
     }
 
     @Test
@@ -242,9 +241,7 @@ public class ConsumerBindUtilTest {
         key1.addPool(pool3, 5L);
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
-            .thenThrow(new ForbiddenException("fail"));
-        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool2.getId()), eq(10)))
+        when(entitler.bindByPoolQuantity(eq(consumer), anyString(), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
@@ -271,9 +268,7 @@ public class ConsumerBindUtilTest {
         key2.addPool(pool3, 5L);
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
-            .thenThrow(new ForbiddenException("fail"));
-        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool2.getId()), eq(10)))
+        when(entitler.bindByPoolQuantity(eq(consumer), anyString(), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
@@ -291,9 +286,9 @@ public class ConsumerBindUtilTest {
         key1.addPool(pool1, 10L);
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
-                .thenThrow(new ForbiddenException("fail"));
+
         consumerBindUtil.handleActivationKeys(consumer, keys, true);
+        verifyZeroInteractions(entitler);
     }
 
 }

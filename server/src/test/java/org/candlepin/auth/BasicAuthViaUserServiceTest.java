@@ -16,7 +16,7 @@ package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.common.exceptions.NotAuthorizedException;
+import org.candlepin.common.resource.exceptions.NotAuthorizedException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;

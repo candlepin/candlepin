@@ -16,9 +16,9 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.Verify;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ConflictException;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.ConflictException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.RoleDTO;

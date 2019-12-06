@@ -15,8 +15,8 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.controller.CdnManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CdnDTO;

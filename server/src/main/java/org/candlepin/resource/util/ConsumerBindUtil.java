@@ -14,8 +14,9 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.exceptions.RuleValidationException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.Entitler;
@@ -34,6 +35,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.quantity.QuantityRules;
+import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.version.CertVersionConflictException;
@@ -208,8 +210,8 @@ public class ConsumerBindUtil {
                 consumer.setServiceLevel(level);
                 return true;
             }
-            catch (BadRequestException bre) {
-                log.warn(bre.getMessage());
+            catch (RuleValidationException e) {
+                log.warn(e.getMessage());
                 return false;
             }
         }

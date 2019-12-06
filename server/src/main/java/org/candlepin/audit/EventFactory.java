@@ -16,7 +16,7 @@ package org.candlepin.audit;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
-import org.candlepin.common.exceptions.IseException;
+import org.candlepin.common.resource.exceptions.IseException;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;

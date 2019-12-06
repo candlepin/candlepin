@@ -16,8 +16,8 @@
 package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.common.exceptions.CandlepinException;
-import org.candlepin.common.exceptions.ServiceUnavailableException;
+import org.candlepin.common.resource.exceptions.RestApiException;
+import org.candlepin.common.resource.exceptions.ServiceUnavailableException;
 import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
@@ -108,7 +108,7 @@ public class KeycloakAuth extends UserAuth implements AuthProvider {
                 return null;
             }
         }
-        catch (CandlepinException e) {
+        catch (RestApiException e) {
             throw e;
         }
         catch (Exception e) {

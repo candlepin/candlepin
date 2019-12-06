@@ -15,7 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.cache.CandlepinCacheRegions;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.util.Util;
 

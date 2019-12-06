@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 

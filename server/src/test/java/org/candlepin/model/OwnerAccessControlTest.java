@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.test.DatabaseTestFixture;

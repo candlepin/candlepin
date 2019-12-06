@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js;
 
-import org.candlepin.common.exceptions.IseException;
+import org.candlepin.common.resource.exceptions.IseException;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 
 import com.fasterxml.jackson.core.JsonProcessingException;

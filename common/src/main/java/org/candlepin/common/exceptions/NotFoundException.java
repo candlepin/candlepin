@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,18 +14,15 @@
  */
 package org.candlepin.common.exceptions;
 
-import javax.ws.rs.core.Response.Status;
-
-
 /**
- * Thrown when a resource is not found.
+ * Thrown when requested item is not found.
  */
-public class NotFoundException extends CandlepinException {
+public class NotFoundException extends RuntimeException {
     public NotFoundException(String message) {
-        super(Status.NOT_FOUND, message);
+        super(message);
     }
 
     public NotFoundException(String message, Throwable e) {
-        super(Status.NOT_FOUND, message, e);
+        super(message, e);
     }
 }

@@ -35,14 +35,14 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.CandlepinException;
-import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.common.exceptions.GoneException;
-import org.candlepin.common.exceptions.IseException;
-import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
+import org.candlepin.common.resource.exceptions.GoneException;
+import org.candlepin.common.resource.exceptions.IseException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.RestApiException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
@@ -877,7 +877,7 @@ public class ConsumerResource {
 
             return consumerToCreate;
         }
-        catch (CandlepinException ce) {
+        catch (RestApiException ce) {
             // If it is one of ours, rethrow it.
             throw ce;
         }
@@ -1262,7 +1262,7 @@ public class ConsumerResource {
                     consumerCurator.update(toUpdate);
                 }
             }
-            catch (CandlepinException ce) {
+            catch (RestApiException ce) {
                 // If it is one of ours, rethrow it.
                 throw ce;
             }
@@ -2056,7 +2056,7 @@ public class ConsumerResource {
             log.debug("Checked if consumer has unaccepted subscription terms in {}ms",
                 (System.currentTimeMillis() - subTermsStart));
         }
-        catch (CandlepinException e) {
+        catch (RestApiException e) {
             log.debug(e.getMessage());
             throw e;
         }

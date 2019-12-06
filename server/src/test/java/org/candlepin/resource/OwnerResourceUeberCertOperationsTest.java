@@ -18,7 +18,7 @@ import org.candlepin.async.JobManager;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.model.Owner;

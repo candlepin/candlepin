@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.common.exceptions.CandlepinException;
+import org.candlepin.common.resource.exceptions.RestApiException;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response.Status;
  * Represents an exception caused by a property (attribute, fact, etc.) containing an illegal
  * key or value.
  */
-public class PropertyValidationException extends CandlepinException {
+public class PropertyValidationException extends RestApiException {
     private static final long serialVersionUID = 1L;
 
     public PropertyValidationException(String message) {

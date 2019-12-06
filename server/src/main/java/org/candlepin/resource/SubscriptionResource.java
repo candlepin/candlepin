@@ -15,9 +15,9 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Verify;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.exceptions.ResourceMovedException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.ResourceMovedException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.model.Consumer;

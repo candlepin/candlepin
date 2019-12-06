@@ -15,8 +15,8 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Verify;
-import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;

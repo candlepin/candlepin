@@ -15,10 +15,10 @@
 package org.candlepin.auth;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.CandlepinException;
-import org.candlepin.common.exceptions.IseException;
-import org.candlepin.common.exceptions.NotAuthorizedException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.IseException;
+import org.candlepin.common.resource.exceptions.NotAuthorizedException;
+import org.candlepin.common.resource.exceptions.RestApiException;
 import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.candlepin.common.resteasy.auth.RestEasyOAuthMessage;
 
@@ -120,7 +120,7 @@ public class OAuth implements AuthProvider {
             Response.Status returnCode = Response.Status.fromStatusCode(e.getHttpStatusCode());
             String message = i18n.tr("OAuth problem encountered. Internal message is: {0}", e.getMessage());
 
-            throw new CandlepinException(returnCode, message);
+            throw new RestApiException(returnCode, message);
         }
         catch (OAuthException e) {
             log.debug("OAuth Error", e);

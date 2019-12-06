@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;

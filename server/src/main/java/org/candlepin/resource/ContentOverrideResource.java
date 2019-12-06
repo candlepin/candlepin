@@ -18,7 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.common.auth.SecurityHole;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.model.AbstractHibernateObject;

@@ -15,7 +15,7 @@
 package org.candlepin.sync;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.IseException;
+import org.candlepin.common.resource.exceptions.IseException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 

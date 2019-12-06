@@ -15,8 +15,8 @@
 package org.candlepin.common.util;
 
 import org.candlepin.common.exceptions.CandlepinParameterParseException;
-import org.candlepin.common.exceptions.ExceptionMessage;
-import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
+import org.candlepin.common.resource.exceptions.ExceptionMessage;
+import org.candlepin.common.resource.exceptions.mappers.CandlepinExceptionMapper;
 
 import com.google.inject.Inject;
 

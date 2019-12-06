@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.common.exceptions.IseException;
+import org.candlepin.common.resource.exceptions.IseException;
 
 /**
  * CertificateSizeException: Thrown when we cannot generate a certificate as it will be

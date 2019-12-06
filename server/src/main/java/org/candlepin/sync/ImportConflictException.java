@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.common.exceptions.CandlepinException;
+import org.candlepin.common.resource.exceptions.RestApiException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +29,7 @@ import javax.ws.rs.core.Response.Status;
  * We generally try to return all conflicts that occurred so the caller can re-try and
  * override them all if desired.
  */
-public class ImportConflictException extends CandlepinException {
+public class ImportConflictException extends RestApiException {
 
     public ImportConflictException(String message, Importer.Conflict type) {
         super(Status.CONFLICT, new ConflictExceptionMessage(message, type));

@@ -15,7 +15,7 @@
 package org.candlepin.resource;
 
 import org.candlepin.async.JobException;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;

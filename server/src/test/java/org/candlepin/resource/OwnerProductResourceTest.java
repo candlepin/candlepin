@@ -15,8 +15,8 @@
 package org.candlepin.resource;
 
 import org.candlepin.async.JobManager;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;

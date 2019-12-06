@@ -15,7 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Product.Attributes;

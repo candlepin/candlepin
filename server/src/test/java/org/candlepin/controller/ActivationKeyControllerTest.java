@@ -14,7 +14,9 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.AlreadyRegisteredException;
+import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.RuleValidationException;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.Owner;
@@ -50,7 +52,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * ActivationKeyResourceTest
+ * ActivationKeyControllerTest
  */
 public class ActivationKeyControllerTest extends DatabaseTestFixture {
     @Inject private OwnerProductCurator ownerProductCurator;
@@ -86,7 +88,7 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
         assertNotNull(output);
 
         controller.deleteActivationKey(key.getId());
-        assertThrows(BadRequestException.class, () ->
+        assertThrows(NotFoundException.class, () ->
             controller.getActivationKey(key.getId())
         );
     }
@@ -96,7 +98,7 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
         ActivationKeyController akr = new ActivationKeyController(activationKeyCurator, i18n,
             poolManager, serviceLevelValidator, activationKeyRules, ownerProductCurator);
 
-        assertThrows(BadRequestException.class, () ->
+        assertThrows(NotFoundException.class, () ->
             akr.deleteActivationKey("JarJarBinks")
         );
     }
@@ -138,7 +140,7 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
         assertEquals(1, key.getPools().size());
 
         ActivationKey finalKey = key;
-        assertThrows(BadRequestException.class, () ->
+        assertThrows(RuleValidationException.class, () ->
             akr.addPoolToKey(finalKey.getId(), pool.getId(), 1L)
         );
     }
@@ -156,7 +158,7 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
 
         ActivationKeyController akr = new ActivationKeyController(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, ownerProductCurator);
-        assertThrows(BadRequestException.class, () ->
+        assertThrows(RuleValidationException.class, () ->
             akr.addPoolToKey("testKey", "testPool", 2L)
         );
     }
@@ -174,7 +176,7 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
 
         ActivationKeyController akr = new ActivationKeyController(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, ownerProductCurator);
-        assertThrows(BadRequestException.class, () ->
+        assertThrows(RuleValidationException.class, () ->
             akr.addPoolToKey("testKey", "testPool", -3L)
         );
     }
@@ -228,7 +230,7 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
 
         ActivationKeyController akr = new ActivationKeyController(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, ownerProductCurator);
-        assertThrows(BadRequestException.class, () ->
+        assertThrows(RuleValidationException.class, () ->
             akr.addPoolToKey("testKey", "testPool", 1L)
         );
     }
@@ -351,7 +353,7 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
         update.setServiceLevel("level1");
         update.setReleaseVersion(TestUtil.getStringOfSize(256));
 
-        assertThrows(BadRequestException.class, () ->
+        assertThrows(RuleValidationException.class, () ->
             akr.updateActivationKey(key.getId(), update)
         );
     }
@@ -395,7 +397,7 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
         assertEquals(1, key.getProducts().size());
 
         ActivationKey finalKey = key;
-        assertThrows(BadRequestException.class, () ->
+        assertThrows(AlreadyRegisteredException.class, () ->
             akr.addProductIdToKey(finalKey.getId(), product.getId())
         );
     }

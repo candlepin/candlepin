@@ -14,7 +14,9 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.AlreadyRegisteredException;
+import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.exceptions.RuleValidationException;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
@@ -41,7 +43,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * ActivationKeyResource
+ * ActivationKeyController
  */
 public class ActivationKeyController {
 
@@ -75,21 +77,24 @@ public class ActivationKeyController {
      * @param keyId
      *  The ID of the activation key to fetch
      *
-     * @throws BadRequestException
-     *  if the given ID is null, empty or is not associated with a valid activation key
+     * @throws IllegalArgumentException
+     *  if the given ID is null, empty
+     *
+     * @throws NotFoundException
+     *  if the given ID is not associated with a valid activation key
      *
      * @return
      *  an ActivationKey with the specified ID
      */
     private ActivationKey fetchActivationKey(String keyId) {
         if (keyId == null || keyId.isEmpty()) {
-            throw new BadRequestException(i18n.tr("activation key ID is null or empty"));
+            throw new IllegalArgumentException(i18n.tr("activation key ID is null or empty"));
         }
 
         ActivationKey key = this.activationKeyCurator.secureGet(keyId);
 
         if (key == null) {
-            throw new BadRequestException(i18n.tr("ActivationKey with id {0} could not be found.", keyId));
+            throw new NotFoundException(i18n.tr("ActivationKey with id {0} could not be found.", keyId));
         }
 
         return key;
@@ -111,7 +116,7 @@ public class ActivationKeyController {
             Matcher keyMatcher = AK_CHAR_FILTER.matcher(update.getName());
 
             if (!keyMatcher.matches()) {
-                throw new BadRequestException(
+                throw new IllegalArgumentException(
                     i18n.tr("The activation key name \"{0}\" must be alphanumeric or " +
                         "include the characters \"-\" or \"_\"", update.getName()));
             }
@@ -156,15 +161,15 @@ public class ActivationKeyController {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
 
-        // Throws a BadRequestException if adding pool to key is a bad idea
+        // Throws a RuleValidationException if adding pool to key is a bad idea
         String message = activationKeyRules.validatePoolForActivationKey(key, pool, quantity);
         if (message != null) {
-            throw new BadRequestException(message);
+            throw new RuleValidationException(message);
         }
 
         // Make sure we don't try to register the pool twice.
         if (key.hasPool(pool)) {
-            throw new BadRequestException(
+            throw new AlreadyRegisteredException(
                 i18n.tr("Pool ID \"{0}\" has already been registered with this activation key", poolId)
             );
         }
@@ -188,7 +193,7 @@ public class ActivationKeyController {
 
         // Make sure we don't try to register the product ID twice.
         if (key.hasProduct(product)) {
-            throw new BadRequestException(
+            throw new AlreadyRegisteredException(
                 i18n.tr("Product ID \"{0}\" has already been registered with this activation key", productId)
             );
         }
@@ -222,7 +227,7 @@ public class ActivationKeyController {
         Pool pool = poolManager.get(poolId);
 
         if (pool == null) {
-            throw new BadRequestException(i18n.tr("Pool with id {0} could not be found.", poolId));
+            throw new NotFoundException(i18n.tr("Pool with id {0} could not be found.", poolId));
         }
 
         return pool;
@@ -232,7 +237,7 @@ public class ActivationKeyController {
         Product prod = this.ownerProductCurator.getProductById(o, prodId);
 
         if (prod == null) {
-            throw new BadRequestException(i18n.tr("Product with id {0} could not be found.", prodId));
+            throw new NotFoundException(i18n.tr("Product with id {0} could not be found.", prodId));
         }
 
         return prod;

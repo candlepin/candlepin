@@ -14,8 +14,8 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.test.DatabaseTestFixture;

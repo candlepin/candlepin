@@ -15,7 +15,7 @@
 
 package org.candlepin.auth;
 
-import org.candlepin.common.exceptions.CandlepinException;
+import org.candlepin.common.resource.exceptions.RestApiException;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -178,13 +178,13 @@ public class KeycloakOIDCFacade implements HttpFacade {
 
         @Override
         public void sendError(int code) {
-            throw new CandlepinException(Status.fromStatusCode(code),
+            throw new RestApiException(Status.fromStatusCode(code),
                 "Error during authentication");
         }
 
         @Override
         public void sendError(int code, String message) {
-            throw new CandlepinException(Status.fromStatusCode(code), message);
+            throw new RestApiException(Status.fromStatusCode(code), message);
         }
 
         @Override

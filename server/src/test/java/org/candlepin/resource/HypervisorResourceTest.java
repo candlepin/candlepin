@@ -24,7 +24,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;

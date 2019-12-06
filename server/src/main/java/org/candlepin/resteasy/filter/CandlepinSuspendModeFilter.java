@@ -15,7 +15,7 @@
 package org.candlepin.resteasy.filter;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.SuspendedException;
+import org.candlepin.common.resource.exceptions.SuspendedException;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 

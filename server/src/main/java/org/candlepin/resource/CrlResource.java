@@ -16,7 +16,7 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.IseException;
+import org.candlepin.common.resource.exceptions.IseException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;

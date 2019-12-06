@@ -54,27 +54,29 @@ import org.candlepin.bind.PreEntitlementRulesCheckOpFactory;
 import org.candlepin.cache.JCacheManagerProvider;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationPrefixes;
-import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
-import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
-import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
-import org.candlepin.common.exceptions.mappers.FailureExceptionMapper;
-import org.candlepin.common.exceptions.mappers.InternalServerErrorExceptionMapper;
-import org.candlepin.common.exceptions.mappers.JAXBMarshalExceptionMapper;
-import org.candlepin.common.exceptions.mappers.JAXBUnmarshalExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NoLogWebApplicationExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotAcceptableExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotAllowedExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotAuthorizedExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotFoundExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotSupportedExceptionMapper;
-import org.candlepin.common.exceptions.mappers.ReaderExceptionMapper;
-import org.candlepin.common.exceptions.mappers.RollbackExceptionMapper;
-import org.candlepin.common.exceptions.mappers.RuntimeExceptionMapper;
-import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
-import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
-import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
+import org.candlepin.common.resource.exceptions.mappers.BadRequestExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.CandlepinExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.FailureExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.IllegalArgumentExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.InternalServerErrorExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.JAXBMarshalExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.JAXBUnmarshalExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.NoLogWebApplicationExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.NotAcceptableExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.NotAllowedExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.NotAuthorizedExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.NotFoundExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.NotSupportedExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.ReaderExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.RollbackExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.RuleValidationExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.RuntimeExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.ValidationExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.WebApplicationExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.common.resteasy.filter.DynamicJsonFilter;
 import org.candlepin.common.resteasy.filter.LinkHeaderResponseFilter;
 import org.candlepin.common.resteasy.filter.PageRequestFilter;
@@ -260,25 +262,9 @@ public class CandlepinModule extends AbstractModule {
         bind(PoolRules.class);
         bind(CriteriaRules.class);
         bind(Entitler.class);
-        bind(NotSupportedExceptionMapper.class);
-        bind(NotAuthorizedExceptionMapper.class);
-        bind(NotFoundExceptionMapper.class);
-        bind(NotAcceptableExceptionMapper.class);
-        bind(NoLogWebApplicationExceptionMapper.class);
-        bind(NotAllowedExceptionMapper.class);
-        bind(InternalServerErrorExceptionMapper.class);
-        bind(DefaultOptionsMethodExceptionMapper.class);
-        bind(BadRequestExceptionMapper.class);
-        bind(RollbackExceptionMapper.class);
-        bind(ValidationExceptionMapper.class);
-        bind(WebApplicationExceptionMapper.class);
-        bind(FailureExceptionMapper.class);
-        bind(ReaderExceptionMapper.class);
-        bind(WriterExceptionMapper.class);
-        bind(CandlepinExceptionMapper.class);
-        bind(RuntimeExceptionMapper.class);
-        bind(JAXBMarshalExceptionMapper.class);
-        bind(JAXBUnmarshalExceptionMapper.class);
+
+        exceptionMappers();
+
         bind(AnnotationLocator.class).asEagerSingleton();
 
         bind(Principal.class).toProvider(PrincipalProvider.class);
@@ -318,6 +304,30 @@ public class CandlepinModule extends AbstractModule {
         bind(CertificateReader.class).asEagerSingleton();
         bind(PrivateKeyReader.class).to(JSSPrivateKeyReader.class);
         bind(X509ExtensionUtil.class);
+    }
+
+    private void exceptionMappers() {
+        bind(BadRequestExceptionMapper.class);
+        bind(CandlepinExceptionMapper.class);
+        bind(DefaultOptionsMethodExceptionMapper.class);
+        bind(FailureExceptionMapper.class);
+        bind(IllegalArgumentExceptionMapper.class);
+        bind(InternalServerErrorExceptionMapper.class);
+        bind(JAXBMarshalExceptionMapper.class);
+        bind(JAXBUnmarshalExceptionMapper.class);
+        bind(NoLogWebApplicationExceptionMapper.class);
+        bind(NotAcceptableExceptionMapper.class);
+        bind(NotAllowedExceptionMapper.class);
+        bind(NotAuthorizedExceptionMapper.class);
+        bind(NotFoundExceptionMapper.class);
+        bind(NotSupportedExceptionMapper.class);
+        bind(ReaderExceptionMapper.class);
+        bind(RollbackExceptionMapper.class);
+        bind(RuleValidationExceptionMapper.class);
+        bind(RuntimeExceptionMapper.class);
+        bind(ValidationExceptionMapper.class);
+        bind(WebApplicationExceptionMapper.class);
+        bind(WriterExceptionMapper.class);
     }
 
     private void resources() {

@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.RuleValidationException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -36,7 +36,6 @@ import java.util.Set;
  */
 public class ServiceLevelValidator {
 
-    private static final int MAX_COL_LENGTH = 255;
     private I18n i18n;
     private PoolManager poolManager;
     private OwnerCurator ownerCurator;
@@ -72,7 +71,7 @@ public class ServiceLevelValidator {
             String error = i18n.tr("Service level \"{0}\" is not available to units of organization {1}.",
                 StringUtils.join(invalidServiceLevels, ", "), owner.getKey());
 
-            throw new BadRequestException(error);
+            throw new RuleValidationException(error);
         }
     }
 

@@ -19,7 +19,7 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.resource.exceptions.ForbiddenException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;

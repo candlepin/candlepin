@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.resource.exceptions.NotFoundException;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;

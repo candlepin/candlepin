@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.filter;
 
-import org.candlepin.common.exceptions.GoneException;
+import org.candlepin.common.resource.exceptions.GoneException;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.Consumer;

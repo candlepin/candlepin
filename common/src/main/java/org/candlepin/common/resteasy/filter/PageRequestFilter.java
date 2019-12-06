@@ -14,9 +14,9 @@
  */
 package org.candlepin.common.resteasy.filter;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.PageRequest.Order;
+import org.candlepin.common.resource.exceptions.BadRequestException;
 
 import com.google.inject.Inject;
 

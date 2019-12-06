@@ -14,9 +14,9 @@
  */
 package org.candlepin.common.resteasy.filter;
 
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.guice.CommonI18nProvider;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.resource.exceptions.BadRequestException;
 
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;

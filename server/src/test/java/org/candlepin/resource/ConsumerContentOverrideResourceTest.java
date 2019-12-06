@@ -17,7 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.model.Consumer;

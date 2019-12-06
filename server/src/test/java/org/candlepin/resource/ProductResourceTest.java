@@ -21,7 +21,7 @@ import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ContentDTO;

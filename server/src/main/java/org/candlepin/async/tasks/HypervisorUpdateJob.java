@@ -23,7 +23,7 @@ import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.auth.Principal;
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.resource.exceptions.BadRequestException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
