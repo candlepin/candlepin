@@ -150,6 +150,7 @@ module HostedTest
   # Lets users be agnostic of what mode we are in, standalone or hosted.
   # Always returns the main pool that was created ( unless running in hosted mode and refresh is skipped )
   # not to be used to create custom pool
+  # DEPRECATED, Create your pools directly using create_pool from candlepin_api.rb
   def create_pool_and_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           account_number='', order_number='',

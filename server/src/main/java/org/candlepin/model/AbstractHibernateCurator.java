@@ -40,6 +40,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.metadata.ClassMetadata;
@@ -65,8 +66,9 @@ import javax.persistence.LockModeType;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.TypedQuery;
-
-
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.CriteriaQuery;
 
 /**
  * AbstractHibernateCurator base class for all Candlepin curators. Curators are
@@ -170,6 +172,52 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Transactional
     public E get(Serializable id) {
         return id == null ? null : this.get(entityType, id);
+    }
+
+    /**
+     * Checks if entry exists in db.
+     * @param id primary key of entity.
+     * @return boolean value whether row exists or not
+     */
+    @Transactional
+    public boolean exists(Serializable id) {
+        boolean doesExists = false;
+        String columnName = getPrimaryKeyName();
+
+        if (columnName != null) {
+            CriteriaBuilder builder = this.getEntityManager().getCriteriaBuilder();
+            CriteriaQuery<Long> query = builder.createQuery(Long.class);
+            query.select(builder.count(query.from(entityType)));
+            Root<E> root = query.from(entityType);
+            query.where(builder.equal(root.get(columnName), id));
+
+            if (this.getEntityManager().createQuery(query).getSingleResult() > 0) {
+                doesExists = true;
+            }
+        }
+
+        return doesExists;
+    }
+
+    /**
+     * Returns name of primary key column
+     * @return Returns entity primary key column
+     */
+    public String getPrimaryKeyName() {
+        String primaryColumn = null;
+
+        try {
+            primaryColumn = this.getEntityManager()
+                .getMetamodel()
+                .entity(entityType)
+                .getId(String.class)
+                .getName();
+        }
+        catch (IllegalArgumentException e) {
+            log.debug("Unable to get primary key for entity {}", entityType);
+        }
+
+        return primaryColumn;
     }
 
     /**

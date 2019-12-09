@@ -8,6 +8,7 @@ describe 'Virt Only Pools' do
   before(:each) do
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
+    @owner['autobindHypervisorDisabled'] = true
   end
 
   it 'should allow virt guests to consume from virt_only pools' do

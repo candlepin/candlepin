@@ -54,6 +54,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.custom.CustomQuery;
@@ -1087,18 +1088,18 @@ public class SessionWrapper implements SessionImplementor {
     }
 
     @Override
-    public <T> EntityGraph<T> createEntityGraph(Class<T> rootType) {
-        return null;
+    public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
+        return sessionImpl.createEntityGraph(rootType);
     }
 
     @Override
-    public EntityGraph<?> createEntityGraph(String graphName) {
-        return null;
+    public RootGraphImplementor<?> createEntityGraph(String graphName) {
+        return sessionImpl.createEntityGraph(graphName);
     }
 
     @Override
-    public EntityGraph<?> getEntityGraph(String graphName) {
-        return null;
+    public RootGraphImplementor<?> getEntityGraph(String graphName) {
+        return sessionImpl.getEntityGraph(graphName);
     }
 
     @Override
@@ -1426,6 +1427,11 @@ public class SessionWrapper implements SessionImplementor {
     public <T> QueryImplementor<T> createQuery(String s, Class<T> aClass, Selection selection,
         QueryOptions queryOptions) {
         return null;
+    }
+
+    @Override
+    public PersistenceContext getPersistenceContextInternal() {
+        return sessionImpl.getPersistenceContextInternal();
     }
 
     @Override

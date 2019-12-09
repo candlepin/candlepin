@@ -19,7 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
+import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -861,6 +863,105 @@ public class ProductDataTest {
         assertTrue(Util.collectionsAreEqual(Arrays.<String>asList(), pids));
     }
 
+    @Test
+    public void testGetSetBranding() {
+        ProductData dto = new ProductData();
+        Collection<Branding> input = Arrays.asList(
+            new Branding(null, "eng_id_1", "brand_name_1", "OS"),
+            new Branding(null, "eng_id_2", "brand_name_2", "OS"),
+            new Branding(null, "eng_id_3", "brand_name_3", "OS")
+        );
+
+        Collection<Branding> output = dto.getBranding();
+        assertNull(output);
+
+        ProductData output2 = dto.setBranding(input);
+        assertSame(dto, output2);
+
+        output = dto.getBranding();
+        assertTrue(Util.collectionsAreEqual(input, output));
+    }
+
+    @Test
+    public void testAddBranding() {
+        ProductData dto = new ProductData();
+
+        Collection<Branding> brandings = dto.getBranding();
+        assertNull(brandings);
+
+        boolean output = dto.addBranding(new Branding(null, "eng_id_1", "brand_name_1", "OS"));
+        brandings = dto.getBranding();
+
+        assertTrue(output);
+        assertNotNull(brandings);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(
+            new Branding(null, "eng_id_1", "brand_name_1", "OS")), brandings));
+
+        output = dto.addBranding(new Branding(null, "eng_id_2", "brand_name_2", "OS"));
+        brandings = dto.getBranding();
+
+        assertTrue(output);
+        assertNotNull(brandings);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(
+            new Branding(null, "eng_id_1", "brand_name_1", "OS"),
+            new Branding(null, "eng_id_2", "brand_name_2", "OS")), brandings));
+
+        output = dto.addBranding(new Branding(null, "eng_id_1", "brand_name_1", "OS"));
+        brandings = dto.getBranding();
+
+        assertFalse(output);
+        assertNotNull(brandings);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(
+            new Branding(null, "eng_id_1", "brand_name_1", "OS"),
+            new Branding(null, "eng_id_2", "brand_name_2", "OS")), brandings));
+    }
+
+    @Test
+    public void testRemoveBranding() {
+        ProductData dto = new ProductData();
+
+        Collection<Branding> brandings = dto.getBranding();
+        assertNull(brandings);
+
+        boolean output = dto.removeBranding(new Branding(null, "eng_id_1", "brand_name_1", "OS"));
+        brandings = dto.getBranding();
+
+        assertFalse(output);
+        assertNull(brandings);
+
+        dto.setBranding(Arrays.asList(
+            new Branding(null, "eng_id_1", "brand_name_1", "OS"),
+            new Branding(null, "eng_id_2", "brand_name_2", "OS")));
+        brandings = dto.getBranding();
+
+        assertNotNull(brandings);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(
+            new Branding(null, "eng_id_1", "brand_name_1", "OS"),
+            new Branding(null, "eng_id_2", "brand_name_2", "OS")), brandings));
+
+        output = dto.removeBranding(new Branding(null, "eng_id_1", "brand_name_1", "OS"));
+        brandings = dto.getBranding();
+
+        assertTrue(output);
+        assertNotNull(brandings);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(
+            new Branding(null, "eng_id_2", "brand_name_2", "OS")), brandings));
+
+        output = dto.removeBranding(new Branding(null, "eng_id_3", "brand_name_3", "OS"));
+        brandings = dto.getBranding();
+
+        assertFalse(output);
+        assertNotNull(brandings);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(
+            new Branding(null, "eng_id_2", "brand_name_2", "OS")), brandings));
+
+        output = dto.removeBranding(new Branding(null, "eng_id_2", "brand_name_2", "OS"));
+        brandings = dto.getBranding();
+
+        assertTrue(output);
+        assertNotNull(brandings);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(), brandings));
+    }
 
     @Test
     public void testGetSetHref() {
@@ -924,6 +1025,18 @@ public class ProductDataTest {
             new ProductContentData(content[5], true)
         );
 
+        Collection<BrandingInfo> branding1 = Arrays.asList(
+            new Branding(null, "eng_id_1", "brand_name_1", "OS"),
+            new Branding(null, "eng_id_2", "brand_name_2", "OS"),
+            new Branding(null, "eng_id_3", "brand_name_3", "OS")
+        );
+
+        Collection<BrandingInfo> branding2 = Arrays.asList(
+            new Branding(null, "eng_id_4", "brand_name_4", "OS"),
+            new Branding(null, "eng_id_5", "brand_name_5", "OS"),
+            new Branding(null, "eng_id_6", "brand_name_6", "OS")
+        );
+
         return Stream.of(
             new Object[] { "Uuid", "test_value", "alt_value" },
             new Object[] { "Id", "test_value", "alt_value" },
@@ -932,6 +1045,7 @@ public class ProductDataTest {
             new Object[] { "Attributes", attributes1, attributes2 },
             new Object[] { "ProductContent", productContent1, productContent2 },
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
+            new Object[] { "Branding", branding1, branding2},
             // new Object[] { "Href", "test_value", null },
             new Object[] { "Locked", Boolean.TRUE, false }
         );

@@ -20,15 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
@@ -70,6 +62,8 @@ import javax.persistence.EntityManager;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
+
+
 
 /**
  * HypervisorUpdateJobTest
@@ -227,6 +221,7 @@ public class HypervisorUpdateJobTest {
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
         Consumer hypervisor = new Consumer();
+        hypervisor.ensureUUID();
         hypervisor.setName("hypervisor_name");
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
@@ -250,6 +245,7 @@ public class HypervisorUpdateJobTest {
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         Consumer hypervisor = new Consumer();
+        hypervisor.ensureUUID();
         hypervisor.setName("hypervisor_name");
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
@@ -272,6 +268,7 @@ public class HypervisorUpdateJobTest {
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
         Consumer hypervisor = new Consumer();
+        hypervisor.ensureUUID();
         hypervisor.setName("hyper-name");
         hypervisor.setOwner(owner);
         hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
@@ -311,6 +308,7 @@ public class HypervisorUpdateJobTest {
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
         Consumer hypervisor = new Consumer();
+        hypervisor.ensureUUID();
         hypervisor.setName("hyper-name");
         hypervisor.setOwner(owner);
         hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");

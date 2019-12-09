@@ -18,6 +18,7 @@ import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.MapView;
@@ -37,6 +38,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -55,6 +57,7 @@ import javax.xml.bind.annotation.XmlTransient;
  *   "attributes" : [ ... ],
  *   "productContent" : [ ... ],
  *   "dependentProductIds" : [ ... ],
+ *   "branding" : [ ... ],
  *   "href" : "/products/ff808081554a3e4101554a3e9033005d",
  *   "created" : "2016-06-13T14:51:02+0000",
  *   "updated" : "2016-06-13T14:51:02+0000"
@@ -85,6 +88,8 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
     protected Map<String, ProductContentData> content;
 
     protected Set<String> dependentProductIds;
+
+    protected Set<Branding> branding;
 
     @ApiModelProperty(example = "/products/ff808081554a3e4101554a3e9033005d")
     protected String href;
@@ -813,6 +818,94 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
     }
 
     /**
+     * Retrieves the branding of the product represented by this DTO. If the product branding has not
+     * yet been defined, this method returns null.
+     * <p></p>
+     * Note that the collection returned by this method is a view of the collection backing this
+     * product data. Elements cannot be added to the collection, but elements may be removed.
+     * Changes made to the collection will be reflected by this product data instance.
+     *
+     * @return
+     *  the branding of the product, or null if the content not yet been defined
+     */
+    public Collection<Branding> getBranding() {
+        return this.branding != null ? new SetView(this.branding) : null;
+    }
+
+    /**
+     * Sets the branding of the product represented by this DTO.
+     *
+     * @param branding
+     *  A collection of brandings to attach to this DTO, or null to clear the existing brandings
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public ProductData setBranding(Collection<Branding> branding) {
+        if (branding != null) {
+            if (this.branding == null) {
+                this.branding = new HashSet<>();
+            }
+            else {
+                this.branding.clear();
+            }
+
+            for (Branding brand : branding) {
+                this.addBranding(brand);
+            }
+        }
+        else {
+            this.branding = null;
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the branding to this product. If the branding
+     * is already added, it will not be added again.
+     *
+     * @param branding
+     *  The branding to add
+     *
+     * @throws IllegalArgumentException
+     *  if branding is null
+     *
+     * @return
+     *  true if the branding was added successfully; false otherwise
+     */
+    public boolean addBranding(Branding branding) {
+        if (branding == null) {
+            throw new IllegalArgumentException("branding is null");
+        }
+
+        if (this.branding == null) {
+            this.branding = new HashSet<>();
+        }
+
+        // This is a DTO; we don't want references to Product model entities.
+        branding.setProduct(null);
+        return this.branding.add(branding);
+    }
+
+    /**
+     * Removes the specified branding from this product. If the branding is not on this product, this method
+     * does nothing.
+     *
+     * @param branding
+     *  The branding to remove
+     *
+     * @throws IllegalArgumentException
+     *  if branding is null
+     *
+     * @return
+     *  true if the branding was removed successfully; false otherwise
+     */
+    public boolean removeBranding(Branding branding) {
+        return this.branding != null ? this.branding.remove(branding) : false;
+    }
+
+    /**
      * Retrieves the link of the product represented by this DTO. If the product hyperlink has not
      * yet been defined, this method returns null.
      *
@@ -888,6 +981,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
             .append(this.attributes, that.attributes)
             .append(this.content, that.content)
             .append(this.dependentProductIds, that.dependentProductIds)
+            .append(this.branding, that.branding)
             .append(this.href, that.href)
             .append(this.locked, that.locked);
 
@@ -906,6 +1000,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
             .append(this.attributes)
             .append(this.content)
             .append(this.dependentProductIds)
+            .append(this.branding)
             .append(this.locked);
 
         return builder.toHashCode();
@@ -931,6 +1026,12 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         if (this.dependentProductIds != null) {
             copy.dependentProductIds = new HashSet<>();
             copy.dependentProductIds.addAll(this.dependentProductIds);
+        }
+
+        if (this.branding != null) {
+            copy.branding = new HashSet<>();
+            copy.branding.addAll(
+                this.branding.stream().map(Branding::clone).collect(Collectors.toSet()));
         }
 
         return copy;
@@ -965,6 +1066,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         this.setAttributes(source.getAttributes());
         this.setProductContent(source.getProductContent());
         this.setDependentProductIds(source.getDependentProductIds());
+        this.setBranding(source.getBranding());
 
         return this;
     }
@@ -1014,6 +1116,7 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         }
 
         this.setDependentProductIds(source.getDependentProductIds());
+        this.setBranding(source.getBranding());
 
         return this;
     }

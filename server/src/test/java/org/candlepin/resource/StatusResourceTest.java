@@ -17,23 +17,19 @@ package org.candlepin.resource;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.auth.KeycloakConfiguration;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.KeycloakStatusDTO;
 import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -41,14 +37,31 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.keycloak.representations.adapters.config.AdapterConfig;
+
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
 
+
 /**
- * StatusResourceTest
+ * Test suite for the StatusResource class
  */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class StatusResourceTest {
 
     @Mock private RulesCurator rulesCurator;
@@ -57,8 +70,10 @@ public class StatusResourceTest {
     @Mock private CandlepinCache candlepinCache;
     @Mock private StatusCache mockedStatusCache;
     @Mock private CandlepinModeManager modeManager;
+    @Mock private KeycloakConfiguration keycloakConfig;
+    @Mock private AdapterConfig mockKeycloakAdapterConfig;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
@@ -70,6 +85,15 @@ public class StatusResourceTest {
         when(mockedStatusCache.getStatus()).thenReturn(null);
         when(candlepinCache.getStatusCache()).thenReturn(mockedStatusCache);
         when(modeManager.getCurrentMode()).thenReturn(Mode.NORMAL);
+        when(keycloakConfig.getAdapterConfig()).thenReturn(mockKeycloakAdapterConfig);
+        when(mockKeycloakAdapterConfig.getRealm()).thenReturn("realm");
+        when(mockKeycloakAdapterConfig.getAuthServerUrl()).thenReturn("https://example.com/auth");
+        when(mockKeycloakAdapterConfig.getResource()).thenReturn("resource");
+    }
+
+    private StatusResource createResource() {
+        return new StatusResource(this.rulesCurator, this.config, this.jsProvider, this.candlepinCache,
+            this.modeManager, this.keycloakConfig);
     }
 
     @Test
@@ -78,8 +102,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
-            modeManager);
+        StatusResource sr = this.createResource();
         StatusDTO s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -93,8 +116,7 @@ public class StatusResourceTest {
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("foo");
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
-            modeManager);
+        StatusResource sr = this.createResource();
         StatusDTO s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -110,8 +132,7 @@ public class StatusResourceTest {
         ps.println("version=${version}");
         ps.println("release=${release}");
         when(rulesCurator.getUpdatedFromDB()).thenThrow(new RuntimeException());
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
-            modeManager);
+        StatusResource sr = this.createResource();
         StatusDTO s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -134,8 +155,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator, config, jsProvider, candlepinCache,
-            modeManager);
+        StatusResource sr = this.createResource();
         StatusDTO s = sr.status();
         ps.close();
 
@@ -146,5 +166,29 @@ public class StatusResourceTest {
         assertEquals("${version}", s.getVersion());
         assertTrue(s.getResult());
         assertFalse(s.getStandalone());
+    }
+
+    @Test
+    public void keycloakParamsPresentWhenKeycloakActive() {
+        when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(true);
+
+        StatusResource sr = this.createResource();
+
+        StatusDTO s = sr.status();
+        assertTrue("not a keycloak-enabled status", s instanceof KeycloakStatusDTO);
+        KeycloakStatusDTO keycloakStatus = (KeycloakStatusDTO) s;
+        assertEquals("realm", keycloakStatus.getKeycloakRealm());
+        assertEquals("https://example.com/auth", keycloakStatus.getKeycloakAuthUrl());
+        assertEquals("resource", keycloakStatus.getKeycloakResource());
+    }
+
+    @Test
+    public void keycloakParamsMissingWhenKeycloakInactive() {
+        when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(false);
+
+        StatusResource sr = this.createResource();
+
+        StatusDTO s = sr.status();
+        assertFalse("is a keycloak-enabled status", s instanceof KeycloakStatusDTO);
     }
 }

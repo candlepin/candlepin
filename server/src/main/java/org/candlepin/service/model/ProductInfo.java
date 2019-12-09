@@ -99,6 +99,17 @@ public interface ProductInfo {
     Collection<? extends ProductContentInfo> getProductContent();
 
     /**
+     * Fetches the branding associated with this product. If the branding has not been set,
+     * this method returns null. If this product does not have any custom branding, this method
+     * returns an empty collection.
+     *
+     * @return
+     *  A collection of custom branding associated with this product, or null if the branding
+     *  has not been set
+     */
+    Collection<? extends BrandingInfo> getBranding();
+
+    /**
      * Fetches the date this product was created. If the creation date has not been set, this method
      * returns null.
      *

@@ -80,7 +80,7 @@ class Candlepin
               content_tags=[], created_date=nil, last_checkin_date=nil,
               annotations=nil, recipient_owner_key=nil, user_agent=nil,
               entitlement_count=0, id_cert=nil, serviceLevel=nil, role=nil, usage=nil,
-              addOns=nil, reporter_id=nil)
+              addOns=nil, reporter_id=nil, autoheal=nil)
 
     consumer = {
       :type => {:label => type},
@@ -103,6 +103,7 @@ class Candlepin
     consumer[:idCert] = id_cert if id_cert
 
     consumer[:serviceLevel] = serviceLevel if serviceLevel
+    consumer[:autoheal] = autoheal if not autoheal.nil?
     consumer[:role] = role if role
     consumer[:usage] = usage if usage
     consumer[:addOns] = addOns if addOns
@@ -793,6 +794,7 @@ class Candlepin
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
     dependentProductIds = params[:dependentProductIds] || []
+    branding = params[:branding] || []
     relies_on = params[:relies_on] || []
 
     #if product don't have type attributes, create_product will fail on server
@@ -804,6 +806,7 @@ class Candlepin
       'multiplier' => multiplier,
       'attributes' => attributes,
       'dependentProductIds' => dependentProductIds,
+      'branding' => branding,
       'reliesOn' => relies_on
     }
 
@@ -819,6 +822,7 @@ class Candlepin
     product[:multiplier] = params[:multiplier] if params[:multiplier]
     product[:attributes] = params[:attributes] if params[:attributes]
     product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
+    product[:branding] = params[:branding] if params[:branding]
     product[:relies_on] = params[:relies_on] if params[:relies_on]
 
     put("/owners/#{owner_key}/products/#{product_id}", {}, product)
@@ -966,6 +970,15 @@ class Candlepin
   def get_consumer(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}")
+  end
+
+  def consumer_exists(consumer_uuid=nil)
+    consumer_uuid ||= @uuid
+    head("/consumers/#{consumer_uuid}/exists")
+  end
+
+  def consumer_exists_bulk(data)
+    post("/consumers/exists", {}, data)
   end
 
   def get_consumer_release(consumer_id=nil)
@@ -1537,6 +1550,21 @@ class Candlepin
     end
 
     return (response.body)
+  end
+
+  def head(uri, params={})
+    # escape and build uri
+    euri = URI.escape(uri)
+    if !params.empty?
+      euri << '?'
+      euri << URI.encode_www_form(params)
+    end
+
+    # execute
+    puts ("HEAD #{euri}") if @verbose
+    response = get_client(uri, Net::HTTP::Head, :head)[euri].head
+
+    return response
   end
 
   def post(uri, params={}, data=nil)

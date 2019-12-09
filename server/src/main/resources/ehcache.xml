@@ -1,25 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<config
+    xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
+    xmlns='http://www.ehcache.org/v3'
+    xmlns:jsr107='http://www.ehcache.org/v3/jsr107'
+    xsi:schemaLocation="
+        http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.8.xsd
+        http://www.ehcache.org/v3/jsr107 http://www.ehcache.org/schema/ehcache-107-ext-3.8.xsd">
 
 
-<ehcache>
-	<sizeOfPolicy maxDepth="100" maxDepthExceededBehavior="abort"/>
+    <service>
+        <jsr107:defaults default-template="default-template"/>
+    </service>
 
-<!-- There are some internal caches created by hibernate that will
-     inherit these settings
-     -->
-    <defaultCache 
-        eternal="false" 
-        maxEntriesLocalHeap="100000"
-        timeToIdleSeconds="86400" 
-        timeToLiveSeconds="86400"/>    
-    
-    <!-- We know we gonna have just one entry in this cache -->
-     <cache
-        name="query-5-seconds"
-        maxEntriesLocalHeap="1"
-        eternal="false"
-        timeToIdleSeconds="5"
-        timeToLiveSeconds="5"
-    />
+    <cache-template name="default-template">
+        <key-type copier="org.ehcache.impl.copy.IdentityCopier">java.lang.Object</key-type>
+        <value-type copier="org.ehcache.impl.copy.IdentityCopier">java.lang.Object</value-type>
+        <expiry>
+            <ttl unit="seconds">86400</ttl>
+        </expiry>
+        <heap unit="entries">100000</heap>
+        <jsr107:mbeans enable-statistics="false" enable-management="false"/>
+    </cache-template>
 
-</ehcache>
+    <cache alias="query-5-seconds" uses-template="default-template">
+        <expiry>
+            <ttl unit="seconds">5</ttl>
+        </expiry>
+        <heap unit="entries">1</heap>
+    </cache>
+
+</config>

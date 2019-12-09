@@ -60,7 +60,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import java.io.File;
@@ -81,6 +80,8 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+
+
 
 /**
  * TestUtil for creating various testing objects. Objects backed by the database
@@ -107,8 +108,9 @@ public class TestUtil {
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner) {
-        return new Consumer("TestConsumer" + randomInt(), "User", owner, type);
+        return new Consumer("TestConsumer" + randomInt(), "User", owner, type).setUuid(Util.generateUUID());
     }
+
     public static ConsumerDTO createConsumerDTO(ConsumerTypeDTO type, OwnerDTO owner) {
         return createConsumerDTO("TestConsumer" + randomInt(), "User", owner, type);
     }
@@ -162,8 +164,7 @@ public class TestUtil {
             "User",
             owner,
             createConsumerType()
-        );
-
+        ).setUuid(Util.generateUUID());
         consumer.setCreated(new Date());
         consumer.setFact("foo", "bar");
         consumer.setFact("foo1", "bar1");
@@ -549,7 +550,6 @@ public class TestUtil {
     public static IdentityCertificate createIdCert(Date expiration) {
         IdentityCertificate idCert = new IdentityCertificate();
         CertificateSerial serial = new CertificateSerial(expiration);
-        serial.setId(Long.valueOf(new Random().nextInt(1000000)));
 
         // totally arbitrary
         idCert.setId(String.valueOf(new Random().nextInt(1000000)));
@@ -594,6 +594,17 @@ public class TestUtil {
             .setAttributes(Collections.<String, String>emptyMap());
 
         return dto;
+    }
+
+    public static Branding createProductBranding(Product product) {
+        Branding productBranding = new Branding();
+        String suffix = randomString();
+        productBranding.setId("test-id-" + suffix);
+        productBranding.setProduct(product);
+        productBranding.setName("test-name-" + suffix);
+        productBranding.setType("test-type-" + suffix);
+        productBranding.setProductId("test-product-id-" + suffix);
+        return productBranding;
     }
 
     public void addPermissionToUser(User u, Access role, Owner o) {
@@ -645,12 +656,6 @@ public class TestUtil {
         pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
-        for (Branding branding : sub.getBranding()) {
-            pool.getBranding().add(
-                new Branding(branding.getProductId(), branding.getType(), branding.getName())
-            );
-        }
-
         return pool;
     }
 
@@ -674,10 +679,6 @@ public class TestUtil {
 
         // Copy sub-product data if there is any:
         p.setDerivedProduct(pool.getDerivedProduct());
-
-        for (Branding b : pool.getBranding()) {
-            p.getBranding().add(new Branding(b.getProductId(), b.getType(), b.getName()));
-        }
 
         return p;
     }
@@ -767,7 +768,6 @@ public class TestUtil {
         assertEquals(pool1.getEntitlements(), pool2.getEntitlements());
         assertEquals(pool1.getConsumed(), pool2.getConsumed());
         assertEquals(pool1.getExported(), pool2.getExported());
-        assertEquals(pool1.getBranding(), pool2.getBranding());
         assertEquals(pool1.getCalculatedAttributes(), pool2.getCalculatedAttributes());
         assertEquals(pool1.isMarkedForDelete(), pool2.isMarkedForDelete());
         assertEquals(pool1.getUpstreamConsumerId(), pool2.getUpstreamConsumerId());
@@ -826,12 +826,9 @@ public class TestUtil {
 
         doReturn(transaction).when(mockEntityManager).getTransaction();
 
-        doAnswer(new Answer<Transactional>() {
-            @Override
-            public Transactional answer(InvocationOnMock iom) throws Throwable {
-                Transactional.Action action = (Transactional.Action) iom.getArguments()[0];
-                return new Transactional(mockEntityManager).wrap(action);
-            }
+        doAnswer((Answer<Transactional>) iom -> {
+            Transactional.Action action = (Transactional.Action) iom.getArguments()[0];
+            return new Transactional(mockEntityManager).wrap(action);
         }).when(mockCurator).transactional(any());
     }
 }

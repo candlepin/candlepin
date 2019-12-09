@@ -14,8 +14,11 @@
  */
 package org.candlepin.audit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+
 
 /**
  * An abstract base class for all message receivers listening for Event messages.

@@ -328,14 +328,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @NotNull
     private Long exported;
 
-    @OneToMany
-    @JoinTable(name = "cp_pool_branding",
-        joinColumns = @JoinColumn(name = "pool_id"),
-        inverseJoinColumns = @JoinColumn(name = "branding_id"))
-    @Cascade({org.hibernate.annotations.CascadeType.ALL, org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @BatchSize(size = 1000)
-    private Set<Branding> branding;
-
     // Impl note:
     // These properties are only used as temporary stores to hold information that's only present
     // in the pool JSON due to the product itself not being serialized with it. These will be
@@ -399,14 +391,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      */
     @Column(name = "locked")
     @Type(type = "org.hibernate.type.NumericBooleanType")
-    private boolean locked;
+    private Boolean locked;
 
     public Pool() {
         this.activeSubscription = Boolean.TRUE;
         this.providedProducts = new HashSet<>();
         this.derivedProvidedProducts = new HashSet<>();
         this.attributes = new HashMap<>();
-        this.branding = new HashSet<>();
         this.entitlements = new HashSet<>();
 
         // TODO:
@@ -423,6 +414,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         this.derivedProvidedProductDtos = null;
 
         this.markedForDelete = false;
+        this.locked = false;
 
         this.setExported(0L);
         this.setConsumed(0L);
@@ -829,6 +821,49 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
         String value = this.attributes.get(key);
         return (value == null && this.product != null) ? this.product.getAttributeValue(key) : value;
+    }
+
+    /**
+     * Checks if the given attribute is defined on the product, and if not, then the pool.
+     *
+     * @param key
+     *  The key (name) of the attribute to check
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute is set on the product or the pool; false otherwise
+     */
+    public boolean hasMergedProductAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        return (this.product != null && this.product.hasAttribute(key)) || this.attributes.containsKey(key);
+    }
+
+    /**
+     * Retrieves the value for the given attribute on this pool's product. If the pool has an available
+     * product, and the attribute is not set on it, or the pool does not have a product, then the pool
+     * will be checked instead.
+     *
+     * @param key
+     *  The key (name) of the attribute for which to fetch the value
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  the value of the attribute for this product or pool, or null if the attribute is not set on either
+     */
+    public String getMergedProductAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        String value = this.product != null ? this.product.getAttributeValue(key) : null;
+        return value == null ? this.attributes.get(key) : value;
     }
 
     /**
@@ -1340,14 +1375,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return "true".equalsIgnoreCase(this.getAttributeValue(Attributes.DEVELOPMENT_POOL));
     }
 
-    public Set<Branding> getBranding() {
-        return branding;
-    }
-
-    public void setBranding(Set<Branding> branding) {
-        this.branding = branding;
-    }
-
     @JsonIgnore
     public SourceSubscription getSourceSubscription() {
         return sourceSubscription;
@@ -1498,7 +1525,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     public boolean isLocked() {
-        return locked;
+        return this.locked != null && locked.booleanValue();
     }
 
     public void setLocked(boolean locked) {

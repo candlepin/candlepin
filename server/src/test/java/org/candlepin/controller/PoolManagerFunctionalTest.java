@@ -27,7 +27,6 @@ import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -40,6 +39,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -60,6 +60,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Arrays;
 import java.util.Date;
@@ -170,15 +171,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         sub3.setEndDate(TestUtil.createDate(3020, 12, 12));
         sub3.setLastModified(new Date());
 
-        sub4 = new SubscriptionDTO();
-        sub4.setId(Util.generateDbUUID());
-        sub4.setOwner(this.modelTranslator.translate(o, OwnerDTO.class));
-        sub4.setProduct(this.modelTranslator.translate(provisioning, ProductDTO.class));
-        sub4.setQuantity(5L);
-        sub4.setStartDate(new Date());
-        sub4.setEndDate(TestUtil.createDate(3020, 12, 12));
-        sub4.setLastModified(new Date());
-
         BrandingDTO brand1 = new BrandingDTO();
         brand1.setName("branding1");
         brand1.setType("type1");
@@ -189,7 +181,17 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         brand2.setType("type2");
         brand2.setProductId("product2");
 
-        sub4.setBranding(Arrays.asList(brand1, brand2));
+        sub4 = new SubscriptionDTO();
+        sub4.setId(Util.generateDbUUID());
+        sub4.setOwner(this.modelTranslator.translate(o, OwnerDTO.class));
+        sub4.setProduct(this.modelTranslator.translate(provisioning, ProductDTO.class));
+        sub4.getProduct().addBranding(brand1);
+        sub4.getProduct().addBranding(brand2);
+
+        sub4.setQuantity(5L);
+        sub4.setStartDate(new Date());
+        sub4.setEndDate(TestUtil.createDate(3020, 12, 12));
+        sub4.setLastModified(new Date());
 
         subscriptions.add(sub1);
         subscriptions.add(sub2);
@@ -300,12 +302,12 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 masterPool = pool;
             }
         }
-        Set<Branding> brandingSet = poolManager.fabricateSubscriptionFromPool(masterPool).getBranding();
+        Collection<Branding> brandingSet =
+            poolManager.fabricateSubscriptionFromPool(masterPool).getProduct().getBranding();
 
         assertNotNull(brandingSet);
         assertEquals(2, brandingSet.size());
-        ArrayList<Branding> list = new ArrayList<>();
-        list.addAll(brandingSet);
+        ArrayList<Branding> list = new ArrayList<>(brandingSet);
         list.sort(new Comparator<Branding>() {
 
             @Override

@@ -204,21 +204,31 @@ describe 'Entitlement Certificate V3' do
   end
 
   it 'verify branding info is correct in json blob' do
-    product = create_product(nil, nil)
+    eng_product = create_product("111", "engineering_product_name")
+    branding = [{:productId => "111", :type => 'Some Type', :name => 'Super Branded Name'}]
+
+    if is_hosted?
+      mkt_product = create_upstream_product('555', { :branding => branding })
+    else
+      mkt_product = create_product("555", "marketing_product_name", :branding => branding)
+    end
+    expect(mkt_product.branding.size).to eq(1)
 
     now = DateTime.now
-    branding = [{:productId => product['id'], :type => 'Some Type', :name => 'Super Branded Name'}]
-    create_pool_and_subscription(@owner['key'], product.id, 10, [], '12345', '6789', 'order1', now - 10, now + 365, false, {:branding => branding})
-    entitlement = @system.consume_product(product.id)[0]
+    pool = create_pool_and_subscription(@owner['key'], mkt_product.id, 10, [eng_product.id],
+                                        '12345', '6789', 'order1', now - 10, now + 365, false)
+    expect(pool.branding.size).to eq(1)
+
+    entitlement = @system.consume_product(eng_product.id)[0]
     json_body = extract_payload(@system.list_certificates[0]['cert'])
 
-    json_body['subscription']['name'].should == product.name
+    json_body['subscription']['name'].should == mkt_product.name
     json_body['consumer'].should == @system.get_consumer()['uuid']
 
     # Verify branding info
     json_body['products'][0]['brand_name'].should == 'Super Branded Name'
     json_body['products'][0]['brand_type'].should == 'Some Type'
-  end
+end
 
   it 'encoded the content urls' do
     @content_1 = create_content_ex({:content_url => '/content/dist/rhel/$releasever/$basearch/debug',})

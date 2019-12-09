@@ -47,7 +47,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         this.productManager = new ProductManager(
             this.mockEntCertGenerator, this.ownerContentCurator, this.ownerProductCurator,
-            this.productCurator, this.modelTranslator);
+            this.productCurator);
 
         this.contentManager = new ContentManager(
             this.contentCurator, this.mockEntCertGenerator, this.ownerContentCurator,

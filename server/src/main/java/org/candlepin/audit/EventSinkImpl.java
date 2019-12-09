@@ -97,6 +97,7 @@ public class EventSinkImpl implements EventSink {
         catch (Exception e) {
             log.error("Error looking up ActiveMQ queue info: ", e);
         }
+
         return results;
     }
 
@@ -130,6 +131,7 @@ public class EventSinkImpl implements EventSink {
             if (messageSender == null) {
                 messageSender = new EventMessageSender(this.sessionFactory);
             }
+
             messageSender.queueMessage(mapper.writeValueAsString(event), event.getType(), event.getTarget());
         }
         catch (Exception e) {
@@ -257,6 +259,7 @@ public class EventSinkImpl implements EventSink {
             ClientMessage message = session.createMessage(ClientMessage.TEXT_TYPE, true);
             message.getBodyBuffer().writeNullableSimpleString(SimpleString.toSimpleString(eventString));
 
+            // Set the event type and target if provided
             if (type != null) {
                 message.putStringProperty(EVENT_TYPE_KEY, type.name());
             }

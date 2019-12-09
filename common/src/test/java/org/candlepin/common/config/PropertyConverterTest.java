@@ -42,6 +42,8 @@ public class PropertyConverterTest {
         assertTrue(toBoolean("1"));
         assertTrue(toBoolean("y"));
         assertFalse(toBoolean("n"));
+
+        assertFalse(toBoolean(null));
     }
 
     @Test

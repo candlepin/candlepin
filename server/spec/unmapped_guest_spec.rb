@@ -89,9 +89,10 @@ describe 'Unmapped Guest Pools' do
 
     unmapped_guests_only = get_attribute_value(bound_pool['attributes'], "unmapped_guests_only")
     expect(unmapped_guests_only).not_to be_nil
+    expect(bound_pool["type"]).to eq('UNMAPPED_GUEST')
   end
 
-  it 'ensures unmapped guest will attach to unmapped guest pool on auto attach only once' do
+  it 'ensures unmapped guest will attach to unmapped guest pool only once on auto attach' do
     all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
     all_pools.each do |pool|
       unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
@@ -209,6 +210,39 @@ describe 'Unmapped Guest Pools' do
     bound_pool = ents[0].pool
     requires_host = get_attribute_value(bound_pool['attributes'], "requires_host")
     expect(requires_host).to eq(@host2_client.uuid)
+  end
+
+  it 'replaces entitlement from another host with unmapped during an auto attach' do
+    all_pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
+
+    all_pools.each do |pool|
+      unmapped = get_attribute_value(pool['attributes'], 'unmapped_guests_only')
+      if unmapped.nil? || unmapped != 'true'
+        @host1_client.consume_pool(pool['id'], :quantity => 1)
+        @host2_client.consume_pool(pool['id'], :quantity => 1)
+      end
+    end
+    @cp.refresh_pools(@owner['key'])
+
+    # should be the base pool, the bonus pool for unmapped guests, plus two pools for the hosts' guests
+    @pools = @user.list_pools :owner => @owner.id, :product => @virt_limit_product.id
+    @pools.size.should == 4
+
+    @guest1_client.consume_product(@virt_limit_product.id)
+
+    # should not remove until attached to new host
+    @host1_client.update_consumer({:guestIds => []});
+
+    # do not finish the migration
+    # @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
+
+    @guest1_client.consume_product(@virt_limit_product.id)
+    ents = @guest1_client.list_entitlements()
+    ents.length.should eq(1)
+
+    bound_pool = ents[0].pool
+    expect(bound_pool["type"]).to eq('UNMAPPED_GUEST')
   end
 
   it 'compliance status for entitled unmapped guest will be partial' do

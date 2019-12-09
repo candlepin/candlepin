@@ -129,7 +129,8 @@ public class DefaultEventMessageReceiverTest {
     @ParameterizedTest
     @MethodSource("testMsgTypes")
     public void whenMsgAcknowledgeThrowsExceptionSessionIsRolledBack(byte msgType) throws Exception {
-        this.primeBuffer(msgType, eventJson());
+        this.primeBuffer(msgType, this.eventJson());
+
         doThrow(new ActiveMQException(ActiveMQExceptionType.DISCONNECTED, "Induced exception for testing"))
             .when(clientMessage).acknowledge();
         receiver.onMessage(clientMessage);
@@ -140,7 +141,8 @@ public class DefaultEventMessageReceiverTest {
     @ParameterizedTest
     @MethodSource("testMsgTypes")
     public void whenProperClientMsgPassedThenOnMessageShouldSucceed(byte msgType) throws Exception {
-        this.primeBuffer(msgType, eventJson());
+        this.primeBuffer(msgType, this.eventJson());
+
         receiver.onMessage(clientMessage);
         verify(eventListener).onEvent(any(Event.class));
         verify(clientMessage).acknowledge();
@@ -151,7 +153,8 @@ public class DefaultEventMessageReceiverTest {
     @ParameterizedTest
     @MethodSource("testMsgTypes")
     public void sessionIsRolledBackWhenAnyExceptionIsThrownFromEventListener(byte msgType) throws Exception {
-        this.primeBuffer(msgType, eventJson());
+        this.primeBuffer(msgType, this.eventJson());
+
         doThrow(new RuntimeException("Forced")).when(eventListener).onEvent(any(Event.class));
         receiver.onMessage(clientMessage);
         verify(clientMessage).acknowledge();

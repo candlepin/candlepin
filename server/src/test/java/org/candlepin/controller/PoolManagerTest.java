@@ -42,7 +42,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Consumer;
@@ -66,6 +65,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
@@ -76,7 +76,7 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.activationkey.ActivationKeyRules;
+import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -687,10 +687,10 @@ public class PoolManagerTest {
         Product product = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
-        Branding b1 = new Branding("8000", "OS", "Branded Awesome OS");
-        Branding b2 = new Branding("8001", "OS", "Branded Awesome OS 2");
-        sub.getBranding().add(b1);
-        sub.getBranding().add(b2);
+        Branding b1 = new Branding(null, "8000", "Branded Awesome OS", "OS");
+        Branding b2 = new Branding(null, "8001", "Branded Awesome OS 2", "OS");
+        product.addBranding(b1);
+        product.addBranding(b2);
 
         this.mockProducts(owner, product);
 
@@ -700,9 +700,9 @@ public class PoolManagerTest {
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
-        assertEquals(2, resultPool.getBranding().size());
-        assertTrue(resultPool.getBranding().contains(b1));
-        assertTrue(resultPool.getBranding().contains(b2));
+        assertEquals(2, resultPool.getProduct().getBranding().size());
+        assertTrue(resultPool.getProduct().getBranding().contains(b1));
+        assertTrue(resultPool.getProduct().getBranding().contains(b2));
     }
 
     @Test
@@ -1289,7 +1289,7 @@ public class PoolManagerTest {
         this.manager.getRefresher(mockSubAdapter, mockOwnerAdapter).add(owner).run();
 
         verify(mockPoolCurator).batchDelete(eq(pools), anyCollectionOf(String.class));
-        verify(entitlementCurator).batchDelete(eq(new HashSet<Entitlement>(poolEntitlements)));
+        verify(entitlementCurator).batchDeleteByIds(eq(new HashSet<>(Arrays.asList(ent.getId()))));
     }
 
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {

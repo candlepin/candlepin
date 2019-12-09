@@ -330,6 +330,19 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             }
         }
 
+        if (entity.getBranding() != null) {
+            for (Branding brand : entity.getBranding()) {
+                if (brand.getProductId() == null ||
+                    brand.getName() == null ||
+                    brand.getType() == null) {
+                    throw new IllegalStateException(
+                        "Product contains a Branding with a null product id, name or type.");
+                }
+
+                brand.setProduct(entity);
+            }
+        }
+
         // TODO: Add more reference checks here.
 
         return entity;

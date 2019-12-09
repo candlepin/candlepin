@@ -12,42 +12,23 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.policy.js.activationkey;
+package org.candlepin.policy.activationkey;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.StandardTranslator;
-import org.candlepin.jackson.ProductCachedSerializationModule;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Rules;
-import org.candlepin.model.RulesCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
-import com.google.inject.Provider;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.io.InputStream;
-import java.util.Date;
 import java.util.Locale;
 
 /**
@@ -57,37 +38,16 @@ public class ActivationKeyRulesTest {
 
     private ActivationKeyRules actKeyRules;
     private static int poolid = 0;
-
-    @Mock private RulesCurator rulesCuratorMock;
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
-    @Mock private JsRunnerRequestCache cache;
-    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
-    @Mock private EnvironmentCurator environmentCurator;
-    @Mock private OwnerCurator mockOwnerCurator;
-
     private I18n i18n;
-    private JsRunnerProvider provider;
     private Owner owner = TestUtil.createOwner();
-    private ModelTranslator translator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);
-        // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
-        Rules rules = new Rules(Util.readFile(is));
-        when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
-        when(rulesCuratorMock.getRules()).thenReturn(rules);
-        when(cacheProvider.get()).thenReturn(cache);
-
-        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
-        ProductCurator productCurator = mock(ProductCurator.class);
-        translator = new StandardTranslator(mockConsumerTypeCurator, environmentCurator, mockOwnerCurator);
-        actKeyRules = new ActivationKeyRules(provider.get(), i18n,
-                new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
+        actKeyRules = new ActivationKeyRules(i18n);
     }
 
     @Test
@@ -97,18 +57,16 @@ public class ActivationKeyRulesTest {
         key.addPool(genPool(), new Long(1));
 
         Pool pool = genPool();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getErrors().isEmpty());
-        assertTrue(result.getWarnings().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     @Test
     public void testActivationKeyRulesNoPools() {
         ActivationKey key = new ActivationKey();
         Pool pool = genPool();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getErrors().isEmpty());
-        assertTrue(result.getWarnings().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     /*
@@ -123,9 +81,8 @@ public class ActivationKeyRulesTest {
 
         Pool pool = genPhysOnlyPool();
         // Should be a valid combination
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getErrors().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     /*
@@ -138,20 +95,17 @@ public class ActivationKeyRulesTest {
         key.addPool(genPool(), new Long(1));
 
         Pool pool = genInstanceBased();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getErrors().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     @Test
     public void testActivationKeyRulesBadQuantity() {
         ActivationKey key = new ActivationKey();
         Pool pool = genPool();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(-1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.invalid.quantity";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(-1));
+        assertEquals(1, result.getErrorKeys().size());
+        assertEquals(ActivationKeyRules.ErrorKeys.INVALID_QUANTITY, result.getErrorKeys().get(0));
     }
 
     /*
@@ -166,9 +120,8 @@ public class ActivationKeyRulesTest {
         pool.setConsumed(4L);
 
         // Attempting to overconsume the pool
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(2));
-        assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getErrors().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(2));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     @Test
@@ -179,9 +132,8 @@ public class ActivationKeyRulesTest {
         pool.setQuantity(-1L);
         pool.setConsumed(4L);
 
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(2));
-        assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getErrors().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(2));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     @Test
@@ -189,11 +141,9 @@ public class ActivationKeyRulesTest {
         ActivationKey key = new ActivationKey();
         Pool pool = genPoolForType("person");
 
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.actkey.cannot.use.person.pools";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
+        assertEquals(1, result.getErrorKeys().size());
+        assertEquals(ActivationKeyRules.ErrorKeys.CANNOT_USE_PERSON_POOLS, result.getErrorKeys().get(0));
     }
 
     @Test
@@ -202,9 +152,8 @@ public class ActivationKeyRulesTest {
         key.addPool(genPoolForType("system"), 1L);
 
         Pool pool = genPoolForType("system");
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getErrors().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     @Test
@@ -213,9 +162,8 @@ public class ActivationKeyRulesTest {
         key.addPool(genHostRestricted("host1"), 1L);
 
         Pool pool = genHostRestricted("host1");
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getErrors().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     @Test
@@ -223,9 +171,8 @@ public class ActivationKeyRulesTest {
         ActivationKey key = new ActivationKey();
 
         Pool pool = genNonMultiEnt();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getErrors().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     @Test
@@ -233,11 +180,10 @@ public class ActivationKeyRulesTest {
         ActivationKey key = new ActivationKey();
 
         Pool pool = genNonMultiEnt();
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(2));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.invalid.nonmultient.quantity";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(2));
+        assertEquals(1, result.getErrorKeys().size());
+        assertEquals(ActivationKeyRules.ErrorKeys.INVALID_NON_MULTIENT_QUANTITY,
+            result.getErrorKeys().get(0));
     }
 
     @Test
@@ -246,11 +192,9 @@ public class ActivationKeyRulesTest {
         Pool pool = genNonMultiEnt();
         key.addPool(pool, 1L);
 
-        ValidationResult result = actKeyRules.runPreActKey(key, pool, new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertEquals(1, result.getErrors().size());
-        String expected = "rulefailed.already.exists";
-        assertEquals(expected, result.getErrors().get(0).getResourceKey());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
+        assertEquals(1, result.getErrorKeys().size());
+        assertEquals(ActivationKeyRules.ErrorKeys.ALREADY_EXISTS, result.getErrorKeys().get(0));
     }
 
     @Test
@@ -258,9 +202,9 @@ public class ActivationKeyRulesTest {
         ActivationKey key = new ActivationKey();
         key.addPool(genInstanceBased(), null);
 
-        ValidationResult result = actKeyRules.runPreActKey(key, genPhysOnlyPool(), new Long(1));
-        assertTrue(result.getWarnings().isEmpty());
-        assertTrue(result.getErrors().isEmpty());
+        ValidationResult result = actKeyRules.runPoolValidationForActivationKey(
+            key, genPhysOnlyPool(), new Long(1));
+        assertTrue(result.getErrorKeys().isEmpty());
     }
 
     private Pool genPool() {

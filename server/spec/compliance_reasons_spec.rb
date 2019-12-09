@@ -34,7 +34,60 @@ describe 'Single Entitlement Compliance Reasons' do
                  :support_type => 'excellent',})
     @product1_pool = create_pool_and_subscription(@owner['key'], @product1.id, 100, [], '1888', '1234')
 
+
+    # Create a stackable product limiting by socket.
+    @prod3 = random_string("Product3")
+    @socket_product = create_product(nil, @prod3, :attributes => {
+        :version => '6.4',
+        :cores => 2,
+        :sockets => 1,
+        :instance_multiplier => 2,
+        :stacking_id => @prod3,
+        :'multi-entitlement' => 'yes',
+        :warning_period => 15,
+        :management_enabled => true,
+        :support_level => 'standard',
+        :support_type => 'excellent',})
+    @socket_pool = create_pool_and_subscription(@owner['key'], @socket_product.id, 5, [], '1888', '1234')
+
     @user = user_client(@owner, random_string('test-user'))
+  end
+
+  # the actual test:
+  it 'should be partially compliant when using cores if vcpu is not available' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                             {'system.certificate_version' => '3.2',
+                              # Simulate 8 sockets as would be returned from system fact
+                              'cpu.core(s)_per_socket'=> '1',
+                              'cpu.cpu(s)'=> '8',
+                              'cpu.cpu_socket(s)'=> '8',
+                              'virt.is_guest'=> 'true'
+                             })
+    installed = [
+        {'productId' => @socket_product.id, 'productName' => @socket_product.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+
+    entitlements = system.consume_pool(@socket_pool.id, {:quantity => 1})
+    entitlements.should_not == nil
+    entitlements.size.should == 1
+
+    compliance_status = system.get_compliance(consumer_id=system.uuid)
+    compliance_status['status'].should == 'partial'
+    compliance_status['compliant'].should == false
+    compliance_status.should have_key('reasons')
+
+    expected_has = "8"
+    expected_covered = "2"
+    expected_message = "Only supports %s of %s vCPUs." % [expected_covered,
+                                                          expected_has]
+
+    reasons = compliance_status['reasons']
+    reasons.size.should == 1
+    assert_reason(reasons[0], 'VCPU', expected_message, {'stack_id' => @prod3,
+                                                         'covered' => expected_covered,
+                                                         'has' => expected_has,
+                                                         'name' => @socket_product.name})
   end
 
   it 'reports products not covered' do

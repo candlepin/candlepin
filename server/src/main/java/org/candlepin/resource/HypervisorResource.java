@@ -44,6 +44,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -383,7 +384,7 @@ public class HypervisorResource {
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId, Owner owner, Principal principal) {
-        Consumer consumer = new Consumer();
+        Consumer consumer = new Consumer().setUuid(Util.generateUUID());
         consumer.setName(incHypervisorId);
         consumer.setType(this.hypervisorType);
         consumer.setFact("uname.machine", "x86_64");

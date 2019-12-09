@@ -45,7 +45,6 @@ describe 'Consumer Resource' do
   end
 
   it 'should not allow copying id cert to other consumers' do
-
      consumer_old = @user2.register(random_string('consumer1'))
      id_cert = consumer_old['idCert']
 
@@ -164,6 +163,58 @@ describe 'Consumer Resource' do
     results[@consumer1.uuid].should_not be_nil
   end
 
+  it 'should not let consumer update environment with incorrect env name' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    expect{
+      consumer_client.update_consumer({:environment => {:name => "abc"}})
+    }.to raise_error(RestClient::ResourceNotFound)
+  end
+
+  it 'should let consumer update environment with valid env name only' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+      consumer['idCert']['key'])
+    env = @cp.create_environment(@owner1['key'], random_string("env_id"), random_string("env_name"))
+
+    expect(consumer.environment).to be_nil
+
+    consumer_client.update_consumer({:environment => {:name => env.name}})
+    consumer = @cp.get_consumer(consumer['uuid'])
+
+    expect(consumer.environment).to_not be_nil
+  end
+
+  it 'should let consumer update environment with valid env id only' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    env = @cp.create_environment(@owner1['key'], random_string("env_id"), random_string("env_name"))
+
+    expect(consumer.environment).to be_nil
+
+    consumer_client.update_consumer({:environment => {:id => env.id}})
+    consumer = @cp.get_consumer(consumer['uuid'])
+
+    expect(consumer.environment).to_not be_nil
+  end
+
+  it 'should let not consumer update environment with incorrect env id' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    expect(consumer.environment).to be_nil
+
+    expect{
+      consumer_client.update_consumer({:environment => {:id => 'incorrect_id'}})
+    }.to raise_error(RestClient::ResourceNotFound)
+
+  end
+
   it 'should return a 410 for deleted consumers' do
     @consumer1.unregister(@consumer1.uuid)
     lambda do
@@ -265,10 +316,77 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::BadRequest)
   end
 
-  it 'returns a 404 for a non-existant consumer' do
+  it 'returns a 404 for a non-existent consumer' do
     lambda do
       @cp.get_consumer('fake-uuid')
     end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
+  it 'returns a 404 when checking if a non-existent consumer exists' do
+    expect {
+      @cp.consumer_exists('fake-uuid')
+    }.to raise_error(RestClient::ResourceNotFound)
+  end
+
+  it 'returns a 204 when checking if a real consumer exists' do
+    response = @cp.head("/consumers/#{@consumer1.uuid}/exists")
+    expect(response.code).to eq(204)
+  end
+
+  it 'returns a 410 when checking if a deleted consumer exists' do
+    @consumer1.unregister(@consumer1.uuid)
+
+    expect {
+      @cp.consumer_exists(@consumer1.uuid)
+    }.to raise_error(RestClient::Gone)
+  end
+
+  it 'allows consumer to check for self-existence' do
+    @consumer1.consumer_exists(@consumer1.uuid)
+  end
+
+  it 'does not allow consumer to check existence of other consumers' do
+    # This test should expect a 404 rather than a 503, as we're explicitly minimizing the amount
+    # of information provided in the no-permission case. Consumer 1 has no access to consumer 2,
+    # and should not be able to determine whether or not consumer 2 even exists.
+
+    expect {
+      @consumer1.consumer_exists(@consumer2.uuid)
+    }.to raise_error(RestClient::ResourceNotFound)
+  end
+
+  it 'allows an admin to check if any consumer exists' do
+    @cp.consumer_exists(@consumer1.uuid)
+    @cp.consumer_exists(@consumer2.uuid)
+  end
+
+  it 'does not allow to check existence when nil input is provided' do
+    expect {
+      @cp.consumer_exists_bulk(nil)
+    }.to raise_error(RestClient::BadRequest)
+  end
+
+  it 'return empty body when all consumer uuid exists for bulk consumer existence check' do
+    post_data = [@consumer1.uuid]
+    response = @cp.consumer_exists_bulk(post_data)
+    expect(response).to be(nil)
+  end
+
+  it 'should raise resource not found when consumer does not exists for bulk consumer existence check' do
+    post_data = [@consumer1.uuid, "test_uuid", "more_test_uuid"]
+    expect {
+      @cp.consumer_exists_bulk(post_data)
+    }.to raise_error(RestClient::ResourceNotFound)
+  end
+
+  it 'should return non existing ids for bulk consumer existence check' do
+    post_data = [@consumer1.uuid, "test_uuid", "more_test_uuid"]
+    begin
+      @cp.consumer_exists_bulk(post_data)
+    rescue RestClient::ResourceNotFound => e
+      json = JSON.parse(e.http_body)
+      expect(json).to include("test_uuid", "more_test_uuid")
+    end
   end
 
   it 'lets a consumer view their own information' do
@@ -360,6 +478,22 @@ describe 'Consumer Resource' do
     #reload to be sure it was persisted
     consumer = client.get_consumer(consumer['uuid'])
     expect(consumer['serviceLevel']).to eq(service_level)
+  end
+
+  it 'should let a consumer register and disable autoheal' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+                               owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil,
+                               nil, nil, nil, nil, false)
+
+    expect(consumer['autoheal']).to eq(false)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['autoheal']).to eq(false)
   end
 
   it 'should let a consumer register and set system purpose role' do

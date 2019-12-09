@@ -10,6 +10,7 @@ jpa.config.hibernate.connection.url=<%= candlepin.jdbc_url %>
 jpa.config.hibernate.connection.username=<%= candlepin.cpdb_username %>
 jpa.config.hibernate.connection.password=<%= candlepin.cpdb_password %>
 jpa.config.hibernate.dialect=<%= candlepin.jdbc_dialect %>
+jpa.config.hibernate.javax.cache.uri=ehcache.xml
 
 candlepin.auth.trusted.enable=true
 candlepin.auth.oauth.enable=true

@@ -9,7 +9,7 @@
   </parent>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin</artifactId>
-  <version>2.8.0</version>
+  <version>2.11.1</version>
   <packaging>war</packaging>
   <name>Candlepin</name>
   <description>The Candlepin Entitlement Engine</description>
@@ -20,7 +20,139 @@
     <dependency>
       <groupId>org.hibernate.validator</groupId>
       <artifactId>hibernate-validator-annotation-processor</artifactId>
-      <version>6.0.7.Final</version>
+      <version>6.0.16.Final</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-servlet-filter-adapter</artifactId>
+      <version>7.0.0</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-adapter-core</artifactId>
+      <version>7.0.0</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-common</artifactId>
+      <version>7.0.0</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-core</artifactId>
+      <version>7.0.0</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-adapter-spi</artifactId>
+      <version>7.0.0</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-servlet-adapter-spi</artifactId>
+      <version>7.0.0</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <version>4.4.7</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <version>1.60</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk15on</artifactId>
+      <version>1.60</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-jaxrs-oauth-client</artifactId>
+      <version>7.0.0</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-authz-client</artifactId>
+      <version>7.0.0</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -56,7 +188,7 @@
     <dependency>
       <groupId>org.candlepin</groupId>
       <artifactId>candlepin-common</artifactId>
-      <version>2.7.2</version>
+      <version>2.11.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -248,7 +380,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -260,7 +392,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -272,7 +404,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -284,7 +416,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
       <artifactId>jackson-jaxrs-base</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -296,7 +428,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.jaxrs</groupId>
       <artifactId>jackson-jaxrs-json-provider</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -308,7 +440,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-jsonSchema</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -320,7 +452,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-jaxb-annotations</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -332,7 +464,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-hibernate5</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -344,7 +476,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jdk8</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -704,7 +836,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-yaml</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -716,7 +848,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-xml</artifactId>
-      <version>2.9.4</version>
+      <version>2.10.1</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -800,7 +932,7 @@
     <dependency>
       <groupId>org.hibernate.validator</groupId>
       <artifactId>hibernate-validator</artifactId>
-      <version>6.0.7.Final</version>
+      <version>6.0.16.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -824,7 +956,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-core</artifactId>
-      <version>5.3.8.Final</version>
+      <version>5.4.9.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -836,7 +968,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-c3p0</artifactId>
-      <version>5.3.8.Final</version>
+      <version>5.4.9.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -896,7 +1028,7 @@
     <dependency>
       <groupId>com.mchange</groupId>
       <artifactId>c3p0</artifactId>
-      <version>0.9.5.2</version>
+      <version>0.9.5.4</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -967,20 +1099,8 @@
     </dependency>
     <dependency>
       <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-ehcache</artifactId>
-      <version>5.3.8.Final</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>*</artifactId>
-          <groupId>*</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.ehcache</groupId>
-      <artifactId>ehcache</artifactId>
-      <version>2.10.3</version>
+      <artifactId>hibernate-jcache</artifactId>
+      <version>5.4.6.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -991,8 +1111,8 @@
     </dependency>
     <dependency>
       <groupId>org.ehcache</groupId>
-      <artifactId>jcache</artifactId>
-      <version>1.0.0</version>
+      <artifactId>ehcache</artifactId>
+      <version>3.8.0</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -1087,6 +1207,18 @@
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
+      <artifactId>artemis-stomp-protocol</artifactId>
+      <version>2.4.0</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
       <artifactId>artemis-journal</artifactId>
       <version>2.4.0</version>
       <scope>compile</scope>
@@ -1100,7 +1232,7 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-all</artifactId>
-      <version>4.1.16.Final</version>
+      <version>4.1.42.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -1184,7 +1316,7 @@
     <dependency>
       <groupId>org.apache.mina</groupId>
       <artifactId>mina-core</artifactId>
-      <version>1.0.1</version>
+      <version>2.1.3</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -1196,7 +1328,7 @@
     <dependency>
       <groupId>org.apache.mina</groupId>
       <artifactId>mina-filter-ssl</artifactId>
-      <version>1.0.1</version>
+      <version>1.1.7</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -1434,30 +1566,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpkix-jdk15on</artifactId>
-      <version>1.60</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>*</artifactId>
-          <groupId>*</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.bouncycastle</groupId>
-      <artifactId>bcprov-jdk15on</artifactId>
-      <version>1.60</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>*</artifactId>
-          <groupId>*</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>org.hsqldb</groupId>
       <artifactId>hsqldb</artifactId>
       <version>2.3.2</version>
@@ -1472,7 +1580,7 @@
     <dependency>
       <groupId>org.candlepin</groupId>
       <artifactId>candlepin-common</artifactId>
-      <version>2.7.2</version>
+      <version>2.11.1</version>
       <type>tar.gz</type>
       <classifier>complete</classifier>
       <scope>provided</scope>

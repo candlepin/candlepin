@@ -43,17 +43,25 @@ public class CandlepinFilterModule extends ServletModule {
         Map<String, String> loggingFilterConfig = new HashMap<>();
         loggingFilterConfig.put("header.name", "x-candlepin-request-uuid");
 
-
         String regex = ".*";
 
-        /**
+        /*
          * A negative lookeahead regex that makes sure that we can serve
-         * static content at docs/
+         * static content at docs/ and/or token/
          */
-        if (config.getBoolean(ConfigProperties.SWAGGER_ENABLED)) {
+        if (config.getBoolean(ConfigProperties.TOKENPAGE_ENABLED) &&
+            config.getBoolean(ConfigProperties.SWAGGER_ENABLED)) {
+            // don't filter docs or token
+            regex = "^(?!/docs|/token).*";
+        }
+        else if (config.getBoolean(ConfigProperties.SWAGGER_ENABLED)) {
+            // don't filter docs
             regex = "^(?!/docs).*";
         }
-
+        else if (config.getBoolean(ConfigProperties.TOKENPAGE_ENABLED)) {
+            // don't filter token
+            regex = "^(?!/token).*";
+        }
         filterRegex(regex).through(CandlepinScopeFilter.class);
         filterRegex(regex).through(CandlepinPersistFilter.class);
         filterRegex(regex).through(LoggingFilter.class, loggingFilterConfig);

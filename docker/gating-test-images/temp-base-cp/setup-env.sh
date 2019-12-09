@@ -81,27 +81,4 @@ stage_version=$(python -c 'import json; fp = open("stage_status.json", "r"); obj
 git checkout candlepin-${stage_version}-1
 rm stage_status.json
 
-# Setup and install rvm, ruby and pals
-# Import and trust rvm keys
-curl -sSL https://rvm.io/mpapis.asc | gpg --batch --import -; \
-echo 409B6B1796C275462A1703113804BB82D39DC0E3:6: | gpg --batch --import-ownertrust; \
-curl -sSL https://rvm.io/pkuczynski.asc | gpg --batch --import -; \
-echo 7D2BAF1CF37B13E2069D6956105BD0E739499BDB:6: | gpg --batch --import-ownertrust
-
-# turning off verbose mode, rvm is nuts with this
-set +v
-curl -sSL https://get.rvm.io | bash -s stable
-source /etc/profile.d/rvm.sh || true
-
-rvm install 2.5.3
-rvm use --default 2.5.3
-set -v
-
-# Install all ruby deps
-gem update --system
-gem install bundler
-bundle install --without=proton
-
-# Download all artifacts (time saver)
-buildr artifacts
-buildr checkstyle || true
+./gradlew --no-daemon dependencies

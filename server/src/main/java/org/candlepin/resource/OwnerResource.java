@@ -47,7 +47,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -59,7 +58,6 @@ import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -147,6 +145,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.PersistenceException;
 import javax.ws.rs.Consumes;
@@ -174,6 +174,7 @@ import javax.ws.rs.core.MultivaluedMap;
 public class OwnerResource {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
+    private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
@@ -549,6 +550,10 @@ public class OwnerResource {
         if (dto.isAutobindDisabled() != null) {
             entity.setAutobindDisabled(dto.isAutobindDisabled());
         }
+
+        if (dto.isAutobindHypervisorDisabled() != null) {
+            entity.setAutobindHypervisorDisabled(dto.isAutobindHypervisorDisabled());
+        }
     }
 
     /**
@@ -779,24 +784,6 @@ public class OwnerResource {
                     }
                 }
                 entity.setDerivedProvidedProducts(derivedProducts);
-            }
-        }
-
-        if (dto.getBranding() != null) {
-            if (dto.getBranding().isEmpty()) {
-                entity.setBranding(Collections.emptySet());
-            }
-            else {
-                Set<Branding> branding = new HashSet<>();
-                for (BrandingDTO brandingDTO : dto.getBranding()) {
-                    if (brandingDTO != null) {
-                        branding.add(new Branding(
-                            brandingDTO.getProductId(),
-                            brandingDTO.getType(),
-                            brandingDTO.getName()));
-                    }
-                }
-                entity.setBranding(branding);
             }
         }
     }
@@ -1203,9 +1190,9 @@ public class OwnerResource {
             throw new BadRequestException(i18n.tr("Must provide a name for activation key."));
         }
 
-        String testName = dto.getName().replace("-", "0").replace("_", "0");
+        Matcher keyMatcher = AK_CHAR_FILTER.matcher(dto.getName());
 
-        if (!testName.matches("[a-zA-Z0-9]*")) {
+        if (!keyMatcher.matches()) {
             throw new BadRequestException(
                 i18n.tr("The activation key name \"{0}\" must be alphanumeric or " +
                     "include the characters \"-\" or \"_\"", dto.getName()));
@@ -1812,10 +1799,6 @@ public class OwnerResource {
 
         if (newPoolDTO.getDerivedProvidedProducts() == null) {
             newPool.setDerivedProvidedProducts(currentPool.getDerivedProvidedProducts());
-        }
-
-        if (newPoolDTO.getBranding() == null) {
-            newPool.setBranding(currentPool.getBranding());
         }
 
         // Apply changes to the pool and its derived pools

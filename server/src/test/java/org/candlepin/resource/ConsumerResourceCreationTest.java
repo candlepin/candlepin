@@ -260,6 +260,7 @@ public class ConsumerResourceCreationTest {
 
     public Configuration initConfig() {
         Configuration config = new ConfigForTesting();
+        config.setProperty(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING, "true");
         return config;
     }
 

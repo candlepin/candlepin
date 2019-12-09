@@ -210,6 +210,20 @@ public class QuantityRulesTest {
     }
 
     @Test
+    public void shouldUseCoresIfNoVcpu() {
+        consumer.setFact(IS_VIRT, "true");
+        consumer.setFact(SOCKET_FACT, "1");
+        consumer.setFact(CORES_FACT, "8");
+        pool.getProduct().setAttribute(CORES_ATTRIBUTE, "2");
+        pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
+
+        final SuggestedQuantityDTO suggested = quantityRules
+            .getSuggestedQuantity(pool, consumer, new Date());
+
+        assertEquals(new Long(4), suggested.getSuggested());
+    }
+
+    @Test
     public void testVirtIgnoresSockets() {
         // Ensure that we start this test with no entitlements.
         consumer.getEntitlements().clear();

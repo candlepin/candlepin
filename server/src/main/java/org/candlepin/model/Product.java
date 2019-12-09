@@ -59,15 +59,17 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.stream.Collectors;
+
 
 
 /**
@@ -245,10 +247,18 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private boolean locked;
 
+    @OneToMany(mappedBy = "product")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    @BatchSize(size = 1000)
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+    @Immutable
+    private Set<Branding> branding;
+
     public Product() {
         this.attributes = new HashMap<>();
         this.productContent = new LinkedList<>();
         this.dependentProductIds = new HashSet<>();
+        this.branding = new HashSet<>();
     }
 
     /**
@@ -323,6 +333,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setCreated(source.getCreated() != null ? (Date) source.getCreated().clone() : null);
         this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
         this.setLocked(source.isLocked());
+
+        this.setBranding(source.getBranding());
     }
 
     /**
@@ -368,6 +380,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
 
+        this.setBranding(source.getBranding());
+
         return this;
     }
 
@@ -408,6 +422,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
         copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
+
+        copy.branding = new HashSet<>();
+        copy.setBranding(this.branding.stream()
+            .map(brand -> new Branding(copy, brand.getProductId(), brand.getName(), brand.getType()))
+            .collect(Collectors.toSet()));
 
         return copy;
     }
@@ -640,6 +659,95 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         return this;
+    }
+
+    /**
+     * Retrieves a collection of branding for this product. If the brandings have not
+     * yet been defined, this method returns an empty collection.
+     *
+     * @return
+     *  the brandings of this product
+     */
+    public Collection<Branding> getBranding() {
+        return new SetView<>(branding);
+    }
+
+    /**
+     * Sets the brandings of this product.
+     *
+     * @param branding
+     *  A collection of brandings to attach to this product, or null to clear the brandings
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product setBranding(Collection<Branding> branding) {
+        this.branding.clear();
+
+        if (branding != null) {
+            for (Branding brand : branding) {
+                this.addBranding(brand);
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the specified branding as one of the brandings of this product. If the branding
+     * is already there, it will not be added again.
+     *
+     * @param branding
+     *  The branding to add
+     *
+     * @throws IllegalArgumentException
+     *  if branding is null
+     *
+     * @return
+     *  true if the branding was added successfully; false otherwise
+     */
+    public boolean addBranding(Branding branding) {
+        if (branding == null) {
+            throw new IllegalArgumentException("branding is null");
+        }
+
+        branding.setProduct(this);
+        return this.branding.add(branding);
+    }
+
+    /**
+     * Removes the branding represented by the given branding entity from this product. Any branding
+     * with the same ID as the ID of the given branding entity will be removed.
+     *
+     * @param branding
+     *  The branding entity representing the branding to remove from this product
+     *
+     * @throws IllegalArgumentException
+     *  if branding is null or has null id
+     *
+     * @return
+     *  true if the branding was removed successfully; false otherwise
+     */
+    public boolean removeBranding(Branding branding) {
+        if (branding == null) {
+            throw new IllegalArgumentException("branding is null");
+        }
+
+        if (branding.getId() == null) {
+            throw new IllegalArgumentException("branding id is null");
+        }
+
+        Collection<Branding> remove = new LinkedList<>();
+
+        for (Branding pb : this.branding) {
+
+            if (branding.equals(pb)) {
+                pb.setProduct(null);
+                remove.add(pb);
+            }
+        }
+
+        return this.branding.removeAll(remove);
     }
 
     @XmlTransient
@@ -1080,13 +1188,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
             // Compare content UUIDs
             equals = equals && Util.collectionsAreEqual(this.productContent, that.productContent,
-                    new Comparator<ProductContent>() {
-                        public int compare(ProductContent pc1, ProductContent pc2) {
-                            // We're assuming the collections are well-formed and won't contain null
-                            // objects, but we'll verify that just in case they do.
-                            return pc1 == pc2 || (pc1 != null && pc1.equals(pc2)) ? 0 : 1;
-                        }
-                    });
+                (pc1, pc2) -> Objects.equals(pc1, pc2) ? 0 : 1);
+
+            // Compare branding collections
+            equals = equals && Util.collectionsAreEqual(this.branding, that.branding,
+                (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
         }
 
         return equals;
@@ -1120,7 +1226,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
         // manually step through these and add the elements to ensure the hash code is
         // generated properly.
-        int accumulator = 0;
+        int accumulator;
 
         if (!this.dependentProductIds.isEmpty()) {
             accumulator = 0;
@@ -1135,6 +1241,15 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             accumulator = 0;
             for (ProductContent pc : this.productContent) {
                 accumulator += (pc != null ? pc.getEntityVersion() : 0);
+            }
+
+            builder.append(accumulator);
+        }
+
+        if (!this.branding.isEmpty()) {
+            accumulator = 0;
+            for (Branding branding : this.branding) {
+                accumulator += (branding != null ? branding.hashCode() : 0);
             }
 
             builder.append(accumulator);

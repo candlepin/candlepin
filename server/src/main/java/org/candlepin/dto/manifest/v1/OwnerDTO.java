@@ -50,6 +50,7 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Owner
     protected UpstreamConsumerDTO upstreamConsumer;
     protected String logLevel;
     protected Boolean autobindDisabled;
+    protected Boolean autobindHypervisorDisabled;
     protected String contentAccessMode;
     protected String contentAccessModeList;
     protected Date lastRefreshed;
@@ -164,6 +165,17 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Owner
         return this;
     }
 
+    @JsonProperty
+    public Boolean isAutobindHypervisorDisabled() {
+        return autobindHypervisorDisabled;
+    }
+
+    @JsonIgnore
+    public OwnerDTO setAutobindHypervisorDisabled(Boolean autobindHypervisorDisabled) {
+        this.autobindHypervisorDisabled = autobindHypervisorDisabled;
+        return this;
+    }
+
     public String getContentAccessMode() {
         return contentAccessMode;
     }
@@ -249,6 +261,7 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Owner
                 .append(lucid, rucid)
                 .append(this.getLogLevel(), that.getLogLevel())
                 .append(this.isAutobindDisabled(), that.isAutobindDisabled())
+                .append(this.isAutobindHypervisorDisabled(), that.isAutobindHypervisorDisabled())
                 .append(this.getContentAccessMode(), that.getContentAccessMode())
                 .append(this.getContentAccessModeList(), that.getContentAccessModeList())
                 .append(this.getLastRefreshed(), that.getLastRefreshed());
@@ -278,6 +291,7 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Owner
             .append(this.getUpstreamConsumer() != null ? this.getUpstreamConsumer().getId() : null)
             .append(this.getLogLevel())
             .append(this.isAutobindDisabled())
+            .append(this.isAutobindHypervisorDisabled())
             .append(this.getContentAccessMode())
             .append(this.getContentAccessModeList())
             .append(this.getLastRefreshed());
@@ -320,6 +334,7 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Owner
         this.setUpstreamConsumer(source.getUpstreamConsumer());
         this.setLogLevel(source.getLogLevel());
         this.setAutobindDisabled(source.isAutobindDisabled());
+        this.setAutobindHypervisorDisabled(source.isAutobindHypervisorDisabled());
         this.setContentAccessMode(source.getContentAccessMode());
         this.setContentAccessModeList(source.getContentAccessModeList());
         this.setLastRefreshed(source.getLastRefreshed());

@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,16 +27,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.inject.Inject;
 
 
 /**
  * ProductTest
  */
-public class ProductTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
+public class ProductTest {
 
     protected static Stream<Object[]> getValuesForEqualityAndReplication() {
         Map<String, String> attributes1 = new HashMap<>();
@@ -74,15 +73,26 @@ public class ProductTest extends DatabaseTestFixture {
             new ProductContent(null, content[5], true)
         );
 
+        Set<Branding> brandings1 = Stream.of(
+            new Branding(null, "eng_prod_id_1", "eng_prod_name_1", "OS"),
+            new Branding(null, "eng_prod_id_2", "eng_prod_name_2", "OS"),
+            new Branding(null, "eng_prod_id_3", "eng_prod_name_3", "OS")
+        ).collect(Collectors.toSet());
+
+        Set<Branding> brandings2 = Stream.of(
+            new Branding(null, "eng_prod_id_4", "eng_prod_name_4", "OS"),
+            new Branding(null, "eng_prod_id_5", "eng_prod_name_5", "OS"),
+            new Branding(null, "eng_prod_id_6", "eng_prod_name_6", "OS")
+        ).collect(Collectors.toSet());
+
         return Stream.of(
             new Object[] { "Id", "test_value", "alt_value" },
             new Object[] { "Name", "test_value", "alt_value" },
             new Object[] { "Multiplier", 1234L, 4567L },
             new Object[] { "Attributes", attributes1, attributes2 },
             new Object[] { "ProductContent", productContent1, productContent2 },
-            new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") }
-            // new Object[] { "Href", "test_value", null },
-            // new Object[] { "Locked", Boolean.TRUE, false }
+            new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
+            new Object[] { "Branding", brandings1, brandings2 }
         );
     }
 
@@ -190,4 +200,31 @@ public class ProductTest extends DatabaseTestFixture {
         assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
         assertNotEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
     }
+
+    @ParameterizedTest
+    @MethodSource("getValuesForEqualityAndReplication")
+    public void testClone(String valueName, Object value1, Object value2) throws Exception {
+        Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
+        Method accessor = methods[0];
+        Method mutator = methods[1];
+
+        Product base = new Product();
+
+        mutator.invoke(base, value1);
+
+        Product clone = (Product) base.clone();
+
+        if (value1 instanceof Collection) {
+            assertTrue(Util.collectionsAreEqual(
+                (Collection) accessor.invoke(base), (Collection) accessor.invoke(clone)
+            ));
+        }
+        else {
+            assertEquals(accessor.invoke(base), accessor.invoke(clone));
+        }
+
+        assertEquals(base, clone);
+        assertEquals(base.hashCode(), clone.hashCode());
+    }
+
 }

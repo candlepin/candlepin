@@ -14,15 +14,16 @@
  */
 package org.candlepin.resteasy.filter;
 
+import org.candlepin.auth.KeycloakAuth;
 import org.candlepin.auth.AuthProvider;
-import org.candlepin.auth.BasicAuth;
-import org.candlepin.auth.NoAuthPrincipal;
-import org.candlepin.auth.OAuth;
-import org.candlepin.auth.Principal;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.auth.SSLAuth;
 import org.candlepin.auth.TrustedConsumerAuth;
+import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.TrustedUserAuth;
-import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.auth.BasicAuth;
+import org.candlepin.auth.OAuth;
+import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
@@ -91,6 +92,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     public void setupAuthStrategies() {
+        // use keycloak authentication
+        if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
+            providers.add(injector.getInstance(KeycloakAuth.class));
+        }
         // use oauth
         if (config.getBoolean(ConfigProperties.OAUTH_AUTHENTICATION)) {
             providers.add(injector.getInstance(OAuth.class));

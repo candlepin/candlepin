@@ -25,13 +25,13 @@ import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.Owner;
 import org.candlepin.model.dto.TinySubscription;
@@ -153,8 +153,8 @@ public class X509V3ExtensionUtilTest {
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
+        mktProd.addBranding(new Branding(null, engProdId, brandedName, "OS"));
         Pool pool = TestUtil.createPool(mktProd);
-        pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         Consumer consumer = new Consumer();
         Entitlement e = new Entitlement(pool, consumer, owner, 10);
 
@@ -170,17 +170,16 @@ public class X509V3ExtensionUtilTest {
     public void productWithMultipleBrandNames() {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
-        Owner owner = new Owner("Test Corporation");
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
         Product mktProd = new Product("mkt", "MKT SKU");
+        mktProd.addBranding(new Branding(null, engProdId, brandedName, "OS"));
+        mktProd.addBranding(new Branding(null, engProdId, "another brand name", "OS"));
+        mktProd.addBranding(new Branding(null, engProdId, "number 3", "OS"));
         Pool pool = TestUtil.createPool(mktProd);
-        pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
-        pool.getBranding().add(new Branding(engProdId, "OS", "another brand name"));
-        pool.getBranding().add(new Branding(engProdId, "OS", "number 3"));
         Set<String> possibleBrandNames = new HashSet<>();
-        for (Branding b : pool.getBranding()) {
+        for (Branding b : mktProd.getBranding()) {
             possibleBrandNames.add(b.getName());
         }
 

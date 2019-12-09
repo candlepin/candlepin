@@ -24,7 +24,27 @@ describe 'Autobind Disabled On Owner' do
       @consumer_cp.consume_product()
     rescue RestClient::BadRequest => e
       exception_thrown = true
-      ex_message = "Ignoring request to auto-attach. It is disabled for org \"#{@owner['key']}\"."
+      ex_message = "Ignoring request to auto-attach. It is disabled for org \"#{@owner['key']}\" because of the content access mode setting."
+      data = JSON.parse(e.response)
+      data['displayMessage'].should == ex_message
+    end
+    exception_thrown.should be true
+  end
+
+  it 'autobind fails when hypervisor autobind disabled on owner' do
+    exception_thrown = false
+    @owner['autobindDisabled'] = false
+    @owner['autobindHypervisorDisabled'] = true
+    @cp.update_owner(@owner['key'], @owner)
+    @owner = @cp.get_owner(@owner['key'])
+    puts (@owner.inspect())
+    begin
+      consumer = @user_cp.register("foofy", :hypervisor, nil, {}, nil, @owner['key'], [], [])
+      consumer_cp = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+      consumer_cp.consume_product()
+    rescue RestClient::BadRequest => e
+      exception_thrown = true
+      ex_message = "Ignoring request to auto-attach. It is disabled for org \"#{@owner['key']}\" because of the hypervisor autobind setting."
       data = JSON.parse(e.response)
       data['displayMessage'].should == ex_message
     end

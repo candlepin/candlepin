@@ -82,6 +82,16 @@ public class ConfigProperties {
      * e.g. 1 000 0000 will effectively disable the
      * functionality. This is handy when you expect a lot of
      * messages and you do not want to run out of disk space.
+     *
+     * NOTE: Increasing this property to more than 501760 could cause the following issue:
+     *  https://access.redhat.com/solutions/2203791
+     * As the article explains, this issue could occur only when the value of journal-buffer-size is less
+     * than the value of min-large-message-size, in bytes. We do not currently alter the
+     * journal-buffer-size on the artemis broker, which uses the default value (501760 bytes), while the
+     * default value of this property (which is used to set the min-large-message-size) is set to 102400
+     * bytes. As such, the issue will not occur with our default settings, but only if we set this property
+     * to a value larger than 501760 (or if the journal-buffer-size property in broker.xml is changed to be
+     * less than the value of this property).
      */
     public static final String ACTIVEMQ_LARGE_MSG_SIZE = "candlepin.audit.hornetq.large_msg_size";
 
@@ -127,6 +137,7 @@ public class ConfigProperties {
     public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enable";
     public static final String OAUTH_AUTHENTICATION = "candlepin.auth.oauth.enable";
     public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enable";
+    public static final String KEYCLOAK_AUTHENTICATION = "candlepin.auth.keycloak.enable";
 
     /**
      * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
@@ -172,6 +183,7 @@ public class ConfigProperties {
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
     // Cache
     public static final String CACHE_JMX_STATS = "cache.jmx.statistics";
+    public static final String CACHE_CONFIG_FILE_URI = JPA_CONFIG_PREFIX + "hibernate.javax.cache.uri";
 
     public static final String[] ENCRYPTED_PROPERTIES = new String[] {
         DB_PASSWORD,
@@ -260,6 +272,7 @@ public class ConfigProperties {
 
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
 
+    // Async Job Properties and utilities
     public static final String ASYNC_JOBS_THREADS = "candlepin.async.threads";
     public static final String ASYNC_JOBS_WHITELIST = "candlepin.async.whitelist";
     public static final String ASYNC_JOBS_BLACKLIST = "candlepin.async.blacklist";
@@ -326,6 +339,17 @@ public class ConfigProperties {
         return builder.toString();
     }
 
+    /**
+     * Enabled dev page used to interactively login to a Keycloak instance and generate offline
+     * token.
+     */
+    public static final String TOKENPAGE_ENABLED = "candlepin.tokenpage.enabled";
+
+    /** Path to keycloak.json */
+    public static final String KEYCLOAK_FILEPATH = "candlepin.keycloak.config";
+
+    public static final String ENTITLER_BULK_SIZE = "entitler.bulk.size";
+
     public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {
         private static final long serialVersionUID = 1L;
 
@@ -367,6 +391,8 @@ public class ConfigProperties {
                 "org.candlepin.audit.ActivationListener");
             this.put(AUDIT_FILTER_ENABLED, "false");
 
+            this.put(ENTITLER_BULK_SIZE, "1000");
+
             /**
             * These default DO_NOT_FILTER events are those events needed by
             * other Satellite components. See sources:
@@ -394,6 +420,7 @@ public class ConfigProperties {
             this.put(TRUSTED_AUTHENTICATION, "false");
             this.put(SSL_AUTHENTICATION, "true");
             this.put(OAUTH_AUTHENTICATION, "false");
+            this.put(KEYCLOAK_AUTHENTICATION, "false");
             this.put(BASIC_AUTHENTICATION, "true");
             this.put(AUTH_OVER_HTTP, "false");
             // By default, environments should be hidden so clients do not need to
@@ -404,10 +431,10 @@ public class ConfigProperties {
             this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
             this.put(CACHE_JMX_STATS, "false");
+            this.put(CACHE_CONFIG_FILE_URI, "ehcache.xml");
 
             this.put(SUSPEND_MODE_ENABLED, "true");
 
-            // Pinsetter
             this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
             this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
             this.put(SHARD_WEBAPP, "candlepin");
@@ -427,6 +454,7 @@ public class ConfigProperties {
             this.put(PREFIX_WEBURL, "localhost:8443/candlepin");
             this.put(PREFIX_APIURL, "localhost:8443/candlepin");
             this.put(PASSPHRASE_SECRET_FILE, "/etc/katello/secure/passphrase");
+            this.put(KEYCLOAK_FILEPATH, "/etc/candlepin/keycloak.json");
 
             /**
              *  Defines the maximum number of products allowed in the product cache.
@@ -446,6 +474,7 @@ public class ConfigProperties {
             this.put(BOOLEAN_ATTRIBUTES, BOOLEAN_ATTRIBUTE_LIST);
 
             this.put(SWAGGER_ENABLED, Boolean.toString(true));
+            this.put(TOKENPAGE_ENABLED, Boolean.toString(true));
 
             // Async job defaults and scheduling
             // Quartz scheduling bits

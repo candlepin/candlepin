@@ -45,6 +45,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
+import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -451,9 +452,39 @@ public class ConsumerResource {
     @Produces(MediaType.WILDCARD)
     @Path("{consumer_uuid}/exists")
     public void consumerExists(
-        @PathParam("consumer_uuid") String uuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
         if (!consumerCurator.doesConsumerExist(uuid)) {
             throw new NotFoundException(i18n.tr("Consumer with id {0} could not be found.", uuid));
+        }
+    }
+
+    @ApiOperation(
+        notes = "Checks for the existence of a Consumer in bulk. This API return UUIDs of non-existing" +
+        "consumer",
+        value = "")
+    @ApiResponses({ @ApiResponse(code = 404, message = "Returns all consumer UUIDs that doesn't exist or " +
+        "cannot be accessed"),
+        @ApiResponse(code = 204, message = "If all consumer UUIDs exists and can be accessed"),
+        @ApiResponse(code = 400, message = "When no UUIDs are provided") })
+    @POST
+    @Consumes(MediaType.WILDCARD)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("exists")
+    public Response consumerExistsBulk(Set<String> consumerUuids) throws BadRequestException {
+        if (consumerUuids != null && !consumerUuids.isEmpty()) {
+            Set<String> existingUuids = consumerCurator.getExistingConsumerUuids(consumerUuids);
+            consumerUuids.removeAll(existingUuids);
+
+            if (consumerUuids.isEmpty()) {
+                return Response.status(Response.Status.NO_CONTENT).build();
+            }
+            else {
+                return Response.status(Response.Status.NOT_FOUND)
+                    .entity(consumerUuids).build();
+            }
+        }
+        else {
+            throw new BadRequestException(i18n.tr("No UUIDs provided."));
         }
     }
 
@@ -599,13 +630,13 @@ public class ConsumerResource {
         }
 
         if (dto.getHypervisorId() == null &&
-            dto.getFact("dmi.system.uuid") != null &&
+            dto.getFact(Consumer.Facts.SYSTEM_UUID) != null &&
             !"true".equals(dto.getFact("virt.is_guest")) &&
             entity.getOwnerId() != null) {
             HypervisorId hypervisorId = new HypervisorId(
                 entity,
                 ownerCurator.findOwnerById(entity.getOwnerId()),
-                dto.getFact("dmi.system.uuid"));
+                dto.getFact(Consumer.Facts.SYSTEM_UUID));
             entity.setHypervisorId(hypervisorId);
         }
 
@@ -705,11 +736,12 @@ public class ConsumerResource {
 
         // fix for duplicate hypervisor/consumer problem
         Consumer consumer = null;
-        if (ownerKey != null && dto.getFact("dmi.system.uuid") != null &&
+        if (ownerKey != null && config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
+            dto.getFact(Consumer.Facts.SYSTEM_UUID) != null &&
             !"true".equalsIgnoreCase(dto.getFact("virt.is_guest"))) {
             Owner owner = ownerCurator.getByKey(ownerKey);
             if (owner != null) {
-                consumer = consumerCurator.getHypervisor(dto.getFact("dmi.system.uuid"), owner);
+                consumer = consumerCurator.getHypervisor(dto.getFact(Consumer.Facts.SYSTEM_UUID), owner);
                 if (consumer != null) {
                     consumer.setIdCert(generateIdCert(consumer, false));
                     this.updateConsumer(consumer.getUuid(), dto, principal);
@@ -760,7 +792,12 @@ public class ConsumerResource {
 
         validateViaConsumerType(consumer, type, keys, owner, userName, principal);
 
-        consumer.setAutoheal(true); // this is the default
+        if (consumer.getAutoheal() != null) {
+            consumer.setAutoheal(consumer.getAutoheal());
+        }
+        else {
+            consumer.setAutoheal(true); // this is the default
+        }
 
         // Sanitize the inbound facts
         this.sanitizeConsumerFacts(consumer);
@@ -1121,6 +1158,14 @@ public class ConsumerResource {
             log.warn("User {} does not have access to create consumers in org {}",
                 principal.getPrincipalName(), owner.getKey());
 
+            List<Owner> owners = ((UserPrincipal) principal).getOwners();
+            boolean isOwnerContained = owners != null && owners.stream()
+                .anyMatch(t -> t != null && t.getOwnerId().equals(owner.getOwnerId()));
+            if (isOwnerContained) {
+                throw new ForbiddenException(i18n.tr("{0} is not authorized to register with " +
+                    "organization {1}", principal.getName(), owner.getKey()));
+            }
+
             throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", owner.getKey()));
         }
 
@@ -1280,27 +1325,7 @@ public class ConsumerResource {
 
         changesMade = updateSystemPurposeData(updated, toUpdate) || changesMade;
 
-        String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
-        if (environmentId != null && (toUpdate.getEnvironmentId() == null ||
-            !toUpdate.getEnvironmentId().equals(environmentId))) {
-            Environment e = environmentCurator.get(environmentId);
-            if (e == null) {
-                throw new NotFoundException(i18n.tr(
-                    "Environment with ID \"{0}\" could not be found.", environmentId));
-            }
-            log.info("Updating environment to: {}", environmentId);
-            toUpdate.setEnvironment(e);
-
-            // reset content access cert
-            Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
-            if (owner.isContentAccessEnabled()) {
-                toUpdate.setContentAccessCert(null);
-                contentAccessCertService.removeContentAccessCert(toUpdate);
-            }
-            // lazily regenerate certs, so the client can still work
-            poolManager.regenerateCertificatesOf(toUpdate, true);
-            changesMade = true;
-        }
+        changesMade = updateEnvironment(updated, toUpdate) || changesMade;
 
         // like the other values in an update, if consumer name is null, act as if
         // it should remain the same
@@ -1356,6 +1381,64 @@ public class ConsumerResource {
 
             Event event = eventBuilder.setEventData(toUpdate).buildEvent();
             sink.queueEvent(event);
+        }
+
+        return changesMade;
+    }
+
+    /**
+     * Updates consumer environment either by environment name or id, reset & re-generate CA certs.
+     * @return boolean status whether any updates are made or not.
+     */
+    private boolean updateEnvironment(ConsumerDTO updated, Consumer toUpdate) {
+        if (updated.getEnvironment() == null) {
+            return false;
+        }
+
+        boolean changesMade = false;
+        String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
+        String environmentName = updated.getEnvironment() == null ? null : updated.getEnvironment().getName();
+        String validatedEnvId = null;
+
+        if (environmentId != null) {
+            if (toUpdate.getEnvironmentId() == null || !toUpdate.getEnvironmentId().equals(environmentId)) {
+
+                if (!environmentCurator.exists(environmentId)) {
+                    throw new NotFoundException(i18n.tr(
+                        "Environment with ID \"{0}\" could not be found.", environmentId));
+                }
+
+                validatedEnvId = environmentId;
+            }
+
+        }
+        else if (environmentName != null) {
+            String envId = this.environmentCurator.
+                getEnvironmentIdByName(toUpdate.getOwnerId(), environmentName);
+
+            if (envId == null) {
+                throw new NotFoundException(i18n.tr(
+                    "Environment with name \"{0}\" could not be found.", environmentName));
+            }
+
+            if (toUpdate.getEnvironmentId() == null || !envId.equals(toUpdate.getEnvironmentId())) {
+                validatedEnvId = envId;
+            }
+        }
+
+        if (validatedEnvId != null) {
+            toUpdate.setEnvironmentId(validatedEnvId);
+            // reset content access cert
+            Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
+
+            if (owner.isContentAccessEnabled()) {
+                toUpdate.setContentAccessCert(null);
+                contentAccessCertService.removeContentAccessCert(toUpdate);
+            }
+
+            // lazily regenerate certs, so the client can still work
+            poolManager.regenerateCertificatesOf(toUpdate, true);
+            changesMade = true;
         }
 
         return changesMade;
@@ -1604,6 +1687,9 @@ public class ConsumerResource {
                     entitler.sendEvents(ents);
                 }
                 catch (AutobindDisabledForOwnerException e) {
+                    log.warn("Guest auto-attach skipped. {}", e.getMessage());
+                }
+                catch (AutobindHypervisorDisabledException e) {
                     log.warn("Guest auto-attach skipped. {}", e.getMessage());
                 }
             }
@@ -2029,7 +2115,13 @@ public class ConsumerResource {
             }
             catch (AutobindDisabledForOwnerException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\".", owner.getKey()));
+                    "It is disabled for org \"{0}\" because of the content access mode setting."
+                    , owner.getKey()));
+            }
+            catch (AutobindHypervisorDisabledException e) {
+                throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting."
+                    , owner.getKey()));
             }
         }
 

@@ -130,7 +130,7 @@ cleanup() {
         trap - $signals
         trap "" ERR EXIT
 
-        # Run buildr clean in our target CP directory
+        # Run buildr or gradle clean in our target CP directory
         if [ "$CLEAN_CP" == "1" ]; then
             cd $CP_HOME
             build_clean
@@ -380,14 +380,15 @@ fi
 
 if [ ! -z "$BUILDR_TASK" ]; then
     if [ -f ../gradlew ]; then
-        echo 'Warning: buildr is deprecated in this branch.'
-    fi
-    echo "Running buildr $BUILDR_TASK..."
-    CLEAN_CP=1
+        echo 'Warning: buildr is deprecated in this branch. Cannot run a buildr task.'
+    else
+        echo "Running buildr $BUILDR_TASK..."
+        CLEAN_CP=1
 
-    cd $CP_HOME
-    tee /var/log/candlepin/buildr.log < /tmp/teepipe &
-    buildr $BUILDR_TASK > /tmp/teepipe 2>&1
+        cd $CP_HOME
+        tee /var/log/candlepin/buildr.log < /tmp/teepipe &
+        buildr $BUILDR_TASK > /tmp/teepipe 2>&1
+    fi
 fi
 
 cleanup

@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
-
+import javax.persistence.NoResultException;
 
 
 /**
@@ -171,5 +171,32 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         }
 
         return count;
+    }
+
+    /**
+     * Get environment Id by owner id and environment name.
+     *
+     * @param ownerId owner Id.
+     * @param envName environment name.
+     * @return environment Id
+     */
+    public String getEnvironmentIdByName(String ownerId, String envName) {
+        String jpql = "SELECT e.id FROM Environment e WHERE e.owner.id = :owner_id and e.name = :env_name";
+        String envId = null;
+
+        if (ownerId != null && envName != null) {
+            try {
+                envId = this.getEntityManager()
+                    .createQuery(jpql, String.class)
+                    .setParameter("owner_id", ownerId)
+                    .setParameter("env_name", envName)
+                    .getSingleResult();
+            }
+            catch (NoResultException exp) {
+                log.trace("Unable to find environment Id by envName {}", envName);
+            }
+        }
+
+        return envId;
     }
 }

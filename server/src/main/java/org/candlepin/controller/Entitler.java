@@ -25,17 +25,18 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
@@ -45,6 +46,7 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductInfo;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -64,38 +66,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-
-
 /**
  * entitler
  */
 public class Entitler {
-    private static Logger log = LoggerFactory.getLogger(Entitler.class);
+
+    private static final Logger log = LoggerFactory.getLogger(Entitler.class);
+    private static final int MAX_DEV_LIFE_DAYS = 90;
 
     private Configuration config;
     private ConsumerCurator consumerCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
     private ContentManager contentManager;
     private EventFactory evtFactory;
     private EventSink sink;
     private EntitlementRulesTranslator messageTranslator;
     private EntitlementCurator entitlementCurator;
     private I18n i18n;
-    private OwnerProductCurator ownerProductCurator;
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
     private PoolManager poolManager;
-    private ProductCurator productCurator;
     private ProductManager productManager;
     private ProductServiceAdapter productAdapter;
-
-    private int maxDevLifeDays = 90;
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
-        EntitlementCurator entitlementCurator, Configuration config, OwnerProductCurator ownerProductCurator,
-        OwnerCurator ownerCurator, PoolCurator poolCurator, ProductCurator productCurator,
-        ProductManager productManager, ProductServiceAdapter productAdapter, ContentManager contentManager) {
+        EntitlementCurator entitlementCurator, Configuration config,
+        OwnerCurator ownerCurator, PoolCurator poolCurator,
+        ProductManager productManager, ProductServiceAdapter productAdapter, ContentManager contentManager,
+        ConsumerTypeCurator ctc) {
 
         this.poolManager = pm;
         this.i18n = i18n;
@@ -105,13 +105,12 @@ public class Entitler {
         this.messageTranslator = messageTranslator;
         this.entitlementCurator = entitlementCurator;
         this.config = config;
-        this.ownerProductCurator = ownerProductCurator;
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
-        this.productCurator = productCurator;
         this.productManager = productManager;
         this.productAdapter = productAdapter;
         this.contentManager = contentManager;
+        this.consumerTypeCurator = ctc;
     }
 
     public List<Entitlement> bindByPoolQuantity(Consumer consumer, String poolId, Integer quantity) {
@@ -166,7 +165,7 @@ public class Entitler {
 
     public List<Entitlement> bindByProducts(String[] productIds,
         String consumeruuid, Date entitleDate, Collection<String> fromPools)
-        throws AutobindDisabledForOwnerException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
         Owner o = ownerCurator.findOwnerById(c.getOwnerId());
         AutobindData data = AutobindData.create(c, o).on(entitleDate)
@@ -183,8 +182,11 @@ public class Entitler {
      * @return List of Entitlements
      * @throws AutobindDisabledForOwnerException when an autobind attempt is made and the owner
      *         has it disabled.
+     * @throws AutobindHypervisorDisabledException when an autobind attempt is made on a hypervisor
+     *         and the owner has it disabled.
      */
-    public List<Entitlement> bindByProducts(AutobindData data) throws AutobindDisabledForOwnerException {
+    public List<Entitlement> bindByProducts(AutobindData data)
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
         return bindByProducts(data, false);
     }
 
@@ -197,21 +199,37 @@ public class Entitler {
      * @return List of Entitlements
      * @throws AutobindDisabledForOwnerException when an autobind attempt is made and the owner
      *         has it disabled.
+     * @throws AutobindHypervisorDisabledException when an autobind attempt is made on a hypervisor
+     *         and the owner has it disabled.
      */
     @Transactional
     public List<Entitlement> bindByProducts(AutobindData data, boolean force)
-        throws AutobindDisabledForOwnerException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
         Consumer consumer = data.getConsumer();
         Owner owner = data.getOwner();
+        ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
+        boolean autobindHypervisorDisabled = owner.isAutobindHypervisorDisabled() &&
+            type != null &&
+            type.isType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
 
-        if ((!consumer.isDev() && owner.isAutobindDisabled()) || owner.isContentAccessEnabled()) {
+        if (!consumer.isDev() &&
+            (owner.isAutobindDisabled() || owner.isContentAccessEnabled() || autobindHypervisorDisabled)) {
             String caMessage = owner.isContentAccessEnabled() ?
                 " because of the content access mode setting" : "";
-            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}",
-                consumer.getUuid(), owner.getKey(), caMessage);
-            throw new AutobindDisabledForOwnerException(i18n.tr(
-                "Auto-attach is disabled for owner \"{0}\"{1}.",
-                owner.getKey(), caMessage));
+            String hypMessage = owner.isAutobindHypervisorDisabled() ?
+                " because of the hypervisor autobind setting" : "";
+            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}{}",
+                consumer.getUuid(), owner.getKey(), caMessage, hypMessage);
+            if (autobindHypervisorDisabled) {
+                throw new AutobindHypervisorDisabledException(i18n.tr(
+                    "Auto-attach is disabled for owner \"{0}\"{1}.",
+                    owner.getKey(), hypMessage));
+            }
+            else {
+                throw new AutobindDisabledForOwnerException(i18n.tr(
+                    "Auto-attach is disabled for owner \"{0}\"{1}.",
+                    owner.getKey(), caMessage));
+            }
         }
 
         // If the consumer is a guest, and has a host, try to heal the host first
@@ -251,6 +269,12 @@ public class Entitler {
                  * a guest is switching hosts */
                 consumer = consumerCurator.get(consumer.getId());
                 data.setConsumer(consumer);
+            }
+            else {
+                // Revoke host specific entitlements
+                EntitlementFilterBuilder filter = new EntitlementFilterBuilder();
+                filter.addAttributeFilter(Pool.Attributes.REQUIRES_HOST);
+                poolManager.revokeEntitlements(entitlementCurator.listByConsumer(consumer, filter));
             }
         }
 
@@ -299,10 +323,10 @@ public class Entitler {
     }
 
     private Date getEndDate(Product prod, Date startTime) {
-        int interval = maxDevLifeDays;
+        int interval = MAX_DEV_LIFE_DAYS;
         String prodExp = prod.getAttributeValue(Product.Attributes.TTL);
 
-        if (prodExp != null &&  Integer.parseInt(prodExp) < maxDevLifeDays) {
+        if (prodExp != null &&  Integer.parseInt(prodExp) < MAX_DEV_LIFE_DAYS) {
             interval = Integer.parseInt(prodExp);
         }
 
@@ -483,10 +507,16 @@ public class Entitler {
         }
 
         if (!entsToDelete.isEmpty()) {
-            poolManager.revokeEntitlements(entsToDelete);
+            for (List<Entitlement> ents : this.partition(entsToDelete)) {
+                poolManager.revokeEntitlements(ents);
+            }
         }
 
         return total;
+    }
+
+    private Iterable<List<Entitlement>> partition(List<Entitlement> entsToDelete) {
+        return Iterables.partition(entsToDelete, config.getInt(ConfigProperties.ENTITLER_BULK_SIZE));
     }
 
     public int revokeUnmappedGuestEntitlements() {

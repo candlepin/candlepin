@@ -30,7 +30,7 @@ import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
-import org.candlepin.policy.js.activationkey.ActivationKeyRules;
+import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;

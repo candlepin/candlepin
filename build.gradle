@@ -22,8 +22,7 @@ version = "2.0"
 ext.versions = [
     artemis: "2.4.0",
     resteasy: "3.5.1.Final",
-    jackson: "2.9.9",
-    jackson_patch: "2.9.9.3",
+    jackson: "2.10.1",
     swagger: "1.5.7",
     logback: "1.2.3",
     guice: "4.1.0",
@@ -55,7 +54,7 @@ ext.libraries = [
     jackson: [
         "com.fasterxml.jackson.core:jackson-annotations:${versions.jackson}",
         "com.fasterxml.jackson.core:jackson-core:${versions.jackson}",
-        "com.fasterxml.jackson.core:jackson-databind:${versions.jackson_patch}",
+        "com.fasterxml.jackson.core:jackson-databind:${versions.jackson}",
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:${versions.jackson}",
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${versions.jackson}",
         "com.fasterxml.jackson.module:jackson-module-jsonSchema:${versions.jackson}",
@@ -105,6 +104,7 @@ ext.libraries = [
         "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final",
         "javax.transaction:jta:1.1",
         "javax.persistence:javax.persistence-api:2.2",
+        "javax.xml.bind:jaxb-api:2.3.1",
     ],
     commons: [
         "commons-codec:commons-codec:1.11",
@@ -129,7 +129,7 @@ ext.libraries = [
         "net.oauth.core:oauth-provider:20100527",
     ],
     collections: "com.google.guava:guava:25.1-jre",
-    hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.7.Final",
+    hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.16.Final",
     checkstyle: "com.puppycrawl.tools:checkstyle:${versions.checkstyle}",
     gettext: "com.googlecode.gettext-commons:gettext-commons:0.9.8",
     javax_servlet: "javax.servlet:servlet-api:2.5",
@@ -139,8 +139,8 @@ ext.libraries = [
         "org.jmock:jmock-junit4:2.5.1",
     ],
     validator: [
-        "org.hibernate.validator:hibernate-validator:6.0.7.Final",
-        "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.7.Final",
+        "org.hibernate.validator:hibernate-validator:6.0.16.Final",
+        "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.16.Final",
     ],
 ]
 
@@ -248,6 +248,5 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
 }
 
 wrapper {
-    gradleVersion = "5.3"
     distributionType = Wrapper.DistributionType.ALL
 }

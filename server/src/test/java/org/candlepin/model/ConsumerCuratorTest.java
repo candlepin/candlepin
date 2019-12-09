@@ -1263,6 +1263,29 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testExistingConsumerUuidsNullCheck() {
+        Set<String> existingIds = consumerCurator.getExistingConsumerUuids(null);
+        assertTrue(existingIds.isEmpty());
+    }
+
+    @Test
+    public void testExistingConsumerUuidsWhenIdsExists() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("fooBarPlus");
+        consumer = consumerCurator.create(consumer);
+        List<String> ids = Arrays.asList("fooBarPlus", "testId1", "testId2");
+        Set<String> existingIds = consumerCurator.getExistingConsumerUuids(ids);
+        assertIterableEquals(existingIds, Arrays.asList("fooBarPlus"));
+    }
+
+    @Test
+    void testExistingConsumerUuidsWhenIdsNotExist() {
+        Set<String> existingId = consumerCurator.getExistingConsumerUuids(Arrays
+            .asList("thisIdNotExists", "anotherNonExistingId"));
+        assertTrue(existingId.isEmpty());
+    }
+
+    @Test
     public void testGetHypervisor() {
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
@@ -1331,7 +1354,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorConsumerMapWithFacts() {
         String hypervisorId1 = "Hypervisor";
         Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer1.setFact("dmi.system.uuid", "blah");
+        consumer1.setFact(Consumer.Facts.SYSTEM_UUID, "blah");
         HypervisorId hypervisorId = new HypervisorId(hypervisorId1);
         hypervisorId.setOwner(owner);
         consumer1.setHypervisorId(hypervisorId);
@@ -1349,7 +1372,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         // first consumer set with only the fact, not the hypervisor
         String hypervisorId1 = "Hypervisor";
         Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer1.setFact("dmi.system.uuid", "blah");
+        consumer1.setFact(Consumer.Facts.SYSTEM_UUID, "blah");
         consumer1 = consumerCurator.create(consumer1);
 
         // next consumer set with the hypervisor, not the fact

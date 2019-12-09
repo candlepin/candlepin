@@ -1,19 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <config xmlns="http://zanata.org/namespace/config/">
-    <url>https://vendors.zanata.redhat.com/</url>
+    <url>https://fedora.zanata.org/</url>
     <project>candlepin</project>
     <project-version>master</project-version>
     <project-type>gettext</project-type>
-    <locales>
-        <locale>de</locale>
-        <locale>es</locale>
-        <locale>fr</locale>
-        <locale>it</locale>
-        <locale>ja</locale>
-        <locale>ko</locale>
-        <locale map-from="pt_BR">pt-BR</locale>
-        <locale>ru</locale>
-        <locale map-from="zh_CN">zh-Hans</locale>
-        <locale map-from="zh_TW">zh-Hant</locale>
-    </locales>
 </config>

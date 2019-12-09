@@ -27,8 +27,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-
-
+import java.util.stream.IntStream;
 
 /**
  * Test suite for the ProductTranslator (manifest import/export) class
@@ -77,6 +76,9 @@ public class ProductTranslatorTest extends
             Content content = TestUtil.createContent("content-" + i);
             source.addContent(content, true);
         }
+
+        IntStream.rangeClosed(1, 3)
+            .forEach(i -> source.addBranding(TestUtil.createProductBranding(source)));
 
         return source;
     }

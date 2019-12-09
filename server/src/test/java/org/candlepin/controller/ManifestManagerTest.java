@@ -60,6 +60,7 @@ import org.candlepin.sync.file.ManifestFileService;
 import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.test.TestUtil;
 
+import org.candlepin.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -115,7 +116,8 @@ public class ManifestManagerTest {
             new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
         type.setId("test-ctype-" + TestUtil.randomInt());
 
-        Consumer consumer = new Consumer("TestConsumer" + TestUtil.randomInt(), "User", owner, type);
+        Consumer consumer = new Consumer("TestConsumer" + TestUtil.randomInt(), "User", owner, type)
+            .setUuid(Util.generateUUID());
 
         when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(type);
         when(consumerTypeCurator.get(eq(type.getId()))).thenReturn(type);

@@ -112,10 +112,10 @@ public class EventSinkImplTest {
 
     @Test
     public void sendEventShouldSendMessageOnProperEventInput() throws Exception {
-        final String content = "Simple String";
+        String content = "Simple String";
         doReturn(content).when(mapper).writeValueAsString(anyObject());
-        ArgumentCaptor<ClientMessage> argumentCaptor = ArgumentCaptor
-            .forClass(ClientMessage.class);
+
+        ArgumentCaptor<ClientMessage> argumentCaptor = ArgumentCaptor.forClass(ClientMessage.class);
         eventSinkImpl.queueEvent(mock(Event.class));
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(argumentCaptor.capture());
@@ -132,8 +132,7 @@ public class EventSinkImplTest {
     }
 
     @Test
-    public void sendEventShouldNotFailWhenObjectMapperThrowsException()
-        throws Exception {
+    public void sendEventShouldNotFailWhenObjectMapperThrowsException() throws Exception {
         doThrow(new JsonGenerationException("Nothing serious!"))
             .when(mapper).writeValueAsString(any());
         Event event = mock(Event.class);
@@ -143,8 +142,7 @@ public class EventSinkImplTest {
     }
 
     @Test
-    public void consumerCreatedShouldEmitSuccessfully()
-        throws Exception {
+    public void consumerCreatedShouldEmitSuccessfully() throws Exception {
         Consumer consumer = TestUtil.createConsumer();
         eventSinkImpl.emitConsumerCreated(consumer);
         eventSinkImpl.sendEvents();
@@ -152,16 +150,14 @@ public class EventSinkImplTest {
     }
 
     @Test
-    public void ownerCreatedShouldEmitSuccessfully()
-        throws Exception {
+    public void ownerCreatedShouldEmitSuccessfully() throws Exception {
         eventSinkImpl.emitOwnerCreated(o);
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
     @Test
-    public void poolCreatedShouldEmitSuccessfully()
-        throws Exception {
+    public void poolCreatedShouldEmitSuccessfully() throws Exception {
         Pool pool = TestUtil.createPool(o, TestUtil.createProduct());
         eventSinkImpl.emitPoolCreated(pool);
         eventSinkImpl.sendEvents();
@@ -169,8 +165,7 @@ public class EventSinkImplTest {
     }
 
     @Test
-    public void exportCreatedShouldEmitSuccessfully()
-        throws Exception {
+    public void exportCreatedShouldEmitSuccessfully() throws Exception {
         Consumer consumer = TestUtil.createConsumer();
         eventSinkImpl.emitExportCreated(consumer);
         eventSinkImpl.sendEvents();
@@ -178,8 +173,7 @@ public class EventSinkImplTest {
     }
 
     @Test
-    public void importCreatedShouldEmitSuccessfully()
-        throws Exception {
+    public void importCreatedShouldEmitSuccessfully() throws Exception {
         Owner owner = new Owner("Import guy");
         eventSinkImpl.emitImportCreated(owner);
         eventSinkImpl.sendEvents();
@@ -187,8 +181,7 @@ public class EventSinkImplTest {
     }
 
     @Test
-    public void emptyKeyShouldEmitSuccessfully()
-        throws Exception {
+    public void emptyKeyShouldEmitSuccessfully() throws Exception {
         ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), null);
         eventSinkImpl.emitActivationKeyCreated(key);
         eventSinkImpl.sendEvents();
@@ -196,8 +189,7 @@ public class EventSinkImplTest {
     }
 
     @Test
-    public void keyWithPoolsShouldEmitSuccessfully()
-        throws Exception {
+    public void keyWithPoolsShouldEmitSuccessfully() throws Exception {
         ArrayList<Pool> pools = new ArrayList<>();
         pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
         pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
@@ -208,8 +200,7 @@ public class EventSinkImplTest {
     }
 
     @Test
-    public void rulesUpdatedShouldEmitSuccessfully()
-        throws Exception {
+    public void rulesUpdatedShouldEmitSuccessfully() throws Exception {
         Rules oldRules = new Rules(TestUtil.createRulesBlob(1));
         Rules newRules = new Rules(TestUtil.createRulesBlob(2));
         eventSinkImpl.emitRulesModified(oldRules, newRules);
@@ -218,8 +209,7 @@ public class EventSinkImplTest {
     }
 
     @Test
-    public void rulesDeletedShouldEmitSuccessfully()
-        throws Exception {
+    public void rulesDeletedShouldEmitSuccessfully() throws Exception {
         Rules oldRules = new Rules(TestUtil.createRulesBlob(1));
         eventSinkImpl.emitRulesDeleted(oldRules);
         eventSinkImpl.sendEvents();

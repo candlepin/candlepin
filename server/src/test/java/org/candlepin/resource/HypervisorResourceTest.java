@@ -259,8 +259,7 @@ public class HypervisorResourceTest {
         Owner o = new Owner("owner-key-2", "Owner Name 2");
         o.setId("owner-id-2");
 
-        Consumer existing = new Consumer();
-        existing.setUuid("test-host");
+        Consumer existing = new Consumer().setUuid("test-host");
         existing.setName("test-host-name");
         existing.setOwner(o);
         existing.addGuestId(new GuestId("GUEST_A"));

@@ -56,6 +56,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.PrePersist;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -134,10 +135,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private String serviceLevel;
 
     @Column(name = "sp_role", length = 255, nullable = true)
+    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     @Size(max = 255)
     private String role;
 
     @Column(name = "sp_usage", length = 255, nullable = true)
+    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     @Size(max = 255)
     private String usage;
 
@@ -280,9 +283,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public Consumer() {
-        // This constructor is for creating a new Consumer in the DB, so we'll
-        // generate a UUID at this point.
-        this.ensureUUID();
         this.entitlements = new HashSet<>();
         this.setEntitlementCount(0L);
     }
@@ -295,6 +295,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return uuid;
     }
 
+    @PrePersist
     public void ensureUUID() {
         if (uuid == null  || uuid.length() == 0) {
             this.uuid = Util.generateUUID();
@@ -303,9 +304,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     /**
      * @param uuid the UUID of this consumer.
+     * @return this consumer.
      */
-    public void setUuid(String uuid) {
+    public Consumer setUuid(String uuid) {
         this.uuid = uuid;
+        return this;
     }
 
     /**

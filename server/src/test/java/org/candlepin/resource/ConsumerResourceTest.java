@@ -69,7 +69,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.SystemPurposeComplianceRules;
-import org.candlepin.policy.js.activationkey.ActivationKeyRules;
+import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.AutobindData;
@@ -89,6 +89,7 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.ServiceLevelValidator;
+import org.candlepin.util.Util;
 
 import com.google.inject.util.Providers;
 
@@ -445,7 +446,9 @@ public class ConsumerResourceTest {
         when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
             .thenReturn(status);
         // cert expires today which will trigger regen
-        consumer.setIdCert(createIdCert());
+        IdentityCertificate idCert = createIdCert();
+        idCert.getSerial().setId(Util.generateUniqueLong());
+        consumer.setIdCert(idCert);
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
         when(mockIdentityCertServiceAdapter.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
 

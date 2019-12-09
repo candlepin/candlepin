@@ -29,7 +29,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -59,7 +58,7 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.activationkey.ActivationKeyRules;
+import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -71,7 +70,6 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.CertificateSerialInfo;
 import org.candlepin.service.model.CdnInfo;
@@ -281,6 +279,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             log.debug("Processing subscription: {}", sub);
             Pool pool = this.convertToMasterPoolImpl(sub, owner, importedProducts);
+            pool.setLocked(true);
             this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts);
         }
 
@@ -376,6 +375,10 @@ public class CandlepinPoolManager implements PoolManager {
                 if (update != null) {
                     subPool.setDerivedProduct(update);
                 }
+            }
+
+            if (pool.isLocked()) {
+                subPool.setLocked(true);
             }
         }
 
@@ -585,7 +588,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             // dates changed. regenerate all entitlement certificates
             if (updatedPool.getDatesChanged() || updatedPool.getProductsChanged() ||
-                updatedPool.getBrandingChanged()) {
+                updatedPool.getDerivedProductsChanged()) {
 
                 poolsToRegenEnts.add(existingPool);
             }
@@ -855,7 +858,6 @@ public class CandlepinPoolManager implements PoolManager {
         pool.setUpstreamPoolId(sub.getUpstreamPoolId());
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
         pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
-        pool.setLocked(true);
 
         // Resolve CDN
         if (sub.getCdn() != null) {
@@ -932,21 +934,6 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             pool.setCertificate(cert);
-        }
-
-        // Add in branding
-        if (sub.getBranding() != null) {
-            Set<Branding> branding = new HashSet<>();
-
-            for (BrandingInfo brand : sub.getBranding()) {
-                // Impl note:
-                // We create a new instance here since we don't have a separate branding DTO (yet),
-                // and we need to be certain that we don't try to move or change a branding object
-                // associated with another pool.
-                branding.add(new Branding(brand.getProductId(), brand.getType(), brand.getName()));
-            }
-
-            pool.setBranding(branding);
         }
 
         if (sub.getProduct() == null || sub.getProduct().getId() == null) {
@@ -1843,6 +1830,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
+    @Transactional
     public Set<Pool> revokeEntitlements(List<Entitlement> entsToRevoke) {
         return revokeEntitlements(entsToRevoke, null, true);
     }
@@ -2262,7 +2250,9 @@ public class CandlepinPoolManager implements PoolManager {
             // Revoke/delete entitlements
             if (!entitlements.isEmpty()) {
                 log.info("Revoking {} entitlements...", entitlements.size());
-                this.entitlementCurator.batchDelete(entitlements);
+                this.entitlementCurator.unlinkEntitlements(entitlements);
+                this.entitlementCertificateCurator.deleteByEntitlementIds(entitlementIds);
+                this.entitlementCurator.batchDeleteByIds(entitlementIds);
                 this.entitlementCurator.flush();
                 this.entitlementCurator.batchDetach(entitlements);
                 log.info("Entitlements successfully revoked");
@@ -2618,7 +2608,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> pools, boolean includeWarnings) {
         List<Pool> filteredPools = new LinkedList<>();
         for (Pool p : pools) {
-            ValidationResult result = activationKeyRules.runPreActKey(key, p, null);
+            ValidationResult result = activationKeyRules.runPoolValidationForActivationKey(key, p, null);
             if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
                 filteredPools.add(p);
             }

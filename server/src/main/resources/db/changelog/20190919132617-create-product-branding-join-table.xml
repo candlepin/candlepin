@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20190919132617-1" author="nmoumoul">
+        <comment>Create table for product branding.</comment>
+
+        <createTable tableName="cp2_product_branding">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp2_product_branding_pkey"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="type" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="product_uuid" type="VARCHAR(32)">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="cp2_product_branding"
+                baseColumnNames="product_uuid"
+                constraintName="cp2_product_branding_fk1"
+                deferrable="false"
+                initiallyDeferred="false"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="uuid"
+                referencedTableName="cp2_products"
+                referencesUniqueColumn="false" />
+    </changeSet>
+
+    <changeSet id="20190919132617-2" author="sdhome">
+        <comment>Migrate data from CP_POOL_BRANDING to CP_PRODUCT_BRANDING.</comment>
+
+        <!--Reusing the banding ID as the primary key for cp2_product_branding table.
+            There are duplicate entries in banding table with different branding UUIDs.
+            Hence selecting the maximum UUID among that group.-->
+        <sql>
+            INSERT INTO cp2_product_branding
+                SELECT      max(cp_branding.id), current_timestamp, current_timestamp,
+                            cp_branding.product_id, cp_branding.type, cp_branding.name, cp.product_uuid
+                FROM        cp_pool_branding cpb
+                INNER JOIN  cp_pool cp on cpb.pool_id = cp.id
+                INNER JOIN  cp_branding on cpb.branding_id = cp_branding.id
+                GROUP BY    cp.product_uuid,cp_branding.name,cp_branding.product_id,cp_branding.type
+                ORDER BY    cp.product_uuid
+        </sql>
+    </changeSet>
+
+    <changeSet id="20190919132617-3" author="sdhome">
+        <comment>Remove CP_POOL_BRANDING and CP BRANDING as they are no longer needed.</comment>
+
+        <!--Removing table and related constraints-->
+        <dropTable tableName="cp_pool_branding" cascadeConstraints="true"/>
+        <dropTable tableName="cp_branding" cascadeConstraints="true"/>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->

@@ -150,6 +150,7 @@ describe 'Healing' do
   it 'healing fails when autobind disabled on owner' do
     owner = create_owner random_string('test_owner1')
     owner['autobindDisabled'] = true
+    owner['autobindHypervisorDisabled'] = false
     @cp.update_owner(owner['key'], owner)
 
     owner = @cp.get_owner(owner['key'])
@@ -165,7 +166,7 @@ describe 'Healing' do
       consumer_cp.consume_product()
     rescue RestClient::BadRequest => e
       exception_thrown = true
-      ex_message = "Ignoring request to auto-attach. It is disabled for org \"#{owner['key']}\"."
+      ex_message = "Ignoring request to auto-attach. It is disabled for org \"#{owner['key']}\" because of the content access mode setting."
       data = JSON.parse(e.response)
       data['displayMessage'].should == ex_message
     end

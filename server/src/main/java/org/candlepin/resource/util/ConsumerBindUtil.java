@@ -17,6 +17,7 @@ package org.candlepin.resource.util;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
+import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
@@ -78,7 +79,8 @@ public class ConsumerBindUtil {
     }
 
     public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys,
-        boolean autoattachDisabledForOwner) throws AutobindDisabledForOwnerException {
+        boolean autoattachDisabledForOwner)
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
         // Process activation keys.
 
         boolean listSuccess = false;
@@ -150,7 +152,7 @@ public class ConsumerBindUtil {
     }
 
     private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key)
-        throws AutobindDisabledForOwnerException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
         try {
             Set<String> productIds = new HashSet<>();
             List<String> poolIds = new ArrayList<>();

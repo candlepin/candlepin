@@ -62,6 +62,7 @@ import java.util.stream.Collectors;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.LockModeType;
+import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
 
 /**
@@ -567,10 +568,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     @Transactional
-    public void heartbeatUpdate(final String reporterId, final Date checkIn, final String ownerKey) {
+    public void heartbeatUpdate(final String reporterId, final Date checkIn, final String ownerKey)
+        throws PersistenceException {
         final String query;
-        final String db = config.getProperty("jpa.config.hibernate.connection.driver_class");
-        if (db.contains("mysql")) {
+        final String db = ((String) this.currentSession().getSessionFactory().getProperties()
+            .get("hibernate.dialect")).toLowerCase();
+        if (db.contains("mysql") || db.contains("maria")) {
             query = "" +
                 "UPDATE cp_consumer a" +
                 " JOIN cp_consumer_hypervisor b on a.id = b.consumer_id " +
@@ -590,7 +593,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 " AND c.account = :ownerKey";
         }
         else {
-            query = "";
+            throw new PersistenceException(
+                "The HypervisorHearbeatUpdate cannot execute as the database dialect is not recognized.");
         }
 
         this.currentSession().createSQLQuery(query)
@@ -891,10 +895,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 consumerIds.addAll(query.list());
             }
             for (Consumer consumer: this.getConsumers(consumerIds)) {
-                HypervisorId hypervisorId =
-                    systemUuidHypervisorMap.get(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase());
-                hypervisorMap.add(hypervisorId.getHypervisorId(), consumer);
-                remainingHypervisorIds.remove(hypervisorId.getHypervisorId());
+                if (consumer.getHypervisorId() != null) {
+                    hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
+                    remainingHypervisorIds.remove(consumer.getHypervisorId().getHypervisorId());
+                }
+                else {
+                    hypervisorMap.add(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(), consumer);
+                }
             }
         }
         if (!remainingHypervisorIds.isEmpty()) {
@@ -1000,6 +1007,29 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return result != 0;
     }
 
+    /**
+     * Given the Consumer UUIDs it returns unique consumer UUIDs that exists.
+     *
+     * @param consumerUuids consumer UUIDs.
+     * @return set of consumer UUIDs that exists.
+     */
+    public Set<String> getExistingConsumerUuids(Iterable<String> consumerUuids) {
+        Set<String> existingUuids = new HashSet<>();
+
+        if (consumerUuids != null && consumerUuids.iterator().hasNext()) {
+            int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
+
+            String querySql = "SELECT C.uuid FROM Consumer C WHERE C.uuid IN (:uuids)";
+            javax.persistence.Query query = this.getEntityManager().createQuery(querySql);
+
+            for (List<String> block : Iterables.partition(consumerUuids, blockSize)) {
+                existingUuids.addAll(query.setParameter("uuids", block).getResultList());
+            }
+        }
+
+        return existingUuids;
+    }
+
     public Consumer verifyAndLookupConsumer(String consumerUuid) {
         Consumer consumer = this.findByUuid(consumerUuid);
 
@@ -1022,7 +1052,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             Hibernate.initialize(e.getCertificates());
 
             if (e.getPool() != null) {
-                Hibernate.initialize(e.getPool().getBranding());
                 Hibernate.initialize(e.getPool().getProductAttributes());
                 Hibernate.initialize(e.getPool().getAttributes());
                 Hibernate.initialize(e.getPool().getDerivedProductAttributes());

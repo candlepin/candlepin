@@ -47,6 +47,7 @@ import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.util.Providers;
 
+import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -107,7 +108,7 @@ public class GuestIdResourceTest {
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct.setId("test-system-ctype");
 
-        consumer = new Consumer("consumer", "test", owner, ct);
+        consumer = new Consumer("consumer", "test", owner, ct).setUuid(Util.generateUUID());
         guestIdResource = new GuestIdResource(guestIdCurator, consumerCurator, consumerTypeCurator,
             consumerResource, i18n, eventFactory, sink, migrationProvider, this.modelTranslator);
 

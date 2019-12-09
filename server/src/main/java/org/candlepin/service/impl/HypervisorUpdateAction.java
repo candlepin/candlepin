@@ -51,6 +51,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+
+
 /**
  * Returns {@link Result} of hypervisor update containing the result of the
  * update and a map of known hypervisor consumers.
@@ -113,11 +115,19 @@ public class HypervisorUpdateAction {
             .onRollback(status -> sink.rollback());
 
         for (String hypervisorId : hosts) {
-            Consumer knownHost = transaction.execute(owner, incomingHosts.get(hypervisorId), result, create,
-                principal, jobReporterId);
+            try {
+                Consumer knownHost = transaction.execute(owner, incomingHosts.get(hypervisorId), result,
+                    create, principal, jobReporterId);
 
-            if (knownHost != null) {
-                hypervisorConsumersMap.add(knownHost.getHypervisorId().getHypervisorId(), knownHost);
+                if (knownHost != null) {
+                    hypervisorConsumersMap.add(knownHost.getHypervisorId().getHypervisorId(), knownHost);
+                }
+            }
+            catch (Exception e) {
+                // Nothing needs to be done here, probably. The failure should have already
+                // been logged in the transactional block
+                log.debug("Unexpected exception occurred while processing hypervisor {}:",
+                    hypervisorId, e);
             }
         }
         return new Result(result, hypervisorConsumersMap);
@@ -186,6 +196,7 @@ public class HypervisorUpdateAction {
                     hypervisorId, owner.getKey(), resultHost.getHypervisorId().getReporterId(),
                     jobReporterId);
             }
+
             boolean typeUpdated = false;
             if (!hypervisorType.getId().equals(resultHost.getTypeId())) {
                 typeUpdated = true;
@@ -199,6 +210,7 @@ public class HypervisorUpdateAction {
 
             if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated ||
                 hypervisorIdUpdated || nameUpdated) {
+
                 resultHost.setLastCheckin(new Date());
                 guestMigration.migrate(false);
                 result.addUpdated(this.translator.translate(resultHost, HypervisorConsumerDTO.class));
@@ -213,8 +225,10 @@ public class HypervisorUpdateAction {
                 resultHost.getHypervisorId() != null &&
                 (resultHost.getHypervisorId().getReporterId() == null ||
                 !jobReporterId.contentEquals(resultHost.getHypervisorId().getReporterId()))) {
+
                 resultHost.getHypervisorId().setReporterId(jobReporterId);
             }
+
             try {
                 consumerCurator.update(resultHost);
             }
@@ -310,6 +324,8 @@ public class HypervisorUpdateAction {
     private Consumer createConsumerForHypervisorId(String incHypervisorId, String reporterId,
         Owner owner, String principal, Consumer incoming) {
         Consumer consumer = new Consumer();
+        consumer.ensureUUID();
+
         if (incoming.getName() != null) {
             consumer.setName(incoming.getName());
         }
