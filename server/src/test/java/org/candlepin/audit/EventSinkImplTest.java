@@ -14,9 +14,7 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
@@ -35,26 +33,34 @@ import org.candlepin.test.TestUtil;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
-import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 
+
+
 /**
- * EventSinkImplTest
+ * Test suite for the EventSinkImpl class
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EventSinkImplTest {
 
     @Mock private ClientSessionFactory mockSessionFactory;
@@ -73,7 +79,7 @@ public class EventSinkImplTest {
     private ObjectMapper mapper;
     private Owner o;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         this.factory = new EventFactory(mockPrincipalProvider, mapper);
         this.principal = TestUtil.createOwnerPrincipal();
@@ -82,7 +88,7 @@ public class EventSinkImplTest {
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         when(mockSessionFactory.createSession()).thenReturn(mockClientSession);
         when(mockClientSession.createProducer(anyString())).thenReturn(mockClientProducer);
-        when(mockClientSession.createMessage(anyBoolean())).thenReturn(mockClientMessage);
+        when(mockClientSession.createMessage(anyByte(), anyBoolean())).thenReturn(mockClientMessage);
         when(mockClientMessage.getBodyBuffer()).thenReturn(ActiveMQBuffers.fixedBuffer(2000));
         when(mockSessionFactory.getServerLocator()).thenReturn(mockLocator);
         doReturn(Mode.NORMAL).when(this.mockModeManager).getCurrentMode();
@@ -104,35 +110,6 @@ public class EventSinkImplTest {
         return sink;
     }
 
-    /**Set up the {@link ClientSessionFactory} to throw an exception when
-     * {@link ClientSessionFactory#createSession()} is called.
-     * Make sure, we throw up our hands saying "I am not dealing with this".
-     * @throws Exception
-     */
-    @Test(expected = RuntimeException.class)
-    public void eventSinkShouldThrowExceptionWhenSessionCreationFailsInConstructor()
-        throws Exception {
-        final ClientSessionFactory csFactory = mock(ClientSessionFactory.class);
-        doThrow(new ActiveMQException()).when(csFactory.createSession());
-        createEventSink(csFactory);
-        fail("Runtime exception should have been thrown.");
-    }
-
-
-    /**Set up the {@link ClientSession} to throw an exception when
-     * {@link ClientSession#createProducer(String)} is called.
-     * Make sure, we throw up our hands saying "I am not dealing with this".
-     * @throws Exception
-     */
-    @Test(expected = RuntimeException.class)
-    public void eventSinkShouldThrowExceptionWhenProducerCreationFailsInConstructor()
-        throws Exception {
-        doThrow(new ActiveMQException()).when(
-            mockClientSession.createProducer(anyString()));
-        createEventSink(mockSessionFactory);
-        fail("Runtime exception should have been thrown.");
-    }
-
     @Test
     public void sendEventShouldSendMessageOnProperEventInput() throws Exception {
         final String content = "Simple String";
@@ -142,8 +119,16 @@ public class EventSinkImplTest {
         eventSinkImpl.queueEvent(mock(Event.class));
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(argumentCaptor.capture());
-        assertEquals(content, argumentCaptor.getValue().getBodyBuffer()
-            .readString());
+
+        ClientMessage message = argumentCaptor.getValue();
+        assertNotNull(message);
+
+        ActiveMQBuffer buffer = message.getBodyBuffer();
+        assertNotNull(buffer);
+
+        SimpleString sstr = buffer.readNullableSimpleString();
+        assertNotNull(sstr);
+        assertEquals(content, sstr.toString());
     }
 
     @Test

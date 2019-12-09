@@ -26,6 +26,7 @@ public abstract class EventMessageReceiver extends MessageReceiver {
 
     public EventMessageReceiver(EventListener listener, ActiveMQSessionFactory sessionFactory,
         ObjectMapper mapper) {
+
         super(ArtemisMessageSource.getQueueName(listener), sessionFactory, mapper);
         this.listener = listener;
     }
