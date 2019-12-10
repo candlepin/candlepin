@@ -34,8 +34,8 @@ public class CertificateSerialDTOTest extends AbstractDTOTest<CertificateSerialD
         super(CertificateSerialDTO.class);
 
         this.values = new HashMap<>();
-        this.values.put("Id", 12345L);
-        this.values.put("Serial", BigInteger.TEN);
+        this.values.put("Id", "12345");
+        this.values.put("Serial", BigInteger.TEN.toString());
         this.values.put("Date", new Date());
         this.values.put("Collected", true);
         this.values.put("Revoked", true);

@@ -36,6 +36,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
@@ -43,7 +44,6 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -366,7 +366,7 @@ public class ConsumerResourceTest {
         when(mockEntitlementCertServiceAdapter.listEntitlementSerialIds(consumer)).thenReturn(serialIds);
         when(mockEntitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
 
-        List<CertificateSerialDto> serials = consumerResource
+        List<CertificateSerialDTO> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
 
         verifyCertificateSerialNumbers(serials);
@@ -408,9 +408,9 @@ public class ConsumerResourceTest {
     }
 
     private void verifyCertificateSerialNumbers(
-        List<CertificateSerialDto> serials) {
+        List<CertificateSerialDTO> serials) {
         assertEquals(3, serials.size());
-        assertTrue(serials.get(0).getSerial() > 0);
+        assertTrue(Long.valueOf(serials.get(0).getSerial()) > 0);
     }
 
     private List<EntitlementCertificate> createEntitlementCertificates() {

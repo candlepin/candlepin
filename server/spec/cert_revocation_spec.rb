@@ -84,7 +84,7 @@ describe 'Certificate Revocation List', :serial => true do
     new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
     new_time.should_not == old_time
     crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
-    crl.revoked.map { |i| i.serial }.should include(serial)
+    expect(crl.revoked.map { |i| i.serial.to_s }).to include(serial)
   end
 
   it 'should regenerate the on-disk crl' do
@@ -123,19 +123,19 @@ describe 'Certificate Revocation List', :serial => true do
 
     @cp.delete_cdn(cdn_label)
 
-    revoked_serials.should include(cdn.certificate.serial.serial)
+    expect(revoked_serials).to include(cdn.certificate.serial.serial)
   end
 
   it 'should put revoked ueber cert on CRL' do
     cert_serial = @cp.generate_ueber_cert(@owner['key']).serial.serial
     delete_owner(@owner)
-    revoked_serials.should include(cert_serial)
+    expect(revoked_serials).to include(cert_serial)
   end
 
   it 'should put revoked id cert on CRL' do
     id_cert = OpenSSL::X509::Certificate.new(@system.identity_certificate)
     @system.unregister
-    revoked_serials.should include(id_cert.serial.to_i)
+    expect(revoked_serials).to include(id_cert.serial.to_s)
   end
 
   it 'should put revoked content access cert on CRL' do
@@ -155,11 +155,11 @@ describe 'Certificate Revocation List', :serial => true do
     certs.length.should == 1
 
     cert_serial = certs[0].serial.serial
-    revoked_serials.should_not include(cert_serial)
+    expect(revoked_serials).to_not include(cert_serial)
 
     @cp.update_owner(cam_owner['key'], {'contentAccessMode' => "entitlement"})
     new_system.list_certificates.length.should == 0
-    revoked_serials.should include(cert_serial)
+    expect(revoked_serials).to include(cert_serial)
 end
 
   def filter_serial(product, consumer=@system)
@@ -171,7 +171,7 @@ end
   end
 
   def revoked_serials
-    return @cp.get_crl.revoked.map {|entry| entry.serial.to_i }
+    return @cp.get_crl.revoked.map {|entry| entry.serial.to_s}
   end
 
 end
