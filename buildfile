@@ -114,6 +114,16 @@ EHCACHE = ['org.hibernate:hibernate-ehcache:jar:5.3.8.Final',
            'javax.cache:cache-api:jar:1.0.0'
           ]
 
+KEYCLOAK = ['org.keycloak:keycloak-servlet-filter-adapter:jar:6.0.1',
+            'org.keycloak:keycloak-adapter-core:jar:6.0.1',
+            'org.keycloak:keycloak-common:jar:6.0.1',
+            'org.keycloak:keycloak-core:jar:6.0.1',
+            'org.keycloak:keycloak-adapter-spi:jar:6.0.1',
+            'org.keycloak:keycloak-servlet-adapter-spi:jar:6.0.1',            
+            'org.keycloak:keycloak-jaxrs-oauth-client:jar:6.0.1',
+            'org.keycloak:keycloak-authz-client:jar:6.0.1'
+           ]
+
 VALIDATOR = ['org.hibernate.validator:hibernate-validator:jar:6.0.7.Final',
              'org.hibernate.validator:hibernate-validator-annotation-processor:jar:6.0.7.Final',
              'javax.validation:validation-api:jar:2.0.1.Final']
@@ -123,6 +133,7 @@ HIBERNATE = [group('hibernate-core', 'hibernate-c3p0',
                    :version => '5.3.8.Final'),
              ANTLR,
              EHCACHE,
+             KEYCLOAK,
              VALIDATOR,
              'org.hibernate.common:hibernate-commons-annotations:jar:5.0.4.Final',
              'net.bytebuddy:byte-buddy:jar:1.9.4',

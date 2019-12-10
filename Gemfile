@@ -1,4 +1,5 @@
-source 'https://rubygems.org'
+#source 'https://rubygems.org'
+source 'https://gems.ruby-china.com/'
 
 gem 'buildr', '1.5.3'
 # Not a typo - we use both buildr and builder
@@ -15,7 +16,7 @@ gem 'httpclient'
 gem 'activesupport', '~> 4.2'
 
 group 'proton' do
-  gem 'qpid_proton', '~> 0.21.0'
+  gem 'qpid_proton', '~> 0.28.0'
 end
 
 # Remove this once we are fully using the new Ruby bindings
