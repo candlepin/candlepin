@@ -14,17 +14,19 @@ OPTIONS:
   -m        use mysql
   -n NAME   Sets the project name for the docker-compose run
   -p        use postgres
+  -l        skip docker pull and use local images
 
 USAGE
 }
 
-while getopts ":bc:dmn:op" opt; do
+while getopts ":bc:dmn:opl" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
     m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";
        chcon -Rt svirt_sandbox_file_t $DIR/mysql.cnf;;
     n) PROJ_NAME="-p $OPTARG";;
     p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;
+    l) USE_CACHE="1";;
     \?)
       echo "Invalid option: -$OPTARG" >&2
       usage
@@ -43,7 +45,11 @@ done
 cd $DIR
 docker-compose $PROJ_NAME stop
 docker-compose $PROJ_NAME rm -f
-docker-compose $COMPOSE_ARGS pull
+
+if [ "$USE_CACHE" != "1" ]; then
+  docker-compose $COMPOSE_ARGS pull
+fi
+
 docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm candlepin $TEST_CMD
 RETVAL=$?
 docker-compose $PROJ_NAME down
