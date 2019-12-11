@@ -127,11 +127,34 @@ describe 'Consumer Resource Activation Key' do
     expect(consumer['addOns']).to include('addon2')
   end
 
+  it 'should override consumer syspurpose attributes with attributes on activation keys' do
+    prod1 = create_product(random_string('product1'), random_string('product1'))
+    create_pool_and_subscription(@owner['key'], prod1.id, 10)
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1', nil, nil, 'ak-usage', 'ak-role', ['ak-addon1','ak-addon2'])
+
+    consumer = @client.register(
+        random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"], nil, nil, nil, nil, nil, nil,
+        nil, nil, nil, nil, nil, nil, "client-sla", "client-role", "client-usage", [])
+    consumer.uuid.should_not be_nil
+
+    consumer.serviceLevel.should == "client-sla"
+    consumer.usage.should == "ak-usage"
+    consumer.role.should == "ak-role"
+    consumer['addOns'].length.should == 2
+    expect(consumer['addOns']).to include('ak-addon1')
+    expect(consumer['addOns']).to include('ak-addon2')
+  end
+
   it 'should allow a consumer to register with syspurpose attributes on activation key and consumer' do
     prod1 = create_product(random_string('product1'), random_string('product1'))
     create_pool_and_subscription(@owner['key'], prod1.id, 10)
 
-    key1 = @cp.create_activation_key(@owner['key'], 'key1', nil, nil, 'test-usage', 'test-role', ['addon1','addon2'])
+    ak_role = 'ak-role'
+    ak_usage = 'ak-usage'
+    ak_addons = ['ak-addon1','ak-addon2']
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1', nil, nil, ak_usage, ak_role, ak_addons)
 
     service_level = 'consumer_service_level'
     role = 'consumer_role'
@@ -144,12 +167,12 @@ describe 'Consumer Resource Activation Key' do
     expect(consumer['uuid']).to_not be_nil
 
     expect(consumer['serviceLevel']).to eq(service_level)
-    expect(consumer['role']).to eq(role)
-    expect(consumer['usage']).to eq(usage)
+    expect(consumer['role']).to eq(ak_role)
+    expect(consumer['usage']).to eq(ak_usage)
 
     expect(consumer['addOns']).to_not be_nil
-    expect(consumer['addOns'].size).to eq(addons.size)
-    expect(consumer['addOns']).to include(*addons)
+    expect(consumer['addOns'].size).to eq(ak_addons.size)
+    expect(consumer['addOns']).to include(*ak_addons)
   end
 
   it 'should allow a consumer to register with multiple activation keys with same content override names' do
