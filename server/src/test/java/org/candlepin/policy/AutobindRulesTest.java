@@ -4153,4 +4153,52 @@ public class AutobindRulesTest {
         PoolQuantity q = bestPools.get(0);
         assertEquals(new Integer(2), q.getQuantity());
     }
+
+    /*
+     * Tests that during auto-attach, Role values between what the consumer specified and pool attributes
+     * are compared irrespective of the white-spaces in roles.
+     */
+    @Test
+    public void selectBestPoolsMatchesRoleValueWithWhiteSpaces() {
+        // Consumer specified syspurpose role attribute:
+        consumer.setRole("JBoss");
+
+        // Product with multiple roles:
+        Product prod1 = createSysPurposeProduct(null, "RHEL Server,  JBoss,  Satellite", null, null, null);
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+        List<Pool> pools = new ArrayList<>();
+        pools.add(p1);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(p1, 1)));
+    }
+
+    /*
+     * Tests that during auto-attach, Addon values between what the consumer specified and pool attributes
+     * are compared irrespective of the white-spaces in addons.
+     */
+    @Test
+    public void selectBestPoolsMatchesAddonsValueWithWhiteSpaces() {
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("RHEL ELS");
+        consumer.setAddOns(addons);
+
+        // Product with multiple addons:
+        Product prod1 = createSysPurposeProduct(null, null, "RHEL EUS,   RHEL ELS ", null, null);
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+        List<Pool> pools = new ArrayList<>();
+        pools.add(p1);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(p1, 1)));
+    }
 }

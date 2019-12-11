@@ -312,7 +312,7 @@ function createPool(pool, consumer) {
             }
         }
         for (var i = 0 ; i < poolSet.length; i++) {
-            poolSet[i] = poolSet[i].toLowerCase();
+            poolSet[i] = poolSet[i].toLowerCase().trim();
         }
         return poolSet;
     };
@@ -2580,7 +2580,12 @@ var Autobind = {
                     var group_addon = group_addons[i];
                     var is_common_addon = false;
                     for (var j = 0; j < addons.length; j++) {
-                        if (Utils.equalsIgnoreCase(addons[j], group_addon)) {
+
+                        if (!addons[j] || !addons[j].trim()) {
+                            is_common_addon = false;
+                        }
+
+                        if (Utils.equalsIgnoreCase(addons[j].trim(), group_addon)) {
                             is_common_addon = true;
                         }
                     }
@@ -2595,9 +2600,11 @@ var Autobind = {
              * Returns the role that the stack will cover, which the consumer requires.
              */
             get_common_role: function(role) {
-                if (role == null) {
+                if (!role || !role.trim()) {
                     return null;
                 }
+                role = role.trim();
+
                 var group_roles = this.get_roles();
                 for (var i = 0; i < group_roles.length; i++) {
                     var group_role = group_roles[i];
@@ -3089,7 +3096,7 @@ var Autobind = {
 
         var attached_roles = get_role_pools(attached_pools);
         for (var j = 0; j < attached_roles.length; j++) {
-            if (Utils.equalsIgnoreCase(attached_roles[j], role)) {
+            if (Utils.equalsIgnoreCase(attached_roles[j], role.trim())) {
                 return "";
             }
         }
@@ -3112,7 +3119,7 @@ var Autobind = {
         for (var i = 0; i < addons.length; i++) {
             var contains_addon = false;
             for (var j = 0; j < attached_addons.length; j++) {
-                if (Utils.equalsIgnoreCase(attached_addons[j], addons[i])) {
+                if (Utils.equalsIgnoreCase(attached_addons[j], addons[i].trim())) {
                     contains_addon = true;
                 }
             }

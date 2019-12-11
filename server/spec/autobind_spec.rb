@@ -752,4 +752,47 @@ describe 'Autobind On Owner' do
     entitlements.size.should == 1
     entitlements[0].pool.productId.should == mkt_product2.id
   end
+
+  it 'pools with white-spaces in role/addons should be attached' do
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+
+    mkt_prod_with_role_only = create_product(random_string('product'),
+                                             random_string('product'),
+                                             {:attributes => {:roles => "PROVIDED_ROLE,    NON_PROVIDED_ROLE "},
+                                              :owner => owner_key})
+    pool_with_role_only = create_pool_and_subscription(owner_key, mkt_prod_with_role_only.id, 10, [])
+
+    mkt_prod_with_addon_only = create_product(random_string('product'),
+                                              random_string('product'),
+                                              {:attributes => {:addons => "PROVIDED_ADDON,   NON_PROVIDED_ADDON "},
+                                               :owner => owner_key})
+    pool_with_addon_only = create_pool_and_subscription(owner_key, mkt_prod_with_addon_only.id, 10, [])
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil,
+        nil, "PROVIDED_ROLE", nil, ["PROVIDED_ADDON", "ANOTHER_ADDON"])
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    status['status'].should == 'mismatched'
+    status['nonCompliantRole'].include?('PROVIDED_ROLE').should == true
+    status['nonCompliantAddOns'].include?('PROVIDED_ADDON').should == true
+    status['nonCompliantAddOns'].include?('ANOTHER_ADDON').should == true
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 2
+
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    status['status'].should == 'mismatched'
+    status['nonCompliantAddOns'].include?('ANOTHER_ADDON').should == true
+    status['compliantAddOns']['PROVIDED_ADDON'][0]['pool']['id'].should == pool_with_addon_only.id
+    status['compliantRole']['PROVIDED_ROLE'][0]['pool']['id'].should == pool_with_role_only.id
+  end
+
 end
