@@ -25,17 +25,14 @@ import org.candlepin.async.JobExecutionException;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.service.impl.HypervisorUpdateAction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -49,11 +46,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -140,23 +134,6 @@ public class HypervisorUpdateJob implements AsyncJob {
             final HypervisorUpdateAction.Result updateResult = hypervisorUpdateAction.update(
                 owner, hypervisors.getHypervisors(), create, principal, jobReporterId);
             final HypervisorUpdateResultDTO result = updateResult.getResult();
-            final VirtConsumerMap hypervisorKnownConsumersMap = updateResult.getKnownConsumers();
-
-            final List<Consumer> created = new ArrayList<>();
-            final List<Consumer> updated = new ArrayList<>();
-            for (Consumer consumer : hypervisorKnownConsumersMap.getConsumers()) {
-                final HypervisorConsumerDTO translated = this.translator.translate(
-                    consumer, HypervisorConsumerDTO.class);
-                if (result.wasCreated(translated)) {
-                    created.add(consumer);
-                }
-                else {
-                    updated.add(consumer);
-                }
-            }
-
-            doInBulk(created, consumers -> consumerCurator.saveAll(consumers, false, false));
-            doInBulk(updated, consumers -> consumerCurator.bulkUpdate(consumers, false));
 
             log.info("Summary for report from {} by principal {}\n {}", jobReporterId, principal, result);
             return result;
@@ -171,14 +148,6 @@ public class HypervisorUpdateJob implements AsyncJob {
         final byte[] data = arguments.getAs(DATA, byte[].class);
         final String json = decompress(data);
         return mapper.readValue(json, HypervisorList.class);
-    }
-
-    private void doInBulk(final List<Consumer> created,
-        final java.util.function.Consumer<Set<Consumer>> action) {
-        Lists.partition(created, BULK_SIZE)
-            .stream()
-            .map(HashSet::new)
-            .forEach(action);
     }
 
     private static byte[] compress(String text) {

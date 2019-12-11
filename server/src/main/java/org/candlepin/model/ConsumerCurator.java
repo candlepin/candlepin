@@ -906,6 +906,47 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return hypervisorMap;
     }
 
+    @Transactional
+    public Consumer getExistingConsumerByHypervisorIdOrUuid(String ownerId, String hypervisorId,
+        String systemUuid) {
+        VirtConsumerMap hypervisorMap = new VirtConsumerMap();
+        Consumer found = null;
+        String sql =
+            "select consumer_id from cp_consumer_hypervisor " +
+            "where hypervisor_id = :hypervisorId " +
+            "and owner_id = :ownerId";
+
+        Query query = this.currentSession()
+            .createSQLQuery(sql)
+            .setParameter("ownerId", ownerId)
+            .setParameter("hypervisorId", hypervisorId);
+        List<String> consumerIds = query.list();
+
+        if (consumerIds != null && consumerIds.size() > 0) {
+            List<String> one = Collections.singletonList(consumerIds.get(0));
+            found = (Consumer) ((List) this.getConsumers(one)).get(0);
+        }
+        else if (systemUuid != null) {
+            sql =
+                "select cp_consumer.id from cp_consumer " +
+                    "join cp_consumer_facts on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+                    "where cp_consumer_facts.mapkey = '" + Consumer.Facts.SYSTEM_UUID + "' and " +
+                    "lower(cp_consumer_facts.element) = :uuid " +
+                    "and cp_consumer.owner_id = :ownerId " +
+                    "order by cp_consumer.updated desc";
+            query = this.currentSession()
+                .createSQLQuery(sql)
+                .setParameter("ownerId", ownerId)
+                .setParameter("uuid", systemUuid.toLowerCase());
+            consumerIds = query.list();
+            if (consumerIds != null && consumerIds.size() > 0) {
+                List<String> one = Collections.singletonList(consumerIds.get(0));
+                found = (Consumer) ((List) this.getConsumers(one)).get(0);
+            }
+        }
+        return found;
+    }
+
     /**
      * @param hypervisorIds list of unique hypervisor identifiers
      * @param ownerId Org namespace to search
