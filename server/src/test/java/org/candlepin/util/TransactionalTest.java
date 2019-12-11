@@ -20,6 +20,8 @@ import static org.mockito.Mockito.any;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -27,6 +29,9 @@ import javax.transaction.Status;
 
 
 
+/**
+ * Test suite for the Transactional object
+ */
 public class TransactionalTest  {
 
     /**
@@ -94,8 +99,8 @@ public class TransactionalTest  {
         doReturn(this.transaction).when(this.entityManager).getTransaction();
     }
 
-    private Transactional buildTransactional() {
-        return new Transactional(this.entityManager);
+    private <O> Transactional<O> buildTransactional() {
+        return new Transactional<O>(this.entityManager);
     }
 
     @Test
@@ -132,6 +137,12 @@ public class TransactionalTest  {
     }
 
     @Test
+    public void testCannotSetNullCommitListener() {
+        Transactional transactional = this.buildTransactional();
+        assertThrows(IllegalArgumentException.class, () -> transactional.onCommit(null));
+    }
+
+    @Test
     public void testSetRollbackListener() {
         Transactional transactional = this.buildTransactional();
 
@@ -156,6 +167,12 @@ public class TransactionalTest  {
     }
 
     @Test
+    public void testCannotSetNullRollbackListener() {
+        Transactional transactional = this.buildTransactional();
+        assertThrows(IllegalArgumentException.class, () -> transactional.onRollback(null));
+    }
+
+    @Test
     public void testSetOnCompleteListener() {
         Transactional transactional = this.buildTransactional();
 
@@ -177,6 +194,12 @@ public class TransactionalTest  {
 
         transactional.onComplete(listener);
         transactional.onComplete(listener);
+    }
+
+    @Test
+    public void testCannotSetNullCompleteListener() {
+        Transactional transactional = this.buildTransactional();
+        assertThrows(IllegalArgumentException.class, () -> transactional.onComplete(null));
     }
 
     @Test
@@ -356,4 +379,177 @@ public class TransactionalTest  {
         assertThrows(IllegalStateException.class, () -> transactional.execute());
     }
 
+    @Test
+    public void testSetCommitValidator() {
+        Transactional transactional = this.buildTransactional();
+
+        transactional.commitIf(output -> true);
+    }
+
+    @Test
+    public void testSetMultipleCommitValidators() {
+        Transactional transactional = this.buildTransactional();
+
+        transactional.commitIf(output -> true);
+        transactional.commitIf(output -> true);
+    }
+
+    @Test
+    public void testSetSameCommitValidatorRepeatedly() {
+        Transactional transactional = this.buildTransactional();
+        Transactional.Validator validator = output -> true;
+
+        transactional.commitIf(validator);
+        transactional.commitIf(validator);
+    }
+
+    @Test
+    public void testCannotSetNullCommitValidator() {
+        Transactional transactional = this.buildTransactional();
+        assertThrows(IllegalArgumentException.class, () -> transactional.commitIf(null));
+    }
+
+    @Test
+    public void testSetRollbackValidator() {
+        Transactional transactional = this.buildTransactional();
+
+        transactional.rollbackIf(output -> true);
+    }
+
+    @Test
+    public void testSetMultipleRollbackValidators() {
+        Transactional transactional = this.buildTransactional();
+
+        transactional.rollbackIf(output -> true);
+        transactional.rollbackIf(output -> true);
+    }
+
+    @Test
+    public void testSetSameRollbackValidatorRepeatedly() {
+        Transactional transactional = this.buildTransactional();
+        Transactional.Validator validator = output -> true;
+
+        transactional.rollbackIf(validator);
+        transactional.rollbackIf(validator);
+    }
+
+    @Test
+    public void testCannotSetNullRollbackValidator() {
+        Transactional transactional = this.buildTransactional();
+        assertThrows(IllegalArgumentException.class, () -> transactional.rollbackIf(null));
+    }
+
+    @Test
+    public void testSingleCommitValidatorCommitsOnPass() {
+        Transactional<String> transactional = this.<String>buildTransactional();
+
+        transactional.wrap(args -> "abc")
+            .commitIf(output -> "abc".equals(output))
+            .execute();
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).commit();
+        verify(this.transaction, never()).rollback();
+    }
+
+    @Test
+    public void testSingleCommitValidatorRollsbackOnFail() {
+        Transactional<String> transactional = this.<String>buildTransactional();
+
+        transactional.wrap(args -> "abc")
+            .commitIf(output -> "123".equals(output))
+            .execute();
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).rollback();
+        verify(this.transaction, never()).commit();
+    }
+
+    @Test
+    public void testMultiCommitValidatorCommitIfAllPass() {
+        Transactional<String> transactional = this.<String>buildTransactional();
+
+        transactional.wrap(args -> "abc")
+            .commitIf(output -> output.startsWith("a"))
+            .commitIf(output -> output.contains("b"))
+            .commitIf(output -> output.endsWith("c"))
+            .execute();
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).commit();
+        verify(this.transaction, never()).rollback();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"1", "2", "3"})
+    public void testMultiCommitValidatorRollbackIfAnyFail(String fail) {
+        Transactional<String> transactional = this.<String>buildTransactional();
+
+        transactional.wrap(args -> fail)
+            .commitIf(output -> !"1".equals(output))
+            .commitIf(output -> !"2".equals(output))
+            .commitIf(output -> !"3".equals(output))
+            .execute();
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).rollback();
+        verify(this.transaction, never()).commit();
+    }
+
+    @Test
+    public void testSingleRollbackValidatorRollbackOnPass() {
+        Transactional<String> transactional = this.<String>buildTransactional();
+
+        transactional.wrap(args -> "abc")
+            .rollbackIf(output -> "abc".equals(output))
+            .execute();
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).rollback();
+        verify(this.transaction, never()).commit();
+    }
+
+    @Test
+    public void testSingleRollbackValidatorCommitsOnFail() {
+        Transactional<String> transactional = this.<String>buildTransactional();
+
+        transactional.wrap(args -> "abc")
+            .rollbackIf(output -> "123".equals(output))
+            .execute();
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).commit();
+        verify(this.transaction, never()).rollback();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"1", "2", "3"})
+    public void testMultiRollbackValidatorRollbackIfAnyPass(String fail) {
+        Transactional<String> transactional = this.<String>buildTransactional();
+
+        transactional.wrap(args -> fail)
+            .rollbackIf(output -> !"1".equals(output))
+            .rollbackIf(output -> !"2".equals(output))
+            .rollbackIf(output -> !"3".equals(output))
+            .execute();
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).rollback();
+        verify(this.transaction, never()).commit();
+    }
+
+    @Test
+    public void testMultiRollbackValidatorCommitIfAllFail() {
+        Transactional<String> transactional = this.<String>buildTransactional();
+
+        transactional.wrap(args -> "abc")
+            .rollbackIf(output -> output.startsWith("x"))
+            .rollbackIf(output -> output.contains("y"))
+            .rollbackIf(output -> output.endsWith("z"))
+            .execute();
+
+        verify(this.transaction, times(1)).begin();
+        verify(this.transaction, times(1)).commit();
+        verify(this.transaction, never()).rollback();
+    }
 }
