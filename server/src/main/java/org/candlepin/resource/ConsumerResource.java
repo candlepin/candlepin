@@ -841,14 +841,14 @@ public class ConsumerResource {
 
             sink.emitConsumerCreated(consumerToCreate);
 
+            // Update syspurpose data
+            // Note: this must come before activation key handling, as syspurpose details on the
+            // activation keys have higher priority than those on consumer
+            this.updateSystemPurposeData(consumer, consumerToCreate);
+
             if (keys.size() > 0) {
                 consumerBindUtil.handleActivationKeys(consumerToCreate, keys, owner.isAutobindDisabled());
             }
-
-            // Update syspurpose data
-            // Note: this must come after activation key handling, as syspurpose details on the
-            // consumer have higher priority than those on activation keys
-            this.updateSystemPurposeData(consumer, consumerToCreate);
 
             // If no service level was specified, and the owner has a default set, use it:
             String csl = consumerToCreate.getServiceLevel();
