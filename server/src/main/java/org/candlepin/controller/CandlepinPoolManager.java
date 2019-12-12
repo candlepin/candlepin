@@ -39,7 +39,6 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
@@ -55,7 +54,6 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
@@ -148,7 +146,6 @@ public class CandlepinPoolManager implements PoolManager {
     private OwnerCurator ownerCurator;
     private OwnerProductCurator ownerProductCurator;
     private CdnCurator cdnCurator;
-    private PinsetterKernel pinsetterKernel;
     private OwnerManager ownerManager;
     private BindChainFactory bindChainFactory;
 
@@ -185,7 +182,6 @@ public class CandlepinPoolManager implements PoolManager {
         OwnerProductCurator ownerProductCurator,
         OwnerManager ownerManager,
         CdnCurator cdnCurator,
-        PinsetterKernel pinsetterKernel,
         I18n i18n,
         BindChainFactory bindChainFactory) {
 
@@ -213,7 +209,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.ownerProductCurator = ownerProductCurator;
         this.ownerManager = ownerManager;
         this.cdnCurator = cdnCurator;
-        this.pinsetterKernel = pinsetterKernel;
         this.i18n = i18n;
         this.bindChainFactory = bindChainFactory;
     }
@@ -1810,12 +1805,12 @@ public class CandlepinPoolManager implements PoolManager {
      * environment, all provided products for each entitlement, and check if any product
      * provides any of the modified content set IDs.
      *
-     * @param e Environment where the content was promoted/demoted.
+     * @param e Id of the environment where the content was promoted/demoted.
      * @param affectedContent List of content set IDs promoted/demoted.
      */
     @Override
     @Transactional
-    public void regenerateCertificatesOf(Environment e, Set<String> affectedContent, boolean lazy) {
+    public void regenerateCertificatesOf(String e, Set<String> affectedContent, boolean lazy) {
         this.ecGenerator.regenerateCertificatesOf(e, affectedContent, lazy);
     }
 

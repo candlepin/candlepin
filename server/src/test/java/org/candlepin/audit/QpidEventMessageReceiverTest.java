@@ -16,9 +16,8 @@ package org.candlepin.audit;
 
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.controller.ActiveMQStatusMonitor;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,25 +65,18 @@ public class QpidEventMessageReceiverTest {
     @Spy private ObjectMapper mapper = new ObjectMapper();
     @Spy private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
 
-    private EventSourceConnection connection;
+    private ActiveMQSessionFactory sessionFactory;
     private QpidEventMessageReceiver receiver;
 
     @BeforeEach
     public void init() throws Exception {
         when(clientMessage.getBodyBuffer()).thenReturn(activeMQBuffer);
-        when(clientSessionFactory.createSession(eq(false), eq(false), eq(0))).thenReturn(clientSession);
+        when(clientSessionFactory.createSession()).thenReturn(clientSession);
         when(clientSession.createConsumer(anyString())).thenReturn(clientConsumer);
 
-        this.connection = new EventSourceConnection(mock(ActiveMQStatusMonitor.class),
-            mock(Configuration.class)) {
+        this.sessionFactory = new TestingActiveMQSessionFactory(clientSessionFactory, null);
 
-            @Override
-            ClientSessionFactory getFactory() {
-                return clientSessionFactory;
-            }
-        };
-
-        receiver = new QpidEventMessageReceiver(eventListener, this.connection, new ObjectMapper());
+        receiver = new QpidEventMessageReceiver(eventListener, this.sessionFactory, new ObjectMapper());
         // Calling connect will initialize the ClientSession
         receiver.connect();
     }

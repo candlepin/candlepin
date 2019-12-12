@@ -15,15 +15,13 @@
 package org.candlepin.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.candlepin.model.CuratorException;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.Closure;
 import org.apache.commons.collections.ClosureUtils;
 import org.apache.commons.lang.StringUtils;
+import org.candlepin.model.CuratorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,12 +30,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
@@ -54,9 +54,6 @@ import java.util.UUID;
  */
 public class Util {
 
-    /**
-     *
-     */
     public static final String UTC_STR = "UTC";
     private static Logger log = LoggerFactory.getLogger(Util.class);
     private static ObjectMapper mapper = new ObjectMapper();
@@ -92,18 +89,6 @@ public class Util {
         return generateUUID().replace("-", "");
     }
 
-    public static <T> List<T> subList(List<T> parentList, int start, int end) {
-        List<T> l = new ArrayList<>();
-        for (int i = start; i < end; i++) {
-            l.add(parentList.get(i));
-        }
-        return l;
-    }
-
-    public static <T> List<T> subList(List<T> parentList, int size) {
-        return subList(parentList, 0, size - 1);
-    }
-
     public static <T> Set<T> asSet(T... values) {
         Set<T> output = new HashSet<>(values.length);
 
@@ -112,13 +97,6 @@ public class Util {
         }
 
         return output;
-    }
-
-    public static Date getFutureDate(int years) {
-        Calendar future = Calendar.getInstance();
-        future.setTime(new Date());
-        future.set(Calendar.YEAR, future.get(Calendar.YEAR) + years);
-        return future.getTime();
     }
 
     public static Date tomorrow() {
@@ -151,30 +129,6 @@ public class Util {
         return calendar.getTime();
     }
 
-    public static Date hoursAgo(int hours) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.HOUR, hours * -1);
-        return calendar.getTime();
-    }
-
-    public static Date addToFields(int day, int month, int yr) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.DAY_OF_MONTH, day);
-        calendar.add(Calendar.MONTH, month);
-        calendar.add(Calendar.YEAR, yr);
-        return calendar.getTime();
-    }
-
-    public static Date setToMidnight(Date dt) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(dt);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return cal.getTime();
-    }
-
     public static Date toDate(String dt) {
         SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy");
         try {
@@ -190,13 +144,6 @@ public class Util {
             throw new IllegalArgumentException(message);
         }
         return value;
-    }
-
-    public static String defaultIfEmpty(String str, String def) {
-        if (str == null || str.trim().length() == 0) {
-            return def;
-        }
-        return str;
     }
 
     public static boolean equals(String str, String str1) {
@@ -236,7 +183,7 @@ public class Util {
     }
 
     public static String capitalize(String str) {
-        char [] chars = str.toCharArray();
+        char[] chars = str.toCharArray();
         chars[0] = Character.toUpperCase(chars[0]);
         return new String(chars);
     }
@@ -292,7 +239,7 @@ public class Util {
         return Math.abs(rnd);
     }
 
-    public static String toBase64(byte [] data) {
+    public static String toBase64(byte[] data) {
         try {
             // to be thread-safe, we should create it from the static method
             // If we don't specify the line separator, it will use CRLF
@@ -367,9 +314,8 @@ public class Util {
         return mapper.writeValueAsString(anObject);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static Object fromJson(String json, Class clazz) {
-        Object output = null;
+    public static <T> T fromJson(String json, Class<T> clazz) {
+        T output = null;
         try {
             output = mapper.readValue(json, clazz);
         }
@@ -564,5 +510,27 @@ public class Util {
         }
 
         return true;
+    }
+
+    /**
+     * Fetches the hostname for this system without going through the network stack and DNS
+     *
+     * @return
+     *  the hostname of this system
+     */
+    public static String getHostname() {
+        try {
+            Field implField = InetAddress.class.getDeclaredField("impl");
+            implField.setAccessible(true);
+
+            Object impl = implField.get(null);
+            Method method = impl.getClass().getDeclaredMethod("getLocalHostName");
+            method.setAccessible(true);
+
+            return (String) method.invoke(impl);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

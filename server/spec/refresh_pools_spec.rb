@@ -20,10 +20,15 @@ describe 'Refresh Pools' do
     owner = create_owner random_string('test_owner')
 
     status = @cp.refresh_pools(owner['key'], true)
-    status.state.should eq('CREATED')
 
-    # URI returned is valid - use post to clean up
-    @cp.post(status.statusPath).state.should_not be_nil
+    expect(status).to_not be_nil
+    expect(status['state']).to eq('QUEUED')
+
+    # Wait for the job to finish (should be quick)
+    wait_for_job(status['id'])
+
+    # Cleanup the job now that it's finished
+    @cp.cleanup_jobs({:id => status['id']})
   end
 
   it 'contains the proper return value' do
@@ -50,7 +55,7 @@ describe 'Refresh Pools' do
     @cp.refresh_pools(owner['key'])
     @cp.list_pools({:owner => owner.id}).length.should == 6
   end
-  
+
   it 'detects changes in provided products' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)

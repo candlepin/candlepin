@@ -39,18 +39,19 @@ module CandlepinMethods
   end
 
   # Loop to wait for the given job ID to complete, with timeout.
-  def wait_for_job(job_id, timeout_seconds)
-    states = ['FINISHED', 'CANCELED', 'FAILED']
-    wait_interval = 2 # seconds
-    total_taken = 0
-    while total_taken < timeout_seconds
-      sleep wait_interval
-      total_taken += wait_interval
+  def wait_for_job(job_id, timeout_seconds = 30, wait_interval = 2)
+    states = ['FAILED', 'CANCELED', 'ABORTED', 'FINISHED']
+    start_time = Time.now
+    status = nil
+
+    loop do
       status = @cp.get_job(job_id)
-      if states.include? status['state']
-        return status
-      end
+
+      break if (states.include? status['state']) || (timeout_seconds > 0 && Time.now - start_time > timeout_seconds)
+      sleep wait_interval
     end
+
+    return status
   end
 
   def create_product(id=nil, name=nil, params={})
@@ -779,6 +780,7 @@ class AsyncStandardExporter < StandardExporter
     if status["state"] == "FAILED"
       raise AsyncExportFailure.new(status)
     end
+
     result = status["resultData"]
     client.download_consumer_export(result["exportedConsumer"], result["exportId"], dest_dir)
   end

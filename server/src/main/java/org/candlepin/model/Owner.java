@@ -32,6 +32,8 @@ import org.hibernate.annotations.GenericGenerator;
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.NaturalId;
 
+import org.slf4j.event.Level;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
@@ -481,7 +483,11 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     public void setLogLevel(String logLevel) {
-        this.logLevel = logLevel;
+        this.logLevel = logLevel != null && !logLevel.isEmpty() ? logLevel : null;
+    }
+
+    public void setLogLevel(Level logLevel) {
+        this.setLogLevel(logLevel != null ? logLevel.name() : null);
     }
 
     @Override

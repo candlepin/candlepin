@@ -14,22 +14,36 @@
  */
 package org.candlepin.guice;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.JobMessageDispatcher;
+import org.candlepin.async.JobMessageReceiver;
+import org.candlepin.async.tasks.ActiveEntitlementJob;
+import org.candlepin.async.tasks.EntitlerJob;
+import org.candlepin.async.tasks.JobCleaner;
+import org.candlepin.async.tasks.CRLUpdateJob;
+import org.candlepin.async.tasks.EntitleByProductsJob;
+import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
+import org.candlepin.async.tasks.ExportJob;
+import org.candlepin.async.tasks.HealEntireOrgJob;
+import org.candlepin.async.tasks.HypervisorHeartbeatUpdateJob;
+import org.candlepin.async.tasks.HypervisorUpdateJob;
+import org.candlepin.async.tasks.ImportJob;
+import org.candlepin.async.tasks.ImportRecordCleanerJob;
+import org.candlepin.async.tasks.ManifestCleanerJob;
+import org.candlepin.async.tasks.OrphanCleanupJob;
+import org.candlepin.async.tasks.RefreshPoolsForProductJob;
+import org.candlepin.async.tasks.RefreshPoolsJob;
+import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
+import org.candlepin.async.tasks.RegenProductEntitlementCertsJob;
+import org.candlepin.async.tasks.UndoImportsJob;
+import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.audit.AMQPBusPublisher;
+import org.candlepin.audit.ArtemisMessageSource;
+import org.candlepin.audit.ArtemisMessageSourceReceiverFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
+import org.candlepin.audit.MessageSource;
+import org.candlepin.audit.MessageSourceReceiverFactory;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.audit.QpidConfigBuilder;
 import org.candlepin.audit.QpidConnection;
@@ -69,34 +83,28 @@ import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
-import org.candlepin.controller.ModeManager;
-import org.candlepin.controller.ModeManagerImpl;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ScheduledExecutorServiceProvider;
 import org.candlepin.controller.SuspendModeTransitioner;
+import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.PoolEventFilter;
+import org.candlepin.messaging.CPMSessionFactory;
+import org.candlepin.messaging.CPMContextListener;
+import org.candlepin.messaging.impl.artemis.ArtemisContextListener;
+import org.candlepin.messaging.impl.artemis.ArtemisSessionFactory;
+import org.candlepin.messaging.impl.artemis.ArtemisUtil;
+import org.candlepin.messaging.impl.noop.NoopContextListener;
+import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
-import org.candlepin.pinsetter.core.GuiceJobFactory;
-import org.candlepin.pinsetter.core.PinsetterJobListener;
-import org.candlepin.pinsetter.core.PinsetterKernel;
-import org.candlepin.pinsetter.core.PinsetterTriggerListener;
-import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
-import org.candlepin.pinsetter.tasks.EntitlerJob;
-import org.candlepin.pinsetter.tasks.HypervisorUpdateJob;
-import org.candlepin.pinsetter.tasks.HypervisorHeartbeatUpdateJob;
-import org.candlepin.pinsetter.tasks.JobCleaner;
-import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
-import org.candlepin.pinsetter.tasks.SweepBarJob;
-import org.candlepin.pinsetter.tasks.UnpauseJob;
-import org.candlepin.pki.impl.JSSPrivateKeyReader;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
-import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.impl.JSSPKIUtility;
+import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
@@ -144,7 +152,6 @@ import org.candlepin.resteasy.filter.AuthorizationFeature;
 import org.candlepin.resteasy.filter.CandlepinQueryInterceptor;
 import org.candlepin.resteasy.filter.CandlepinSuspendModeFilter;
 import org.candlepin.resteasy.filter.ConsumerCheckInFilter;
-import org.candlepin.resteasy.filter.PinsetterAsyncFilter;
 import org.candlepin.resteasy.filter.SecurityHoleAuthorizationFilter;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.resteasy.filter.SuperAdminAuthorizationFilter;
@@ -168,6 +175,19 @@ import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.X509ExtensionUtil;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -179,9 +199,8 @@ import com.google.inject.persist.jpa.JpaPersistModule;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
-import org.quartz.JobListener;
-import org.quartz.TriggerListener;
-import org.quartz.spi.JobFactory;
+import org.quartz.SchedulerFactory;
+import org.quartz.impl.StdSchedulerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import io.swagger.jaxrs.config.BeanConfig;
@@ -215,17 +234,13 @@ public class CandlepinModule extends AbstractModule {
         CandlepinRequestScope requestScope = new CandlepinRequestScope();
         bindScope(CandlepinRequestScoped.class, requestScope);
         bind(CandlepinRequestScope.class).toInstance(requestScope);
-
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
 
         configureJPA();
+        bindPki();
 
-        bind(PKIUtility.class).to(JSSPKIUtility.class).asEagerSingleton();
-        bind(CertificateReader.class).asEagerSingleton();
-        bind(PrivateKeyReader.class).to(JSSPrivateKeyReader.class);
-        bind(X509ExtensionUtil.class);
         bind(ResolverUtil.class);
         bind(GuestMigration.class);
 
@@ -236,7 +251,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(EntitlementRules.class);
         bind(EntitlementRulesTranslator.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
-        bind(ModeManager.class).to(ModeManagerImpl.class).asEagerSingleton();
+        bind(CandlepinModeManager.class).asEagerSingleton();
         bind(SuspendModeTransitioner.class).asEagerSingleton();
         bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);
         bind(HypervisorUpdateAction.class);
@@ -278,13 +293,6 @@ public class CandlepinModule extends AbstractModule {
         bind(JsonProvider.class);
         miscConfigurations();
 
-        // Async Jobs
-        bind(RefreshPoolsJob.class);
-        bind(EntitlerJob.class);
-        requestStaticInjection(EntitlerJob.class);
-        bind(HypervisorUpdateJob.class);
-        bind(HypervisorHeartbeatUpdateJob.class);
-
         // UeberCerts
         bind(UeberCertificateGenerator.class);
 
@@ -302,42 +310,50 @@ public class CandlepinModule extends AbstractModule {
         this.configureModelTranslator();
     }
 
+    private void bindPki() {
+        bind(PKIUtility.class).to(JSSPKIUtility.class).asEagerSingleton();
+        bind(CertificateReader.class).asEagerSingleton();
+        bind(PrivateKeyReader.class).to(JSSPrivateKeyReader.class);
+        bind(X509ExtensionUtil.class);
+    }
+
     private void resources() {
-        bind(ConsumerResource.class);
-        bind(ConsumerContentOverrideResource.class);
         bind(ActivationKeyContentOverrideResource.class);
-        bind(HypervisorResource.class);
-        bind(ConsumerTypeResource.class);
-        bind(ContentResource.class);
-        bind(PoolResource.class);
-        bind(EntitlementResource.class);
-        bind(OwnerResource.class);
-        bind(OwnerProductResource.class);
-        bind(OwnerContentResource.class);
-        bind(RoleResource.class);
-        bind(RootResource.class);
-        bind(ProductResource.class);
-        bind(SubscriptionResource.class);
         bind(ActivationKeyResource.class);
+        bind(AdminResource.class);
+        bind(CdnResource.class);
         bind(CertificateSerialResource.class);
         bind(CrlResource.class);
-        bind(JobResource.class);
-        bind(RulesResource.class);
-        bind(AdminResource.class);
-        bind(StatusResource.class);
-        bind(EnvironmentResource.class);
-        bind(UserResource.class);
-        bind(DistributorVersionResource.class);
+        bind(ConsumerContentOverrideResource.class);
+        bind(ConsumerResource.class);
+        bind(ConsumerTypeResource.class);
+        bind(ContentResource.class);
         bind(DeletedConsumerResource.class);
-        bind(CdnResource.class);
+        bind(DistributorVersionResource.class);
+        bind(EntitlementResource.class);
+        bind(EnvironmentResource.class);
         bind(GuestIdResource.class);
+        bind(HypervisorResource.class);
+        bind(JobResource.class);
+        bind(OwnerContentResource.class);
+        bind(OwnerProductResource.class);
+        bind(OwnerResource.class);
+        bind(PoolResource.class);
+        bind(ProductResource.class);
+        bind(RoleResource.class);
+        bind(RootResource.class);
+        bind(RulesResource.class);
+        bind(SubscriptionResource.class);
+        bind(StatusResource.class);
+        bind(UserResource.class);
     }
 
     private void miscConfigurations() {
         configureInterceptors();
         configureAuth();
-        configureEventSink();
-        configurePinsetter();
+        configureMessaging();
+        configureActiveMQComponents();
+        configureAsyncJobs();
         configureExporter();
         configureSwagger();
         configureBindFactories();
@@ -354,6 +370,21 @@ public class CandlepinModule extends AbstractModule {
             .configure()
             .messageInterpolator(interpolatorProvider.get())
             .buildValidatorFactory();
+    }
+
+    protected void configureMessaging() {
+        String provider = this.config.getString(ConfigProperties.CPM_PROVIDER);
+
+        // TODO: Change this to a map lookup as we get more providers
+
+        if (ArtemisUtil.PROVIDER.equalsIgnoreCase(provider)) {
+            bind(CPMContextListener.class).to(ArtemisContextListener.class).asEagerSingleton();
+            bind(CPMSessionFactory.class).to(ArtemisSessionFactory.class).asEagerSingleton();
+        }
+        else {
+            bind(CPMContextListener.class).to(NoopContextListener.class).asEagerSingleton();
+            bind(CPMSessionFactory.class).to(NoopSessionFactory.class).asEagerSingleton();
+        }
     }
 
     protected void configureJPA() {
@@ -380,26 +411,48 @@ public class CandlepinModule extends AbstractModule {
 
     private void configureInterceptors() {
         bind(ConsumerCheckInFilter.class);
-        bind(CandlepinSuspendModeFilter.class);
         bind(PageRequestFilter.class);
-        bind(PinsetterAsyncFilter.class);
         bind(CandlepinQueryInterceptor.class);
         bind(VersionResponseFilter.class);
         bind(LinkHeaderResponseFilter.class);
         bind(DynamicJsonFilter.class);
 
+        // Only bind the suspend mode filter if configured to do so
+        if (this.config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
+            bind(CandlepinSuspendModeFilter.class);
+        }
+
         bindConstant().annotatedWith(Names.named("PREFIX_APIURL_KEY")).to(ConfigProperties.PREFIX_APIURL);
     }
 
-    private void configurePinsetter() {
-        bind(JobFactory.class).to(GuiceJobFactory.class);
-        bind(JobListener.class).to(PinsetterJobListener.class);
-        bind(TriggerListener.class).to(PinsetterTriggerListener.class);
-        bind(PinsetterKernel.class);
-        bind(CertificateRevocationListTask.class);
-        bind(JobCleaner.class);
-        bind(UnpauseJob.class);
-        bind(SweepBarJob.class);
+    private void configureAsyncJobs() {
+        bind(SchedulerFactory.class).to(StdSchedulerFactory.class);
+
+        bind(JobMessageDispatcher.class);
+        bind(JobMessageReceiver.class);
+
+        JobManager.registerJob(ActiveEntitlementJob.JOB_KEY, ActiveEntitlementJob.class);
+        JobManager.registerJob(CRLUpdateJob.JOB_KEY, CRLUpdateJob.class);
+        JobManager.registerJob(EntitlerJob.JOB_KEY, EntitlerJob.class);
+        JobManager.registerJob(EntitleByProductsJob.JOB_KEY, EntitleByProductsJob.class);
+        JobManager.registerJob(ExpiredPoolsCleanupJob.JOB_KEY, ExpiredPoolsCleanupJob.class);
+        JobManager.registerJob(ExportJob.JOB_KEY, ExportJob.class);
+        JobManager.registerJob(HealEntireOrgJob.JOB_KEY, HealEntireOrgJob.class);
+        JobManager.registerJob(HypervisorHeartbeatUpdateJob.JOB_KEY, HypervisorHeartbeatUpdateJob.class);
+        JobManager.registerJob(HypervisorUpdateJob.JOB_KEY, HypervisorUpdateJob.class);
+        JobManager.registerJob(ImportJob.JOB_KEY, ImportJob.class);
+        JobManager.registerJob(ImportRecordCleanerJob.JOB_KEY, ImportRecordCleanerJob.class);
+        JobManager.registerJob(JobCleaner.JOB_KEY, JobCleaner.class);
+        JobManager.registerJob(ManifestCleanerJob.JOB_KEY, ManifestCleanerJob.class);
+        JobManager.registerJob(OrphanCleanupJob.JOB_KEY, OrphanCleanupJob.class);
+        JobManager.registerJob(RefreshPoolsForProductJob.JOB_KEY, RefreshPoolsForProductJob.class);
+        JobManager.registerJob(RefreshPoolsJob.JOB_KEY, RefreshPoolsJob.class);
+        JobManager.registerJob(RegenEnvEntitlementCertsJob.JOB_KEY, RegenEnvEntitlementCertsJob.class);
+        JobManager.registerJob(RegenProductEntitlementCertsJob.JOB_KEY,
+            RegenProductEntitlementCertsJob.class);
+        JobManager.registerJob(UndoImportsJob.JOB_KEY, UndoImportsJob.class);
+        JobManager.registerJob(UnmappedGuestEntitlementCleanerJob.JOB_KEY,
+            UnmappedGuestEntitlementCleanerJob.class);
     }
 
     private void configureExporter() {
@@ -436,15 +489,16 @@ public class CandlepinModule extends AbstractModule {
 
     private void configureAmqp() {
         // for lazy loading:
-
         bind(AMQPBusPublisher.class).in(Singleton.class);
         //TODO make sure these two classes are always singletons
         bind(QpidConnection.class).in(Singleton.class);
         bind(QpidConfigBuilder.class).in(Singleton.class);
     }
 
-    private void configureEventSink() {
+    private void configureActiveMQComponents() {
         if (config.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED)) {
+            bind(MessageSource.class).to(ArtemisMessageSource.class);
+            bind(MessageSourceReceiverFactory.class).to(ArtemisMessageSourceReceiverFactory.class);
             bind(EventSink.class).to(EventSinkImpl.class);
         }
         else {

@@ -48,6 +48,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Date;
 
+
+
 /**
  * Used to perform operations on Owners that need more than just the owner
  * curator.
@@ -80,15 +82,21 @@ public class OwnerManager {
 
     @Inject
     public OwnerManager(ConsumerCurator consumerCurator,
-        ActivationKeyCurator activationKeyCurator, EnvironmentCurator envCurator,
-        ExporterMetadataCurator exportCurator, ImportRecordCurator importRecordCurator,
-        PermissionBlueprintCurator permissionCurator, OwnerProductCurator ownerProductCurator,
-        ProductManager productManager, OwnerContentCurator ownerContentCurator,
-        ContentManager contentManager, OwnerCurator ownerCurator,
+        ActivationKeyCurator activationKeyCurator,
+        EnvironmentCurator envCurator,
+        ExporterMetadataCurator exportCurator,
+        ImportRecordCurator importRecordCurator,
+        PermissionBlueprintCurator permissionCurator,
+        OwnerProductCurator ownerProductCurator,
+        ProductManager productManager,
+        OwnerContentCurator ownerContentCurator,
+        ContentManager contentManager,
+        OwnerCurator ownerCurator,
         ContentAccessCertServiceAdapter contentAccessCertService,
         ContentAccessCertificateCurator contentAccessCertCurator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
-        UeberCertificateCurator uberCertificateCurator, OwnerServiceAdapter ownerServiceAdapter) {
+        UeberCertificateCurator uberCertificateCurator,
+        OwnerServiceAdapter ownerServiceAdapter) {
 
         this.consumerCurator = consumerCurator;
         this.activationKeyCurator = activationKeyCurator;
@@ -107,6 +115,7 @@ public class OwnerManager {
         this.uberCertificateCurator = uberCertificateCurator;
         this.ownerServiceAdapter = ownerServiceAdapter;
     }
+
     @Transactional
     public void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: {}", owner);

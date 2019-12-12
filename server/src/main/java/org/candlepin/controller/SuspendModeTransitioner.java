@@ -16,21 +16,19 @@ package org.candlepin.controller;
 
 import org.candlepin.audit.ActiveMQStatus;
 import org.candlepin.audit.QpidStatus;
-import org.candlepin.cache.CandlepinCache;
-import org.candlepin.model.CandlepinModeChange;
-import org.candlepin.model.CandlepinModeChange.Mode;
-import org.candlepin.model.CandlepinModeChange.Reason;
+import org.candlepin.controller.mode.CandlepinModeManager;
 
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.Objects;
+
+
+
+// TODO: Remove this class and move the status listeners to the appropriate package related to
+// each listener.
 
 
 /**
@@ -40,27 +38,24 @@ import java.util.Set;
  *
  * Using this class, clients can attempt to transition to appropriate mode. The
  * attempt may be no-op if no transition is required.
- *
  */
 public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStatusListener {
     private static Logger log = LoggerFactory.getLogger(SuspendModeTransitioner.class);
 
-    private ModeManager modeManager;
-    private CandlepinCache candlepinCache;
+    private static final String REASON_CLASS_QPID = "QPID";
+    private static final String REASON_CLASS_ACTIVEMQ = "ACTIVEMQ";
+
+    private CandlepinModeManager modeManager;
 
     @Inject
-    public SuspendModeTransitioner(CandlepinCache cache) {
-        this.candlepinCache = cache;
+    public SuspendModeTransitioner(CandlepinModeManager modeManager) {
+        this.modeManager = Objects.requireNonNull(modeManager);
     }
 
-    /**
-     * Other dependencies are injected using method injection so
-     * that Guice can handle circular dependency between SuspendModeTransitioner
-     * and the QpidConnection
-     */
-    @Inject
-    public void setModeManager(ModeManager modeManager) {
-        this.modeManager = modeManager;
+    private void resolveReasons(String reasonClass, Object... reasons) {
+        for (Object reason : reasons) {
+            this.modeManager.resolveSuspendReason(reasonClass, reason.toString());
+        }
     }
 
     /**
@@ -77,28 +72,28 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
             return;
         }
 
-        Reason reason;
-        if (QpidStatus.CONNECTED.equals(newStatus)) {
-            reason = Reason.QPID_UP;
+        switch (newStatus) {
+            case CONNECTED:
+                this.modeManager.resolveSuspendReasonClass(REASON_CLASS_QPID);
+                break;
+
+            case DOWN:
+                this.modeManager.suspendOperations(REASON_CLASS_QPID, newStatus.toString());
+                this.resolveReasons(REASON_CLASS_QPID, QpidStatus.FLOW_STOPPED, QpidStatus.MISSING_EXCHANGE,
+                    QpidStatus.MISSING_BINDING);
+                break;
+
+            case FLOW_STOPPED:
+            case MISSING_EXCHANGE:
+            case MISSING_BINDING:
+                this.modeManager.suspendOperations(REASON_CLASS_QPID, newStatus.toString());
+                this.resolveReasons(REASON_CLASS_QPID, QpidStatus.DOWN);
+                break;
+
+            default:
+                String msg = String.format("Unknown or unexpected Qpid status received: %s", newStatus);
+                throw new IllegalStateException(msg);
         }
-        else if (QpidStatus.DOWN.equals(newStatus)) {
-            reason = Reason.QPID_DOWN;
-        }
-        else if (QpidStatus.FLOW_STOPPED.equals(newStatus)) {
-            reason = Reason.QPID_FLOW_STOPPED;
-        }
-        else if (QpidStatus.MISSING_EXCHANGE.equals(newStatus)) {
-            reason = Reason.QPID_MISSING_EXCHANGE;
-        }
-        else if (QpidStatus.MISSING_BINDING.equals(newStatus)) {
-            reason = Reason.QPID_MISSING_BINDING;
-        }
-        else {
-            String msg = String.format("Could not transition candlepin mode: Unknown Qpid status: %s",
-                newStatus);
-            throw new IllegalArgumentException(msg);
-        }
-        transitionAppropriately(reason);
     }
 
     /**
@@ -112,137 +107,18 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
             return;
         }
 
-        Reason reason;
-        if (ActiveMQStatus.CONNECTED.equals(newStatus)) {
-            reason = Reason.ACTIVEMQ_UP;
-        }
-        else if (ActiveMQStatus.DOWN.equals(newStatus)) {
-            reason = Reason.ACTIVEMQ_DOWN;
-        }
-        else {
-            String msg = String.format("Could not transition candlepin mode: Unknown ActiveMQ status: %s",
-                newStatus);
-            throw new IllegalArgumentException(msg);
-        }
-        transitionAppropriately(reason);
-    }
+        switch (newStatus) {
+            case CONNECTED:
+                this.modeManager.resolveSuspendReasonClass(REASON_CLASS_ACTIVEMQ);
+                break;
 
-    /**
-     * Attempts to transition Candlepin according to current Mode and current status of
-     * the Qpid/ActiveMQ broker. Logs and swallows possible exceptions - theoretically
-     * there should be none.
-     *
-     * Most of the time the transition won't be required and this method will be no-op.
-     *
-     * Because suspend mode can be triggered by multiple sources, transitioning is based
-     * on reasons why the mode was changed. For example, in a case where the Qpid and
-     * ActiveMQ brokers are down, candlepin should remain in suspend mode until both
-     * brokers come back up. In this case, when a single broker comes back online, if
-     * the previous reason indicates that the other broker was down, then candlepin
-     * remains in suspend mode.
-     *
-     * There is an edge-case when transitioning from SUSPEND to NORMAL mode.
-     * During that transition, there is a small time window between checking the
-     * Qpid status and attempt to reconnect. If the Qpid status is reported as
-     * Qpid up, the transitioner will try to reconnect to the broker. This reconnect
-     * may fail. In that case the transition to NORMAL mode shouldn't go through.
-     */
-    private synchronized void transitionAppropriately(Reason reason) {
-        log.debug("Attempting to transition to appropriate Mode");
+            case DOWN:
+                this.modeManager.suspendOperations(REASON_CLASS_ACTIVEMQ, newStatus.toString());
+                break;
 
-        CandlepinModeChange lastModeChange = modeManager.getLastCandlepinModeChange();
-
-        if (lastModeChange.getReasons().contains(reason)) {
-            log.debug("No transition required. {} already known.");
-            return;
-        }
-
-        log.debug("Reason for transition is {}, the current mode is {}", reason, lastModeChange);
-        Set<Reason> lastReasons = new HashSet<>(lastModeChange.getReasons());
-        if (lastModeChange.getMode() == Mode.SUSPEND) {
-            switch (reason) {
-                case QPID_UP:
-                    resetQpidReasons(lastReasons);
-                    break;
-                case QPID_FLOW_STOPPED:
-                case QPID_DOWN:
-                case QPID_MISSING_BINDING:
-                case QPID_MISSING_EXCHANGE:
-                    resetQpidReasons(lastReasons, reason);
-                    break;
-                case ACTIVEMQ_UP:
-                    resetActiveMQReasons(lastReasons);
-                    break;
-                case ACTIVEMQ_DOWN:
-                    resetActiveMQReasons(lastReasons, reason);
-                    break;
-                default:
-                    throw new RuntimeException("Unknown reason for entering SUSPEND mode: " + reason);
-            }
-
-            // No more issues, can exit suspend mode
-            if (lastReasons.isEmpty()) {
-                log.info("Entering NORMAL mode.");
-                modeManager.enterMode(Mode.NORMAL, reason);
-                cleanStatusCache();
-            }
-            else {
-                modeManager.enterMode(Mode.SUSPEND, lastReasons.toArray(new Reason[lastReasons.size()]));
-                cleanStatusCache();
-            }
-        }
-        else if (lastModeChange.getMode() == Mode.NORMAL) {
-            switch (reason) {
-                case QPID_FLOW_STOPPED:
-                case QPID_MISSING_BINDING:
-                case QPID_MISSING_EXCHANGE:
-                case QPID_DOWN:
-                case ACTIVEMQ_DOWN:
-                    log.debug("Will need to transition Candlepin into SUSPEND Mode: {}", reason);
-                    modeManager.enterMode(Mode.SUSPEND, reason);
-                    cleanStatusCache();
-                    break;
-                case QPID_UP:
-                case ACTIVEMQ_UP:
-                    log.debug("All connections are Ok and current mode is NORMAL. No-op!");
-                    break;
-                default:
-                    throw new RuntimeException("Unknown reason for entering NORMAL mode: " + reason);
-            }
+            default:
+                String msg = String.format("Unknown or unexpected ActiveMQ status received: %s", newStatus);
+                throw new IllegalStateException(msg);
         }
     }
-
-    /**
-     * Cleans Status Cache. We need to do this so that client's don't see
-     * cached status response in case of a mode change.
-     */
-    private void cleanStatusCache() {
-        candlepinCache.getStatusCache().clear();
-    }
-
-    private void resetQpidReasons(Set<Reason> reasons, Reason ... keep) {
-        List<Reason> allAMQ = Arrays.asList(
-            Reason.QPID_UP,
-            Reason.QPID_DOWN,
-            Reason.QPID_FLOW_STOPPED,
-            Reason.QPID_MISSING_BINDING,
-            Reason.QPID_MISSING_EXCHANGE);
-        resetReasonGroup(reasons, allAMQ, keep);
-    }
-
-    private void resetActiveMQReasons(Set<Reason> reasons, Reason ... keep) {
-        List<Reason> allAMQ = Arrays.asList(Reason.ACTIVEMQ_DOWN, Reason.ACTIVEMQ_UP);
-        resetReasonGroup(reasons, allAMQ, keep);
-    }
-
-    private void resetReasonGroup(Set<Reason> reasons, List<Reason> reasonGroup, Reason ... keep) {
-        List<Reason> toKeep = keep != null ? Arrays.asList(keep) : new ArrayList<>();
-        if (!reasonGroup.containsAll(toKeep)) {
-            throw new IllegalArgumentException(
-                String.format("One of %s is not part of group: %s", reasonGroup, toKeep));
-        }
-        reasons.removeAll(reasonGroup);
-        reasons.addAll(toKeep);
-    }
-
 }

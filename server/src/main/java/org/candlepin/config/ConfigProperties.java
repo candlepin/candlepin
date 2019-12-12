@@ -15,26 +15,22 @@
 
 package org.candlepin.config;
 
-import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
+import static org.candlepin.common.config.ConfigurationPrefixes.*;
 
+import org.candlepin.async.tasks.ActiveEntitlementJob;
+import org.candlepin.async.tasks.JobCleaner;
+import org.candlepin.async.tasks.CRLUpdateJob;
+import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
+import org.candlepin.async.tasks.ImportRecordCleanerJob;
+import org.candlepin.async.tasks.ManifestCleanerJob;
+import org.candlepin.async.tasks.OrphanCleanupJob;
+import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.pinsetter.tasks.ActiveEntitlementJob;
-import org.candlepin.pinsetter.tasks.CancelJobJob;
-import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
-import org.candlepin.pinsetter.tasks.EntitlerJob;
-import org.candlepin.pinsetter.tasks.ExpiredPoolsJob;
-import org.candlepin.pinsetter.tasks.ImportRecordJob;
-import org.candlepin.pinsetter.tasks.JobCleaner;
-import org.candlepin.pinsetter.tasks.ManifestCleanerJob;
-import org.candlepin.pinsetter.tasks.OrphanCleanupJob;
-import org.candlepin.pinsetter.tasks.SweepBarJob;
-import org.candlepin.pinsetter.tasks.UnmappedGuestEntitlementCleanerJob;
-import org.candlepin.pinsetter.tasks.UnpauseJob;
-
-import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+
+
 
 /**
  * Defines a map of default properties used to prepopulate the {@link Configuration}.
@@ -72,6 +68,10 @@ public class ConfigProperties {
 
     public static final String ACTIVEMQ_EMBEDDED = "candlepin.audit.hornetq.embedded";
     public static final String ACTIVEMQ_BROKER_URL = "candlepin.audit.hornetq.broker_url";
+    public static final String ACTIVEMQ_KEYSTORE = "candlepin.audit.hornetq.keystore";
+    public static final String ACTIVEMQ_KEYSTORE_PASSWORD = "candlepin.audit.hornetq.keystore_password";
+    public static final String ACTIVEMQ_TRUSTSTORE = "candlepin.audit.hornetq.truststore";
+    public static final String ACTIVEMQ_TRUSTSTORE_PASSWORD = "candlepin.audit.hornetq.truststore_password";
     public static final String ACTIVEMQ_SERVER_CONFIG_PATH = "candlepin.audit.hornetq.config_path";
 
     /**
@@ -139,6 +139,20 @@ public class ConfigProperties {
     public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enable";
     public static final String KEYCLOAK_AUTHENTICATION = "candlepin.auth.keycloak.enable";
 
+    /**
+     * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
+     */
+    public static final String SUSPEND_MODE_ENABLED = "candlepin.suspend_mode_enabled";
+
+    // Messaging
+    public static final String CPM_PROVIDER = "candlepin.messaging.provider";
+
+    // TODO:
+    // Clean up all the messaging configuration. We have all sorts of prefixes and definitions for
+    // common broker options, and stuff which is unique to specific brokers. We should be defining
+    // them as "candlepin.<broker type>.<setting>" instead of the various sections we have now.
+
+
     // AMQP stuff
     public static final String AMQP_INTEGRATION_ENABLED = "candlepin.amqp.enable";
     public static final String AMQP_CONNECT_STRING = "candlepin.amqp.connect";
@@ -149,10 +163,6 @@ public class ConfigProperties {
     public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
     public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
 
-    /**
-     * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
-     */
-    public static final String SUSPEND_MODE_ENABLED = "candlepin.suspend_mode_enabled";
     /**
      * Timeout that is used for QpidQmf while receiving messages. It shouldn't be necessary
      * to modify this unless the environment and Qpid Broker is so heavily utilized, that
@@ -165,6 +175,10 @@ public class ConfigProperties {
      */
     public static final String QPID_MODE_TRANSITIONER_DELAY = "candlepin.amqp.suspend.transitioner_delay";
 
+
+    // Quartz configurations
+    public static final String QUARTZ_CLUSTERED_MODE = "org.quartz.jobStore.isClustered";
+
     // Hibernate
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
     // Cache
@@ -174,38 +188,6 @@ public class ConfigProperties {
     public static final String[] ENCRYPTED_PROPERTIES = new String[] {
         DB_PASSWORD,
     };
-
-    // Pinsetter
-    public static final String TASKS = "pinsetter.tasks";
-    public static final String DEFAULT_TASKS = "pinsetter.default_tasks";
-    public static final String ENABLE_PINSETTER = "candlepin.pinsetter.enable";
-    public static final String PINSETTER_ASYNC_JOB_TIMEOUT = "pinsetter.waiting.timeout.seconds";
-    public static final String PINSETTER_MAX_RETRIES = "pinsetter.retries.max";
-    public static final int PINSETTER_MAX_RETRIES_DEFAULT = 10;
-
-    public static final String[] DEFAULT_TASK_LIST = new String[] {
-        ActiveEntitlementJob.class.getName(),
-        CancelJobJob.class.getName(),
-        CertificateRevocationListTask.class.getName(),
-        ExpiredPoolsJob.class.getName(),
-        ImportRecordJob.class.getName(),
-        JobCleaner.class.getName(),
-        ManifestCleanerJob.class.getName(),
-        OrphanCleanupJob.class.getName(),
-        SweepBarJob.class.getName(),
-        UnmappedGuestEntitlementCleanerJob.class.getName(),
-        UnpauseJob.class.getName(),
-    };
-
-    public static final String MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES =
-        "pinsetter.org.candlepin.pinsetter.tasks.ManifestCleanerJob.max_age_in_minutes";
-
-    public static final String ENTITLER_JOB_THROTTLE =
-        "pinsetter." + EntitlerJob.class.getName() + ".throttle";
-    public static final String ENTITLER_BULK_SIZE = "entitler.bulk.size";
-
-    public static final String BATCH_BIND_NUMBER_OF_POOLS_LIMIT =
-        "candlepin.batch.bind.number_of_pools_limit";
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
 
@@ -289,14 +271,82 @@ public class ConfigProperties {
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD = "candlepin.identityCert.expiry.threshold";
 
     public static final String SWAGGER_ENABLED = "candlepin.swagger.enabled";
-    /**
-     * Enabled dev page used to interactively login to a Keycloak instance and generate offline token.
-     */
+
+    /** Enabled dev page used to interactively login to a Keycloak instance and generate offline token. */
     public static final String TOKENPAGE_ENABLED = "candlepin.tokenpage.enabled";
-    /**
-     * Path to keycloak.json
-     */
+
+    /** Path to keycloak.json */
     public static final String KEYCLOAK_FILEPATH = "candlepin.keycloak.config";
+
+    // Async Job Properties and utilities
+    public static final String ASYNC_JOBS_THREADS = "candlepin.async.threads";
+    public static final String ASYNC_JOBS_WHITELIST = "candlepin.async.whitelist";
+    public static final String ASYNC_JOBS_BLACKLIST = "candlepin.async.blacklist";
+    public static final String ASYNC_JOBS_SCHEDULER_ENABLED = "candlepin.async.scheduler.enabled";
+
+    // Whether or not we should allow queuing new jobs on this node while the job manager is suspended/paused
+    public static final String ASYNC_JOBS_QUEUE_WHILE_SUSPENDED = "candlepin.async.queue_while_suspended";
+
+    // Used for per-job configuration. The full syntax is "PREFIX.{job_key}.SUFFIX". For instance,
+    // to configure the schedule flag for the job TestJob1, the full configuration would be:
+    // candlepin.async.jobs.TestJob1.schedule=0 0 0/3 * * ?
+    public static final String ASYNC_JOBS_PREFIX = "candlepin.async.jobs.";
+    public static final String ASYNC_JOBS_JOB_ENABLED = "enabled";
+    public static final String ASYNC_JOBS_JOB_SCHEDULE = "schedule";
+
+    // "Temporary" configuration to limit the scope of the jobs/schedule endpoint. Only job keys
+    // specified in this property will be allowed to be triggered via the schedule endpoint.
+    public static final String ASYNC_JOBS_TRIGGERABLE_JOBS = "candlepin.async.triggerable_jobs";
+    public static final String[] ASYNC_JOBS_TRIGGERABLE_JOBS_LIST = new String[] {
+        ActiveEntitlementJob.JOB_KEY,
+        CRLUpdateJob.JOB_KEY,
+        ExpiredPoolsCleanupJob.JOB_KEY,
+        ImportRecordCleanerJob.JOB_KEY,
+        JobCleaner.JOB_KEY,
+        ManifestCleanerJob.JOB_KEY,
+        OrphanCleanupJob.JOB_KEY,
+        UnmappedGuestEntitlementCleanerJob.JOB_KEY
+    };
+
+    /**
+     * Fetches a string representing the prefix for all per-job configuration for the specified job.
+     * The job key or class name may be used, but the usage must be consistent.
+     *
+     * @param jobKey
+     *  the key or class name of the job for which to fetch build configuration prefix
+     *
+     * @return
+     *  the configuration prefix for the given job
+     */
+    public static String jobConfigPrefix(String jobKey) {
+        StringBuilder builder = new StringBuilder(ASYNC_JOBS_PREFIX)
+            .append(jobKey)
+            .append('.');
+
+        return builder.toString();
+    }
+
+    /**
+     * Fetches a configuration string for the given configuration for the specified job. The job may
+     * be specified via job key or class name, but the usage must be consistent.
+     *
+     * @param jobKey
+     *  the key or class name of the job for which to build the configuration string
+     *
+     * @return
+     *  the configuration string for the given configuration for the specified job
+     */
+    public static String jobConfig(String jobKey, String cfgName) {
+        StringBuilder builder = new StringBuilder(ASYNC_JOBS_PREFIX)
+            .append(jobKey)
+            .append('.')
+            .append(cfgName);
+
+        return builder.toString();
+    }
+
+    public static final String ENTITLER_BULK_SIZE = "entitler.bulk.size";
+
     public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {
         private static final long serialVersionUID = 1L;
 
@@ -309,6 +359,8 @@ public class ConfigProperties {
 
             this.put(ACTIVATION_DEBUG_PREFIX, "");
 
+            this.put(CPM_PROVIDER, "artemis");
+
             this.put(ACTIVEMQ_ENABLED, "true");
             this.put(ACTIVEMQ_EMBEDDED, "true");
             // By default, connect to embedded artemis (InVM)
@@ -318,10 +370,25 @@ public class ConfigProperties {
             this.put(ACTIVEMQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
             this.put(ACTIVEMQ_CONNECTION_MONITOR_INTERVAL, "5000"); // milliseconds
 
+            // AMQP (Qpid) configuration used by events
+            this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
+            this.put(AMQP_CONNECT_STRING, "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'");
+            this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/candlepin.jks");
+            this.put(AMQP_KEYSTORE_PASSWORD, "password");
+            this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
+            this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
+            this.put(QPID_QMF_RECEIVE_TIMEOUT, "5000");
+            this.put(QPID_MODE_TRANSITIONER_DELAY, "10");
+
+            this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
+            this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "1"); // Try for 10 seconds (1*10s)
+
             this.put(AUDIT_LISTENERS,
                 "org.candlepin.audit.LoggingListener," +
                 "org.candlepin.audit.ActivationListener");
             this.put(AUDIT_FILTER_ENABLED, "false");
+
+            this.put(ENTITLER_BULK_SIZE, "1000");
 
             /**
             * These default DO_NOT_FILTER events are those events needed by
@@ -363,35 +430,11 @@ public class ConfigProperties {
             this.put(CACHE_JMX_STATS, "false");
             this.put(CACHE_CONFIG_FILE_URI, "ehcache.xml");
 
-            // Pinsetter
-            // prevent Quartz from checking for updates
-            this.put("org.quartz.scheduler.skipUpdateCheck", "true");
-            this.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
-            this.put("org.quartz.threadPool.threadCount", "15");
-            this.put("org.quartz.threadPool.threadPriority", "5");
-            this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
-            this.put(ENTITLER_JOB_THROTTLE, "7");
-            this.put(ENTITLER_BULK_SIZE, "1000");
-            this.put(BATCH_BIND_NUMBER_OF_POOLS_LIMIT, "100");
-
-            // AMQP (Qpid) configuration used by events
-            this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
-            this.put(AMQP_CONNECT_STRING, "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'");
-            this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/candlepin.jks");
-            this.put(AMQP_KEYSTORE_PASSWORD, "password");
-            this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
-            this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
             this.put(SUSPEND_MODE_ENABLED, "true");
-            this.put(QPID_QMF_RECEIVE_TIMEOUT, "5000");
-            this.put(QPID_MODE_TRANSITIONER_DELAY, "10");
-
-            this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
-            this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "1"); // Try for 10 seconds (1*10s)
 
             this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
             this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
             this.put(SHARD_WEBAPP, "candlepin");
-            this.put(ENABLE_PINSETTER, "true");
 
             // defaults
             this.put(SHARD_USERNAME, "admin");
@@ -418,10 +461,7 @@ public class ConfigProperties {
              */
             this.put(PRODUCT_CACHE_MAX, "100");
 
-            /**
-             * As we do math on some facts and attributes, we need to constrain
-             * some values
-             */
+            /** As we do math on some facts and attributes, we need to constrain some values */
             this.put(INTEGER_FACTS, INTEGER_FACT_LIST);
             this.put(NON_NEG_INTEGER_FACTS, NON_NEG_INTEGER_FACT_LIST);
             this.put(INTEGER_ATTRIBUTES, INTEGER_ATTRIBUTE_LIST);
@@ -430,15 +470,40 @@ public class ConfigProperties {
             this.put(NON_NEG_LONG_ATTRIBUTES, NON_NEG_LONG_ATTRIBUTE_LIST);
             this.put(BOOLEAN_ATTRIBUTES, BOOLEAN_ATTRIBUTE_LIST);
 
-            // Default 20 minutes
-            this.put(PINSETTER_ASYNC_JOB_TIMEOUT, Integer.toString(1200));
-            this.put(PINSETTER_MAX_RETRIES, Integer.toString(PINSETTER_MAX_RETRIES_DEFAULT));
             this.put(SWAGGER_ENABLED, Boolean.toString(true));
             this.put(TOKENPAGE_ENABLED, Boolean.toString(true));
 
-            // ManifestCleanerJob config
-            // Max Age: 24 hours
-            this.put(MANIFEST_CLEANER_JOB_MAX_AGE_IN_MINUTES, "1440");
+            // Async job defaults and scheduling
+            // Quartz scheduling bits
+            this.put("org.quartz.scheduler.skipUpdateCheck", "true");
+            this.put("org.quartz.threadPool.class", "org.quartz.simpl.SimpleThreadPool");
+            this.put("org.quartz.threadPool.threadCount", "15");
+            this.put("org.quartz.threadPool.threadPriority", "5");
+
+            this.put(ASYNC_JOBS_THREADS, "10");
+            this.put(ASYNC_JOBS_QUEUE_WHILE_SUSPENDED, "true");
+            this.put(ASYNC_JOBS_SCHEDULER_ENABLED, "true");
+
+            this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ActiveEntitlementJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(CRLUpdateJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                CRLUpdateJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(ExpiredPoolsCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ExpiredPoolsCleanupJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(ImportRecordCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ImportRecordCleanerJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(JobCleaner.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                JobCleaner.DEFAULT_SCHEDULE);
+            this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ManifestCleanerJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(OrphanCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                OrphanCleanupJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
+
+            // Set the triggerable jobs list
+            this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
+
         }
     };
 

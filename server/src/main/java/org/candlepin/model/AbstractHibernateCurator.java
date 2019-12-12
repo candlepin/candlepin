@@ -61,6 +61,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
@@ -648,6 +649,28 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public EntityManager getEntityManager() {
         return entityManager.get();
     }
+
+    public EntityTransaction getTransaction() {
+        EntityManager manager = this.getEntityManager();
+        return manager != null ? manager.getTransaction() : null;
+    }
+
+    /**
+     * Creates a new transactional wrapper using the specified action.
+     *
+     * @param action
+     *  The action to perform in a transaction
+     *
+     * @return
+     *  a Transactional wrapper configured to execute the specified action
+     */
+    public <O> org.candlepin.util.Transactional<O> transactional(
+        org.candlepin.util.Transactional.Action<O> action) {
+
+        return new org.candlepin.util.Transactional<O>(this.getEntityManager())
+            .wrap(action);
+    }
+
 
     /**
      * Fetches the natural ID loader for this entity. This loader can be used and reused to

@@ -16,6 +16,8 @@ package org.candlepin.resteasy.filter;
 
 import com.google.inject.Injector;
 import org.candlepin.common.exceptions.GoneException;
+import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -23,7 +25,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.JobCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Persisted;
@@ -34,7 +35,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.pinsetter.core.model.JobStatus;
 import org.xnap.commons.i18n.I18n;
 
 import javax.inject.Inject;
@@ -63,7 +63,7 @@ public class StoreFactory {
         storeMap.put(User.class, new UserStore());
         storeMap.put(ActivationKey.class, new ActivationKeyStore());
         storeMap.put(Product.class, new ProductStore());
-        storeMap.put(JobStatus.class, new JobStatusStore());
+        storeMap.put(AsyncJobStatus.class, new AsyncJobStatusStore());
 
         for (EntityStore<? extends Persisted> store : storeMap.values()) {
             injector.injectMembers(store);
@@ -235,21 +235,21 @@ public class StoreFactory {
         }
     }
 
-    private class JobStatusStore implements EntityStore<JobStatus> {
-        @Inject private JobCurator jobCurator;
+    private class AsyncJobStatusStore implements EntityStore<AsyncJobStatus> {
+        @Inject private AsyncJobStatusCurator jobCurator;
 
         @Override
-        public JobStatus lookup(String jobId) {
+        public AsyncJobStatus lookup(String jobId) {
             return jobCurator.get(jobId);
         }
 
         @Override
-        public List<JobStatus> lookup(Collection<String> jobIds) {
+        public List<AsyncJobStatus> lookup(Collection<String> jobIds) {
             return jobCurator.listAllByIds(jobIds).list();
         }
 
         @Override
-        public Owner getOwner(JobStatus entity) {
+        public Owner getOwner(AsyncJobStatus entity) {
             return null;
         }
     }

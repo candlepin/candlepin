@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
@@ -45,7 +46,6 @@ import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
@@ -58,8 +58,8 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
-import org.candlepin.util.FactValidator;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.FactValidator;
 
 import com.google.inject.util.Providers;
 
@@ -67,7 +67,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
@@ -76,6 +75,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -94,7 +94,6 @@ public class HypervisorResourceTest {
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
-    @Mock private OwnerProductCurator ownerProductCurator;
     @Mock private EventSink sink;
     @Mock private EventFactory eventFactory;
     @Mock private ActivationKeyCurator activationKeyCurator;
@@ -107,6 +106,8 @@ public class HypervisorResourceTest {
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private GuestIdCurator guestIdCurator;
     @Mock private EnvironmentCurator environmentCurator;
+    @Mock private JobManager jobManager;
+
     private GuestIdResource guestIdResource;
 
     private ConsumerResource consumerResource;
@@ -144,7 +145,7 @@ public class HypervisorResourceTest {
             this.deletedConsumerCurator, null, null, config,
             null, null, null, this.consumerBindUtil, null, null,
             new FactValidator(config, this.i18nProvider), null, consumerEnricher, migrationProvider,
-            modelTranslator);
+            modelTranslator, this.jobManager);
 
         this.guestIdResource = new GuestIdResource(this.guestIdCurator, this.consumerCurator,
             this.consumerTypeCurator, this.consumerResource, this.i18n, this.eventFactory, this.sink,
@@ -152,23 +153,14 @@ public class HypervisorResourceTest {
 
         this.hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, consumerTypeCurator, i18n, ownerCurator, migrationProvider, modelTranslator,
-            guestIdResource);
+            guestIdResource, jobManager);
 
         // Ensure that we get the consumer that was passed in back from the create call.
-        when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                return invocation.getArguments()[0];
-            }
-        });
+        when(consumerCurator.create(any(Consumer.class)))
+            .thenAnswer(invocation -> invocation.getArguments()[0]);
 
         when(consumerCurator.create(any(Consumer.class), any(Boolean.class)))
-            .thenAnswer(new Answer<Object>() {
-                @Override
-                public Object answer(InvocationOnMock invocation) throws Throwable {
-                    return invocation.getArguments()[0];
-                }
-            });
+            .thenAnswer(invocation -> invocation.getArguments()[0]);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class)))
             .thenReturn(new ComplianceStatus(new Date()));
@@ -191,25 +183,22 @@ public class HypervisorResourceTest {
             when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
             when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
-            doAnswer(new Answer<ConsumerType>() {
-                @Override
-                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
-                    Object[] args = invocation.getArguments();
-                    Consumer consumer = (Consumer) args[0];
-                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
-                    ConsumerType ctype = null;
+            doAnswer((Answer<ConsumerType>) invocation -> {
+                Object[] args = invocation.getArguments();
+                Consumer consumer = (Consumer) args[0];
+                ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+                ConsumerType ctype1;
 
-                    if (consumer == null || consumer.getTypeId() == null) {
-                        throw new IllegalArgumentException("consumer is null or lacks a type ID");
-                    }
-
-                    ctype = curator.get(consumer.getTypeId());
-                    if (ctype == null) {
-                        throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
-                    }
-
-                    return ctype;
+                if (consumer == null || consumer.getTypeId() == null) {
+                    throw new IllegalArgumentException("consumer is null or lacks a type ID");
                 }
+
+                ctype1 = curator.get(consumer.getTypeId());
+                if (ctype1 == null) {
+                    throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                }
+
+                return ctype1;
             }).when(consumerTypeCurator).getConsumerType(any(Consumer.class));
         }
 
@@ -258,13 +247,14 @@ public class HypervisorResourceTest {
 
     @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
     @Test
-    public void hypervisorCheckInUpdatesGuestIdsWhenHostConsumerExists() throws Exception {
+    public void hypervisorCheckInUpdatesGuestIdsWhenHostConsumerExists() {
         Owner owner = new Owner("owner-key-1", "Owner Name 1");
         owner.setId("owner-id-1");
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
         String hypervisorId = "test-host";
-        hostGuestMap.put(hypervisorId, new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_B"))));
+        hostGuestMap.put(hypervisorId, new ArrayList(Collections
+            .singletonList(TestUtil.createGuestIdDTO("GUEST_B"))));
 
         Owner o = new Owner("owner-key-2", "Owner Name 2");
         o.setId("owner-id-2");
@@ -361,7 +351,7 @@ public class HypervisorResourceTest {
         HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), false);
 
-        assertEquals(null, result.getCreated());
+        assertNull(result.getCreated());
         assertEquals(1, result.getFailedUpdate().size());
 
         String failed = result.getFailedUpdate().iterator().next();
@@ -483,7 +473,7 @@ public class HypervisorResourceTest {
         owner.setAutobindDisabled(true);
 
         Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
-        hostGuestMap.put("HYPERVISOR_A", new ArrayList());
+        hostGuestMap.put("HYPERVISOR_A", new ArrayList<>());
         when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
 
         try {

@@ -19,6 +19,8 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
@@ -105,6 +107,27 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return (Owner) createSecureCriteria()
             .add(Restrictions.eq("key", key))
             .uniqueResult();
+    }
+
+    /**
+     * Fetches and locks the owner by the owner key. If a matching owner could not be found, this
+     * method returns null.
+     *
+     * @param key
+     *  the key to use to lock and load the owner
+     *
+     * @return
+     *  the locked owner, or null if a matching owner could not be found
+     */
+    public Owner lockAndLoadByKey(String key) {
+        if (key != null && !key.isEmpty()) {
+            return this.currentSession()
+                .bySimpleNaturalId(Owner.class)
+                .with(new LockOptions(LockMode.PESSIMISTIC_WRITE))
+                .load(key);
+        }
+
+        return null;
     }
 
     /**

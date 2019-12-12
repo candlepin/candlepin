@@ -34,14 +34,23 @@ candlepin.importer.fail_on_unknown=false
 <% if (candlepin.external_broker) { %>\
 candlepin.audit.hornetq.embedded=false
 candlepin.audit.hornetq.broker_url=tcp://localhost:61617
+candlepin.audit.hornetq.truststore=/var/lib/artemis/candlepin/certs/artemis-client.ts
+candlepin.audit.hornetq.truststore_password=securepassword
+candlepin.audit.hornetq.keystore=/var/lib/artemis/candlepin/certs/artemis-client.ks
+candlepin.audit.hornetq.keystore_password=securepassword
 <% } %>\
 candlepin.pretty_print=true
 
-candlepin.pinsetter.enable=<%= candlepin.pinsetter_enabled %>
+candlepin.async.scheduler.enabled=<%= candlepin.async_scheduler_enabled %>
+
 <% if (candlepin.hidden_resources) { %>\
 candlepin.hidden_resources=<%= candlepin.hidden_resources %>
-<% } %>\
 
+<% } %>\
+<% if (candlepin.hidden_capabilities) { %>\
+candlepin.hidden_capabilities=<%= candlepin.hidden_capabilities %>
+
+<% } %>\
 org.quartz.jobStore.misfireThreshold=60000
 org.quartz.jobStore.useProperties=false
 org.quartz.jobStore.dataSource=myDS

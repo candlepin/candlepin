@@ -178,35 +178,35 @@ describe 'Product Resource' do
     jobs = @cp.refresh_pools_for_orgs_with_product(["p4"])
     jobs.length.should == 1
     jobs.each do |job|
-      job['id'].should include("refresh_pools")
+      job['name'].should include("refresh_pools")
       wait_for_job(job['id'], 15)
     end
 
     jobs = @cp.refresh_pools_for_orgs_with_product(["p5d"])
     jobs.length.should == 1
     jobs.each do |job|
-      job['id'].should include("refresh_pools")
+      job['name'].should include("refresh_pools")
       wait_for_job(job['id'], 15)
     end
 
     jobs = @cp.refresh_pools_for_orgs_with_product(["p1"])
     jobs.length.should == 3
     jobs.each do |job|
-      job['id'].should include("refresh_pools")
+      job['name'].should include("refresh_pools")
       wait_for_job(job['id'], 15)
     end
 
     jobs = @cp.refresh_pools_for_orgs_with_product(["p3"])
     jobs.length.should == 2
     jobs.each do |job|
-      job['id'].should include("refresh_pools")
+      job['name'].should include("refresh_pools")
       wait_for_job(job['id'], 15)
     end
 
     jobs = @cp.refresh_pools_for_orgs_with_product(["p4", "p6"])
     jobs.length.should == 2
     jobs.each do |job|
-      job['id'].should include("refresh_pools")
+      job['name'].should include("refresh_pools")
       wait_for_job(job['id'], 15)
     end
 

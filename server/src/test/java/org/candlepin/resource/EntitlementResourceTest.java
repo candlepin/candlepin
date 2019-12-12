@@ -21,6 +21,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.async.JobManager;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.dto.ModelTranslator;
@@ -81,6 +82,7 @@ public class EntitlementResourceTest {
     @Mock private SubscriptionResource subResource;
     @Mock private EntitlementRules entRules;
     @Mock private EntitlementRulesTranslator messageTranslator;
+    @Mock private JobManager jobManager;
     @Mock protected ModelTranslator modelTranslator;
 
     private EntitlementResource entResource;
@@ -89,7 +91,7 @@ public class EntitlementResourceTest {
     public void before() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         entResource = new EntitlementResource(entitlementCurator, consumerCurator, consumerTypeCurator,
-            poolManager, i18n, entitler, entRules, messageTranslator, modelTranslator);
+            poolManager, i18n, entitler, entRules, messageTranslator, jobManager, modelTranslator);
 
         owner = new Owner("admin");
         owner.setId("admin-id");

@@ -478,7 +478,7 @@ class Candlepin
   end
 
   def set_scheduler_status(status)
-    post("/jobs/scheduler", {}, status)
+    post("/jobs/scheduler", { "running" => status })
   end
 
   def trigger_job(job, async=false)
@@ -547,7 +547,7 @@ class Candlepin
     end
   end
 
-  def async_call(immediate, *args, &blk)
+  def async_call(immediate, auto_cleanup=true, *args, &blk)
     status = blk.call(args)
 
     # Hack to limit test churn due to switchover to refresh pools being hosted only:
@@ -559,7 +559,7 @@ class Candlepin
     return status if immediate
 
     # otherwise poll the server to make this call synchronous
-    finished_states = ['FINISHED', 'CANCELED', 'FAILED']
+    finished_states = ['ABORTED', 'FINISHED', 'CANCELED', 'FAILED']
 
     # We toss this into a new array since async_call is sometimes used with endpoints which return multiple
     # job details
@@ -570,13 +570,16 @@ class Candlepin
     status.each_index do |index|
       while !finished_states.include? status[index]['state'].upcase
         sleep 1
-        # POSTing here will delete the job once it has finished
-        status[index] = post(status[index]['statusPath'])
+        status[index] = get(status[index]['statusPath'])
+      end
+
+      if auto_cleanup
+        delete('/jobs', {:id => [status[index]['id']]}, nil, true)
       end
     end
 
     # If we only have one job detail, return the status directly; otherwise return a collection of job results
-    return (status.length == 1 ? status[0]['result'] : status.map {|detail| detail['result']})
+    return (status.length == 1 ? status[0]['resultData'] : status.map {|detail| detail['resultData']})
   end
 
   def export_consumer(dest_dir, params={}, uuid=nil)
@@ -1369,6 +1372,24 @@ class Candlepin
 
   def cancel_job(job_id)
     delete "/jobs/#{job_id}"
+  end
+
+  def cleanup_jobs(params = {})
+    # TODO: validation/sanitiation as necessary
+
+    # query = {
+    #   :id =>
+    #   :key =>
+    #   :state =>
+    #   :owner =>
+    #   :origin =>
+    #   :executor =>
+    #   :after =>
+    #   :before =>
+    #   :force =>
+    # }
+
+    return delete('/jobs', params, nil, true)
   end
 
   def import(owner_key, filename, params = {}, headers = {})

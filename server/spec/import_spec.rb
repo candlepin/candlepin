@@ -11,9 +11,10 @@ describe 'Import Test Group:', :serial => true do
 
     before(:all) do
       # Decide the import method to use, async or synchronous
-      @import_method = import_now
       if async
         @import_method = import_and_wait
+      else
+        @import_method = import_now
       end
 
       @cp = Candlepin.new('admin', 'admin')
@@ -60,7 +61,6 @@ describe 'Import Test Group:', :serial => true do
         # Wait a little longer here as import can take a bit of time
         wait_for_job(job["id"], 10)
         status = @cp.get_job(job["id"], true)
-        status["correlationId"].should == @cp_correlation_id
         if status["state"] == "FAILED"
           raise AsyncImportFailure.new(status)
         end
@@ -194,8 +194,12 @@ describe 'Import Test Group:', :serial => true do
       end
 
       exception.should be true
-      expect(json["conflicts"].size).to eq(1)
-      json["conflicts"].include?("MANIFEST_SAME").should be true
+      if async
+        json.include?("MANIFEST_SAME").should be true
+      else
+        expect(json["conflicts"].size).to eq(1)
+        json["conflicts"].include?("MANIFEST_SAME").should be true
+      end
     end
 
     it 'should not allow importing an old manifest' do
@@ -224,8 +228,12 @@ describe 'Import Test Group:', :serial => true do
       end
 
       exception.should be true
-      expect(json["conflicts"].size).to eq(1)
-      json["conflicts"].include?("MANIFEST_OLD").should be true
+      if async
+        json.include?("MANIFEST_OLD").should be true
+      else
+        expect(json["conflicts"].size).to eq(1)
+        json["conflicts"].include?("MANIFEST_OLD").should be true
+      end
     end
 
     it 'should create a FAILURE record on a duplicate import' do
@@ -289,9 +297,14 @@ describe 'Import Test Group:', :serial => true do
       end
 
       exception.should be true
-      json["displayMessage"].include?(expected).should be true
-      json["conflicts"].size.should == 1
-      json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be true
+      if async
+        json.include?(expected).should be true
+        json.include?("DISTRIBUTOR_CONFLICT").should be true
+      else
+        json["displayMessage"].include?(expected).should be true
+        json["conflicts"].size.should == 1
+        json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be true
+      end
 
       @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid'].should == old_upstream_uuid
 
@@ -312,9 +325,14 @@ describe 'Import Test Group:', :serial => true do
       end
 
       exception.should be true
-      json["displayMessage"].include?(expected).should be true
-      json["conflicts"].size.should == 1
-      json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be true
+      if async
+        json.include?(expected).should be true
+        json.include?("DISTRIBUTOR_CONFLICT").should be true
+      else
+        json["displayMessage"].include?(expected).should be true
+        json["conflicts"].size.should == 1
+        json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be true
+      end
     end
 
     it 'should allow forcing a manifest from a different subscription management application' do
@@ -376,9 +394,13 @@ describe 'Import Test Group:', :serial => true do
 
       @cp.delete_owner(owner2['key'])
       exception.should be true
-      message = json["displayMessage"]
-      message.should_not be_nil
-      message.should == expected
+      if async
+        json.include?(expected).should be true
+      else
+        message = json["displayMessage"]
+        message.should_not be_nil
+        message.should == expected
+      end
     end
 
     it "should store the subscription upstream entitlement cert" do

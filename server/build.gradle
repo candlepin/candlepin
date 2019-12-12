@@ -32,16 +32,24 @@ ext {
     cpdb_username = "candlepin"
     cpdb_password = ""
     db_name = "candlepin"
+
     if (project.findProperty("hidden_resources")) {
         hidden_resources = project.findProperty("hidden_resources")
     }
+
+    if (project.findProperty("hidden_capabilities")) {
+        hidden_capabilities = project.findProperty("hidden_capabilities")
+    }
+
     if (!project.findProperty("db_host") ||
         (project.findProperty("db_host") && "".equals(project.findProperty("db_host")))) {
         db_host = "localhost"
     }
+
     if (project.findProperty("app_db_name") && !"".equals(project.findProperty("app_db_name"))) {
         db_name = project.findProperty("app_db_name")
     }
+
     // If MYSQL set up the mysql stuff else set up postgres (default)
     if (project.findProperty("database_server") == "mysql") {
         jdbc_driver_class = "com.mysql.jdbc.Driver"
@@ -58,7 +66,8 @@ ext {
     amqp_enabled = "true".equals(project.findProperty("qpid"))
     external_broker = "true".equals(project.findProperty("external_broker"))
     hostedtest = "true".equals(project.findProperty("hostedtest"))
-    pinsetter_enabled = "true".equals(project.findProperty("pinsetter_enabled"))
+    async_scheduler_enabled = !project.findProperty("async_scheduler_enabled") ||
+        "true".equals(project.findProperty("async_scheduler_enabled"))
 }
 
 war {
@@ -173,7 +182,7 @@ dependencies {
     compileOnly "org.mozilla:jss:4.4.6"
     testImplementation "org.mozilla:jss:4.4.6"
     implementation "ldapjdk:ldapjdk:4.19"
-    implementation "org.quartz-scheduler:quartz:2.2.1"
+    implementation "org.quartz-scheduler:quartz:2.2.2"
 
     // These for ActiveMQ Artemis
     implementation "org.apache.activemq:artemis-server:${versions.artemis}"

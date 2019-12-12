@@ -13,97 +13,41 @@ describe 'Job Status' do
     create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
   end
 
-  it 'should contain the owner key' do
-    status = @cp.autoheal_org(@owner['key'])
-    status['targetId'].should == @owner['key']
-
-    wait_for_job(status['id'], 15)
-  end
-
-  it 'should contain the target type' do
-    status = @cp.autoheal_org(@owner['key'])
-    status['targetType'].should == "owner"
-
-    wait_for_job(status['id'], 15)
-  end
-
-
-  it 'should be findable by owner key' do
-    jobs = []
-    3.times {
-        jobs << @cp.autoheal_org(@owner['key'])
-        wait_for_job(jobs[-1]['id'], 15)
-    }
-    # in hosted mode we will get a refresh pools job
-    jobs = @cp.list_jobs(@owner['key'])
-    jobs = jobs.select{ |job| job.id.start_with?('heal_entire_org') }
-    jobs.length.should == 3
-  end
-
-  it 'should only find jobs with the correct owner key' do
-    owner2 = create_owner(random_string('some_owner'))
-    product = create_product(nil, nil, :owner => owner2['key'])
-    create_pool_and_subscription(owner2['key'], product.id, 100)
-
-    jobs = []
-    # Just some random numbers here
-    4.times {
-        jobs << @cp.autoheal_org(owner2['key'])
-        jobs << @cp.autoheal_org(@owner['key'])
-        wait_for_job(jobs[-1]['id'], 15)
-        wait_for_job(jobs[-2]['id'], 15)
-    }
-    2.times {
-        jobs << @cp.autoheal_org(owner2['key'])
-        wait_for_job(jobs[-1]['id'], 15)
-    }
-    jobs2 = []
-    jobs2 = @cp.list_jobs(@owner['key'])
-    jobs2.each do |job|
-      job.targetId.should == @owner['key']
-    end
-    # in hosted mode we will get a refresh pools job
-    jobs2 = jobs2.select{ |job| job.id.start_with?('heal_entire_org') }
-    jobs2.length.should == 4
-  end
-
   it 'should find an empty list if the owner key is wrong' do
     @cp.list_jobs('totaly_made_up').should be_empty
   end
 
-  it 'should return an error if no owner key is supplied' do
-    lambda do
-      @cp.list_jobs('')
-    end.should raise_exception(RestClient::BadRequest)
-  end
-
   it 'should cancel a job' do
-    @cp.set_scheduler_status(false)
-    job = @cp.autoheal_org(@owner['key'])
-    #make sure we see a job waiting to go
-    joblist = @cp.list_jobs(@owner['key'])
-    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CREATED'
+    begin
+      @cp.set_scheduler_status(false)
 
-    @cp.cancel_job(job['id'])
-    #make sure we see a job canceled
-    joblist = @cp.list_jobs(@owner['key'])
-    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
+      job = @cp.autoheal_org(@owner['key'])
+      #make sure we see a job waiting to go
+      joblist = @cp.list_jobs(@owner['key'])
+      joblist.find { |j| j['id'] == job['id'] }['state'].should == 'QUEUED'
 
-    @cp.set_scheduler_status(true)
-    sleep 1 #let the job queue drain..
-    #make sure job didn't flip to FINISHED
-    joblist = @cp.list_jobs(@owner['key'])
-    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
+      @cp.cancel_job(job['id'])
+      #make sure we see a job canceled
+      joblist = @cp.list_jobs(@owner['key'])
+      joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
+
+      @cp.set_scheduler_status(true)
+      sleep 1 #let the job queue drain..
+      #make sure job didn't flip to FINISHED
+      joblist = @cp.list_jobs(@owner['key'])
+      joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
+    ensure
+      @cp.set_scheduler_status(true)
+    end
   end
 
-  it 'should contain the system target type and id for async binds' do
+  it 'should contain the system id for async binds' do
     @cp.autoheal_org(@owner['key'])
     system = consumer_client(@user, 'system6')
 
     status = system.consume_product(@monitoring.id, { :async => true })
 
-    status['targetType'].should == "consumer"
-    status['targetId'].should == system.uuid
+    status['principal'].should == system.uuid
 
     wait_for_job(status['id'], 15)
   end
@@ -140,22 +84,27 @@ describe 'Job Status' do
   end
 
   it 'should allow user to cancel a job it initiated' do
-    @cp.set_scheduler_status(false)
-    job = @user.autoheal_org(@owner['key'])
-    #make sure we see a job waiting to go
-    joblist = @cp.list_jobs(@owner['key'])
-    expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CREATED')
+    begin
+      @cp.set_scheduler_status(false)
 
-    @user.cancel_job(job['id'])
-    #make sure we see a job canceled
-    joblist = @cp.list_jobs(@owner['key'])
-    expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
+      job = @user.autoheal_org(@owner['key'])
+      #make sure we see a job waiting to go
+      joblist = @cp.list_jobs(@owner['key'])
+      expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('QUEUED')
 
-    @cp.set_scheduler_status(true)
-    sleep 1 #let the job queue drain..
-    #make sure job didn't flip to FINISHED
-    joblist = @cp.list_jobs(@owner['key'])
-    expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
+      @user.cancel_job(job['id'])
+      #make sure we see a job canceled
+      joblist = @cp.list_jobs(@owner['key'])
+      expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
+
+      @cp.set_scheduler_status(true)
+      sleep 1 #let the job queue drain..
+      #make sure job didn't flip to FINISHED
+      joblist = @cp.list_jobs(@owner['key'])
+      expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
+    ensure
+      @cp.set_scheduler_status(true)
+    end
   end
 
   it 'should not allow user to cancel a job it did not initiate' do
@@ -176,7 +125,6 @@ describe 'Job Status' do
     lambda do
       @user.get_job(job['id'])
     end.should raise_exception(RestClient::Forbidden)
-
   end
 
   it 'should allow consumer to view status of own job' do
@@ -203,12 +151,29 @@ describe 'Job Status' do
   end
 
   it 'should allow consumer to cancel own job' do
-    system = consumer_client(@user, 'system7')
+    begin
+      @cp.set_scheduler_status(false)
+
+      system = consumer_client(@user, 'system7', :system,  nil,  {}, @owner['key'])
+      job = system.consume_product(@monitoring.id, { :async => true })
+      status = system.get_job(job['id'])
+      system.cancel_job(job['id'])
+      # wait for job to complete, or test clean up will conflict with the asynchronous job.
+      wait_for_job(status['id'], 15)
+    ensure
+      @cp.set_scheduler_status(true)
+    end
+  end
+
+  it 'should fail to cancel terminal job' do
+    system = consumer_client(@user, 'system7', :system,  nil,  {}, @owner['key'])
     job = system.consume_product(@monitoring.id, { :async => true })
     status = system.get_job(job['id'])
-    system.cancel_job(job['id'])
-    # wait for job to complete, or test clean up will conflict with the asynchronous job.
     wait_for_job(status['id'], 15)
+
+    lambda do
+      system.cancel_job(job['id'])
+    end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'should not allow consumer to cancel another consumers job' do

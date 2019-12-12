@@ -14,33 +14,44 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.StateManagementException;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.JobStatusDTO;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.SchedulerStatusDTO;
-import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.JobCurator;
-import org.candlepin.pinsetter.core.PinsetterException;
-import org.candlepin.pinsetter.core.PinsetterKernel;
-import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.pinsetter.core.model.JobStatus.JobState;
-import org.candlepin.util.Util;
+import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatus.JobState;
+import org.candlepin.model.AsyncJobStatusCurator;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.resteasy.DateFormat;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -63,241 +74,452 @@ import io.swagger.annotations.Authorization;
 @Path("/jobs")
 @Api(value = "jobs", authorizations = { @Authorization("basic") })
 public class JobResource {
-
-    private JobCurator curator;
-    private PinsetterKernel pk;
-    private I18n i18n;
-    private ModelTranslator translator;
-
     private static Logger log = LoggerFactory.getLogger(JobResource.class);
 
+    private static final String NULL_OWNER_KEY = "null";
+
+    private Configuration config;
+    private I18n i18n;
+    private ModelTranslator translator;
+    private JobManager jobManager;
+    private AsyncJobStatusCurator jobCurator;
+    private OwnerCurator ownerCurator;
+
+    private Set<String> triggerableJobKeys;
+
+
     @Inject
-    public JobResource(JobCurator curator, PinsetterKernel pk, I18n i18n, ModelTranslator translator) {
-        this.curator = curator;
-        this.pk = pk;
-        this.i18n = i18n;
-        this.translator = translator;
+    public JobResource(Configuration config, I18n i18n, ModelTranslator translator, JobManager jobManager,
+        AsyncJobStatusCurator jobCurator, OwnerCurator ownerCurator) {
+
+        this.config = Objects.requireNonNull(config);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.translator = Objects.requireNonNull(translator);
+        this.jobManager = Objects.requireNonNull(jobManager);
+        this.jobCurator = Objects.requireNonNull(jobCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+
+        // This will be instantiated on demand
+        this.triggerableJobKeys = null;
+    }
+
+
+    // Scheduler status
+    @ApiOperation(
+        value = "fetches the status of the job scheduler for this Candlepin node",
+        response = AsyncJobStatusDTO.class, responseContainer = "set")
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @GET
+    @Path("/scheduler")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public SchedulerStatusDTO getSchedulerStatus() {
+        SchedulerStatusDTO output = new SchedulerStatusDTO();
+
+        JobManager.ManagerState state = this.jobManager.getManagerState();
+        output.setRunning(state == JobManager.ManagerState.RUNNING);
+
+        // TODO: Add other stuff here as necessary (jobs stats like running, queued, etc.)
+
+        return output;
+    }
+
+    @ApiOperation(
+        value = "enables or disables the job scheduler for this Candlepin node",
+        response = AsyncJobStatusDTO.class, responseContainer = "set")
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @POST
+    @Path("/scheduler")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public SchedulerStatusDTO setSchedulerStatus(
+        @QueryParam("running") @DefaultValue("true") boolean running) {
+
+        try {
+            // Impl note: This is kind of lazy and may run into problems in obscure circumstances where
+            // the state has been paused for a specific reason (suspend mode, for instance) or is otherwise
+            // in a state where we can't start/pause. In such cases, we'll trigger a StateManagementException
+            // or an IllegalStateException
+
+            if (running) {
+                this.jobManager.resume();
+            }
+            else {
+                this.jobManager.suspend();
+            }
+        }
+        catch (IllegalStateException | StateManagementException e) {
+            String errmsg = this.i18n.tr("Error setting scheduler status");
+            throw new IseException(errmsg, e);
+        }
+
+        return this.getSchedulerStatus();
+    }
+
+
+    // Job status
+    @ApiOperation(
+        value = "fetches a set of job statuses matching the given filter options",
+        response = AsyncJobStatusDTO.class, responseContainer = "set")
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @GET
+    @Path("/")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public Stream<AsyncJobStatusDTO> listJobStatuses(
+        @QueryParam("id") Set<String> ids,
+        @QueryParam("key") Set<String> keys,
+        @QueryParam("state") Set<String> states,
+        @QueryParam("owner") Set<String> ownerKeys,
+        @QueryParam("principal") Set<String> principals,
+        @QueryParam("origin") Set<String> origins,
+        @QueryParam("executor") Set<String> executors,
+        @QueryParam("after") @DateFormat Date after,
+        @QueryParam("before") @DateFormat Date before) {
+
+        // Convert and validate state names to actual states
+        Set<JobState> jobStates = this.translateJobStateNames(states);
+        Set<String> ownerIds = this.translateOwnerKeys(ownerKeys);
+
+        this.validateDateRange(after, before);
+
+        // TODO: Should we bother checking the other params as well? Seems like they're
+        // self-validating
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobIds(ids)
+            .setJobKeys(keys)
+            .setJobStates(jobStates)
+            .setOwnerIds(ownerIds)
+            .setPrincipalNames(principals)
+            .setOrigins(origins)
+            .setExecutors(executors)
+            .setStartDate(after)
+            .setEndDate(before);
+
+        return this.jobManager.findJobs(queryBuilder).stream()
+            .map(this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
+    }
+
+    @ApiOperation(
+        value = "fetches the job status associated with the specified job ID",
+        response = AsyncJobStatusDTO.class)
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @GET
+    @Path("/{job_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public AsyncJobStatusDTO getJobStatus(
+        @PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
+
+        if (jobId == null || jobId.isEmpty()) {
+            String errmsg = this.i18n.tr("Job ID is null or empty");
+            throw new BadRequestException(errmsg);
+        }
+
+        AsyncJobStatus status = this.jobManager.findJob(jobId);
+        if (status == null) {
+            String errmsg = this.i18n.tr("No job status found associated with the given job ID: {0}", jobId);
+            throw new NotFoundException(errmsg);
+        }
+
+        return this.translator.translate(status, AsyncJobStatusDTO.class);
+    }
+
+    @ApiOperation(
+        value = "cancels the job associated with the specified job ID",
+        response = AsyncJobStatusDTO.class)
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @DELETE
+    @Path("/{job_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public AsyncJobStatusDTO cancelJob(
+        @PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
+
+        if (jobId == null || jobId.isEmpty()) {
+            String errmsg = this.i18n.tr("Job ID is null or empty");
+            throw new BadRequestException(errmsg);
+        }
+
+        try {
+            // Due to the race conditions that could occur here, we'll just try and recover on
+            // state exception.
+            AsyncJobStatus status = this.jobManager.cancelJob(jobId);
+            if (status == null) {
+                String errmsg = this.i18n.tr("No job status found associated with the given job ID: {0}",
+                    jobId);
+
+                throw new NotFoundException(errmsg);
+            }
+
+            return this.translator.translate(status, AsyncJobStatusDTO.class);
+        }
+        catch (IllegalStateException e) {
+            // Job is already in a terminal state.
+            String errmsg = this.i18n.tr("Job {0} is already in a terminal state or otherwise cannot be " +
+                "canceled at this time", jobId);
+            throw new BadRequestException(errmsg, e);
+        }
+    }
+
+    @ApiOperation(
+        value = "cleans up terminal jobs matching the provided criteria",
+        response = AsyncJobStatusDTO.class)
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @DELETE
+    @Path("/")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public int cleanupTerminalJobs(
+        @QueryParam("id") Set<String> ids,
+        @QueryParam("key") Set<String> keys,
+        @QueryParam("state") Set<String> states,
+        @QueryParam("owner") Set<String> ownerKeys,
+        @QueryParam("principal") Set<String> principals,
+        @QueryParam("origin") Set<String> origins,
+        @QueryParam("executor") Set<String> executors,
+        @QueryParam("after") @DateFormat Date after,
+        @QueryParam("before") @DateFormat Date before,
+        @QueryParam("force") @DefaultValue("false") boolean force) {
+
+        // Convert state names
+        Set<JobState> jobStates = this.translateJobStateNames(states);
+        Set<String> ownerIds = this.translateOwnerKeys(ownerKeys);
+
+        this.validateDateRange(after, before);
+
+        // TODO: Should we bother checking the other params as well? Seems like they're
+        // self-validating
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobIds(ids)
+            .setJobKeys(keys)
+            .setJobStates(jobStates)
+            .setOwnerIds(ownerIds)
+            .setPrincipalNames(principals)
+            .setOrigins(origins)
+            .setExecutors(executors)
+            .setStartDate(after)
+            .setEndDate(before);
+
+        int count;
+
+        if (force) {
+            // If we're forcing the cleanup (see: deletion), skip the job manager and go right to
+            // the DB, doing whatever unchecked badness the user has decided to do with this.
+            count = this.jobCurator.deleteJobs(queryBuilder);
+        }
+        else {
+            count = this.jobManager.cleanupJobs(queryBuilder);
+        }
+
+        return count;
+    }
+
+    @ApiOperation(
+        value = "schedules a job using the specified key and job properties",
+        response = AsyncJobStatusDTO.class)
+    @ApiResponses({
+        @ApiResponse(code = 400, message = ""),
+        @ApiResponse(code = 404, message = "")
+    })
+    @POST
+    @Path("schedule/{job_key}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public AsyncJobStatusDTO scheduleJob(
+        @PathParam("job_key") String jobKey) {
+
+        if (jobKey == null || jobKey.isEmpty()) {
+            String errmsg = this.i18n.tr("Job key is null or empty");
+            throw new BadRequestException(errmsg);
+        }
+
+        // Until we come up with a secure and consistent way to provide type-safe parameters to
+        // the jobs, we'll follow the triggerJob method from the old resource and limit this to
+        // explicitly allowed jobs.
+        if (!this.jobIsSchedulable(jobKey)) {
+            String errmsg = this.i18n.tr("Job \"{0}\" is not configured for manual scheduling", jobKey);
+            throw new ForbiddenException(errmsg);
+        }
+
+        // Impl note: At the time of writing, we don't have any other details to add here.
+        JobConfig config = JobConfig.forJob(jobKey);
+
+        // TODO: figure out a relatively safe way of adding arbitrary parameters to the job
+        // for (Object entry : request.getParameterMap().entrySet()) {
+        //     Map.Entry<String, String[]> queryParam = (Map.Entry<String, String[]>) entry;
+
+        //     String param = queryParam.getKey();
+        //     String[] vals = queryParam.getValue();
+
+        //     config.setJobArgument(param, vals.length > 1 ? vals : vals[0]);
+        // }
+
+        try {
+            AsyncJobStatus status = this.jobManager.queueJob(config);
+            return this.translator.translate(status, AsyncJobStatusDTO.class);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                jobKey);
+
+            throw new IseException(errmsg, e);
+        }
+    }
+
+    /**
+     * Checks if the provided job key is schedulable according to Candlepin's current configuration.
+     *
+     * @param jobKey
+     *  the job key to check
+     *
+     * @return
+     *  true if the job can be scheduled; false otherwise
+     */
+    private boolean jobIsSchedulable(String jobKey) {
+        if (this.triggerableJobKeys == null) {
+            this.triggerableJobKeys = new HashSet<>();
+
+            String jobList = this.config.getString(ConfigProperties.ASYNC_JOBS_TRIGGERABLE_JOBS, null);
+            if (jobList != null) {
+                for (String job : jobList.split("\\s*,\\s*")) {
+                    if (job.length() > 0) {
+                        this.triggerableJobKeys.add(job.toLowerCase());
+                    }
+                }
+            }
+        }
+
+        return jobKey != null && this.triggerableJobKeys.contains(jobKey.toLowerCase());
     }
 
 
     /**
-     * Returns false if only one of the strings is not empty, otherwise
-     * returns true.
-     * @param owner param1
-     * @param uuid param2
-     * @param pname param3
-     * @return a boolean
+     * Translates the given job state names into a set of job states. If any of the provided states
+     * cannot be translated, this method throws a NotFoundException with an error message containing
+     * the failed names. If the provided collection of state names is null, this method returns
+     * null.
+     *
+     * @param stateNames
+     *  a collection of job state names to translate
+     *
+     * @throws NotFoundException
+     *  if the provided collection of state names contains one or more names that cannot be
+     *  translated
+     *
+     * @return
+     *  a set of JobStates representing the provided state names
      */
-    private boolean ensureOnlyOne(String owner, String uuid, String pname) {
-        String[] params = new String[3];
-        params[0] = owner;
-        params[1] = uuid;
-        params[2] = pname;
+    private Set<JobState> translateJobStateNames(Collection<String> stateNames) {
+        Set<JobState> jobStates = null;
 
-        boolean found = false;
+        if (stateNames != null) {
+            jobStates = new HashSet<>();
+            Set<String> failedNames = new HashSet<>();
 
-        for (String s : params) {
-            if (found && !StringUtils.isEmpty(s)) {
-                return false;
+            for (String name : stateNames) {
+                try {
+                    jobStates.add(JobState.valueOf(name.toUpperCase()));
+                }
+                catch (IllegalArgumentException | NullPointerException e) {
+                    failedNames.add(name);
+                }
             }
-            else if (!StringUtils.isEmpty(s)) {
-                found = true;
-            }
-        }
 
-        return true;
-    }
-
-    @ApiOperation(notes = "Retrieves a list of Job Status", value = "getStatuses",
-        response = JobStatus.class, responseContainer = "list")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<JobStatusDTO> getStatuses(
-        @QueryParam("owner") String ownerKey,
-        @QueryParam("consumer") String uuid,
-        @QueryParam("principal") String principalName) {
-
-        boolean allParamsEmpty = StringUtils.isEmpty(ownerKey) &&
-            StringUtils.isEmpty(uuid) &&
-            StringUtils.isEmpty(principalName);
-
-        // make sure we only specified one
-        if (allParamsEmpty || !ensureOnlyOne(ownerKey, uuid, principalName)) {
-            throw new BadRequestException(i18n.tr("You must specify exactly " +
-                "one of owner key, unit UUID, or principal name."));
-        }
-
-        CandlepinQuery<JobStatus> statuses = null;
-        if (!StringUtils.isEmpty(ownerKey)) {
-            statuses = curator.findByOwnerKey(ownerKey);
-        }
-        else if (!StringUtils.isEmpty(uuid)) {
-            statuses = curator.findByConsumerUuid(uuid);
-        }
-        else if (!StringUtils.isEmpty(principalName)) {
-            statuses = curator.findByPrincipalName(principalName);
-        }
-
-        if (statuses == null) {
-            throw new NotFoundException("");
-        }
-
-        return this.translator.translateQuery(
-            statuses.transform(jobStatus -> jobStatus.cloakResultData(true)), JobStatusDTO.class);
-    }
-
-    @ApiOperation(notes = "Retrieves the Scheduler Status", value = "getSchedulerStatus")
-    @GET
-    @Path("scheduler")
-    @Produces(MediaType.APPLICATION_JSON)
-    public SchedulerStatusDTO getSchedulerStatus() {
-        SchedulerStatusDTO ss = new SchedulerStatusDTO();
-        try {
-            ss.setRunning(pk.getSchedulerStatus());
-        }
-        catch (PinsetterException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return ss;
-    }
-
-    @ApiOperation(notes = "Updates the Scheduler Status", value = "setSchedulerStatus")
-    @ApiResponses({ @ApiResponse(code = 500, message = "") })
-    @POST
-    @Path("scheduler")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public SchedulerStatusDTO setSchedulerStatus(boolean running) {
-        try {
-            if (running) {
-                pk.unpauseScheduler();
-            }
-            else {
-                pk.pauseScheduler();
+            if (failedNames.size() > 0) {
+                String errmsg = this.i18n.tr("Unknown job states: {0}", failedNames);
+                throw new NotFoundException(errmsg);
             }
         }
-        catch (PinsetterException pe) {
-            throw new IseException(i18n.tr("Error setting scheduler status"));
-        }
-        return getSchedulerStatus();
+
+        return jobStates;
     }
 
-    @ApiOperation(notes = "Re-trigger cron jobs", value = "retrigger")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 500, message = "") })
-    @POST
-    @Path("retrigger/{task}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @SuppressWarnings("unchecked")
-    public void retrigger(@PathParam("task") String task) {
+    /**
+     * Translates the provided owner keys in a way that doesn't expose information about the
+     * (non-)existence of owners by key, nor widens the queries when keys are provided that don't
+     * represent existing owners.
+     *
+     * Keys provided to this method will be resolved using a (slow) lookup of owners. Keys
+     * representing existing owners will be converted to the owner ID as appropriate. Invalid keys
+     * will be left as-is to avoid reducing the lookup to nothing.
+     *
+     * The special case of the string "null" will be converted to a null value to allow looking up
+     * jobs that aren't associated with an owner.
+     *
+     * @param ownerKeys
+     *  a collection of owner keys to translate
+     *
+     * @return
+     *  a set of owner IDs translated from the given keys
+     */
+    private Set<String> translateOwnerKeys(Collection<String> ownerKeys) {
+        Set<String> ownerIds = null;
 
-        /*
-         * at the time of implementing this API, the only jobs that
-         * are permissible are cron jobs.
-         */
-        Class cronJobClass = getCronJobClass(task);
+        if (ownerKeys != null && !ownerKeys.isEmpty()) {
+            Map<String, Owner> ownerMap = new HashMap<>();
+            ownerIds = new HashSet<>();
 
-        try {
-            pk.retriggerCronJob(task, cronJobClass);
-        }
-        catch (PinsetterException e) {
-            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", task,
-                e.getMessage()));
-        }
-    }
+            for (Owner owner : this.ownerCurator.getByKeys(ownerKeys)) {
+                ownerMap.put(owner.getKey(), owner);
+            }
 
-    @ApiOperation(notes = "Fires cron jobs asynchronously and immediately", value = "schedule")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 500, message = "") })
-    @POST
-    @Path("schedule/{task}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @SuppressWarnings("unchecked")
-    public JobStatusDTO schedule(@PathParam("task") String task) {
-
-        Class cronJobClass = getCronJobClass(task);
-        try {
-            /*
-             * at the time of implementing this API, the only jobs that
-             * are permissible are cron jobs.
-             */
-            return this.translator.translate(
-                pk.scheduleSingleJob(cronJobClass, Util.generateUUID()), JobStatusDTO.class);
-        }
-        catch (PinsetterException e) {
-            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", task,
-                e.getMessage()));
-        }
-    }
-
-    private Class getCronJobClass(String task) {
-        String className = "org.candlepin.pinsetter.tasks." + task;
-        try {
-            for (String permissibleJob : ConfigProperties.DEFAULT_TASK_LIST) {
-                if (className.equalsIgnoreCase(permissibleJob)) {
-                    return Class.forName(permissibleJob);
+            for (String key : ownerKeys) {
+                if (NULL_OWNER_KEY.equalsIgnoreCase(key)) {
+                    ownerIds.add(null);
+                }
+                else {
+                    Owner owner = ownerMap.get(key);
+                    ownerIds.add(owner != null ? owner.getId() : key);
                 }
             }
         }
-        catch (ClassNotFoundException e) {
-            throw new IseException(i18n.tr("Error trying to schedule {0}: {1}", className,
-                e.getMessage()));
-        }
-        throw new BadRequestException(i18n.tr("Not a permissible job: {0}. Only {1} are permissible",
-            task, prettyPrintJobs(ConfigProperties.DEFAULT_TASK_LIST)));
+
+        return ownerIds;
     }
 
-    private String prettyPrintJobs(String... jobs) {
-        List<String> jobNames = new ArrayList<>();
-        for (String job : jobs) {
-            jobNames.add(StringUtils.substringAfterLast(job, "."));
+    /**
+     * Checks that the provided date range is a logical range, by ensuring it is null, open-ended,
+     * or in chronological order.
+     *
+     * @param start
+     *  the beginning of the date range
+     *
+     * @param end
+     *  the end of the date range
+     *
+     * @throws BadRequestException
+     *  if the start and end dates are not null and the start date is after the end date
+     */
+    private void validateDateRange(Date start, Date end) {
+        if (start != null && end != null) {
+            if (start.compareTo(end) > 0) {
+                String errmsg = this.i18n.tr(
+                    "Invalid date range; start date occurs after the end date: {0} > {1}", start, end);
+
+                throw new BadRequestException(errmsg);
+            }
         }
-        return StringUtils.join(jobNames, ", ");
     }
 
-    @ApiOperation(notes = "Retrieves a single Job Status", value = "getStatus")
-    @GET
-    @Path("/{job_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public JobStatusDTO getStatus(@PathParam("job_id") @Verify(JobStatus.class) String jobId,
-        @QueryParam("result_data") @DefaultValue("false") boolean resultData) {
-        JobStatus js = curator.get(jobId);
-        js.cloakResultData(!resultData);
-        return this.translator.translate(js, JobStatusDTO.class);
-    }
-
-    @ApiOperation(notes = "Cancels a Job Status", value = "cancel")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @DELETE
-    @Path("/{job_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public JobStatusDTO cancel(@PathParam("job_id") @Verify(JobStatus.class) String jobId) {
-        JobStatus j = curator.get(jobId);
-        if (j.getState().equals(JobState.CANCELED)) {
-            throw new BadRequestException(i18n.tr("job already canceled"));
-        }
-        if (j.isDone()) {
-            throw new BadRequestException(i18n.tr("cannot cancel a job that is in a finished state"));
-        }
-        return this.translator.translate(curator.cancel(jobId), JobStatusDTO.class);
-    }
-
-    @ApiOperation(notes = "Retrieves a Job Status and Removes if finished",
-        value = "getStatusAndDeleteIfFinished")
-    @POST
-    @Path("/{job_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    public JobStatusDTO getStatusAndDeleteIfFinished(
-        @PathParam("job_id") @Verify(JobStatus.class) String jobId) {
-        JobStatus status = curator.get(jobId);
-
-        if (status != null && status.getState() == JobState.FINISHED) {
-            curator.delete(status);
-        }
-
-        return this.translator.translate(status, JobStatusDTO.class);
-    }
 }

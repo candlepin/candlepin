@@ -24,6 +24,8 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+
+
 /**
  * CandlepinRequestScope
  *
@@ -34,8 +36,8 @@ import java.util.Map;
 public class CandlepinRequestScope implements Scope {
 
     public void enter() {
-        ResteasyProviderFactory.pushContext(CandlepinRequestScopeData.class,
-            new CandlepinRequestScopeData());
+        CandlepinRequestScopeData data = new CandlepinRequestScopeData();
+        ResteasyProviderFactory.pushContext(CandlepinRequestScopeData.class, data);
     }
 
     public void exit() {
@@ -59,11 +61,13 @@ public class CandlepinRequestScope implements Scope {
     }
 
     private <T> Map<Key<?>, Object> getScopedObjectMap(Key<T> key) {
-        CandlepinRequestScopeData scopeData = ResteasyProviderFactory.getContextData(
-            CandlepinRequestScopeData.class);
+        CandlepinRequestScopeData scopeData = ResteasyProviderFactory
+            .getContextData(CandlepinRequestScopeData.class);
+
         if (scopeData == null) {
             throw new OutOfScopeException("Cannot access " + key + " outside of a scoping block");
         }
+
         return scopeData.get();
     }
 

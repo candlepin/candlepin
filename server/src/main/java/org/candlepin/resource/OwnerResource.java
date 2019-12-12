@@ -14,6 +14,12 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.HealEntireOrgJob;
+import org.candlepin.async.tasks.RefreshPoolsJob;
+import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -40,6 +46,7 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -48,15 +55,14 @@ import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
@@ -74,7 +80,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SystemPurposeAttributeType;
@@ -86,10 +91,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.pinsetter.tasks.HealEntireOrgJob;
-import org.candlepin.pinsetter.tasks.ImportJob;
-import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
-import org.candlepin.pinsetter.tasks.UndoImportsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
@@ -117,7 +118,6 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -175,8 +175,9 @@ public class OwnerResource {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
 
+    private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
+
     private OwnerCurator ownerCurator;
-    private ProductCurator productCurator;
     private OwnerInfoCurator ownerInfoCurator;
     private ActivationKeyCurator activationKeyCurator;
     private OwnerServiceAdapter ownerService;
@@ -190,8 +191,6 @@ public class OwnerResource {
     private ImportRecordCurator importRecordCurator;
     private PoolManager poolManager;
     private OwnerManager ownerManager;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private EntitlementCertificateCurator entitlementCertCurator;
     private EntitlementCurator entitlementCurator;
     private UeberCertificateCurator ueberCertCurator;
     private UeberCertificateGenerator ueberCertGenerator;
@@ -204,11 +203,10 @@ public class OwnerResource {
     private ConsumerTypeValidator consumerTypeValidator;
     private OwnerProductCurator ownerProductCurator;
     private ModelTranslator translator;
-    private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
+    private JobManager jobManager;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
-        ProductCurator productCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
         I18n i18n,
@@ -221,8 +219,6 @@ public class OwnerResource {
         ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
-        ConsumerTypeCurator consumerTypeCurator,
-        EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
         UeberCertificateCurator ueberCertCurator,
         UeberCertificateGenerator ueberCertGenerator,
@@ -235,10 +231,10 @@ public class OwnerResource {
         ResolverUtil resolverUtil,
         ConsumerTypeValidator consumerTypeValidator,
         OwnerProductCurator ownerProductCurator,
-        ModelTranslator translator) {
+        ModelTranslator translator,
+        JobManager jobManager) {
 
         this.ownerCurator = ownerCurator;
-        this.productCurator = productCurator;
         this.ownerInfoCurator = ownerInfoCurator;
         this.activationKeyCurator = activationKeyCurator;
         this.consumerCurator = consumerCurator;
@@ -251,8 +247,6 @@ public class OwnerResource {
         this.manifestManager = manifestManager;
         this.ownerManager = ownerManager;
         this.eventAdapter = eventAdapter;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.entitlementCertCurator = entitlementCertCurator;
         this.entitlementCurator = entitlementCurator;
         this.ueberCertCurator = ueberCertCurator;
         this.ueberCertGenerator = ueberCertGenerator;
@@ -266,6 +260,7 @@ public class OwnerResource {
         this.consumerTypeValidator = consumerTypeValidator;
         this.ownerProductCurator = ownerProductCurator;
         this.translator = translator;
+        this.jobManager = jobManager;
     }
 
     /**
@@ -1088,7 +1083,7 @@ public class OwnerResource {
 
     /**
      * Heals an Owner
-     * <p>
+     *
      * Starts an asynchronous healing for the given Owner. At the end of the
      * process the idea is that all of the consumers in the owned by the Owner
      * will be up to date.
@@ -1106,12 +1101,16 @@ public class OwnerResource {
         " At the end of the process the idea is that all of the consumers " +
         "in the owned by the Owner will be up to date.", value = "Heal owner")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public JobDetail healEntire(
-        @ApiParam("ownerKey id of the owner to be healed.")
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+    public AsyncJobStatusDTO healEntire(
+        @ApiParam("ownerKey id of the owner to be healed.") @PathParam("owner_key") @Verify(Owner.class)
+        String ownerKey)
+        throws JobException {
 
         Owner owner = findOwnerByKey(ownerKey);
-        return HealEntireOrgJob.healEntireOrg(owner, new Date());
+        JobConfig config = HealEntireOrgJob.createJobConfig().setOwner(owner).setEntitleDate(new Date());
+
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /**
@@ -1316,7 +1315,7 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public void deleteLogLevel(@PathParam("owner_key") String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
-        owner.setLogLevel(null);
+        owner.setLogLevel((String) null);
         ownerCurator.merge(owner);
     }
 
@@ -1629,10 +1628,10 @@ public class OwnerResource {
         "an on-site deployment is just a no-op.", value = "Update Subscription")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 202, message = "") })
-    public JobDetail refreshPools(
+    public AsyncJobStatusDTO refreshPools(
         @PathParam("owner_key") String ownerKey,
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner,
-        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) throws JobException {
 
         Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
@@ -1649,7 +1648,12 @@ public class OwnerResource {
             return null;
         }
 
-        return RefreshPoolsJob.forOwner(owner, lazyRegen);
+        JobConfig config = RefreshPoolsJob.createJobConfig()
+            .setOwner(owner)
+            .setLazyRegeneration(lazyRegen);
+
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /**
@@ -1835,8 +1839,9 @@ public class OwnerResource {
         "information which is global to the candlepin server. This import data is *not* " +
         "undone, we assume that updates to this data can be safely kept. ", value = "Undo Imports")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public JobDetail undoImports(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey, @Context Principal principal) {
+    public AsyncJobStatusDTO undoImports(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey, @Context Principal principal)
+        throws JobException {
 
         Owner owner = findOwnerByKey(ownerKey);
 
@@ -1844,7 +1849,11 @@ public class OwnerResource {
             throw new NotFoundException("No import found for owner " + ownerKey);
         }
 
-        return UndoImportsJob.forOwner(owner, false);
+        JobConfig config = UndoImportsJob.createJobConfig()
+            .setOwner(owner);
+
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /**
@@ -1946,10 +1955,10 @@ public class OwnerResource {
         @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 500, message = ""),
         @ApiResponse(code = 409, message = "")})
-    public JobDetail importManifestAsync(
+    public AsyncJobStatusDTO importManifestAsync(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") String[] overrideConflicts,
-        MultipartInput input) {
+        MultipartInput input) throws JobException {
 
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
         UploadMetadata fileData = new UploadMetadata();
@@ -1959,8 +1968,11 @@ public class OwnerResource {
             fileData = getArchiveFromResponse(input);
             String archivePath = fileData.getData().getAbsolutePath();
             log.info("Running async import of archive {} for owner {}", archivePath, owner.getDisplayName());
-            return manifestManager.importManifestAsync(owner, fileData.getData(),
+            JobConfig config =  manifestManager.importManifestAsync(owner, fileData.getData(),
                 fileData.getUploadedFilename(), overrides);
+
+            AsyncJobStatus job = this.jobManager.queueJob(config);
+            return this.translator.translate(job, AsyncJobStatusDTO.class);
         }
         catch (IOException e) {
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());

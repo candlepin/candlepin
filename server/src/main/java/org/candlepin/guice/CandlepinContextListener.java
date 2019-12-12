@@ -18,6 +18,7 @@ import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
 import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
 import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
+import org.candlepin.async.JobManager;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ActiveMQContextListener;
 import org.candlepin.audit.QpidConnection;
@@ -33,7 +34,7 @@ import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
-import org.candlepin.pinsetter.core.PinsetterContextListener;
+import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
@@ -84,8 +85,10 @@ import javax.servlet.ServletContextEvent;
 public class CandlepinContextListener extends GuiceResteasyBootstrapServletContextListener {
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
+    private CPMContextListener cpmContextListener;
+
     private ActiveMQContextListener activeMQContextListener;
-    private PinsetterContextListener pinsetterListener;
+    private JobManager jobManager;
     private LoggerContextListener loggerListener;
 
     // a bit of application-initialization code. Not sure if this is the
@@ -139,13 +142,26 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
     @Override
     public void withInjector(Injector injector) {
+        try {
+            this.initializeSubsystems(injector);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void initializeSubsystems(Injector injector) throws Exception {
         // Must call super.contextInitialized() before accessing injector
         insertValidationEventListeners(injector);
         ResourceLocatorMap map = injector.getInstance(ResourceLocatorMap.class);
         map.init();
 
-        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
+        // make sure our session factory is initialized before we attempt to start something
+        // that relies upon it
+        this.cpmContextListener = injector.getInstance(CPMContextListener.class);
+        this.cpmContextListener.initialize(injector);
 
+        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             if (!config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
                 QpidQmf qmf = injector.getInstance(QpidQmf.class);
                 QpidStatus status = qmf.getStatus();
@@ -185,14 +201,14 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         }
 
-        pinsetterListener = injector.getInstance(PinsetterContextListener.class);
-        pinsetterListener.contextInitialized();
+        // Setup the job manager
+        this.jobManager = injector.getInstance(JobManager.class);
+        this.jobManager.initialize();
+        this.jobManager.start();
 
         loggerListener = injector.getInstance(LoggerContextListener.class);
 
-        /**
-         * Custom ModelConverter to handle our specific serialization requirements
-         */
+        // Custom ModelConverter to handle our specific serialization requirements
         ModelConverters.getInstance()
             .addConverter(injector.getInstance(CandlepinSwaggerModelConverter.class));
 
@@ -207,16 +223,33 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     @Override
     public void contextDestroyed(ServletContextEvent event) {
         super.contextDestroyed(event);
-        if (config.getBoolean(ACTIVEMQ_ENABLED)) {
-            activeMQContextListener.contextDestroyed();
+
+        try {
+            this.destroySubsystems();
         }
-        pinsetterListener.contextDestroyed();
-        loggerListener.contextDestroyed();
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void destroySubsystems() throws Exception {
+        // Tear down the job system
+        this.jobManager.shutdown();
 
         // if amqp is enabled, close all connections.
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             Util.closeSafely(injector.getInstance(AMQPBusPublisher.class), "AMQPBusPublisher");
         }
+
+        if (config.getBoolean(ACTIVEMQ_ENABLED)) {
+            activeMQContextListener.contextDestroyed();
+        }
+
+        // Make sure this is called after everything else, as other objects may rely on the
+        // messaging subsystem
+        this.cpmContextListener.destroy();
+
+        this.loggerListener.contextDestroyed();
     }
 
     protected void setCapabilities(Configuration config) {

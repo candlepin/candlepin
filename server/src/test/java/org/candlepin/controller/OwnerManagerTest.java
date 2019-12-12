@@ -47,6 +47,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class OwnerManagerTest {
     private OwnerManager ownerManager;
+
     @Mock
     private ConsumerCurator consumerCurator;
     @Mock
@@ -79,6 +80,7 @@ public class OwnerManagerTest {
     private UeberCertificateCurator uberCertificateCurator;
     @Mock
     private OwnerServiceAdapter ownerServiceAdapter;
+
 
     @Before
     public void setUp() {

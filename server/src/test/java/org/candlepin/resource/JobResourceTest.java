@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,263 +14,1336 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.JobManager.ManagerState;
+import org.candlepin.async.StateManagementException;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.StandardTranslator;
-import org.candlepin.dto.api.v1.JobStatusDTO;
-import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.JobCurator;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.TransformedCandlepinQuery;
-import org.candlepin.pinsetter.core.PinsetterException;
-import org.candlepin.pinsetter.core.PinsetterKernel;
-import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.pinsetter.core.model.JobStatus.JobState;
-import org.candlepin.test.MockResultIterator;
-import org.candlepin.util.ElementTransformer;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.v1.SchedulerStatusDTO;
+import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatus.JobState;
+import org.candlepin.model.AsyncJobStatusCurator;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.Owner;
+import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import org.mockito.ArgumentCaptor;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+
 
 /**
- * JobResourceTest
+ * Test suite for the JobResource class
  */
-public class JobResourceTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+public class JobResourceTest extends DatabaseTestFixture {
 
-    private JobResource jobResource;
-    @Mock private JobCurator jobCurator;
-    @Mock private OwnerCurator ownerCurator;
-    @Mock private PinsetterKernel pinsetterKernel;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
-    @Mock private EnvironmentCurator environmentCurator;
-
+    private Configuration config;
     private I18n i18n;
-    private ModelTranslator translator;
 
-    @Before
-    public void init() {
-        MockitoAnnotations.initMocks(this);
-        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        translator = new StandardTranslator(this.consumerTypeCurator,
-            this.environmentCurator,
-            this.ownerCurator);
-        jobResource = new JobResource(jobCurator, pinsetterKernel, i18n, translator);
+    private JobManager jobManager;
+    private AsyncJobStatusCurator jobCurator;
+
+
+    @BeforeEach
+    public void init() throws Exception {
+        super.init();
+
+        this.config = new CandlepinCommonTestConfig();
+        this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
+        this.jobManager = mock(JobManager.class);
+        this.jobCurator = mock(AsyncJobStatusCurator.class);
     }
 
-    private void mockCPQueryTransform(final CandlepinQuery query) {
-        doAnswer(new Answer<CandlepinQuery>() {
-            @Override
-            public CandlepinQuery answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                return new TransformedCandlepinQuery(query, (ElementTransformer) args[0]);
+    private JobResource buildJobResource() {
+        return new JobResource(this.config, this.i18n, this.modelTranslator, this.jobManager,
+            this.jobCurator, this.ownerCurator);
+    }
+
+    public static Stream<Arguments> schedulerStatusTestArgProvider() {
+        List<Arguments> args = new LinkedList<>();
+
+        for (ManagerState state : ManagerState.values()) {
+            args.add(Arguments.of(state, state == ManagerState.RUNNING));
+        }
+
+        return args.stream();
+    }
+
+    public static Stream<Arguments> emptyInputProvider() {
+        return Stream.of(
+            Arguments.of((String) null),
+            Arguments.of(""));
+    }
+
+    @ParameterizedTest
+    @EnumSource(ManagerState.class)
+    public void testGetSchedulerStatus(ManagerState state) {
+        doReturn(state).when(this.jobManager).getManagerState();
+        boolean expected = (state == ManagerState.RUNNING);
+
+        JobResource resource = this.buildJobResource();
+        SchedulerStatusDTO output = resource.getSchedulerStatus();
+
+        assertNotNull(output);
+        assertEquals(expected, output.isRunning());
+    }
+
+    @Test
+    public void testSetSchedulerStatusToRunning() {
+        doReturn(ManagerState.RUNNING).when(this.jobManager).getManagerState();
+
+        JobResource resource = this.buildJobResource();
+        SchedulerStatusDTO output = resource.setSchedulerStatus(true);
+
+        assertNotNull(output);
+        assertTrue(output.isRunning());
+
+        verify(this.jobManager, times(1)).resume();
+    }
+
+    @Test
+    public void testSetSchedulerStatusToPaused() {
+        doReturn(ManagerState.SUSPENDED).when(this.jobManager).getManagerState();
+
+        JobResource resource = this.buildJobResource();
+        SchedulerStatusDTO output = resource.setSchedulerStatus(false);
+
+        assertNotNull(output);
+        assertFalse(output.isRunning());
+
+        verify(this.jobManager, times(1)).suspend();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "true", "false" })
+    public void testSetSchedulerIllegalStateExceptionsAreMaskedWithIseExceptions(boolean running) {
+        doThrow(new IllegalStateException("testing start op failure")).when(this.jobManager).resume();
+        doThrow(new IllegalStateException("testing suspend op failure")).when(this.jobManager).suspend();
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(IseException.class, () -> resource.setSchedulerStatus(running));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "true", "false" })
+    public void testSetSchedulerStateManagementExceptionsAreMaskedWithIseExceptions(boolean running) {
+        doThrow(new StateManagementException(ManagerState.SUSPENDED, ManagerState.RUNNING,
+            "testing start op failure")).when(this.jobManager).resume();
+        doThrow(new StateManagementException(ManagerState.RUNNING, ManagerState.SUSPENDED,
+            "testing suspend op failure")).when(this.jobManager).suspend();
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(IseException.class, () -> resource.setSchedulerStatus(running));
+    }
+
+    public static Stream<Arguments> targetJobStatusesSimpleCollectionProvider() {
+        return Stream.of(
+            Arguments.of((Set) null),
+            Arguments.of(Util.asSet()),
+            Arguments.of(Util.asSet((String) null)),
+            Arguments.of(Util.asSet("")),
+            Arguments.of(Util.asSet("value-1")),
+            Arguments.of(Util.asSet("value-1", "value-2", "value-3")));
+    }
+
+    public static Stream<Arguments> targetJobStatusesWithJobStatesProvider() {
+        List<Arguments> args = new LinkedList<>();
+
+        List<Set<JobState>> stateBlocks = new LinkedList<>();
+
+        for (int i = 1; i <= 3; ++i) {
+            JobState[] states = JobState.values();
+            Set<JobState> block = new HashSet<>();
+
+            for (int j = 0; j < i; ++j) {
+                block.add(states[j]);
             }
-        }).when(query).transform(any(ElementTransformer.class));
-    }
 
-    @Test
-    public void getStatusesNoArgs() {
-        try {
-            jobResource.getStatuses(null, null, null);
-            fail("Should have thrown a BadRequestException");
+            stateBlocks.add(block);
         }
-        catch (BadRequestException e) {
-            //expected, return
-            return;
+
+        // Mixed case converter
+        Function<JobState, String> mixedCaseMapper = (JobState state) -> {
+            String name = state.name();
+
+            StringBuilder builder = new StringBuilder(name.length());
+            boolean upper = true;
+
+            for (char chr : name.toCharArray()) {
+                builder.append(upper ? Character.toUpperCase(chr) : chr);
+                upper = !upper;
+            }
+
+            return builder.toString();
+        };
+
+        // Process the blocks, adding lower case, upper case and mixed case
+        // variants to the arg list
+        for (Set<JobState> block : stateBlocks) {
+            Set<String> names;
+
+            // Lower case
+            names = block.stream()
+                .map(state -> state.name().toLowerCase())
+                .collect(Collectors.toSet());
+
+            args.add(Arguments.of(names, block));
+
+            // Upper case
+            names = block.stream()
+                .map(state -> state.name().toUpperCase())
+                .collect(Collectors.toSet());
+
+            args.add(Arguments.of(names, block));
+
+            // Mixed case
+            names = block.stream()
+                .map(mixedCaseMapper)
+                .collect(Collectors.toSet());
+
+            args.add(Arguments.of(names, block));
+        }
+
+        return args.stream();
+    }
+
+    public static Stream<Arguments> targetJobStatusesWithInvalidJobStatesProvider() {
+        return Stream.of(
+            Arguments.of((String) null),
+            Arguments.of(""),
+            Arguments.of("bad job state"));
+    }
+
+    public static Stream<Arguments> targetJobStatusesByDatesProvider() {
+        return Stream.of(
+            Arguments.of((Date) null),
+            Arguments.of(new Date()),
+            Arguments.of(Util.yesterday()),
+            Arguments.of(Util.tomorrow()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testListJobStatusesByJobId(Set<String> ids) {
+        AsyncJobStatus status1 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status2 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status3 = mock(AsyncJobStatus.class);
+        List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
+
+        doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(ids, null, null, null, null,
+            null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertEquals(ids, builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testListJobStatusesByJobKey(Set<String> values) {
+        AsyncJobStatus status1 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status2 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status3 = mock(AsyncJobStatus.class);
+        List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
+
+        doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, values, null, null, null,
+            null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertEquals(values, builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesWithJobStatesProvider")
+    public void testListJobStatusesWithJobStates(Set<String> stateNames, Set<JobState> expected) {
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, stateNames, null, null,
+            null, null, null, null);
+
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        Collection<JobState> states = builder.getJobStates();
+        assertNotNull(states);
+        assertEquals(expected, states);
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesWithInvalidJobStatesProvider")
+    public void testListJobStatusesWithInvalidJobStates(String badStateName) {
+        Set<String> stateNames = Util.asSet(badStateName);
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(NotFoundException.class, () ->
+            resource.listJobStatuses(null, null, stateNames, null, null, null, null, null, null));
+    }
+
+    @Test
+    public void testListJobStatusesWithValidOwnerKeys() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+
+        Set<String> keys = Util.asSet(owner1.getKey(), owner2.getKey(), owner3.getKey());
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, keys, null,
+            null, null, null, null);
+
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        Collection<String> ownerIds = builder.getOwnerIds();
+        assertNotNull(ownerIds);
+        assertEquals(3, ownerIds.size());
+        assertTrue(ownerIds.contains(owner1.getId()));
+        assertTrue(ownerIds.contains(owner2.getId()));
+        assertTrue(ownerIds.contains(owner3.getId()));
+    }
+
+    @Test
+    public void testListJobStatusesWithInvalidOwnerKeys() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Set<String> keys = Util.asSet("", owner1.getKey(), "bad_key", owner2.getKey(), null);
+        Set<String> expected = Util.asSet("", owner1.getId(), "bad_key", owner2.getId(), null);
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, keys, null,
+            null, null, null, null);
+
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        Collection<String> ownerIds = builder.getOwnerIds();
+        assertNotNull(ownerIds);
+
+        assertEquals(expected.size(), ownerIds.size());
+        for (String id : expected) {
+            assertTrue(ownerIds.contains(id));
         }
     }
 
     @Test
-    public void schedulerPausedTest() throws PinsetterException {
-        when(pinsetterKernel.getSchedulerStatus()).thenReturn(true);
-        assertTrue(jobResource.getSchedulerStatus().isRunning());
+    public void testListJobStatusesConvertsNullOwnerKeyStringToNullRef() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
 
-        when(pinsetterKernel.getSchedulerStatus()).thenReturn(false);
-        assertFalse(jobResource.getSchedulerStatus().isRunning());
-    }
+        Set<String> keys = Util.asSet(owner1.getKey(), "null", owner2.getKey());
+        Set<String> expected = Util.asSet(owner1.getId(), null, owner2.getId());
 
-    @Test
-    public void getStatusAndDeleteIfFinishedTest() {
-        //nothing to delete..
-        when(jobCurator.get("bogus_id")).thenReturn(new JobStatus());
-        jobResource.getStatusAndDeleteIfFinished("foobar");
-        verify(jobCurator, never()).delete(any(JobStatus.class));
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
 
-        //now lets make a deletable JobStatus
-        JobStatus finishedJobStatus = new JobStatus();
-        finishedJobStatus.setState(JobState.FINISHED);
-        when(jobCurator.get("deletable_id")).thenReturn(finishedJobStatus);
-        jobResource.getStatusAndDeleteIfFinished("deletable_id");
-        verify(jobCurator, atLeastOnce()).delete(finishedJobStatus);
-    }
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, keys, null,
+            null, null, null, null);
 
-    @Test
-    public void cancelJob() {
-        //we are just testing that the cancellation gets into the db
-        JobStatus createdJobStatus = new JobStatus();
-        createdJobStatus.setState(JobState.CREATED);
-        JobStatus canceledJobStatus = new JobStatus();
-        canceledJobStatus.setState(JobState.CANCELED);
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
 
-        when(jobCurator.get("cancel_id")).thenReturn(createdJobStatus);
-        when(jobCurator.cancel("cancel_id")).thenReturn(canceledJobStatus);
-        jobResource.cancel("cancel_id");
-        verify(jobCurator, atLeastOnce()).cancel("cancel_id");
-    }
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
 
-    @Test
-    public void getStatusesByPrincipal() {
-        List<JobStatus> statuses = new ArrayList<>();
-        JobStatus status = new JobStatus();
-        statuses.add(status);
+        Collection<String> ownerIds = builder.getOwnerIds();
+        assertNotNull(ownerIds);
 
-        CandlepinQuery query = mock(CandlepinQuery.class);
-        when(query.list()).thenReturn(statuses);
-        when(query.iterate()).thenReturn(new MockResultIterator(statuses.iterator()));
-        when(query.iterate(anyInt(), anyBoolean())).thenReturn(new MockResultIterator(statuses.iterator()));
-        when(jobCurator.findByPrincipalName(eq("admin"))).thenReturn(query);
-        this.mockCPQueryTransform(query);
-
-        Collection<JobStatusDTO> real = jobResource.getStatuses(null, null, "admin").list();
-        assertNotNull(real);
-        assertEquals(1, real.size());
-    }
-
-    @Test
-    public void getStatusesByOwner() {
-        List<JobStatus> statuses = new ArrayList<>();
-        JobStatus status = new JobStatus();
-        statuses.add(status);
-
-        CandlepinQuery query = mock(CandlepinQuery.class);
-        when(query.list()).thenReturn(statuses);
-        when(query.iterate()).thenReturn(new MockResultIterator(statuses.iterator()));
-        when(query.iterate(anyInt(), anyBoolean())).thenReturn(new MockResultIterator(statuses.iterator()));
-        when(jobCurator.findByOwnerKey(eq("admin"))).thenReturn(query);
-        this.mockCPQueryTransform(query);
-
-        Collection<JobStatusDTO> real = jobResource.getStatuses("admin", null, null).list();
-        assertNotNull(real);
-        assertEquals(1, real.size());
-    }
-
-    @Test
-    public void getStatusesByUuid() {
-        List<JobStatus> statuses = new ArrayList<>();
-        JobStatus status = new JobStatus();
-        statuses.add(status);
-
-        CandlepinQuery query = mock(CandlepinQuery.class);
-        when(query.list()).thenReturn(statuses);
-        when(query.iterate()).thenReturn(new MockResultIterator(statuses.iterator()));
-        when(query.iterate(anyInt(), anyBoolean())).thenReturn(new MockResultIterator(statuses.iterator()));
-        when(jobCurator.findByConsumerUuid(eq("abcd"))).thenReturn(query);
-        this.mockCPQueryTransform(query);
-
-        Collection<JobStatusDTO> real = jobResource.getStatuses(null, "abcd", null).list();
-        assertNotNull(real);
-        assertEquals(1, real.size());
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void statusForPrincipalNotFound() {
-        when(jobCurator.findByPrincipalName(eq("foo"))).thenReturn(null);
-        jobResource.getStatuses(null, null, "foo");
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void statusForOwnerNotFound() {
-        when(jobCurator.findByOwnerKey(eq("foo"))).thenReturn(null);
-        jobResource.getStatuses("foo", null, null);
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void statusForConsumerNotFound() {
-        when(jobCurator.findByConsumerUuid(eq("foo"))).thenReturn(null);
-        jobResource.getStatuses(null, "foo", null);
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void cannotSpecifyAllParams() {
-        jobResource.getStatuses("fi", "fi", "fofum");
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void cannotSpecifyMoreThanOne() {
-        jobResource.getStatuses("fi", "fi", null);
-    }
-
-    @Test
-    public void emptyStringIsAlsoValid() {
-        List<JobStatus> statuses = new ArrayList<>();
-        JobStatus status = new JobStatus();
-        statuses.add(status);
-
-        CandlepinQuery query = mock(CandlepinQuery.class);
-        when(query.list()).thenReturn(statuses);
-        when(jobCurator.findByPrincipalName(eq("foo"))).thenReturn(query);
-        when(query.transform(any(ElementTransformer.class))).thenReturn(query);
-
-        jobResource.getStatuses(null, "", "foo");
-    }
-
-    /**
-     * Returns true if a BadRequestException was thrown, otherwise
-     * returns false.
-     * @param o param1
-     * @param c param2
-     * @param p param3
-     * @return true if a BadRequestException was thrown, otherwise
-     * returns false.
-     */
-    private boolean expectException(String o, String c, String p) {
-        try {
-            jobResource.getStatuses(o, c, p);
+        assertEquals(expected.size(), ownerIds.size());
+        for (String id : expected) {
+            assertTrue(ownerIds.contains(id));
         }
-        catch (BadRequestException bre) {
-            return false;
-        }
-        return true;
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testListJobStatusesByJobPrincipal(Set<String> values) {
+        AsyncJobStatus status1 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status2 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status3 = mock(AsyncJobStatus.class);
+        List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
+
+        doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, values,
+            null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getOwnerIds());
+        assertEquals(values, builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testListJobStatusesByJobOrigin(Set<String> values) {
+        AsyncJobStatus status1 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status2 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status3 = mock(AsyncJobStatus.class);
+        List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
+
+        doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
+            values, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertEquals(values, builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testListJobStatusesByJobExecutor(Set<String> values) {
+        AsyncJobStatus status1 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status2 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status3 = mock(AsyncJobStatus.class);
+        List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
+
+        doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
+            null, values, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertEquals(values, builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesByDatesProvider")
+    public void testListJobStatusesByJobStartDate(Date value) {
+        AsyncJobStatus status1 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status2 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status3 = mock(AsyncJobStatus.class);
+        List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
+
+        doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
+            null, null, value, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertEquals(value, builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesByDatesProvider")
+    public void testListJobStatusesByJobEndDate(Date value) {
+        AsyncJobStatus status1 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status2 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status3 = mock(AsyncJobStatus.class);
+        List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
+
+        doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
+            null, null, null, value);
+
+        // Verify the input passthrough is working properly
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertEquals(value, builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
     }
 
     @Test
-    public void verifyInput() {
-        List<JobStatus> statuses = new ArrayList<>();
-        JobStatus status = new JobStatus();
-        statuses.add(status);
+    public void testListJobStatusesFailsOnInvalidDateRange() {
+        Date start = Util.addDaysToDt(-2);
+        Date end = Util.addDaysToDt(2);
 
-        CandlepinQuery query = mock(CandlepinQuery.class);
-        when(query.list()).thenReturn(statuses);
-        when(jobCurator.findByOwnerKey(any(String.class))).thenReturn(query);
-        when(jobCurator.findByConsumerUuid(any(String.class))).thenReturn(query);
-        when(jobCurator.findByPrincipalName(any(String.class))).thenReturn(query);
-        when(query.transform(any(ElementTransformer.class))).thenReturn(query);
+        JobResource resource = this.buildJobResource();
+        assertThrows(BadRequestException.class, () ->
+            resource.listJobStatuses(null, null, null, null, null, null, null, end, start));
+    }
 
-        assertFalse(expectException("owner", "uuid", "pname"));
-        assertFalse(expectException("owner", null, "pname"));
-        assertFalse(expectException("owner", "uuid", null));
-        assertFalse(expectException(null, "uuid", "pname"));
-        assertTrue(expectException("owner", null, null));
-        assertTrue(expectException("owner", "", null));
-        assertTrue(expectException(null, "uuid", null));
-        assertTrue(expectException("", "uuid", null));
-        assertTrue(expectException(null, null, "pname"));
-        assertTrue(expectException(null, "", "pname"));
+    @Test
+    public void testGetJobStatus() {
+        String jobId = "test_job_id";
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        doReturn(jobId).when(status).getId();
+        doReturn(status).when(this.jobManager).findJob(eq(jobId));
+
+        JobResource resource = this.buildJobResource();
+        AsyncJobStatusDTO output = resource.getJobStatus(jobId);
+
+        assertNotNull(output);
+        assertEquals(jobId, output.getId());
+    }
+
+    @Test
+    public void testGetJobStatusWithBadId() {
+        String jobId = "bad_job_id";
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(NotFoundException.class, () -> resource.getJobStatus(jobId));
+    }
+
+    @ParameterizedTest
+    @MethodSource("emptyInputProvider")
+    public void testGetJobStatusWithBadId(String jobId) {
+        JobResource resource = this.buildJobResource();
+        assertThrows(BadRequestException.class, () -> resource.getJobStatus(jobId));
+    }
+
+    @Test
+    public void testCancelJob() {
+        String jobId = "test_job_id";
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        doReturn(jobId).when(status).getId();
+        doReturn(status).when(this.jobManager).cancelJob(eq(jobId));
+
+        JobResource resource = this.buildJobResource();
+        AsyncJobStatusDTO output = resource.cancelJob(jobId);
+
+        assertNotNull(output);
+        assertEquals(jobId, output.getId());
+
+        // This is implied due to the output matching, but it doesn't hurt, either.
+        verify(this.jobManager, times(1)).cancelJob(eq(jobId));
+    }
+
+    @Test
+    public void testCancelJobWithBadId() {
+        String jobId = "bad_job_id";
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(NotFoundException.class, () -> resource.cancelJob(jobId));
+    }
+
+    @ParameterizedTest
+    @MethodSource("emptyInputProvider")
+    public void testCancelJobWithBadId(String jobId) {
+        JobResource resource = this.buildJobResource();
+        assertThrows(BadRequestException.class, () -> resource.cancelJob(jobId));
+    }
+
+    @Test
+    public void testCancelJobInTerminalState() {
+        String jobId = "test_job_id";
+        doThrow(new IllegalStateException()).when(this.jobManager).cancelJob(eq(jobId));
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(BadRequestException.class, () -> resource.cancelJob(jobId));
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testCleanupTerminalJobsByIds(Set<String> values) {
+        this.testCleanupTerminalJobsByIds(values, false);
+        clearInvocations(this.jobManager, this.jobCurator);
+        this.testCleanupTerminalJobsByIds(values, true);
+    }
+
+    public void testCleanupTerminalJobsByIds(Set<String> values, boolean force) {
+        int expected = new Random().nextInt();
+        doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+        doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(values, null, null, null, null,
+            null, null, null, null, force);
+
+        // Verify the input passthrough is working properly
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+        assertNotNull(builder);
+        assertEquals(values, builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testCleanupTerminalJobsByKeys(Set<String> values) {
+        this.testCleanupTerminalJobsByKeys(values, false);
+        clearInvocations(this.jobManager, this.jobCurator);
+        this.testCleanupTerminalJobsByKeys(values, true);
+    }
+
+    public void testCleanupTerminalJobsByKeys(Set<String> values, boolean force) {
+        int expected = new Random().nextInt();
+        doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+        doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, values, null, null, null,
+            null, null, null, null, force);
+
+        // Verify the input passthrough is working properly
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertEquals(values, builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesWithJobStatesProvider")
+    public void testCleanupTerminalJobsByJobStates(Set<String> stateNames, Set<JobState> expected) {
+        this.testCleanupTerminalJobsWithJobStates(stateNames, expected, false);
+        clearInvocations(this.jobManager, this.jobCurator);
+        this.testCleanupTerminalJobsWithJobStates(stateNames, expected, true);
+    }
+
+    public void testCleanupTerminalJobsWithJobStates(Set<String> stateNames, Set<JobState> expected,
+        boolean force) {
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, null, stateNames, null, null, null, null,
+            null, null, force);
+
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        Collection<JobState> states = builder.getJobStates();
+        assertNotNull(states);
+        assertEquals(expected, states);
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesWithInvalidJobStatesProvider")
+    public void testCleanupTerminalJobsWithInvalidJobStates(String badStateName) {
+        Set<String> stateNames = new HashSet<>();
+        stateNames.add(badStateName);
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(NotFoundException.class, () ->
+            resource.cleanupTerminalJobs(null, null, stateNames, null, null, null, null, null, null, false));
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesWithInvalidJobStatesProvider")
+    public void testCleanupTerminalJobsWithInvalidJobStatesWhenForced(String badStateName) {
+        Set<String> stateNames = new HashSet<>();
+        stateNames.add(badStateName);
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(NotFoundException.class, () ->
+            resource.cleanupTerminalJobs(null, null, stateNames, null, null, null, null, null, null, true));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "true", "false" })
+    public void testCleanupTerminalJobsWithValidOwnerKeys(boolean force) {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+
+        Set<String> keys = Util.asSet(owner1.getKey(), owner2.getKey(), owner3.getKey());
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, null, null, keys, null, null,
+            null, null, null, force);
+
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        Collection<String> ownerIds = builder.getOwnerIds();
+        assertNotNull(ownerIds);
+        assertEquals(3, ownerIds.size());
+        assertTrue(ownerIds.contains(owner1.getId()));
+        assertTrue(ownerIds.contains(owner2.getId()));
+        assertTrue(ownerIds.contains(owner3.getId()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "true", "false" })
+    public void testCleanupTerminalJobsWithInvalidOwnerKeys(boolean force) {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Set<String> keys = Util.asSet("", owner1.getKey(), "key", owner2.getKey(), null);
+        Set<String> expected = Util.asSet("", owner1.getId(), "key", owner2.getId(), null);
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, null, null, keys, null, null,
+            null, null, null, force);
+
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        Collection<String> ownerIds = builder.getOwnerIds();
+        assertNotNull(ownerIds);
+
+        assertEquals(expected.size(), ownerIds.size());
+        for (String id : expected) {
+            assertTrue(ownerIds.contains(id));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "true", "false" })
+    public void testCleanupTerminalJobsConvertsNullOwnerKeyStringToNullRef(boolean force) {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Set<String> keys = Util.asSet(owner1.getKey(), "null", owner2.getKey());
+        Set<String> expected = Util.asSet(owner1.getId(), null, owner2.getId());
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, null, null, keys, null, null,
+            null, null, null, force);
+
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        Collection<String> ownerIds = builder.getOwnerIds();
+        assertNotNull(ownerIds);
+
+        assertEquals(expected.size(), ownerIds.size());
+        for (String id : expected) {
+            assertTrue(ownerIds.contains(id));
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testCleanupTerminalJobsByPrincipals(Set<String> values) {
+        this.testCleanupTerminalJobsByPrincipals(values, false);
+        clearInvocations(this.jobManager, this.jobCurator);
+        this.testCleanupTerminalJobsByPrincipals(values, true);
+    }
+
+    public void testCleanupTerminalJobsByPrincipals(Set<String> values, boolean force) {
+        int expected = new Random().nextInt();
+        doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+        doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, null, null, null, values,
+            null, null, null, null, force);
+
+        // Verify the input passthrough is working properly
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+        assertEquals(values, builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testCleanupTerminalJobsByOrigins(Set<String> values) {
+        this.testCleanupTerminalJobsByOrigins(values, false);
+        clearInvocations(this.jobManager, this.jobCurator);
+        this.testCleanupTerminalJobsByOrigins(values, true);
+    }
+
+    public void testCleanupTerminalJobsByOrigins(Set<String> values, boolean force) {
+        int expected = new Random().nextInt();
+        doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+        doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, null, null, null, null,
+            values, null, null, null, force);
+
+        // Verify the input passthrough is working properly
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertEquals(values, builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesSimpleCollectionProvider")
+    public void testCleanupTerminalJobsByExecutors(Set<String> values) {
+        this.testCleanupTerminalJobsByExecutors(values, false);
+        clearInvocations(this.jobManager, this.jobCurator);
+        this.testCleanupTerminalJobsByExecutors(values, true);
+    }
+
+    public void testCleanupTerminalJobsByExecutors(Set<String> values, boolean force) {
+        int expected = new Random().nextInt();
+        doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+        doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, null, null, null, null,
+            null, values, null, null, force);
+
+        // Verify the input passthrough is working properly
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertEquals(values, builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesByDatesProvider")
+    public void testCleanupTerminalJobsByStartDate(Date value) {
+        this.testCleanupTerminalJobsByStartDate(value, false);
+        clearInvocations(this.jobManager, this.jobCurator);
+        this.testCleanupTerminalJobsByStartDate(value, true);
+    }
+
+    public void testCleanupTerminalJobsByStartDate(Date value, boolean force) {
+        int expected = new Random().nextInt();
+        doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+        doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, null, null, null, null,
+            null, null, value, null, force);
+
+        // Verify the input passthrough is working properly
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertEquals(value, builder.getStartDate());
+        assertNull(builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("targetJobStatusesByDatesProvider")
+    public void testCleanupTerminalJobsByEndDate(Date value) {
+        this.testCleanupTerminalJobsByEndDate(value, false);
+        clearInvocations(this.jobManager, this.jobCurator);
+        this.testCleanupTerminalJobsByEndDate(value, true);
+    }
+
+    public void testCleanupTerminalJobsByEndDate(Date value, boolean force) {
+        int expected = new Random().nextInt();
+        doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+        doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        int result = resource.cleanupTerminalJobs(null, null, null, null, null,
+            null, null, null, value, force);
+
+        // Verify the input passthrough is working properly
+        if (force) {
+            verify(this.jobManager, never()).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+            verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
+        }
+        else {
+            verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+            verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        }
+
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertEquals(value, builder.getEndDate());
+
+        // Verify the output passthrough is working properly
+        assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "true", "false" })
+    public void testCleanupTerminalJobsFailsOnInvalidDateRange(boolean force) {
+        Date start = Util.addDaysToDt(-2);
+        Date end = Util.addDaysToDt(2);
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(BadRequestException.class, () ->
+            resource.cleanupTerminalJobs(null, null, null, null, null, null, null, end, start, force));
+    }
+
+    private void setTriggerableJobs(String... jobs) {
+        String value = String.join(",", jobs);
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_TRIGGERABLE_JOBS, value);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "job1", "job2", "job3" })
+    public void testScheduleJob(String jobKey) throws JobException {
+        this.setTriggerableJobs("job1", "job2", "job3");
+
+        ArgumentCaptor<JobConfig> captor = ArgumentCaptor.forClass(JobConfig.class);
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+
+        doReturn(jobKey).when(status).getJobKey();
+        doReturn(status).when(this.jobManager).queueJob(any(JobConfig.class));
+
+        JobResource resource = this.buildJobResource();
+        AsyncJobStatusDTO result = resource.scheduleJob(jobKey);
+
+        assertNotNull(result);
+        assertEquals(jobKey, result.getJobKey());
+
+        verify(this.jobManager, times(1)).queueJob(captor.capture());
+
+        JobConfig config = captor.getValue();
+        assertNotNull(config);
+        assertEquals(jobKey, config.getJobKey());
+    }
+
+    @Test
+    public void testScheduleJobFailsIfNotOnTriggerableConfig() {
+        this.setTriggerableJobs("job1", "job2", "job3");
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(ForbiddenException.class, () -> resource.scheduleJob("bad_job_key"));
+    }
+
+    @ParameterizedTest
+    @MethodSource("emptyInputProvider")
+    public void testScheduleJobFailsOnEmptyInput(String jobKey) {
+        this.setTriggerableJobs("job1", "job2", "job3");
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(BadRequestException.class, () -> resource.scheduleJob(jobKey));
     }
 }

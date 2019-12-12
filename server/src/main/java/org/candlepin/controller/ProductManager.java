@@ -27,7 +27,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.pinsetter.tasks.OrphanCleanupJob;
 import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;

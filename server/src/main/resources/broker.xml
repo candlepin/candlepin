@@ -24,7 +24,7 @@
 
         <acceptors>
             <acceptor name="in-vm">vm://0</acceptor>
-            <!-- <acceptor name="netty">tcp://localhost:61617</acceptor> -->
+            <!-- <acceptor name="netty">tcp://localhost:61617?sslEnabled=true;keyStorePath=${artemis.instance}/certs/artemis-server.ks;keyStorePassword=securepassword;needClientAuth=true;trustStorePath=${artemis.instance}/certs/artemis-server.ts;trustStorePassword=securepassword</acceptor> -->
         </acceptors>
 
         <security-enabled>false</security-enabled>
@@ -59,6 +59,11 @@
                     <queue name="event.org.candlepin.audit.AMQPBusPublisher" />
                 </multicast>
             </address>
+            <address name="job">
+                <multicast>
+                    <queue name="jobs" />
+                </multicast>
+            </address>
         </addresses>
 
         <address-settings>
@@ -80,6 +85,7 @@
                 <redelivery-delay-multiplier>2</redelivery-delay-multiplier>
                 <max-delivery-attempts>0</max-delivery-attempts>
             </address-setting>
+
             <address-setting match="event.qpid">
                 <auto-create-queues>true</auto-create-queues>
                 <max-size-bytes>10485760</max-size-bytes>
@@ -95,6 +101,20 @@
                 -->
                 <redelivery-delay>0</redelivery-delay>
                 <max-delivery-attempts>1</max-delivery-attempts>
+            </address-setting>
+
+            <address-setting match="job">
+                <auto-create-queues>true</auto-create-queues>
+                <max-size-bytes>10485760</max-size-bytes>
+
+                <!-- By default, Artemis will page messages when the queue address is full. -->
+                <page-size-bytes>1048576</page-size-bytes>
+
+                <!-- Redelivery config -->
+                <redelivery-delay>30000</redelivery-delay>
+                <max-redelivery-delay>3600000</max-redelivery-delay>
+                <redelivery-delay-multiplier>2</redelivery-delay-multiplier>
+                <max-delivery-attempts>0</max-delivery-attempts>
             </address-setting>
         </address-settings>
 

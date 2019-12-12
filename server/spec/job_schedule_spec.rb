@@ -8,18 +8,19 @@ describe 'Scheduled Jobs' do
   it 'should not schedule arbitrary tasks' do
     lambda {
       job = @cp.trigger_job('MySQLInjectionJob')
-    }.should raise_exception(RestClient::BadRequest)
+    }.should raise_exception(RestClient::Forbidden)
   end
 
   it 'should not schedule non cron tasks' do
     lambda {
       job = @cp.trigger_job('UndoImportsJob')
-    }.should raise_exception(RestClient::BadRequest)
+    }.should raise_exception(RestClient::Forbidden)
   end
 
   it 'should schedule cron tasks irrespective of the case' do
-    job = @cp.trigger_job('expiredpoolsjob')
-    job.state.should == 'CREATED'
+    job = @cp.trigger_job('ExpiredPoolsCleanupJob')
+    expect(job['state']).to eq('QUEUED')
+
     wait_for_job(job['id'], 15)
   end
 
@@ -35,7 +36,7 @@ describe 'Scheduled Jobs' do
     });
     #verify pool exists before
     @cp.get_pool(pool['id']).should_not be_nil
-    job = @cp.trigger_job('ExpiredPoolsJob')
+    job = @cp.trigger_job('ExpiredPoolsCleanupJob')
     wait_for_job(job['id'], 15)
     lambda {
       pool = @cp.get_pool(pool['id'])
@@ -58,7 +59,7 @@ describe 'Scheduled Jobs' do
     end
     records = @cp.list_imports(@import_owner['key'])
     records.size.should == 11
-    job = @cp.trigger_job('ImportRecordJob')
+    job = @cp.trigger_job('ImportRecordCleanerJob')
     wait_for_job(job['id'], 15)
     records = @cp.list_imports(@import_owner['key'])
     records.size.should == 10

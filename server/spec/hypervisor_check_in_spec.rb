@@ -108,7 +108,6 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged: 0, Failed: 0'
     result_data = job_detail['resultData']
     hyp_consumer = @cp.get_consumer(result_data.created[0].uuid)
     hyp_consumer.facts['test_fact'].should == 'fact_value'
@@ -156,7 +155,6 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, ['g1'])
-    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged: 0, Failed: 0'
     result_data = job_detail['resultData']
     should_add_consumer_to_created_when_new_host_id_and_guests_were_reported(result_data, host_name)
   end
@@ -189,7 +187,6 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('name')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, ['g1'], false)
-    job_detail['result'].should == 'Created: 0, Updated: 0, Unchanged: 0, Failed: 1'
     result_data = job_detail['resultData']
     should_not_add_new_consumer_when_create_missing_is_false(result_data)
   end
@@ -216,7 +213,6 @@ describe 'Hypervisor Resource', :type => :virt do
     #because mysql
     sleep 2
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id,  ['g1', 'g2'])
-    job_detail['result'].should == 'Created: 0, Updated: 1, Unchanged: 0, Failed: 0'
     result_data = job_detail['resultData']
     should_add_consumer_to_updated_when_guest_ids_are_updated(result_data, old_check_in)
   end
@@ -250,7 +246,6 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should add consumer to unchanged when same guest ids are sent - async' do
     old_check_in = @cp.get_consumer(@host_uuid)
     job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, @expected_guest_ids)
-    job_detail['result'].should == 'Created: 0, Updated: 0, Unchanged: 1, Failed: 0'
     result_data = job_detail['resultData']
     should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result_data, old_check_in)
   end
@@ -290,7 +285,6 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     host_name = random_string('host')
     job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    job_detail['result'].should == 'Created: 1, Updated: 0, Unchanged: 0, Failed: 0'
     result_data = job_detail['resultData']
     result_data.created.size.should == 1
     created_consumer = @cp.get_consumer(result_data.created[0].uuid)
@@ -742,8 +736,10 @@ describe 'Hypervisor Resource', :type => :virt do
 
   def async_update_hypervisor(owner, consumer, host_name, host_hyp_id, guests, create=true, reporter_id=nil, facts=nil)
     job_detail = run_async_update(owner, consumer, host_name, host_hyp_id, guests, create, reporter_id, facts)
-    job_detail['state'].should == 'FINISHED'
-    job_detail['result'].should_not be_nil
+
+    expect(job_detail['state']).to eq('FINISHED')
+    expect(job_detail['resultData']).to_not be_nil
+
     return job_detail
   end
 
@@ -755,8 +751,8 @@ describe 'Hypervisor Resource', :type => :virt do
 
   def create_virtwho_client(user)
     consumer = user.register(random_string("virt-who"), :system, nil, {},
-        nil, nil, [], [{:productId => 'installedprod',
-           :productName => "Installed"}])
+        nil, nil, [], [{:productId => 'installedprod', :productName => "Installed"}])
+
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     return consumer_client
   end
@@ -911,7 +907,7 @@ describe 'Hypervisor Resource', :type => :virt do
     }
 
     job_detail = send_host_guest_mapping(owner, user, before_migration.to_json())
-    job_detail["state"].should == "FINISHED"
+    expect(job_detail["state"]).to eq("FINISHED")
 
     after_migration = {
         "hypervisors" => [
@@ -936,7 +932,7 @@ describe 'Hypervisor Resource', :type => :virt do
     }
 
     job_detail = send_host_guest_mapping(owner, user, after_migration.to_json())
-    job_detail["state"].should == "FINISHED"
+    expect(job_detail["state"]).to eq("FINISHED")
   end
 
   it 'should raise bad request exception if owner has autobind disabled' do
@@ -970,8 +966,8 @@ describe 'Hypervisor Resource', :type => :virt do
     host_name = random_string('name')
     job_detail = run_async_update(owner, consumer_cp, host_name, host_hyp_id, [])
 
-    job_detail['state'].should == 'FAILED'
-    job_detail['result'].should == "Could not update host/guest mapping. Auto-attach is disabled for owner #{owner['key']}."
+    expect(job_detail["state"]).to eq("FAILED")
+    job_detail['resultData'].should == "org.candlepin.async.JobExecutionException: Could not update host/guest mapping. Auto-attach is disabled for owner #{owner['key']}."
   end
 
   it 'Hypervisor Checkin should complete succesfully when a guest with host specific entitlement is migrated' do

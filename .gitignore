@@ -35,6 +35,7 @@ dataSources/
 **/.settings
 
 **/build/
+**/out/
 **/custom.yaml
 **/renderer.chain
 **/generated_certs/

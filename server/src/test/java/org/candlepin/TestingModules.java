@@ -43,9 +43,8 @@ import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.controller.ModeManager;
-import org.candlepin.controller.ModeManagerImpl;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
@@ -60,10 +59,10 @@ import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.pinsetter.core.GuiceJobFactory;
-import org.candlepin.pinsetter.core.PinsetterJobListener;
-import org.candlepin.pinsetter.core.PinsetterTriggerListener;
-import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
+import org.candlepin.messaging.CPMContextListener;
+import org.candlepin.messaging.CPMSessionFactory;
+import org.candlepin.messaging.impl.noop.NoopContextListener;
+import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.pki.PKIUtility;
@@ -133,9 +132,8 @@ import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.quartz.JobListener;
-import org.quartz.TriggerListener;
-import org.quartz.spi.JobFactory;
+import org.quartz.SchedulerFactory;
+import org.quartz.impl.StdSchedulerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.InputStream;
@@ -303,8 +301,6 @@ public class TestingModules {
             bind(ContentAccessCertServiceAdapter.class).to(DefaultContentAccessCertServiceAdapter.class);
             bind(ScriptEngineProvider.class);
 
-            bind(JobFactory.class).to(GuiceJobFactory.class);
-            bind(JobListener.class).to(PinsetterJobListener.class);
             bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
 
             bind(JsRunnerProvider.class).asEagerSingleton();
@@ -328,7 +324,6 @@ public class TestingModules {
             bindInterceptor(Matchers.inPackage(Package.getPackage("org.candlepin.resource")),
                 new HttpMethodMatcher(), authMethodInterceptor);
 
-            bind(CertificateRevocationListTask.class);
             // temporary
             bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
             bind(PoolRules.class);
@@ -338,14 +333,21 @@ public class TestingModules {
 
             bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
                 .to(ExpiryDateFunction.class).in(Singleton.class);
-            bind(ModeManager.class).to(ModeManagerImpl.class).asEagerSingleton();
-            bind(TriggerListener.class).to(PinsetterTriggerListener.class);
+
+            bind(CandlepinModeManager.class).asEagerSingleton();
             install(new FactoryModuleBuilder().build(BindChainFactory.class));
             install(new FactoryModuleBuilder().build(BindContextFactory.class));
             install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
 
             // Bind model translator
             bind(ModelTranslator.class).to(StandardTranslator.class).asEagerSingleton();
+
+            // Async job stuff
+            bind(SchedulerFactory.class).to(StdSchedulerFactory.class);
+
+            // Messaging
+            bind(CPMSessionFactory.class).to(NoopSessionFactory.class).in(Singleton.class);
+            bind(CPMContextListener.class).to(NoopContextListener.class).in(Singleton.class);
         }
 
         @Provides @Singleton @Named("EventFactoryObjectMapper")

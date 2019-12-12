@@ -14,7 +14,6 @@
  */
 package org.candlepin.common.filter;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -22,6 +21,7 @@ import org.slf4j.MDC;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 import javax.servlet.Filter;
@@ -45,9 +45,14 @@ public class LoggingFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(LoggingFilter.class);
 
+    public static final String CSID_KEY = "csid";
+    private static final int CSID_MAX_LENGTH = 40;
+    private static final Pattern CSID_REGEX = Pattern.compile("^([a-zA-Z0-9-]){1," + CSID_MAX_LENGTH + "}$");
+
+    /** The metadata key used to display the owner's key or display name */
+    public static final String OWNER_KEY = "org"; // This value must match that set in logback.xml
+
     private String customHeaderName;
-    private final int CORRELATION_ID_LENGTH = 40;
-    public static final String CSID = "csid";
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -77,7 +82,8 @@ public class LoggingFilter implements Filter {
             String requestUUID = UUID.randomUUID().toString();
             MDC.put("requestUuid", requestUUID);
 
-            String correlationId = "";
+            String correlationId = null;
+
             Enumeration<String> headerNames = (Enumeration<String>) ((HttpServletRequest) request)
                 .getHeaderNames();
             while (headerNames.hasMoreElements()) {
@@ -86,13 +92,15 @@ public class LoggingFilter implements Filter {
                     correlationId = ((HttpServletRequest) request).getHeader(name);
                 }
             }
-            if (correlationId.matches("^([a-zA-Z0-9-])+$") &&
-                correlationId.length() <= CORRELATION_ID_LENGTH) {
-                MDC.put(CSID, correlationId);
-            }
-            else if (!StringUtils.isBlank(correlationId)) {
-                log.info("Correlation Id must contain alphanumeric characters or hypens and " +
-                    "be {} or fewer characters in length.", CORRELATION_ID_LENGTH);
+
+            if (correlationId != null) {
+                if (CSID_REGEX.matcher(correlationId).matches()) {
+                    MDC.put(CSID_KEY, correlationId);
+                }
+                else {
+                    log.warn("Correlation Id must consist of alphanumeric characters or hypens and " +
+                        "be {} or fewer characters in length.", CSID_MAX_LENGTH);
+                }
             }
 
             // Add requestUuid to the serverRequest as an attribute, so Tomcat can

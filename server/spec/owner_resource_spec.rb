@@ -685,8 +685,8 @@ describe 'Owner Resource Pool Filter Tests' do
       random_string("Product2"),
       {
         :attributes => {
-            :support_level => 'Supurb',
-            :cores => '4'
+          :support_level => 'Supurb',
+          :cores => '4'
         }
       }
     )

@@ -28,13 +28,14 @@ describe 'Hypervisor Resource - Heartbeat Endpoint', :type => :virt do
   it 'should update last checkin date of consumers of given reporter' do
     job = @client.hypervisor_heartbeat_update(@owner['key'], @expected_reporter_id)
 
-    job.should_not be_nil
-    job['id'].should include("hypervisor_update")
+    expect(job).to_not be_nil
+    expect(job['name']).to include("hypervisor_heartbeat_update")
+
     wait_for_job(job['id'], 10)
 
     consumer = @cp.get_consumer(@consumer.uuid)
 
-    Date.parse(consumer.lastCheckin).should == Date.today
+    expect(Date.parse(consumer['lastCheckin'])).to eq(Date.today)
   end
 
 end

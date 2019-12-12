@@ -14,6 +14,11 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.async.JobConfig;
+import org.candlepin.async.JobException;
+import org.candlepin.async.JobManager;
+import org.candlepin.async.tasks.EntitleByProductsJob;
+import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -45,6 +50,7 @@ import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.CapabilityDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
@@ -56,6 +62,7 @@ import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
@@ -92,8 +99,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.pinsetter.tasks.EntitleByProductsJob;
-import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -222,6 +227,7 @@ public class ConsumerResource {
     private ConsumerEnricher consumerEnricher;
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
+    private JobManager jobManager;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
@@ -249,7 +255,8 @@ public class ConsumerResource {
         ConsumerTypeValidator consumerTypeValidator,
         ConsumerEnricher consumerEnricher,
         Provider<GuestMigration> migrationProvider,
-        ModelTranslator translator) {
+        ModelTranslator translator,
+        JobManager jobManager) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -289,6 +296,7 @@ public class ConsumerResource {
         this.consumerEnricher = consumerEnricher;
         this.migrationProvider = migrationProvider;
         this.translator = translator;
+        this.jobManager = jobManager;
     }
 
     /**
@@ -2013,7 +2021,7 @@ public class ConsumerResource {
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
         @QueryParam("entitle_date") String entitleDateStr,
-        @QueryParam("from_pool") List<String> fromPools) {
+        @QueryParam("from_pool") List<String> fromPools) throws JobException {
         /* NOTE: This method should NEVER be provided with a POST body.
            While technically that change would be backwards compatible,
            there are older clients which erroneously provide an empty string
@@ -2062,19 +2070,33 @@ public class ConsumerResource {
         // HANDLE ASYNC
         //
         if (async) {
-            JobDetail detail = null;
+            JobConfig jobConfig;
 
             if (poolIdString != null) {
-                detail = EntitlerJob.bindByPool(poolIdString, consumer, owner, quantity);
+                String cfg = ConfigProperties.jobConfig(EntitlerJob.JOB_KEY, EntitlerJob.CFG_JOB_THROTTLE);
+                int throttle = config.getInt(cfg, EntitlerJob.DEFAULT_THROTTLE);
+
+                jobConfig = EntitlerJob.createConfig(throttle)
+                    .setOwner(owner)
+                    .setConsumer(consumer)
+                    .setPoolQuantity(poolIdString, quantity);
             }
             else {
-                detail = EntitleByProductsJob.bindByProducts(productIds, consumer, entitleDate, fromPools,
-                    owner);
+                jobConfig = EntitleByProductsJob.createConfig()
+                    .setOwner(owner)
+                    .setConsumer(consumer)
+                    .setProductIds(productIds)
+                    .setEntitleDate(entitleDate)
+                    .setPools(fromPools);
             }
 
             // events will be triggered by the job
+            AsyncJobStatus status = jobManager.queueJob(jobConfig);
+            AsyncJobStatusDTO statusDTO = this.translator.translate(status, AsyncJobStatusDTO.class);
             return Response.status(Response.Status.OK)
-                .type(MediaType.APPLICATION_JSON).entity(detail).build();
+                .type(MediaType.APPLICATION_JSON)
+                .entity(statusDTO)
+                .build();
         }
 
         //
@@ -2445,7 +2467,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/export/async")
-    public JobDetail exportDataAsync(
+    public AsyncJobStatusDTO exportDataAsync(
         @Context HttpServletResponse response,
         @PathParam("consumer_uuid") @Verify(Consumer.class)
         @ApiParam(value = "The UUID of the target consumer", required = true) String consumerUuid,
@@ -2461,15 +2483,18 @@ public class ConsumerResource {
         @QueryParam("ext")
         @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
         required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
-        List<KeyValueParameter> extensionArgs) {
+        List<KeyValueParameter> extensionArgs) throws JobException {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
-        return manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel, webAppPrefix,
-            apiUrl, getExtensionParamMap(extensionArgs));
+        JobConfig config = manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel,
+            webAppPrefix, apiUrl, getExtensionParamMap(extensionArgs));
+
+        AsyncJobStatus job = this.jobManager.queueJob(config);
+        return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
     /**

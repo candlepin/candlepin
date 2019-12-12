@@ -459,7 +459,7 @@ describe 'Product Versioning' do
       end
 
       sleep 1
-      @cp.trigger_job("OrphanCleanupJob");
+      @cp.trigger_job("OrphanCleanupJob")
 
       updater.join
       generator.join

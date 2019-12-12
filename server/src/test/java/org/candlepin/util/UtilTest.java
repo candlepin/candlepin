@@ -14,22 +14,17 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.commons.codec.binary.Base64;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.commons.codec.binary.Base64;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,14 +32,23 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TimeZone;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 
 /**
@@ -67,71 +71,6 @@ public class UtilTest {
     @Test
     public void testRandomUUIDS() {
         assertNotSame(Util.generateUUID(), Util.generateUUID());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void subListStartEnd() {
-        String[] strs = {"a", "b", "c", "d"};
-        List<String> strings = Arrays.asList(strs);
-        List<String> sub = Util.subList(strings, 1, 3);
-        assertNotNull(sub);
-        assertEquals(2, sub.size());
-        assertEquals("b", sub.get(0));
-        assertEquals("c", sub.get(1));
-    }
-
-    @Test(expected = ArrayIndexOutOfBoundsException.class)
-    @SuppressWarnings("unchecked")
-    public void subListInvalidStart() {
-        String[] strs = {"a", "b", "c", "d"};
-        List<String> strings = Arrays.asList(strs);
-        Util.subList(strings, -1, 3);
-    }
-
-    @Test(expected = ArrayIndexOutOfBoundsException.class)
-    @SuppressWarnings("unchecked")
-    public void subListInvalidEnd() {
-        String[] strs = {"a", "b", "c", "d"};
-        List<String> strings = Arrays.asList(strs);
-        Util.subList(strings, 1, 10);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void subListNull() {
-        Util.subList(null, 0, 10);
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void subListSize() {
-        String[] strs = {"a", "b", "c", "d"};
-        List<String> strings = Arrays.asList(strs);
-        List<String> sub = Util.subList(strings, 3);
-        assertNotNull(sub);
-        assertEquals(2, sub.size());
-        assertEquals("a", sub.get(0));
-        assertEquals("b", sub.get(1));
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void subListBadSize() {
-        String[] strs = {"a", "b", "c", "d"};
-        List<String> strings = Arrays.asList(strs);
-        List<String> sub = Util.subList(strings, -3);
-        assertNotNull(sub);
-        assertEquals(0, sub.size());
-    }
-
-    @Test
-    public void futureDate() {
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        int curyear = c.get(Calendar.YEAR);
-
-        c.setTime(Util.getFutureDate(5));
-        assertFalse(curyear == c.get(Calendar.YEAR));
     }
 
     @Test
@@ -214,63 +153,6 @@ public class UtilTest {
     }
 
     @Test
-    public void hoursAgoSubtractsHoursFromCurrentTime() {
-        Calendar c = Calendar.getInstance();
-        int expectedMinute = c.get(Calendar.MINUTE);
-
-        c.add(Calendar.HOUR_OF_DAY, -26);
-        int expectedDay = c.get(Calendar.DATE);
-        int expectedHour = c.get(Calendar.HOUR_OF_DAY);
-
-        c.setTime(Util.hoursAgo(26));
-        assertEquals(expectedDay, c.get(Calendar.DATE));
-        assertEquals(expectedHour, c.get(Calendar.HOUR_OF_DAY));
-        assertEquals(expectedMinute, c.get(Calendar.MINUTE));
-    }
-
-    @Ignore("This will fail on the last day of each month, or any time after July!")
-    @Test
-    public void addToFields() {
-        Calendar c = Calendar.getInstance();
-        c.setTime(new Date());
-        int curday = c.get(Calendar.DAY_OF_MONTH);
-        int curmonth = c.get(Calendar.MONTH);
-        int curyear = c.get(Calendar.YEAR);
-
-        c.setTime(Util.addToFields(1, 5, 10));
-        assertEquals(curday + 1, c.get(Calendar.DAY_OF_MONTH));
-        assertEquals(curmonth + 5, c.get(Calendar.MONTH));
-        assertEquals(curyear + 10, c.get(Calendar.YEAR));
-
-        // TODO: figure out how to do negatives
-//        c.setTime(Util.addToFields(-40, -13, -99));
-//        assertEquals(curday - 40, c.get(Calendar.DAY_OF_MONTH));
-//        assertEquals(curmonth - 13, c.get(Calendar.MONTH));
-//        assertEquals(curyear - 99, c.get(Calendar.YEAR));
-    }
-
-    @Test
-    public void testSetToMidnight() {
-        Date now = new Date();
-        Date midnight = Util.setToMidnight(now);
-        assertFalse(now.equals(midnight));
-
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(midnight);
-        assertEquals(0, cal.get(Calendar.HOUR_OF_DAY));
-        assertEquals(0, cal.get(Calendar.MINUTE));
-        assertEquals(0, cal.get(Calendar.SECOND));
-        assertEquals(TimeZone.getDefault(), cal.getTimeZone());
-
-        Date stillmidnight = Util.setToMidnight(midnight);
-        cal.setTime(stillmidnight);
-        assertEquals(0, cal.get(Calendar.HOUR_OF_DAY));
-        assertEquals(0, cal.get(Calendar.MINUTE));
-        assertEquals(0, cal.get(Calendar.SECOND));
-        assertEquals(TimeZone.getDefault(), cal.getTimeZone());
-    }
-
-    @Test
     public void toDate() {
         Calendar c = Calendar.getInstance();
         c.setTime(Util.toDate("03/17/2011"));
@@ -321,21 +203,6 @@ public class UtilTest {
         Integer daone = Util.assertNotNull(one, "shouldn't see this");
         assertNotNull(daone);
         assertEquals(one, daone);
-    }
-
-    @Test
-    public void returnDefaultIfNull() {
-        assertEquals("default", Util.defaultIfEmpty(null, "default"));
-    }
-
-    @Test
-    public void returnDefaultIfEmpty() {
-        assertEquals("default", Util.defaultIfEmpty("", "default"));
-    }
-
-    @Test
-    public void returnString() {
-        assertEquals("returnme", Util.defaultIfEmpty("returnme", "default"));
     }
 
     @Test
@@ -436,7 +303,7 @@ public class UtilTest {
     public void json() throws JsonProcessingException {
         String test = "I Love JSON";
         String json = Util.toJson(test);
-        String result = (String) Util.fromJson(json, String.class);
+        String result = Util.fromJson(json, String.class);
         assertEquals(result, test);
     }
 
@@ -530,5 +397,16 @@ public class UtilTest {
 
     private interface TestClosable {
         void close();
+    }
+
+    @Test
+    public void testGetHostname() {
+        try {
+            String hostname = Util.getHostname();
+            assertNotNull(hostname);
+        }
+        catch (Exception e) {
+            fail("getHostname should not throw an exception");
+        }
     }
 }

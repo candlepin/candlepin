@@ -19,17 +19,15 @@ import org.candlepin.config.ConfigProperties;
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
-import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
-
+import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
+
 
 
 /**
@@ -39,55 +37,16 @@ import java.util.List;
 public class ActiveMQContextListener {
     private static  Logger log = LoggerFactory.getLogger(ActiveMQContextListener.class);
 
-    private EmbeddedActiveMQ activeMQServer;
-    private EventSource eventSource;
+    private ArtemisMessageSource messageSource;
 
     public void contextDestroyed() {
-        if (activeMQServer != null) {
-            eventSource.shutDown();
-            try {
-                activeMQServer.stop();
-                log.info("ActiveMQ server stopped.");
-            }
-            catch (Exception e) {
-                log.error("Error stopping ActiveMQ server", e);
-            }
-
+        if (this.messageSource != null) {
+            this.messageSource.shutDown();
         }
     }
 
     public void contextInitialized(Injector injector) {
-        org.candlepin.common.config.Configuration candlepinConfig =
-            injector.getInstance(org.candlepin.common.config.Configuration.class);
-
-        boolean embedded = candlepinConfig.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED);
-        if (embedded) {
-            log.info("Candlepin will connect to an embedded Artemis server.");
-            if (activeMQServer == null) {
-                activeMQServer = new EmbeddedActiveMQ();
-
-                // If the Artemis config file is specified in the config use it. Otherwise
-                // the broker.xml file distributed via the WAR file will be used.
-                String artemisConfigFilePath = candlepinConfig.getProperty(
-                    ConfigProperties.ACTIVEMQ_SERVER_CONFIG_PATH);
-                if (artemisConfigFilePath != null && !artemisConfigFilePath.isEmpty()) {
-                    log.info("Loading Artemis config file: {}", artemisConfigFilePath);
-                    activeMQServer.setConfigResourcePath(new File(artemisConfigFilePath).toURI().toString());
-                }
-            }
-
-            try {
-                activeMQServer.start();
-                log.info("ActiveMQ server started");
-            }
-            catch (Exception e) {
-                log.error("Failed to start ActiveMQ message server:", e);
-                throw new RuntimeException(e);
-            }
-        }
-        else {
-            log.info("Candlepin will connect to a remote Artemis server.");
-        }
+        Configuration candlepinConfig = injector.getInstance(Configuration.class);
 
         ActiveMQStatusMonitor activeMQStatusMonitor = injector.getInstance(ActiveMQStatusMonitor.class);
         // If suspend mode is enabled, we need the transitioner to listen for connection drops.
@@ -95,46 +54,25 @@ public class ActiveMQContextListener {
             activeMQStatusMonitor.registerListener(injector.getInstance(SuspendModeTransitioner.class));
         }
 
-        // Set up the EventSource.
-        eventSource = injector.getInstance(EventSource.class);
-        // EventSource must listen for ActiveMQ status changes so that connections can be rebuilt.
-        activeMQStatusMonitor.registerListener(eventSource);
+        // Set up the ArtemisMessageSource.
+        messageSource = injector.getInstance(ArtemisMessageSource.class);
+        // ArtemisMessageSource must listen for ActiveMQ status changes so that connections can be rebuilt.
+        activeMQStatusMonitor.registerListener(messageSource);
 
-        setupAmqp(injector, candlepinConfig, eventSource);
-
-        // Register all listeners now that a connection to the server is established.
-        List<EventListener> eventListeners = new ArrayList<>();
-        getActiveMQListeners(candlepinConfig).forEach(listenerClass -> {
-            try {
-                Class<?> clazz = this.getClass().getClassLoader().loadClass(listenerClass);
-                eventListeners.add((EventListener) injector.getInstance(clazz));
-            }
-            catch (Exception e) {
-                log.warn("Unable to register listener {}", listenerClass, e);
-            }
-        });
-
-        for (EventListener listener : eventListeners) {
-            try {
-                eventSource.registerListener(listener);
-            }
-            catch (Exception e) {
-                log.warn("Unable to register listener {}", listener, e);
-            }
-        }
+        setupAmqp(injector, candlepinConfig, messageSource);
 
         // Initialize the ActiveMQ status monitor so that client sessions can be established
         // if the broker is active.
         activeMQStatusMonitor.initialize();
     }
 
-    private void setupAmqp(Injector injector, org.candlepin.common.config.Configuration candlepinConfig,
-        EventSource eventSource) {
+    private void setupAmqp(Injector injector, Configuration candlepinConfig,
+        ArtemisMessageSource messageSource) {
         if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             // Listen for Qpid connection changes so that the appropriate ClientSessions
             // can be shutdown/restarted when Qpid status changes.
             QpidStatusMonitor qpidStatusMonitor = injector.getInstance(QpidStatusMonitor.class);
-            qpidStatusMonitor.addStatusChangeListener(eventSource);
+            qpidStatusMonitor.addStatusChangeListener(messageSource);
         }
     }
 
@@ -142,8 +80,7 @@ public class ActiveMQContextListener {
      * @param candlepinConfig
      * @return List of class names that will be configured as ActiveMQ listeners.
      */
-    public static List<String> getActiveMQListeners(
-        org.candlepin.common.config.Configuration candlepinConfig) {
+    public static List<String> getActiveMQListeners(Configuration candlepinConfig) {
         //AMQP integration here - If it is disabled, don't add it to listeners.
         List<String> listeners = Lists.newArrayList(
             candlepinConfig.getList(ConfigProperties.AUDIT_LISTENERS));
@@ -151,6 +88,7 @@ public class ActiveMQContextListener {
         if (candlepinConfig.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             listeners.add(AMQPBusPublisher.class.getName());
         }
+
         return listeners;
     }
 
