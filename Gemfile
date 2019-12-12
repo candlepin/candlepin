@@ -1,18 +1,15 @@
 source 'https://rubygems.org'
 
-gem 'buildr', '1.5.3'
-# Not a typo - we use both buildr and builder
-gem 'builder'
 gem 'rspec', '~> 3.0'
 gem 'mime-types', '~> 1.25.0'
 gem 'oauth'
 gem 'parallel_tests'
-gem 'buildr-findBugs'
 gem 'pmd'
 gem 'stringex'
 gem 'digest-murmurhash'
 gem 'httpclient'
 gem 'activesupport', '~> 4.2'
+gem 'rubyzip', '~> 1.3.0'
 
 group 'proton' do
   gem 'qpid_proton', '~> 0.21.0'
