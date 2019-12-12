@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.11.1
+Version: 2.11.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,46 @@ fi
 
 #raw
 %changelog
+* Thu Dec 12 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.11.2-1
+- 1655731: Auto-Attach will not correctly match on role/addon product attribute
+  when a space exists after a comma.   - Added trim() in get_common_role,
+  retrievePoolAttributeValues,     get_common_addons, get_role_pools and,
+  get_remaining_addons function   - Added JUnit/Rspec to test the roles and
+  addons having white-spaces (sonalidhome@gmail.com)
+- Updated pom.xml for Java 11 support (crog@redhat.com)
+- 1772194: Updated Qpid event messaging to use TEXT_TYPE and simple strings
+  (crog@redhat.com)
+- [ENT-1670] 1640822: [RFE] Change or switch content view from content host
+  (prakgupt@redhat.com)
+- ENT-496: Update Consumer to no longer generate UUIDs on instantiation   -
+  Added @PrePersist annotation on ensureUUID. It will initialize UUID attribute
+  before it gets persisted.   - Removed entry of ensureUUID() from default
+  constructor Consumer().   - Added setUuid() entry wherever the default
+  constructor is called. (sonalidhome@gmail.com)
+- 1772194: Updated event messaging to use TEXT_TYPE and simple strings
+  (crog@redhat.com)
+- Add pom update for stomp protocol support (bcourt@redhat.com)
+- Add stomp protocol support to artemis for use by Katello (bcourt@redhat.com)
+- Remove id generation code from the constructor  - Removed unique long id
+  generation code from CertificateSerial constructor  - Added
+  CertificateSerialIdGenerator to generate CertificateSerial ID  - Persist
+  CertificationSerial objects before creating X509Certificate  - Updated Junits
+  related to this change (abhiskum@abhiskum.usersys.redhat.com)
+- 1774640: Allow config entry to stop uuid match on consumers
+  (wpoteat@redhat.com)
+- 1774640: Provide configuration option to disable UUID uniqueness constraint
+  in Satellite 6 (wpoteat@redhat.com)
+- 1774236: hypervisor checkin fails with cp_consumer_hypervisor_ukey error
+  (wpoteat@redhat.com)
+- Containers now use gradle instead of buildr (nmoumoul@redhat.com)
+- Update to Hibernate 5.4.9.Final (bcourt@redhat.com)
+- Update jackson to 2.10.1 (bcourt@redhat.com)
+- Update POM files due to version updates in the gradle files.
+  (bcourt@redhat.com)
+- Bump dependency versions of netty-all and keycloak (crog@redhat.com)
+- Updated branding and workaround for content desync in org_migrator
+  (crog@redhat.com)
+
 * Thu Nov 14 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.11.1-1
 - Move ActivationKeyRules to Java (nmoumoul@redhat.com)
 - 1466415: Candlepin should allow setting of default auto-attach value for
