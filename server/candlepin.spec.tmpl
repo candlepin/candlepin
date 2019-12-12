@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.11.2
+Version: 2.12.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Thu Dec 12 2019 Barnaby Court <bcourt@redhat.com> 2.12.0-1
+- 1775361: Syspurpose attributes from AK should have priority over client
+  attributes (ojanus@redhat.com)
+
 * Thu Dec 12 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.11.2-1
 - 1655731: Auto-Attach will not correctly match on role/addon product attribute
   when a space exists after a comma.   - Added trim() in get_common_role,
