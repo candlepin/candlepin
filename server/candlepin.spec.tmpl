@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.12.0
+Version: 3.0.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,91 @@ fi
 
 #raw
 %changelog
+* Thu Dec 12 2019 Barnaby Court <bcourt@redhat.com> 3.0.0-1
+- Added conditional commit and rollback to the Transactional helper
+  (crog@redhat.com)
+- Hypervisor checkin should use individual locking and transactions
+  (wpoteat@redhat.com)
+- Updated event messaging to use TEXT_TYPE and simple strings (crog@redhat.com)
+- Added the Transactional class and interfaces (crog@redhat.com)
+- Removed pinsetter and pinsetter accessories (crog@redhat.com)
+- Added the Candlepin messaging package and the new CandlepinModeManager
+  (crog@redhat.com)
+- ENT-869: Use SSL when deploying Artemis remotely (nmoumoul@redhat.com)
+- [ENT-1478] Investigate & implement job constraint for EntitlerJob
+  (ojanus@redhat.com)
+- Updated JobManager's scoping capabilities (crog@redhat.com)
+- Updated the JobResource to use the new async jobs API (crog@redhat.com)
+- Added support for jobs to have an owner context (crog@redhat.com)
+- Switch all tests of async jobs to JUnit5 (ojanus@redhat.com)
+- [F] ENT-853: Port EntitleByProductsJob To The New Messaging Framework
+  (ojanus@redhat.com)
+- ENT-866: Remove redundant scheduled jobs (nmoumoul@redhat.com)
+- Reverted binary job constraint interface changes (crog@redhat.com)
+- Several compatibility updates for the Artemis jobs APIs (crog@redhat.com)
+- HealEntireOrgJob review comment fixes (abhiskum@localhost.localdomain)
+- [F] ENT-851: Port EntitlerJob To The New Messaging Framework
+  (ojanus@redhat.com)
+- Enable redelivery of Artemis messages (nmoumoul@redhat.com)
+- Ported the HealEntireOrgJob to the Artemis job system
+  (abhiskum@localhost.localdomain)
+- Ported the JobCleaner to the Artemis job system
+  (abhiskum@localhost.localdomain)
+- Port ImportRecordJob to the new job framework (nmoumoul@redhat.com)
+- Ported the ExpiredPoolsJob to the Artemis job system (crog@redhat.com)
+- Ported the ActiveEntitlementJob to the Artemis job system
+  (abhiskum@localhost.localdomain)
+- Ported the OrphanCleanupJob to the Artemis job system (crog@redhat.com)
+- Port UnmappedGuestEntitlementCleanerJob to the new job framework
+  (nmoumoul@redhat.com)
+- Ported the CertificateRevocationListTask to the Artemis job system
+  (crog@redhat.com)
+- Ported the ManifestCleanerJob to the Artemis job system (crog@redhat.com)
+- ENT-855: Port RegenEnvEntitlementCertsJob to the new job framework
+  (nmoumoul@redhat.com)
+- Added support for multiple parameters in the UniqueByArgConstraint
+  (crog@redhat.com)
+- Ported the HypervisorHeartbeatUpdateJob to the Artemis job framework
+  (crog@redhat.com)
+- Added synchronization between the database and messaging bus
+  (crog@redhat.com)
+- Ported the UndoImportsJob to the Artemis job system (crog@redhat.com)
+- Quartz should be bumped to version 2.2.2 (nmoumoul@redhat.com)
+- Migrate changes to HypervisorUpdateJob from master to async.
+  (ojanus@redhat.com)
+- Merge master into artemis branch (ojanus@redhat.com)
+- Port HypervisorUpdateJob To The New Messaging Framework (ojanus@redhat.com)
+- ENT-846: Port RefreshPoolsJob To The New Messaging Framework
+  (nmoumoul@redhat.com)
+- [F] ENT-850: Port RefreshPoolsForProductJob to new framework
+  (ojanus@redhat.com)
+- Port ImportJob To The New Messaging Framework (nmoumoul@redhat.com)
+- Updated how async job data serialization is performed (crog@redhat.com)
+- Updated ConsumerResource to use the new async ExportJob task
+  (crog@redhat.com)
+- Added the AsyncJobStatusDTO and associated translator (crog@redhat.com)
+- Added the UniqueByArgument constraint to the async ExportJob
+  (crog@redhat.com)
+- Added job constraints and the UniqueByArg constraint (crog@redhat.com)
+- Added basic support for scheduling jobs (crog@redhat.com)
+- Port ExportJob To The New Messaging Framework (ojanus@redhat.com)
+- Made several improvements and fixes to the job and logging systems
+  (crog@redhat.com)
+- Improved error handling in JobManager and JobMessageReceiver
+  (crog@redhat.com)
+- Added support for retry-on-failure to the async job system (crog@redhat.com)
+- Execute Jobs When Message Is Received From Artemis[ENT-1089]
+  (ojanus@redhat.com)
+- Added ability to receive async job messages from Artemis (mstead@redhat.com)
+- Various fixes for async job message sending (mstead@redhat.com)
+- Moved the amqp management  and message sending out of JobManager
+  (crog@redhat.com)
+- Added the JobBuilder, JobExecutionContext and CandlepinAsyncJob classes
+  (crog@redhat.com)
+- Additional changes to the async job infrastructure (crog@redhat.com)
+- Added corrections due to PR feedback (crog@redhat.com)
+- Added support for job management through Artemis (crog@redhat.com)
+
 * Thu Dec 12 2019 Barnaby Court <bcourt@redhat.com> 2.12.0-1
 - 1775361: Syspurpose attributes from AK should have priority over client
   attributes (ojanus@redhat.com)
