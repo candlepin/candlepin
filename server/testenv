@@ -1,0 +1,13 @@
+#! /bin/bash
+
+# TODO: Create a pod and bring up a candlepin/db for spec tests
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+PROJ_DIR=$(dirname ${SCRIPT_DIR})
+
+CONTAINER=$(podman create \
+  -t testenv:latest \
+  /bin/bash --login -c "cd /candlepin && $*")
+podman cp ${PROJ_DIR}/ ${CONTAINER}:/candlepin/
+podman start -ia ${CONTAINER}
+podman rm ${CONTAINER}
