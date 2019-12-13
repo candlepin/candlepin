@@ -25,13 +25,10 @@ import org.candlepin.dto.TimestampedCandlepinDTO;
  * The ProductCertificateDTO is a DTO representing product certificates presented to the API.
  */
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing a product certificate")
-public class ProductCertificateDTO extends TimestampedCandlepinDTO<ProductCertificateDTO> {
+public class ProductCertificateDTO extends AbstractCertificateDTO<ProductCertificateDTO> {
 
     private static final long serialVersionUID = 1L;
 
-    protected String id;
-    protected String key;
-    protected String cert;
     private ProductDTO product;
 
     /**
@@ -50,29 +47,6 @@ public class ProductCertificateDTO extends TimestampedCandlepinDTO<ProductCertif
      */
     public ProductCertificateDTO(ProductCertificateDTO source) {
         super(source);
-    }
-
-    /**
-     * Retrieves the id field of this ProductCertificateDTO object.
-     *
-     * @return the id field of this ProductCertificateDTO object.
-     */
-    @JsonIgnore
-    public String getId() {
-        return this.id;
-    }
-
-    /**
-     * Sets the id to set on this ProductCertificateDTO object.
-     *
-     * @param id the id to set on this ProductCertificateDTO object.
-     *
-     * @return a reference to this ProductCertificateDTO object.
-     */
-    @JsonIgnore
-    public ProductCertificateDTO setId(String id) {
-        this.id = id;
-        return this;
     }
 
     /**
@@ -99,39 +73,24 @@ public class ProductCertificateDTO extends TimestampedCandlepinDTO<ProductCertif
     }
 
     /**
-     * Returns the product of this product certificate.
+     * Get CertificateSerialDTO - Always returns null
      *
-     * @return the key of this certificate.
+     * @return null
      */
-    public String getKey() {
-        return this.key;
+    @Override
+    @JsonIgnore
+    public CertificateSerialDTO getSerial() {
+        return null;
     }
 
     /**
-     * Sets the key of this certificate.
      *
-     * @param key the key to set.
-     *
+     * @param serial the serial cert to set.
      * @return a reference to this ProductCertificateDTO object.
      */
-    public ProductCertificateDTO setKey(String key) {
-        this.key = key;
-        return this;
-    }
-
-    public String getCert() {
-        return this.cert;
-    }
-
-    /**
-     * Sets the cert of this certificate.
-     *
-     * @param cert the cert to set.
-     *
-     * @return a reference to this ProductCertificateDTO object.
-     */
-    public ProductCertificateDTO setCert(String cert) {
-        this.cert = cert;
+    @Override
+    @JsonProperty
+    public ProductCertificateDTO setSerial(CertificateSerialDTO serial) {
         return this;
     }
 
@@ -159,9 +118,6 @@ public class ProductCertificateDTO extends TimestampedCandlepinDTO<ProductCertif
             ProductCertificateDTO that = (ProductCertificateDTO) obj;
 
             EqualsBuilder builder = new EqualsBuilder()
-                .append(this.getId(), that.getId())
-                .append(this.getKey(), that.getKey())
-                .append(this.getCert(), that.getCert())
                 .append(this.getProduct() != null ? this.getProduct().getId() : null,
                 that.getProduct() != null ? that.getProduct().getId() : null);
 
@@ -178,9 +134,6 @@ public class ProductCertificateDTO extends TimestampedCandlepinDTO<ProductCertif
     public int hashCode() {
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(super.hashCode())
-            .append(this.getId())
-            .append(this.getKey())
-            .append(this.getCert())
             .append(this.getProduct() != null ? this.getProduct().getId() : null);
 
         return builder.toHashCode();
@@ -206,9 +159,6 @@ public class ProductCertificateDTO extends TimestampedCandlepinDTO<ProductCertif
     public ProductCertificateDTO populate(ProductCertificateDTO source) {
         super.populate(source);
 
-        this.setId(source.getId());
-        this.setKey(source.getKey());
-        this.setCert(source.getCert());
         this.setProduct(source.getProduct());
 
         return this;

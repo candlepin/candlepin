@@ -19,7 +19,8 @@ import org.candlepin.dto.AbstractDTOTest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Test suite for the ProductCertificateDTO class
@@ -27,12 +28,14 @@ import java.util.Map;
 public class ProductCertificateDTOTest extends AbstractDTOTest<ProductCertificateDTO> {
 
     protected Map<String, Object> values;
+    protected static ArrayList<String> skipMethodList = new ArrayList<>(Arrays.asList("getSerial"));
+
 
     public ProductCertificateDTOTest() {
         super(ProductCertificateDTO.class);
+
         ProductDTO pdto = new ProductDTO();
         pdto.setId("test-prod-id");
-
         this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Key", "test-key");
@@ -40,6 +43,19 @@ public class ProductCertificateDTOTest extends AbstractDTOTest<ProductCertificat
         this.values.put("Product", pdto);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
+
+    }
+
+    /**
+     * Method to skip testing any field in any DTO class by
+     * not including their accessor method for testing.
+     *
+     * @param methodName getter method of field.
+     * @return boolean
+     */
+    @Override
+    protected boolean skipMethod(String methodName) {
+        return skipMethodList.contains(methodName) ? true : false;
     }
 
     /**

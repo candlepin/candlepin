@@ -64,7 +64,8 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         for (Method method : this.dtoClass.getMethods()) {
             try {
                 Matcher matcher = ACCESSOR_NAME_REGEX.matcher(method.getName());
-                if (matcher.matches() && method.getParameterTypes().length == 0) {
+                if (matcher.matches() && method.getParameterTypes().length == 0 &&
+                    !skipMethod(method.getName())) {
                     String fieldName = matcher.group(1);
                     Method mutator = this.dtoClass.getMethod("set" + fieldName, method.getReturnType());
                     fields.put(fieldName, new Method[] { method, mutator });
@@ -86,6 +87,18 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         }
 
         this.copyConstructor = constructor;
+    }
+
+    /**
+     * Method to skip testing any field in any DTO class by
+     * not including their accessor method for testing.
+     * Defaults to false
+     *
+     * @param methodName getter method of field.
+     * @return boolean value
+     */
+    protected boolean skipMethod(String methodName) {
+        return false;
     }
 
     public T getDTOInstance() {
