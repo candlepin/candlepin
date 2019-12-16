@@ -30,17 +30,19 @@ import javax.persistence.AttributeConverter;
  * the target attribute class to the parent class's constructor:
  *
  * <pre>
+ * {@code
  * public class MyTypeJsonConverter extends AbstractJsonConverter<MyType> {
  *   public MyTypeJsonConverter() {
  *     super(MyType.class);
  *   }
+ * }
  * }
  * </pre>
  *
  * With the converter class created, the <tt>@Convert</tt> annotation needs to be added where
  * appropriate. The simplest approach is to apply it to the attribute field within the entity:
  *
- * <pre>
+ * {@code
  * public class MyEntity {
  *   ...
  *
@@ -50,7 +52,7 @@ import javax.persistence.AttributeConverter;
  *
  *   ...
  * }
- * </pre>
+ * }
  *
  * See the documentation on the <tt>@Convert</tt> annotation for other ways to apply the it.
  *

@@ -34,6 +34,7 @@ import java.util.Set;
 
 /**
  * A DTO representation of the ActivationKey entity in the Rules framework:
+ * {@code
  * <tt>
  *  {
  *    "id": "string",
@@ -49,6 +50,7 @@ import java.util.Set;
  *    ]
  *  }
  * </tt>
+ * }
  */
 public class ActivationKeyDTO extends CandlepinDTO<ActivationKeyDTO> {
     public static final long serialVersionUID = 1L;

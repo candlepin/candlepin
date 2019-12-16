@@ -175,7 +175,7 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
      *
      * Resource resolution order is detailed in the JAX-RS 2.0 specification in section 3.7.2.
      * Consider the following
-     *
+     * {@code
      *   @PUT
      *   @Path("/foo")
      *   public String methodOne() {
@@ -188,6 +188,7 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
      *   public String methodTwo(@PathParam("id") String id) {
      *       ....
      *   }
+     * }
      *
      *   With a cursory reading of the specification, it appears that a request to
      *

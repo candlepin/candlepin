@@ -618,8 +618,7 @@ public class ActivationKeyDTO extends TimestampedCandlepinDTO<ActivationKeyDTO> 
     /**
      * Adds the given product ID to this activation key DTO.
      *
-     * @param
-     *  productId the product ID to add to this activation key DTO.
+     * @param productId the product ID to add to this activation key DTO.
      *
      * @throws IllegalArgumentException
      *  if the productId is null or empty

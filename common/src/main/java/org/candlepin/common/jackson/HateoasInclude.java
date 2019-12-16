@@ -30,8 +30,8 @@ import java.lang.annotation.Target;
  * checked in that order. When applied to the class, all properties within the class will be
  * included. Otherwise, only the properties with the annotation will be included.
  *
- * Additionally, if the annotation is applied to an accessor in the form of "get<property>" or
- * "is<property>", the property will be included as if it the annotation were applied directly to it.
+ * Additionally, if the annotation is applied to an accessor in the form of "get{property}" or
+ * "is{property}", the property will be included as if it the annotation were applied directly to it.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.LOCAL_VARIABLE, ElementType.METHOD})

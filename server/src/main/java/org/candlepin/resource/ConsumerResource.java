@@ -2502,7 +2502,7 @@ public class ConsumerResource {
      * where param.key is the map key and param.value is the map value.
      *
      * @param params the query parameters to build the map from.
-     * @return a Map<String, String> of the key/value pairs in the specified parameters.
+     * @return {@code Map<String, String>} of the key/value pairs in the specified parameters.
      */
     private Map<String, String> getExtensionParamMap(List<KeyValueParameter> params) {
         Map<String, String> paramMap = new HashMap<>();

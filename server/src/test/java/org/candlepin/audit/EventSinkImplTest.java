@@ -110,7 +110,6 @@ public class EventSinkImplTest {
     }
 
     /**
-     * @return
      * @throws Exception
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) throws Exception {

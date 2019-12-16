@@ -1357,7 +1357,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * long constant name used in many curators. Callers which need this behavior with a custom
      * size can simulate the behavior by using the <tt>Iterables.partition</tt> method directly:
      * <pre>
-     *  Iterable<List<String>> blocks = ', 'entityIds, blockSize);
+     *  {@code Iterable<List<String>> blocks = ', 'entityIds, blockSize); }
      * </pre>
      *
      * @param collection
