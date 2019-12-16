@@ -17,7 +17,19 @@
     <dependency>
       <groupId>com.puppycrawl.tools</groupId>
       <artifactId>checkstyle</artifactId>
-      <version>8.2</version>
+      <version>8.26</version>
+      <scope>runtime</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.github.sevntu-checkstyle</groupId>
+      <artifactId>sevntu-checks</artifactId>
+      <version>1.36.0</version>
       <scope>runtime</scope>
       <exclusions>
         <exclusion>
