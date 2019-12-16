@@ -14,9 +14,6 @@
  */
 package org.candlepin.common.config;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +26,11 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Properties;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 public class PropertiesFileConfigurationTest {

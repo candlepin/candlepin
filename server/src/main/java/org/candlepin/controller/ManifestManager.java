@@ -14,18 +14,6 @@
  */
 package org.candlepin.controller;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.tasks.ExportJob;
 import org.candlepin.async.tasks.ImportJob;
@@ -53,16 +41,28 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.file.ManifestFile;
 import org.candlepin.sync.file.ManifestFileService;
-import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.sync.file.ManifestFileServiceException;
+import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.util.Util;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * This class serves as a controller layer for manifest export and import and encapsulates

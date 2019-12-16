@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -29,6 +27,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Calendar;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
 

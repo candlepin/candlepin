@@ -26,6 +26,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ContentOverrideCurator;
 import org.candlepin.util.ContentOverrideValidator;
+
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;

@@ -24,6 +24,8 @@ import org.candlepin.config.ConfigProperties;
 
 import com.google.inject.Inject;
 
+import io.swagger.annotations.ApiOperation;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +40,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import io.swagger.annotations.ApiOperation;
 
 /**
  * A root resource, responsible for returning client a struct of links to the

@@ -14,16 +14,16 @@
  */
 package org.candlepin.resteasy.filter;
 
-import org.candlepin.auth.KeycloakAuth;
 import org.candlepin.auth.AuthProvider;
-import org.candlepin.common.auth.SecurityHole;
-import org.candlepin.auth.SSLAuth;
-import org.candlepin.auth.TrustedConsumerAuth;
-import org.candlepin.auth.NoAuthPrincipal;
-import org.candlepin.auth.TrustedUserAuth;
 import org.candlepin.auth.BasicAuth;
+import org.candlepin.auth.KeycloakAuth;
+import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.OAuth;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SSLAuth;
+import org.candlepin.auth.TrustedConsumerAuth;
+import org.candlepin.auth.TrustedUserAuth;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
@@ -34,12 +34,12 @@ import org.candlepin.model.DeletedConsumerCurator;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.swagger.jaxrs.listing.ApiListingResource;
+
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.swagger.jaxrs.listing.ApiListingResource;
 
 import java.io.IOException;
 import java.lang.reflect.Method;

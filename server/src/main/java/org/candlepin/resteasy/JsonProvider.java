@@ -14,7 +14,6 @@
  */
 package org.candlepin.resteasy;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
@@ -25,6 +24,7 @@ import org.candlepin.jackson.ProductCachedSerializationModule;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;

@@ -15,13 +15,15 @@
 
 package org.candlepin.cache;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.dto.api.v1.StatusDTO;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Created by mstead on 11/04/17.

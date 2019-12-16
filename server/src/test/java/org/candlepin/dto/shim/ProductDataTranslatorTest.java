@@ -14,19 +14,16 @@
  */
 package org.candlepin.dto.shim;
 
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.BrandingDTO;
-import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.BrandingTranslator;
 import org.candlepin.dto.api.v1.BrandingTranslatorTest;
+import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
-import org.candlepin.model.Content;
 import org.candlepin.model.Branding;
+import org.candlepin.model.Content;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
@@ -38,6 +35,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Test suite for the UpstreamConsumerTranslator class

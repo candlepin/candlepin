@@ -14,9 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.test.MatchesPattern.*;
-import static org.junit.Assert.*;
-
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.CertificateSerialCurator;
@@ -51,6 +48,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.inject.Inject;
+
+import static org.candlepin.test.MatchesPattern.matchesPattern;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 /**
  * CrlFileUtilTest

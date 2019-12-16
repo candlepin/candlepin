@@ -16,11 +16,11 @@ package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.Branding;
 import org.candlepin.model.SubscriptionsCertificate;
 
 import java.util.Collection;

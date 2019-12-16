@@ -14,9 +14,6 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.NotAuthorizedException;
@@ -46,6 +43,11 @@ import java.util.Set;
 
 import javax.inject.Provider;
 import javax.ws.rs.core.HttpHeaders;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.when;
 
 public class BasicAuthViaUserServiceTest {
 

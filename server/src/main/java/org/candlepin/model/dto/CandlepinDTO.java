@@ -18,8 +18,8 @@ import org.candlepin.model.AbstractHibernateObject;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
-import java.util.Date;
 import java.io.Serializable;
+import java.util.Date;
 
 
 

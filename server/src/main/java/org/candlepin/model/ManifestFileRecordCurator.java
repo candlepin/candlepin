@@ -14,19 +14,18 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.sync.file.ManifestFileType;
+
+import com.google.inject.persist.Transactional;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Blob;
 import java.util.Date;
 
-import javax.persistence.Query;
-
-import org.candlepin.sync.file.ManifestFileType;
-
-import com.google.inject.persist.Transactional;
-
 import javax.inject.Singleton;
+import javax.persistence.Query;
 
 /**
  * Provides DB management for stored manifest archive files.

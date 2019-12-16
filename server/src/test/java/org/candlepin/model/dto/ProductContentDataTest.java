@@ -14,8 +14,6 @@
  */
 package org.candlepin.model.dto;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.model.Content;
 import org.candlepin.model.ProductContent;
 import org.candlepin.util.Util;
@@ -27,6 +25,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.stream.Stream;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test suite for the ProductContentData class

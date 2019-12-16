@@ -14,8 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.mockito.Mockito.*;
-
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
@@ -64,6 +62,12 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.InputStream;
 import java.util.Locale;
+
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 
 public class EntitlementRulesTestFixture {
     protected Enforcer enforcer;

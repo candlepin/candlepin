@@ -16,8 +16,8 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.dto.TimestampedCandlepinDTO;
-import org.candlepin.jackson.SingleValueWrapSerializer;
 import org.candlepin.jackson.SingleValueWrapDeserializer;
+import org.candlepin.jackson.SingleValueWrapSerializer;
 import org.candlepin.util.SetView;
 
 import com.fasterxml.jackson.annotation.JsonCreator;

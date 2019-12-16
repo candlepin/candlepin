@@ -14,13 +14,13 @@
  */
 package org.candlepin.test;
 
-import static org.junit.Assert.assertEquals;
-
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Utilitiy methods used in tests

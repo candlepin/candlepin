@@ -14,9 +14,10 @@
  */
 package org.candlepin.dto.rules.v1;
 
+import org.candlepin.dto.CandlepinDTO;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.CandlepinDTO;
 
 
 /**

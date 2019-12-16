@@ -29,7 +29,6 @@ import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.Hibernate;
-import org.hibernate.query.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
@@ -39,10 +38,11 @@ import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.SimpleExpression;
 import org.hibernate.criterion.Subqueries;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.internal.FilterImpl;
+import org.hibernate.query.Query;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.StringType;
 import org.slf4j.Logger;
@@ -62,9 +62,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.persistence.TypedQuery;
-
 import javax.inject.Singleton;
+import javax.persistence.TypedQuery;
 
 
 

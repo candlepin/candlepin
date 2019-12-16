@@ -14,20 +14,6 @@
  */
 package org.candlepin;
 
-import static org.mockito.Mockito.*;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -56,20 +42,20 @@ import org.candlepin.guice.TestPrincipalProvider;
 import org.candlepin.guice.TestingScope;
 import org.candlepin.guice.ValidationListenerProvider;
 import org.candlepin.jackson.PoolEventFilter;
-import org.candlepin.model.CPRestrictions;
-import org.candlepin.model.Rules;
-import org.candlepin.model.RulesCurator;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
+import org.candlepin.model.CPRestrictions;
+import org.candlepin.model.Rules;
+import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.JSSPKIUtility;
+import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -114,6 +100,18 @@ import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -148,6 +146,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Guice modules for unit testing

@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -35,6 +33,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * PoolCuratorEntitlementRulesTest

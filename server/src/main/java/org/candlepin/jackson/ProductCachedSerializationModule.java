@@ -14,7 +14,6 @@
  */
 package org.candlepin.jackson;
 
-import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import org.candlepin.model.Pool;
 import org.candlepin.model.ProductCurator;
 
@@ -23,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
+import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.google.inject.Inject;
 
 /**

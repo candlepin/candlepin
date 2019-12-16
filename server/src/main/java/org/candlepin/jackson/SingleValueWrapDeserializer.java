@@ -14,11 +14,13 @@
  */
 package org.candlepin.jackson;
 
+import org.candlepin.common.exceptions.CandlepinJsonProcessingException;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import org.candlepin.common.exceptions.CandlepinJsonProcessingException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

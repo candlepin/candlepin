@@ -14,9 +14,6 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
@@ -37,6 +34,17 @@ import java.util.Locale;
 
 import javax.inject.Provider;
 import javax.ws.rs.core.HttpHeaders;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class TrustedUserAuthTest {
 

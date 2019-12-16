@@ -23,15 +23,13 @@ import org.candlepin.service.model.OwnerInfo;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
 import org.hibernate.annotations.GenericGenerator;
-
-import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.annotations.NaturalId;
-
 import org.slf4j.event.Level;
 
 import java.io.Serializable;

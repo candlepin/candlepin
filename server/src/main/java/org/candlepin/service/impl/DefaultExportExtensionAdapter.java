@@ -14,13 +14,12 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.model.ConsumerInfo;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-
-import org.candlepin.service.ExportExtensionAdapter;
 
 
 

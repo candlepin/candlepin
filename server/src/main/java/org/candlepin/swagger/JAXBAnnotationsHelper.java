@@ -15,12 +15,14 @@
 package org.candlepin.swagger;
 
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+
 import io.swagger.models.Xml;
 import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.MapProperty;
 import io.swagger.models.properties.ObjectProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
+
 import org.apache.commons.lang3.StringUtils;
 
 import javax.xml.bind.annotation.XmlAttribute;

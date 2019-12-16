@@ -14,14 +14,14 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.jboss.resteasy.spi.ApplicationException;
 import org.junit.jupiter.api.Test;
 
 import java.io.EOFException;
 
 import javax.ws.rs.core.Response;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * ApplicationExceptionMapperTest

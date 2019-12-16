@@ -21,7 +21,6 @@ import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

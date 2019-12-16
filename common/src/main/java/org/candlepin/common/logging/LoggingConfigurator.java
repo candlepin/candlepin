@@ -17,10 +17,10 @@ package org.candlepin.common.logging;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationPrefixes;
 
-import org.slf4j.LoggerFactory;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
+
+import org.slf4j.LoggerFactory;
 
 /**
  * Sets the log4j logging levels dynamically based on values from the candlepin.conf file.

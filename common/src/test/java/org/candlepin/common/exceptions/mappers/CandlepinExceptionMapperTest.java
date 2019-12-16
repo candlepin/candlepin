@@ -14,9 +14,6 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.guice.CommonI18nProvider;
 import org.candlepin.common.guice.TestingScope;
@@ -26,8 +23,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.RequestScoped;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
@@ -38,6 +35,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 

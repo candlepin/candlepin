@@ -17,6 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.audit.ActiveMQStatus;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

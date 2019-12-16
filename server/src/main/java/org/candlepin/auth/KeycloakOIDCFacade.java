@@ -16,6 +16,7 @@
 package org.candlepin.auth;
 
 import org.candlepin.common.exceptions.CandlepinException;
+
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.keycloak.adapters.OIDCHttpFacade;
@@ -23,15 +24,16 @@ import org.keycloak.adapters.spi.AuthenticationError;
 import org.keycloak.adapters.spi.HttpFacade;
 import org.keycloak.adapters.spi.LogoutError;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.security.cert.X509Certificate;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+
+import javax.security.cert.X509Certificate;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * Facade to allow the Keycloak classes to interface with RestEasy's HttpRequest and ResponseBuilder.

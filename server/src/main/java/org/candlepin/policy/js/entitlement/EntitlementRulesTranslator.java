@@ -18,9 +18,10 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.policy.ValidationError;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
 
 import java.util.HashMap;
 import java.util.Map;

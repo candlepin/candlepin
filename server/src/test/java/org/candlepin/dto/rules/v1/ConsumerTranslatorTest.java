@@ -14,9 +14,6 @@
  */
 package org.candlepin.dto.rules.v1;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Consumer;
@@ -31,6 +28,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Test suite for the ConsumerTranslator (Rules framework) class

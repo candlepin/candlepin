@@ -14,10 +14,10 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.service.model.SubscriptionInfo;
-import org.candlepin.service.model.ProductInfo;
-import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ContentInfo;
+import org.candlepin.service.model.ProductContentInfo;
+import org.candlepin.service.model.ProductInfo;
+import org.candlepin.service.model.SubscriptionInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

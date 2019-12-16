@@ -14,9 +14,6 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -44,10 +41,10 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.ServiceLevelValidator;
+import org.candlepin.util.Util;
 
 import com.google.inject.util.Providers;
 
-import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,6 +59,18 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.inject.Provider;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.nullable;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 

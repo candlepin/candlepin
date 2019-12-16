@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
@@ -30,6 +28,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**

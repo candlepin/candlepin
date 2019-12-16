@@ -14,9 +14,6 @@
  */
 package org.candlepin.common.resteasy.filter;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.guice.CommonI18nProvider;
 import org.candlepin.common.paging.PageRequest;
@@ -33,6 +30,12 @@ import org.xnap.commons.i18n.I18n;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 /**
  * PageRequestFilterTest

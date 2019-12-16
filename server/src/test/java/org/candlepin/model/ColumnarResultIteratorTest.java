@@ -14,20 +14,21 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.test.DatabaseTestFixture;
 
+import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.Session;
-import org.hibernate.Query;
-
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 

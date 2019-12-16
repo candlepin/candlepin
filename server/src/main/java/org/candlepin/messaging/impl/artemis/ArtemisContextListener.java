@@ -14,15 +14,14 @@
  */
 package org.candlepin.messaging.impl.artemis;
 
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMException;
 
-import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
-
 import com.google.inject.Injector;
 
+import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

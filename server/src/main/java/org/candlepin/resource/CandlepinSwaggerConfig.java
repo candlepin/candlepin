@@ -14,8 +14,6 @@
  */
 package org.candlepin.resource;
 
-import java.util.ArrayList;
-
 import io.swagger.annotations.Info;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.Reader;
@@ -24,6 +22,8 @@ import io.swagger.models.ExternalDocs;
 import io.swagger.models.SecurityRequirement;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.BasicAuthDefinition;
+
+import java.util.ArrayList;
 
 /**
  * Swagger Configuration. This class is scaned together with other resources

@@ -21,9 +21,9 @@ import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.ConsumerInfo;
 
-import org.xnap.commons.i18n.I18n;
-
 import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Collection;

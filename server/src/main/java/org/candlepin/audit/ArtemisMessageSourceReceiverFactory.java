@@ -14,12 +14,14 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.common.config.Configuration;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+
 import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.candlepin.async.impl.ActiveMQSessionFactory;
-import org.candlepin.common.config.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -25,7 +25,6 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

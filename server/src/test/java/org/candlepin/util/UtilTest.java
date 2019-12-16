@@ -19,7 +19,9 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;

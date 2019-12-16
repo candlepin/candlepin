@@ -14,6 +14,13 @@
  */
 package org.candlepin.dto.rules.v1;
 
+import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.dto.CandlepinDTO;
+import org.candlepin.jackson.CandlepinAttributeDeserializer;
+import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
+import org.candlepin.util.MapView;
+import org.candlepin.util.SetView;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,21 +30,16 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.common.jackson.HateoasInclude;
-import org.candlepin.dto.CandlepinDTO;
-import org.candlepin.jackson.CandlepinAttributeDeserializer;
-import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
-import org.candlepin.util.MapView;
-import org.candlepin.util.SetView;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * A DTO representation of the Pool entity as used by the Rules framework.

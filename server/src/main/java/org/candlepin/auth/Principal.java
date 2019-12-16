@@ -14,9 +14,10 @@
  */
 package org.candlepin.auth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.util.Util;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;

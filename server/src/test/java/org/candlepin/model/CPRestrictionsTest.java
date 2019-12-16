@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.DatabaseConfigFactory;
@@ -26,7 +24,6 @@ import com.google.inject.Injector;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.InExpression;
 import org.hibernate.criterion.LogicalExpression;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,6 +31,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * CPRestrictionsTest

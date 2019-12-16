@@ -14,8 +14,6 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.jboss.resteasy.util.MediaTypeHelper.*;
-
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.util.VersionUtil;
@@ -37,6 +35,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+
+import static org.jboss.resteasy.util.MediaTypeHelper.getBestMatch;
+import static org.jboss.resteasy.util.MediaTypeHelper.parseHeader;
 
 
 

@@ -21,7 +21,6 @@ import org.candlepin.util.X509ExtensionUtil;
 import com.google.inject.Inject;
 
 import org.hibernate.criterion.Restrictions;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -14,10 +14,6 @@
  */
 package org.candlepin.guice;
 
-import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
-import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
-import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
-
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ActiveMQContextListener;
@@ -46,6 +42,8 @@ import com.google.inject.Module;
 import com.google.inject.Stage;
 import com.google.inject.util.Modules;
 
+import io.swagger.converter.ModelConverters;
+
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.dialect.PostgreSQL92Dialect;
@@ -58,8 +56,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
-import io.swagger.converter.ModelConverters;
-
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
@@ -71,6 +67,10 @@ import javax.cache.CacheManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+
+import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
+import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
+import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 /**
  * Customized Candlepin version of

@@ -17,13 +17,13 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
-import org.candlepin.async.tasks.HypervisorUpdateJob;
 import org.candlepin.async.tasks.HypervisorHeartbeatUpdateJob;
+import org.candlepin.async.tasks.HypervisorUpdateJob;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.auth.Verify;
 import org.candlepin.auth.UpdateConsumerCheckIn;
+import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
@@ -47,6 +47,13 @@ import org.candlepin.resource.util.GuestMigration;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -74,13 +81,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
 
 
 

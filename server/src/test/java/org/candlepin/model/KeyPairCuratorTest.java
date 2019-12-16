@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
@@ -23,6 +21,9 @@ import org.junit.jupiter.api.Test;
 import java.security.KeyPair;
 
 import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * KeyPairCuratorTest

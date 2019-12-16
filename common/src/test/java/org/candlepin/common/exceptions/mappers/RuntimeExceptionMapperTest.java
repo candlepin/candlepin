@@ -14,9 +14,6 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.ExceptionMessage;
@@ -38,6 +35,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 
 /**

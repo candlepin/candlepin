@@ -26,7 +26,7 @@ ext.versions = [
     swagger: "1.5.7",
     logback: "1.2.3",
     guice: "4.1.0",
-    checkstyle: "8.2",
+    checkstyle: "8.26",
     jaxb: "2.3.0",
     junit5: "5.4.1",
     mockito: "2.23.4",
@@ -130,7 +130,10 @@ ext.libraries = [
     ],
     collections: "com.google.guava:guava:25.1-jre",
     hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.16.Final",
-    checkstyle: "com.puppycrawl.tools:checkstyle:${versions.checkstyle}",
+    checkstyle: [
+            "com.puppycrawl.tools:checkstyle:${versions.checkstyle}",
+            "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
+    ],
     gettext: "com.googlecode.gettext-commons:gettext-commons:0.9.8",
     javax_servlet: "javax.servlet:servlet-api:2.5",
     javax_validation: "javax.validation:validation-api:2.0.1.Final",

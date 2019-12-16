@@ -14,9 +14,6 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.model.Consumer;
@@ -31,6 +28,12 @@ import java.lang.reflect.Method;
 
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AuthorizationFeatureTest {

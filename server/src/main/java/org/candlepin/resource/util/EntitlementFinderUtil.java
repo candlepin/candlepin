@@ -14,11 +14,12 @@
  */
 package org.candlepin.resource.util;
 
-import java.util.List;
-
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
+
+import org.apache.commons.lang.StringUtils;
+
+import java.util.List;
 
 /**
  * EntitlementFinderUtil

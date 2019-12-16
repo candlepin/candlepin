@@ -14,8 +14,6 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.test.DatabaseTestFixture;
@@ -25,6 +23,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * RulesResourceTest

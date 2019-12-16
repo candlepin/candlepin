@@ -14,15 +14,17 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.audit.ActiveMQStatus;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.remoting.CloseListener;
-import org.candlepin.audit.ActiveMQStatus;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

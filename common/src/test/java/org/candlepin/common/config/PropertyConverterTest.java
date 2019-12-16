@@ -14,14 +14,21 @@
  */
 package org.candlepin.common.config;
 
-import static org.candlepin.common.config.PropertyConverter.*;
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.candlepin.common.config.PropertyConverter.toBigInteger;
+import static org.candlepin.common.config.PropertyConverter.toBoolean;
+import static org.candlepin.common.config.PropertyConverter.toInteger;
+import static org.candlepin.common.config.PropertyConverter.toList;
+import static org.candlepin.common.config.PropertyConverter.toLong;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PropertyConverterTest {
     private Object BAD_COMPARISON = new Object();

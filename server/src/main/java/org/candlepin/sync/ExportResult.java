@@ -14,9 +14,9 @@
  */
 package org.candlepin.sync;
 
-import java.io.Serializable;
-
 import org.candlepin.resource.ConsumerResource;
+
+import java.io.Serializable;
 
 /**
  * Represents the result from an async export job. This class simply defines

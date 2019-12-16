@@ -14,8 +14,21 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import org.candlepin.TestingModules;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.model.Branding;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Content;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
+import org.candlepin.model.dto.TinySubscription;
+import org.candlepin.test.TestUtil;
+import org.candlepin.util.X509V3ExtensionUtil.NodePair;
+import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,21 +36,6 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import org.candlepin.TestingModules;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.Content;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.Branding;
-import org.candlepin.model.ProductContent;
-import org.candlepin.model.Owner;
-import org.candlepin.model.dto.TinySubscription;
-import org.candlepin.test.TestUtil;
-import org.candlepin.util.X509V3ExtensionUtil.NodePair;
-import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +45,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 
 

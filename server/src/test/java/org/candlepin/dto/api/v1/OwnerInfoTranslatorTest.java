@@ -14,14 +14,15 @@
  */
 package org.candlepin.dto.api.v1;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Owner;
 import org.candlepin.service.model.OwnerInfo;
 
 import java.util.Date;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 
 

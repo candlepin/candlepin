@@ -14,9 +14,10 @@
  */
 package org.candlepin.dto.api.v1;
 
+import org.candlepin.dto.CandlepinDTO;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.CandlepinDTO;
 
 /**
  * A DTO representation of the Consumer entity, as exposed by the API for hypervisor updates.

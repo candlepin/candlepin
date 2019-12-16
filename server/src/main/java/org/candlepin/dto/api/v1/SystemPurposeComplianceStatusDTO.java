@@ -18,10 +18,10 @@ import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
+import io.swagger.annotations.ApiModel;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import io.swagger.annotations.ApiModel;
 
 import java.util.Collection;
 import java.util.Comparator;

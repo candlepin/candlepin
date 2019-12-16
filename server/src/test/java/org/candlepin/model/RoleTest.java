@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.test.DatabaseTestFixture;
@@ -28,6 +26,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class RoleTest extends DatabaseTestFixture {
     @Inject private UserCurator userCurator;

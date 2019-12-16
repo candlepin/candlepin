@@ -14,12 +14,15 @@
  */
 package org.candlepin.dto.api.v1;
 
+import org.candlepin.dto.TimestampedCandlepinDTO;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.swagger.annotations.ApiModel;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.TimestampedCandlepinDTO;
 
 /**
  * The ProductCertificateDTO is a DTO representing product certificates presented to the API.

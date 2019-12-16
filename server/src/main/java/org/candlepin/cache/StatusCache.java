@@ -15,6 +15,7 @@
 package org.candlepin.cache;
 
 import org.candlepin.dto.api.v1.StatusDTO;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

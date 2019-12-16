@@ -14,11 +14,13 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.config.Configuration;
+import org.candlepin.util.AttributeValidator;
+
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.util.AttributeValidator;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
@@ -28,11 +30,6 @@ import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Singleton;
-import javax.persistence.Cache;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,6 +37,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.inject.Singleton;
+import javax.persistence.Cache;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 
 

@@ -18,8 +18,8 @@ import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
-import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.ProductContentInfo;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
@@ -27,7 +27,6 @@ import org.candlepin.util.Util;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 

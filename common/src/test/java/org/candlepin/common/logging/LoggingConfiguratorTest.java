@@ -14,20 +14,22 @@
  */
 package org.candlepin.common.logging;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.common.config.ConfigurationPrefixes;
 import org.candlepin.common.config.MapConfiguration;
-
-import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 
+import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * LoggingConfigTest

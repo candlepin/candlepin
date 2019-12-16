@@ -29,7 +29,6 @@ import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.ext.Provider;
 
 /**
  * This class is responsible for determining whether or not the principal

@@ -21,13 +21,12 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.OwnerContentCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.OwnerProductCurator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

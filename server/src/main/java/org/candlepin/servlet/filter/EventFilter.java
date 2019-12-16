@@ -14,11 +14,11 @@
  */
 package org.candlepin.servlet.filter;
 
-import com.google.inject.Injector;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.filter.TeeHttpServletResponse;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;

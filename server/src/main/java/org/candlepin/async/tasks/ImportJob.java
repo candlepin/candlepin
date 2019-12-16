@@ -14,7 +14,6 @@
  */
 package org.candlepin.async.tasks;
 
-import com.google.inject.Inject;
 import org.candlepin.async.ArgumentConversionException;
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.ImportConflictJobException;
@@ -33,6 +32,9 @@ import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImportConflictException;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.file.ManifestFileService;
+
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

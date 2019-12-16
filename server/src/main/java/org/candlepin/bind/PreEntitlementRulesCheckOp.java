@@ -14,15 +14,16 @@
  */
 package org.candlepin.bind;
 
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
+
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

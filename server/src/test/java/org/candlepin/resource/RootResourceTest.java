@@ -14,8 +14,6 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-
 import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.config.CandlepinCommonTestConfig;
 
@@ -25,6 +23,8 @@ import org.junit.Test;
 import java.lang.reflect.Method;
 
 import javax.ws.rs.Path;
+
+import static org.junit.Assert.assertEquals;
 
 
 /**

@@ -13,9 +13,10 @@
  *  in this software or its documentation.
  */
 
-import org.gradle.api.Project
-import org.gradle.api.Plugin
+
 import org.gradle.api.GradleException
+import org.gradle.api.Plugin
+import org.gradle.api.Project
 
 class GettextExtension {
     String keys_project_dir

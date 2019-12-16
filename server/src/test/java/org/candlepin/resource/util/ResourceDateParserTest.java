@@ -14,8 +14,6 @@
  */
 package org.candlepin.resource.util;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.common.exceptions.BadRequestException;
 
 import org.junit.Test;
@@ -23,6 +21,9 @@ import org.junit.Test;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * ResourceDateParserTest

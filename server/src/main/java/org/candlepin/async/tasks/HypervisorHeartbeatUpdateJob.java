@@ -14,8 +14,8 @@
  */
 package org.candlepin.async.tasks;
 
-import org.candlepin.async.AsyncJob;
 import org.candlepin.async.ArgumentConversionException;
+import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;

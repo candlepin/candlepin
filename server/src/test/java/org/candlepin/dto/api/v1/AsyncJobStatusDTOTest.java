@@ -14,8 +14,6 @@
  */
 package org.candlepin.dto.api.v1;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.dto.AbstractDTOTest;
 
 import java.util.Date;

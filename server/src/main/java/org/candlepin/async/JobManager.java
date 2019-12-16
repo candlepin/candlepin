@@ -15,8 +15,8 @@
 package org.candlepin.async;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.auth.Principal;
 import org.candlepin.auth.JobPrincipal;
+import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.filter.LoggingFilter;
@@ -32,7 +32,6 @@ import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
@@ -40,23 +39,22 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import org.quartz.CronTrigger;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.CronScheduleBuilder;
+import org.quartz.CronTrigger;
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.ScheduleBuilder;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerFactory;
 import org.quartz.SchedulerException;
+import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -79,8 +77,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
-import javax.transaction.Synchronization;
 import javax.transaction.Status;
+import javax.transaction.Synchronization;
 
 
 

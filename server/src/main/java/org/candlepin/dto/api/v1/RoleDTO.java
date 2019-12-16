@@ -15,9 +15,9 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.service.model.RoleInfo;
 import org.candlepin.util.ListView;
 import org.candlepin.util.Util;
-import org.candlepin.service.model.RoleInfo;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

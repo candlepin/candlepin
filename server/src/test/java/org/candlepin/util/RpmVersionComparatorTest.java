@@ -14,13 +14,13 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.common.util.RpmVersionComparator;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * RpmVersionComparatorTest

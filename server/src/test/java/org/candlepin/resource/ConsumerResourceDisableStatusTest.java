@@ -14,8 +14,6 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.model.Consumer;
@@ -36,6 +34,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * ConsumerResourceEntitlementRulesTest

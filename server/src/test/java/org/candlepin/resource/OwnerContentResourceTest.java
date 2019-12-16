@@ -13,7 +13,6 @@
  * in this software or its documentation.
  */
 package org.candlepin.resource;
-import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -37,6 +36,13 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 

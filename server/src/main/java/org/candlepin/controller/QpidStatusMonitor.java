@@ -15,13 +15,15 @@
 
 package org.candlepin.controller;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import org.candlepin.audit.QpidConnection;
 import org.candlepin.audit.QpidQmf;
 import org.candlepin.audit.QpidStatus;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -14,13 +14,11 @@
  */
 package org.candlepin.resource;
 
-import static org.quartz.JobBuilder.*;
-
-import org.candlepin.auth.Verify;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RegenProductEntitlementCertsJob;
+import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
@@ -52,18 +50,18 @@ import org.candlepin.resteasy.parameter.KeyValueParameter;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang.StringUtils;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
+
+import org.apache.commons.lang.StringUtils;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
 import java.util.ArrayList;

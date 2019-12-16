@@ -21,8 +21,8 @@ import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 
 import java.util.Collection;
 import java.util.Collections;
