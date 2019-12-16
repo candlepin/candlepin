@@ -80,8 +80,7 @@ rvm use --default 2.5.3
 set -v
 
 # Install all ruby deps
-gem update --system
-gem install bundler
+gem install bundler -v 1.16.1
 bundle install --without=proton
 
 # Installs all Java deps into the image, big time saver
