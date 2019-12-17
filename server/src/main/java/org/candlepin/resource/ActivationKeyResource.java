@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Verify;
+import org.candlepin.common.resource.exceptions.BadRequestException;
 import org.candlepin.controller.ActivationKeyController;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
@@ -34,6 +35,7 @@ import io.swagger.annotations.Authorization;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -58,15 +60,21 @@ import javax.ws.rs.core.MediaType;
 public class ActivationKeyResource {
 
     private static final Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
+    private static final String BAD_ACTIVATION_KEY_ID = "activation key ID is null or empty";
+    private static final String BAD_POOL_ID = "pool ID is null or empty";
+    private static final String BAD_PRODUCT_ID = "product ID is null or empty";
+    private static final String UPDATE_IS_NULL = "update is null";
 
     private final ActivationKeyController activationKeyController;
     private final ModelTranslator translator;
+    private final I18n i18n;
 
     @Inject
     public ActivationKeyResource(
-        ActivationKeyController activationKeyController, ModelTranslator translator) {
+        ActivationKeyController activationKeyController, ModelTranslator translator, I18n i18n) {
         this.activationKeyController = Objects.requireNonNull(activationKeyController);
         this.translator = Objects.requireNonNull(translator);
+        this.i18n = Objects.requireNonNull(i18n);
     }
 
     @ApiOperation(notes = "Retrieves a single Activation Key", value = "Get Activation Key")
@@ -77,6 +85,9 @@ public class ActivationKeyResource {
     public ActivationKeyDTO getActivationKey(
         @PathParam("activation_key_id")
         @Verify(ActivationKey.class) String activationKeyId) {
+        if (activationKeyId == null || activationKeyId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_ACTIVATION_KEY_ID));
+        }
         log.debug("Searching for activation key: {}", activationKeyId);
         ActivationKey key = this.activationKeyController.getActivationKey(activationKeyId);
         return this.translator.translate(key, ActivationKeyDTO.class);
@@ -90,6 +101,9 @@ public class ActivationKeyResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Iterator<PoolDTO> getActivationKeyPools(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId) {
+        if (activationKeyId == null || activationKeyId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_ACTIVATION_KEY_ID));
+        }
         log.debug("Searching for pools of activation key: {}", activationKeyId);
         return this.activationKeyController.getActivationKeyPools(activationKeyId)
             .stream()
@@ -106,6 +120,12 @@ public class ActivationKeyResource {
     public ActivationKeyDTO updateActivationKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @ApiParam(name = "update", required = true) ActivationKeyDTO update) {
+        if (activationKeyId == null || activationKeyId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_ACTIVATION_KEY_ID));
+        }
+        if (update == null) {
+            throw new BadRequestException(i18n.tr(UPDATE_IS_NULL));
+        }
         log.debug("Updating activation key: {}", activationKeyId);
         ActivationKey toUpdate = this.activationKeyController
             .updateActivationKey(activationKeyId, update);
@@ -122,6 +142,12 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id") @Verify(Pool.class) String poolId,
         @QueryParam("quantity") Long quantity) {
+        if (activationKeyId == null || activationKeyId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_ACTIVATION_KEY_ID));
+        }
+        if (poolId == null || poolId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_POOL_ID));
+        }
         log.debug("Adding pool: {} to activation key: {}", poolId, activationKeyId);
         ActivationKey key = this.activationKeyController.addPoolToKey(activationKeyId, poolId, quantity);
         return this.translator.translate(key, ActivationKeyDTO.class);
@@ -136,6 +162,12 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id")
         @Verify(Pool.class) String poolId) {
+        if (activationKeyId == null || activationKeyId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_ACTIVATION_KEY_ID));
+        }
+        if (poolId == null || poolId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_POOL_ID));
+        }
         log.debug("Removing pool: {} from activation key: {}", poolId, activationKeyId);
         ActivationKey key = this.activationKeyController.removePoolFromKey(activationKeyId, poolId);
         return this.translator.translate(key, ActivationKeyDTO.class);
@@ -150,6 +182,12 @@ public class ActivationKeyResource {
     public ActivationKeyDTO addProductIdToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
+        if (activationKeyId == null || activationKeyId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_ACTIVATION_KEY_ID));
+        }
+        if (productId == null || productId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_PRODUCT_ID));
+        }
         log.debug("Adding product ID: {} to activation key: {}", productId, activationKeyId);
         ActivationKey key = this.activationKeyController.addProductIdToKey(activationKeyId, productId);
         return this.translator.translate(key, ActivationKeyDTO.class);
@@ -163,6 +201,12 @@ public class ActivationKeyResource {
     public ActivationKeyDTO removeProductIdFromKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("product_id") String productId) {
+        if (activationKeyId == null || activationKeyId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_ACTIVATION_KEY_ID));
+        }
+        if (productId == null || productId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_PRODUCT_ID));
+        }
         log.debug("Removing product ID: {} from activation key: {}", productId, activationKeyId);
         ActivationKey key = this.activationKeyController.removeProductIdFromKey(activationKeyId, productId);
         return this.translator.translate(key, ActivationKeyDTO.class);
@@ -186,6 +230,9 @@ public class ActivationKeyResource {
     public void deleteActivationKey(
         @PathParam("activation_key_id")
         @Verify(ActivationKey.class) String activationKeyId) {
+        if (activationKeyId == null || activationKeyId.isEmpty()) {
+            throw new BadRequestException(i18n.tr(BAD_ACTIVATION_KEY_ID));
+        }
         log.debug("Deleting activation key: {}", activationKeyId);
         this.activationKeyController.deleteActivationKey(activationKeyId);
     }
