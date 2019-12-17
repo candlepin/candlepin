@@ -45,9 +45,9 @@ public class ActivationKeyContentOverrideResource extends
     private ActivationKeyCurator activationKeyCurator;
 
     /**
-     * @param contentOverrideCurator
-     * @param contentOverrideValidator
-     * @param parentPath
+     * @param akcoCurator
+     * @param akCurator
+     * @param validator
      */
     @Inject
     public ActivationKeyContentOverrideResource(I18n i18n, ActivationKeyContentOverrideCurator akcoCurator,

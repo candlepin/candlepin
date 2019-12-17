@@ -78,9 +78,9 @@ public class Cdn extends AbstractHibernateObject implements CdnInfo {
     }
 
     /**
-     * @param string
-     * @param string2
-     * @param string3
+     * @param label
+     * @param name
+     * @param url
      */
     public Cdn(String label, String name, String url) {
         this(label, name, url, null);

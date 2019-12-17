@@ -26,7 +26,7 @@ ext.versions = [
     swagger: "1.5.7",
     logback: "1.2.3",
     guice: "4.1.0",
-    checkstyle: "8.26",
+    checkstyle: "8.27",
     jaxb: "2.3.0",
     junit5: "5.4.1",
     mockito: "2.23.4",

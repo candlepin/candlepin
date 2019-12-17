@@ -68,7 +68,7 @@ public class Order {
     }
 
     /**
-     * @param accountNumber
+     * @param account
      */
     public void setAccount(String account) {
         this.account = account;

@@ -1618,7 +1618,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * Figures out if the pool with poolId provides a product providedProductId.
      * 'provides' means that the product is either Pool product or is linked through
      * cp2_pool_provided_products table
-     * @param poolId
+     * @param pool
      * @param providedProductId
      * @return True if and only if providedProductId is provided product or pool product
      */

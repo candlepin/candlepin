@@ -231,7 +231,7 @@ public interface PoolManager {
      * Updates the pools based on the entitlements in the specified stack.
      *
      * @param consumer
-     * @param pools
+     * @param pool
      */
     void updatePoolsFromStackWithoutDeletingStack(Consumer consumer,
         List<Pool> pool, Collection<Entitlement> entitlements);
@@ -240,7 +240,7 @@ public interface PoolManager {
      * @param guest products we want to provide for
      * @param host to bind entitlements to
      * @param entitleDate
-     * @param owner
+     * @param ownerId
      * @param serviceLevelOverride
      * @param fromPools
      * @return list of entitlements to bind

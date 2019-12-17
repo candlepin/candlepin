@@ -104,7 +104,7 @@ public class TinySubscription {
     }
 
     /**
-     * @param virt_only
+     * @param virtOnly
      */
     public void setVirtOnly(Boolean virtOnly) {
         this.virtOnly = virtOnly;
