@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.0
+Version: 3.1.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,13 @@ fi
 
 #raw
 %changelog
+* Tue Dec 17 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.1-1
+- Update checkstyle to 8.27 (bcourt@redhat.com)
+- Update pom for checkstyle changes. (bcourt@redhat.com)
+- Fix checkstyle javadoc errors (bcourt@redhat.com)
+- Update to Checkstyle 8.26 & use sevntu.checks for
+  DiamondOperatorForVariableDefinitionCheck (bcourt@redhat.com)
+
 * Thu Dec 12 2019 Barnaby Court <bcourt@redhat.com> 3.1.0-1
 - 
 
