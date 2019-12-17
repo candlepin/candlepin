@@ -96,7 +96,6 @@ public class JsRunnerProvider implements Provider<JsRunner> {
      *  We do them once here, and define this provider as a singleton, so it's only
      *  done at provider creation or whenever rules are refreshed.
      *
-     * @param rulesCurator
      */
     public void compileRules() {
         compileRules(false);

@@ -183,7 +183,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * If multiple registered consumers report this guest ID (re-registraiton), only the
      * most recently updated will be returned.
      *
-     * @param guestId
+     * @param guestIds
      *
      * @return VirtConsumerMap of guest ID to it's registered guest consumer, or null if
      * none exists.
