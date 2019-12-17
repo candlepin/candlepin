@@ -21,7 +21,6 @@ import org.candlepin.common.util.VersionUtil;
 import com.google.inject.Inject;
 
 import org.jboss.resteasy.spi.BadRequestException;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Map;

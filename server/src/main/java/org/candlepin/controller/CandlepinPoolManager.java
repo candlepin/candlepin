@@ -26,10 +26,10 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -70,29 +70,26 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.model.CdnInfo;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.CertificateSerialInfo;
-import org.candlepin.service.model.CdnInfo;
-import org.candlepin.service.model.SubscriptionInfo;
-import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.ContentInfo;
+import org.candlepin.service.model.ProductInfo;
+import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
 import org.candlepin.util.Util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;

@@ -14,18 +14,21 @@
  */
 package org.candlepin.dto.rules.v1;
 
+import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.dto.CandlepinDTO;
+
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.common.jackson.HateoasInclude;
-import org.candlepin.dto.CandlepinDTO;
+
+import java.util.Date;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Date;
 
 
 

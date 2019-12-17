@@ -44,7 +44,7 @@ public class QpidConfigBuilder {
     }
 
     /**
-     * Transforms Candlepin configuration to a Map <String, String> so that its easy to
+     * Transforms Candlepin configuration to a {@code Map <String, String> }so that its easy to
      * configure Qpid broker.
      * @param ctx
      * @return Map of configurations for Qpid Broker

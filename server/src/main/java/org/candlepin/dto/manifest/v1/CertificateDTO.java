@@ -14,12 +14,13 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.service.model.CertificateInfo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 
 

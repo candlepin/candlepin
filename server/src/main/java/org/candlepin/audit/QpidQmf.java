@@ -75,7 +75,6 @@ public class QpidQmf {
      *
      * @param targetType
      * @param query
-     * @return
      * @throws JMSException
      */
     private List<Map<String, Object>> runQuery(String targetType, Map<Object, Object> query)

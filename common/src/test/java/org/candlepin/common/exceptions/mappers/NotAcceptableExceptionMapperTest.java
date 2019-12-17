@@ -14,12 +14,12 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.NotAcceptableException;
 import javax.ws.rs.core.Response;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * NotAcceptableExceptionMapperTest

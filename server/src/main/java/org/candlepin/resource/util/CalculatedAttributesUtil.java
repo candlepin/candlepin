@@ -14,11 +14,11 @@
  */
 package org.candlepin.resource.util;
 
+import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolComplianceType;
 import org.candlepin.policy.js.quantity.QuantityRules;
-import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 
 import com.google.inject.Inject;
 

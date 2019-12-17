@@ -14,8 +14,6 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.async.JobException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
@@ -40,6 +38,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * ConsumerResourceEntitlementRulesTest

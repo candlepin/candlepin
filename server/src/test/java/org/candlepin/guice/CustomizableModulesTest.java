@@ -14,9 +14,6 @@
  */
 package org.candlepin.guice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.PropertiesFileConfiguration;
 
@@ -26,6 +23,9 @@ import org.junit.Test;
 
 import java.net.URISyntaxException;
 import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class CustomizableModulesTest {
 

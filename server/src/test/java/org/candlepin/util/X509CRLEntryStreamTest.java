@@ -14,9 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.test.MatchesPattern.*;
-import static org.junit.Assert.*;
-
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -60,6 +57,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.candlepin.test.MatchesPattern.matchesPattern;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test implementations of X509CRLEntryStream

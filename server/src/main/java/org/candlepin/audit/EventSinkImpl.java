@@ -18,13 +18,13 @@ import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 

@@ -14,7 +14,6 @@
  */
 package org.candlepin.resteasy.filter;
 
-import com.google.inject.Injector;
 import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatusCurator;
@@ -35,15 +34,19 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+
+import com.google.inject.Injector;
+
 import org.xnap.commons.i18n.I18n;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
 
 
 /**

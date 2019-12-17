@@ -17,9 +17,10 @@ package org.candlepin.sync;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.ProductCurator;
-import org.mockito.Mockito;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.mockito.Mockito;
 
 public class TestSyncUtils {
 

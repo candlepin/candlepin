@@ -14,16 +14,12 @@
  */
 package org.candlepin.policy.js;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
-import java.util.Date;
-
 import org.candlepin.model.Rules;
 import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
+
+import com.google.inject.Provider;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +28,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.google.inject.Provider;
+import java.util.Date;
+
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 /**
  * JsRunnerProviderTest
  */

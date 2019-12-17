@@ -18,9 +18,9 @@ import org.candlepin.auth.Principal;
 
 import com.google.inject.Provider;
 
-import javax.inject.Singleton;
-
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
+import javax.inject.Singleton;
 
 /**
  * Guice provider that pulls the principal out of the ResteasyProviderFactory's context.

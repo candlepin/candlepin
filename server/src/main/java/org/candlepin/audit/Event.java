@@ -14,10 +14,11 @@
  */
 package org.candlepin.audit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.util.Util;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

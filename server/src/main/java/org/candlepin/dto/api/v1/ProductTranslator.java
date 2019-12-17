@@ -17,9 +17,9 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
-import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 
 import java.util.Collection;

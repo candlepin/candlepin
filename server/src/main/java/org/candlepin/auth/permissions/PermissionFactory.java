@@ -17,8 +17,8 @@ package org.candlepin.auth.permissions;
 import org.candlepin.auth.Access;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.OwnerInfo;
+import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
@@ -31,8 +31,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Singleton;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 
 

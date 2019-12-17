@@ -15,25 +15,19 @@
 
 package org.candlepin.auth;
 
-import org.jboss.resteasy.spi.HttpRequest;
-import org.keycloak.TokenVerifier;
-import javax.inject.Inject;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.ws.rs.core.Context;
-import java.io.IOException;
-
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.common.resteasy.auth.AuthUtil;
-import org.keycloak.KeycloakSecurityContext;
 import org.candlepin.service.UserServiceAdapter;
+
+import org.jboss.resteasy.spi.HttpRequest;
+import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.TokenVerifier;
+import org.keycloak.adapters.KeycloakDeployment;
+import org.keycloak.adapters.RefreshableKeycloakSecurityContext;
 import org.keycloak.adapters.RequestAuthenticator;
 import org.keycloak.adapters.ServerRequest;
-import org.keycloak.adapters.RefreshableKeycloakSecurityContext;
-import org.keycloak.adapters.KeycloakDeployment;
-
 import org.keycloak.common.VerificationException;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.AccessTokenResponse;
@@ -42,7 +36,14 @@ import org.keycloak.util.TokenUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import java.io.IOException;
+
+import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.ws.rs.core.Context;
 
 /**
  * AuthenticationProvider that accepts an {@link AccessToken} or

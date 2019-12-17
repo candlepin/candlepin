@@ -14,9 +14,6 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SSLAuth;
 import org.candlepin.auth.Verify;
@@ -26,6 +23,10 @@ import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.model.Consumer;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.test.DatabaseTestFixture;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -50,10 +51,6 @@ import org.mockito.quality.Strictness;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-
 import java.lang.reflect.Method;
 import java.security.cert.X509Certificate;
 
@@ -66,6 +63,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.UriInfo;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)

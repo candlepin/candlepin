@@ -18,6 +18,7 @@ package org.candlepin.auth;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+
 import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.adapters.KeycloakDeployment;
 import org.keycloak.adapters.KeycloakDeploymentBuilder;
@@ -25,10 +26,12 @@ import org.keycloak.adapters.RequestAuthenticator;
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.inject.Inject;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import javax.inject.Inject;
 
 
 /**

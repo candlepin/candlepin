@@ -14,8 +14,6 @@
  */
 package org.candlepin.controller;
 
-import static org.mockito.Mockito.*;
-
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -29,16 +27,18 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 
 
 /**

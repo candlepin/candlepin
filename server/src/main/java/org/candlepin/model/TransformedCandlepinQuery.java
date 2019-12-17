@@ -20,8 +20,8 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 
 import javax.persistence.LockModeType;
 

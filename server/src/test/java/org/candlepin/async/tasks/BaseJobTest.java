@@ -14,9 +14,10 @@
  */
 package org.candlepin.async.tasks;
 
+import org.candlepin.TestingModules;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.candlepin.TestingModules;
 
 /**
  * Base class for tests of jobs that need Guice injection

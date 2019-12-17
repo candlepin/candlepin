@@ -16,8 +16,8 @@ package org.candlepin.resource.util;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
-import org.candlepin.model.Product;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.DateRange;
@@ -25,7 +25,6 @@ import org.candlepin.util.DateRange;
 import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

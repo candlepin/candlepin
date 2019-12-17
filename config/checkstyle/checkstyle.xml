@@ -80,6 +80,11 @@
    -->
   <module name="FileTabCharacter"/>
 
+  <module name="LineLength">
+    <property name="ignorePattern" value="import"/>
+    <property name="max" value="110"/>
+  </module>
+
   <!--
      FileSetCheck TreeWalker checks individual Java source files and defines
      properties that are applicable to checking such files.
@@ -117,7 +122,8 @@
     <module name="MissingDeprecated" />
 
     <!-- Force usage of the Java 7 diamond operator -->
-    <module name="org.candlepin.checks.DiamondOperatorForVariableDefinitionCheck" />
+
+    <module name="com.github.sevntu.checkstyle.checks.coding.DiamondOperatorForVariableDefinitionCheck"/>
 
     <!--
        #######################################################################
@@ -195,13 +201,11 @@
     <module name="UnusedImports"/>
     <module name="ImportOrder">
       <!-- Static imports should go at the top of the import list -->
-      <property name="option" value="top"/>
-      <property name="ordered" value="false"/>
-      <!-- ImportOrder is nice in theory, but in practice Eclipse's auto-import ordering can slightly
-         mismatch with what this module requires. -->
-      <!--<property name="groups" value="org.candlepin,com.redhat.rhn,com,org,net,ch,java,javax"/>-->
-      <!--<property name="separated" value="true"/>-->
-
+      <property name="option" value="bottom"/>
+      <property name="ordered" value="true"/>
+      <property name="groups" value="org.candlepin,com.redhat.rhn,ch,com,io,liquibase,net,org,java,javax"/>
+      <property name="separated" value="true"/>
+     <property name="sortStaticImportsAlphabetically" value="true" />
     </module>
 
     <!--
@@ -226,8 +230,6 @@
       <property name="allowMissingParamTags" value="true" />
       <property name="allowMissingThrowsTags" value="true" />
       <property name="allowMissingReturnTag" value="false" />
-      <property name="allowMissingPropertyJavadoc" value="true" />
-      <property name="allowMissingJavadoc" value="true" />
     </module>
     <module name="JavadocMethod">
       <property name="id" value="JavadocMethodTest"/>
@@ -237,8 +239,6 @@
       <property name="allowMissingParamTags" value="true" />
       <property name="allowMissingThrowsTags" value="true" />
       <property name="allowMissingReturnTag" value="true" />
-      <property name="allowMissingPropertyJavadoc" value="true" />
-      <property name="allowMissingJavadoc" value="true" />
     </module>
 
     <module name="JavadocVariable">
@@ -302,10 +302,6 @@
        See http://checkstyle.sourceforge.net/config_sizes.html
        #######################################################################
      -->
-    <module name="LineLength">
-      <property name="ignorePattern" value="import"/>
-      <property name="max" value="110"/>
-    </module>
     <module name="MethodLength">
        <property name="tokens" value="METHOD_DEF"/>
        <property name="max" value="100"/>

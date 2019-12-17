@@ -14,14 +14,14 @@
  */
 package org.candlepin.jackson;
 
-import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
-import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
-import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import org.candlepin.model.Pool;
 import org.candlepin.model.ProductCurator;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
+import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
+import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 
 import java.io.IOException;
 import java.util.Set;

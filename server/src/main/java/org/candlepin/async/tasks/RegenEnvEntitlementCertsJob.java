@@ -14,7 +14,6 @@
  */
 package org.candlepin.async.tasks;
 
-import com.google.inject.Inject;
 import org.candlepin.async.ArgumentConversionException;
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobArguments;
@@ -23,6 +22,8 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Environment;
+
+import com.google.inject.Inject;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -14,7 +14,6 @@
  */
 package org.candlepin.audit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.exceptions.IseException;
@@ -25,8 +24,10 @@ import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Pool;
-
 import org.candlepin.util.Util;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

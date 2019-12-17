@@ -14,16 +14,16 @@
  */
 package org.candlepin.hostedtest;
 
+import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.ProductContentData;
+import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.BrandingInfo;
@@ -33,12 +33,11 @@ import org.candlepin.service.model.CertificateSerialInfo;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.OwnerInfo;
-import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.ProductContentInfo;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import org.apache.commons.lang.StringUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

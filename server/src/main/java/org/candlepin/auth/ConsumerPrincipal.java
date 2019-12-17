@@ -14,8 +14,8 @@
  */
 package org.candlepin.auth;
 
-import org.candlepin.auth.permissions.AttachPermission;
 import org.candlepin.auth.permissions.AsyncJobStatusPermission;
+import org.candlepin.auth.permissions.AttachPermission;
 import org.candlepin.auth.permissions.ConsumerEntitlementPermission;
 import org.candlepin.auth.permissions.ConsumerOrgHypervisorPermission;
 import org.candlepin.auth.permissions.ConsumerPermission;

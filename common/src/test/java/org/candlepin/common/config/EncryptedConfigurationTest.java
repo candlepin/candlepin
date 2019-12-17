@@ -14,10 +14,6 @@
  */
 package org.candlepin.common.config;
 
-import static org.candlepin.common.config.ConfigurationPrefixes.*;
-import static org.hamcrest.MatcherAssert.*;
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +27,11 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import javax.crypto.BadPaddingException;
+
+import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class EncryptedConfigurationTest {
     // generated with katello-secure-passphrase and katell-passwd

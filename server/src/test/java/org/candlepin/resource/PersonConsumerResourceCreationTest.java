@@ -14,8 +14,6 @@
  */
 package org.candlepin.resource;
 
-import static org.mockito.Mockito.when;
-
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -26,6 +24,8 @@ import org.candlepin.model.Role;
 import org.candlepin.model.User;
 
 import org.junit.Test;
+
+import static org.mockito.Mockito.when;
 
 
 

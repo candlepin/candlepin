@@ -33,6 +33,7 @@ import java.util.Map;
  * </p>
  *
  * <pre>
+ * {@code
  * void extendManifest(File extensionDir, Consumer targetConsumer, Map<String, String> extensionData)
  *    throws IOException {
  *    String version = (String) extensionData.get("version");
@@ -41,6 +42,7 @@ import java.util.Map;
  *    writer.write("An extension was created for consumer " + targetConsumer.getUuid() + ".\n");
  *    writer.write("Version: " + version);
  *    writer.close();
+ * }
  * }
  * </pre>
  *

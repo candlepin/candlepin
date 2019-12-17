@@ -14,9 +14,6 @@
  */
 package org.candlepin.resource.util;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
@@ -43,6 +40,11 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.when;
 
 /**
  * CalculatedAttributesUtilTest

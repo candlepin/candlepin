@@ -16,8 +16,10 @@
 package org.candlepin.pki;
 
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertArrayEquals;
 
 public class SubjectKeyIdentifierWriterTest {
 

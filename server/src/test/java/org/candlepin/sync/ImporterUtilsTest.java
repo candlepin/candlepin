@@ -19,6 +19,7 @@ import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.RevocableCertificate;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

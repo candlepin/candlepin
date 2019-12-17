@@ -14,8 +14,6 @@
  */
 package org.candlepin.pki;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.pki.impl.ProviderBasedPrivateKeyReader;
 
@@ -43,6 +41,8 @@ import java.lang.reflect.Constructor;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.util.Arrays;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test ProviderBasedPrivateKeyReader

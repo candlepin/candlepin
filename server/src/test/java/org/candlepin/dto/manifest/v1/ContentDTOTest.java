@@ -14,8 +14,6 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.dto.AbstractDTOTest;
 
 import org.junit.Test;
@@ -25,6 +23,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
 
 
 

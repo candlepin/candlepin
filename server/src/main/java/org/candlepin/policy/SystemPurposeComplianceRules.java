@@ -23,12 +23,12 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 
 import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;

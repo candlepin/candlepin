@@ -16,8 +16,8 @@ package org.candlepin.policy.criteria;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;

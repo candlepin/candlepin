@@ -14,8 +14,6 @@
  */
 package org.candlepin.test;
 
-import static org.mockito.Mockito.*;
-
 import org.candlepin.TestingInterceptor;
 import org.candlepin.TestingModules;
 import org.candlepin.auth.Access;
@@ -32,6 +30,7 @@ import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.LiquibaseExtension;
 import org.candlepin.model.AsyncJobStatusCurator;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -62,7 +61,6 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.Branding;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
@@ -111,6 +109,9 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
 
 

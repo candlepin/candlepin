@@ -14,11 +14,6 @@
  */
 package org.candlepin.controller;
 
-import static org.apache.commons.collections.CollectionUtils.*;
-import static org.apache.commons.collections.TransformerUtils.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.paging.Page;
@@ -27,6 +22,7 @@ import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -39,7 +35,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
-import org.candlepin.model.Branding;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -56,13 +51,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
 import org.apache.commons.collections.Transformer;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,6 +70,17 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.EntityNotFoundException;
+
+import static org.apache.commons.collections.CollectionUtils.containsAny;
+import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.reset;
 
 
 

@@ -14,16 +14,18 @@
  */
 package org.candlepin.resteasy.filter;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ResultIterator;
 import org.candlepin.resteasy.JsonProvider;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
@@ -32,10 +34,11 @@ import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
 
+import java.util.Objects;
+
 import javax.persistence.EntityManager;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
-import java.util.Objects;
 
 /**
  * The CandlepinQueryInterceptor handles the streaming of a query and applies any paging

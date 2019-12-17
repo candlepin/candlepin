@@ -14,6 +14,11 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.sync.file.ManifestFile;
+import org.candlepin.sync.file.ManifestFileType;
+
+import org.hibernate.annotations.GenericGenerator;
+
 import java.beans.Transient;
 import java.io.InputStream;
 import java.sql.Blob;
@@ -31,10 +36,6 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.sync.file.ManifestFile;
-import org.candlepin.sync.file.ManifestFileType;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * A class representing the storage of a manifest file and the meta-data associated

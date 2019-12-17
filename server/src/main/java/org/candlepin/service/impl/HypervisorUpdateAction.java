@@ -34,11 +34,11 @@ import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.util.Transactional;
 
 import com.google.inject.Inject;
 
 import org.apache.commons.lang.StringUtils;
-import org.candlepin.util.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

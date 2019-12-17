@@ -17,8 +17,8 @@ package org.candlepin.messaging.impl.artemis;
 import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMMessage;
 
-import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 

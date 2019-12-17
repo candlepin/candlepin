@@ -14,12 +14,13 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
-
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+
+import org.hibernate.criterion.Restrictions;
 
 import java.util.Collection;
 import java.util.List;
+
 import javax.inject.Singleton;
 import javax.persistence.NoResultException;
 

@@ -14,16 +14,14 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertTrue;
-
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.Owner;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +31,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * ProductExporterTest

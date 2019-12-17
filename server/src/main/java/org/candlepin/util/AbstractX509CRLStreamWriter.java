@@ -14,8 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.util.DERUtil.*;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -27,6 +25,15 @@ import java.security.PrivateKey;
 import java.security.Signature;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.candlepin.util.DERUtil.readFullyAndTrack;
+import static org.candlepin.util.DERUtil.readLength;
+import static org.candlepin.util.DERUtil.readTag;
+import static org.candlepin.util.DERUtil.readTagNumber;
+import static org.candlepin.util.DERUtil.writeBytes;
+import static org.candlepin.util.DERUtil.writeLength;
+import static org.candlepin.util.DERUtil.writeTag;
+import static org.candlepin.util.DERUtil.writeValue;
 
 /**
  * Abstract class with DER utility methods for X509CRLStreamWriter.

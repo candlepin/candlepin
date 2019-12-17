@@ -15,8 +15,8 @@
 package org.candlepin.hostedtest;
 
 import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.ConflictException;
+import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;

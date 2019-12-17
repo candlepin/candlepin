@@ -14,11 +14,11 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 
 import com.google.inject.Inject;
 

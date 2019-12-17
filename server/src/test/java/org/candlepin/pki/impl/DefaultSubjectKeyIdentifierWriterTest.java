@@ -14,14 +14,14 @@
  */
 package org.candlepin.pki.impl;
 
-import static org.junit.Assert.*;
-
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+
+import static org.junit.Assert.assertArrayEquals;
 
 
 public class DefaultSubjectKeyIdentifierWriterTest {

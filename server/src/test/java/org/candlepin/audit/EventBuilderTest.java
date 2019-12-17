@@ -14,11 +14,13 @@
  */
 package org.candlepin.audit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Pool;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;

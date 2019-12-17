@@ -14,8 +14,6 @@
  */
 package org.candlepin.auth.permissions;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -36,6 +34,9 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;

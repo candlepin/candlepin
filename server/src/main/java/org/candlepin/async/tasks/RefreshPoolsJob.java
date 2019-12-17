@@ -14,7 +14,6 @@
  */
 package org.candlepin.async.tasks;
 
-import com.google.inject.Inject;
 import org.candlepin.async.ArgumentConversionException;
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobArguments;
@@ -29,6 +28,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+
+import com.google.inject.Inject;
 
 /**
  * Asynchronous job for refreshing the entitlement pools for specific {@link Owner}.

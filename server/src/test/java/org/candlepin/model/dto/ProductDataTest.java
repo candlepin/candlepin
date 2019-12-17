@@ -14,12 +14,10 @@
  */
 package org.candlepin.model.dto;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.common.jackson.DynamicPropertyFilter;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
-import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.util.Util;
@@ -39,6 +37,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test suite for the ProductData class

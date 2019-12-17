@@ -14,8 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.util.DERUtil.*;
-
 import org.candlepin.pki.impl.JSSPKIUtility;
 
 import com.google.common.io.ByteStreams;
@@ -74,6 +72,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.candlepin.util.DERUtil.GENERALIZED_TIME_TAG_NUM;
+import static org.candlepin.util.DERUtil.SEQUENCE_TAG_NUM;
+import static org.candlepin.util.DERUtil.UTC_TIME_TAG_NUM;
+import static org.candlepin.util.DERUtil.findHeaderBytesDelta;
+import static org.candlepin.util.DERUtil.readFullyAndTrack;
+import static org.candlepin.util.DERUtil.readLength;
+import static org.candlepin.util.DERUtil.readTag;
+import static org.candlepin.util.DERUtil.readTagNumber;
+import static org.candlepin.util.DERUtil.writeBytes;
+import static org.candlepin.util.DERUtil.writeLength;
+import static org.candlepin.util.DERUtil.writeTag;
+import static org.candlepin.util.DERUtil.writeValue;
 
 /**
  * Implementation of X509CRLStreamWriter using JSS crypto provider.

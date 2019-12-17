@@ -20,8 +20,8 @@ import org.candlepin.messaging.CPMProducer;
 import org.candlepin.messaging.CPMSession;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
+import org.apache.activemq.artemis.api.core.client.ClientProducer;
 
 import java.util.Objects;
 

@@ -14,8 +14,6 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-
 import org.candlepin.model.Rules;
 import org.candlepin.policy.js.RuleParseException;
 
@@ -26,6 +24,8 @@ import org.junit.runners.Parameterized.Parameters;
 
 import java.util.Arrays;
 import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * RulesVersionmatchingTest

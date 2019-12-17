@@ -14,18 +14,19 @@
  */
 package org.candlepin.async.tasks;
 
-import com.google.inject.Inject;
-import org.candlepin.async.AsyncJob;
 import org.candlepin.async.ArgumentConversionException;
+import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
+import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.async.JobConstraints;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.sync.ExportResult;
+
+import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

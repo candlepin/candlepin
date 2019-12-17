@@ -14,12 +14,10 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
-import org.apache.qpid.client.AMQConnectionFactory;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
+
+import org.apache.qpid.client.AMQConnectionFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +29,19 @@ import javax.jms.Topic;
 import javax.jms.TopicSession;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class QpidConnectionTest {

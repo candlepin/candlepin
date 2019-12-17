@@ -14,9 +14,10 @@
  */
 package org.candlepin.dto.api.v1;
 
+import org.candlepin.dto.TimestampedCandlepinDTO;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.dto.TimestampedCandlepinDTO;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

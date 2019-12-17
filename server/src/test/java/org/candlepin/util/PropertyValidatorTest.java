@@ -14,8 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.util.PropertyValidator.Validator;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +29,9 @@ import java.util.Locale;
 import java.util.Map;
 
 import javax.inject.Provider;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 

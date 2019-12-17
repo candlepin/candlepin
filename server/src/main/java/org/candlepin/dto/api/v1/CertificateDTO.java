@@ -14,9 +14,9 @@
  */
 package org.candlepin.dto.api.v1;
 
-import io.swagger.annotations.ApiModel;
-
 import org.candlepin.dto.TimestampedCandlepinDTO;
+
+import io.swagger.annotations.ApiModel;
 
 
 

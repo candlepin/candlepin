@@ -21,10 +21,10 @@ import org.candlepin.util.MapView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
+import io.swagger.annotations.ApiModel;
+
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import io.swagger.annotations.ApiModel;
 
 import java.util.HashMap;
 import java.util.HashSet;

@@ -27,6 +27,14 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.converter.ModelConverter;
+import io.swagger.converter.ModelConverterContext;
+import io.swagger.jackson.SwaggerAnnotationIntrospector;
+import io.swagger.jackson.TypeNameResolver;
+import io.swagger.models.Model;
+import io.swagger.models.properties.Property;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Comparator;
@@ -36,14 +44,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.bind.annotation.XmlElement;
-
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.converter.ModelConverter;
-import io.swagger.converter.ModelConverterContext;
-import io.swagger.jackson.SwaggerAnnotationIntrospector;
-import io.swagger.jackson.TypeNameResolver;
-import io.swagger.models.Model;
-import io.swagger.models.properties.Property;
 
 
 

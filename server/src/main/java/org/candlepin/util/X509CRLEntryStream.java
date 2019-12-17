@@ -14,8 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.util.DERUtil.*;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -26,6 +24,16 @@ import java.io.InputStream;
 import java.security.cert.X509CRLEntry;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.candlepin.util.DERUtil.GENERALIZED_TIME_TAG_NUM;
+import static org.candlepin.util.DERUtil.OBJECT_IDENTIFIER_TAG_NUM;
+import static org.candlepin.util.DERUtil.SEQUENCE_TAG_NUM;
+import static org.candlepin.util.DERUtil.UTC_TIME_TAG_NUM;
+import static org.candlepin.util.DERUtil.readFullyAndTrack;
+import static org.candlepin.util.DERUtil.readLength;
+import static org.candlepin.util.DERUtil.readTag;
+import static org.candlepin.util.DERUtil.readTagNumber;
+import static org.candlepin.util.DERUtil.writeLength;
 
 /**
  * Reads an X509 CRL in a stream and returns the serial number for a revoked certificate

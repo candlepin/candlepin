@@ -18,7 +18,6 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

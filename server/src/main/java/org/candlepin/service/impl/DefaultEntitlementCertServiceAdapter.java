@@ -285,7 +285,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     /**
      * @param consumer
      * @param useContentPrefix
-     * @return
      * @throws IOException
      */
     private String getContentPrefix(Consumer consumer, Owner owner, boolean useContentPrefix)

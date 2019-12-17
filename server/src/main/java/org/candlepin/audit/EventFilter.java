@@ -21,7 +21,6 @@ import org.candlepin.config.ConfigProperties;
 
 import com.google.inject.Inject;
 
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

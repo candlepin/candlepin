@@ -14,8 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.model.Rules;
 
@@ -25,6 +23,9 @@ import org.junit.Test;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.Map;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * VersionUtilTest

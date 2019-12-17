@@ -14,8 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.pki.CertificateReader;
@@ -30,6 +28,10 @@ import com.google.inject.Module;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 

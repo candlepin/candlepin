@@ -20,15 +20,13 @@ import org.candlepin.hibernate.AbstractJsonConverter;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
 import org.hibernate.annotations.GenericGenerator;
-
 import org.slf4j.event.Level;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;

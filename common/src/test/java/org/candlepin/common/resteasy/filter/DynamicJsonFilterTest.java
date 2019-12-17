@@ -14,9 +14,6 @@
  */
 package org.candlepin.common.resteasy.filter;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.candlepin.common.jackson.DynamicFilterData;
 
 import org.jboss.resteasy.mock.MockHttpRequest;
@@ -32,6 +29,12 @@ import java.net.URI;
 import java.util.Arrays;
 
 import javax.ws.rs.container.ContainerRequestContext;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 
 /**

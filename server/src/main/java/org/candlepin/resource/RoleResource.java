@@ -18,8 +18,8 @@ import org.candlepin.auth.Access;
 import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
+import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.service.UserServiceAdapter;
@@ -27,6 +27,13 @@ import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
 import com.google.inject.Inject;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Authorization;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.spi.BadRequestException;
@@ -44,13 +51,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
 
 
 

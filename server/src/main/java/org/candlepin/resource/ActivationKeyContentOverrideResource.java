@@ -24,12 +24,12 @@ import org.candlepin.util.ContentOverrideValidator;
 
 import com.google.inject.Inject;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.Authorization;
+
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.Path;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.Authorization;
 
 
 

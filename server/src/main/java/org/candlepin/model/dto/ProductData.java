@@ -16,9 +16,9 @@ package org.candlepin.model.dto;
 
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
-import org.candlepin.model.Branding;
 import org.candlepin.model.ProductContent;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.MapView;

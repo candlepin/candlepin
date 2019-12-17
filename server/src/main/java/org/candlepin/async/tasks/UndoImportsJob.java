@@ -19,9 +19,9 @@ import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
+import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.async.JobConstraints;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -38,12 +38,12 @@ import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.xnap.commons.i18n.I18n;
 
-import javax.inject.Inject;
 import java.util.Date;
 import java.util.List;
+
+import javax.inject.Inject;
 
 
 

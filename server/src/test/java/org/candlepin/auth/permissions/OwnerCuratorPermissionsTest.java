@@ -14,8 +14,6 @@
  */
 package org.candlepin.auth.permissions;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
@@ -24,8 +22,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -33,6 +31,10 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OwnerCuratorPermissionsTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;

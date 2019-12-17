@@ -14,10 +14,10 @@
  */
 package org.candlepin.audit;
 
-import com.google.inject.name.Named;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.exceptions.IseException;
+import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -29,12 +29,12 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

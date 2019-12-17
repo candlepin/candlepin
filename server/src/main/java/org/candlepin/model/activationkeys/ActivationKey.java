@@ -14,8 +14,6 @@
  */
 package org.candlepin.model.activationkeys;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
@@ -24,8 +22,10 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
-
 import org.candlepin.util.Util;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.GenericGenerator;

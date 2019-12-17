@@ -14,10 +14,11 @@
  */
 package org.candlepin.audit;
 
-import org.apache.activemq.artemis.api.core.client.ClientSession;
-import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.common.config.Configuration;
+
+import org.apache.activemq.artemis.api.core.client.ClientSession;
+import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 
 import static org.mockito.Mockito.mock;
 

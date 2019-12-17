@@ -14,11 +14,6 @@
  */
 package org.candlepin.resteasy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import org.candlepin.common.config.Configuration;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.ProductCurator;
@@ -43,6 +38,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.core.MediaType;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 

@@ -24,11 +24,6 @@ import org.candlepin.common.resteasy.auth.RestEasyOAuthMessage;
 
 import com.google.inject.Inject;
 
-import org.jboss.resteasy.spi.HttpRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
-
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthException;
@@ -37,6 +32,11 @@ import net.oauth.OAuthProblemException;
 import net.oauth.OAuthValidator;
 import net.oauth.SimpleOAuthValidator;
 import net.oauth.signature.OAuthSignatureMethod;
+
+import org.jboss.resteasy.spi.HttpRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

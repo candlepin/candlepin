@@ -14,13 +14,14 @@
  */
 package org.candlepin.controller;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.PoolCurator;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import java.util.Arrays;
 

@@ -15,8 +15,8 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
-import org.candlepin.util.SetView;
 import org.candlepin.service.model.ContentInfo;
+import org.candlepin.util.SetView;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -14,14 +14,14 @@
  */
 package org.candlepin.async.tasks;
 
-import org.candlepin.async.AsyncJob;
 import org.candlepin.async.ArgumentConversionException;
+import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
+import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.async.JobConstraints;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;

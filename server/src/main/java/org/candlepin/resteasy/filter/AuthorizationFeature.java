@@ -17,10 +17,10 @@ package org.candlepin.resteasy.filter;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 
+import io.swagger.jaxrs.listing.ApiListingResource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.swagger.jaxrs.listing.ApiListingResource;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

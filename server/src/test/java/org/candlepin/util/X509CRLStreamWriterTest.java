@@ -14,9 +14,6 @@
  */
 package org.candlepin.util;
 
-import static org.candlepin.test.MatchesPattern.*;
-import static org.junit.Assert.*;
-
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
@@ -71,6 +68,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.candlepin.test.MatchesPattern.matchesPattern;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test implementations of X509CRLStreamWriter

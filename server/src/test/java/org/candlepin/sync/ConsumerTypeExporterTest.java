@@ -14,8 +14,6 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
-
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
@@ -36,6 +34,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * ConsumerTypeExporterTest

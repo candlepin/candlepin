@@ -36,10 +36,10 @@ import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
+import org.candlepin.service.ContentAccessCertServiceAdapter;
 
 import com.google.inject.Inject;
 
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

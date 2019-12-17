@@ -15,6 +15,7 @@
 package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
+
 import org.junit.Test;
 
 import java.util.Date;
