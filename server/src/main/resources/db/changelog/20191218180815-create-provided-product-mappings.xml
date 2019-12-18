@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20191218180815-1" author="sdhome">
+        <comment>Create table for product and provided products mappings</comment>
+
+        <createTable tableName="cp2_product_provided_products">
+
+            <column name="product_uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="provided_product_uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="cp2_product_provided_products"
+            baseColumnNames="product_uuid"
+            constraintName="cp2_product_prov_products_fk1"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="uuid"
+            referencedTableName="cp2_products"
+            referencesUniqueColumn="false" />
+
+        <addForeignKeyConstraint
+            baseTableName="cp2_product_provided_products"
+            baseColumnNames="provided_product_uuid"
+            constraintName="cp2_product_prov_products_fk2"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="uuid"
+            referencedTableName="cp2_products"
+            referencesUniqueColumn="false" />
+
+    </changeSet>
+
+    <changeSet id="20191218180815-2" author="sdhome">
+        <comment>Create table for derived product and derived provided products mappings</comment>
+
+        <createTable tableName="cp2_product_derprov_products">
+            <column name="product_uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="provided_product_uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="cp2_product_derprov_products"
+            baseColumnNames="product_uuid"
+            constraintName="cp2_prod_derprov_products_fk1"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="uuid"
+            referencedTableName="cp2_products"
+            referencesUniqueColumn="false" />
+
+        <addForeignKeyConstraint
+            baseTableName="cp2_product_derprov_products"
+            baseColumnNames="provided_product_uuid"
+            constraintName="cp2_prod_derprov_products_fk2"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="uuid"
+            referencedTableName="cp2_products"
+            referencesUniqueColumn="false" />
+
+    </changeSet>
+
+</databaseChangeLog>
