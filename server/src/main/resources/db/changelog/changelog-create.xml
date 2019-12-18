@@ -1238,6 +1238,7 @@
     <include file="db/changelog/20190919132617-create-product-branding-join-table.xml"/>
     <include file="db/changelog/20190927153020-index-facts-element.xml"/>
     <include file="db/changelog/20191009160315-remove-duplicate-indexes.xml"/>
+    <include file="db/changelog/20191218180815-create-provided-product-mappings.xml"/>
     <include file="db/changelog/20200430172317-add-column-rh-cloud-profile-modified.xml"/>
     <include file="db/changelog/20200525150632-switch-job-data-to-longtext.xml"/>
     <include file="db/changelog/20200604045445-async-job-data-restructure.xml"/>
