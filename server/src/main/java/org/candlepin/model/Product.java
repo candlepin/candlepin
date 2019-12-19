@@ -304,6 +304,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setAttribute(Attributes.ARCHITECTURE, arch);
     }
 
+    public Product(String productId, String name, String variant, String version, String arch, String type,
+        Set<Product> providedProducts) {
+        this(productId, name, variant, version, arch, type);
+
+        this.setProvidedProducts(providedProducts);
+    }
+
     /**
      * Creates a shallow copy of the specified source product. Owners, attributes and content are
      * not duplicated, but the joining objects are (ProductAttribute, ProductContent, etc.).
