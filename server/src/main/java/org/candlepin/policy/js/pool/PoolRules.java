@@ -335,9 +335,7 @@ public class PoolRules {
                     BooleanUtils.toBoolean(existingPool.getAttributeValue(Pool.Attributes.DERIVED_POOL));
 
                 update.setProductsChanged(checkForChangedProducts(
-                    useDerived ? masterPool.getDerivedProduct() : masterPool.getProduct(),
-                    getExpectedProvidedProducts(masterPool, useDerived),
-                    existingPool,
+                    useDerived ? masterPool.getDerivedProduct() : masterPool.getProduct(), existingPool,
                     changedProducts)
                 );
 
@@ -489,7 +487,7 @@ public class PoolRules {
 
         // Check if product ID, name, or provided products have changed.
         update.setProductsChanged(checkForChangedProducts(
-            product, acc.getExpectedProvidedProds(), pool, changedProducts
+            product, pool, changedProducts
         ));
 
         if (!StringUtils.equals(eldestEntPool.getContractNumber(), pool.getContractNumber()) ||
@@ -521,60 +519,24 @@ public class PoolRules {
         return orderDataChanged;
     }
 
-    private Set<Product> getExpectedProvidedProducts(Pool pool, boolean useDerived) {
-        Set<Product> incomingProvided = new HashSet<>();
-        /**
-         * It is necessary to use getters for provided products here, because the pool
-         * is fabricated from subscrfiption (using CandlepinPoolManager.convertToMasterPool
-         * It is not an actual pool that would be stored in the DB.
-         */
-        Set<Product> source = useDerived ? pool.getDerivedProvidedProducts() : pool.getProvidedProducts();
-
-        if (source != null && !source.isEmpty()) {
-            incomingProvided.addAll(source);
-        }
-
-        return incomingProvided;
-    }
-
-    private boolean changedProductsInSet(Set<Product> products, Map<String, Product> changedProducts) {
-
-        if (products != null && changedProducts != null) {
-            for (Product product : products) {
-                if (product != null && changedProducts.get(product.getId()) != null) {
-                    return true;
-                }
-            }
-
-        }
-        return false;
-    }
-
-    private boolean checkForChangedProducts(Product incomingProduct, Set<Product> incomingProvided,
-        Pool existingPool, Map<String, Product> changedProducts) {
-
+    private boolean checkForChangedProducts(Product incomingProduct, Pool existingPool, Map<String,
+        Product> changedProducts) {
         Product existingProduct = existingPool.getProduct();
-        Set<Product> currentProvided = productCurator.getPoolProvidedProductsCached(existingPool);
         String pid = existingProduct.getId();
 
         // TODO: ideally we would differentiate between these different product changes
         // a little, but in the end it probably doesn't matter:
-        boolean productsChanged =
-            (pid != null && !pid.equals(incomingProduct.getId())) ||
-            !currentProvided.equals(incomingProvided);
+        boolean productsChanged = pid != null && !pid.equals(incomingProduct.getId());
 
         // Check if the existing product is in the set of changed products
         if (!productsChanged && changedProducts != null) {
             if (pid != null) {
                 productsChanged = (changedProducts.get(pid) != null);
             }
-            productsChanged = productsChanged ||
-                changedProductsInSet(incomingProvided, changedProducts);
         }
 
         if (productsChanged) {
             existingPool.setProduct(incomingProduct);
-            existingPool.setProvidedProducts(incomingProvided);
         }
 
         return productsChanged;
@@ -592,23 +554,6 @@ public class PoolRules {
                 (changedProducts != null && changedProducts.containsKey(pool.getDerivedProduct().getId()));
         }
 
-        // Build expected set of ProvidedProducts and compare:
-        Set<Product> currentProvided = productCurator.getPoolDerivedProvidedProductsCached(existingPool);
-        Set<Product> incomingProvided = new HashSet<>();
-
-        /**
-         * Incoming pool is not in the database yet. It has the
-         * derived products on the instance itself.
-         */
-        if (pool.getDerivedProvidedProducts() != null) {
-            for (Product p : pool.getDerivedProvidedProducts()) {
-                incomingProvided.add(p);
-            }
-        }
-
-        productsChanged |= !currentProvided.equals(incomingProvided) ||
-            changedProductsInSet(incomingProvided, changedProducts);
-
         if (productsChanged) {
             // 998317: NPE during refresh causes refresh to abort.
             // Above we check getDerivedProduct for null, but here
@@ -620,10 +565,6 @@ public class PoolRules {
             else {
                 // subscription no longer has a derived product
                 existingPool.setDerivedProduct(null);
-            }
-            existingPool.getDerivedProvidedProducts().clear();
-            if (incomingProvided != null && !incomingProvided.isEmpty()) {
-                existingPool.getDerivedProvidedProducts().addAll(incomingProvided);
             }
         }
 

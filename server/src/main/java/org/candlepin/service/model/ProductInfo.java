@@ -19,7 +19,6 @@ import java.util.Date;
 import java.util.Map;
 
 
-
 /**
  * The ProductInfo represents a minimal set of owner/organization information used by the service
  * adapters.
@@ -126,4 +125,14 @@ public interface ProductInfo {
      *  the last update date for this product, or null if the last update date has not been set
      */
     Date getUpdated();
+
+    /**
+     * Fetches a collection of engineering products. If the provided
+     * products have not yet been set, this method returns null.
+     *
+     * @return
+     *  A collection of engineering products for this product, or null if the provided
+     *  products have not been set
+     */
+    Collection<? extends ProductInfo> getProvidedProducts();
 }

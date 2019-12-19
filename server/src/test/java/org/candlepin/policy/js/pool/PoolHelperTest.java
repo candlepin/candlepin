@@ -222,7 +222,7 @@ public class PoolHelperTest {
         targetPool.setId("sub-prod-pool");
         targetPool.setDerivedProduct(subProduct);
 
-        targetPool.setDerivedProvidedProducts(derivedProducts);
+        targetPool.getDerivedProduct().setProvidedProducts(derivedProducts);
         when(productCurator.getPoolDerivedProvidedProductsCached(targetPool))
             .thenReturn(derivedProducts);
         targetPool.setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited");
@@ -253,7 +253,8 @@ public class PoolHelperTest {
         assertEquals("SV2", hostRestrictedPool.getProduct().getAttributeValue("SA2"));
 
         // Check that the sub provided products made it to the sub pool
-        Set<Product> providedProducts = hostRestrictedPool.getProvidedProducts();
+        Set<Product> providedProducts =
+            (Set<Product>) hostRestrictedPool.getProduct().getProvidedProducts();
 
         assertEquals(2, providedProducts.size());
         assertTrue(providedProducts.contains(derivedProduct1));

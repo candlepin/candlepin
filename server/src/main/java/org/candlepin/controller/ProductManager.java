@@ -326,6 +326,7 @@ public class ProductManager {
             }
 
             sourceProducts.put(product.getId(), product);
+            product = this.applyProvidedProductChanges(product, update, owner);
             product = this.applyProductChanges((Product) product.clone(), update, importedContent);
 
             // Prevent this product from being changed by our API
@@ -346,6 +347,7 @@ public class ProductManager {
                 }
 
                 Product product = new Product(update.getId(), update.getName());
+                product = this.applyProvidedProductChanges(product, update, owner);
                 product = this.applyProductChanges(product, update, importedContent);
 
                 // Prevent this product from being changed by our API
@@ -647,6 +649,40 @@ public class ProductManager {
     }
 
     /**
+     * Applies the changes related to provided products from the given productInfo to the specified entity.
+     *
+     * @param entity
+     *  The entity to modify.
+     *
+     * @param update
+     *  The productInfo containing the modifications to apply.
+     *
+     * @param owner
+     *  An owner to use for resolving entity references.
+     *
+     * @return
+     *  The updated product entity.
+     */
+    private Product applyProvidedProductChanges(Product entity, ProductInfo update, Owner owner) {
+        if (update.getProvidedProducts() != null && !update.getProvidedProducts().isEmpty()) {
+            entity.getProvidedProducts().clear();
+
+            for (ProductInfo productInfo : update.getProvidedProducts()) {
+                if (productInfo != null && productInfo.getId() != null) {
+                    Product newProd = this.ownerProductCurator.getProductById(owner,
+                        productInfo.getId());
+
+                    if (newProd != null) {
+                        entity.addProvidedProduct(newProd);
+                    }
+                }
+            }
+        }
+
+        return entity;
+    }
+
+    /**
      * Applies the changes from the given DTO to the specified entity
      *
      * @param entity
@@ -873,7 +909,6 @@ public class ProductManager {
         Collection<ProductDTO> providedProducts = dto.getProvidedProducts();
 
         if (providedProducts != null) {
-
             if (!Util.collectionsAreEqual(entity.getProvidedProducts().stream()
                 .map(Product::getId)
                 .collect(Collectors.toList()),
@@ -974,6 +1009,17 @@ public class ProductManager {
             Comparator<BrandingInfo> comparator = BrandingInfo.getBrandingInfoComparator();
             if (!Util.collectionsAreEqual((Collection) entity.getBranding(),
                 (Collection) update.getBranding(), comparator)) {
+                return true;
+            }
+        }
+
+        if (update.getProvidedProducts() != null) {
+            if (!Util.collectionsAreEqual(entity.getProvidedProducts().stream()
+                .map(Product::getId)
+                .collect(Collectors.toList()),
+                update.getProvidedProducts().stream()
+                .map(ProductInfo::getId)
+                .collect(Collectors.toList()))) {
                 return true;
             }
         }

@@ -811,7 +811,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         // Creating actual provided Products
         ProductDTO prov1 = TestUtil.createProductDTO("providedId1", "OS1");
         this.productManager.createProduct(prov1, owner);
-        ProductDTO prov2 = TestUtil.createProductDTO("anotherProvidedProductID", "ProvName");
+        ProductDTO prov2 = TestUtil.createProductDTO("providedId2", "OS2");
         this.productManager.createProduct(prov2, owner);
         dto.addProvidedProduct(prov1);
         Product output = this.productManager.createProduct(dto, owner);

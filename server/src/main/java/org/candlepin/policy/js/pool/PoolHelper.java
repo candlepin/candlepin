@@ -220,7 +220,7 @@ public class PoolHelper {
                 throw new RuntimeException("Product " + product.getId() +
                     " has not been imported into org " + destination.getOwner().getKey());
             }
-            destination.addProvidedProduct(destprod);
+            destination.getProduct().addProvidedProduct(destprod);
         }
     }
 
@@ -282,7 +282,7 @@ public class PoolHelper {
         );
 
         // Must be sure to copy the provided products, not try to re-use them directly:
-        pool.setProvidedProducts(providedProducts);
+        pool.getProduct().setProvidedProducts(providedProducts);
 
         if (sourcePool != null && sourceConsumer != null && sourceEntitlement != null) {
             if (sourcePool.isStacked()) {

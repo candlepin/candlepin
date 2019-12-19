@@ -957,44 +957,6 @@ public class CandlepinPoolManager implements PoolManager {
             pool.setDerivedProduct(product);
         }
 
-        if (sub.getProvidedProducts() != null) {
-            Set<Product> products = new HashSet<>();
-
-            for (ProductInfo pdata : sub.getProvidedProducts()) {
-                if (pdata != null) {
-                    product = productMap.get(pdata.getId());
-
-                    if (product == null) {
-                        throw new IllegalStateException("Subscription's provided products references a " +
-                            "product which cannot be resolved: " + pdata);
-                    }
-
-                    products.add(product);
-                }
-            }
-
-            pool.setProvidedProducts(products);
-        }
-
-        if (sub.getDerivedProvidedProducts() != null) {
-            Set<Product> products = new HashSet<>();
-
-            for (ProductInfo pdata : sub.getDerivedProvidedProducts()) {
-                if (pdata != null) {
-                    product = productMap.get(pdata.getId());
-
-                    if (product == null) {
-                        throw new IllegalStateException("Subscription's derived provided products " +
-                            "references a product which cannot be resolved: " + pdata);
-                    }
-
-                    products.add(product);
-                }
-            }
-
-            pool.setDerivedProvidedProducts(products);
-        }
-
         return pool;
     }
 
@@ -1028,14 +990,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         productData.add(sub.getProduct());
         productData.add(sub.getDerivedProduct());
-
-        if (sub.getProvidedProducts() != null) {
-            productData.addAll(sub.getProvidedProducts());
-        }
-
-        if (sub.getDerivedProvidedProducts() != null) {
-            productData.addAll(sub.getDerivedProvidedProducts());
-        }
 
         for (ProductInfo pdata : productData) {
             if (pdata != null) {

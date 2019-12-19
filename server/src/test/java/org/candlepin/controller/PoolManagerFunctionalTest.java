@@ -188,12 +188,22 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         brand2.setType("type2");
         brand2.setProductId("product2");
 
+        ProductDTO providedProduct1 = new ProductDTO();
+        providedProduct1.setId("p1");
+        providedProduct1.setName("providedProduct1");
+
+        ProductDTO providedProduct2 = new ProductDTO();
+        providedProduct2.setId("p2");
+        providedProduct2.setName("providedProduct2");
+
         sub4 = new SubscriptionDTO();
         sub4.setId(Util.generateDbUUID());
         sub4.setOwner(this.modelTranslator.translate(o, OwnerDTO.class));
         sub4.setProduct(this.modelTranslator.translate(provisioning, ProductDTO.class));
         sub4.getProduct().addBranding(brand1);
         sub4.getProduct().addBranding(brand2);
+        sub4.getProduct().addProvidedProduct(providedProduct1);
+        sub4.getProduct().addProvidedProduct(providedProduct2);
 
         sub4.setQuantity(5L);
         sub4.setStartDate(new Date());

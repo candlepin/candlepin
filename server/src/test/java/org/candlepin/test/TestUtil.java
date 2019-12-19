@@ -647,13 +647,24 @@ public class TestUtil {
             }
         }
 
-        Pool pool = new Pool(sub.getOwner(), product, providedProducts, sub.getQuantity(),
-            sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
-            sub.getOrderNumber()
-        );
+        Pool pool = new Pool();
+        pool.setOwner(sub.getOwner());
+        pool.setQuantity(sub.getQuantity());
+        pool.setStartDate(sub.getStartDate());
+        pool.setEndDate(sub.getEndDate());
+        pool.setAccountNumber(sub.getContractNumber());
+        pool.setAccountNumber(sub.getAccountNumber());
+        pool.setOrderNumber(sub.getOrderNumber());
 
-        pool.setDerivedProduct(derivedProduct);
-        pool.setDerivedProvidedProducts(derivedProvidedProducts);
+        if (product != null) {
+            product.setProvidedProducts(providedProducts);
+            pool.setProduct(product);
+        }
+
+        if (derivedProduct != null) {
+            derivedProduct.setProvidedProducts(derivedProvidedProducts);
+            pool.setDerivedProduct(derivedProduct);
+        }
 
         if (sub.getId() != null) {
             pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
@@ -685,7 +696,13 @@ public class TestUtil {
             new SourceSubscription(pool.getSubscriptionId(), pool.getSubscriptionSubKey()));
 
         // Copy sub-product data if there is any:
-        p.setDerivedProduct(pool.getDerivedProduct());
+        if (pool.getDerivedProduct() != null) {
+            p.setDerivedProduct((Product) pool.getDerivedProduct().clone());
+        }
+
+        if (pool.getProduct() != null) {
+            p.setProduct((Product) pool.getProduct().clone());
+        }
 
         return p;
     }

@@ -103,8 +103,6 @@ public class ImportedEntityCompiler {
                 // Add any products attached to this subscription...
                 this.addProducts(subscription.getProduct());
                 this.addProducts(subscription.getDerivedProduct());
-                this.addProducts(subscription.getProvidedProducts());
-                this.addProducts(subscription.getDerivedProvidedProducts());
             }
         }
     }

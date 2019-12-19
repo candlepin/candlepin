@@ -124,9 +124,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         sdata.setOwner(this.resolveOwner(sinfo.getOwner()));
 
         sdata.setProduct(this.resolveProduct(sinfo.getProduct()));
-        sdata.setProvidedProducts(this.resolveProducts(sinfo.getProvidedProducts()));
         sdata.setDerivedProduct(this.resolveProduct(sinfo.getDerivedProduct()));
-        sdata.setDerivedProvidedProducts(this.resolveProducts(sinfo.getDerivedProvidedProducts()));
 
         sdata.setQuantity(sinfo.getQuantity());
         sdata.setStartDate(sinfo.getStartDate());
@@ -166,27 +164,12 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         }
 
         // Apply updates...
-
         // Do product resolution here
         ProductData product = this.resolveProduct(sinfo.getProduct());
-        Collection<ProductData> providedProducts = this.resolveProducts(sinfo.getProvidedProducts());
-
-        ProductData dProduct = this.resolveProduct(sinfo.getDerivedProduct());
-        Collection<ProductData> dpProvidedProducts = this.resolveProducts(sinfo.getDerivedProvidedProducts());
 
         // If they all resolved, set the products
         if (product != null) {
             sdata.setProduct(product);
-        }
-
-        if (providedProducts != null) {
-            sdata.setProvidedProducts(providedProducts);
-        }
-
-        sdata.setDerivedProduct(dProduct);
-
-        if (dpProvidedProducts != null) {
-            sdata.setDerivedProvidedProducts(dpProvidedProducts);
         }
 
         // Set the other "safe" properties here...
@@ -289,6 +272,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         pdata.setCreated(new Date());
         pdata.setUpdated(new Date());
         pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
+        pdata.setProvidedProducts(this.resolveProducts(pinfo.getProvidedProducts()));
 
         // Create our mappings...
         this.productMap.put(pdata.getId(), pdata);
