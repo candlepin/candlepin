@@ -61,6 +61,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
@@ -257,11 +259,21 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Immutable
     private Set<Branding> branding;
 
+    @ManyToMany
+    @JoinTable(
+        name = "cp2_product_provided_products",
+        joinColumns = {@JoinColumn(name = "product_uuid", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "provided_product_uuid")})
+    @BatchSize(size = 1000)
+    @Immutable
+    private Set<Product> providedProducts;
+
     public Product() {
         this.attributes = new HashMap<>();
         this.productContent = new LinkedList<>();
         this.dependentProductIds = new HashSet<>();
         this.branding = new HashSet<>();
+        this.providedProducts = new HashSet<>();
     }
 
     /**
@@ -338,6 +350,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setLocked(source.isLocked());
 
         this.setBranding(source.getBranding());
+        this.setProvidedProducts(source.getProvidedProducts());
     }
 
     /**
@@ -430,6 +443,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         copy.setBranding(this.branding.stream()
             .map(brand -> new Branding(copy, brand.getProductId(), brand.getName(), brand.getType()))
             .collect(Collectors.toSet()));
+
+        copy.setProvidedProducts(this.providedProducts);
 
         return copy;
     }
@@ -1196,6 +1211,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // Compare branding collections
             equals = equals && Util.collectionsAreEqual(this.branding, that.branding,
                 (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
+
+            //Compare provided product
+            equals = equals && Util.collectionsAreEqual(this.providedProducts, that.providedProducts,
+                (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
+
         }
 
         return equals;
@@ -1258,6 +1278,15 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             builder.append(accumulator);
         }
 
+        if (!this.providedProducts.isEmpty()) {
+            accumulator = 0;
+            for (Product product : this.providedProducts) {
+                accumulator += (product != null ? product.hashCode() : 0);
+            }
+
+            builder.append(accumulator);
+        }
+
         return builder.toHashCode();
     }
 
@@ -1267,6 +1296,34 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @PreUpdate
     public void updateEntityVersion() {
         this.entityVersion = this.getEntityVersion();
+    }
+
+    /**
+     * Retrieves a collection of provided product for this product.
+     *
+     * @return returns the provided product of this product.
+     */
+    @JsonIgnore
+    public Collection<Product> getProvidedProducts() {
+        return new SetView<>(this.providedProducts);
+    }
+
+    /**
+     * Method to set provided products.
+     *
+     * @param providedProducts A collection of provided products.
+     * @return A reference to this product.
+     */
+    public Product setProvidedProducts(Collection<Product> providedProducts) {
+
+        if (providedProducts != null) {
+            this.providedProducts = new HashSet<>(providedProducts);
+        }
+        else {
+            this.providedProducts = new HashSet<>();
+        }
+
+        return this;
     }
 
 }
