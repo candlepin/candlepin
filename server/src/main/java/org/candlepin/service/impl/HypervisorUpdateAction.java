@@ -73,7 +73,8 @@ public class HypervisorUpdateAction {
         this.consumerResource = consumerResource;
         this.subAdapter = subAdapter;
         this.translator = translator;
-        this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
+        this.hypervisorType = consumerTypeCurator.getByLabel(
+            ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
 
     @Transactional
@@ -152,8 +153,8 @@ public class HypervisorUpdateAction {
                 boolean hypervisorIdUpdated = updateHypervisorId(knownHost, owner, jobReporterId,
                     hypervisorId);
 
-                boolean nameUpdated = knownHost.getName() == null ||
-                    !knownHost.getName().equals(incoming.getName());
+                boolean nameUpdated = incoming.getName() != null &&
+                    (knownHost.getName() == null || !knownHost.getName().equals(incoming.getName()));
                 if (nameUpdated) {
                     knownHost.setName(incoming.getName());
                 }
