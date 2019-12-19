@@ -146,6 +146,10 @@ public class ProductTranslatorTest extends
                         }
                     }
                 }
+
+                Collection<Product> sourceProducts = source.getProvidedProducts();
+                Set<ProductDTO> productsDTO = dto.getProvidedProducts();
+                verifyProductsOutput(sourceProducts, productsDTO);
             }
             else {
                 assertTrue(dto.getProductContent().isEmpty());
@@ -154,6 +158,30 @@ public class ProductTranslatorTest extends
         }
         else {
             assertNull(dto);
+        }
+    }
+
+    /**
+     * Verifies that the product's sets of products are translated properly.
+     *
+     * @param originalProducts
+     *  The original collection of products we check against.
+     *
+     * @param dtoProducts
+     *  The translated DTO set of products that we need to verify.
+     */
+    private void verifyProductsOutput(Collection<Product> originalProducts,
+        Set<ProductDTO> dtoProducts) {
+        for (Product productSource : originalProducts) {
+            for (ProductDTO productDTO : dtoProducts) {
+
+                assertNotNull(productDTO);
+                assertNotNull(productDTO.getId());
+
+                if (productDTO.getId().equals(productSource.getId())) {
+                    assertTrue(productDTO.getName().equals(productSource.getName()));
+                }
+            }
         }
     }
 }
