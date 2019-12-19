@@ -839,6 +839,7 @@ class Candlepin
     dependentProductIds = params[:dependentProductIds] || []
     branding = params[:branding] || []
     relies_on = params[:relies_on] || []
+    providedProducts = params[:providedProducts] || []
 
     #if product don't have type attributes, create_product will fail on server
     #side.
@@ -850,7 +851,8 @@ class Candlepin
       'attributes' => attributes,
       'dependentProductIds' => dependentProductIds,
       'branding' => branding,
-      'reliesOn' => relies_on
+      'reliesOn' => relies_on,
+      'providedProducts' => providedProducts.collect { |pid| {'id' => pid} },
     }
 
     post("/owners/#{owner_key}/products", {}, product)
@@ -867,6 +869,11 @@ class Candlepin
     product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
     product[:branding] = params[:branding] if params[:branding]
     product[:relies_on] = params[:relies_on] if params[:relies_on]
+
+    if params[:providedProducts]
+      product['providedProducts'] = params[:providedProducts]
+        .collect { |pid| {'id' => pid} }
+    end
 
     put("/owners/#{owner_key}/products/#{product_id}", {}, product)
   end

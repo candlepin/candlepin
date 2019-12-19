@@ -102,6 +102,19 @@ public class ProductTranslator extends TimestampedEntityTranslator<Product, Prod
             else {
                 destination.setBranding(Collections.emptySet());
             }
+
+            Collection<Product> products = source.getProvidedProducts();
+
+            if (products != null && !products.isEmpty()) {
+                for (Product prod : products) {
+                    if (prod != null) {
+                        destination.addProvidedProduct(modelTranslator.translate(prod, ProductDTO.class));
+                    }
+                }
+            }
+            else {
+                destination.setProvidedProducts(Collections.<ProductDTO>emptySet());
+            }
         }
         else {
             destination.setProductContent(Collections.emptyList());

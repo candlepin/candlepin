@@ -14,14 +14,12 @@
  */
 package org.candlepin.dto.api.v1;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.dto.AbstractDTOTest;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
+import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 
 
 
@@ -77,6 +76,12 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
             brandings.add(branding);
         }
 
+        Set<ProductDTO> providedProd = Util.asSet(
+            TestUtil.createProductDTO("pp1", "providedProduct1"),
+            TestUtil.createProductDTO("pp2", "providedProduct2"),
+            TestUtil.createProductDTO("pp3", "providedProduct3")
+        );
+
         this.values = new HashMap<>();
         this.values.put("Uuid", "test_value");
         this.values.put("Id", "test_value");
@@ -100,6 +105,7 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         this.values.put("Href", "test-href");
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
+        this.values.put("ProvidedProducts", providedProd);
     }
 
     /**
@@ -251,4 +257,31 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         branding.setType("");
         assertThrows(IllegalArgumentException.class, () -> dto.addBranding(branding));
     }
+
+    @Test
+    public void testAddProvidedProductWithAbsentProvidedProduct() {
+        ProductDTO dto = new ProductDTO();
+        ProductDTO prov1 = TestUtil.createProductDTO("prodID2", "OS");
+
+        assertTrue(dto.addProvidedProduct(prov1));
+    }
+
+    @Test
+    public void testAddProvidedProductWithPresentProvidedProduct() {
+        ProductDTO dto = new ProductDTO();
+        ProductDTO provProduct = TestUtil.createProductDTO("prodID2", "OS");
+
+        assertTrue(dto.addProvidedProduct(provProduct));
+
+        ProductDTO anotherProvProduct = TestUtil.createProductDTO("prodID2", "OS");
+
+        assertFalse(dto.addProvidedProduct(anotherProvProduct));
+    }
+
+    @Test
+    public void testAddProvidedProductWithNullInput() {
+        ProductDTO dto = new ProductDTO();
+        assertThrows(IllegalArgumentException.class, () -> dto.addProvidedProduct(null));
+    }
+
 }
