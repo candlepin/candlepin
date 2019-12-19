@@ -764,4 +764,65 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
+
+    @Test
+    public void testCreateProductWithProvidedProduct() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
+        ProductDTO prov1 = TestUtil.createProductDTO("prodID2", "OS");
+        this.productManager.createProduct(prov1, owner);
+        dto.addProvidedProduct(prov1);
+
+        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
+
+        Product output = this.productManager.createProduct(dto, owner);
+
+        assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
+        assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1")
+            .getProvidedProducts().size());
+    }
+
+    @Test
+    public void testIsChangedByTrueWhenProvidedProductsAdded() {
+        Product product = TestUtil.createProduct("p1", "prod1");
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+        ProductDTO prov1 = TestUtil.createProductDTO("prodID2", "OS");
+        pdto.addProvidedProduct(prov1);
+
+        assertTrue(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testIsChangedByDTOIsTrueWhenProvidedProductRemoved() {
+        Product product = TestUtil.createProduct("p1", "prod1");
+        Product providedProduct = TestUtil.createProduct("providedProd", "pp");
+        product.addProvidedProduct(providedProduct);
+        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+        pdto.getProvidedProducts().clear();
+
+        assertTrue(ProductManager.isChangedBy(product, pdto));
+    }
+
+    @Test
+    public void testUpdateProductWithProvidedProduct() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
+
+        // Creating actual provided Products
+        ProductDTO prov1 = TestUtil.createProductDTO("providedId1", "OS1");
+        this.productManager.createProduct(prov1, owner);
+        ProductDTO prov2 = TestUtil.createProductDTO("anotherProvidedProductID", "ProvName");
+        this.productManager.createProduct(prov2, owner);
+        dto.addProvidedProduct(prov1);
+        Product output = this.productManager.createProduct(dto, owner);
+
+        assertEquals(1, output.getProvidedProducts().size());
+
+        ProductDTO pdto = this.modelTranslator.translate(output, ProductDTO.class);
+        pdto.addProvidedProduct(prov2);
+        output = this.productManager.updateProduct(pdto, owner, false);
+
+        assertEquals(2, output.getProvidedProducts().size());
+    }
+
 }

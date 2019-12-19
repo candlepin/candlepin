@@ -417,5 +417,67 @@ describe 'Owner Product Resource' do
     # A new product version should have been created during an update of branding
     expect(updated_prod_uuid).not_to eq(original_prod_uuid)
   end
+
+  it "should able to create product with provided product" do
+    owner = create_owner random_string('some-owner')
+    provided_product_id1 = "provided_product_id_1"
+    provided_product_id2 = "provided_product_id_2"
+    product_name = "test_product"
+
+    p1 = create_product(provided_product_id1, random_string("provided1"),  :owner => owner['key'])
+    p2 = create_product(provided_product_id2, random_string("provided2"),  :owner => owner['key'])
+
+    prod = create_product(product_name, product_name, :owner => owner['key'],
+      :providedProducts => [ "provided_product_id_1", "provided_product_id_2" ])
+
+    product = @cp.get_product(owner['key'], prod['id'])
+
+    expect(product.providedProducts.find { |item| item['id'] == 'provided_product_id_2' })
+      .to_not be_nil
+    expect(product.providedProducts.find { |item| item['id'] == 'provided_product_id_1' })
+      .to_not be_nil
+  end
+
+  it "should able to update product with provided products" do
+    owner = create_owner random_string('some-owner')
+    provided_product_id = "provided_product_id"
+    product_name = "test_product"
+
+    create_product(provided_product_id, random_string("provided"),  :owner => owner['key'])
+    create_product(product_name, product_name, :owner => owner['key'])
+
+    prod = @cp.update_product(owner['key'], product_name, :providedProducts => [ "provided_product_id" ])
+
+    expect(prod.providedProducts[0].id).to eq('provided_product_id')
+  end
+
+  it 'should create new product version when updating provided product' do
+    owner = create_owner random_string('some-owner')
+    name = random_string("product-")
+    provided_product_id = "provided_product_id"
+    new_provided_product_id = "new_provided_product_id"
+
+    create_product(provided_product_id, random_string("provided"),  :owner => owner['key'])
+    prod = create_product(name, name, :owner => owner['key'], :providedProducts => [ "provided_product_id" ])
+
+    prod.providedProducts.size.should == 1
+
+    prod = @cp.get_product(owner['key'], prod['id'])
+    prod.providedProducts.size.should == 1
+    original_prod_uuid = prod.uuid
+
+    create_product(new_provided_product_id, random_string("provided"),  :owner => owner['key'])
+    updated_prod = @cp.update_product(owner['key'], prod['id'],
+      :providedProducts => ["new_provided_product_id" ])
+
+    updated_prod.providedProducts.size.should == 1
+    updated_prod_uuid = updated_prod.uuid
+
+    expect(updated_prod.providedProducts[0].id).to eq('new_provided_product_id')
+
+    # A new product version should have been created during an update of provided product
+    expect(updated_prod_uuid).not_to eq(original_prod_uuid)
+  end
+
 end
 
