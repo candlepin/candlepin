@@ -397,6 +397,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
 
         this.setBranding(source.getBranding());
+        this.setProvidedProducts(source.getProvidedProducts());
 
         return this;
     }
@@ -444,7 +445,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .map(brand -> new Branding(copy, brand.getProductId(), brand.getName(), brand.getType()))
             .collect(Collectors.toSet()));
 
-        copy.setProvidedProducts(this.providedProducts);
+        copy.providedProducts = new HashSet<>();
+        copy.setProvidedProducts(this.providedProducts.stream()
+            .map(provProduct -> (Product) provProduct.clone())
+            .collect(Collectors.toSet()));
 
         return copy;
     }
@@ -1212,7 +1216,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             equals = equals && Util.collectionsAreEqual(this.branding, that.branding,
                 (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
 
-            //Compare provided product
+            // Compare provided product
             equals = equals && Util.collectionsAreEqual(this.providedProducts, that.providedProducts,
                 (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
 
@@ -1303,7 +1307,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *
      * @return returns the provided product of this product.
      */
-    @JsonIgnore
     public Collection<Product> getProvidedProducts() {
         return new SetView<>(this.providedProducts);
     }
@@ -1326,4 +1329,18 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return this;
     }
 
+    /**
+     * Adds the specified provided product as one of the provided product of this product. If the provided
+     * product is already there, it will not be added again.
+     *
+     * @param providedProduct
+     *  A provided product that needs to added as one of the provided product
+     *  of this product.
+     *
+     * @return
+     *  boolean value if provided product is added or not.
+     */
+    public boolean addProvidedProduct(Product providedProduct) {
+        return providedProduct != null && this.providedProducts.add(providedProduct);
+    }
 }
