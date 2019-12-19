@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.common.exceptions.RuleValidationException;
+import org.candlepin.common.exceptions.SlaValidationException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
 
 
 /**
@@ -47,7 +46,7 @@ public class ServiceLevelValidator {
         this.ownerCurator = ownerCurator;
     }
 
-    public void validate(String ownerId, Collection<String> serviceLevels) {
+    private void validate(String ownerId, Collection<String> serviceLevels) {
         Set<String> invalidServiceLevels = new HashSet<>();
 
         for (String serviceLevel : serviceLevels) {
@@ -71,7 +70,7 @@ public class ServiceLevelValidator {
             String error = i18n.tr("Service level \"{0}\" is not available to units of organization {1}.",
                 StringUtils.join(invalidServiceLevels, ", "), owner.getKey());
 
-            throw new RuleValidationException(error);
+            throw new SlaValidationException(error);
         }
     }
 

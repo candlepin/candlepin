@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2019 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,16 +14,26 @@
  */
 package org.candlepin.common.resource.exceptions;
 
-import javax.ws.rs.core.Response.Status;
 
 /**
- * GoneException
+ * DeletedConsumerExceptionMessage
  */
-public class GoneException extends RestApiException {
-    public GoneException(String message) {
-        super(Status.GONE, message);
+public class DeletedConsumerExceptionMessage extends ExceptionMessage {
+    private String deletedId;
+
+
+    public DeletedConsumerExceptionMessage(String message, String deletedId) {
+        super(message);
+        this.deletedId = deletedId;
     }
-    public GoneException(String message, String deletedId) {
-        super(Status.GONE, new DeletedConsumerExceptionMessage(message, deletedId));
+
+    public String getDeletedId() {
+        return deletedId;
     }
+
+    public void setDeletedId(String deletedId) {
+        this.deletedId = deletedId;
+    }
+
+
 }

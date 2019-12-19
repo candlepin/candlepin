@@ -14,7 +14,7 @@
  */
 package org.candlepin.common.resource.exceptions.mappers;
 
-import org.candlepin.common.exceptions.RuleValidationException;
+import org.candlepin.common.exceptions.SlaValidationException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -23,15 +23,15 @@ import javax.ws.rs.ext.Provider;
 
 
 /**
- * RuleValidationExceptionMapper maps the RuleValidationException into a
+ * SLAValidationExceptionMapper maps the SLAValidationException into a
  * BAD REQUEST response.
  */
 @Provider
-public class RuleValidationExceptionMapper extends CandlepinExceptionMapper
-    implements ExceptionMapper<RuleValidationException> {
+public class SLAValidationExceptionMapper extends CandlepinExceptionMapper
+    implements ExceptionMapper<SlaValidationException> {
 
     @Override
-    public final Response toResponse(final RuleValidationException exception) {
+    public final Response toResponse(final SlaValidationException exception) {
         return getDefaultBuilder(exception, Status.BAD_REQUEST,
             determineBestMediaType()).build();
     }

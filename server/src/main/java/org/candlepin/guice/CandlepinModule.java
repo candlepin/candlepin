@@ -74,6 +74,7 @@ import org.candlepin.common.resource.exceptions.mappers.ReaderExceptionMapper;
 import org.candlepin.common.resource.exceptions.mappers.RollbackExceptionMapper;
 import org.candlepin.common.resource.exceptions.mappers.RuleValidationExceptionMapper;
 import org.candlepin.common.resource.exceptions.mappers.RuntimeExceptionMapper;
+import org.candlepin.common.resource.exceptions.mappers.SLAValidationExceptionMapper;
 import org.candlepin.common.resource.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.common.resource.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.common.resource.exceptions.mappers.WriterExceptionMapper;
@@ -324,6 +325,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ReaderExceptionMapper.class);
         bind(RollbackExceptionMapper.class);
         bind(RuleValidationExceptionMapper.class);
+        bind(SLAValidationExceptionMapper.class);
         bind(RuntimeExceptionMapper.class);
         bind(ValidationExceptionMapper.class);
         bind(WebApplicationExceptionMapper.class);

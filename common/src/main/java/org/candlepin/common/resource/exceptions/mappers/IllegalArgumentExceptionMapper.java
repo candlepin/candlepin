@@ -21,9 +21,8 @@ import javax.ws.rs.ext.Provider;
 
 
 /**
- * BadRequestExceptionMapper maps the RESTEasy BadRequestException into JSON and
- * allows the proper header to be set. This allows Candlepin to control the flow
- * of the exceptions.
+ * IllegalArgumentExceptionMapper maps the IllegalArgumentException into a
+ * BAD REQUEST response.
  */
 @Provider
 public class IllegalArgumentExceptionMapper extends CandlepinExceptionMapper

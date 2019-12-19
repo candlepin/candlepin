@@ -14,7 +14,6 @@
  */
 package org.candlepin.common.exceptions;
 
-import org.candlepin.common.resource.exceptions.ConflictException;
 
 /**
  * ConcurrentModificationException
@@ -24,7 +23,7 @@ import org.candlepin.common.resource.exceptions.ConflictException;
  *
  * This exception produces a 409 error.
  */
-public class ConcurrentModificationException extends ConflictException {
+public class ConcurrentModificationException extends RuntimeException {
 
     public ConcurrentModificationException(String message, Exception e) {
         super(message, e);

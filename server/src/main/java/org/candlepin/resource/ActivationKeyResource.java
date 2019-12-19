@@ -60,10 +60,10 @@ import javax.ws.rs.core.MediaType;
 public class ActivationKeyResource {
 
     private static final Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
-    private static final String BAD_ACTIVATION_KEY_ID = "activation key ID is null or empty";
-    private static final String BAD_POOL_ID = "pool ID is null or empty";
-    private static final String BAD_PRODUCT_ID = "product ID is null or empty";
-    private static final String UPDATE_IS_NULL = "update is null";
+    private static final String BAD_ACTIVATION_KEY_ID = I18n.marktr("activation key ID is null or empty");
+    private static final String BAD_POOL_ID = I18n.marktr("pool ID is null or empty");
+    private static final String BAD_PRODUCT_ID = I18n.marktr("product ID is null or empty");
+    private static final String UPDATE_IS_NULL = I18n.marktr("update is null");
 
     private final ActivationKeyController activationKeyController;
     private final ModelTranslator translator;

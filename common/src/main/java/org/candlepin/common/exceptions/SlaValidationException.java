@@ -14,28 +14,12 @@
  */
 package org.candlepin.common.exceptions;
 
-
-import org.candlepin.common.resource.exceptions.ExceptionMessage;
-
 /**
- * DeletedConsumerExceptionMessage
+ * Thrown when an SLA validation fails. Such as when Service level is not
+ * available to units of organization.
  */
-public class DeletedConsumerExceptionMessage extends ExceptionMessage {
-    private String deletedId;
-
-
-    public DeletedConsumerExceptionMessage(String message, String deletedId) {
+public class SlaValidationException extends RuntimeException {
+    public SlaValidationException(String message) {
         super(message);
-        this.deletedId = deletedId;
     }
-
-    public String getDeletedId() {
-        return deletedId;
-    }
-
-    public void setDeletedId(String deletedId) {
-        this.deletedId = deletedId;
-    }
-
-
 }

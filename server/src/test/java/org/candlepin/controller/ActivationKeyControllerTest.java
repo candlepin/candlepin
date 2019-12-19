@@ -17,6 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.common.exceptions.AlreadyRegisteredException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.RuleValidationException;
+import org.candlepin.common.exceptions.SlaValidationException;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.Owner;
@@ -353,7 +354,7 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
         update.setServiceLevel("level1");
         update.setReleaseVersion(TestUtil.getStringOfSize(256));
 
-        assertThrows(RuleValidationException.class, () ->
+        assertThrows(SlaValidationException.class, () ->
             akr.updateActivationKey(key.getId(), update)
         );
     }
