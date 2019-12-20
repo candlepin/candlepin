@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.common.config.PropertyConverter;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
@@ -1364,6 +1365,10 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     public String getStackId() {
         return (this.getProduct() != null ?
             this.getProduct().getAttributeValue(Product.Attributes.STACKING_ID) : null);
+    }
+
+    public boolean isMultiEnt() {
+        return PropertyConverter.toBoolean(this.getMergedProductAttribute(Pool.Attributes.MULTI_ENTITLEMENT));
     }
 
     @JsonIgnore

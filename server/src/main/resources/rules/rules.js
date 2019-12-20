@@ -1,4 +1,4 @@
-// Version: 5.39
+// Version: 5.40
 
 /*
  * Default Candlepin rule set.
@@ -1567,6 +1567,11 @@ var ActivationKey = {
     }
 }
 
+/**
+ * DEPRECATED:
+ *  This functionality has been moved to EntitlementRules.java & PoolValidator.java as of Candlepin 3.1.0.
+*   This method will no longer be called by Candlepin and is considered deprecated.
+ */
 var Entitlement = {
 
     // defines mapping of product attributes to functions

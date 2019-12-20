@@ -38,7 +38,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.policy.ValidationError;
+import org.candlepin.policy.RulesValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
@@ -481,8 +481,8 @@ public class Entitler {
                 log.debug("consumer {} dry-run errors:", consumer.getUuid());
                 for (Entry<String, ValidationResult> entry : e.getResults().entrySet()) {
                     log.debug("errors for pool id: {}", entry.getKey());
-                    for (ValidationError error : entry.getValue().getErrors()) {
-                        log.debug(error.getResourceKey());
+                    for (RulesValidationError error : entry.getValue().getErrors()) {
+                        log.debug("{}", error);
                     }
                 }
             }

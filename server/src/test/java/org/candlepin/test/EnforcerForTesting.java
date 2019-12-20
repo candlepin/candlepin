@@ -23,7 +23,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.entitlement.Enforcer;
-import org.candlepin.policy.entitlement.PreUnbindHelper;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -53,10 +52,6 @@ public class EnforcerForTesting implements Enforcer {
     public ValidationResult preEntitlement(Consumer consumer, Pool enitlementPool,
         Integer quantity, CallerType caller) {
         return new ValidationResult();
-    }
-
-    public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
-        return new PreUnbindHelper(null);
     }
 
     @Override

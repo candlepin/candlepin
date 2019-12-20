@@ -18,10 +18,6 @@ import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.rules.v1.ConsumerDTO;
-import org.candlepin.dto.rules.v1.EntitlementDTO;
-import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -32,16 +28,10 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsonJsContext;
-import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -58,44 +48,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import static org.candlepin.policy.entitlement.PoolValidator.*;
 
 
 /**
  * Enforces entitlement rules for normal (non-manifest) consumers.
  */
 public class EntitlementRules implements Enforcer {
+
     private static final Logger log = LoggerFactory.getLogger(EntitlementRules.class);
 
     private DateSource dateSource;
 
     private I18n i18n;
-    private JsRunner jsRules;
     private Configuration config;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
-    private RulesObjectMapper objectMapper;
-    private ModelTranslator translator;
 
     @Inject
-    public EntitlementRules(DateSource dateSource,
-        JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
-        ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, RulesObjectMapper mapper,
-        ModelTranslator translator) {
+    public EntitlementRules(DateSource dateSource, I18n i18n, Configuration config,
+        ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator,
+        ProductCurator productCurator) {
 
-        this.jsRules = jsRules;
         this.dateSource = dateSource;
         this.i18n = i18n;
         this.config = config;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
-        this.objectMapper = mapper;
-        this.translator = translator;
-
-        jsRules.init("entitlement_name_space");
     }
 
     @Override
@@ -135,39 +117,36 @@ public class EntitlementRules implements Enforcer {
         /* This document describes the java script portion of the pre entitlement rules check:
          * http://www.candlepinproject.org/docs/candlepin/pre_entitlement_rules_check.html
          */
-        Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
-            consumer.getEntitlements().stream()
-                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        JsonJsContext args = new JsonJsContext(objectMapper);
-        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-        args.put("hostConsumer", this.translator.translate(host, ConsumerDTO.class));
-        args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
-        args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-        args.put("poolQuantities", entitlementPoolQuantities);
-        args.put("caller", caller.getLabel());
-        args.put("log", log, false);
+        for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
+            Pool pool = poolQuantity.getPool();
+            int quantity = poolQuantity.getQuantity();
+            PoolValidationData validationData = new PoolValidationData.Builder()
+                .setCaller(caller)
+                .setConsumer(consumer)
+                .setConsumerType(ctype)
+                .setPool(pool)
+                .setQuantity(quantity)
+                .setHostConsumer(host)
+                .build();
 
-        String json = jsRules.runJsFunction(String.class, "validate_pools_batch", args);
-
-        TypeReference<Map<String, ValidationResult>> typeref =
-            new TypeReference<Map<String, ValidationResult>>() {};
-        try {
-            resultMap = objectMapper.toObject(json, typeref);
-            for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
-                if (!resultMap.containsKey(poolQuantity.getPool().getId())) {
-                    resultMap.put(poolQuantity.getPool().getId(), new ValidationResult());
-                    log.info("no result returned for pool: {}", poolQuantity.getPool());
+            ValidationResult result = new ValidationResult();
+            for (PoolValidator validator: PoolValidator.values()) {
+                if (pool.hasMergedAttribute(validator.getAttributeKey()) || validator == GLOBAL) {
+                    validator.validate(validationData, result);
                 }
-
             }
-        }
-        catch (Exception e) {
-            throw new RuleExecutionException(e);
+            resultMap.put(pool.getId(), result);
         }
 
         for (PoolQuantity poolQuantity : entitlementPoolQuantities) {
+            if (!resultMap.containsKey(poolQuantity.getPool().getId())) {
+                resultMap.put(poolQuantity.getPool().getId(), new ValidationResult());
+                log.info("no result returned for pool: {}", poolQuantity.getPool());
+            }
+
             finishValidation(resultMap.get(poolQuantity.getPool().getId()),
                 poolQuantity.getPool(), poolQuantity.getQuantity());
         }
@@ -178,33 +157,28 @@ public class EntitlementRules implements Enforcer {
     @Override
     @SuppressWarnings("checkstyle:indentation")
     public List<Pool> filterPools(Consumer consumer, List<Pool> pools, boolean showAll) {
-        JsonJsContext args = new JsonJsContext(objectMapper);
         Map<String, ValidationResult> resultMap = new HashMap<>();
 
-        Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
-            pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
+        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-        Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
-            consumer.getEntitlements().stream()
-                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+        for (Pool pool : pools) {
+            int quantity = 1;
+            PoolValidationData validationData = new PoolValidationData.Builder()
+                .setCaller(CallerType.LIST_POOLS)
+                .setConsumer(consumer)
+                .setConsumerType(ctype)
+                .setPool(pool)
+                .setQuantity(quantity)
+                .setHostConsumer(getHost(consumer))
+                .build();
 
-        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
-        args.put("hostConsumer", this.translator.translate(getHost(consumer), ConsumerDTO.class));
-        args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
-        args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-        args.put("pools", poolStream.collect(Collectors.toSet()));
-        args.put("caller", CallerType.LIST_POOLS.getLabel());
-        args.put("log", log, false);
-
-        String json = jsRules.runJsFunction(String.class, "validate_pools_list", args);
-        TypeReference<Map<String, ValidationResult>> typeref =
-            new TypeReference<Map<String, ValidationResult>>() {};
-
-        try {
-            resultMap = objectMapper.toObject(json, typeref);
-        }
-        catch (Exception e) {
-            throw new RuleExecutionException(e);
+            ValidationResult result = new ValidationResult();
+            for (PoolValidator validator: PoolValidator.values()) {
+                if (pool.hasMergedAttribute(validator.getAttributeKey()) || validator == GLOBAL) {
+                    validator.validate(validationData, result);
+                }
+            }
+            resultMap.put(pool.getId(), result);
         }
 
         List<Pool> filteredPools = new LinkedList<>();
@@ -240,9 +214,10 @@ public class EntitlementRules implements Enforcer {
     public void finishValidation(ValidationResult result, Pool pool, Integer quantity) {
         validatePoolQuantity(result, pool, quantity);
         if (pool.isExpired(dateSource)) {
-            result.addError(new ValidationError(i18n.tr("Subscriptions for {0} expired on: {1}",
+            result.addError(i18n.tr("Unable to attach subscription for the product \"{0}\": Subscriptions " +
+                "for {0} expired on: {1}",
                 pool.getProductId(),
-                pool.getEndDate())));
+                pool.getEndDate()));
         }
     }
 
@@ -257,8 +232,7 @@ public class EntitlementRules implements Enforcer {
             // multi ent check
             if (!"yes".equalsIgnoreCase(pool.getProductAttributeValue(Pool.Attributes.MULTI_ENTITLEMENT)) &&
                 entitlement.getQuantity() + change > 1) {
-                result.addError(new ValidationError(
-                    EntitlementRulesTranslator.PoolErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED));
+                result.addError(EntitlementRulesTranslator.ErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED);
             }
             if (!consumer.isGuest()) {
                 String multiplier = pool.getProductAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER);
@@ -266,9 +240,7 @@ public class EntitlementRules implements Enforcer {
                     int instanceMultiplier = Integer.parseInt(multiplier);
                     // quantity should be divisible by multiplier
                     if ((entitlement.getQuantity() + change) % instanceMultiplier != 0) {
-                        result.addError(new ValidationError(
-                            EntitlementRulesTranslator.PoolErrorKeys.QUANTITY_MISMATCH
-                        ));
+                        result.addError(EntitlementRulesTranslator.ErrorKeys.QUANTITY_MISMATCH);
                     }
                 }
             }
@@ -281,10 +253,9 @@ public class EntitlementRules implements Enforcer {
     // Always ensure that we do not over consume.
     // FIXME for auto sub stacking, we need to be able to pull across multiple
     // pools eventually, so this would need to go away in that case
-    protected void validatePoolQuantity(ValidationResult result, Pool pool,
-        int quantity) {
+    protected void validatePoolQuantity(ValidationResult result, Pool pool, int quantity) {
         if (!pool.entitlementsAvailable(quantity)) {
-            result.addError(EntitlementRulesTranslator.PoolErrorKeys.NO_ENTITLEMENTS_AVAILABLE);
+            result.addError(EntitlementRulesTranslator.ErrorKeys.NO_ENTITLEMENTS_AVAILABLE);
         }
     }
 

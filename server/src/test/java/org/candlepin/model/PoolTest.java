@@ -577,4 +577,19 @@ public class PoolTest extends DatabaseTestFixture {
         assertTrue(output.contains(expectedValue2));
         assertTrue(output.contains(expectedValue3));
     }
+
+    @Test
+    public void testIsMultiEnt() {
+        Pool pool = new Pool();
+        pool.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+
+        assertTrue(pool.isMultiEnt());
+    }
+
+    @Test
+    public void testIsNotMultiEnt() {
+        Pool pool = new Pool();
+
+        assertFalse(pool.isMultiEnt());
+    }
 }

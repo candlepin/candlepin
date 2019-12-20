@@ -26,9 +26,8 @@ import java.util.List;
  */
 public class ValidationResult {
 
-    private List<ValidationError> errors;
-    private List<ValidationWarning> warnings;
-    private List<RulesValidationError> errorKeys;
+    private List<RulesValidationError> errors;
+    private List<RulesValidationWarning> warnings;
 
     /**
      * default ctor
@@ -36,77 +35,54 @@ public class ValidationResult {
     public ValidationResult() {
         errors = new LinkedList<>();
         warnings = new LinkedList<>();
-        errorKeys = new LinkedList<>();
     }
 
     /**
      * Return the list of errors if any.
      * @return the list of errors if any.
      */
-    public List<ValidationError> getErrors() {
+    public List<RulesValidationError> getErrors() {
         return errors;
     }
 
     /**
-     * Add an error
-     * @param error error to add
-     */
-    public void addError(ValidationError error) {
-        errors.add(error);
-    }
-
-    /**
-     * Add an error
-     * @param resourceKey string to use for the error
-     */
-    public void addError(String resourceKey) {
-        errors.add(new ValidationError(resourceKey));
-    }
-
-    /**
-     * Return the list of error keys if any.
-     * @return the list of error keys if any.
-     */
-    public List<RulesValidationError> getErrorKeys() {
-        return errorKeys;
-    }
-
-    /**
      * Add an errorKey
-     * @param errorKey error key to add
+     * @param errorKey error to add
      */
     public void addError(RulesValidationError errorKey) {
-        errorKeys.add(errorKey);
+        errors.add(errorKey);
+    }
+
+    /**
+     * Add an error message.
+     * NOTE: The error needs to be translated already!
+     *
+     * @param errorMessage translated error string to add
+     */
+    public void addError(String errorMessage) {
+        RulesValidationError errorKey = (i18n, args) -> errorMessage;
+        errors.add(errorKey);
     }
 
     /**
      * Return the list of warnings if any.
      * @return the list of warnings if any.
      */
-    public List<ValidationWarning> getWarnings() {
+    public List<RulesValidationWarning> getWarnings() {
         return warnings;
     }
 
     /**
-     * Add a warning
-     * @param warning warning to add
+     * Add a warningKey
+     * @param warningKey warning to add
      */
-    public void addWarning(ValidationWarning warning) {
-        warnings.add(warning);
-    }
-
-    /**
-     * Add a warning
-     * @param resourceKey resource key
-     */
-    public void addWarning(String resourceKey) {
-        warnings.add(new ValidationWarning(resourceKey));
+    public void addWarning(RulesValidationWarning warningKey) {
+        warnings.add(warningKey);
     }
 
     public void add(ValidationResult result) {
         errors.addAll(result.getErrors());
         warnings.addAll(result.getWarnings());
-        errorKeys.addAll(result.getErrorKeys());
     }
 
     /**
@@ -115,14 +91,6 @@ public class ValidationResult {
      */
     public boolean hasErrors() {
         return !errors.isEmpty();
-    }
-
-    /**
-     * Returns true if there were any error keys during validation.
-     * @return true if there were any error keys during validation.
-     */
-    public boolean hasErrorKeys() {
-        return !errorKeys.isEmpty();
     }
 
     /**

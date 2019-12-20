@@ -68,12 +68,13 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.RulesValidationError;
 import org.candlepin.policy.SystemPurposeComplianceRules;
-import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.policy.entitlement.Enforcer;
 import org.candlepin.policy.entitlement.Enforcer.CallerType;
+import org.candlepin.policy.entitlement.EntitlementRulesTranslator;
 import org.candlepin.policy.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -1220,8 +1221,8 @@ public class PoolManagerTest {
             any(CallerType.class))).thenReturn(resultMap);
 
         when(result.isSuccessful()).thenReturn(false);
-        List<ValidationError> errors = new ArrayList<>();
-        errors.add(new ValidationError("rulefailed.no.entitlements.available"));
+        List<RulesValidationError> errors = new ArrayList<>();
+        errors.add(EntitlementRulesTranslator.ErrorKeys.NO_ENTITLEMENTS_AVAILABLE);
         when(result.getErrors()).thenReturn(errors);
         List<PoolQuantity> bestPools = new ArrayList<>();
         bestPools.add(new PoolQuantity(pool1, 1));

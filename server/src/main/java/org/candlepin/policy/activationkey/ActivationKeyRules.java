@@ -135,9 +135,9 @@ public class ActivationKeyRules {
      */
     public String validatePoolForActivationKey(ActivationKey key, Pool pool, Long quantity) {
         ValidationResult validation = runPoolValidationForActivationKey(key, pool, quantity);
-        if (!validation.getErrorKeys().isEmpty()) {
+        if (!validation.getErrors().isEmpty()) {
             // Use the first error
-            return validation.getErrorKeys().get(0).buildErrorMessage(i18n, pool);
+            return validation.getErrors().get(0).buildErrorMessage(i18n, pool);
         }
         return null;
     }

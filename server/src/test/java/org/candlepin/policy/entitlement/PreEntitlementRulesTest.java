@@ -91,8 +91,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
         assertTrue(result.isSuccessful());
-        assertEquals("rulewarning.unsupported.number.of.cores",
-            result.getWarnings().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.WarningKeys.CORE_NUMBER_UNSUPPORTED,
+            result.getWarnings().get(0));
     }
 
     @Test
@@ -125,8 +125,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
         assertTrue(result.isSuccessful());
-        assertEquals("rulewarning.unsupported.ram",
-            result.getWarnings().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.WarningKeys.RAM_NUMBER_UNSUPPORTED,
+            result.getWarnings().get(0));
     }
 
     @Test
@@ -159,8 +159,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
         assertTrue(result.isSuccessful());
-        assertEquals("rulewarning.unsupported.number.of.sockets",
-            result.getWarnings().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.WarningKeys.SOCKET_NUMBER_UNSUPPORTED,
+            result.getWarnings().get(0));
     }
 
     @Test public void bindWithQuantityNoMultiEntitle() {
@@ -174,8 +174,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertEquals(1, result.getErrors().size());
-        assertTrue(result.getErrors().get(0).getResourceKey().contains(
-            "multi-entitlement"));
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED,
+            result.getErrors().get(0));
     }
 
     @Test
@@ -197,7 +197,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
             assertFalse(result.isSuccessful());
             assertTrue(result.hasErrors());
             assertEquals(1, result.getErrors().size());
-            assertTrue(result.getErrors().get(0).getResourceKey().contains("multi-entitlement"));
+            assertEquals(EntitlementRulesTranslator.ErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED,
+                result.getErrors().get(0));
         }
     }
 
@@ -603,8 +604,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasWarnings());
         assertEquals(1, result.getErrors().size());
-        assertEquals("virt.guest.host.does.not.match.pool.owner",
-            result.getErrors().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.VIRT_HOST_MISMATCH,
+            result.getErrors().get(0));
     }
 
     @Test
@@ -627,8 +628,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasWarnings());
         assertEquals(1, result.getErrors().size());
-        assertEquals("virt.guest.host.does.not.match.pool.owner",
-            result.getErrors().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.VIRT_HOST_MISMATCH, result.getErrors().get(0));
     }
 
     @Test
@@ -638,8 +638,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertTrue(result.hasWarnings());
         assertEquals(1, result.getWarnings().size());
-        assertEquals("rulewarning.virt.only",
-            result.getWarnings().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.WarningKeys.VIRT_ONLY, result.getWarnings().get(0));
     }
 
     @Test
@@ -669,8 +668,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertTrue(result.hasWarnings());
         assertEquals(1, result.getWarnings().size());
-        assertEquals("rulewarning.physical.only",
-            result.getWarnings().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.WarningKeys.PHYSICAL_ONLY, result.getWarnings().get(0));
     }
 
     @Test
@@ -700,8 +698,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult result = enforcer.preEntitlement(tooOld, pool, 1);
         assertTrue(result.hasErrors());
         assertEquals(1, result.getErrors().size());
-        assertEquals("virt.guest.cannot.use.unmapped.guest.pool.not.new",
-            result.getErrors().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.VIRTUAL_GUEST_RESTRICTED,
+            result.getErrors().get(0));
     }
 
     @Test
@@ -719,8 +717,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1, CallerType.BIND);
         assertTrue(result.hasErrors());
         assertEquals(1, result.getErrors().size());
-        assertEquals("virt.guest.cannot.bind.future.unmapped.guest.pool",
-            result.getErrors().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.TEMPORARY_FUTURE_POOL, result.getErrors().get(0));
     }
 
     @Test
@@ -742,8 +739,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
         assertTrue(result.hasErrors());
         assertEquals(1, result.getErrors().size());
-        assertEquals("virt.guest.cannot.use.unmapped.guest.pool.has.host",
-            result.getErrors().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.UNMAPPED_GUEST_RESTRICTED,
+            result.getErrors().get(0));
     }
 
     private Pool setupUserRestrictedPool() {
@@ -875,8 +872,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasWarnings());
         assertEquals(1, result.getErrors().size());
-        assertEquals("consumer.does.not.match.pool.consumer.requirement",
-            result.getErrors().get(0).getResourceKey());
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.CONSUMER_MISMATCH, result.getErrors().get(0));
     }
 
 }

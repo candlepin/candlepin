@@ -19,7 +19,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -36,10 +35,7 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.test.TestDateUtil;
@@ -117,25 +113,21 @@ public class EntitlementRulesTestFixture {
             TestDateUtil.date(2010, 1, 1));
         when(cacheProvider.get()).thenReturn(cache);
 
-        JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
-
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
         enforcer = new EntitlementRules(
             new DateSourceImpl(),
-            jsRules,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config,
             consumerCurator,
             consumerTypeCurator,
-            productCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)),
-            translator
+            productCurator
         );
 
         owner = TestUtil.createOwner();
 
         consumerType = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
         consumer = new Consumer("test consumer", "test user", owner, consumerType);
+        consumer.setUuid("random_uuid");
 
         poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductCuratorMock,
                 productCurator);

@@ -39,6 +39,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.entitlement.Enforcer;
 import org.candlepin.policy.entitlement.EntitlementRules;
+import org.candlepin.policy.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
@@ -764,10 +765,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         catch (EntitlementRefusedException e) {
             assertNotNull(e.getResults());
             assertEquals(2, e.getResults().entrySet().size());
-            assertEquals("rulefailed.no.entitlements.available", e.getResults().get(pool1.getId())
-                .getErrors().get(0).getResourceKey());
-            assertEquals("rulefailed.no.entitlements.available", e.getResults().get(pool2.getId())
-                .getErrors().get(0).getResourceKey());
+            assertEquals(EntitlementRulesTranslator.ErrorKeys.NO_ENTITLEMENTS_AVAILABLE,
+                e.getResults().get(pool1.getId()).getErrors().get(0));
+            assertEquals(EntitlementRulesTranslator.ErrorKeys.NO_ENTITLEMENTS_AVAILABLE,
+                e.getResults().get(pool2.getId()).getErrors().get(0));
         }
 
     }

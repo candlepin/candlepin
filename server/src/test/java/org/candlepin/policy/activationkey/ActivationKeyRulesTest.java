@@ -59,7 +59,7 @@ public class ActivationKeyRulesTest {
 
         Pool pool = genPool();
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     @Test
@@ -67,7 +67,7 @@ public class ActivationKeyRulesTest {
         ActivationKey key = new ActivationKey();
         Pool pool = genPool();
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     /*
@@ -83,7 +83,7 @@ public class ActivationKeyRulesTest {
         Pool pool = genPhysOnlyPool();
         // Should be a valid combination
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     /*
@@ -97,7 +97,7 @@ public class ActivationKeyRulesTest {
 
         Pool pool = genInstanceBased();
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     @Test
@@ -105,8 +105,8 @@ public class ActivationKeyRulesTest {
         ActivationKey key = new ActivationKey();
         Pool pool = genPool();
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(-1));
-        assertEquals(1, result.getErrorKeys().size());
-        assertEquals(ActivationKeyRules.ErrorKeys.INVALID_QUANTITY, result.getErrorKeys().get(0));
+        assertEquals(1, result.getErrors().size());
+        assertEquals(ActivationKeyRules.ErrorKeys.INVALID_QUANTITY, result.getErrors().get(0));
     }
 
     /*
@@ -122,7 +122,7 @@ public class ActivationKeyRulesTest {
 
         // Attempting to overconsume the pool
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(2));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     @Test
@@ -134,7 +134,7 @@ public class ActivationKeyRulesTest {
         pool.setConsumed(4L);
 
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(2));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     @Test
@@ -143,8 +143,8 @@ public class ActivationKeyRulesTest {
         Pool pool = genPoolForType("person");
 
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
-        assertEquals(1, result.getErrorKeys().size());
-        assertEquals(ActivationKeyRules.ErrorKeys.CANNOT_USE_PERSON_POOLS, result.getErrorKeys().get(0));
+        assertEquals(1, result.getErrors().size());
+        assertEquals(ActivationKeyRules.ErrorKeys.CANNOT_USE_PERSON_POOLS, result.getErrors().get(0));
     }
 
     @Test
@@ -154,7 +154,7 @@ public class ActivationKeyRulesTest {
 
         Pool pool = genPoolForType("system");
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     @Test
@@ -164,7 +164,7 @@ public class ActivationKeyRulesTest {
 
         Pool pool = genHostRestricted("host1");
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     @Test
@@ -173,7 +173,7 @@ public class ActivationKeyRulesTest {
 
         Pool pool = genNonMultiEnt();
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     @Test
@@ -182,9 +182,9 @@ public class ActivationKeyRulesTest {
 
         Pool pool = genNonMultiEnt();
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(2));
-        assertEquals(1, result.getErrorKeys().size());
+        assertEquals(1, result.getErrors().size());
         assertEquals(ActivationKeyRules.ErrorKeys.INVALID_NON_MULTIENT_QUANTITY,
-            result.getErrorKeys().get(0));
+            result.getErrors().get(0));
     }
 
     @Test
@@ -194,8 +194,8 @@ public class ActivationKeyRulesTest {
         key.addPool(pool, 1L);
 
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(key, pool, new Long(1));
-        assertEquals(1, result.getErrorKeys().size());
-        assertEquals(ActivationKeyRules.ErrorKeys.ALREADY_EXISTS, result.getErrorKeys().get(0));
+        assertEquals(1, result.getErrors().size());
+        assertEquals(ActivationKeyRules.ErrorKeys.ALREADY_EXISTS, result.getErrors().get(0));
     }
 
     @Test
@@ -205,7 +205,7 @@ public class ActivationKeyRulesTest {
 
         ValidationResult result = actKeyRules.runPoolValidationForActivationKey(
             key, genPhysOnlyPool(), new Long(1));
-        assertTrue(result.getErrorKeys().isEmpty());
+        assertTrue(result.getErrors().isEmpty());
     }
 
     private Pool genPool() {

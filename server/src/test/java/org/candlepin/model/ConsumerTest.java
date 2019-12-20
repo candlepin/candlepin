@@ -27,7 +27,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
@@ -518,5 +520,89 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         consumer = consumerCurator.get(cid);
         assertTrue(consumer.getUsage().isEmpty());
+    }
+
+    @Test
+    public void testIsCapable() {
+        Set<ConsumerCapability> capabilitySet = new HashSet<>();
+        capabilitySet.add(new ConsumerCapability(consumer, "random_capability"));
+        capabilitySet.add(new ConsumerCapability(consumer, "derived_product"));
+        consumer.setCapabilities(capabilitySet);
+
+        assertTrue(consumer.isCapable("derived_product"));
+    }
+
+    @Test
+    public void testIsNotCapable() {
+        Set<ConsumerCapability> capabilitySet = new HashSet<>();
+        capabilitySet.add(new ConsumerCapability(consumer, "random_capability"));
+        capabilitySet.add(new ConsumerCapability(consumer, "another_random_capability"));
+        consumer.setCapabilities(capabilitySet);
+
+        assertFalse(consumer.isCapable("derived_product"));
+    }
+
+    @Test
+    public void testConsumerIsNotNewBornWhenNotPersistedYet() {
+        Consumer consumer = new Consumer();
+
+        assertFalse(consumer.isNewborn());
+    }
+
+    @Test
+    public void testConsumerIsNewBorn() {
+        consumer.setCreated(new Date());
+
+        assertTrue(consumer.isNewborn());
+    }
+
+    @Test
+    public void testConsumerIsNotNewBornIfCreatedMoreThanOneDayAgo() {
+        Date moreThanADayAgo = new Date(new Date().getTime() - 24L * 61L * 60L * 1000L);
+        consumer.setCreated(moreThanADayAgo);
+
+        assertFalse(consumer.isNewborn());
+    }
+
+    @Test
+    public void testArchitectureMatches() {
+        consumer.setFact(Consumer.Facts.ARCH, "x86");
+        assertTrue(consumer.architectureMatches("X86"));
+    }
+
+    @Test
+    public void testArchitectureMatchesX86variant() {
+        consumer.setFact(Consumer.Facts.ARCH, "i386");
+        assertTrue(consumer.architectureMatches("X86"));
+    }
+
+    @Test
+    public void testArchitectureMatchesWithMultipleArchesAndSpaces() {
+        consumer.setFact(Consumer.Facts.ARCH, "x86");
+        assertTrue(consumer.architectureMatches(" X86 , aarch64, whatever"));
+    }
+
+    @Test
+    public void testArchitectureMatchesWithALL() {
+        consumer.setFact(Consumer.Facts.ARCH, "x86");
+        assertTrue(consumer.architectureMatches("ALL"));
+    }
+
+    @Test
+    public void testArchitectureMatchesWhenProductArchIsNull() {
+        consumer.setFact(Consumer.Facts.ARCH, "x86");
+        assertTrue(consumer.architectureMatches(null));
+    }
+
+    @Test
+    public void testArchitectureDoesNotMatch() {
+        consumer.setFact(Consumer.Facts.ARCH, "aarch64");
+        assertFalse(consumer.architectureMatches("X86"));
+    }
+
+    @Test
+    public void testArchitectureDoesNotMatchWhenConsumerArchIsNull() {
+        consumer.setFact(Consumer.Facts.ARCH, null);
+        assertFalse(consumer.architectureMatches("X86"));
     }
 }

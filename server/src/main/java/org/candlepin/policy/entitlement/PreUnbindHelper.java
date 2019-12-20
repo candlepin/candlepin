@@ -26,27 +26,9 @@ import org.candlepin.policy.ValidationResult;
 public class PreUnbindHelper {
 
     private ValidationResult result;
-    private ConsumerCurator consumerCurator;
 
     public PreUnbindHelper(ConsumerCurator consumerCurator) {
-        this.consumerCurator = consumerCurator;
         result = new ValidationResult();
-    }
-
-    /**
-     * Add an error message to the validation results.
-     * @param resourceKey key of the error message.
-     */
-    public void addError(String resourceKey) {
-        result.addError(resourceKey);
-    }
-
-    /**
-     * Add a warning message to the validation.
-     * @param resourceKey key
-     */
-    public void addWarning(String resourceKey) {
-        result.addWarning(resourceKey);
     }
 
     /**

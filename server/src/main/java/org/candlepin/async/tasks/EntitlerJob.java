@@ -31,7 +31,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.dto.PoolIdAndErrors;
 import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.policy.ValidationError;
+import org.candlepin.policy.RulesValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.entitlement.EntitlementRulesTranslator;
 
@@ -112,7 +112,7 @@ public class EntitlerJob implements AsyncJob {
 
         for (Pool pool : poolCurator.listAllByIds(results.keySet())) {
             final List<String> errorMessages = new ArrayList<>();
-            for (ValidationError error : results.get(pool.getId()).getErrors()) {
+            for (RulesValidationError error : results.get(pool.getId()).getErrors()) {
                 errorMessages.add(translator.poolErrorToMessage(pool, error));
             }
             poolErrors.add(new PoolIdAndErrors(pool.getId(), errorMessages));

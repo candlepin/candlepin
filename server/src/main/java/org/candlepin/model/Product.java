@@ -145,6 +145,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         /** Attribute used to identify stacked products and pools */
         public static final String STACKING_ID = "stacking_id";
 
+        /** Attribute for specifying the provided storage band */
+        public static final String STORAGE_BAND = "storage_band";
+
         /** Attribute for specifying the provided support level provided by a given product */
         public static final String SUPPORT_LEVEL = "support_level";
 

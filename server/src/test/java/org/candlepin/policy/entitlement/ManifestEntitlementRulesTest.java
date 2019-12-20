@@ -24,9 +24,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.policy.ValidationError;
+import org.candlepin.policy.RulesValidationError;
+import org.candlepin.policy.RulesValidationWarning;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.entitlement.Enforcer.CallerType;
 import org.candlepin.test.TestUtil;
 
@@ -112,8 +112,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
         assertEquals(0, results.getWarnings().size());
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.cores.unsupported.by.consumer", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.CORES_UNSUPPORTED_BY_CONSUMER, error);
     }
 
     @Test
@@ -131,8 +131,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
         assertNotNull(results);
         assertEquals(0, results.getErrors().size());
-        ValidationWarning warning = results.getWarnings().get(0);
-        assertEquals("rulewarning.cores.unsupported.by.consumer", warning.getResourceKey());
+        RulesValidationWarning warning = results.getWarnings().get(0);
+        assertEquals(EntitlementRulesTranslator.WarningKeys.CORES_UNSUPPORTED_BY_CONSUMER, warning);
     }
 
     @Test
@@ -171,8 +171,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
         assertEquals(0, results.getWarnings().size());
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.ram.unsupported.by.consumer", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.RAM_UNSUPPORTED_BY_CONSUMER, error);
     }
 
     @Test
@@ -191,8 +191,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
         assertNotNull(results);
         assertEquals(0, results.getErrors().size());
-        ValidationWarning warning = results.getWarnings().get(0);
-        assertEquals("rulewarning.ram.unsupported.by.consumer", warning.getResourceKey());
+        RulesValidationWarning warning = results.getWarnings().get(0);
+        assertEquals(EntitlementRulesTranslator.WarningKeys.RAM_UNSUPPORTED_BY_CONSUMER, warning);
     }
 
     @Test
@@ -230,8 +230,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
         assertEquals(0, results.getWarnings().size());
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.instance.unsupported.by.consumer", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.INSTANCE_UNSUPPORTED_BY_CONSUMER, error);
     }
 
     @Test
@@ -248,8 +248,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
         assertNotNull(results);
         assertEquals(0, results.getErrors().size());
-        ValidationWarning warning = results.getWarnings().get(0);
-        assertEquals("rulewarning.instance.unsupported.by.consumer", warning.getResourceKey());
+        RulesValidationWarning warning = results.getWarnings().get(0);
+        assertEquals(EntitlementRulesTranslator.WarningKeys.INSTANCE_UNSUPPORTED_BY_CONSUMER, warning);
     }
 
     @Test
@@ -283,8 +283,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
         assertEquals(1, results.getErrors().size());
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("pool.not.available.to.manifest.consumers", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.RESTRICTED_POOL, error);
     }
 
     @Test
@@ -299,8 +299,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
         assertNotNull(results);
         assertEquals(1, results.getErrors().size());
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("pool.not.available.to.manifest.consumers", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.RESTRICTED_POOL, error);
     }
 
     @Test
@@ -315,8 +315,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
         assertEquals(1, results.getErrors().size());
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("pool.not.available.to.manifest.consumers", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.RESTRICTED_POOL, error);
     }
 
     @Test
@@ -331,8 +331,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
         assertNotNull(results);
         assertEquals(1, results.getErrors().size());
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("pool.not.available.to.manifest.consumers", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.RESTRICTED_POOL, error);
     }
 
 
@@ -347,8 +347,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 10);
         assertNotNull(results);
         assertEquals(1, results.getErrors().size());
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.no.entitlements.available", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.NO_ENTITLEMENTS_AVAILABLE, error);
     }
 
     @Test
@@ -366,8 +366,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertEquals(1, results.getErrors().size());
         assertTrue(results.getWarnings().isEmpty());
 
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.derivedproduct.unsupported.by.consumer", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.DERIVED_PRODUCT_UNSUPPORTED_BY_CONSUMER, error);
     }
 
     @Test
@@ -385,8 +385,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertEquals(1, results.getWarnings().size());
         assertTrue(results.getErrors().isEmpty());
 
-        ValidationWarning warning = results.getWarnings().get(0);
-        assertEquals("rulewarning.derivedproduct.unsupported.by.consumer", warning.getResourceKey());
+        RulesValidationWarning warning = results.getWarnings().get(0);
+        assertEquals(EntitlementRulesTranslator.WarningKeys.DERIVED_PRODUCT_UNSUPPORTED_BY_CONSUMER, warning);
     }
 
     @Test
@@ -404,8 +404,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertEquals(1, results.getErrors().size());
         assertTrue(results.getWarnings().isEmpty());
 
-        ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.derivedproduct.unsupported.by.consumer", error.getResourceKey());
+        RulesValidationError error = results.getErrors().get(0);
+        assertEquals(EntitlementRulesTranslator.ErrorKeys.DERIVED_PRODUCT_UNSUPPORTED_BY_CONSUMER, error);
     }
 
     @Test

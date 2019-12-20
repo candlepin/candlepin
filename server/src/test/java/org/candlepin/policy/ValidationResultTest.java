@@ -42,93 +42,65 @@ public class ValidationResultTest {
     }
 
     @Test
-    public void addErrorsNull() {
-        vr.addError((ValidationError) null);
+    public void addErrorNull() {
+        vr.addError((RulesValidationError) null);
         assertFalse(vr.getErrors().isEmpty());
-        assertTrue(null == vr.getErrors().get(0));
-    }
-
-    @Test
-    public void addErrorString() {
-        vr.addError("error1");
-        assertFalse(vr.getErrors().isEmpty());
-        assertFalse(vr.getErrors().isEmpty());
+        assertNull(vr.getErrors().get(0));
     }
 
     @Test
     public void addError() {
-        ValidationError ve = mock(ValidationError.class);
+        RulesValidationError ve = mock(RulesValidationError.class);
         vr.addError(ve);
         assertFalse(vr.getErrors().isEmpty());
         assertEquals(ve, vr.getErrors().get(0));
     }
 
     @Test
-    public void emptyErrorKeys() {
-        assertNotNull(vr.getErrorKeys());
-        assertTrue(vr.getErrorKeys().isEmpty());
-    }
-
-    @Test
-    public void addErrorKeyNull() {
-        vr.addError((RulesValidationError) null);
-        assertFalse(vr.getErrorKeys().isEmpty());
-        assertNull(vr.getErrorKeys().get(0));
-    }
-
-    @Test
-    public void addErrorKey() {
-        RulesValidationError ve = mock(RulesValidationError.class);
-        vr.addError(ve);
-        assertFalse(vr.getErrorKeys().isEmpty());
-        assertEquals(ve, vr.getErrorKeys().get(0));
-    }
-
-    @Test
-    public void hasErrorKeys() {
-        assertFalse(vr.hasErrorKeys());
+    public void hasErrors() {
+        assertFalse(vr.hasErrors());
         vr.addError(mock(RulesValidationError.class));
-        assertTrue(vr.hasErrorKeys());
+        assertTrue(vr.hasErrors());
     }
 
     @Test
-    public void getWarnings() {
+    public void emptyWarnings() {
+        assertNotNull(vr.getWarnings());
         assertTrue(vr.getWarnings().isEmpty());
     }
 
     @Test
+    public void addWarningNull() {
+        vr.addWarning(null);
+        assertFalse(vr.getWarnings().isEmpty());
+        assertNull(vr.getWarnings().get(0));
+    }
+
+    @Test
     public void addWarning() {
-        ValidationWarning vw = mock(ValidationWarning.class);
+        RulesValidationWarning vw = mock(RulesValidationWarning.class);
         vr.addWarning(vw);
         assertFalse(vr.getWarnings().isEmpty());
         assertEquals(vw, vr.getWarnings().get(0));
     }
 
     @Test
-    public void addWarningString() {
-        vr.addWarning("warning");
-        assertFalse(vr.getWarnings().isEmpty());
-        assertEquals("warning", vr.getWarnings().get(0).getResourceKey());
-    }
-
-    @Test
-    public void hasErrors() {
-        assertFalse(vr.hasErrors());
-        vr.addError("error");
-        assertTrue(vr.hasErrors());
-    }
-
-    @Test
     public void hasWarnings() {
         assertFalse(vr.hasWarnings());
-        vr.addWarning("warning");
+        vr.addWarning(mock(RulesValidationWarning.class));
         assertTrue(vr.hasWarnings());
     }
 
     @Test
     public void isSuccessful() {
         assertTrue(vr.isSuccessful());
-        vr.addError("unsuccessful");
+        vr.addError((i18n, args) -> "mock error message");
+        assertFalse(vr.isSuccessful());
+    }
+
+    @Test
+    public void isSuccessfulhnejknh() {
+        vr.addError((i18n, args) -> "mock error message");
         assertFalse(vr.isSuccessful());
     }
 }

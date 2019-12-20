@@ -17,15 +17,12 @@ package org.candlepin.policy.entitlement;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.policy.ValidationError;
+import org.candlepin.policy.RulesValidationError;
+import org.candlepin.policy.RulesValidationWarning;
 
 import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
-
-import java.util.HashMap;
-import java.util.Map;
-
 
 
 /**
@@ -37,199 +34,190 @@ public class EntitlementRulesTranslator {
     // Add documentation for the intended circumstances for these error keys
 
     /**
-     * Common/known error keys for pool attachment failures
+     * Keys that represent the various warnings that can be produced by the EntitlementRules.
+     * Warning messages may use the following variable(s):
+     * {0} - pool id
      */
-    public static final class PoolErrorKeys {
-        public static final String ALREADY_ATTACHED =
-            "rulefailed.consumer.already.has.product";
+    public enum WarningKeys implements RulesValidationWarning {
+        ARCHITECTURE_MISMATCH(
+            I18n.marktr("The entitlement's product architecture does not match with the consumer's.")),
+        DERIVED_PRODUCT_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support derived products data required by pool \"{0}\"")),
+        VCPU_NUMBER_UNSUPPORTED(
+            I18n.marktr("Pool \"{0}\" does not cover the consumer's vcpus.")),
+        SOCKET_NUMBER_UNSUPPORTED(
+            I18n.marktr("Pool \"{0}\" does not cover the consumer's sockets.")),
+        CORE_NUMBER_UNSUPPORTED(
+            I18n.marktr("Pool \"{0}\" does not cover the consumer's cores.")),
+        RAM_NUMBER_UNSUPPORTED(
+            I18n.marktr("Pool \"{0}\" does not cover the consumer's ram.")),
+        STORAGE_BAND_NUMBER_UNSUPPORTED(
+            I18n.marktr("Pool \"{0}\" does not cover the consumer's storage band usage.")),
+        CORES_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support core calculation required by pool \"{0}\"")),
+        RAM_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support RAM calculation required by pool \"{0}\"")),
+        STORAGE_BAND_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support storage band calculation required by pool \"{0}\"")),
+        VIRT_ONLY(
+            I18n.marktr("Pool is restricted to virtual guests: \"{0}\".")),
+        PHYSICAL_ONLY(
+            I18n.marktr("Pool is restricted to physical systems: \"{0}\".")),
+        INSTANCE_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support instance based calculation required by pool \"{0}\""));
 
-        public static final String NO_ENTITLEMENTS_AVAILABLE =
-            "rulefailed.no.entitlements.available";
+        private final String warnmsg;
 
-        public static final String CONSUMER_TYPE_MISMATCH =
-            "rulefailed.consumer.type.mismatch";
+        /**
+         * Key constructor that accepts the warning's translatable message.
+         * @param warnmsg The translatable message of the warning that this enum represents.
+         */
+        WarningKeys(String warnmsg) {
+            this.warnmsg = warnmsg;
+        }
 
-        public static final String MULTI_ENTITLEMENT_UNSUPPORTED =
-            "rulefailed.pool.does.not.support.multi-entitlement";
-
-        public static final String VIRT_HOST_MISMATCH =
-            "virt.guest.host.does.not.match.pool.owner";
-
-        public static final String CONSUMER_MISMATCH =
-            "consumer.does.not.match.pool.consumer.requirement";
-
-        public static final String RESTRICTED_POOL =
-            "pool.not.available.to.manifest.consumers";
-
-        public static final String VIRT_ONLY =
-            "rulefailed.virt.only";
-
-        public static final String PHYSICAL_ONLY =
-            "rulefailed.physical.only";
-
-        public static final String QUANTITY_MISMATCH =
-            "rulefailed.quantity.mismatch";
-
-        public static final String INSTANCE_UNSUPPORTED_BY_CONSUMER =
-            "rulefailed.instance.unsupported.by.consumer";
-
-        public static final String BAND_UNSUPPORTED_BY_CONSUMER =
-            "rulefailed.band.unsupported.by.consumer";
-
-        public static final String CORES_UNSUPPORTED_BY_CONSUMER =
-            "rulefailed.cores.unsupported.by.consumer";
-
-        public static final String RAM_UNSUPPORTED_BY_CONSUMER =
-            "rulefailed.ram.unsupported.by.consumer";
-
-        public static final String DERIVED_PRODUCT_DATA_UNSUPPORTED =
-            "rulefailed.derivedproduct.unsupported.by.consumer";
-
-        public static final String UNMAPPED_GUEST_RESTRICTED =
-            "virt.guest.cannot.use.unmapped.guest.pool.has.host";
-
-        public static final String VIRTUAL_GUEST_RESTRICTED =
-            "virt.guest.cannot.use.unmapped.guest.pool.not.new";
-
-        public static final String TEMPORARY_FUTURE_POOL =
-            "virt.guest.cannot.bind.future.unmapped.guest.pool";
+        @Override
+        public String buildWarningMessage(I18n i18n, Object... args) {
+            return i18n.tr(this.warnmsg, args);
+        }
     }
 
     /**
-     * Common/known error keys for product attachment failures
+     * Keys that represent the various errors that can be produced by the EntitlementRules.
+     * Each error key might map to one, two or three error messages (depending on the context, which can be
+     * the validation of a pool, entitlement, or product).
+     *
+     * Error messages may use the following variable(s):
+     * {0} - Error message type
+     * {1} - Pool id OR Entitlement id OR Product id
+     * {2} - Pool restricted username
+     * {3} - Host consumer uuid
+     * {4} - Pool product (sku) name
+     * {5} - Product multiplier
+     * {6} - Pool's product id
+     * {7} - Pool end date
      */
-    public static final class ProductErrorKeys {
-        public static final String ALREADY_ATTACHED =
-            "rulefailed.consumer.already.has.product";
-
-        public static final String NO_ENTITLEMENTS_AVAILABLE =
-            "rulefailed.no.entitlements.available";
-
-        public static final String CONSUMER_TYPE_MISMATCH =
-            "rulefailed.consumer.type.mismatch";
-
-        public static final String VIRT_ONLY =
-            "rulefailed.virt.only";
-
-    }
-
-    /**
-     * Common/known error keys for entitlement attachment failures
-     */
-    public static final class EntitlementErrorKeys {
-        public static final String INSUFFICIENT_QUANTITY =
-            "rulefailed.no.entitlements.available";
-
-        public static final String MULTI_ENTITLEMENT_UNSUPPORTED =
-            "rulefailed.pool.does.not.support.multi-entitlement";
-
-        public static final String ALREADY_ATTACHED =
-            "rulefailed.consumer.already.has.product";
-    }
-
-    private static final Map<String, String> POOL_ERROR_MESSAGES;
-    private static final String DEFAULT_POOL_ERROR_MESSAGE;
-
-    private static final Map<String, String> PRODUCT_ERROR_MESSAGES;
-    private static final String DEFAULT_PRODUCT_ERROR_MESSAGE;
-
-    private static final Map<String, String> ENTITLEMENT_ERROR_MESSAGES;
-    private static final String DEFAULT_ENTITLEMENT_ERROR_MESSAGE;
-
-    static {
-        // Pool error messages can contain the following variables:
-        // {0} - Error key
-        // {1} - Pool ID
-        // {2} - Pool product (sku) name
-        // {3} - Product multiplier
-        // {4} - Post (for host-limited pools)
-        POOL_ERROR_MESSAGES = new HashMap<>();
-
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.ALREADY_ATTACHED,
-            I18n.marktr("This unit has already had the subscription matching pool ID \"{1}\" attached."));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.NO_ENTITLEMENTS_AVAILABLE,
-            I18n.marktr("No subscriptions are available from the pool with ID \"{1}\"."));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.CONSUMER_TYPE_MISMATCH,
-            I18n.marktr("Units of this type are not allowed to attach the pool with ID \"{1}\"."));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED,
-            I18n.marktr("Multi-entitlement not supported for pool with ID \"{1}\"."));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.VIRT_HOST_MISMATCH,
-            I18n.marktr("Pool \"{1}\" is restricted to guests running on host: \"{4}\"."));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.CONSUMER_MISMATCH,
-            I18n.marktr("Pool \"{1}\" is restricted to a specific consumer."));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.RESTRICTED_POOL,
-            I18n.marktr("Pool not available to subscription management applications."));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.VIRT_ONLY,
-            I18n.marktr("Pool is restricted to virtual guests: \"{1}\"."));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.PHYSICAL_ONLY,
-            I18n.marktr("Pool is restricted to physical systems: \"{1}\"."));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.QUANTITY_MISMATCH,
-            I18n.marktr("Subscription \"{2}\" must be attached using a quantity evenly divisible by {3}"));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.INSTANCE_UNSUPPORTED_BY_CONSUMER,
-            I18n.marktr("Unit does not support instance based calculation required by pool \"{1}\""));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.BAND_UNSUPPORTED_BY_CONSUMER,
-            I18n.marktr("Unit does not support band calculation required by pool \"{1}\""));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.CORES_UNSUPPORTED_BY_CONSUMER,
-            I18n.marktr("Unit does not support core calculation required by pool \"{1}\""));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.RAM_UNSUPPORTED_BY_CONSUMER,
-            I18n.marktr("Unit does not support RAM calculation required by pool \"{1}\""));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.DERIVED_PRODUCT_DATA_UNSUPPORTED,
-            I18n.marktr("Unit does not support derived products data required by pool \"{1}\""));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.UNMAPPED_GUEST_RESTRICTED,
-            I18n.marktr("Pool is restricted to unmapped virtual guests: \"{1}\""));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.VIRTUAL_GUEST_RESTRICTED,
-            I18n.marktr("Pool is restricted to virtual guests in their first day of existence: \"{1}\""));
-        POOL_ERROR_MESSAGES.put(PoolErrorKeys.TEMPORARY_FUTURE_POOL,
-            I18n.marktr("Pool is restricted when it is temporary and begins in the future: \"{1}\""));
-        DEFAULT_POOL_ERROR_MESSAGE =
-            I18n.marktr("Unable to attach pool with ID \"{1}\".: {0}.");
-
-        // Product error messages can contain the following variables
-        // {0} - Error key
-        // {1} - Product ID
-        PRODUCT_ERROR_MESSAGES = new HashMap<>();
-
-        PRODUCT_ERROR_MESSAGES.put(ProductErrorKeys.ALREADY_ATTACHED,
-            I18n.marktr("This system already has a subscription for the product \"{1}\" attached."));
-        PRODUCT_ERROR_MESSAGES.put(ProductErrorKeys.NO_ENTITLEMENTS_AVAILABLE,
+    public enum ErrorKeys implements RulesValidationError {
+        DERIVED_PRODUCT_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support derived products data required by pool \"{1}\"")),
+        ALREADY_ATTACHED(
+            I18n.marktr("This unit has already had the subscription matching pool ID \"{1}\" attached."),
+            I18n.marktr("Multi-entitlement not supported for pool connected with entitlement \"{1}\"."),
+            I18n.marktr("This system already has a subscription for the product \"{1}\" attached.")),
+        MULTI_ENTITLEMENT_UNSUPPORTED(
+            I18n.marktr("Multi-entitlement not supported for pool with ID \"{1}\"."),
+            I18n.marktr("Multi-entitlement not supported for pool connected with entitlement \"{1}\".")),
+        CONSUMER_TYPE_MISMATCH(
+            I18n.marktr("Units of this type are not allowed to attach the pool with ID \"{1}\"."),
+            DEFAULT_ENTITLEMENT_ERROR_MESSAGE,
+            I18n.marktr("Units of this type are not allowed for the product \"{1}\".")),
+        POOL_NOT_AVAILABLE_TO_USER(
+            I18n.marktr("Pool is only available to user \"{2}\".")),
+        CORES_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support core calculation required by pool \"{1}\"")),
+        RAM_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support RAM calculation required by pool \"{1}\"")),
+        STORAGE_BAND_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support band calculation required by pool \"{1}\"")),
+        RESTRICTED_POOL(
+            I18n.marktr("Pool not available to subscription management applications.")),
+        VIRT_ONLY(
+            I18n.marktr("Pool is restricted to virtual guests: \"{1}\"."),
+            DEFAULT_ENTITLEMENT_ERROR_MESSAGE,
+           I18n.marktr("Only virtual systems can have subscription \"{1}\" attached.")),
+        PHYSICAL_ONLY(
+            I18n.marktr("Pool is restricted to physical systems: \"{1}\".")),
+        UNMAPPED_GUEST_RESTRICTED(
+            I18n.marktr("Pool is restricted to unmapped virtual guests: \"{1}\"")),
+        VIRTUAL_GUEST_RESTRICTED(
+            I18n.marktr("Pool is restricted to virtual guests in their first day of existence: \"{1}\"")),
+        TEMPORARY_FUTURE_POOL(
+            I18n.marktr("Pool is restricted when it is temporary and begins in the future: \"{1}\"")),
+        CONSUMER_MISMATCH(
+            I18n.marktr("Pool \"{1}\" is restricted to a specific consumer.")),
+        VIRT_HOST_MISMATCH(
+            I18n.marktr("Pool \"{1}\" is restricted to guests running on host: \"{3}\".")),
+        QUANTITY_MISMATCH(
+            I18n.marktr("Subscription \"{4}\" must be attached using a quantity evenly divisible by {5}")),
+        INSTANCE_UNSUPPORTED_BY_CONSUMER(
+            I18n.marktr("Unit does not support instance based calculation required by pool \"{1}\"")),
+        NO_ENTITLEMENTS_AVAILABLE(
+            I18n.marktr("No subscriptions are available from the pool with ID \"{1}\"."),
+            I18n.marktr("Insufficient pool quantity available for adjustment to entitlement \"{1}\"."),
             I18n.marktr("There are not enough free subscriptions available for the product \"{1}\""));
-        PRODUCT_ERROR_MESSAGES.put(ProductErrorKeys.CONSUMER_TYPE_MISMATCH,
-            I18n.marktr("Units of this type are not allowed for the product \"{1}\"."));
-        PRODUCT_ERROR_MESSAGES.put(ProductErrorKeys.VIRT_ONLY,
-            I18n.marktr("Only virtual systems can have subscription \"{1}\" attached."));
-        DEFAULT_PRODUCT_ERROR_MESSAGE =
-            I18n.marktr("Unable to attach subscription for the product \"{1}\": {0}.");
 
-        // Entitlement error messages can contain the following variables
-        // {0} - Error key
-        // {1} - Entitlement ID
-        ENTITLEMENT_ERROR_MESSAGES = new HashMap<>();
+        private final String poolErrorMessage;
+        private final String entitlementErrorMessage;
+        private final String productErrorMessage;
 
-        ENTITLEMENT_ERROR_MESSAGES.put(EntitlementErrorKeys.INSUFFICIENT_QUANTITY,
-            I18n.marktr("Insufficient pool quantity available for adjustment to entitlement \"{1}\"."));
-        ENTITLEMENT_ERROR_MESSAGES.put(EntitlementErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED,
-            I18n.marktr("Multi-entitlement not supported for pool connected with entitlement \"{1}\"."));
-        ENTITLEMENT_ERROR_MESSAGES.put(EntitlementErrorKeys.ALREADY_ATTACHED,
-            I18n.marktr("Multi-entitlement not supported for pool connected with entitlement \"{1}\"."));
-        DEFAULT_ENTITLEMENT_ERROR_MESSAGE =
-            I18n.marktr("Unable to adjust quantity for the entitlement with id \"{1}\": {0}");
+        /**
+         * Validation error key constructor that accepts the error's translatable message.
+         * @param poolErrorMessage The translatable message of the error that this enum represents, within
+         * the context of validating against a pool.
+         */
+        ErrorKeys(String poolErrorMessage) {
+            this.poolErrorMessage = poolErrorMessage;
+            this.entitlementErrorMessage = DEFAULT_ENTITLEMENT_ERROR_MESSAGE;
+            this.productErrorMessage = DEFAULT_PRODUCT_ERROR_MESSAGE;
+        }
+
+        /**
+         * Validation error key constructor that accepts the error's translatable messages.
+         * @param poolErrorMessage The translatable message of the error that this enum instance represents,
+         * within the context of validating against a pool.
+         * @param entitlementErrorMessage The translatable message of the error that this enum instance
+         * represents, within the context of validating against an entitlement.
+         */
+        ErrorKeys(String poolErrorMessage, String entitlementErrorMessage) {
+            this.poolErrorMessage = poolErrorMessage;
+            this.entitlementErrorMessage = entitlementErrorMessage;
+            this.productErrorMessage = DEFAULT_PRODUCT_ERROR_MESSAGE;
+        }
+
+        /**
+         * Validation error key constructor that accepts the error's translatable messages.
+         * @param poolErrorMessage The translatable message of the error that this enum instance represents,
+         * within the context of validating against a pool.
+         * @param entitlementErrorMessage The translatable message of the error that this enum instance
+         * represents, within the context of validating against an entitlement.
+         * @param productErrorMessage The translatable message of the error that this enum instance
+         * represents, within the context of validating against a product.
+         */
+        ErrorKeys(String poolErrorMessage, String entitlementErrorMessage, String productErrorMessage) {
+            this.poolErrorMessage = poolErrorMessage;
+            this.entitlementErrorMessage = entitlementErrorMessage;
+            this.productErrorMessage =  productErrorMessage;
+        }
+
+        @Override
+        public String buildErrorMessage(I18n i18n, Object... args) {
+            if (args[0] == ErrorMessageTypes.POOL_ERROR) {
+                return i18n.tr(this.poolErrorMessage, args);
+            }
+            else if (args[0] == ErrorMessageTypes.ENTITLEMENT_ERROR) {
+                return i18n.tr(this.entitlementErrorMessage, args);
+            }
+            else if (args[0] == ErrorMessageTypes.PRODUCT_ERROR) {
+                return i18n.tr(this.productErrorMessage, args);
+            }
+            throw new IllegalArgumentException("Error message type is required!");
+        }
     }
 
-    private static String getPoolErrorMessage(String key) {
-        String message = POOL_ERROR_MESSAGES.get(key);
-        return message != null ? message : DEFAULT_POOL_ERROR_MESSAGE;
+    /**
+     * Indicates the context that the error happened in.
+     */
+    private enum ErrorMessageTypes {
+        POOL_ERROR,
+        ENTITLEMENT_ERROR,
+        PRODUCT_ERROR
     }
 
-    private static String getProductErrorMessage(String key) {
-        String message = PRODUCT_ERROR_MESSAGES.get(key);
-        return message != null ? message : DEFAULT_PRODUCT_ERROR_MESSAGE;
-    }
+    private static final String DEFAULT_PRODUCT_ERROR_MESSAGE =
+        I18n.marktr("Unable to attach subscription for the product \"{1}\": {0}.");
 
-    private static String getEntitlementErrorMessage(String key) {
-        String message = ENTITLEMENT_ERROR_MESSAGES.get(key);
-        return message != null ? message : DEFAULT_ENTITLEMENT_ERROR_MESSAGE;
-    }
-
+    private static final String DEFAULT_ENTITLEMENT_ERROR_MESSAGE =
+        I18n.marktr("Unable to adjust quantity for the entitlement with id \"{1}\": {0}");
 
     private I18n i18n;
 
@@ -238,25 +226,21 @@ public class EntitlementRulesTranslator {
         this.i18n = i18n;
     }
 
-    public String poolErrorToMessage(Pool pool, ValidationError error) {
+    public String poolErrorToMessage(Pool pool, RulesValidationError error) {
         String host = pool.getAttributeValue(Pool.Attributes.REQUIRES_HOST);
         String multiplier = pool.getProduct() != null ?
             pool.getProduct().getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER) : null;
-        String key = error.getResourceKey();
 
-        return i18n.tr(getPoolErrorMessage(key),
-            new Object[] { key, pool.getId(), pool.getProductName(), multiplier, host });
+        return error.buildErrorMessage(this.i18n, ErrorMessageTypes.POOL_ERROR, pool.getId(),
+            pool.getRestrictedToUsername(), host, pool.getProductName(), multiplier, pool.getProductId(),
+            pool.getEndDate());
     }
 
-    public String productErrorToMessage(String productId, ValidationError error) {
-        String key = error.getResourceKey();
-
-        return i18n.tr(getProductErrorMessage(key), new Object[] { key, productId });
+    public String productErrorToMessage(String productId, RulesValidationError error) {
+        return error.buildErrorMessage(this.i18n, ErrorMessageTypes.PRODUCT_ERROR, productId);
     }
 
-    public String entitlementErrorToMessage(Entitlement entitlement, ValidationError error) {
-        String key = error.getResourceKey();
-
-        return i18n.tr(getEntitlementErrorMessage(key), new Object[] { key, entitlement.getId() });
+    public String entitlementErrorToMessage(Entitlement entitlement, RulesValidationError error) {
+        return error.buildErrorMessage(this.i18n, ErrorMessageTypes.PRODUCT_ERROR, entitlement.getId());
     }
 }

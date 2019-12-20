@@ -55,12 +55,13 @@ import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.RulesValidationError;
 import org.candlepin.policy.SystemPurposeComplianceRules;
-import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.policy.entitlement.Enforcer;
 import org.candlepin.policy.entitlement.Enforcer.CallerType;
+import org.candlepin.policy.entitlement.EntitlementRulesTranslator;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -1119,9 +1120,9 @@ public class CandlepinPoolManager implements PoolManager {
                 if (retries > 0) {
                     for (String poolId : e.getResults().keySet()) {
 
-                        List<ValidationError> errors = e.getResults().get(poolId).getErrors();
-                        if (errors.size() == 1 && errors.get(0).getResourceKey()
-                            .equals("rulefailed.no.entitlements.available")) {
+                        List<RulesValidationError> errors = e.getResults().get(poolId).getErrors();
+                        if (errors.size() == 1 &&
+                            errors.get(0) == EntitlementRulesTranslator.ErrorKeys.NO_ENTITLEMENTS_AVAILABLE) {
                             retry = true;
                             break;
                         }

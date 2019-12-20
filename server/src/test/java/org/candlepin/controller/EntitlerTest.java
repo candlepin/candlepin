@@ -37,7 +37,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.policy.ValidationError;
+import org.candlepin.policy.RulesValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
@@ -109,10 +109,9 @@ public class EntitlerTest {
     @Mock private ContentManager contentManager;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
 
-    private ValidationResult fakeOutResult(String msg) {
+    private ValidationResult fakeOutResult(RulesValidationError error) {
         ValidationResult result = new ValidationResult();
-        ValidationError err = new ValidationError(msg);
-        result.addError(err);
+        result.addError(error);
         return result;
     }
 
@@ -268,68 +267,70 @@ public class EntitlerTest {
 
     @Test
     public void someOtherErrorPool() {
-        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest("do.not.match"));
+        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(
+            EntitlementRulesTranslator.ErrorKeys.RAM_UNSUPPORTED_BY_CONSUMER));
     }
 
     @Test
     public void consumerTypeMismatchPool() {
-        String msg = "rulefailed.consumer.type.mismatch";
-        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.CONSUMER_TYPE_MISMATCH;
+        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(error));
     }
 
     @Test
     public void alreadyHasProductPool() {
-        String msg = "rulefailed.consumer.already.has.product";
-        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.ALREADY_ATTACHED;
+        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(error));
     }
 
     @Test
     public void noEntitlementsAvailable() {
-        String msg = "rulefailed.no.entitlements.available";
-        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.NO_ENTITLEMENTS_AVAILABLE;
+        assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(error));
     }
 
     @Test
     public void consumerDoesntSupportInstanceBased() {
         String expected = "Unit does not support instance based calculation required by pool \"pool10\"";
-        String msg = "rulefailed.instance.unsupported.by.consumer";
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.INSTANCE_UNSUPPORTED_BY_CONSUMER;
 
-        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(error));
         assertEquals(expected, e.getMessage());
     }
 
     @Test
     public void consumerDoesntSupportCores() {
         String expected = "Unit does not support core calculation required by pool \"pool10\"";
-        String msg = "rulefailed.cores.unsupported.by.consumer";
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.CORES_UNSUPPORTED_BY_CONSUMER;
 
-        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(error));
         assertEquals(expected, e.getMessage());
     }
 
     @Test
     public void consumerDoesntSupportRam() {
         String expected = "Unit does not support RAM calculation required by pool \"pool10\"";
-        String msg = "rulefailed.ram.unsupported.by.consumer";
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.RAM_UNSUPPORTED_BY_CONSUMER;
 
-        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(error));
         assertEquals(expected, e.getMessage());
     }
 
     @Test
     public void consumerDoesntSupportDerived() {
         String expected = "Unit does not support derived products data required by pool \"pool10\"";
-        String msg = "rulefailed.derivedproduct.unsupported.by.consumer";
+        RulesValidationError error =
+            EntitlementRulesTranslator.ErrorKeys.DERIVED_PRODUCT_UNSUPPORTED_BY_CONSUMER;
 
-        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(error));
         assertEquals(expected, e.getMessage());
     }
 
-    private void bindByPoolErrorTest(String msg) throws EntitlementRefusedException {
+    private void bindByPoolErrorTest(RulesValidationError error) throws EntitlementRefusedException {
         String poolid = "pool10";
         Pool pool = mock(Pool.class);
         Map<String, ValidationResult> fakeResult = new HashMap<>();
-        fakeResult.put(poolid, fakeOutResult(msg));
+        fakeResult.put(poolid, fakeOutResult(error));
         EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
 
         when(pool.getId()).thenReturn(poolid);
@@ -342,51 +343,52 @@ public class EntitlerTest {
 
     @Test
     public void alreadyHasProduct() {
-        String msg = "rulefailed.consumer.already.has.product";
-        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest(msg));
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.ALREADY_ATTACHED;
+        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest(error));
     }
 
     @Test
     public void noEntitlementsForProduct() {
-        String msg = "rulefailed.no.entitlements.available";
-        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest(msg));
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.NO_ENTITLEMENTS_AVAILABLE;
+        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest(error));
     }
 
     @Test
     public void mismatchByProduct() {
-        String msg = "rulefailed.consumer.type.mismatch";
-        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest(msg));
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.CONSUMER_TYPE_MISMATCH;
+        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest(error));
     }
 
     @Test
     public void virtOnly() {
         String expected = "Pool is restricted to virtual guests: \"pool10\".";
-        String msg = "rulefailed.virt.only";
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.VIRT_ONLY;
 
-        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(error));
         assertEquals(expected, e.getMessage());
     }
 
     @Test
     public void physicalOnly() {
         String expected = "Pool is restricted to physical systems: \"pool10\".";
-        String msg = "rulefailed.physical.only";
+        RulesValidationError error = EntitlementRulesTranslator.ErrorKeys.PHYSICAL_ONLY;
 
-        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(msg));
+        ForbiddenException e = assertThrows(ForbiddenException.class, () -> bindByPoolErrorTest(error));
         assertEquals(expected, e.getMessage());
     }
 
     @Test
     public void allOtherErrors() {
-        assertThrows(ForbiddenException.class, () -> bindByProductErrorTest("generic.error"));
+        assertThrows(ForbiddenException.class,
+            () -> bindByProductErrorTest(EntitlementRulesTranslator.ErrorKeys.CONSUMER_TYPE_MISMATCH));
     }
 
-    private void bindByProductErrorTest(String msg)
+    private void bindByProductErrorTest(RulesValidationError error)
         throws EntitlementRefusedException, AutobindDisabledForOwnerException,
         AutobindHypervisorDisabledException {
         String[] pids = {"prod1", "prod2", "prod3"};
         Map<String, ValidationResult> fakeResult = new HashMap<>();
-        fakeResult.put("blah", fakeOutResult(msg));
+        fakeResult.put("blah", fakeOutResult(error));
         EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
         AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
         when(pm.entitleByProducts(data)).thenThrow(ere);

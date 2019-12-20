@@ -31,6 +31,8 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -93,6 +95,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     public static final class Facts {
         public static final String SYSTEM_UUID = "dmi.system.uuid";
+        public static final String CORES = "cpu.core(s)_per_socket";
+        public static final String SOCKETS = "cpu.cpu_socket(s)";
+        public static final String RAM = "memory.memtotal";
+        public static final String ARCH = "uname.machine";
+        public static final String STORAGE_BAND = "band.storage.usage";
+        public static final String VIRT_IS_GUEST = "virt.is_guest";
+        public static final String VIRT_UUID = "virt.uuid";
     }
 
     @Id
@@ -454,7 +463,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public boolean hasFact(String fact) {
-        return facts != null && facts.containsKey(fact);
+        return facts != null && facts.containsKey(fact) && facts.get(fact) != null;
     }
 
     /**
@@ -820,6 +829,64 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
                 cc.setConsumer(this);
             }
         }
+    }
+
+    /**
+     * Returns true if the consumer has the specified capability, or false otherwise.
+     *
+     * @param capability the capability we want to check for.
+     * @return true if the consumer has the capability, or false otherwise.
+     */
+    public boolean isCapable(String capability) {
+        if (this.getCapabilities() == null || capability == null) {
+            return false;
+        }
+
+        return this.getCapabilities().stream()
+            .map(ConsumerCapability::getName)
+            .anyMatch(capability::equals);
+    }
+
+    /**
+     * Was this consumer created in the last 24 hours?
+     *
+     * @return boolean was created in the last 24 hours
+     */
+    public boolean isNewborn() {
+        if (getCreated() == null) {
+            return false;
+        }
+        Instant oneDayFromRegistration = getCreated().toInstant().plus(Duration.ofDays(1));
+        return Instant.now().isBefore(oneDayFromRegistration);
+    }
+
+    /**
+     * Returns true if the consumer's architecture matches that of the input.
+     *
+     * @param productArch The architecture attribute value of a product.
+     * @return true if the architecture matches, false otherwise.
+     */
+    public boolean architectureMatches(String productArch) {
+
+        if (productArch != null) {
+            Set<String> supportedArches = Util.asSet(productArch.toUpperCase().trim().split("\\s*,\\s*"));
+
+            // If X86 is supported, add all variants to this list:
+            if (supportedArches.contains("X86")) {
+                supportedArches.add("I386");
+                supportedArches.add("I586");
+                supportedArches.add("I686");
+            }
+
+            if (!supportedArches.contains("ALL") &&
+                (!this.hasFact(Consumer.Facts.ARCH) ||
+                this.getFact(Consumer.Facts.ARCH).isEmpty() ||
+                !supportedArches.contains(this.getFact(Consumer.Facts.ARCH).toUpperCase()))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

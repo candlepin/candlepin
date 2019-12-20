@@ -32,6 +32,7 @@ import org.candlepin.model.dto.PoolIdAndErrors;
 import org.candlepin.model.dto.PoolIdAndQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.entitlement.EntitlementRulesTranslator;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -196,7 +197,7 @@ public class EntitlerJobTest {
     private void stubEntitlerErrorResult(String poolId) throws EntitlementRefusedException {
         final HashMap<String, ValidationResult> mapResult = new HashMap<>();
         final ValidationResult result = new ValidationResult();
-        result.addError("rulefailed.no.entitlements.available");
+        result.addError(EntitlementRulesTranslator.ErrorKeys.NO_ENTITLEMENTS_AVAILABLE);
         mapResult.put(poolId, result);
         when(entitler.bindByPoolQuantities(eq(CONSUMER_UUID), anyMap()))
             .thenThrow(new EntitlementRefusedException(mapResult));
