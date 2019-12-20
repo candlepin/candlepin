@@ -30,11 +30,15 @@ Packager:       John Doe <john doe com>
 Vendor:         Red Hat
 URL:            http://www.tricky-testing-animals.org/
 BuildArch:      noarch
- 
+
+%%install
+${install_cmds}
+
 %%description
 This is a ${name} package.
  
 %%files
+${installed_files}
  
 %%changelog
 * Fri Mar 1 2019 John Doe <john doe com> 0
@@ -445,6 +449,41 @@ def create_dummy_package(package, expect_script_path, keygrip):
     version = package.get('version', '1')
     release = package.get('release', '0')
     arch = package.get('arch', 'noarch')
+    files = package.get('files', None)
+    installed_files = ''
+    install_cmds = ''
+
+    # If definition of RPM contains files section, then add files to the RPM
+    if files is not None:
+        for file in files:
+            # Path of file has to be specified, other attributes
+            # are optional, because we can use default values
+            path = file['path']
+            file_type = file.get('type', 'file')
+            perm = file.get('perm', '0644')
+            owner = file.get('owner', 'root')
+            group = file.get('group', 'root')
+            content = file.get('content', '')
+            if file_type == 'file':
+                dir_name = os.path.dirname(path)
+                install_cmds += "mkdir -p $RPM_BUILD_ROOT/{dir_name}\n".format(
+                    dir_name=dir_name)
+                install_cmds += 'echo "{content}" > $RPM_BUILD_ROOT/{path}\n'.format(
+                    content=content, path=path)
+            elif file_type == 'directory':
+                install_cmds += 'mkdir -p $RPM_BUILD_ROOT/{path}\n'.format(
+                    path=path)
+            else:
+                print('Skipping file: "%s", because file type: "%s" is not supported' %
+                    (path, file_type))
+                continue
+            install_cmds += 'chown {owner} $RPM_BUILD_ROOT/{path}\n'.format(
+                owner=owner, path=path)
+            install_cmds += 'chgrp {group} $RPM_BUILD_ROOT/{path}\n'.format(
+                group=group, path=path)
+            install_cmds += 'chmod {perm} $RPM_BUILD_ROOT/{path}\n'.format(
+                perm=perm, path=path)
+            installed_files += path + '\n'
 
     # Path to rpm file
     rpm_file_name = name + '-' + version + '-' + release + '.' + arch + '.rpm'
@@ -462,7 +501,14 @@ def create_dummy_package(package, expect_script_path, keygrip):
 
     # Create content of spec file
     template = string.Template(RPM_SPEC_FILE_TEMPLATE)
-    d = {'name': name, 'Name': name[0].upper() + name[1:], 'version': version, 'release': release}
+    d = {
+        'name': name,
+        'Name': name[0].upper() + name[1:],
+        'version': version,
+        'release': release,
+        'installed_files': installed_files,
+        'install_cmds': install_cmds
+    }
     rpm_spec_content = template.substitute(d)
 
     # Path to spec file
@@ -473,7 +519,7 @@ def create_dummy_package(package, expect_script_path, keygrip):
         fp.write(rpm_spec_content)
 
     # Generate RPM package using rpmbuild
-    ret,_ = run_command('rpmbuild -bb %s' % spec_file_path)
+    ret,_ = run_command('rpmbuild -bb %s' % spec_file_path, verbose=True)
 
     if ret != 0:
         print("Error: creating RPM %s FAILED" % name)
