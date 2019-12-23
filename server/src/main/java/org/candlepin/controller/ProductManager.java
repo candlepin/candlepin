@@ -607,7 +607,6 @@ public class ProductManager {
         }
 
         this.applyProvidedProductChanges(entity, update, owner);
-
         return this.applyProductChanges(entity, update, contentMap);
     }
 

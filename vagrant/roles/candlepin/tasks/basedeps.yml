@@ -1,0 +1,56 @@
+---
+- name: Enable EPEL
+  package:
+    name: epel-release
+    state: present
+  when: ansible_distribution == 'CentOS'
+  tags:
+    - candlepin-basedeps
+    - candlepin
+
+- name: Install base packages
+  package:
+    name:
+      - gcc
+      - git
+      - haveged
+      - java-1.8.0-openjdk-devel
+      - jss
+      - libxml2-python
+      - liquibase
+      - make
+      - policycoreutils-devel
+      - postgresql
+      - postgresql-jdbc
+      - postgresql-server
+      - python-psycopg2
+      - python-pip
+      - qpid-proton-c
+      - qpid-proton-c-devel
+      - ruby
+      - ruby-devel
+      - rubygem-bundler
+      - rubygem-qpid_proton
+      - rubygem-json_pure
+      - rubygems
+      - tomcat
+      - wget
+      - zlib
+      - zlib-devel
+      - createrepo_c
+      - rpm-build
+      - rpm-sign
+      - python-requests
+    state: present
+  tags:
+    - candlepin-basedeps
+    - candlepin
+
+- name: Ensure that all packages are up2date
+  package:
+    name: "*"
+    state: latest
+  tags:
+    - candlepin-basedeps
+    - candlepin
+    - system_update

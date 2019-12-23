@@ -309,7 +309,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this(productId, name, variant, version, arch, type);
 
         this.setProvidedProducts(providedProducts);
-
     }
 
     /**

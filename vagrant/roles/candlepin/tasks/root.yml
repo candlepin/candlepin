@@ -1,0 +1,134 @@
+---
+- name: Disable SELINUX
+  selinux:
+    state: disabled
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Enable & Start the haveged entropy service
+  service:
+    name: haveged
+    enabled: yes
+    state: started
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Add remote debugging config to tomcat
+  lineinfile:
+    dest: /etc/tomcat/tomcat.conf
+    line: "JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Initiate database
+  command: service postgresql initdb
+  args:
+    creates: /var/lib/pgsql/data/postgresql.conf
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Set postgresql to trust
+  replace:
+    dest: /var/lib/pgsql/data/pg_hba.conf
+    regexp: '(ident|peer)'
+    replace: 'trust'
+    backup: yes
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Set postgresql to accept RH internal connections
+  lineinfile:
+    dest: /var/lib/pgsql/data/pg_hba.conf
+    line: "host    all         all         10.0.0.0/8            md5"
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Find host ip & netmask
+  set_fact:
+    host_address: "{{hostvars['dev']['ansible_default_ipv4']['gateway']}}"
+    net_address_and_mask: "{{hostvars['dev']['ansible_default_ipv4']['gateway']}}/{{hostvars['dev']['ansible_default_ipv4']['netmask']}}"
+  when: hostvars['dev'] is defined
+
+- name: Set postgresql to trust connections from VM host
+  lineinfile:
+    dest: /var/lib/pgsql/data/pg_hba.conf
+    line: "host    all         all         {{host_address}}/{{net_address_and_mask | ipaddr('prefix')}}           trust"
+  when: hostvars['dev'] is defined
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Set postgresql listen on all addresses
+  lineinfile:
+    dest: /var/lib/pgsql/data/postgresql.conf
+    line: "listen_addresses = '*'"
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Start PostgreSQL and enable at boot
+  service:
+    name: postgresql
+    enabled: yes
+    state: started
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Check if firewalld is on
+  shell: "systemctl is-active firewalld.service"
+  ignore_errors: true
+  register: firewalld_status
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: punch holes in firewall
+  firewalld:
+    port: "{{item}}/tcp"
+    permanent: True
+    state: enabled
+    immediate: True
+  with_items:
+    - 22
+    - 5432
+    - 443
+    - 8443
+    - 8080
+    - 5005
+    - 8161
+  when: firewalld_status.rc == 0
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Create postgresql user
+  postgresql_user:
+    name: candlepin
+    password: candlepin
+    role_attr_flags: CREATEDB
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Create postgresql db
+  postgresql_db:
+    name: candlepin
+    owner: candlepin
+  tags:
+    - candlepin
+    - candlepin-root
+
+- name: Install six python module for translations
+  pip:
+    name: six
+  tags:
+    - candlepin
+    - candlepin-root
+    - python-deps

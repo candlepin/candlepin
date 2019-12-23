@@ -1,0 +1,14 @@
+---
+candlepin_basedeps: True
+
+candlepin_git_pull: True
+
+candlepin_user: candlepin
+candlepin_user_home:  /home/candlepin
+
+candlepin_git_repo: https://github.com/candlepin/candlepin.git
+candlepin_checkout: "{{candlepin_user_home}}/candlepin"
+
+candlepin_deploy_args: "-g -a"
+
+yourkit_agent_port: 35675

@@ -25,8 +25,6 @@ import org.candlepin.model.ProductContent;
 import java.util.Collection;
 import java.util.Collections;
 
-
-
 /**
  * The ProductTranslator provides translation from Product model objects to ProductDTOs
  */

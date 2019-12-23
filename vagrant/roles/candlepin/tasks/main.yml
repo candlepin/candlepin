@@ -1,0 +1,27 @@
+---
+- include: basedeps.yml
+  become: true
+  when: candlepin_basedeps
+  tags:
+    - candlepin
+    - candlepin-basedeps
+
+- include: yorkit.yml
+  when: setup_yourkit is defined
+  become: true
+  tags:
+    - candlepin
+    - yorkit-setup
+
+- include: root.yml
+  become: true
+  tags:
+    - candlepin
+    - candlepin-root
+
+- include: user.yml
+  become: yes
+  become_user: "{{ candlepin_user }}"
+  tags:
+    - candlepin
+    - candlepin-user

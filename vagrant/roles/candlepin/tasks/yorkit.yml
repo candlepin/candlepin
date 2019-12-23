@@ -1,0 +1,32 @@
+- name: Create directory for YourKit profiling library
+  file:
+    path: /opt/yjp/bin/linux-x86-64
+    state: directory
+  tags:
+    - candlepin
+    - yourkit-setup
+
+- name: Copy YourKit profiling library from host
+  copy:
+    src: "{{yourkit_library}}"
+    dest: /opt/yjp/bin/linux-x86-64/libyjpagent.so
+    mode: 0755
+  tags:
+    - candlepin
+    - yourkit-setup
+
+- name: Add YourKit profiling library
+  lineinfile:
+    dest: /etc/tomcat/tomcat.conf
+    line: "LD_LIBRARY_PATH=/opt/yjp/bin/linux-x86-64"
+  tags:
+    - candlepin
+    - yourkit-setup
+
+- name: Add YourKit profiling config to tomcat
+  lineinfile:
+    dest: /etc/tomcat/tomcat.conf
+    line: 'CATALINA_OPTS="-agentlib:yjpagent=port={{yourkit_agent_port}}"'
+  tags:
+    - candlepin
+    - yourkit-setup

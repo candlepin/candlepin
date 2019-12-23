@@ -1,0 +1,30 @@
+galaxy_info:
+  author: jmolet
+  description: "Candlepin Entitlement Management"
+  company: "Red Hat"
+  license: license (GPLv2)
+  min_ansible_version: 2.3
+
+  # look into doing this
+  # min_ansible_container_version:
+
+  # Optionally specify the branch Galaxy will use when accessing the GitHub
+  # repo for this role. During role install, if no tags are available,
+  # Galaxy will use this branch. During import Galaxy will access files on
+  # this branch. If Travis integration is configured, only notifications for this
+  # branch will be accepted. Otherwise, in all cases, the repo's default branch
+  # (usually master) will be used.
+  #github_branch:
+
+  platforms:
+    - name: EL
+      versions:
+      - 7
+    - name: Fedora
+      versions:
+      - all
+  galaxy_tags:
+    - candlepin
+    - entitlement
+
+dependencies: []

@@ -1,0 +1,95 @@
+---
+- name: Checkout Candlepin
+  git:
+    repo: "{{candlepin_git_repo}}"
+    dest: "{{candlepin_checkout}}"
+    force: yes
+  when: candlepin_git_pull
+  tags:
+    - candlepin
+    - candlepin-user
+
+- name: Run Bundle install
+  bundler:
+    executable: /usr/bin/bundle
+    state: present
+    user_install: true
+    chdir: "{{candlepin_checkout}}"
+    exclude_groups: proton
+  tags:
+    - candlepin
+    - candlepin-user
+  # old way
+  #command: /usr/local/bin/bundle install
+  #args:
+  #  chdir: "{{candlepin_checkout}}"
+
+- name: Add JAVA_HOME to bashrc
+  lineinfile:
+    dest: "{{candlepin_user_home}}/.bashrc"
+    line: "export JAVA_HOME=/usr/lib/jvm/java-1.8.0/"
+  tags:
+    - candlepin
+    - candlepin-user
+
+- name: Check for zshrc
+  stat:
+    path: "{{candlepin_user_home}}/.zshrc"
+  register: zshrc_file
+  tags:
+    - candlepin
+    - candlepin-user
+
+- name: Add JAVA_HOME to zshrc
+  lineinfile:
+    dest: "{{candlepin_user_home}}/.zshrc"
+    line: "export JAVA_HOME=/usr/lib/jvm/java-1.8.0/"
+  when: zshrc_file.stat.exists
+  tags:
+    - candlepin
+    - candlepin-user
+
+- name: Build & Deploy the candlepin server
+  shell: "./server/bin/deploy {{candlepin_deploy_args}}"
+  args:
+    chdir: "{{candlepin_checkout}}"
+    # moving to another task
+    # creates: /etc/candlepin/candlepin.conf
+  environment:
+    PATH: "{{ ansible_env.PATH }}:{{ candlepin_user_home }}/bin"
+    JAVA_HOME: "/usr/lib/jvm/java-1.8.0/"
+    TERM: "xterm-256color"
+  tags:
+    - candlepin
+    - candlepin-user
+    - candlepin-deploy
+
+- name: Set permissions on candlepin.conf
+  file:
+    path: /etc/candlepin/candlepin.conf
+  args:
+    owner: root
+    group: "{{ candlepin_user }}"
+    mode: 0664
+  become: True
+  become_user: root
+  become_method: sudo
+  tags:
+    - candlepin-deploy
+    - candlepin
+    - candlepin-user
+
+- name: Set permissions on /etc/candlepin
+  file:
+    path: /etc/candlepin
+  args:
+    owner: root
+    group: "{{ candlepin_user }}"
+    mode: 0775
+  become: True
+  become_user: root
+  become_method: sudo
+  tags:
+    - candlepin-deploy
+    - candlepin
+    - candlepin-user

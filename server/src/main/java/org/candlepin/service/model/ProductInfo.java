@@ -14,10 +14,12 @@
  */
 package org.candlepin.service.model;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Map;
-
 
 
 /**
@@ -126,4 +128,21 @@ public interface ProductInfo {
      *  the last update date for this product, or null if the last update date has not been set
      */
     Date getUpdated();
+
+    /**
+     * Utility method that returns a string comparator for comparing productIDs.
+     *
+     * @return A comparator for comparing productIds.
+     */
+    static Comparator<String> getProductIdComparator() {
+        return (lhs, rhs) -> {
+            if (lhs != null && rhs != null) {
+                boolean equals = new EqualsBuilder()
+                    .append(lhs, rhs)
+                    .isEquals();
+                return equals ? 0 : 1;
+            }
+            return 1;
+        };
+    }
 }
