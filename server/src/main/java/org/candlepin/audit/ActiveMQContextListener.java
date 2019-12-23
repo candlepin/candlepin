@@ -26,6 +26,7 @@ import com.google.inject.Injector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -39,9 +40,15 @@ public class ActiveMQContextListener {
 
     private ArtemisMessageSource messageSource;
 
-    public void contextDestroyed() {
+    public void contextDestroyed(Injector injector) {
         if (this.messageSource != null) {
             this.messageSource.shutDown();
+        }
+        try {
+            injector.getInstance(ActiveMQStatusMonitor.class).close();
+        }
+        catch (IOException e) {
+            log.info("Failed to close ActiveMQ status monitor service", e);
         }
     }
 

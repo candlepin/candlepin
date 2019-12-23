@@ -141,6 +141,7 @@ public class ActiveMQStatusMonitor implements Closeable, Runnable, CloseListener
         }
     }
 
+
     protected synchronized boolean testConnection() {
         if (!connectionOk) {
             try {
@@ -174,11 +175,25 @@ public class ActiveMQStatusMonitor implements Closeable, Runnable, CloseListener
 
     @Override
     public void close() throws IOException {
+
         if (this.clientSessionFactory != null) {
             this.clientSessionFactory.close();
         }
         if (this.locator != null) {
             this.locator.close();
+        }
+
+        if (future != null) {
+            future.cancel(false);
+        }
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

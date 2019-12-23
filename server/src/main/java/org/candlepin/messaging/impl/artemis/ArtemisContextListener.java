@@ -21,6 +21,7 @@ import org.candlepin.messaging.CPMException;
 
 import com.google.inject.Injector;
 
+import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +102,7 @@ public class ArtemisContextListener implements CPMContextListener {
             log.error("Unexpected exception occurred while stopping embedded Artemis server", e);
             throw new CPMException(e);
         }
+        ActiveMQClient.clearThreadPools();
     }
 
 }

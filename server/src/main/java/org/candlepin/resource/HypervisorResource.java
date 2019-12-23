@@ -321,6 +321,7 @@ public class HypervisorResource {
         @ApiResponse(code = 400, message = "Illegal reporter ID was provided"),
         @ApiResponse(code = 404, message = "Target owner not found.")})
     @PUT
+    @Consumes(MediaType.WILDCARD)
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     @Path("/{owner}/heartbeat")

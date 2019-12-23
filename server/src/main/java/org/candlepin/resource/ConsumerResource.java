@@ -467,7 +467,7 @@ public class ConsumerResource {
         @ApiResponse(code = 204, message = "If all consumer UUIDs exists and can be accessed"),
         @ApiResponse(code = 400, message = "When no UUIDs are provided") })
     @POST
-    @Consumes(MediaType.WILDCARD)
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("exists")
     public Response consumerExistsBulk(Set<String> consumerUuids) throws BadRequestException {

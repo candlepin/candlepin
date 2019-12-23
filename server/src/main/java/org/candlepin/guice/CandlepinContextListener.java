@@ -40,6 +40,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.google.inject.persist.PersistService;
 import com.google.inject.util.Modules;
 
 import io.swagger.converter.ModelConverters;
@@ -58,6 +59,10 @@ import org.xnap.commons.i18n.I18nManager;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -241,8 +246,21 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             Util.closeSafely(injector.getInstance(AMQPBusPublisher.class), "AMQPBusPublisher");
         }
 
+        injector.getInstance(PersistService.class).stop();
+        // deregister jdbc driver to avoid warning in tomcat shutdown log
+        Enumeration<Driver> drivers = DriverManager.getDrivers();
+        while (drivers.hasMoreElements()) {
+            Driver driver = drivers.nextElement();
+            try {
+                DriverManager.deregisterDriver(driver);
+            }
+            catch (SQLException e) {
+                log.info("Failed to de-registering driver {}", driver);
+            }
+        }
+
         if (config.getBoolean(ACTIVEMQ_ENABLED)) {
-            activeMQContextListener.contextDestroyed();
+            activeMQContextListener.contextDestroyed(injector);
         }
 
         // Make sure this is called after everything else, as other objects may rely on the
