@@ -53,6 +53,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.CapabilityDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
@@ -66,7 +67,6 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
-import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
@@ -1935,7 +1935,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "serials")
     @UpdateConsumerCheckIn
-    public List<CertificateSerialDto> getEntitlementCertificateSerials(
+    public List<CertificateSerialDTO> getEntitlementCertificateSerials(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
@@ -1945,16 +1945,16 @@ public class ConsumerResource {
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
-        List<CertificateSerialDto> allCerts = new LinkedList<>();
+        List<CertificateSerialDTO> allCerts = new LinkedList<>();
         for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
-            allCerts.add(new CertificateSerialDto(id));
+            allCerts.add(new CertificateSerialDTO().setSerial(id.toString()));
         }
 
         // add content access cert if needed
         try {
             ContentAccessCertificate cac = contentAccessCertService.getCertificate(consumer);
             if (cac != null) {
-                allCerts.add(new CertificateSerialDto(cac.getSerial().getId()));
+                allCerts.add(new CertificateSerialDTO().setSerial(cac.getSerial().getId().toString()));
             }
         }
         catch (IOException ioe) {
