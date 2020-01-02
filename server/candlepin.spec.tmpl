@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.20
+Version: 2.9.21
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Thu Jan 02 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.21-1
+- 1785269: Hypervisor update fails when consumer name is null
+  (wpoteat@redhat.com)
+
 * Tue Dec 17 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.20-1
 - 1784127: Syspurpose attributes from AK should have priority over client
   attributes (ojanus@redhat.com)
