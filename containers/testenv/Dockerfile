@@ -41,7 +41,6 @@ RUN yum install -y procps-ng gcc-c++ patch readline readline-devel zlib zlib-dev
         bzip2 autoconf automake libtool bison sqlite-devel \
         && yum clean all
 
-
 ENV HOME /home/${USER}
 ENV LANG en_US.UTF-8
 USER ${USER}

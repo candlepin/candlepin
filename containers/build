@@ -1,0 +1,16 @@
+#! /bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+PROJ_DIR=$(dirname ${SCRIPT_DIR})
+FILE_LIMIT="$(ulimit -Hn)"
+# TODO: add option to sepcify testenv vs candlepin image
+TARGET=$PROJ_DIR/containers/testenv
+
+podman run -ti \
+    --ulimit nofile=$FILE_LIMIT:$FILE_LIMIT \
+    --device /dev/fuse \
+    --security-opt label=disable \
+    -v $TARGET:/build \
+    -v $HOME/.local/share/containers:/var/lib/containers \
+    quay.io/buildah/stable \
+    buildah -t testenv bud /build
