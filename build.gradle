@@ -9,10 +9,12 @@ buildscript {
     }
     dependencies {
         classpath group: 'org.yaml', name: 'snakeyaml', version: '1.19'
+        classpath "org.openapitools:openapi-generator-gradle-plugin:4.0.1"
     }
 }
 
 plugins {
+    id "io.spring.dependency-management" version "1.0.8.RELEASE"
     id "nebula.lint" version "11.5.0"
     id "checkstyle"
 }
@@ -30,6 +32,7 @@ ext.versions = [
     jaxb: "2.3.0",
     junit5: "5.4.1",
     mockito: "2.23.4",
+    jboss_jaxrs_api: "1.0.2.Final",
 ]
 
 ext.libraries = [
@@ -151,6 +154,20 @@ allprojects {
     group = "org.candlepin"
     apply plugin: "maven"
     apply plugin: "nebula.lint"
+    apply plugin: "io.spring.dependency-management"
+    dependencyManagement {
+        dependencies{
+            dependency "io.swagger:swagger-annotations:${versions.swagger}"
+            dependency "javax.validation:validation-api:2.0.1.Final"
+            dependency "org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.1_spec:${versions.jboss_jaxrs_api}"
+            dependency "com.fasterxml.jackson.core:jackson-annotations:${versions.jackson}"
+            dependencySet(group: "org.jboss.resteasy", version: "${versions.resteasy}") {
+                entry "resteasy-client"
+                entry "resteasy-multipart-provider"
+                entry "resteasy-validator-provider-11"
+            }
+        }
+    }
 
     gradleLint {
         rules = ["dependency-parentheses"]
@@ -192,6 +209,74 @@ subprojects {
         // Temporary repo, which stores jss 4.4.6
         maven { url "http://barnabycourt.fedorapeople.org/repo/candlepin/" }
     }
+}
+
+project(":api") {
+    apply plugin: "org.openapi.generator"
+
+    // This project should only contain generated code.  No point in running checkstyle
+    checkstyle.sourceSets = []
+
+    ext {
+        api_spec_path = "${projectDir}/candlepin-api-spec.yaml"
+        config_file = "${projectDir}/candlepin-api-config.json"
+    }
+
+    openApiGenerate {
+      generatorName = "jaxrs-spec"
+      inputSpec = api_spec_path
+      configFile = config_file
+      outputDir = "$buildDir/generated"
+      configOptions = [
+          interfaceOnly: true,
+          generatePom: false
+      ]
+    }
+
+    openApiValidate {
+        inputSpec = api_spec_path
+    }
+
+    task generateApiDocs(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+        generatorName = "html"
+        inputSpec = api_spec_path
+        outputDir = "$buildDir/docs"
+        generateApiDocumentation = true
+        generateModelDocumentation = true
+        generateModelTests = false
+        generateApiTests = false
+        withXml = false
+    }
+
+    task generateOpenApiJson(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+        generatorName = "openapi"
+        inputSpec = api_spec_path
+        outputDir = "$buildDir/generated"
+        generateApiDocumentation = true
+        generateModelDocumentation = true
+        generateModelTests = false
+        generateApiTests = false
+        withXml = false
+    }
+
+    processResources {
+        from "$buildDir/generated/openapi.json"
+        from api_spec_path
+        rename { String fileName ->
+            api_spec_path.endsWith(fileName) ? 'openapi.yaml' : fileName  // rename yaml to openapi.yaml
+        }
+    }
+
+    dependencies {
+        compile 'com.fasterxml.jackson.core:jackson-annotations'
+        compile 'javax.validation:validation-api'
+        compile 'org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.1_spec'
+        compile 'io.swagger:swagger-annotations'
+    }
+
+    sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/gen/java"]
+    compileJava.dependsOn tasks.openApiGenerate
+    processResources.dependsOn tasks.generateOpenApiJson
 }
 
 configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "candlepin" }) {

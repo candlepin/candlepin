@@ -1,0 +1,8 @@
+{
+  "modelPackage": "org.candlepin.dto.api.v1",
+  "apiPackage": "org.candlepin.resource",
+  "invokerPackage": "org.candlepin",
+  "groupId": "org.candlepin",
+  "artifactId": "candlepin-api",
+  "java8": true
+}
