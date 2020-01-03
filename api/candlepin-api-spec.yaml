@@ -10,7 +10,29 @@ servers:
 security:
   - basicAuth: []
 
-paths: {}
+paths:
+  /:
+    get:
+      description: Retrieves a list of links corresponding to Root resources
+      tags:
+        - root
+      operationId: getRootResources
+      security: []  # this resource doesn't require auth
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Link'
+        default:
+          description: An exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
 
 components:
   schemas:
@@ -20,6 +42,14 @@ components:
         displayMessage:
           type: string
         requestUuid:
+          type: string
+
+    Link:
+      description: Used to represent a link to a top level resource in Candlepin
+      properties:
+        rel:
+          type: string
+        href:
           type: string
 
   securitySchemes:

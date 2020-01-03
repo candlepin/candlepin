@@ -16,6 +16,7 @@ package org.candlepin.resource;
 
 import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.dto.api.v1.Link;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -21,10 +21,9 @@ package org.candlepin.resource;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.Link;
 
 import com.google.inject.Inject;
-
-import io.swagger.annotations.ApiOperation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,19 +34,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 
 /**
  * A root resource, responsible for returning client a struct of links to the
  * various resources Candlepin exposes. This list will be filtered based on the
  * permissions of the caller.
  */
-@Path("/")
-public class RootResource {
+public class RootResource implements RootApi {
 
     private static Logger log = LoggerFactory.getLogger(RootResource.class);
     public static final Map<Object, String> RESOURCE_CLASSES;
@@ -121,16 +117,23 @@ public class RootResource {
         if (rel == null) {
             rel = generateRel(href);
         }
-        return new Link(rel, href);
+        return new Link().rel(rel).href(href);
     }
 
     protected Link classLink(String rel, Class clazz) {
         Path a = (Path) clazz.getAnnotation(Path.class);
+        if (a == null) {
+            a = (Path) Arrays.stream(clazz.getInterfaces())
+                .map(c -> c.getAnnotation(Path.class))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+        }
         String href = a.value();
         if (rel == null) {
             rel = generateRel(href);
         }
-        return new Link(rel, href);
+        return new Link().rel(rel).href(href);
     }
 
     protected Link resourceLink(Object resource, String rel) {
@@ -151,10 +154,6 @@ public class RootResource {
         }
     }
 
-    @ApiOperation(notes = "Retrieves a list of links corresponding to Root resources",
-        value = "getRootResources")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true, anon = true)
     public List<Link> getRootResources() {
         // Create the links when requested. Although
