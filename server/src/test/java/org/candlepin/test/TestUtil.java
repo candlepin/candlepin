@@ -58,6 +58,7 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -71,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+
 
 
 
@@ -487,6 +489,11 @@ public class TestUtil {
 
         Date jsqlD = new Date(cal.getTime().getTime());
         return jsqlD;
+    }
+
+    public static Date createFutureDate(int afterYears) {
+        LocalDate now = LocalDate.now();
+        return createDate(now.getYear() + afterYears, now.getMonthValue(), now.getDayOfMonth());
     }
 
     public static String xmlToBase64String(String xml) {
