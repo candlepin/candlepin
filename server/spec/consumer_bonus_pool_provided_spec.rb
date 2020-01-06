@@ -17,14 +17,15 @@ describe 'Consumer Resource Host/Guest' do
     uuid1 = random_string('system.uuid')
     guests = [{'guestId' => uuid1}]
 
-    std_product = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:virt_limit => "5",
-                       :host_limited => 'true'},
-      :owner => @owner1['key']})
     provided_product = create_product(random_string('product'),
       random_string('product'),
       {:owner => @owner1['key']})
+
+    std_product = create_product(random_string('product'),
+      random_string('product'),
+      {:attributes => {:virt_limit => "5",
+        :host_limited => 'true'},
+        :owner => @owner1['key'], :providedProducts => [provided_product['id']]})
 
     create_pool_and_subscription(@owner1['key'], std_product.id, 10, [provided_product.id])
     all_pools =  @user1.list_owner_pools(@owner1['key'])
