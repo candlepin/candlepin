@@ -131,6 +131,7 @@ public class ExporterTest {
     private SyncUtils su;
     private ExportExtensionAdapter exportExtensionAdapter;
     private ModelTranslator translator;
+    private EntitlementCurator entitlementCurator;
 
     @Before
     public void setUp() {
@@ -138,7 +139,8 @@ public class ExporterTest {
         mockEnvironmentCurator = mock(EnvironmentCurator.class);
         oc = mock(OwnerCurator.class);
         me = new MetaExporter();
-        translator = new StandardTranslator(ctc, mockEnvironmentCurator, oc);
+        entitlementCurator = mock(EntitlementCurator.class);
+        translator = new StandardTranslator(ctc, mockEnvironmentCurator, oc, entitlementCurator);
         ce = new ConsumerExporter(translator);
         cte = new ConsumerTypeExporter(translator);
         rc = mock(RulesCurator.class);

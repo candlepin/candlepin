@@ -93,6 +93,7 @@ import org.candlepin.model.ContentOverride;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
@@ -130,8 +131,8 @@ import com.google.inject.Inject;
 public class StandardTranslator extends SimpleModelTranslator {
 
     @Inject
-    public StandardTranslator(ConsumerTypeCurator consumerTypeCurator,
-        EnvironmentCurator environmentCurator, OwnerCurator ownerCurator) {
+    public StandardTranslator(ConsumerTypeCurator consumerTypeCurator, EnvironmentCurator environmentCurator,
+        OwnerCurator ownerCurator, EntitlementCurator entitlementCurator) {
 
         // API translators
         /////////////////////////////////////////////
@@ -198,7 +199,7 @@ public class StandardTranslator extends SimpleModelTranslator {
             new PermissionBlueprintInfoTranslator(),
             PermissionBlueprintInfo.class, PermissionBlueprintDTO.class);
         this.registerTranslator(
-            new org.candlepin.dto.api.v1.PoolTranslator(),
+            new org.candlepin.dto.api.v1.PoolTranslator(entitlementCurator),
             Pool.class, org.candlepin.dto.api.v1.PoolDTO.class);
         this.registerTranslator(
             new PoolQuantityTranslator(), PoolQuantity.class, PoolQuantityDTO.class);
@@ -255,7 +256,7 @@ public class StandardTranslator extends SimpleModelTranslator {
             new org.candlepin.dto.manifest.v1.OwnerTranslator(),
             Owner.class, org.candlepin.dto.manifest.v1.OwnerDTO.class);
         this.registerTranslator(
-            new org.candlepin.dto.manifest.v1.PoolTranslator(),
+            new org.candlepin.dto.manifest.v1.PoolTranslator(entitlementCurator),
             Pool.class, org.candlepin.dto.manifest.v1.PoolDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.manifest.v1.ProductTranslator(),

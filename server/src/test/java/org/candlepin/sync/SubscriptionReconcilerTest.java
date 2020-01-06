@@ -76,6 +76,7 @@ public class SubscriptionReconcilerTest {
     @Mock private ObjectMapper om;
     @Mock private ProductCurator pc;
     @Mock private EntitlementCurator ec;
+    @Mock private EntitlementCurator entitlementCurator;
 
     private Owner owner;
     private OwnerDTO ownerDto;
@@ -93,7 +94,7 @@ public class SubscriptionReconcilerTest {
 
         this.reconciler = new SubscriptionReconciler(this.poolCurator);
         this.translator = new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(),
-            new OwnerCurator());
+            new OwnerCurator(), entitlementCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, pc, ec, translator);

@@ -24,6 +24,7 @@ import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -90,6 +91,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductManager mockProductManager;
     @Mock private EventSink mockEventSink;
     @Mock private EventFactory mockEventFactory;
+    @Mock private EntitlementCurator entitlementCurator;
 
     @Inject private ModelTranslator translator;
     private Enforcer enforcer;
@@ -126,7 +128,8 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
-        translator = new StandardTranslator(consumerTypeCurator, mockEnvironmentCurator, mockOwnerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, mockEnvironmentCurator, mockOwnerCurator,
+            entitlementCurator);
 
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, consumerTypeCurator,

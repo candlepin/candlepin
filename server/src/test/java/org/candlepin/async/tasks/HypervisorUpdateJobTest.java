@@ -31,6 +31,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
@@ -96,6 +97,7 @@ public class HypervisorUpdateJobTest {
     private EventSink sink;
     private EventFactory evtFactory;
     private EntityManager entityManager;
+    private EntitlementCurator entitlementCurator;
 
     private ModelTranslator translator;
 
@@ -117,6 +119,7 @@ public class HypervisorUpdateJobTest {
         sink = mock(EventSink.class);
         evtFactory = mock(EventFactory.class);
         entityManager = mock(EntityManager.class);
+        entitlementCurator = mock(EntitlementCurator.class);
         objectMapper = new ObjectMapper();
         when(owner.getId()).thenReturn("joe");
 
@@ -131,7 +134,8 @@ public class HypervisorUpdateJobTest {
         when(principal.getUsername()).thenReturn("joe user");
 
         EnvironmentCurator environmentCurator = mock(EnvironmentCurator.class);
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator,
+            entitlementCurator);
 
         hypervisorJson =
             "{\"hypervisors\":" +

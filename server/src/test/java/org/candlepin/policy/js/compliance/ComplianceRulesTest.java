@@ -103,6 +103,7 @@ public class ComplianceRulesTest {
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator productCurator;
     @Mock private EnvironmentCurator environmentCurator;
+    @Mock private EntitlementCurator entitlementCurator;
 
     private ModelTranslator translator;
     private I18n i18n;
@@ -114,7 +115,8 @@ public class ComplianceRulesTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator,
+            entitlementCurator);
 
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);

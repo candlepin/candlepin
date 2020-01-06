@@ -105,6 +105,7 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private ProductCurator productCurator;
     @Mock private OwnerProductCurator ownerProductCurator;
     @Mock private OwnerCurator ownerCurator;
+    @Mock private EntitlementCurator entitlementCurator;
 
     private ModelTranslator translator;
     private JsRunnerProvider provider;
@@ -117,7 +118,7 @@ public class InstalledProductStatusCalculatorTest {
 
         translator = new StandardTranslator(this.consumerTypeCurator,
             this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator, this.entitlementCurator);
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);

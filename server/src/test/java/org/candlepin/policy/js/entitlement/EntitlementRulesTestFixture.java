@@ -106,6 +106,8 @@ public class EntitlementRulesTestFixture {
     protected EventFactory eventFactory;
     @Mock
     protected EnvironmentCurator environmentCurator;
+    @Mock
+    protected EntitlementCurator entitlementCurator;
 
     protected Owner owner;
     protected ConsumerType consumerType;
@@ -131,7 +133,8 @@ public class EntitlementRulesTestFixture {
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator,
+            entitlementCurator);
         enforcer = new EntitlementRules(
             new DateSourceImpl(),
             jsRules,

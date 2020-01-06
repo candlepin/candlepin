@@ -185,6 +185,8 @@ def create_product(cp, owner, product)
   derived_product_id = product['derived_product_id']
   derived_provided_products = product['derived_provided_products'] || []
 
+  puts "provided_products: #{provided_products}"
+
   # To create branding information for marketing product
   if !provided_products.empty? && product['name'].include?('OS') && type == 'MKT'
     branding = [
@@ -202,13 +204,17 @@ def create_product(cp, owner, product)
   attrs['variant'] = variant
   attrs['arch'] = arch
   attrs['type'] = type
+
   product_ret = cp.create_product(owner['name'], id, name, {
     :multiplier => multiplier,
     :attributes => attrs,
     :dependentProductIds => dependent_products,
     :relies_on => relies_on,
-    :branding => branding
+    :branding => branding,
+    :providedProducts => provided_products
   })
+
+
 
   print "product name: #{name} version: #{version} arch: #{arch} type: #{type}\n"
   return product_ret

@@ -81,6 +81,7 @@ public class EntitlementImporterTest {
     @Mock private EntitlementCurator ec;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
+    @Mock private EntitlementCurator entitlementCurator;
 
     private Owner owner;
     private EntitlementImporter importer;
@@ -101,7 +102,7 @@ public class EntitlementImporterTest {
 
         this.translator = new StandardTranslator(mockConsumerTypeCurator,
             mockEnvironmentCurator,
-            ownerCurator);
+            ownerCurator, entitlementCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, mockProductCurator, ec,
@@ -138,10 +139,12 @@ public class EntitlementImporterTest {
         Product provided1 = TestUtil.createProduct();
         Set<Product> providedProducts = new HashSet<>();
         providedProducts.add(new Product(provided1));
+        parentProduct.setProvidedProducts(providedProducts);
 
         Product derivedProvided1 = TestUtil.createProduct();
         Set<Product> derivedProvidedProducts = new HashSet<>();
         derivedProvidedProducts.add(new Product(derivedProvided1));
+        derivedProduct.setProvidedProducts(derivedProvidedProducts);
 
         Pool pool = TestUtil.createPool(
             owner, parentProduct, new HashSet<>(), derivedProduct, new HashSet<>(), 3);

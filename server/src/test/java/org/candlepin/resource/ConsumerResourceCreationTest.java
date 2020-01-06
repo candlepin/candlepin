@@ -42,6 +42,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
@@ -135,6 +136,7 @@ public class ConsumerResourceCreationTest {
     @Mock protected ConsumerEnricher consumerEnricher;
     @Mock protected EnvironmentCurator environmentCurator;
     @Mock protected JobManager jobManager;
+    @Mock private EntitlementCurator entitlementCurator;
 
     protected ModelTranslator modelTranslator;
 
@@ -156,7 +158,7 @@ public class ConsumerResourceCreationTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator, this.entitlementCurator);
 
         testMigration = new GuestMigration(consumerCurator);
         migrationProvider = Providers.of(testMigration);

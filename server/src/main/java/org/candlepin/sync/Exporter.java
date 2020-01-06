@@ -492,12 +492,18 @@ public class Exporter {
             Product product = pool.getProduct();
             products.put(product.getId(), product);
 
+            for (Product providedProduct : product.getProvidedProducts()) {
+                products.put(providedProduct.getId(), providedProduct);
+            }
+
             // Also need to check for sub products
             Product derivedProduct = pool.getDerivedProduct();
             if (derivedProduct != null) {
                 products.put(derivedProduct.getId(), derivedProduct);
+                for (Product derivedProvidedProduct : derivedProduct.getProvidedProducts()) {
+                    products.put(derivedProvidedProduct.getId(), derivedProvidedProduct);
+                }
             }
-
             for (Product derivedProvidedProduct : productCurator
                 .getPoolDerivedProvidedProductsCached(pool)) {
                 products.put(derivedProvidedProduct.getId(), derivedProvidedProduct);

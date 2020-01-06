@@ -19,6 +19,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 
@@ -56,6 +57,7 @@ public class SystemPurposeComplianceStatusTranslatorTest extends
 
 
         Configuration config = mock(Configuration.class);
+        EntitlementCurator entitlementCurator = mock(EntitlementCurator.class);
         injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
             new TestingModules.StandardTest(config),
@@ -63,7 +65,7 @@ public class SystemPurposeComplianceStatusTranslatorTest extends
         );
         i18n = injector.getInstance(I18n.class);
         this.entitlementTranslator = new EntitlementTranslator();
-        this.poolTranslator = new PoolTranslator();
+        this.poolTranslator = new PoolTranslator(entitlementCurator);
 
         this.translator = new SystemPurposeComplianceStatusTranslator();
         return this.translator;

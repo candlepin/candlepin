@@ -21,12 +21,15 @@ import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SubscriptionsCertificate;
+
+import org.mockito.Mock;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -44,7 +47,10 @@ import static org.junit.Assert.assertTrue;
  */
 public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, PoolTranslator> {
 
-    protected PoolTranslator translator = new PoolTranslator();
+    @Mock
+    private EntitlementCurator entitlementCurator;
+
+    protected PoolTranslator translator = new PoolTranslator(entitlementCurator);
 
     // Using EntitlementTranslator instead of EntitlementTranslatorTest to avoid StackOverflow issues
     // caused by bidirectional reference between Pool and Entitlement.

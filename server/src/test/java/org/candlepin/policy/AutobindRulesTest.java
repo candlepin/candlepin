@@ -26,6 +26,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
@@ -90,6 +91,7 @@ public class AutobindRulesTest {
     @Mock private ProductCurator mockProductCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private EnvironmentCurator environmentCurator;
+    @Mock private EntitlementCurator entitlementCurator;
 
     private ComplianceStatus compliance;
     private AutobindRules autobindRules; // TODO rename
@@ -119,7 +121,8 @@ public class AutobindRulesTest {
         jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
         mapper =  new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator));
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator,
+            entitlementCurator);
         autobindRules = new AutobindRules(jsRules, mockProductCurator, consumerTypeCurator, mockOwnerCurator,
            mapper, translator);
 

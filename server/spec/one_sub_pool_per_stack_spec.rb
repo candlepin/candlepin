@@ -18,12 +18,15 @@ describe 'One Sub Pool Per Stack' do
 
     @stack_id = 'mixed-stack'
 
+    @virt_limit_provided_product = create_product()
+
     @virt_limit_product = create_product('vlprod', 'vlprod', {
         :attributes => {
             'virt_limit' => 3,
             'stacking_id' => @stack_id,
             'multi-entitlement' => 'yes'
-        }
+        },
+      :providedProducts => [@virt_limit_provided_product['id']]
     })
 
     @virt_limit_product2 = create_product('vlprod2', 'vlprod2', {
@@ -31,20 +34,22 @@ describe 'One Sub Pool Per Stack' do
             'virt_limit' => 6,
             'stacking_id' => @stack_id,
             'multi-entitlement' => 'yes'
-        }
+        },
+      :providedProducts => [@virt_limit_provided_product['id']]
     })
 
-    @virt_limit_provided_product = create_product()
+    @regular_stacked_provided_product =  create_product()
 
     @regular_stacked_product = create_product('target-id', 'target product', {
         :attributes => {
             'stacking_id' => @stack_id,
             'multi-entitlement' => 'yes',
             'sockets' => 6
-        }
+        },
+      :providedProducts => [@regular_stacked_provided_product['id']]
     })
 
-    @regular_stacked_provided_product =  create_product()
+
 
     @non_stacked_product = create_product(nil, nil, {
         :attributes => {
@@ -53,6 +58,7 @@ describe 'One Sub Pool Per Stack' do
         }
     })
 
+    @derived_provided_product = create_product()
 
     @stacked_datacenter_product = create_product(nil, nil, {
       :attributes => {
@@ -60,28 +66,31 @@ describe 'One Sub Pool Per Stack' do
         :stacking_id => @stack_id,
         :sockets => "2",
         'multi-entitlement' => "yes"
-      }
+      },
+      :providedProducts => [@derived_provided_product['id']]
     })
+
 
     @derived_product = create_product(nil, nil, {
       :attributes => {
           :cores => '6',
           :sockets=>'8'
-      }
+      },
+      :providedProducts => [@derived_provided_product['id']]
     })
-    @derived_provided_product = create_product()
+
 
     # Create a different stackable product but with a different stack id.
     @stack_id2 = "diff-stack-id"
+    @stacked_provided_product2 =  create_product()
     @stacked_product_diff_id = create_product(nil, nil, {
         :attributes => {
             'stacking_id' => @stack_id2,
             'multi-entitlement' => 'yes',
             'sockets' => 6
-        }
+        },
+      :providedProducts => [@stacked_provided_product2['id']]
     })
-
-    @stacked_provided_product2 =  create_product()
 
     create_pool_and_subscription(@owner['key'],
       @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333",

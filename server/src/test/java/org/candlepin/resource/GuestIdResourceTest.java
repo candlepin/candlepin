@@ -31,6 +31,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
@@ -93,6 +94,7 @@ public class GuestIdResourceTest {
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private JobManager jobManager;
+    @Mock private EntitlementCurator entitlementCurator;
 
     private GuestIdResource guestIdResource;
 
@@ -110,7 +112,7 @@ public class GuestIdResourceTest {
         migrationProvider = Providers.of(testMigration);
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator, this.entitlementCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         owner = TestUtil.createOwner();

@@ -21,6 +21,7 @@ import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.TestUtil;
@@ -49,6 +50,7 @@ public class ConsumerExporterTest {
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private OwnerCurator ownerCurator;
+    @Mock private EntitlementCurator entitlementCurator;
     private ModelTranslator translator;
 
     @Test
@@ -60,7 +62,8 @@ public class ConsumerExporterTest {
                 }
             }));
 
-        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
+        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator,
+            entitlementCurator);
         ConsumerExporter exporter = new ConsumerExporter(translator);
         ConsumerType ctype = new ConsumerType("candlepin");
         ctype.setId("8888");

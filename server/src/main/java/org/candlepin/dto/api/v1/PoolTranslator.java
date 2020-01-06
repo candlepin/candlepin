@@ -18,13 +18,18 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.Product;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.service.model.ProductInfo;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -32,6 +37,12 @@ import java.util.Set;
  * The PoolTranslator provides translation from Pool model objects to PoolDTOs.
  */
 public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
+
+    private EntitlementCurator entitlementCurator;
+
+    public PoolTranslator(EntitlementCurator entitlementCurator) {
+        this.entitlementCurator = entitlementCurator;
+    }
 
     /**
      * {@inheritDoc}
@@ -109,8 +120,8 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
             dest.setSourceEntitlement(sourceEntitlement != null ?
                 modelTranslator.translate(sourceEntitlement, EntitlementDTO.class) : null);
 
-            Collection<Branding> branding = source.getProduct() != null ?
-                source.getProduct().getBranding() : null;
+            Collection<Branding> branding =
+                source.getProduct() != null ? source.getProduct().getBranding() : null;
             if (branding != null && !branding.isEmpty()) {
                 for (Branding brand : branding) {
                     if (brand != null) {
@@ -122,22 +133,24 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
                 dest.setBranding(Collections.emptySet());
             }
 
-            Set<Product> products = source.getProvidedProducts();
+            Collection<? extends ProductInfo> products =
+                source.getProduct() != null ? source.getProduct().getProvidedProducts() : null;
             if (products != null && !products.isEmpty()) {
-                for (Product prod : products) {
+                for (ProductInfo prod : products) {
                     if (prod != null) {
-                        dest.addProvidedProduct(
-                            new PoolDTO.ProvidedProductDTO(prod.getId(), prod.getName()));
+                        dest.addProvidedProduct(new PoolDTO.ProvidedProductDTO(prod.getId(), prod.getName()));
                     }
                 }
+
             }
             else {
                 dest.setProvidedProducts(Collections.<PoolDTO.ProvidedProductDTO>emptySet());
             }
 
-            Set<Product> derivedProducts = source.getDerivedProvidedProducts();
+            Collection<? extends ProductInfo> derivedProducts =
+                source.getDerivedProduct() != null ? source.getDerivedProduct().getProvidedProducts() : null;
             if (derivedProducts != null && !derivedProducts.isEmpty()) {
-                for (Product derivedProd : derivedProducts) {
+                for (ProductInfo derivedProd : derivedProducts) {
                     if (derivedProd != null) {
                         dest.addDerivedProvidedProduct(
                             new PoolDTO.ProvidedProductDTO(derivedProd.getId(), derivedProd.getName()));
@@ -147,8 +160,48 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
             else {
                 dest.setDerivedProvidedProducts(Collections.<PoolDTO.ProvidedProductDTO>emptySet());
             }
+
+            // accumulate provided products for stacked entitlements
+            if (PoolType.STACK_DERIVED.equals(source.getType())) {
+                Collection<Product> providedProducts = accumulateStackDerivedPoolProvidedProducts(source);
+                if (source.getDerivedProduct() != null) {
+                    for (Product providedProduct : providedProducts) {
+                        dest.addDerivedProvidedProduct(new PoolDTO.ProvidedProductDTO(providedProduct.getId(),
+                            providedProduct.getName()));
+                    }
+                }
+                else {
+                    for (Product providedProduct : providedProducts) {
+                        dest.addProvidedProduct(new PoolDTO.ProvidedProductDTO(providedProduct.getId(),
+                            providedProduct.getName()));
+                    }
+                }
+            }
+
         }
 
         return dest;
+    }
+
+    /**
+     *
+     * @param pool
+     * @return
+     *   accumulated provided products collection from the same stack entitlements
+     */
+    private Collection<Product> accumulateStackDerivedPoolProvidedProducts(Pool pool) {
+        Set<Product> expectedProvidedProds = new HashSet<>();
+        List<Entitlement> stackedEntitlements = this.entitlementCurator
+            .findByStackId(pool.getSourceStack().getSourceConsumer(), pool.getSourceStackId()).list();
+        for (Entitlement nextStacked : stackedEntitlements) {
+            Pool nextStackedPool = nextStacked.getPool();
+            if (nextStackedPool.getDerivedProduct() == null) {
+                expectedProvidedProds.addAll(nextStackedPool.getProduct().getProvidedProducts());
+            }
+            else {
+                expectedProvidedProds.addAll(nextStackedPool.getDerivedProduct().getProvidedProducts());
+            }
+        }
+        return expectedProvidedProds;
     }
 }

@@ -89,17 +89,13 @@ public class ProductTest {
         ).collect(Collectors.toSet());
 
         Set<Product> providedP1 = Util.asSet(
-            new Product("ak1", "providedProduct1", "varient1", "version1",
-                "arch1" , "type1"),
-            new Product("ak2", "providedProduct2", "varient2", "version2",
-                "arch2", "type2")
+            new Product("ak1", "providedProduct1", "varient1", "version1", "arch1", "type1"),
+            new Product("ak2", "providedProduct2", "varient2", "version2", "arch2", "type2")
         );
 
         Set<Product> providedP2 = Util.asSet(
-            new Product("ak3", "providedProduct3", "varient3", "version3",
-                "arch3" , "type3"),
-            new Product("ak4", "providedProduct4", "varient4", "version4",
-                "arch4" , "type4")
+            new Product("ak3", "providedProduct3", "varient3", "version3", "arch3", "type3"),
+            new Product("ak4", "providedProduct4", "varient4", "version4", "arch4", "type4")
         );
 
         return Stream.of(

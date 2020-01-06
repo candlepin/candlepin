@@ -131,6 +131,7 @@ public class ImporterTest {
     private SubscriptionReconciler mockSubReconciler;
     private ConsumerTypeCurator consumerTypeCurator;
     private ModelTranslator translator;
+    private EntitlementCurator entitlementCurator;
 
     static {
         JSSProviderLoader.addProvider();
@@ -163,8 +164,11 @@ public class ImporterTest {
         this.mockSubReconciler = Mockito.mock(SubscriptionReconciler.class);
         this.consumerTypeCurator = Mockito.mock(ConsumerTypeCurator.class);
         oc = mock(OwnerCurator.class);
+        entitlementCurator = mock(EntitlementCurator.class);
 
-        this.translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator, this.oc);
+
+        this.translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator, this.oc
+            , this.entitlementCurator);
     }
 
     @After

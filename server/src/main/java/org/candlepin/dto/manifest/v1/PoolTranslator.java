@@ -18,13 +18,18 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.Product;
 import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.service.model.ProductInfo;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,6 +38,12 @@ import java.util.stream.Collectors;
  * as used by the manifest import/export framework.
  */
 public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
+
+    private EntitlementCurator entitlementCurator;
+
+    public PoolTranslator(EntitlementCurator entitlementCurator) {
+        this.entitlementCurator = entitlementCurator;
+    }
 
     /**
      * {@inheritDoc}
@@ -125,9 +136,10 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
                 dest.setBranding(Collections.emptySet());
             }
 
-            Set<Product> products = source.getProvidedProducts();
+            Collection<? extends ProductInfo> products = source.getProduct() != null ?
+                source.getProduct().getProvidedProducts() : null;
             if (products != null && !products.isEmpty()) {
-                for (Product prod : products) {
+                for (ProductInfo prod : products) {
                     if (prod != null) {
                         dest.addProvidedProduct(
                             new PoolDTO.ProvidedProductDTO(prod.getId(), prod.getName()));
@@ -138,9 +150,10 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
                 dest.setProvidedProducts(Collections.emptySet());
             }
 
-            Set<Product> derivedProducts = source.getDerivedProvidedProducts();
+            Collection<? extends ProductInfo> derivedProducts = source.getDerivedProduct() != null ?
+                source.getDerivedProduct().getProvidedProducts() : null;
             if (derivedProducts != null && !derivedProducts.isEmpty()) {
-                for (Product derivedProd : derivedProducts) {
+                for (ProductInfo derivedProd : derivedProducts) {
                     if (derivedProd != null) {
                         dest.addDerivedProvidedProduct(
                             new PoolDTO.ProvidedProductDTO(derivedProd.getId(), derivedProd.getName()));
@@ -150,8 +163,47 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
             else {
                 dest.setDerivedProvidedProducts(Collections.emptySet());
             }
+
+            // accumulate provided products for stacked entitlements
+            if (PoolType.STACK_DERIVED.equals(source.getType())) {
+                Collection<Product> providedProducts = accumulateStackDerivedPoolProvidedProducts(source);
+                if (source.getDerivedProduct() != null) {
+                    for (Product providedProduct : providedProducts) {
+                        dest.addDerivedProvidedProduct(new PoolDTO.ProvidedProductDTO(providedProduct.getId(),
+                            providedProduct.getName()));
+                    }
+                }
+                else {
+                    for (Product providedProduct : providedProducts) {
+                        dest.addProvidedProduct(new PoolDTO.ProvidedProductDTO(providedProduct.getId(),
+                            providedProduct.getName()));
+                    }
+                }
+            }
         }
 
         return dest;
+    }
+
+    /**
+     *
+     * @param pool
+     * @return
+     *   accumulated provided products collection from the same stack entitlements
+     */
+    private Collection<Product> accumulateStackDerivedPoolProvidedProducts(Pool pool) {
+        Set<Product> expectedProvidedProds = new HashSet<>();
+        List<Entitlement> stackedEntitlements = this.entitlementCurator
+            .findByStackId(pool.getSourceStack().getSourceConsumer(), pool.getSourceStackId()).list();
+        for (Entitlement nextStacked : stackedEntitlements) {
+            Pool nextStackedPool = nextStacked.getPool();
+            if (nextStackedPool.getDerivedProduct() == null) {
+                expectedProvidedProds.addAll(nextStackedPool.getProduct().getProvidedProducts());
+            }
+            else {
+                expectedProvidedProds.addAll(nextStackedPool.getDerivedProduct().getProvidedProducts());
+            }
+        }
+        return expectedProvidedProds;
     }
 }

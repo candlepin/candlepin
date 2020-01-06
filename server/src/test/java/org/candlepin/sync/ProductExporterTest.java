@@ -49,7 +49,8 @@ public class ProductExporterTest {
         ));
 
         ProductExporter exporter = new ProductExporter(
-            new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(), new OwnerCurator()));
+            new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(), new OwnerCurator(),
+            null));
 
         StringWriter writer = new StringWriter();
 

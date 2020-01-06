@@ -179,6 +179,7 @@ public class ConsumerResourceTest {
     @Mock private UserServiceAdapter userServiceAdapter;
     @Mock private DeletedConsumerCurator mockDeletedConsumerCurator;
     @Mock private JobManager mockJobManager;
+    @Mock private EntitlementCurator entitlementCurator;
 
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
@@ -192,7 +193,7 @@ public class ConsumerResourceTest {
         this.config = new CandlepinCommonTestConfig();
         this.translator = new StandardTranslator(mockConsumerTypeCurator,
             mockEnvironmentCurator,
-            mockOwnerCurator);
+            mockOwnerCurator, entitlementCurator);
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         when(eventBuilder.setEventData(any(Consumer.class))).thenReturn(eventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);
