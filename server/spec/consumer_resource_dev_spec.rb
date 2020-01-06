@@ -19,16 +19,19 @@ describe 'Consumer Dev Resource' do
     pools = @cp.list_owner_pools(@owner['key'])
     pools.length.should eq(1)
 
+    @p_product1 = create_product("p_product_1",
+      "Provided Product 1")
+    @p_product2 = create_product("p_product",
+      "Provided Product 2")
     @dev_product = create_product("dev_product",
                                   "Dev Product",
-                                  {:attributes => { :expires_after => "60"}})
+                                  {:attributes => { :expires_after => "60"}, :providedProducts =>
+                                    [@p_product1["id"], @p_product2["id"]]})
     @dev_product_2 = create_product("2nd_dev_product",
                                   "Dev Product",
-                                  {:attributes => { :expires_after => "60"}})
-    @p_product1 = create_product("p_product_1",
-                                  "Provided Product 1")
-    @p_product2 = create_product("p_product",
-                                  "Provided Product 2")
+                                  {:attributes => { :expires_after => "60"},  :providedProducts =>
+                                    [@p_product1["id"], @p_product2["id"]]})
+
     @consumer = consumer_client(@user, @consumername, :system, 'dev_user', facts = {:dev_sku => "dev_product"})
     installed = [
         {'productId' => @p_product1.id, 'productName' => @p_product1.name},

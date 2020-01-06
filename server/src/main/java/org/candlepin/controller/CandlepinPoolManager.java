@@ -975,6 +975,11 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             pool.setProvidedProducts(products);
+            // TODO: workaround to pass import spec tests. we will revisit and update this in import and
+            // refresh code changes
+            if (pool.getProduct() != null) {
+                pool.getProduct().setProvidedProducts(products);
+            }
         }
 
         if (sub.getDerivedProvidedProducts() != null) {
@@ -994,6 +999,11 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             pool.setDerivedProvidedProducts(products);
+            // TODO: workaround to pass import spec tests. we will revisit and update this in import and
+            // refresh code changes
+            if (pool.getDerivedProduct() != null) {
+                pool.getDerivedProduct().setProvidedProducts(products);
+            }
         }
 
         return pool;
