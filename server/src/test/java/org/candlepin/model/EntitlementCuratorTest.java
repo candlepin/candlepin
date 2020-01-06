@@ -91,7 +91,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         testProduct.setAttribute(Product.Attributes.VARIANT, "Starter Pack");
         productCurator.create(testProduct);
 
-        Pool firstPool = createPool(owner, testProduct, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool firstPool = createPool(owner, testProduct, 1L, dateSource.currentDate(),
+            createFutureDate(1));
         firstPool.setAttribute("pool_attr_1", "attr1");
         poolCurator.merge(firstPool);
 
@@ -104,7 +105,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product1.setAttribute(Pool.Attributes.ENABLED_CONSUMER_TYPES, "satellite");
         productCurator.create(product1);
 
-        Pool secondPool = createPool(owner, product1, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool secondPool = createPool(owner, product1, 1L, dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(secondPool);
 
         secondCertificate = createEntitlementCertificate("key", "certificate");
@@ -184,6 +185,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     private Date createDate(int year, int month, int day) {
         return TestUtil.createDate(year, month, day);
+    }
+
+    private Date createFutureDate(int afterYears) {
+        return TestUtil.createFutureDate(afterYears);
     }
 
     private Entitlement setupListProvidingEntitlement() {
@@ -313,7 +318,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct();
         productCurator.create(product);
 
-        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(pool);
 
         for (int i = 0; i < 10; i++) {
@@ -346,7 +351,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct();
         productCurator.create(product);
 
-        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(pool);
 
         for (int i = 0; i < 10; i++) {
@@ -358,7 +363,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product2 = TestUtil.createProduct();
         productCurator.create(product2);
 
-        Pool pool2 = createPool(owner, product2, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool2 = createPool(owner, product2, 1L, dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(pool2);
 
         for (int i = 0; i < 10; i++) {
@@ -384,7 +389,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct();
         productCurator.create(product);
 
-        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(pool);
 
         for (int i = 0; i < 5; i++) {
@@ -396,7 +401,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Product product2 = TestUtil.createProduct();
         productCurator.create(product2);
 
-        Pool pool2 = createPool(owner, product2, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool2 = createPool(owner, product2, 1L, dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(pool2);
 
         for (int i = 0; i < 5; i++) {
@@ -515,7 +520,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product.setAttribute(Product.Attributes.STACKING_ID, stackingId);
         productCurator.create(product);
 
-        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(pool);
         Entitlement created = bind(consumer, pool);
 
@@ -537,7 +542,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             product.setAttribute(Product.Attributes.STACKING_ID, stackingId);
             productCurator.create(product);
 
-            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
             poolCurator.create(pool);
             Entitlement created = bind(consumer, pool);
         }
@@ -556,7 +561,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         int ents = 5;
         List<Entitlement> createdEntitlements = new LinkedList<>();
         for (int i = 0; i < ents; i++) {
-            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
             poolCurator.create(pool);
             createdEntitlements.add(bind(consumer, pool));
         }
@@ -579,7 +584,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         List<Entitlement> createdEntitlements = new LinkedList<>();
         for (int i = 0; i < 5; i++) {
-            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
 
             if (i < 2) {
                 pool.setSourceStack(new SourceStack(otherConsumer, "otherstackid" + i));
@@ -604,16 +609,16 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product.setAttribute(Product.Attributes.STACKING_ID, stackingId);
         productCurator.create(product);
 
-        Pool futurePool = createPool(owner, product, 1L, createDate(2020, 1, 1), createDate(2021, 1, 1));
+        Pool futurePool = createPool(owner, product, 1L, createFutureDate(1), createFutureDate(2));
         poolCurator.create(futurePool);
         bind(consumer, futurePool);
 
-        Pool currentPool = createPool(owner, product, 1L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool currentPool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(currentPool);
         bind(consumer, currentPool);
 
         Pool anotherCurrentPool = createPool(owner, product, 1L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+            dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(anotherCurrentPool);
         bind(consumer, anotherCurrentPool);
 
@@ -632,7 +637,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         Pool futurePool = createPool(owner, product, 1L,
-            createDate(2020, 1, 1), createDate(2021, 1, 1));
+            createFutureDate(1), createDate(2021, 1, 1));
         poolCurator.create(futurePool);
         bind(consumer, futurePool);
 
@@ -1181,7 +1186,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer distributor = createDistributor(owner);
 
         Pool pool = createPool(owner, product, 10L,
-            dateSource.currentDate(), createDate(2020, 1, 1));
+            dateSource.currentDate(), createFutureDate(1));
         poolCurator.create(pool);
         Entitlement distributorEnt1 = bind(distributor, pool);
         Entitlement consumerEnt1 = bind(consumer, pool);
