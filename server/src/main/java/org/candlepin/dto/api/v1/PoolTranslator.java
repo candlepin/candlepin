@@ -25,6 +25,7 @@ import org.candlepin.model.SubscriptionsCertificate;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 
@@ -109,8 +110,8 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
             dest.setSourceEntitlement(sourceEntitlement != null ?
                 modelTranslator.translate(sourceEntitlement, EntitlementDTO.class) : null);
 
-            Collection<Branding> branding = source.getProduct() != null ?
-                source.getProduct().getBranding() : null;
+            Collection<Branding> branding =
+                source.getProduct() != null ? source.getProduct().getBranding() : null;
             if (branding != null && !branding.isEmpty()) {
                 for (Branding brand : branding) {
                     if (brand != null) {
@@ -122,33 +123,32 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
                 dest.setBranding(Collections.emptySet());
             }
 
-            Set<Product> products = source.getProvidedProducts();
-            if (products != null && !products.isEmpty()) {
-                for (Product prod : products) {
-                    if (prod != null) {
-                        dest.addProvidedProduct(
-                            new PoolDTO.ProvidedProductDTO(prod.getId(), prod.getName()));
-                    }
-                }
-            }
-            else {
-                dest.setProvidedProducts(Collections.<PoolDTO.ProvidedProductDTO>emptySet());
-            }
+            Collection<Product> products =
+                source.getProduct() != null ? source.getProduct().getProvidedProducts() : null;
+            Set<PoolDTO.ProvidedProductDTO> providedProductDTOs = new HashSet<>();
+            addProvidedProducts(products, providedProductDTOs);
+            dest.setProvidedProducts(providedProductDTOs);
 
-            Set<Product> derivedProducts = source.getDerivedProvidedProducts();
-            if (derivedProducts != null && !derivedProducts.isEmpty()) {
-                for (Product derivedProd : derivedProducts) {
-                    if (derivedProd != null) {
-                        dest.addDerivedProvidedProduct(
-                            new PoolDTO.ProvidedProductDTO(derivedProd.getId(), derivedProd.getName()));
-                    }
-                }
-            }
-            else {
-                dest.setDerivedProvidedProducts(Collections.<PoolDTO.ProvidedProductDTO>emptySet());
-            }
+            Collection<Product> derivedProducts =
+                source.getDerivedProduct() != null ? source.getDerivedProduct().getProvidedProducts() : null;
+            Set<PoolDTO.ProvidedProductDTO> derivedProvidedProductDTOs = new HashSet<>();
+            addProvidedProducts(derivedProducts, derivedProvidedProductDTOs);
+            dest.setDerivedProvidedProducts(derivedProvidedProductDTOs);
         }
 
         return dest;
+    }
+
+    private void addProvidedProducts(Collection<Product> providedProducts,
+        Set<PoolDTO.ProvidedProductDTO> providedProductDTOs) {
+        if (providedProducts == null || providedProducts.isEmpty()) {
+            return;
+        }
+        for (Product product : providedProducts) {
+            if (product != null) {
+                providedProductDTOs.add(new PoolDTO.ProvidedProductDTO(product.getId(), product.getName()));
+                addProvidedProducts(product.getProvidedProducts(), providedProductDTOs);
+            }
+        }
     }
 }

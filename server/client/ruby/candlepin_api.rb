@@ -852,7 +852,7 @@ class Candlepin
       'dependentProductIds' => dependentProductIds,
       'branding' => branding,
       'reliesOn' => relies_on,
-      'providedProducts' => providedProducts.collect { |pid| {'id' => pid} },
+      'providedProducts' => providedProducts.collect { |pid| {'id' => pid} || pid},
     }
 
     post("/owners/#{owner_key}/products", {}, product)
