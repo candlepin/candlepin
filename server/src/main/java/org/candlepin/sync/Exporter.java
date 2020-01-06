@@ -59,6 +59,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -492,12 +493,14 @@ public class Exporter {
             Product product = pool.getProduct();
             products.put(product.getId(), product);
 
+            addProvidedProducts(product.getProvidedProducts(), products);
+
             // Also need to check for sub products
             Product derivedProduct = pool.getDerivedProduct();
             if (derivedProduct != null) {
                 products.put(derivedProduct.getId(), derivedProduct);
+                addProvidedProducts(derivedProduct.getProvidedProducts(), products);
             }
-
             for (Product derivedProvidedProduct : productCurator
                 .getPoolDerivedProvidedProductsCached(pool)) {
                 products.put(derivedProvidedProduct.getId(), derivedProvidedProduct);
@@ -538,6 +541,19 @@ public class Exporter {
                     productCertExporter.export(writer, cert);
                     writer.close();
                 }
+            }
+        }
+    }
+
+    private void addProvidedProducts(Collection<Product> providedProducts, Map<String, Product> products) {
+        if (providedProducts == null || providedProducts.isEmpty()) {
+            return;
+        }
+
+        for (Product product : providedProducts) {
+            if (product != null) {
+                products.put(product.getId(), product);
+                addProvidedProducts(product.getProvidedProducts(), products);
             }
         }
     }

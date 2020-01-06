@@ -510,7 +510,7 @@ class StandardExporter < Exporter
     ]
 
     @products[:product1] = create_product(random_string('prod1'), random_string, {
-        :multiplier => 2, :branding => brandings})
+        :multiplier => 2, :branding => brandings, :providedProducts => [@products[:eng_product]['id']]})
     @products[:product2] = create_product(random_string('prod2'), random_string())
     @products[:virt_product] = create_product(random_string('virt_product'), random_string('virt_product'), {
         :attributes => {
@@ -538,11 +538,11 @@ class StandardExporter < Exporter
         }
     })
 
-    @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(), {
-        "sockets" => "2"
-    })
-
     @products[:derived_provided_prod] = create_product(random_string(nil, true), random_string());
+
+    @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(), {
+        "sockets" => "2", :providedProducts => [@products[:derived_provided_prod]['id']]
+    })
 
     #this is for the update process
     @products[:product_up] = create_product(random_string('product_up'), random_string('product_up'))

@@ -59,10 +59,10 @@ describe 'Autobind Disabled On Owner' do
     active_sub = create_pool_and_subscription(@owner['key'], active_prod.id, 10)
     @cp.refresh_pools(@owner['key'])
 
-    dev_product = create_product("dev_product", "Dev Product", {:attributes => { :expires_after => "60"}})
-    dev_product_2 = create_product("2nd_dev_product", "Dev Product", {:attributes => { :expires_after => "60"}})
     p_product1 = create_product("p_product_1", "Provided Product 1")
     p_product2 = create_product("p_product", "Provided Product 2")
+    dev_product = create_product("dev_product", "Dev Product", {:attributes => {:expires_after => "60"},
+      :providedProducts => [p_product1["id"], p_product2["id"]]})
 
     installed = [
         {'productId' => p_product1.id, 'productName' => p_product1.name},

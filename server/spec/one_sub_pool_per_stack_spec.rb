@@ -18,12 +18,15 @@ describe 'One Sub Pool Per Stack' do
 
     @stack_id = 'mixed-stack'
 
+    @virt_limit_provided_product = create_product()
+
     @virt_limit_product = create_product('vlprod', 'vlprod', {
         :attributes => {
             'virt_limit' => 3,
             'stacking_id' => @stack_id,
             'multi-entitlement' => 'yes'
-        }
+        },
+      :providedProducts => [@virt_limit_provided_product['id']]
     })
 
     @virt_limit_product2 = create_product('vlprod2', 'vlprod2', {
@@ -31,20 +34,22 @@ describe 'One Sub Pool Per Stack' do
             'virt_limit' => 6,
             'stacking_id' => @stack_id,
             'multi-entitlement' => 'yes'
-        }
+        },
+      :providedProducts => [@virt_limit_provided_product['id']]
     })
 
-    @virt_limit_provided_product = create_product()
+    @regular_stacked_provided_product =  create_product()
 
     @regular_stacked_product = create_product('target-id', 'target product', {
         :attributes => {
             'stacking_id' => @stack_id,
             'multi-entitlement' => 'yes',
             'sockets' => 6
-        }
+        },
+      :providedProducts => [@regular_stacked_provided_product['id']]
     })
 
-    @regular_stacked_provided_product =  create_product()
+
 
     @non_stacked_product = create_product(nil, nil, {
         :attributes => {
@@ -53,6 +58,7 @@ describe 'One Sub Pool Per Stack' do
         }
     })
 
+    @derived_provided_product = create_product()
 
     @stacked_datacenter_product = create_product(nil, nil, {
       :attributes => {
@@ -60,28 +66,31 @@ describe 'One Sub Pool Per Stack' do
         :stacking_id => @stack_id,
         :sockets => "2",
         'multi-entitlement' => "yes"
-      }
+      },
+      :providedProducts => [@derived_provided_product['id']]
     })
+
 
     @derived_product = create_product(nil, nil, {
       :attributes => {
           :cores => '6',
           :sockets=>'8'
-      }
+      },
+      :providedProducts => [@derived_provided_product['id']]
     })
-    @derived_provided_product = create_product()
+
 
     # Create a different stackable product but with a different stack id.
     @stack_id2 = "diff-stack-id"
+    @stacked_provided_product2 =  create_product()
     @stacked_product_diff_id = create_product(nil, nil, {
         :attributes => {
             'stacking_id' => @stack_id2,
             'multi-entitlement' => 'yes',
             'sockets' => 6
-        }
+        },
+      :providedProducts => [@stacked_provided_product2['id']]
     })
-
-    @stacked_provided_product2 =  create_product()
 
     create_pool_and_subscription(@owner['key'],
       @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333",
@@ -240,53 +249,6 @@ describe 'One Sub Pool Per Stack' do
 
   end
 
-  it 'should update provided products when stacked entitlements change' do
-    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
-
-    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
-    sub_pool.should_not be_nil
-    sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['productId'].should == @virt_limit_provided_product.id
-
-    @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
-
-    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
-    sub_pool.should_not be_nil
-    sub_pool['providedProducts'].length.should == 2
-
-    @host_client.unbind_entitlement(ent1['id'])
-
-    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
-    sub_pool.should_not be_nil
-    sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['productId'].should == @regular_stacked_provided_product.id
-  end
-
-  it 'should include derived provided products if supporting entitlements are in stack' do
-    ent1 = @host_client.consume_pool(@datacenter_pool['id'], {:quantity => 1})[0]
-    ent1.should_not be_nil
-
-    @guest_client.list_pools(:consumer => @guest['uuid']).size.should == 8
-    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
-    sub_pool.should_not be_nil
-    sub_pool['productId'].should == @derived_product.id
-    sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['productId'].should == @derived_provided_product.id
-
-    @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
-
-    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
-    sub_pool.should_not be_nil
-    sub_pool['providedProducts'].length.should == 2
-
-    @host_client.unbind_entitlement(ent1['id'])
-
-    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
-    sub_pool.should_not be_nil
-    sub_pool['providedProducts'].length.should == 1
-    sub_pool['providedProducts'][0]['productId'].should == @regular_stacked_provided_product.id
-  end
-
   it 'should update product data on removing entitlement of same stack' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
     @host_client.consume_pool(@stacked_non_virt_pool['id'], {:quantity => 1})[0]
@@ -370,6 +332,23 @@ describe 'One Sub Pool Per Stack' do
 
     # Guest entitlement should now be revoked.
     @guest_client.list_entitlements.length.should == 0
+  end
+
+  it 'should use derived product in sub pool when master pool has derived product' do
+    ent1 = @host_client.consume_pool(@datacenter_pool['id'], {:quantity => 1})[0]
+    ent1.should_not be_nil
+
+    @guest_client.list_pools(:consumer => @guest['uuid']).size.should == 8
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    sub_pool['productId'].should == @derived_product.id
+    sub_pool['providedProducts'].length.should == 1
+    sub_pool['providedProducts'][0]['productId'].should == @derived_provided_product.id
+
+    @host_client.unbind_entitlement(ent1['id'])
+
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should be_nil
   end
 
   # TODO:
