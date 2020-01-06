@@ -202,6 +202,7 @@ def create_product(cp, owner, product)
   attrs['variant'] = variant
   attrs['arch'] = arch
   attrs['type'] = type
+
   product_ret = cp.create_product(owner['name'], id, name, {
     :multiplier => multiplier,
     :attributes => attrs,

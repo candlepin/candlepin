@@ -67,7 +67,8 @@ describe 'Derived Products' do
       :attributes => {
           :cores => 2,
           :sockets => 4
-      }
+      },
+      :providedProducts => [@eng_product['id']]
     })
 
     @derived_product_2 = create_product(nil, "derived product 2", {

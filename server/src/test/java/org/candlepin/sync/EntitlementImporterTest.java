@@ -138,10 +138,12 @@ public class EntitlementImporterTest {
         Product provided1 = TestUtil.createProduct();
         Set<Product> providedProducts = new HashSet<>();
         providedProducts.add(new Product(provided1));
+        parentProduct.setProvidedProducts(providedProducts);
 
         Product derivedProvided1 = TestUtil.createProduct();
         Set<Product> derivedProvidedProducts = new HashSet<>();
         derivedProvidedProducts.add(new Product(derivedProvided1));
+        derivedProduct.setProvidedProducts(derivedProvidedProducts);
 
         Pool pool = TestUtil.createPool(
             owner, parentProduct, new HashSet<>(), derivedProduct, new HashSet<>(), 3);
