@@ -75,6 +75,25 @@
         {
             "name": "awesome-dummy-deb",
             "version": "1"
+        },
+        {
+            "name": "insights-client",
+            "version": "0.1",
+            "release": "01",
+            "files": [
+                {
+                    "path": "/usr/bin/insights-client",
+                    "type": "file",
+                    "perm": "0744",
+                    "owner": "root",
+                    "group": "root",
+                    "content": "#!/bin/bash"
+                },
+                {
+                    "path": "/etc/insights-client",
+                    "type": "directory"
+                }
+            ]
         }
     ],
     "content": [
@@ -390,6 +409,16 @@
             "content_url": "/path/to/awesomeos-deb",
             "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
             "packages": ["awesome-dummy-deb"]
+        },
+        {
+            "name": "fake-content",
+            "id": 3902,
+            "label": "fake-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/fake-content",
+            "gpg_url": "file:///etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin",
+            "packages": ["insights-client"]
         }
     ],
     "owners": [
@@ -1016,6 +1045,21 @@
             "type": "MKT",
             "provided_products": [
                 "38070"
+            ]
+        },
+        {
+            "name": "Fake OS Bits",
+            "id": "38072",
+            "content": [
+                [3902, true]
+            ]
+        },
+        {
+            "name": "Fake OS Bits",
+            "id": "fakeos-bits",
+            "type": "MKT",
+            "provided_products": [
+                "38072"
             ]
         },
         {
