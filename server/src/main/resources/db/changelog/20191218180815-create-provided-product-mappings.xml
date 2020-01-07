@@ -47,4 +47,21 @@
 
     </changeSet>
 
+    <changeSet id="20191218180815-2" author="sdhome">
+        <comment>Migrate data of cp2_pool_provided_products and cp2_pool_derprov_products
+            to cp2_product_provided_products table</comment>
+        <sql>
+            INSERT into cp2_product_provided_products
+            SELECT      pool.product_uuid,mapping.product_uuid as provided_product_id
+            FROM        cp2_pool_provided_products mapping
+            INNER JOIN  cp_pool pool on mapping.pool_id = pool.id
+            GROUP BY    pool.product_uuid,provided_product_id
+            UNION DISTINCT
+            SELECT      pool.derived_product_uuid product_uuid,mapping.product_uuid as provided_product_id
+            FROM        cp2_pool_derprov_products mapping
+            INNER JOIN  cp_pool pool on mapping.pool_id = pool.id
+            GROUP BY    pool.derived_product_uuid,provided_product_id
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
