@@ -1305,4 +1305,25 @@ describe 'Hypervisor Resource', :type => :virt do
     test_host_1 = @cp.get_consumer(test_host_1.uuid)
     test_host_1['name'].should == new_name
   end
+
+  it 'will not update the nil consumer name from the hypervisor checkin' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    host_hyp_id_1 = random_string("09h06").downcase
+    host_system_id_1 = random_string("bf").downcase
+    reporter_id = "reporter"
+    new_name = random_string('new_name')
+    guest_set_1 = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
+    guests_1 = ['g1', 'g2']
+
+    test_host_1 = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_1)
+    test_host_name = test_host_1['name']
+    @cp.update_consumer({:uuid => test_host_1.uuid, :guestIds => guest_set_1})
+    @cp.get_consumer(test_host_1.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_1
+
+    async_update_hypervisor(owner, user, nil, host_hyp_id_1, guests_1, true, reporter_id, {"dmi.system.uuid" => host_system_id_1})
+    test_host_1 = @cp.get_consumer(test_host_1.uuid)
+    test_host_1['name'].should == test_host_name
+  end
 end

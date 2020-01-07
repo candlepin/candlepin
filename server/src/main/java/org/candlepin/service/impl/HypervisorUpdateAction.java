@@ -182,8 +182,9 @@ public class HypervisorUpdateAction {
             boolean hypervisorIdUpdated = updateHypervisorId(resultHost, owner, jobReporterId,
                 hypervisorId);
 
-            boolean nameUpdated = resultHost.getName() == null ||
-                !resultHost.getName().equals(incomingHost.getName());
+            boolean nameUpdated = incomingHost.getName() != null &&
+                (resultHost.getName() == null ||
+                !resultHost.getName().equals(incomingHost.getName()));
             if (nameUpdated) {
                 resultHost.setName(incomingHost.getName());
             }
