@@ -191,11 +191,12 @@ dependencies {
     implementation "org.apache.activemq:artemis-selector:${versions.artemis}"
     implementation "org.apache.activemq:artemis-stomp-protocol:${versions.artemis}"
     implementation "org.apache.activemq:artemis-journal:${versions.artemis}"
-    implementation "io.netty:netty-all:4.1.42.Final"
-    implementation "commons-beanutils:commons-beanutils:1.9.3"
-    implementation "org.jgroups:jgroups:3.6.13.Final"
-    implementation "org.apache.geronimo.specs:geronimo-json_1.0_spec:1.0-alpha-1"
-    implementation "org.apache.johnzon:johnzon-core:0.9.5"
+    implementation "io.netty:netty-all:4.1.44.Final"
+    implementation "commons-beanutils:commons-beanutils:1.9.4"
+    implementation "org.jctools:jctools-core:3.0.0"
+    implementation "org.jgroups:jgroups:4.1.9.Final"
+    implementation "org.apache.geronimo.specs:geronimo-json_1.1_spec:1.3"
+    implementation "org.apache.johnzon:johnzon-core:1.2.2"
 
     // AMQP drivers for talking to QPID
     implementation "org.apache.qpid:qpid-common:0.32"
