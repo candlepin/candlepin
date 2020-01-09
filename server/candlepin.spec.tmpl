@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.1
+Version: 3.1.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,34 @@ fi
 
 #raw
 %changelog
+* Thu Jan 09 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.2-1
+- Update Artemis to 2.10.1 (bcourt@redhat.com)
+- Update hibernate validator to 6.1.0.Final (bcourt@redhat.com)
+- Updated the update-server-xml script to be more python3 compatible
+  (crog@redhat.com)
+- 1785446: Hypervisor update fails when consumer name is null
+  (wpoteat@redhat.com)
+- Change pool end date from 2020-01-01 to future date (abhiskum@redhat.com)
+- 1476028: ENT-528: Changed serialnumber datatype to String   - Updated
+  serialnumber field datatype from Long to String in CertificateSerialDTO   -
+  Updated serial field datatype form Long to String in CertificateSerialDto   -
+  Converted Long serial value to String from CertificateSerial and set it to
+  CertificateSerialDTO   - Converted Long id to String and pass it to
+  CertificateSerialDto   - Updated Junit and rspec with respect to this change
+  (abhiskum@abhiskum.usersys.redhat.com)
+- 1548048: ENT-519: fix warning messages in tomcat shutdown log   - Updated
+  consumes type value from wildcard to aplication json in
+  ConsumerResource.consumerExistsBulk method   - Added consumes type in
+  HypervisorResource.hypervisorHeartbeatUpdate method   - Added method to
+  cleanup thread and executorService in ActiveMQStatusMonitor   - updated
+  CandlepinContextListener.contextDestroyed method to fix shutdown warnings
+  - Stop ActiveMQ status monitoring         - Clear ActiveMQ client thread
+  pools         - Stop PersistService to avoid jdbc connect/pool related
+  warning         - De-register drivers to avoid jdbc connection/pool related
+  warning (abhiskum@abhiskum.usersys.redhat.com)
+- Fake insights-client in testing repository (jhnidek@redhat.com)
+- Move the rspec failure_formatter to the spec directory (bcourt@redhat.com)
+
 * Tue Dec 17 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.1-1
 - Update checkstyle to 8.27 (bcourt@redhat.com)
 - Update pom for checkstyle changes. (bcourt@redhat.com)
