@@ -20,7 +20,7 @@ plugins {
 version = "2.0"
 
 ext.versions = [
-    artemis: "2.4.0",
+    artemis: "2.10.1",
     resteasy: "3.5.1.Final",
     jackson: "2.10.1",
     swagger: "1.5.7",
