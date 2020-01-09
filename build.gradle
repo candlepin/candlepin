@@ -129,7 +129,7 @@ ext.libraries = [
         "net.oauth.core:oauth-provider:20100527",
     ],
     collections: "com.google.guava:guava:25.1-jre",
-    hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.16.Final",
+    hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor:6.1.0.Final",
     checkstyle: [
             "com.puppycrawl.tools:checkstyle:${versions.checkstyle}",
             "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
@@ -142,8 +142,8 @@ ext.libraries = [
         "org.jmock:jmock-junit4:2.5.1",
     ],
     validator: [
-        "org.hibernate.validator:hibernate-validator:6.0.16.Final",
-        "org.hibernate.validator:hibernate-validator-annotation-processor:6.0.16.Final",
+        "org.hibernate.validator:hibernate-validator:6.1.0.Final",
+        "org.hibernate.validator:hibernate-validator-annotation-processor:6.1.0.Final",
     ],
 ]
 
