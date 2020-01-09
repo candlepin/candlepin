@@ -35,6 +35,7 @@
 
         <persistence-enabled>true</persistence-enabled>
         <journal-type>NIO</journal-type>
+        <journal-pool-files>1</journal-pool-files>
         <create-bindings-dir>true</create-bindings-dir>
         <create-journal-dir>true</create-journal-dir>
         <bindings-directory>/var/lib/candlepin/activemq-artemis/bindings</bindings-directory>
