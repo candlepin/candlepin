@@ -304,6 +304,12 @@ public class HypervisorUpdateJob extends KingpinJob {
                         knownHost.getHypervisorId().setHypervisorId(hypervisorId);
                     }
 
+                    boolean nameUpdated = incoming.getName() != null &&
+                        (knownHost.getName() == null || !knownHost.getName().equals(incoming.getName()));
+                    if (nameUpdated) {
+                        knownHost.setName(incoming.getName());
+                    }
+
                     reportedOnConsumer = knownHost;
                     if (jobReporterId != null && knownHost.getHypervisorId() != null &&
                         hypervisorId.equalsIgnoreCase(knownHost.getHypervisorId().getHypervisorId()) &&
@@ -325,7 +331,7 @@ public class HypervisorUpdateJob extends KingpinJob {
                     boolean factsUpdated = consumerResource.checkForFactsUpdate(knownHost, incoming);
 
                     if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated ||
-                        hypervisorIdUpdated) {
+                        hypervisorIdUpdated || nameUpdated) {
                         knownHost.setLastCheckin(new Date());
                         guestMigration.migrate(false);
                         result.addUpdated(this.translator.translate(knownHost, HypervisorConsumerDTO.class));
