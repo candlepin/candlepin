@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.9
+Version: 2.6.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,14 @@ fi
 
 #raw
 %changelog
+* Thu Jan 09 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.10-1
+- 1788671: Hypervisor checkin fails with cp_consumer_hypervisor_ukey error
+  [2.6] (wpoteat@redhat.com)
+- 1754488: remove addProvider call from static block  -
+  JSSProvider/CryptoManager are now loaded once, during   context
+  initialization, and not during classloading of   JSSProviderLoader.java
+  (abhiskum@abhiskum.usersys.redhat.com)
+
 * Thu Sep 19 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.9-1
 - 1753255: ActiveMQContextListener no longer attempts to load DatabaseListener
   (crog@redhat.com)
