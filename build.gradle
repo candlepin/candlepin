@@ -229,7 +229,8 @@ project(":api") {
       outputDir = "$buildDir/generated"
       configOptions = [
           interfaceOnly: true,
-          generatePom: false
+          generatePom: false,
+          dateLibrary: "java8"
       ]
     }
 
