@@ -52,6 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 /**
@@ -576,7 +577,7 @@ public class ProductManager {
      *  An owner to use for resolving entity references
      *
      * @throws IllegalArgumentException
-     *  if entity, update or owner is null
+     *  If entity, update or owner is null
      *
      * @return
      *  The updated product entity
@@ -605,7 +606,44 @@ public class ProductManager {
             }
         }
 
+        this.applyProvidedProductChanges(entity, update, owner);
+
         return this.applyProductChanges(entity, update, contentMap);
+    }
+
+    /**
+     * Applies the changes related to provided products from the given DTO to the specified entity.
+     *
+     * @param entity
+     *  The entity to modify.
+     *
+     * @param update
+     *  The DTO containing the modifications to apply.
+     *
+     * @param owner
+     *  An owner to use for resolving entity references.
+     *
+     * @return
+     *  The updated product entity.
+     */
+    private Product applyProvidedProductChanges(Product entity, ProductDTO update, Owner owner) {
+
+        if (update.getProvidedProducts() != null && !update.getProvidedProducts().isEmpty()) {
+            entity.getProvidedProducts().clear();
+
+            for (ProductDTO providedProductDTO : update.getProvidedProducts()) {
+                if (providedProductDTO != null && providedProductDTO.getId() != null) {
+                    Product newProd = this.ownerProductCurator.getProductById(owner,
+                        providedProductDTO.getId());
+
+                    if (newProd != null) {
+                        entity.addProvidedProduct(newProd);
+                    }
+                }
+            }
+        }
+
+        return entity;
     }
 
     /**
@@ -828,6 +866,20 @@ public class ProductManager {
             Comparator<BrandingInfo> comparator = BrandingInfo.getBrandingInfoComparator();
             if (!Util.collectionsAreEqual((Collection) entity.getBranding(), (Collection) brandingDTOs,
                 comparator)) {
+                return true;
+            }
+        }
+
+        Collection<ProductDTO> providedProducts = dto.getProvidedProducts();
+
+        if (providedProducts != null) {
+
+            if (!Util.collectionsAreEqual(entity.getProvidedProducts().stream()
+                .map(Product::getId)
+                .collect(Collectors.toList()),
+                providedProducts.stream()
+                .map(ProductDTO::getId)
+                .collect(Collectors.toList()))) {
                 return true;
             }
         }
