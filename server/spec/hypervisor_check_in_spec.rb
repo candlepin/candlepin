@@ -953,7 +953,8 @@ describe 'Hypervisor Resource', :type => :virt do
       "sockets" => 1,
       "instance_multiplier" => 2,
       "multi-entitlement" => "yes",
-      "host_limited" => "true"}})
+      "host_limited" => "true"},
+      :providedProducts => [prod.id]})
     create_pool_and_subscription(owner['key'], prod1['id'], 10, [prod['id']])
 
     guest_facts = {

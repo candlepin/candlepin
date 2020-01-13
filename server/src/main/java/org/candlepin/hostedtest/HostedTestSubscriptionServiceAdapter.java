@@ -289,6 +289,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         pdata.setCreated(new Date());
         pdata.setUpdated(new Date());
         pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
+        pdata.setProvidedProducts(this.resolveProducts(pinfo.getProvidedProducts()));
 
         // Create our mappings...
         this.productMap.put(pdata.getId(), pdata);
