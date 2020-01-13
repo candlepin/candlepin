@@ -35,7 +35,8 @@ describe 'Instance Based Subscriptions' do
         :sockets => "2",
         :host_limited => "true",
         'multi-entitlement' => "yes"
-      }
+      },
+      :providedProducts => [@eng_product.id]
     })
 
     create_pool_and_subscription(@owner['key'], @instance_product.id,

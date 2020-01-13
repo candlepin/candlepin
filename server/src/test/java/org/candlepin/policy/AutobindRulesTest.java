@@ -314,6 +314,7 @@ public class AutobindRulesTest {
         sku1.setAttribute(Product.Attributes.CORES, "6");
         sku1.setAttribute(Product.Attributes.RAM, "2");
         sku1.setAttribute(Product.Attributes.SOCKETS, "2");
+        sku1.addProvidedProduct(provided);
 
         Pool pool1 = createPool("DEAD-BEEF1", owner, sku1, provided);
 
@@ -322,6 +323,7 @@ public class AutobindRulesTest {
         sku2.setAttribute(Product.Attributes.CORES, "6");
         sku2.setAttribute(Product.Attributes.RAM, null);
         sku2.setAttribute(Product.Attributes.SOCKETS, null);
+        sku2.addProvidedProduct(provided);
 
         Pool pool2 = createPool("DEAD-BEEF2", owner, sku2, provided);
         Pool pool3 = createPool("DEAD-BEEF3", owner, sku1, provided);
@@ -357,6 +359,7 @@ public class AutobindRulesTest {
         sku1.setAttribute(Product.Attributes.CORES, "6");
         sku1.setAttribute(Product.Attributes.RAM, "2");
         sku1.setAttribute(Product.Attributes.SOCKETS, "2");
+        sku1.addProvidedProduct(provided);
 
         Pool pool1 = createPool("DEAD-BEEF1", owner, sku1, provided);
         pool1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
@@ -364,6 +367,7 @@ public class AutobindRulesTest {
         //only enforce cores on pool 2:
         Product sku2 = mockStackingProduct("prod2", "Test Stack product", "1", "1");
         sku2.setAttribute(Product.Attributes.CORES, "6");
+        sku2.addProvidedProduct(provided);
 
         Pool pool2 = createPool("DEAD-BEEF2", owner, sku2, provided);
 
@@ -1063,17 +1067,17 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, null, "Smart Management", null, "good-usage");
+        prodRH00009.addProvidedProduct(product69);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
-        RH00009.addProvidedProduct(product69);
         RH00009.setQuantity(0L); // No quantity available
 
         Product prodMCT1650 = createSysPurposeProduct(null, null, null, null, "bad-usage");
+        prodMCT1650.addProvidedProduct(product69);
+        prodMCT1650.addProvidedProduct(product89);
+        prodMCT1650.addProvidedProduct(product100);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
-        MCT1650.addProvidedProduct(product89);
-        MCT1650.addProvidedProduct(product100);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1832,9 +1836,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "provided_role", null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1870,9 +1874,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1905,9 +1909,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "Random Role,RHEL Server", null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1944,9 +1948,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1984,9 +1988,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -2021,9 +2025,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -2058,9 +2062,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -2095,9 +2099,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "Smart Role,Other Role", null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -2145,12 +2149,12 @@ public class AutobindRulesTest {
         // but not the role the consumer has.
         Product prodMCT80 = createSysPurposeProduct(null, null, null,
             null, null);
+        prodMCT80.addProvidedProduct(product69);
         prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "bob");
         prodMCT80.setAttribute("multi-entitlement", "yes");
         Pool MCT80 = TestUtil.createPool(owner, prodMCT80);
         MCT80.setId("MCT80");
         MCT80.setQuantity(1L);
-        MCT80.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2202,10 +2206,10 @@ public class AutobindRulesTest {
             null, null);
         prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "bob");
         prodMCT80.setAttribute("multi-entitlement", "yes");
+        prodMCT80.addProvidedProduct(product69);
         Pool MCT80 = TestUtil.createPool(owner, prodMCT80);
         MCT80.setId("MCT80");
         MCT80.setQuantity(1L);
-        MCT80.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2489,10 +2493,10 @@ public class AutobindRulesTest {
         // This pool provides the consumer's installed product, but does not provide his specified role.
         Product prodWithInstalledProductOnly = createSysPurposeProduct(null, null, null,
             null, null);
+        prodWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
         Pool poolWithInstalledProductOnly = TestUtil.createPool(owner, prodWithInstalledProductOnly);
         poolWithInstalledProductOnly.setId("poolWithInstalledProductOnly");
         poolWithInstalledProductOnly.setQuantity(1L);
-        poolWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
 
         // This pool does not provide the consumer's installed product, but provides his specified role.
         Product prodWithRoleOnly = createSysPurposeProduct(null, "Smart Role,Other Role", null,
@@ -2570,46 +2574,46 @@ public class AutobindRulesTest {
         // This pool provides the consumer's installed product, but does not provide his specified role.
         Product prodWithInstalledProductOnly = createSysPurposeProduct(null, null, null,
             null, null);
+        prodWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
         Pool poolWithInstalledProductOnly = TestUtil.createPool(owner, prodWithInstalledProductOnly);
         poolWithInstalledProductOnly.setId("poolWithInstalledProductOnly");
         poolWithInstalledProductOnly.setQuantity(1L);
-        poolWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
 
         // This pool does not provide the consumer's installed product, but provides his specified role
         // and another non-specified installed product.
         Product prodWithRoleOnly = createSysPurposeProduct(null, "Smart Role,Other Role", null,
             null, null);
+        prodWithRoleOnly.addProvidedProduct(product100);
         Pool poolWithRoleOnly = TestUtil.createPool(owner, prodWithRoleOnly);
         poolWithRoleOnly.setId("poolWithRoleOnly");
         poolWithRoleOnly.setQuantity(1L);
-        poolWithRoleOnly.addProvidedProduct(product100);
 
         // This pool does not provide the consumer's installed product, but provides his specified addon
         // and another non-specified installed product.
         Product prodWithAddonOnly = createSysPurposeProduct(null, null, "Smart Addon,Other Addon",
             null, null);
+        prodWithAddonOnly.addProvidedProduct(product100);
         Pool poolWithAddonOnly = TestUtil.createPool(owner, prodWithAddonOnly);
         poolWithAddonOnly.setId("poolWithAddonOnly");
         poolWithAddonOnly.setQuantity(1L);
-        poolWithAddonOnly.addProvidedProduct(product100);
 
         // This pool does not provide the consumer's installed product, but provides his specified usage
         // and another non-specified installed product.
         Product prodWithUsageOnly = createSysPurposeProduct(null, null, null,
             null, "Other Usage");
+        prodWithUsageOnly.addProvidedProduct(product100);
         Pool poolWithUsageOnly = TestUtil.createPool(owner, prodWithUsageOnly);
         poolWithUsageOnly.setId("poolWithUsageOnly");
         poolWithUsageOnly.setQuantity(1L);
-        poolWithUsageOnly.addProvidedProduct(product100);
 
         // This pool does not provide the consumer's installed product, but provides his specified usage
         // and another non-specified installed product.
         Product prodWithSLAOnly = createSysPurposeProduct(null, null, null,
             "Other SLA", null);
+        prodWithSLAOnly.addProvidedProduct(product100);
         Pool poolWithSLAOnly = TestUtil.createPool(owner, prodWithSLAOnly);
         poolWithSLAOnly.setId("poolWithSLAOnly");
         poolWithSLAOnly.setQuantity(1L);
-        poolWithSLAOnly.addProvidedProduct(product100);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(poolWithInstalledProductOnly);
@@ -2655,16 +2659,16 @@ public class AutobindRulesTest {
         prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
         prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2705,16 +2709,16 @@ public class AutobindRulesTest {
         prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
         prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
+        genericPool.getProduct().addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2752,19 +2756,19 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "random_role", "myaddon",
             "random_sla", "random_usage");
+        prodMCT1650.addProvidedProduct(product69);
         prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
         prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2803,16 +2807,16 @@ public class AutobindRulesTest {
             "mysla", "random_usage");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
         prodMCT1650.setAttribute(Product.Attributes.VCPU, "32");
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2853,18 +2857,18 @@ public class AutobindRulesTest {
         // but it will get a 'match score' for having the usage that the consumer has specified.
         Product prodMCT1650 = createSysPurposeProduct(null, "another_role", null,
             null, "myusage");
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         // This pool will get a 'null rule' score for not having a role specified, just as the consumer
         // does not have a role specified.
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2899,21 +2903,21 @@ public class AutobindRulesTest {
         // the product and role that the consumer has set.
         Product prod1 = createSysPurposeProduct(null, "RHEL Server,random_role", null,
             null, null);
+        prod1.addProvidedProduct(product69);
         prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod1.setAttribute("multi-entitlement", "yes");
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
         pool1.setQuantity(100L);
-        pool1.addProvidedProduct(product69);
 
         Product prod2 = createSysPurposeProduct(null, "RHEL Server,random_role", null,
             null, null);
+        prod2.addProvidedProduct(product69);
         prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod2.setAttribute("multi-entitlement", "yes");
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(100L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -2952,21 +2956,21 @@ public class AutobindRulesTest {
         // the product and addons that the consumer has set.
         Product prod1 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role",
             null, null);
+        prod1.addProvidedProduct(product69);
         prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod1.setAttribute("multi-entitlement", "yes");
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
         pool1.setQuantity(100L);
-        pool1.addProvidedProduct(product69);
 
         Product prod2 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role",
             null, null);
+        prod2.addProvidedProduct(product69);
         prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod2.setAttribute("multi-entitlement", "yes");
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(100L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -3092,16 +3096,16 @@ public class AutobindRulesTest {
 
         Product prod1 = createSysPurposeProduct(null, "mismatched_role", "mismatched_addon",
             "mismatched_sla", "Production");
+        prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
-        pool1.addProvidedProduct(product69);
         pool1.setQuantity(1L);
 
         Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(1L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -3139,16 +3143,16 @@ public class AutobindRulesTest {
 
         Product prod1 = createSysPurposeProduct(null, "mismatched_role", "mismatched_addon",
             "Premium", "mismatched_usage");
+        prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
-        pool1.addProvidedProduct(product69);
         pool1.setQuantity(1L);
 
         Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(1L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -3186,16 +3190,16 @@ public class AutobindRulesTest {
 
         Product prod1 = createSysPurposeProduct(null, "mismatched_role", "my_addon",
             "mismatched_sla", "mismatched_usage");
+        prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
-        pool1.addProvidedProduct(product69);
         pool1.setQuantity(1L);
 
         Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(1L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -3233,16 +3237,16 @@ public class AutobindRulesTest {
 
         Product prod1 = createSysPurposeProduct(null, "RHEL Workstation", "mismatched_addon",
             "mismatched_sla", "mismatched_usage");
+        prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
-        pool1.addProvidedProduct(product69);
         pool1.setQuantity(1L);
 
         Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(1L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -3363,14 +3367,14 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prod1 = createSysPurposeProduct(null, null, null, null, "RandomUsage");
+        prod1.addProvidedProduct(product69);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
-        p1.addProvidedProduct(product69);
 
         Product prod2 = createSysPurposeProduct(null, null, null, "RandomSLA", "Development");
+        prod2.addProvidedProduct(product69);
         Pool p2 = TestUtil.createPool(owner, prod2);
         p2.setId("p2");
-        p2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(p1);
@@ -3405,14 +3409,14 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prod1 = createSysPurposeProduct(null, null, null, "RandomSLA", null);
+        prod1.addProvidedProduct(product69);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
-        p1.addProvidedProduct(product69);
 
         Product prod2 = createSysPurposeProduct(null, null, null, "Premium", "RandomUsage");
+        prod2.addProvidedProduct(product69);
         Pool p2 = TestUtil.createPool(owner, prod2);
         p2.setId("p2");
-        p2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(p1);
@@ -3510,13 +3514,14 @@ public class AutobindRulesTest {
             "2");
         Product product3 = mockProduct(productId3, "Test Provided product");
 
+        product1.addProvidedProduct(product3);
+        product2.addProvidedProduct(product3);
+
         Pool pool1 = mockPool(product1);
         pool1.setId("DEAD-BEEF");
-        pool1.addProvidedProduct(product3);
 
         Pool pool2 = mockPool(product2);
         pool2.setId("DEAD-BEEF2");
-        pool2.addProvidedProduct(product3);
 
         List<Pool> pools = new LinkedList<>();
         //pools.add(pool1);
@@ -3620,6 +3625,7 @@ public class AutobindRulesTest {
         Product derivedProduct = TestUtil.createProduct("derivedProd", "A derived test product");
         product.setAttribute(Product.Attributes.STACKING_ID, "1");
         product.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+        derivedProduct.setProvidedProducts(derivedProvided);
 
         Pool pool = TestUtil.createPool(
             owner, product, new HashSet<>(), derivedProduct, derivedProvided, 100
