@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.2
+Version: 3.1.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,9 @@ fi
 
 #raw
 %changelog
+* Mon Jan 13 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.3-1
+- 1790468: Fixed transaction requirement in JobCleaner task (crog@redhat.com)
+
 * Thu Jan 09 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.2-1
 - Update Artemis to 2.10.1 (bcourt@redhat.com)
 - Update hibernate validator to 6.1.0.Final (bcourt@redhat.com)
