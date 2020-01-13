@@ -25,7 +25,7 @@ describe 'Healing' do
   end
 
   it 'entitles non-compliant products' do
-    parent_prod = create_product()
+    parent_prod = create_product(nil, nil, :providedProducts => [@product1.id , @product2.id])
     current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']])
 
@@ -40,7 +40,7 @@ describe 'Healing' do
   end
 
   it 'entitles non-compliant products despite a valid future entitlement' do
-    parent_prod = create_product()
+    parent_prod = create_product(nil, nil, :providedProducts => [@product1.id, @product2.id])
     current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']])
 
@@ -59,7 +59,7 @@ describe 'Healing' do
   end
 
   it 'entitles non-compliant products at a future date' do
-    parent_prod = create_product()
+    parent_prod = create_product(nil, nil, :providedProducts => [@product1.id,@product2.id])
 
     # This one should be skipped, as we're going to specify a future date:
     current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
@@ -81,7 +81,7 @@ describe 'Healing' do
   it 'can multi-entitle stacked entitlements' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
-      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
+      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product1.id, @product2.id])
     current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']])
 
@@ -94,7 +94,7 @@ describe 'Healing' do
   it 'can complete partial stacks with no installed prod' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
-      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
+      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product3.id])
     current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product3['id']])
 
@@ -112,11 +112,11 @@ describe 'Healing' do
   it 'can multi-entitle stacked entitlements across pools' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
-      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
+      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product1.id, @product2.id])
     create_pool_and_subscription(@owner['key'], parent_prod['id'],
       2, [@product1['id'], @product2['id']])
     parent_prod2 = create_product(nil, nil, :attributes => {
-      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
+      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product1.id, @product2.id])
     create_pool_and_subscription(@owner['key'], parent_prod2['id'],
       2, [@product1['id'], @product2['id']])
 
@@ -129,7 +129,7 @@ describe 'Healing' do
   it 'can complete a pre-existing partial stack' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
-      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
+      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product1.id, @product2.id])
     current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
       10, [@product1['id'], @product2['id']])
 
