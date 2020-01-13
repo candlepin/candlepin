@@ -1650,6 +1650,7 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the number of jobs deleted as a result of this operation
      */
+    @Transactional
     public synchronized int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
         // Prepare for the defaults...
         if (queryBuilder == null) {
