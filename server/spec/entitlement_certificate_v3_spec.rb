@@ -204,13 +204,15 @@ describe 'Entitlement Certificate V3' do
   end
 
   it 'verify branding info is correct in json blob' do
-    eng_product = create_product("111", "engineering_product_name")
+
     branding = [{:productId => "111", :type => 'Some Type', :name => 'Super Branded Name'}]
 
     if is_hosted?
-      mkt_product = create_upstream_product('555', { :branding => branding })
+      eng_product = create_upstream_product("111", { :name => 'engineering_product_name' })
+      mkt_product = create_upstream_product('555', { :branding => branding, :providedProducts => [eng_product] })
     else
-      mkt_product = create_product("555", "marketing_product_name", :branding => branding)
+      eng_product = create_product("111", "engineering_product_name")
+      mkt_product = create_product("555", "marketing_product_name", :branding => branding, :providedProducts => [eng_product.id])
     end
     expect(mkt_product.branding.size).to eq(1)
 
