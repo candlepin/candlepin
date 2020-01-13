@@ -1,0 +1,28 @@
+openapi: 3.0.2
+info:
+  title: Candlepin
+  description: Candlepin is a subscription management server written in Java. It helps with management of software subscriptions.
+  version: 3.0.0-draft
+
+servers:
+  - url: /candlepin
+
+security:
+  - basicAuth: []
+
+paths: {}
+
+components:
+  schemas:
+    ExceptionMessage:
+      description: An exception occurred
+      properties:
+        displayMessage:
+          type: string
+        requestUuid:
+          type: string
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic

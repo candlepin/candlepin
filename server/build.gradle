@@ -143,6 +143,7 @@ dependencies {
     annotationProcessor libraries.hibernate_validator_ap
 
     implementation project(":candlepin-common")
+    implementation project(":api")
 
     implementation libraries.antlr
     implementation libraries.commons
