@@ -24,11 +24,10 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -67,27 +66,28 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
 
         source.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
 
+        Product providedProd = new Product();
+        providedProd.setId("provided-product-id-1");
+        providedProd.setName("provided-product-name-1");
+
+        Product product = new Product();
+        product.setId("product-id-2");
+        product.setName("product-name-2");
+        product.addProvidedProduct(providedProd);
+        source.setProduct(product);
+
+        Product derivedProvidedProd = new Product();
+        derivedProvidedProd.setId("derived-provided-product-id-1");
+        derivedProvidedProd.setName("derived-provided-product-name-1");
+
         Product derivedProduct = new Product();
         derivedProduct.setId("derived-product-id-2");
         derivedProduct.setName("derived-product-name-2");
         derivedProduct.setAttributes(new HashMap<>());
         derivedProduct.setAttribute(Product.Attributes.ARCHITECTURE, "POWER");
         derivedProduct.setAttribute(Product.Attributes.STACKING_ID, "2221");
+        derivedProduct.addProvidedProduct(derivedProvidedProd);
         source.setDerivedProduct(derivedProduct);
-
-        ProvidedProduct providedProd = new ProvidedProduct();
-        providedProd.setProductId("provided-product-id-1");
-        providedProd.setProductName("provided-product-name-1");
-        Set<ProvidedProduct> providedProducts = new HashSet<>();
-        providedProducts.add(providedProd);
-        source.setProvidedProductDtos(providedProducts);
-
-        ProvidedProduct derivedProvidedProd = new ProvidedProduct();
-        derivedProvidedProd.setProductId("derived-provided-product-id-1");
-        derivedProvidedProd.setProductName("derived-provided-product-name-1");
-        Set<ProvidedProduct> derivedProvidedProducts = new HashSet<>();
-        derivedProvidedProducts.add(derivedProvidedProd);
-        source.setDerivedProvidedProductDtos(derivedProvidedProducts);
 
         return source;
     }
@@ -113,11 +113,11 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
 
             if (childrenGenerated) {
 
-                Set<Product> sourceProducts = source.getProvidedProducts();
+                Collection<Product> sourceProducts = source.getProduct().getProvidedProducts();
                 Set<PoolDTO.ProvidedProductDTO> productsDTO = dest.getProvidedProducts();
                 verifyProductsOutput(sourceProducts, productsDTO);
 
-                Set<Product> sourceDerivedProducts = source.getDerivedProvidedProducts();
+                Collection<Product> sourceDerivedProducts = source.getDerivedProduct().getProvidedProducts();
                 Set<PoolDTO.ProvidedProductDTO> derivedProductsDTO = dest.getDerivedProvidedProducts();
                 verifyProductsOutput(sourceDerivedProducts, derivedProductsDTO);
             }
@@ -138,7 +138,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
      *
      * @param dtoProducts the translated DTO set of products that we need to verify.
      */
-    private static void verifyProductsOutput(Set<Product> originalProducts,
+    private static void verifyProductsOutput(Collection<Product> originalProducts,
         Set<PoolDTO.ProvidedProductDTO> dtoProducts) {
         for (Product productSource : originalProducts) {
             for (PoolDTO.ProvidedProductDTO productDTO : dtoProducts) {

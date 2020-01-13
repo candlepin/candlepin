@@ -19,7 +19,8 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 
-import java.util.Collections;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 
@@ -80,33 +81,36 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
         // Process nested objects if we have a model translator to use to the translation...
         if (modelTranslator != null) {
 
-            Set<Product> products = source.getProvidedProducts();
-            if (products != null && !products.isEmpty()) {
-                for (Product prod : products) {
-                    if (prod != null) {
-                        dest.addProvidedProduct(
-                            new PoolDTO.ProvidedProductDTO(prod.getId(), prod.getName()));
-                    }
-                }
-            }
-            else {
-                dest.setProvidedProducts(Collections.<PoolDTO.ProvidedProductDTO>emptySet());
-            }
+            Collection<Product> products = source.getProduct() == null ? null :
+                source.getProduct().getProvidedProducts();
+            Set<PoolDTO.ProvidedProductDTO> providedProductDTOs = new HashSet<>();
+            addProvidedProducts(products, providedProductDTOs);
+            dest.setProvidedProducts(providedProductDTOs);
 
-            Set<Product> derivedProducts = source.getDerivedProvidedProducts();
-            if (derivedProducts != null && !derivedProducts.isEmpty()) {
-                for (Product derivedProd : derivedProducts) {
-                    if (derivedProd != null) {
-                        dest.addDerivedProvidedProduct(
-                            new PoolDTO.ProvidedProductDTO(derivedProd.getId(), derivedProd.getName()));
-                    }
-                }
-            }
-            else {
-                dest.setDerivedProvidedProducts(Collections.<PoolDTO.ProvidedProductDTO>emptySet());
-            }
+            Collection<Product> derivedProducts = source.getDerivedProduct() == null ? null :
+                source.getDerivedProduct().getProvidedProducts();
+            Set<PoolDTO.ProvidedProductDTO> derivedProvidedProductDTOs = new HashSet<>();
+            addProvidedProducts(derivedProducts, derivedProvidedProductDTOs);
+            dest.setDerivedProvidedProducts(derivedProvidedProductDTOs);
+
         }
 
         return dest;
     }
+
+    private void addProvidedProducts(Collection<Product> providedProducts,
+        Set<PoolDTO.ProvidedProductDTO> providedProductDTOs) {
+
+        if (providedProducts == null || providedProducts.isEmpty()) {
+            return;
+        }
+
+        for (Product product : providedProducts) {
+            if (product != null) {
+                providedProductDTOs.add(new PoolDTO.ProvidedProductDTO(product.getId(), product.getName()));
+                addProvidedProducts(product.getProvidedProducts(), providedProductDTOs);
+            }
+        }
+    }
+
 }
