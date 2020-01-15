@@ -17,13 +17,11 @@ package org.candlepin.controller;
 import org.candlepin.common.exceptions.AlreadyRegisteredException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.RuleValidationException;
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
@@ -109,7 +107,7 @@ public class ActivationKeyController {
             .getPools();
     }
 
-    public ActivationKey updateActivationKey(String activationKeyId, ActivationKeyDTO update) {
+    public ActivationKey updateActivationKey(String activationKeyId, ActivationKey update) {
         ActivationKey toUpdate = this.fetchActivationKey(activationKeyId);
 
         if (update.getName() != null) {
@@ -130,8 +128,8 @@ public class ActivationKeyController {
             toUpdate.setServiceLevel(serviceLevel);
         }
 
-        if (update.getReleaseVersion() != null) {
-            toUpdate.setReleaseVer(new Release(update.getReleaseVersion()));
+        if (update.getReleaseVer() != null) {
+            toUpdate.setReleaseVer(update.getReleaseVer());
         }
 
         if (update.getDescription() != null) {
@@ -147,8 +145,7 @@ public class ActivationKeyController {
         }
 
         if (update.getAddOns() != null) {
-            Set<String> addOns = new HashSet<>(update.getAddOns());
-            toUpdate.setAddOns(addOns);
+            toUpdate.setAddOns(new HashSet<>(update.getAddOns()));
         }
 
         if (update.isAutoAttach() != null) {

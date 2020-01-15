@@ -18,8 +18,6 @@ import org.candlepin.common.exceptions.AlreadyRegisteredException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.RuleValidationException;
 import org.candlepin.common.exceptions.SlaValidationException;
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
@@ -341,18 +339,18 @@ public class ActivationKeyControllerTest extends DatabaseTestFixture {
             poolManager, serviceLevelValidator, activationKeyRules, ownerProductCurator);
 
         ActivationKey key = new ActivationKey();
-        OwnerDTO ownerDto = new OwnerDTO();
+        Owner ownerDto = new Owner();
         key.setOwner(owner);
         key.setName("dd");
         key.setServiceLevel("level1");
         key.setReleaseVer(new Release("release1"));
         activationKeyCurator.create(key);
 
-        ActivationKeyDTO update = new ActivationKeyDTO();
+        ActivationKey update = new ActivationKey();
         update.setOwner(ownerDto);
         update.setName("dd");
         update.setServiceLevel("level1");
-        update.setReleaseVersion(TestUtil.getStringOfSize(256));
+        update.setReleaseVer(new Release(TestUtil.getStringOfSize(256)));
 
         assertThrows(SlaValidationException.class, () ->
             akr.updateActivationKey(key.getId(), update)

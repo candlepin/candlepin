@@ -22,6 +22,7 @@ import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 
 import com.google.inject.Inject;
@@ -128,7 +129,7 @@ public class ActivationKeyResource {
         }
         log.debug("Updating activation key: {}", activationKeyId);
         ActivationKey toUpdate = this.activationKeyController
-            .updateActivationKey(activationKeyId, update);
+            .updateActivationKey(activationKeyId, toActivationKey(update));
         return this.translator.translate(toUpdate, ActivationKeyDTO.class);
     }
 
@@ -235,6 +236,21 @@ public class ActivationKeyResource {
         }
         log.debug("Deleting activation key: {}", activationKeyId);
         this.activationKeyController.deleteActivationKey(activationKeyId);
+    }
+
+    private ActivationKey toActivationKey(ActivationKeyDTO update) {
+        ActivationKey toUpdate = new ActivationKey();
+
+        toUpdate.setName(update.getName());
+        toUpdate.setServiceLevel(update.getServiceLevel());
+        toUpdate.setReleaseVer(new Release(update.getReleaseVersion()));
+        toUpdate.setDescription(update.getDescription());
+        toUpdate.setUsage(update.getUsage());
+        toUpdate.setRole(update.getRole());
+        toUpdate.setAddOns(update.getAddOns());
+        toUpdate.setAutoAttach(update.isAutoAttach());
+
+        return toUpdate;
     }
 
 }
