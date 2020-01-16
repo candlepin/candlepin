@@ -205,7 +205,17 @@ public class ImportUpstreamConsumerDTO extends TimestampedCandlepinDTO<ImportUps
         ImportUpstreamConsumerDTO copy = super.clone();
 
         ConsumerTypeDTO type = this.getConsumerType();
-        copy.setConsumerType(type != null ? (ConsumerTypeDTO) type.clone() : null);
+        if (type != null) {
+            copy.setConsumerType(new ConsumerTypeDTO()
+                .created(type.getCreated())
+                .updated(type.getUpdated())
+                .id(type.getId())
+                .label(type.getLabel())
+                .manifest(type.getManifest()));
+        }
+        else {
+            copy.setConsumerType(null);
+        }
 
         return copy;
     }

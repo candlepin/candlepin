@@ -67,7 +67,7 @@ public class ConsumerTypeTranslatorTest extends
 
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getLabel(), dest.getLabel());
-            assertEquals(source.isManifest(), dest.isManifest());
+            assertEquals(source.isManifest(), dest.getManifest());
         }
         else {
             assertNull(dest);

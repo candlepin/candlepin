@@ -34,8 +34,176 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
 
+  /consumertypes:
+    get:
+      description: Retrieves a list of known consumer types
+      tags:
+          - Consumer
+          - ConsumerType
+      operationId: getConsumerTypes
+      x-java-response-container-type: Iterable
+      security: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsumerTypeDTO'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+    post:
+      description: Creates a new consumer type
+      tags:
+        - Consumer
+        - ConsumerType
+      operationId: createConsumerType
+      security: []
+      requestBody:
+          description: The consumer type to create
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumerTypeDTO'
+      responses:
+        200:
+          description: ''
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ConsumerTypeDTO'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+
+  /consumertypes/{id}:
+    get:
+      description: Retrieves a specific consumer type
+      tags:
+          - Consumer
+          - ConsumerType
+      operationId: getConsumerType
+      security: []
+      parameters:
+      - name: id
+        in: path
+        description: The ID of the consumer type to retrieve
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumerTypeDTO'
+        404:
+          description: A consumer type could not be found using the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+    put:
+      description: Updates an existing consumer type
+      tags:
+        - Consumer
+        - ConsumerType
+      operationId: updateConsumerType
+      security: []
+      parameters:
+      - name: id
+        in: path
+        description: The ID of the consumer type to update
+        required: true
+        schema:
+          type: string
+      requestBody:
+          description: The fields and updated values to apply to the specified consumer type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumerTypeDTO'
+      responses:
+        200:
+          description: ''
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ConsumerTypeDTO'
+        404:
+          description: A consumer type could not be found using the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+    delete:
+      description: Deletes an existing consumer type
+      tags:
+          - Consumer
+          - ConsumerType
+      operationId: deleteConsumerType
+      security: []
+      parameters:
+      - name: id
+        in: path
+        description: The ID of the consumer type to delete
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: ''
+          content: {}
+        404:
+          description: A consumer type could not be found using the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
 components:
   schemas:
+    TimestampedEntity:
+      properties:
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+
     ExceptionMessage:
       description: An exception occurred
       properties:
@@ -43,7 +211,6 @@ components:
           type: string
         requestUuid:
           type: string
-
     Link:
       description: Used to represent a link to a top level resource in Candlepin
       properties:
@@ -51,6 +218,19 @@ components:
           type: string
         href:
           type: string
+
+    ConsumerTypeDTO:
+      description: Represents a consumer type used to differentiate various types of consumers
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            label:
+              type: string
+            manifest:
+              type: boolean
 
   securitySchemes:
     basicAuth:
