@@ -58,7 +58,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
 
         assertNotNull(output);
         assertEquals(this.testType.getLabel(), output.getLabel());
-        assertEquals(this.testType.isManifest(), output.isManifest());
+        assertEquals(this.testType.isManifest(), output.getManifest());
     }
 
     @Test
@@ -88,10 +88,10 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         dto.setManifest(true);
 
         // Create the type with our DTO
-        ConsumerTypeDTO output = this.consumerTypeResource.create(dto);
+        ConsumerTypeDTO output = this.consumerTypeResource.createConsumerType(dto);
         assertNotNull(output);
         assertEquals(dto.getLabel(), output.getLabel());
-        assertEquals(dto.isManifest(), output.isManifest());
+        assertEquals(dto.getManifest(), output.getManifest());
 
         // Flush & clear DB state
         this.consumerTypeCurator.flush();
@@ -101,13 +101,13 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         existing = this.consumerTypeCurator.getByLabel(label);
         assertNotNull(existing);
         assertEquals(dto.getLabel(), existing.getLabel());
-        assertEquals(dto.isManifest(), existing.isManifest());
+        assertEquals(dto.getManifest(), existing.isManifest());
     }
 
     @Test
     public void testCreateTypeWithBadData() {
         assertThrows(BadRequestException.class, () ->
-            this.consumerTypeResource.create(new ConsumerTypeDTO())
+            this.consumerTypeResource.createConsumerType(new ConsumerTypeDTO())
         );
     }
 
@@ -121,10 +121,10 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         dto.setLabel(label);
 
         // Update the type with our DTO
-        ConsumerTypeDTO output = this.consumerTypeResource.update(dto);
+        ConsumerTypeDTO output = this.consumerTypeResource.updateConsumerType(dto.getId(), dto);
         assertNotNull(output);
         assertEquals(dto.getLabel(), output.getLabel());
-        assertEquals(manifest, output.isManifest());
+        assertEquals(manifest, output.getManifest());
 
         // Flush & clear DB state
         this.consumerTypeCurator.flush();
@@ -147,10 +147,10 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         dto.setManifest(manifest);
 
         // Update the type with our DTO
-        ConsumerTypeDTO output = this.consumerTypeResource.update(dto);
+        ConsumerTypeDTO output = this.consumerTypeResource.updateConsumerType(dto.getId(), dto);
         assertNotNull(output);
         assertEquals(label, output.getLabel());
-        assertEquals(dto.isManifest(), output.isManifest());
+        assertEquals(dto.getManifest(), output.getManifest());
 
         // Flush & clear DB state
         this.consumerTypeCurator.flush();
@@ -160,7 +160,7 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         ConsumerType existing = this.consumerTypeCurator.get(this.testType.getId());
         assertNotNull(existing);
         assertEquals(label, existing.getLabel());
-        assertEquals(dto.isManifest(), existing.isManifest());
+        assertEquals(dto.getManifest(), existing.isManifest());
     }
 
     @Test
@@ -172,10 +172,10 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         dto.setId(this.testType.getId());
 
         // Update the type with our DTO
-        ConsumerTypeDTO output = this.consumerTypeResource.update(dto);
+        ConsumerTypeDTO output = this.consumerTypeResource.updateConsumerType(dto.getId(), dto);
         assertNotNull(output);
         assertEquals(label, output.getLabel());
-        assertEquals(manifest, output.isManifest());
+        assertEquals(manifest, output.getManifest());
 
         // Flush & clear DB state
         this.consumerTypeCurator.flush();
@@ -194,17 +194,16 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         dto.setId("some bad id");
 
         assertThrows(NotFoundException.class, () ->
-            this.consumerTypeResource.update(dto)
+            this.consumerTypeResource.updateConsumerType(dto.getId(), dto)
         );
     }
 
     @Test
     public void testUpdateTypeWithNullId() {
         ConsumerTypeDTO dto = new ConsumerTypeDTO();
-        dto.setId(null);
 
         assertThrows(NotFoundException.class, () ->
-            this.consumerTypeResource.update(dto)
+            this.consumerTypeResource.updateConsumerType(null, dto)
         );
     }
 

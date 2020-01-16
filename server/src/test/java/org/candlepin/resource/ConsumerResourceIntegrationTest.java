@@ -356,7 +356,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         // now pass in consumer type with null id just like the client would
         ConsumerTypeDTO type = new ConsumerTypeDTO()
-            .setLabel(standardSystemType.getLabel());
+            .label(standardSystemType.getLabel());
 
         assertNull(type.getId());
         ConsumerDTO nulltypeid = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, type);
