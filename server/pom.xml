@@ -31,7 +31,7 @@
     <org.apache.activemq-artemis-selector.version>2.4.0</org.apache.activemq-artemis-selector.version>
     <org.apache.activemq-artemis-journal.version>2.4.0</org.apache.activemq-artemis-journal.version>
     <io.netty-netty-all.version>4.1.16.Final</io.netty-netty-all.version>
-    <commons-beanutils-commons-beanutils.version>1.9.3</commons-beanutils-commons-beanutils.version>
+    <commons-beanutils-commons-beanutils.version>1.9.4</commons-beanutils-commons-beanutils.version>
     <org.jgroups-jgroups.version>3.6.13.Final</org.jgroups-jgroups.version>
     <org.apache.geronimo.specs-geronimo-json_1.0_spec.version>1.0-alpha-1</org.apache.geronimo.specs-geronimo-json_1.0_spec.version>
     <org.apache.johnzon-johnzon-core.version>0.9.5</org.apache.johnzon-johnzon-core.version>
