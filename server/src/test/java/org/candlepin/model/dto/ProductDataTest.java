@@ -45,6 +45,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -971,6 +972,58 @@ public class ProductDataTest {
     }
 
     @Test
+    public void testGetSetProvidedProducts() {
+        ProductData dto = new ProductData();
+        Collection<ProductData> input = Arrays.asList(
+            new ProductData("eng_id_1", "name_1"),
+            new ProductData("eng_id_2", "name_2")
+        );
+
+        Collection<ProductData> output = dto.getProvidedProducts();
+        assertNull(output);
+
+        ProductData output2 = dto.setProvidedProducts(input);
+        assertSame(dto, output2);
+
+        output = dto.getProvidedProducts();
+        assertTrue(Util.collectionsAreEqual(input, output));
+    }
+
+    @Test
+    public void testAddProvidedProducts() {
+        ProductData dto = new ProductData();
+        Collection<ProductData> providedProducts = dto.getProvidedProducts();
+
+        assertNull(providedProducts);
+
+        boolean output = dto.addProvidedProduct(new ProductData("eng_id_1", "name_1"));
+        providedProducts = dto.getProvidedProducts();
+
+        assertTrue(output);
+        assertNotNull(providedProducts);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(
+            new ProductData("eng_id_1", "name_1")), providedProducts));
+
+        output = dto.addProvidedProduct(new ProductData("eng_id_2", "name_2"));
+        providedProducts = dto.getProvidedProducts();
+
+        assertTrue(output);
+        assertNotNull(providedProducts);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(
+            new ProductData("eng_id_1", "name_1"),
+            new ProductData("eng_id_2", "name_2")), providedProducts));
+
+        output = dto.addProvidedProduct(new ProductData("eng_id_1", "name_1"));
+        providedProducts = dto.getProvidedProducts();
+
+        assertFalse(output);
+        assertNotNull(providedProducts);
+        assertTrue(Util.collectionsAreEqual(Arrays.asList(
+            new ProductData("eng_id_1", "name_1"),
+            new ProductData("eng_id_2", "name_2")), providedProducts));
+    }
+
+    @Test
     public void testGetSetHref() {
         ProductData dto = new ProductData();
         String input = "test_value";
@@ -1044,6 +1097,16 @@ public class ProductDataTest {
             new Branding(null, "eng_id_6", "brand_name_6", "OS")
         );
 
+        Set<ProductData> providedProductData1 = Util.asSet(
+            new ProductData("pd1", "providedProduct1"),
+            new ProductData("pd2", "providedProduct2")
+        );
+
+        Set<ProductData> providedProductData2 = Util.asSet(
+            new ProductData("pd3", "providedProduct3"),
+            new ProductData("pd4", "providedProduct4")
+        );
+
         return Stream.of(
             new Object[] { "Uuid", "test_value", "alt_value" },
             new Object[] { "Id", "test_value", "alt_value" },
@@ -1054,7 +1117,8 @@ public class ProductDataTest {
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
             new Object[] { "Branding", branding1, branding2},
             // new Object[] { "Href", "test_value", null },
-            new Object[] { "Locked", Boolean.TRUE, false }
+            new Object[] { "Locked", Boolean.TRUE, false },
+            new Object[] { "ProvidedProducts", providedProductData1, providedProductData2 }
         );
     }
 

@@ -126,4 +126,15 @@ public interface ProductInfo {
      *  the last update date for this product, or null if the last update date has not been set
      */
     Date getUpdated();
+
+    /**
+     * Fetches a collection of engineering products of this product. If the provided
+     * products have not yet been set, this method returns null. If this product does not
+     * provide any engineering products, this method returns an empty collection.
+     *
+     * @return
+     *  A collection of engineering products provided by this Product, or null if the provided
+     *  products have not been set.
+     */
+    Collection<? extends ProductInfo> getProvidedProducts();
 }
