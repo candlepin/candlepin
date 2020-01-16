@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.18
+Version: 2.5.19
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,12 @@ fi
 
 #raw
 %changelog
+* Thu Jan 16 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.5.19-1
+- Update commons-beanutils to 1.9.4 Back port vagrant change to use sshfs
+  instead of nfs by default (bcourt@redhat.com)
+- 1788672 Hypervisor checkin fails with cp_consumer_hypervisor_ukey error [2.5]
+  (wpoteat@redhat.com)
+
 * Thu Oct 03 2019 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.5.18-1
 - 1757542: Handle matching of system uuid regardless of casing
   (wpoteat@redhat.com)
