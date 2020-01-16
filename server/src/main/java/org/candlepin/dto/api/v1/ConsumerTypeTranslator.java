@@ -18,6 +18,9 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ConsumerType;
 
+import java.time.ZoneOffset;
+import java.util.Date;
+
 
 
 /**
@@ -63,6 +66,12 @@ public class ConsumerTypeTranslator implements ObjectTranslator<ConsumerType, Co
         if (dest == null) {
             throw new IllegalArgumentException("dest is null");
         }
+
+        Date created = source.getCreated();
+        dest.setCreated(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
+
+        Date updated = source.getUpdated();
+        dest.setUpdated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
 
         dest.setId(source.getId());
         dest.setLabel(source.getLabel());

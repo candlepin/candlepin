@@ -17,6 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.common.jackson.HateoasArrayExclude;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.jackson.ConsumerTypeDeserializer;
 import org.candlepin.jackson.SingleValueWrapDeserializer;
 import org.candlepin.jackson.SingleValueWrapSerializer;
 import org.candlepin.util.ListView;
@@ -789,6 +790,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
      *
      * @return a reference to this DTO object.
      */
+    @JsonDeserialize(using = ConsumerTypeDeserializer.class)
     public ConsumerDTO setType(ConsumerTypeDTO type) {
         this.type = type;
         return this;
@@ -1085,7 +1087,17 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         copy.setHypervisorId(hid != null ? hid.clone() : null);
 
         ConsumerTypeDTO ctype = this.getType();
-        copy.setType(ctype != null ? ctype.clone() : null);
+        if (ctype != null) {
+            copy.setType(new ConsumerTypeDTO()
+                .created(type.getCreated())
+                .updated(type.getUpdated())
+                .id(type.getId())
+                .label(type.getLabel())
+                .manifest(type.getManifest()));
+        }
+        else {
+            copy.setType(null);
+        }
 
         CertificateDTO idCert = this.getIdCertificate();
         copy.setIdCertificate(idCert != null ? idCert.clone() : null);
