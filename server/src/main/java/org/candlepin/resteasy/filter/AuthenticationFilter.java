@@ -30,6 +30,7 @@ import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.resteasy.AnnotationLocator;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -71,15 +72,19 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private ConsumerCurator consumerCurator;
     private Injector injector;
     private Configuration config;
+    private AnnotationLocator annotationLocator;
     private List<AuthProvider> providers = new ArrayList<>();
 
     @Inject
     public AuthenticationFilter(Configuration config,
         ConsumerCurator consumerCurator,
-        DeletedConsumerCurator deletedConsumerCurator, Injector injector) {
+        DeletedConsumerCurator deletedConsumerCurator,
+        Injector injector,
+        AnnotationLocator annotationLocator) {
         this.consumerCurator = consumerCurator;
         this.injector = injector;
         this.config = config;
+        this.annotationLocator = annotationLocator;
 
         setupAuthStrategies();
     }
@@ -124,7 +129,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         ResourceInfo resourceInfo = ResteasyProviderFactory.getContextData(ResourceInfo.class);
         Method method = resourceInfo.getResourceMethod();
 
-        SecurityHole hole = method.getAnnotation(SecurityHole.class);
+        SecurityHole hole = annotationLocator.getAnnotation(method, SecurityHole.class);
         Principal principal = null;
 
         if (hole != null && hole.anon()) {

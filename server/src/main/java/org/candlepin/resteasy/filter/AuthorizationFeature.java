@@ -16,6 +16,7 @@ package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.resteasy.AnnotationLocator;
 
 import io.swagger.jaxrs.listing.ApiListingResource;
 
@@ -47,21 +48,24 @@ public class AuthorizationFeature implements DynamicFeature {
     private AbstractAuthorizationFilter authorizationFilter;
     private AbstractAuthorizationFilter superAdminFilter;
     private AbstractAuthorizationFilter securityHoleFilter;
+    private AnnotationLocator annotationLocator;
 
     @Inject
     public AuthorizationFeature(VerifyAuthorizationFilter authorizationFilter,
         SuperAdminAuthorizationFilter superAdminFilter,
-        SecurityHoleAuthorizationFilter securityHoleFilter) {
+        SecurityHoleAuthorizationFilter securityHoleFilter,
+        AnnotationLocator annotationLocator) {
         this.authorizationFilter = authorizationFilter;
         this.superAdminFilter = superAdminFilter;
         this.securityHoleFilter = securityHoleFilter;
+        this.annotationLocator = annotationLocator;
     }
 
     @Override
     public void configure(ResourceInfo resourceInfo, FeatureContext context) {
         Method method = resourceInfo.getResourceMethod();
 
-        SecurityHole securityHole = method.getAnnotation(SecurityHole.class);
+        SecurityHole securityHole = annotationLocator.getAnnotation(method, SecurityHole.class);
 
         String name = method.getDeclaringClass().getName() + "." + method.getName();
         if (securityHole != null) {
@@ -83,7 +87,7 @@ public class AuthorizationFeature implements DynamicFeature {
     }
 
     protected boolean isSuperAdminOnly(Method method) {
-        Annotation[][] allAnnotations = method.getParameterAnnotations();
+        Annotation[][] allAnnotations = annotationLocator.getParameterAnnotations(method);
 
         // Any occurrence of the Verify annotation means the method is not superadmin exclusive.
         for (int i = 0; i < allAnnotations.length; i++) {
