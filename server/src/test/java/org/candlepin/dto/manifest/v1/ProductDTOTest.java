@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractDTOTest;
+import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +31,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 
 
 
@@ -75,6 +77,12 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
             brandings.add(branding);
         }
 
+        Set<ProductDTO> providedProd = Util.asSet(
+            new ProductDTO().setId("pp1").setName("providedProduct1"),
+            new ProductDTO().setId("pp2").setName("providedProduct2"),
+            new ProductDTO().setId("pp3").setName("providedProduct3")
+        );
+
         this.values = new HashMap<>();
         this.values.put("Id", "test_value");
         this.values.put("Uuid", "test_value");
@@ -87,6 +95,7 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         this.values.put("Branding", brandings);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
+        this.values.put("ProvidedProducts", providedProd);
     }
 
     /**

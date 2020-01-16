@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -1080,7 +1081,13 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
         copy.setProductContent(this.getProductContent());
         copy.setDependentProductIds(this.getDependentProductIds());
         copy.setBranding(this.getBranding());
-        copy.setProvidedProducts(this.getProvidedProducts());
+
+        if (this.getProvidedProducts() != null) {
+            copy.providedProducts = new HashSet<>();
+            copy.providedProducts.addAll(this.getProvidedProducts().stream()
+                .map(prodDTO -> prodDTO.clone())
+                .collect(Collectors.toSet()));
+        }
 
         return copy;
     }
@@ -1112,7 +1119,12 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
         this.setHref(source.getHref());
         this.setLocked(source.isLocked());
         this.setBranding(source.getBranding());
-        this.setProvidedProducts(source.getProvidedProducts());
+
+        if (source.getProvidedProducts() != null) {
+            this.setProvidedProducts(source.getProvidedProducts().stream()
+                .map(prod -> new ProductDTO(prod))
+                .collect(Collectors.toSet()));
+        }
 
         return this;
     }
