@@ -39,12 +39,12 @@ rm -f postgres/dump.sql
 
 echo "============ Building temporary base candlepin image ============ "
 # builds base centos image which installs candlepin dependencies & environment
-docker build --tag=temp_base_candlepin temp-base-cp/
+docker build --no-cache --tag=temp_base_candlepin temp-base-cp/
 evalrc $? "temp_base_candlepin image build was not successful."
 
 echo "============ Building temporary candlepin image ============ "
 # builds image which deploys a temporary candlepin, loads test data, and then dumps them
-docker build --tag=temp_candlepin temp-cp/
+docker build --no-cache --tag=temp_candlepin temp-cp/
 evalrc $? "temp_candlepin image build was not successful."
 
 echo "============ Deploying temporary candlepin and loading test data ============ "
@@ -72,7 +72,7 @@ evalrc $? "postgres image build was not successful."
 rm postgres/dump.sql
 
 echo "============ Building candlepin image with the version currently used in stage ============ "
-docker build --tag=cp_latest_stage cp-latest-stage/
+docker build --no-cache --tag=cp_latest_stage cp-latest-stage/
 evalrc $? "cp_latest_stage image build was not successful."
 
 echo "============ Pushing images to registry... ============ "
