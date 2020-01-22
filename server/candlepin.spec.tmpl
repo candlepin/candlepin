@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.20
+Version: 2.5.21
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,9 @@ fi
 
 #raw
 %changelog
+* Wed Jan 22 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.5.21-1
+- 1794041: Fixed NPE during ExpiredPoolsJob execution (ojanus@redhat.com)
+
 * Thu Jan 16 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.5.20-1
 - 
 
