@@ -193,6 +193,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
 
+  /deleted_consumers:
+    get:
+      description: Retrieves a list of deleted consumers by deletion date or all. List returned is the deleted Consumers.
+      tags:
+        - Consumer
+        - DeletedConsumer
+      operationId: listByDate
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+          description: Filter deleted consumers to those on or after this date
+      x-java-response-container-type: java.lang.Iterable
+      security: []
+      responses:
+        200:
+          description: A list of deleted consumers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeletedConsumerDTO'
+        400:
+          description: When date is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+
 components:
   schemas:
     TimestampedEntity:
@@ -316,6 +360,25 @@ components:
             resultData:
               type: object
               example: "Refresh completed successfully!"
+
+    DeletedConsumerDTO:
+      description: Represents a deleted consumer
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - properties:
+            id:
+              type: string
+            consumerUuid:
+              type: string
+            ownerId:
+              type: string
+            ownerKey:
+              type: string
+            ownerDisplayName:
+              type: string
+            principalName:
+              type: string
+
   securitySchemes:
     basicAuth:
       type: http
