@@ -1107,6 +1107,7 @@
             "version": "0.1",
             "arch": "x86_64,x86,s390x,ppc64,ia64,arm",
             "skip_pools" : "true",
+            "provided_products": ["37080", "37060"],
             "attributes": {
                 "sockets": 2,
                 "vcpu": 4,
@@ -1132,10 +1133,7 @@
                 "virt_limit" : "unlimited",
                 "host_limited": "true"
             },
-            "derived_product_id" : "awesomeos-server-basic-vdc",
-            "derived_provided_products" : [
-                "37080", "37060"
-            ]
+            "derived_product_id" : "awesomeos-server-basic-vdc"
         },
         {
             "name": "Awesome OS Server Basic (multi-entitlement)",

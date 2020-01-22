@@ -183,7 +183,6 @@ def create_product(cp, owner, product)
   dependent_products = product['dependencies'] || []
   relies_on = product['relies_on'] || []
   derived_product_id = product['derived_product_id']
-  derived_provided_products = product['derived_provided_products'] || []
 
   # To create branding information for marketing product
   if !provided_products.empty? && product['name'].include?('OS') && type == 'MKT'
@@ -207,7 +206,8 @@ def create_product(cp, owner, product)
     :attributes => attrs,
     :dependentProductIds => dependent_products,
     :relies_on => relies_on,
-    :branding => branding
+    :branding => branding,
+    :providedProducts => provided_products
   })
 
   print "product name: #{name} version: #{version} arch: #{arch} type: #{type}\n"
@@ -272,9 +272,7 @@ def create_mkt_product_and_pools(cp, owner, product)
   end
 
   params = {}
-  params[:provided_products] = product['provided_products'] || []
   params[:derived_product_id] = product['derived_product_id']
-  params[:derived_provided_products] = product['derived_provided_products'] || []
 
   params[:start_date] =  Date.today
   params[:end_date] =  params[:start_date] + 365
@@ -296,7 +294,7 @@ def create_mkt_product_and_pools(cp, owner, product)
     owner['name'],
     product_ret['id'],
     small_quantity,
-    product['provided_products'] || [],
+    [],
     contract_number,
     account_number,
     order_number,
@@ -314,7 +312,7 @@ def create_mkt_product_and_pools(cp, owner, product)
     owner['name'],
     product_ret['id'],
     large_quantity,
-    product['provided_products'] || [],
+    [],
     contract_number,
     account_number,
     order_number,
@@ -332,7 +330,7 @@ def create_mkt_product_and_pools(cp, owner, product)
     owner['name'],
     product_ret['id'],
     15,
-    product['provided_products'] || [],
+    [],
     contract_number,
     account_number,
     order_number,
