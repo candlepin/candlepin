@@ -21,6 +21,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
@@ -152,18 +153,23 @@ public class SystemPurposeComplianceRules {
             Set<String> unsatisfiedAddons = new HashSet<>(consumer.getAddOns());
             String preferredSla = consumer.getServiceLevel();
             String preferredUsage = consumer.getUsage();
+            Pool entitlementPool = entitlement.getPool();
 
-            Set<Product> products = Stream.concat(
-                entitlement.getPool().getProvidedProducts().stream(),
-                entitlement.getPool().getDerivedProvidedProducts().stream()
-            ).collect(Collectors.toSet());
-            products.add(entitlement.getPool().getProduct());
-            Product derivedProduct = entitlement.getPool().getDerivedProduct();
-            if (derivedProduct != null) {
-                products.add(derivedProduct);
+            Set<Product> entitlementProducts = new HashSet<>();
+
+            if (entitlementPool.getProvidedProducts() != null) {
+                entitlementProducts.addAll(entitlementPool.getProvidedProducts());
             }
 
-            for (Product product : products) {
+            if (entitlementPool.getDerivedProvidedProducts() != null) {
+                entitlementProducts.addAll(entitlementPool.getDerivedProvidedProducts());
+            }
+
+            entitlementProducts.add(entitlementPool.getProduct());
+            entitlementProducts.add(entitlementPool.getDerivedProduct());
+            entitlementProducts.remove(null);
+
+            for (Product product : entitlementProducts) {
                 if (StringUtils.isNotEmpty(unsatisfedRole) &&
                     product.hasAttribute(Product.Attributes.ROLES)) {
                     List<String> roles =
@@ -212,6 +218,7 @@ public class SystemPurposeComplianceRules {
             !status.getCompliantRole().containsKey(consumer.getRole())) {
             status.setNonCompliantRole(consumer.getRole());
         }
+
         if (CollectionUtils.isNotEmpty(consumer.getAddOns())) {
             for (String addOn : consumer.getAddOns()) {
                 if (!status.getCompliantAddOns().containsKey(addOn)) {
@@ -219,9 +226,11 @@ public class SystemPurposeComplianceRules {
                 }
             }
         }
+
         if (StringUtils.isNotEmpty(consumer.getServiceLevel()) && status.getCompliantSLA().isEmpty()) {
             status.setNonCompliantSLA(consumer.getServiceLevel());
         }
+
         if (StringUtils.isNotEmpty(consumer.getUsage()) && status.getCompliantUsage().isEmpty()) {
             status.setNonCompliantUsage(consumer.getUsage());
         }
