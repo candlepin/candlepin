@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.22
+Version: 2.9.23
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,9 @@ fi
 
 #raw
 %changelog
+* Wed Jan 22 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.23-1
+- 1794043: Fixed NPE during ExpiredPoolsJob execution (ojanus@redhat.com)
+
 * Thu Jan 16 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.22-1
 - Update commons-beanutils to 1.9.4 (bcourt@redhat.com)
 - Change pool end date from 2020-01-01 to future date (abhiskum@redhat.com)
