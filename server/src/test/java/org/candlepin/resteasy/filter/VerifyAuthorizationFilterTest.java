@@ -152,13 +152,6 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         methodInjector = new StubMethodInjector();
         factory.setMethodInjector(methodInjector);
 
-        ResourceInfo mockInfo = mock(ResourceInfo.class);
-        Method method = FakeResource.class.getMethod("someMethod", String.class);
-        when(mockInfo.getResourceMethod()).thenReturn(method);
-        Class clazz = FakeResource.class;
-        when(mockInfo.getResourceClass()).thenReturn(clazz);
-
-        ResteasyProviderFactory.pushContext(ResourceInfo.class, mockInfo);
         ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
 
         when(mockRequestContext.getSecurityContext()).thenReturn(mockSecurityContext);
@@ -166,11 +159,32 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
         resourceMap.init();
 
-        interceptor = new VerifyAuthorizationFilter(i18nProvider, storeFactory, resourceMap);
+        interceptor = new VerifyAuthorizationFilter(i18nProvider, storeFactory, resourceMap,
+            annotationLocator);
+    }
+
+    private void configureResourceClass(Class<?> resourceClass) throws NoSuchMethodException {
+        ResourceInfo mockInfo = mock(ResourceInfo.class);
+        Method method = FakeResource.class.getMethod("someMethod", String.class);
+        when(mockInfo.getResourceMethod()).thenReturn(method);
+        Class clazz = FakeResource.class;
+        when(mockInfo.getResourceClass()).thenReturn(clazz);
+
+        ResteasyProviderFactory.pushContext(ResourceInfo.class, mockInfo);
     }
 
     @Test
     public void testAccessToConsumer() throws Exception {
+        testAccessToConsumerForResource(FakeResource.class);
+    }
+
+    @Test
+    void testAccessToConsumerSpecFirst() throws Exception {
+        testAccessToConsumerForResource(FakeApi.class);
+    }
+
+    void testAccessToConsumerForResource(Class<?> resourceClass) throws Exception {
+        configureResourceClass(resourceClass);
         mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fake/123");
         ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
         mockReq.setAttribute(ResteasyProviderFactory.class.getName(), ResteasyProviderFactory.getInstance());
@@ -196,6 +210,16 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void noAccessToOtherConsumer() throws Exception {
+        noAccessToOtherConsumerForResource(FakeResource.class);
+    }
+
+    @Test
+    void noAccessToOtherConsumerSpecFirst() throws Exception {
+        noAccessToOtherConsumerForResource(FakeApi.class);
+    }
+
+    void noAccessToOtherConsumerForResource(Class<?> resourceClass) throws Exception {
+        configureResourceClass(resourceClass);
         mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fake/123");
         ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
         mockReq.setAttribute(ResteasyProviderFactory.class.getName(), ResteasyProviderFactory.getInstance());
@@ -234,6 +258,26 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         }
     }
 
+    /**
+     * FakeGeneratedApi helps test that our filter works on spec-first APIs.
+     */
+    @SuppressSwaggerCheck
+    @Path("fake")
+    public interface FakeApi {
+        @Path("/{uuid}")
+        String someMethod(String uuid);
+    }
+
+    /**
+     * FakeGeneratedResource helps test that our filter works on spec-first APIs.
+     */
+    public static class FakeApiImpl implements FakeApi {
+        @Override
+        public String someMethod(@Verify(Consumer.class) String uuid) {
+            return null;
+        }
+    }
+
     /*
      * simple Guice Module to turn our ConsumerCurator into a mock object.
      */
@@ -244,6 +288,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
             bind(PermissionFactory.class).toInstance(factory);
             bind(StoreFactory.class);
             bind(FakeResource.class);
+            bind(FakeApiImpl.class);
         }
     }
 }

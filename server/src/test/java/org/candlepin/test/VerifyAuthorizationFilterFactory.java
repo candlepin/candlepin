@@ -18,6 +18,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
+import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.resteasy.filter.VerifyAuthorizationFilter;
@@ -53,6 +54,7 @@ public class VerifyAuthorizationFilterFactory implements MethodInterceptor {
     @Inject private Provider<I18n> i18nProvider;
     @Inject private Provider<Principal> principalProvider;
     @Inject private ResourceLocatorMap resourceMap;
+    @Inject private AnnotationLocator annotationLocator;
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -66,7 +68,7 @@ public class VerifyAuthorizationFilterFactory implements MethodInterceptor {
 
         public AuthorizationMethodInterceptor(Provider<I18n> i18nProvider,
             StoreFactory storeFactory, ResourceLocatorMap resourceMap) {
-            super(i18nProvider, storeFactory, resourceMap);
+            super(i18nProvider, storeFactory, resourceMap, annotationLocator);
         }
 
         @Override

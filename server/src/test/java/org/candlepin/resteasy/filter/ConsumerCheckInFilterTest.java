@@ -19,6 +19,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
+import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
@@ -37,6 +38,7 @@ import java.lang.reflect.Method;
 import java.util.Date;
 
 import javax.inject.Inject;
+import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 
@@ -82,7 +84,9 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         ResteasyProviderFactory.pushContext(ResourceInfo.class, mockInfo);
         ResteasyProviderFactory.pushContext(Principal.class, this.principal);
 
-        interceptor = new ConsumerCheckInFilter(consumerCurator);
+        AnnotationLocator annotationLocator = new AnnotationLocator(injector);
+        annotationLocator.init();
+        interceptor = new ConsumerCheckInFilter(consumerCurator, annotationLocator);
     }
 
     private void mockResourceMethod(Method method) {
@@ -95,10 +99,19 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
     @Test
     public void testUpdatesCheckinWithAnnotation() throws Exception {
+        testUpdatesCheckinWithAnnotationForResource(FakeResource.class);
+    }
+
+    @Test
+    void testUpdatesCheckinWithAnnotationSpecFirst() throws Exception {
+        testUpdatesCheckinWithAnnotationForResource(FakeApi.class);
+    }
+
+    void testUpdatesCheckinWithAnnotationForResource(Class<?> resourceClass) throws Exception {
         Date lastCheckin = this.consumer.getLastCheckin();
         Thread.sleep(1000);
 
-        Method method = FakeResource.class.getMethod("checkinMethod", String.class);
+        Method method = resourceClass.getMethod("checkinMethod", String.class);
         mockResourceMethod(method);
 
         interceptor.filter(getContext());
@@ -113,10 +126,19 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
     @Test
     public void testNoCheckinWithoutAnnotation() throws Exception {
+        testNoCheckinWithoutAnnotationForResource(FakeResource.class);
+    }
+
+    @Test
+    void testNoCheckinWithoutAnnotationSpecFirst() throws Exception {
+        testNoCheckinWithoutAnnotationForResource(FakeApi.class);
+    }
+
+    void testNoCheckinWithoutAnnotationForResource(Class<?> resourceClass) throws Exception {
         Date lastCheckin = this.consumer.getLastCheckin();
         Thread.sleep(1000);
 
-        Method method = FakeResource.class.getMethod("someMethod", String.class);
+        Method method = resourceClass.getMethod("someMethod", String.class);
         mockResourceMethod(method);
 
         interceptor.filter(getContext());
@@ -144,10 +166,37 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         }
     }
 
+    /**
+     * FakeApi helps test that our filter works on spec-first APIs.
+     */
+    @Path("/fake")
+    public interface FakeApi {
+        @Path("1")
+        String someMethod(String str);
+
+        @Path("2")
+        String checkinMethod(String str);
+    }
+
+    /**
+     * FakeApiImpl helps test that our filter works on spec-first APIs.
+     */
+    public static class FakeApiImpl implements FakeApi {
+        public String someMethod(String str) {
+            return str;
+        }
+
+        @UpdateConsumerCheckIn
+        public String checkinMethod(String str) {
+            return str;
+        }
+    }
+
     private static class ConsumerCheckInFilterModule extends AbstractModule {
         @Override
         protected void configure() {
-            // Nothing to do
+            bind(FakeApiImpl.class);
+            bind(FakeResource.class);
         }
     }
 }

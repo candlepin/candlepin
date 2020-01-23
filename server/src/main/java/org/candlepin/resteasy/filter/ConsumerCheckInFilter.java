@@ -18,6 +18,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.resteasy.AnnotationLocator;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -40,10 +41,12 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class ConsumerCheckInFilter implements ContainerRequestFilter {
     private final ConsumerCurator consumerCurator;
+    private final AnnotationLocator annotationLocator;
 
     @Inject
-    public ConsumerCheckInFilter(ConsumerCurator consumerCurator) {
+    public ConsumerCheckInFilter(ConsumerCurator consumerCurator, AnnotationLocator annotationLocator) {
         this.consumerCurator = consumerCurator;
+        this.annotationLocator = annotationLocator;
     }
 
     @Override
@@ -53,7 +56,7 @@ public class ConsumerCheckInFilter implements ContainerRequestFilter {
 
         Principal principal = ResteasyProviderFactory.getContextData(Principal.class);
         if (principal instanceof ConsumerPrincipal &&
-            method.getAnnotation(UpdateConsumerCheckIn.class) != null) {
+            annotationLocator.getAnnotation(method, UpdateConsumerCheckIn.class) != null) {
             ConsumerPrincipal p = (ConsumerPrincipal) principal;
             consumerCurator.updateLastCheckin(p.getConsumer());
         }

@@ -22,6 +22,7 @@ import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Persisted;
+import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.util.Util;
 
@@ -66,13 +67,15 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
     private static final Logger log = LoggerFactory.getLogger(VerifyAuthorizationFilter.class);
     private StoreFactory storeFactory;
     private ResourceLocatorMap locatorMap;
+    private AnnotationLocator annotationLocator;
 
     @Inject
     public VerifyAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider, StoreFactory storeFactory,
-        ResourceLocatorMap locatorMap) {
+        ResourceLocatorMap locatorMap, AnnotationLocator annotationLocator) {
         this.i18nProvider = i18nProvider;
         this.storeFactory = storeFactory;
         this.locatorMap = locatorMap;
+        this.annotationLocator = annotationLocator;
     }
 
     @Override
@@ -125,7 +128,7 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
         // LinkedHashMap preserves insertion order
         Map<Verify, Object> argMap = new LinkedHashMap<>();
 
-        Annotation[][] allAnnotations = method.getParameterAnnotations();
+        Annotation[][] allAnnotations = annotationLocator.getParameterAnnotations(method);
 
         // Any occurrence of the Verify annotation means the method is not superadmin exclusive.
         for (int i = 0; i < allAnnotations.length; i++) {

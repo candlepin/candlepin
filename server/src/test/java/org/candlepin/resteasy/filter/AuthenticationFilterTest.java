@@ -28,6 +28,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.User;
+import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -59,6 +60,7 @@ import java.lang.reflect.Method;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 
@@ -139,8 +141,15 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         when(bearerTokenRequestAuthenticator.getToken()).
             thenReturn(TokenVerifier.create(TESTTOKEN, AccessToken.class).getToken());
 
-        interceptor = new AuthenticationFilter(config, consumerCurator, deletedConsumerCurator, injector);
+        AnnotationLocator annotationLocator = new AnnotationLocator(injector);
+        annotationLocator.init();
+        interceptor = new AuthenticationFilter(config, consumerCurator, deletedConsumerCurator, injector,
+            annotationLocator);
         interceptor.setHttpServletRequest(mockHttpServletRequest);
+    }
+
+    void setResourceClass(Class resourceClass) {
+        when(mockInfo.getResourceClass()).thenReturn(resourceClass);
     }
 
     private void keycloakSetup() {
@@ -178,8 +187,18 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void noSecurityHoleNoPrincipalNoSsl() throws Exception {
+        noSecurityHoleNoPrincipalNoSslForResource(FakeResource.class);
+    }
+
+    @Test
+    void noSecurityHoleNoPrincipalNoSslSpecFirst() throws Exception {
+        noSecurityHoleNoPrincipalNoSslForResource(FakeApi.class);
+    }
+
+    void noSecurityHoleNoPrincipalNoSslForResource(Class<?> resourceClass) throws Exception {
+        setResourceClass(resourceClass);
         when(mockHttpServletRequest.isSecure()).thenReturn(false);
-        Method method = FakeResource.class.getMethod("someMethod", String.class);
+        Method method = resourceClass.getMethod("someMethod", String.class);
         mockResourceMethod(method);
 
         assertThrows(BadRequestException.class, () -> interceptor.filter(getContext()));
@@ -187,9 +206,20 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void noSecurityHoleNoPrincipalNoSslButOverridenByConfig() throws Exception {
+        noSecurityHoleNoPrincipalNoSslButOverridenByConfigForResource(FakeResource.class);
+    }
+
+    @Test
+    void noSecurityHoleNoPrincipalNoSslButOverridenByConfigSpecFirst() throws Exception {
+        noSecurityHoleNoPrincipalNoSslButOverridenByConfigForResource(FakeApi.class);
+    }
+
+    void noSecurityHoleNoPrincipalNoSslButOverridenByConfigForResource(Class<?> resourceClass)
+        throws Exception {
+        setResourceClass(resourceClass);
         config.setProperty(ConfigProperties.AUTH_OVER_HTTP, "true");
         when(mockHttpServletRequest.isSecure()).thenReturn(false);
-        Method method = FakeResource.class.getMethod("someMethod", String.class);
+        Method method = resourceClass.getMethod("someMethod", String.class);
         mockResourceMethod(method);
         assertThrows(NotAuthorizedException.class, () -> interceptor.filter(getContext()));
         // Revert default settings
@@ -198,21 +228,41 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void noSecurityHoleNoPrincipal() throws Exception {
+        noSecurityHoleNoPrincipalForResource(FakeResource.class);
+    }
+
+    @Test
+    void noSecurityHoleNoPrincipalSpecFirst() throws Exception {
+        noSecurityHoleNoPrincipalForResource(FakeApi.class);
+    }
+
+    void noSecurityHoleNoPrincipalForResource(Class<?> resourceClass) throws Exception {
+        setResourceClass(resourceClass);
         when(mockHttpServletRequest.isSecure()).thenReturn(true);
-        Method method = FakeResource.class.getMethod("someMethod", String.class);
+        Method method = resourceClass.getMethod("someMethod", String.class);
         mockResourceMethod(method);
         assertThrows(NotAuthorizedException.class, () -> interceptor.filter(getContext()));
     }
 
     @Test
     public void noSecurityHole() throws Exception {
+        noSecurityHoleForResource(FakeResource.class);
+    }
+
+    @Test
+    void noSecurityHoleSpecFirst() throws Exception {
+        noSecurityHoleForResource(FakeApi.class);
+    }
+
+    void noSecurityHoleForResource(Class<?> resourceClass) throws Exception {
+        setResourceClass(resourceClass);
         mockReq.header("Authorization", "BASIC QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
 
         when(usa.validateUser(eq("Aladdin"), eq("open sesame"))).thenReturn(true);
         when(usa.findByLogin(eq("Aladdin"))).thenReturn(
             new User("Aladdin", "open sesame", true));
 
-        Method method = FakeResource.class.getMethod("someMethod", String.class);
+        Method method = resourceClass.getMethod("someMethod", String.class);
         mockResourceMethod(method);
         interceptor.filter(getContext());
 
@@ -222,7 +272,17 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void securityHoleWithNoAuth() throws Exception {
-        Method method = FakeResource.class.getMethod("noAuthMethod", String.class);
+        securityHoleWithNoAuthForResource(FakeResource.class);
+    }
+
+    @Test
+    void securityHoleWithNoAuthSpecFirst() throws Exception {
+        securityHoleWithNoAuthForResource(FakeApi.class);
+    }
+
+    void securityHoleWithNoAuthForResource(Class<?> resourceClass) throws Exception {
+        setResourceClass(resourceClass);
+        Method method = resourceClass.getMethod("noAuthMethod", String.class);
         mockResourceMethod(method);
 
         interceptor.filter(getContext());
@@ -233,7 +293,17 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void securityHoleWithAuth() throws Exception {
-        Method method = FakeResource.class.getMethod("annotatedMethod", String.class);
+        securityHoleWithAuthForResource(FakeResource.class);
+    }
+
+    @Test
+    void securityHoleWithAuthSpecFirst() throws Exception {
+        securityHoleWithAuthForResource(FakeApi.class);
+    }
+
+    void securityHoleWithAuthForResource(Class<?> resourceClass) throws Exception {
+        setResourceClass(resourceClass);
+        Method method = resourceClass.getMethod("annotatedMethod", String.class);
         mockResourceMethod(method);
 
         mockReq.header("Authorization", "BASIC QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
@@ -249,7 +319,17 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void securityHoleWithAnonAndNoPrincipal() throws Exception {
-        Method method = FakeResource.class.getMethod("anonMethod", String.class);
+        securityHoleWithAnonAndNoPrincipalForResource(FakeResource.class);
+    }
+
+    @Test
+    void securityHoleWithAnonAndNoPrincipalSpecFirst() throws Exception {
+        securityHoleWithAnonAndNoPrincipalForResource(FakeApi.class);
+    }
+
+    void securityHoleWithAnonAndNoPrincipalForResource(Class<?> resourceClass) throws Exception {
+        setResourceClass(resourceClass);
+        Method method = resourceClass.getMethod("anonMethod", String.class);
         mockResourceMethod(method);
 
         interceptor.filter(getContext());
@@ -262,7 +342,17 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void securityHoleWithAnonAndPrincipalProvided() throws Exception {
-        Method method = FakeResource.class.getMethod("anonMethod", String.class);
+        securityHoleWithAnonAndPrincipalProvidedForResource(FakeResource.class);
+    }
+
+    @Test
+    void securityHoleWithAnonAndPrincipalProvidedSpecFirst() throws Exception {
+        securityHoleWithAnonAndPrincipalProvidedForResource(FakeApi.class);
+    }
+
+    void securityHoleWithAnonAndPrincipalProvidedForResource(Class<?> resourceClass) throws Exception {
+        setResourceClass(resourceClass);
+        Method method = resourceClass.getMethod("anonMethod", String.class);
         mockResourceMethod(method);
 
         mockReq.header("Authorization", "BASIC QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
@@ -289,7 +379,45 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
      * FakeResource simply to create a Method object to pass down into
      * the interceptor.
      */
+    @Path("/fake")
     public static class FakeResource {
+        public String someMethod(String str) {
+            return str;
+        }
+
+        @SecurityHole
+        public String annotatedMethod(String str) {
+            return str;
+        }
+
+        @SecurityHole(noAuth = true)
+        public String noAuthMethod(String str) {
+            return str;
+        }
+
+        @SecurityHole(anon = true)
+        public String anonMethod(String str) {
+            return str;
+        }
+    }
+
+    @Path("/fake")
+    public interface FakeApi {
+        @Path("1")
+        String someMethod(String str);
+
+        @Path("2")
+        String annotatedMethod(String str);
+
+        @Path("3")
+        String noAuthMethod(String str);
+
+        @Path("4")
+        String anonMethod(String str);
+    }
+
+    public static class FakeApiImpl implements FakeApi {
+
         public String someMethod(String str) {
             return str;
         }
@@ -316,6 +444,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
             bind(PermissionFactory.class).toInstance(mock(PermissionFactory.class));
             bind(ConsumerCurator.class).toInstance(mock(ConsumerCurator.class));
             bind(UserServiceAdapter.class).toInstance(usa);
+            bind(FakeApiImpl.class);
+            bind(FakeResource.class);
             bind(KeycloakConfiguration.class).toInstance(keycloakAdapterConfiguration);
         }
     }
