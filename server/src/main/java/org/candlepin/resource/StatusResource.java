@@ -24,7 +24,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.controller.mode.ModeChangeReason;
-import org.candlepin.dto.api.v1.KeycloakStatusDTO;
 import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.Rules.RulesSourceEnum;
@@ -33,31 +32,23 @@ import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import java.util.stream.Collectors;
 
 
 
 /**
  * Status Resource
  */
-@Path("/status")
-@Api("status")
-public class StatusResource {
+public class StatusResource implements StatusApi {
     private static Logger log = LoggerFactory.getLogger(StatusResource.class);
 
     /**
@@ -123,9 +114,7 @@ public class StatusResource {
      * @return a Status object
      * @httpcode 200
      */
-    @GET
-    @ApiOperation(value = "Status", notes = "Returns status of the server", authorizations = {})
-    @Produces({ MediaType.APPLICATION_JSON})
+    @Override
     @SecurityHole(noAuth = true, anon = true)
     public StatusDTO status() {
         StatusCache statusCache = candlepinCache.getStatusCache();
@@ -158,30 +147,26 @@ public class StatusResource {
 
         good = good && (mode == Mode.NORMAL);
 
-        StatusDTO status;
+        StatusDTO status = new StatusDTO()
+            .result(good)
+            .version(version)
+            .release(release)
+            .standalone(standalone)
+            .rulesVersion(jsProvider.getRulesVersion())
+            .rulesSource(rulesSource != null ? rulesSource.toString() : null)
+            .mode(mode != null ? mode.toString() : null)
+            .modeReason(mcr != null ? mcr.toString() : null)
+            .modeChangeTime(mcr != null ? mcr.getTime().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .managerCapabilities(caps.stream().collect(Collectors.toList()))
+            .timeUTC(OffsetDateTime.now());
+
         if (keycloakEnabled) {
             AdapterConfig adapterConfig = keycloakConfig.getAdapterConfig();
-            status = new KeycloakStatusDTO()
-                .setKeycloakResource(adapterConfig.getResource())
-                .setKeycloakAuthUrl(adapterConfig.getAuthServerUrl())
-                .setKeycloakRealm(adapterConfig.getRealm());
+            status
+                .keycloakResource(adapterConfig.getResource())
+                .keycloakAuthUrl(adapterConfig.getAuthServerUrl())
+                .keycloakRealm(adapterConfig.getRealm());
         }
-        else {
-            status = new StatusDTO();
-        }
-
-        status
-            .setResult(good)
-            .setVersion(version)
-            .setRelease(release)
-            .setStandalone(standalone)
-            .setRulesVersion(jsProvider.getRulesVersion())
-            .setRulesSource(rulesSource != null ? rulesSource.toString() : null)
-            .setMode(mode != null ? mode.toString() : null)
-            .setModeReason(mcr != null ? mcr.toString() : null)
-            .setModeChangeTime(mcr != null ? mcr.getTime() : null)
-            .setManagerCapabilities(caps)
-            .setTimeUTC(new Date());
 
         statusCache.setStatus(status);
 
