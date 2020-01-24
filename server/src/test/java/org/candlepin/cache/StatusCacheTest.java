@@ -23,7 +23,7 @@ import org.candlepin.dto.api.v1.StatusDTO;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 /**
  * Created by mstead on 11/04/17.
@@ -46,8 +46,8 @@ public class StatusCacheTest {
         StatusCache cache = new StatusCache();
 
         StatusDTO status = new StatusDTO()
-            .setResult(true)
-            .setTimeUTC(new Date());
+            .result(true)
+            .timeUTC(OffsetDateTime.now());
 
         cache.setStatus(status);
         assertEquals(status, cache.getStatus());
@@ -58,8 +58,8 @@ public class StatusCacheTest {
         StatusCache cache = new StatusCache();
 
         StatusDTO status = new StatusDTO()
-            .setResult(true)
-            .setTimeUTC(new Date());
+            .result(true)
+            .timeUTC(OffsetDateTime.now());
 
         cache.setStatus(status);
         assertEquals(status, cache.getStatus());
@@ -71,8 +71,8 @@ public class StatusCacheTest {
     public void multipleInstancesShareSameStatus() {
         StatusCache cache1 = new StatusCache();
         StatusDTO status = new StatusDTO()
-            .setResult(true)
-            .setTimeUTC(new Date());
+            .result(true)
+            .timeUTC(OffsetDateTime.now());
 
         cache1.setStatus(status);
 
