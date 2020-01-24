@@ -43,7 +43,8 @@ public class StatusCache {
         synchronized (LOCK) {
             // Check if we can return our cached status
             if (cachedStatus != null && cachedStatus.getTimeUTC() != null) {
-                long lastUpdateTimeSkew = System.currentTimeMillis() - cachedStatus.getTimeUTC().getTime();
+                long lastUpdateTimeSkew =
+                    System.currentTimeMillis() - cachedStatus.getTimeUTC().toInstant().toEpochMilli();
                 if (lastUpdateTimeSkew <= STATUS_CACHE_TTL) {
                     log.debug("Returning cached status. Last Update Date: {}, Age: {}ms",
                         cachedStatus.getTimeUTC(), lastUpdateTimeSkew);

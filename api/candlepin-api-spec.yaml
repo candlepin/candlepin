@@ -236,6 +236,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
 
+  /status:
+    get:
+      description: Returns status of the server
+      tags:
+        - Status
+      operationId: status
+      security: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusDTO'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
 
 components:
   schemas:
@@ -393,6 +414,45 @@ components:
               type: object
               additionalProperties:
                 type: string
+
+    StatusDTO:
+      description: Version and Status information about running Candlepin server
+      properties:
+        mode:
+          type: string
+        modeReason:
+          type: string
+        modeChangeTime:
+          type: string
+          format: date-time
+        result:
+          type: boolean
+          example: true
+        version:
+          type: string
+          example: 0.9.10
+        release:
+          type: string
+        standalone:
+          type: boolean
+        timeUTC:
+          type: string
+          format: date-time
+        rulesSource:
+          type: string
+        rulesVersion:
+          type: string
+          example: 5.8
+        managerCapabilities:
+          type: array
+          items:
+            type: string
+        keycloakRealm:
+          type: string
+        keycloakAuthUrl:
+          type: string
+        keycloakResource:
+          type: string
 
   securitySchemes:
     basicAuth:
