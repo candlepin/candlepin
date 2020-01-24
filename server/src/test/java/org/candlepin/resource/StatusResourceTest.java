@@ -31,7 +31,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
-import org.candlepin.dto.api.v1.KeycloakStatusDTO;
 import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Rules;
@@ -59,7 +58,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
-
 
 
 /**
@@ -181,12 +179,10 @@ public class StatusResourceTest {
         when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(true);
 
         StatusResource sr = this.createResource();
-        StatusDTO s = sr.status();
-        assertTrue("not a keycloak-enabled status", s instanceof KeycloakStatusDTO);
-        KeycloakStatusDTO keycloakStatus = (KeycloakStatusDTO) s;
-        assertEquals("realm", keycloakStatus.getKeycloakRealm());
-        assertEquals("https://example.com/auth", keycloakStatus.getKeycloakAuthUrl());
-        assertEquals("resource", keycloakStatus.getKeycloakResource());
+        StatusDTO statusDTO = sr.status();
+        assertEquals("realm", statusDTO.getKeycloakRealm());
+        assertEquals("https://example.com/auth", statusDTO.getKeycloakAuthUrl());
+        assertEquals("resource", statusDTO.getKeycloakResource());
     }
 
     @Test
@@ -195,7 +191,9 @@ public class StatusResourceTest {
 
         StatusResource sr = this.createResource();
 
-        StatusDTO s = sr.status();
-        assertFalse("is a keycloak-enabled status", s instanceof KeycloakStatusDTO);
+        StatusDTO statusDTO = sr.status();
+        assertNull("keycloak realm is not null", statusDTO.getKeycloakRealm());
+        assertNull("keycloak auth URL is not null", statusDTO.getKeycloakAuthUrl());
+        assertNull("keycloak resource is not null", statusDTO.getKeycloakResource());
     }
 }
