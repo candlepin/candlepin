@@ -78,6 +78,7 @@ public class AnnotationLocator {
                 }
             }
         }
+
         for (Binding<?> binding : rootResourceBindings) {
             Class<?> clazz = (Class) binding.getKey().getTypeLiteral().getType();
             if (Proxy.isProxyClass(clazz)) {
@@ -91,6 +92,7 @@ public class AnnotationLocator {
                 registerConcreteMethods(resourceClass, clazz);
             }
         }
+
         lock();
     }
 
@@ -98,6 +100,7 @@ public class AnnotationLocator {
         for (ResourceMethod resourceMethod : resourceClass.getResourceMethods()) {
             registerConcreteMethod(resourceMethod.getMethod(), concreteClass);
         }
+
         for (ResourceLocator resourceMethod : resourceClass.getResourceLocators()) {
             registerConcreteMethod(resourceMethod.getMethod(), concreteClass);
         }
@@ -133,6 +136,7 @@ public class AnnotationLocator {
                 return annotation;
             }
         }
+
         return method.getAnnotation(annotationClass);
     }
 
@@ -160,6 +164,7 @@ public class AnnotationLocator {
                 }
             }
         }
+
         return annotations;
     }
 }
