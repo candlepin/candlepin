@@ -144,6 +144,7 @@ import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResolverUtil;
+import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.DateFormatter;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.ResourceLocatorMap;
@@ -278,6 +279,8 @@ public class CandlepinModule extends AbstractModule {
         bind(RuntimeExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
+        bind(AnnotationLocator.class).asEagerSingleton();
+
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRunnerProvider.class).asEagerSingleton();
         bind(JsRunner.class).toProvider(JsRunnerProvider.class);
