@@ -22,6 +22,8 @@ import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
@@ -79,6 +81,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
     private I18n i18n;
     private SubscriptionServiceAdapter subAdapter;
     private ComplianceRules complianceRules;
+    private Configuration config;
 
     private Provider<GuestMigration> migrationProvider;
     private GuestMigration testMigration;
@@ -101,6 +104,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         subAdapter = mock(SubscriptionServiceAdapter.class);
         complianceRules = mock(ComplianceRules.class);
         environmentCurator = mock(EnvironmentCurator.class);
+        config = mock(Configuration.class);
         when(owner.getId()).thenReturn("joe");
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
@@ -241,6 +245,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
         vcm.add(hypervisorId, hypervisor);
         when(consumerCurator.getHostConsumersMap(eq(owner),
             any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+        when(config.getBoolean(eq(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING))).thenReturn(true);
 
         hypervisorJson =
             "{\"hypervisors\":" +
@@ -248,7 +253,7 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
                 "\"name\" : \"hypervisor_999\"," +
                 "\"hypervisorId\" : {\"hypervisorId\":\"expectedHypervisorId\"}," +
                 "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]," +
-                "\"facts\" : {\"dmi.system.uuid\" : \"myUuid\"}" +
+                "\"facts\" : {\"" + Consumer.Facts.SYSTEM_UUID + "\" : \"myUuid\"}" +
                 "}]}";
 
         JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
@@ -265,6 +270,47 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
 
         Consumer argument = consumerCaptor.getValue();
         assertEquals("expectedhypervisorid", argument.getHypervisorId().getHypervisorId());
+    }
+
+    @Test
+    public void hypervisorMatchOnUuidTurnedOffTest() throws JobExecutionException {
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
+        Consumer hypervisor = new Consumer();
+        hypervisor.setName("hyper-name");
+        hypervisor.setOwner(owner);
+        hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
+        String hypervisorId = "existing_hypervisor_id";
+        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        VirtConsumerMap vcm = new VirtConsumerMap();
+        vcm.add(hypervisorId, hypervisor);
+        when(consumerCurator.getHostConsumersMap(eq(owner),
+            any(HypervisorUpdateJob.HypervisorList.class))).thenReturn(vcm);
+        when(config.getBoolean(eq(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING))).thenReturn(false);
+
+        hypervisorJson =
+            "{\"hypervisors\":" +
+                "[{" +
+                "\"name\" : \"hypervisor_999\"," +
+                "\"hypervisorId\" : {\"hypervisorId\":\"expectedHypervisorId\"}," +
+                "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]," +
+                "\"facts\" : {\"" + Consumer.Facts.SYSTEM_UUID + "\" : \"notMyUuid\"}" +
+                "}]}";
+
+        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator, consumerTypeCurator,
+            consumerResource, i18n, subAdapter, complianceRules, translator);
+        injector.injectMembers(job);
+        job.execute(ctx);
+
+        ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerCurator).update(consumerCaptor.capture(), eq(false));
+
+        Consumer argument = consumerCaptor.getValue();
+        assertEquals("existing_hypervisor_id", argument.getHypervisorId().getHypervisorId());
     }
 
     @Test
