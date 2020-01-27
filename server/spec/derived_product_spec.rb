@@ -74,7 +74,8 @@ describe 'Derived Products' do
     @derived_product_2 = create_product(nil, "derived product 2", {
       :attributes => {
           :cores => 2
-      }
+      },
+      :providedProducts => [@eng_product_2.id]
     })
 
     @main_pool = create_pool_and_subscription(@owner['key'], @datacenter_product.id,
@@ -112,7 +113,8 @@ describe 'Derived Products' do
         :sockets => "2",
         :host_limited => "true",
         'multi-entitlement' => "yes"
-      }
+      },
+      :providedProducts => [@eng_product.id]
     })
     create_pool_and_subscription(@owner['key'], instance_product.id, 10, [@eng_product['id']])
 

@@ -47,10 +47,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   end
 
   it 'should attach host provided pools before other available pools' do
-    @both_products = create_product(nil, nil, {
-        :attributes => {
-            :type => 'MKT'
-        }})
+
     datacenter_product_1 = create_product(nil, nil, {
         :attributes => {
             :virt_limit => "unlimited",
@@ -82,6 +79,12 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         }
     })
 
+    @both_products = create_product(nil, nil, {
+        :attributes => {
+            :type => 'MKT'
+        },
+        :providedProducts => [derived_product_1.id, derived_product_2.id]
+    })
     # We'd like there to be three subs, two that require a specific host and one that provides both required products
     # in one. These first two are similar to VDC subscriptions, hence the name datacenter.
     @cp.create_pool(@owner['key'], datacenter_product_1.id, {:quantity => 10, :derived_product_id => derived_product_1['id']})
@@ -417,7 +420,7 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   end
 
   it 'should not heal the host if the product is already compliant' do
-    @second_product = create_product
+    @second_product = create_product(nil, nil, :providedProducts => [@virt_limit_product.id])
     @cp.create_pool(@owner['key'],
       @second_product.id, {:quantity => 10, :provided_products => [@virt_limit_product.id]})
     @cp.refresh_pools(@owner['key'])

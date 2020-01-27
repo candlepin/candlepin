@@ -200,6 +200,7 @@ public class ComplianceRulesTest {
         for (Product pp : providedProducts) {
             ppset.add(pp);
         }
+        product.setProvidedProducts(ppset);
 
         Pool pool = new Pool(
             owner,
