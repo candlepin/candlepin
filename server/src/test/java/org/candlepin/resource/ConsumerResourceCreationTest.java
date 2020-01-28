@@ -158,6 +158,7 @@ public class ConsumerResourceCreationTest {
         migrationProvider = Providers.of(testMigration);
 
         this.config = initConfig();
+        config.setProperty(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING, "true");
         this.resource = new ConsumerResource(
             this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService, this.ownerService,
             null, this.idCertService, null, this.i18n, this.sink, null, null, this.userService, null,

@@ -1316,7 +1316,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorConsumerMapWithFacts() {
         String hypervisorId1 = "Hypervisor";
         Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer1.setFact("dmi.system.uuid", "blah");
+        consumer1.setFact(Consumer.Facts.SYSTEM_UUID, "blah");
         HypervisorId hypervisorId = new HypervisorId(hypervisorId1);
         hypervisorId.setOwner(owner);
         consumer1.setHypervisorId(hypervisorId);
@@ -1335,7 +1335,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         // first consumer set with only the fact, not the hypervisor
         String hypervisorId1 = "Hypervisor";
         Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer1.setFact("dmi.system.uuid", "blah");
+        consumer1.setFact(Consumer.Facts.SYSTEM_UUID, "blah");
         consumer1 = consumerCurator.create(consumer1);
 
         // next consumer set with the hypervisor, not the fact
