@@ -59,7 +59,6 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Locale;
-import java.util.Set;
 
 import javax.inject.Provider;
 
@@ -362,33 +361,6 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
             .thenReturn(1L);
 
         assertFalse(HypervisorUpdateJob.isSchedulable(jobCurator, newJob));
-    }
-
-    @Test
-    public void ensureJobFailsWhenAutobindDisabledForTargetOwner() throws Exception {
-        // Disabled autobind
-        when(owner.isAutobindDisabled()).thenReturn(true);
-        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
-
-        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
-        JobExecutionContext ctx = mock(JobExecutionContext.class);
-        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
-            .thenReturn(new VirtConsumerMap());
-
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            consumerTypeCurator, consumerResource, i18n, subAdapter, complianceRules, translator,
-            objectMapper);
-        injector.injectMembers(job);
-
-        try {
-            job.execute(ctx);
-            fail("Expected exception due to autobind being disabled.");
-        }
-        catch (JobExecutionException jee) {
-            assertEquals(jee.getCause().getMessage(),
-                "Could not update host/guest mapping. Auto-attach is disabled for owner joe.");
-        }
     }
 
 }
