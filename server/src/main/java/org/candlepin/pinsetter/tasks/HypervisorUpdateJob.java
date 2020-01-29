@@ -17,7 +17,6 @@ package org.candlepin.pinsetter.tasks;
 import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
@@ -148,16 +147,6 @@ public class HypervisorUpdateJob extends KingpinJob {
                 context.setResult("Nothing to do. Owner does not exist");
                 log.warn("Hypervisor update attempted against non-existent org id \"{}\"", ownerKey);
                 return;
-            }
-
-            if (owner.isAutobindDisabled() || owner.isContentAccessEnabled()) {
-                final String caMessage = owner.isContentAccessEnabled() ?
-                    " because of the content access mode setting" : "";
-                log.debug("Could not update host/guest mapping. Auto-Attach is disabled for owner {}{}",
-                    owner.getKey(), caMessage);
-                throw new BadRequestException(
-                    i18n.tr("Could not update host/guest mapping. Auto-attach is disabled for owner {0}{1}.",
-                        owner.getKey(), caMessage));
             }
 
             final HypervisorList hypervisors = parsedHypervisors(map);
