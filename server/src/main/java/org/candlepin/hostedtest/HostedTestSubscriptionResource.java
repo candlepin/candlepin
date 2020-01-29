@@ -35,6 +35,7 @@ import com.google.inject.persist.Transactional;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -97,13 +98,20 @@ public class HostedTestSubscriptionResource {
             throw new IllegalArgumentException("subscription is null");
         }
 
-        Map<String, ProductData> pmap = new HashMap<>();
+        Map<String, ProductData> pmap = new LinkedHashMap<>();
         Map<String, ContentData> cmap = new HashMap<>();
 
+        if (subscription.getProduct() != null && subscription.getProduct().getProvidedProducts() != null) {
+            this.addProductsToMap(subscription.getProduct().getProvidedProducts(), pmap);
+        }
+
+        if (subscription.getDerivedProduct() != null &&
+            subscription.getDerivedProduct().getProvidedProducts() != null) {
+            this.addProductsToMap(subscription.getDerivedProduct().getProvidedProducts(), pmap);
+        }
+
         this.addProductsToMap(subscription.getProduct(), pmap);
-        this.addProductsToMap(subscription.getProvidedProducts(), pmap);
         this.addProductsToMap(subscription.getDerivedProduct(), pmap);
-        this.addProductsToMap(subscription.getDerivedProvidedProducts(), pmap);
 
         for (ProductData product : pmap.values()) {
             this.addContentToMap(product.getProductContent(), cmap);

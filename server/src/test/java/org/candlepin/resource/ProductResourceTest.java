@@ -219,16 +219,18 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Product poolProd4 = this.createProduct(owner3);
         Product poolProd5 = this.createProduct(owner3);
 
-        Pool pool1 = this.poolCurator.create(TestUtil.createPool(
-            owner1, poolProd1, new HashSet(Arrays.asList(prod1)), 5));
-        Pool pool2 = this.poolCurator.create(TestUtil.createPool(
-            owner2, poolProd2, new HashSet(Arrays.asList(prod2)), 5));
-        Pool pool3 = this.poolCurator.create(TestUtil.createPool(
-            owner2, poolProd3, new HashSet(Arrays.asList(prod3)), 5));
-        Pool pool4 = this.poolCurator.create(TestUtil.createPool(
-            owner3, poolProd4, new HashSet(Arrays.asList(prod4)), 5));
-        Pool pool5 = this.poolCurator.create(TestUtil.createPool(
-            owner3, poolProd5, new HashSet(Arrays.asList(prod5)), 5));
+        // Set Provided Products
+        poolProd1.setProvidedProducts(Arrays.asList(prod1));
+        poolProd2.setProvidedProducts(Arrays.asList(prod2));
+        poolProd3.setProvidedProducts(Arrays.asList(prod3));
+        poolProd4.setProvidedProducts(Arrays.asList(prod4));
+        poolProd5.setProvidedProducts(Arrays.asList(prod5));
+
+        Pool pool1 = this.poolCurator.create(TestUtil.createPool(owner1, poolProd1, 5));
+        Pool pool2 = this.poolCurator.create(TestUtil.createPool(owner2, poolProd2, 5));
+        Pool pool3 = this.poolCurator.create(TestUtil.createPool(owner2, poolProd3, 5));
+        Pool pool4 = this.poolCurator.create(TestUtil.createPool(owner3, poolProd4, 5));
+        Pool pool5 = this.poolCurator.create(TestUtil.createPool(owner3, poolProd5, 5));
 
         return Arrays.asList(owner1, owner2, owner3);
     }
