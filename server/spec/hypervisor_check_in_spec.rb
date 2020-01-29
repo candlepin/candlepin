@@ -599,6 +599,13 @@ describe 'Hypervisor Resource', :type => :virt do
     end.should raise_exception(RestClient::BadRequest)
   end
 
+  it 'should raise bad request exception if invalid mapping input was provided - async' do
+    virtwho = create_virtwho_client(@user)
+    lambda do
+      virtwho.hypervisor_update(@owner['key'], 'test invalid input')
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
   it 'should see the capability that corresponds to the async method' do
     json = @cp.get_status()
     json['managerCapabilities'].should include("hypervisors_async")
@@ -1201,18 +1208,22 @@ describe 'Hypervisor Resource', :type => :virt do
         ],
         "facts" => {"test_fact" => "fact_value" }
     }
-    job_detail = send_host_guest_mapping(owner, user, report.to_json())
-    job_detail["state"].should == "FAILED"
+    virtwho = create_virtwho_client(@user)
+    lambda do
+      virtwho.hypervisor_update(@owner['key'], report.to_json())
+    end.should raise_exception(RestClient::BadRequest)
 
     # empty json
     report = {}
-    job_detail = send_host_guest_mapping(owner, user, report.to_json())
-    job_detail["state"].should == "FAILED"
+    lambda do
+      virtwho.hypervisor_update(@owner['key'], report.to_json())
+    end.should raise_exception(RestClient::BadRequest)
 
     # this is the correct version of an empy list of hypervisors
     report = {hypervisors:[]}
     job_detail = send_host_guest_mapping(owner, user, report.to_json())
     job_detail["state"].should == "FINISHED"
+
   end
 
   it 'will allow the hardware id to change while the hypervisor id stays constant' do
