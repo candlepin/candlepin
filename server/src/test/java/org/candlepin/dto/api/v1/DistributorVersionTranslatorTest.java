@@ -79,26 +79,20 @@ public class DistributorVersionTranslatorTest
             assertEquals(source.getName(), dest.getName());
             assertEquals(source.getDisplayName(), dest.getDisplayName());
 
-            if (childrenGenerated) {
-                for (DistributorVersionCapability dvcEntity : source.getCapabilities()) {
-                    boolean verified = false;
-                    for (DistributorVersionDTO.DistributorVersionCapabilityDTO dvcDTO :
-                        dest.getCapabilities()) {
+            for (DistributorVersionCapability dvcEntity : source.getCapabilities()) {
+                boolean verified = false;
+                for (DistributorVersionCapabilityDTO dvcDTO :
+                    dest.getCapabilities()) {
 
-                        assertNotNull(dvcDTO);
-                        assertNotNull(dvcDTO.getId());
+                    assertNotNull(dvcDTO);
+                    assertNotNull(dvcDTO.getId());
 
-                        if (dvcDTO.getId().equals(dvcEntity.getId())) {
-                            assertEquals(dvcDTO.getName(), dvcEntity.getName());
-                            verified = true;
-                        }
+                    if (dvcDTO.getId().equals(dvcEntity.getId())) {
+                        assertEquals(dvcDTO.getName(), dvcEntity.getName());
+                        verified = true;
                     }
-                    assertTrue(verified);
                 }
-
-            }
-            else {
-                assertNull(dest.getCapabilities());
+                assertTrue(verified);
             }
         }
         else {
