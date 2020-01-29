@@ -21,7 +21,6 @@ import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -116,12 +115,12 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
      * @throws IllegalArgumentException
      *  if pool is null
      */
-    public Subscription(Pool source, ProductCurator productCurator) {
+    public Subscription(Pool source) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
 
-        this.populate(source, productCurator);
+        this.populate(source);
     }
 
     public String toString() {
@@ -566,7 +565,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
      * @return
      *  a reference to this DTO
      */
-    public Subscription populate(Pool source, ProductCurator productCurator) {
+    public Subscription populate(Pool source) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
@@ -599,7 +598,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         );
 
         // Will work only if source is stored in the database and linked to provided products there!
-        Collection<Product> products = productCurator.getPoolProvidedProductsCached(source);
+        Collection<Product> products = source.getProduct().getProvidedProducts();
         if (products != null) {
             Collection<ProductData> pdata = new LinkedList<>();
 
@@ -613,19 +612,22 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
             this.setProvidedProducts(null);
         }
 
-        products = productCurator.getPoolDerivedProvidedProductsCached(source);
-        if (products != null) {
-            Collection<ProductData> pdata = new LinkedList<>();
+        if (source.getDerivedProduct() != null) {
+            products = source.getDerivedProduct().getProvidedProducts();
+            if (products != null) {
+                Collection<ProductData> pdata = new LinkedList<>();
 
-            for (Product product : products) {
-                pdata.add(product.toDTO());
+                for (Product product : products) {
+                    pdata.add(product.toDTO());
+                }
+
+                this.setDerivedProvidedProducts(pdata);
             }
+            else {
+                this.setDerivedProvidedProducts(null);
+            }
+        }
 
-            this.setDerivedProvidedProducts(pdata);
-        }
-        else {
-            this.setDerivedProvidedProducts(null);
-        }
 
         return this;
     }
