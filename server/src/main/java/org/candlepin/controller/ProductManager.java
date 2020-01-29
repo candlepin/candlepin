@@ -48,6 +48,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -282,6 +284,7 @@ public class ProductManager {
      * @return
      *  A mapping of Red Hat content ID to content entities representing the imported content
      */
+    @SuppressWarnings("checkstyle:methodlength")
     @Transactional
     @Traceable
     public ImportResult<Product> importProducts(@TraceableParam("owner") Owner owner,
@@ -305,6 +308,20 @@ public class ProductManager {
             return importResult;
         }
 
+        HashMap<String, ProductInfo> orderedProductMap = new LinkedHashMap<>();
+        HashMap<String, ProductInfo> productsWithProvidedProducts = new HashMap<>();
+
+        for (ProductInfo product : productData.values()) {
+            if (product.getProvidedProducts() == null) {
+                orderedProductMap.put(product.getId(), product);
+            }
+            else {
+                productsWithProvidedProducts.put(product.getId(), product);
+            }
+        }
+
+        orderedProductMap.putAll(productsWithProvidedProducts);
+
         Map<String, Product> skippedProducts = importResult.getSkippedEntities();
         Map<String, Product> createdProducts = importResult.getCreatedEntities();
         Map<String, Product> updatedProducts = importResult.getUpdatedEntities();
@@ -313,6 +330,7 @@ public class ProductManager {
         Map<String, Product> sourceProducts = new HashMap<>();
         Map<String, List<Product>> existingVersions = new HashMap<>();
         List<OwnerProduct> ownerProductBuffer = new LinkedList<>();
+        Map<String, Product> providedEntityMap = new HashMap<>();
 
         // - Divide imported products into sets of updates and creates
         log.debug("Fetching existing products for update...");
@@ -330,6 +348,17 @@ public class ProductManager {
 
             // Prevent this product from being changed by our API
             product.setLocked(true);
+
+            if (update.getProvidedProducts() == null) {
+                providedEntityMap.put(product.getId(), product);
+            }
+            else {
+                product.getProvidedProducts().clear();
+                for (ProductInfo pInfo : update.getProvidedProducts()) {
+                    Product providedProd = providedEntityMap.get(pInfo.getId());
+                    product.addProvidedProduct(providedProd);
+                }
+            }
 
             updatedProducts.put(product.getId(), product);
             productVersions.put(product.getId(), product.getEntityVersion());
@@ -350,6 +379,17 @@ public class ProductManager {
 
                 // Prevent this product from being changed by our API
                 product.setLocked(true);
+
+                if (update.getProvidedProducts() == null) {
+                    providedEntityMap.put(product.getId(), product);
+                }
+                else {
+                    product.getProvidedProducts().clear();
+                    for (ProductInfo pInfo : update.getProvidedProducts()) {
+                        Product providedProd = providedEntityMap.get(pInfo.getId());
+                        product.addProvidedProduct(providedProd);
+                    }
+                }
 
                 createdProducts.put(product.getId(), product);
                 productVersions.put(product.getId(), product.getEntityVersion());
@@ -426,12 +466,44 @@ public class ProductManager {
             stagedEntities.put(updated.getId(), updated);
         }
 
+        // Set the correct version and fully loaded object of provided product to product.
+        for (Map.Entry<String, Product> prod : stagedEntities.entrySet()) {
+            if (orderedProductMap.containsKey(prod.getValue().getId())) {
+                ProductInfo pInfo = orderedProductMap.get(prod.getValue().getId());
+                Product product = prod.getValue();
+
+                if (pInfo.getProvidedProducts() != null) {
+                    product.getProvidedProducts().clear();
+
+                    for (ProductInfo pp : pInfo.getProvidedProducts()) {
+                        Product providedProduct = null;
+
+                        if (createdProducts.get(pp.getId()) != null) {
+                            providedProduct = createdProducts.get(pp.getId());
+                        }
+
+                        if (skippedProducts.get(pp.getId()) != null) {
+                            providedProduct = skippedProducts.get(pp.getId());
+                        }
+
+                        if (updatedProducts.get(pp.getId()) != null) {
+                            providedProduct = updatedProducts.get(pp.getId());
+                        }
+
+                        if (providedProduct != null) {
+                            product.addProvidedProduct(providedProduct);
+                        }
+                    }
+                }
+            }
+        }
+
         // Persist our staged entities
         // We probably don't want to evict the products yet, as they'll appear as unmanaged if
         // they're used later. However, the join objects can be evicted safely since they're only
         // really used here.
         log.debug("Persisting product changes...");
-        this.productCurator.saveAll(stagedEntities.values(), true, false);
+        persistInOrder(stagedEntities.values());
         this.ownerProductCurator.saveAll(ownerProductBuffer, true, true);
 
         // Perform bulk reference update
@@ -446,6 +518,31 @@ public class ProductManager {
 
         // Return
         return importResult;
+    }
+
+    /**
+     * Method to persist the products in order set such that products with no provided products
+     * occurs before the products having provided products.
+     *
+     * @param products
+     *  A collection of products that needs to be persisted.
+     */
+    void persistInOrder(Collection<Product> products) {
+        HashSet<Product> orderedProducts = new LinkedHashSet<>();
+        HashSet<Product> productsWithProvidedProducts = new HashSet<>();
+
+        for (Product product : products) {
+            if (product.getProvidedProducts().size() == 0) {
+                orderedProducts.add(product);
+            }
+            else {
+                productsWithProvidedProducts.add(product);
+            }
+        }
+
+        orderedProducts.addAll(productsWithProvidedProducts);
+
+        this.productCurator.saveAll(orderedProducts, true, false);
     }
 
     /**
@@ -974,6 +1071,17 @@ public class ProductManager {
             Comparator<BrandingInfo> comparator = BrandingInfo.getBrandingInfoComparator();
             if (!Util.collectionsAreEqual((Collection) entity.getBranding(),
                 (Collection) update.getBranding(), comparator)) {
+                return true;
+            }
+        }
+
+        if (update.getProvidedProducts() != null) {
+            if (!Util.collectionsAreEqual(entity.getProvidedProducts().stream()
+                .map(Product::getId)
+                .collect(Collectors.toSet()),
+                update.getProvidedProducts().stream()
+                .map(ProductInfo::getId)
+                .collect(Collectors.toSet()))) {
                 return true;
             }
         }

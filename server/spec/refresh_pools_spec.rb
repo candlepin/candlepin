@@ -95,6 +95,45 @@ describe 'Refresh Pools' do
     expect(pools[0].providedProducts[0].productId).to eq(provided[2].id)
   end
 
+  it 'detects changes in provided products with products hierarchy' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    provided = []
+
+    3.times do |i|
+      provided << create_upstream_product(random_string("provided-#{i}"))
+    end
+    product = create_upstream_product(random_string('test_prod'), :providedProducts => provided[0..1])
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, product.id, {
+        :provided_products => provided[0..1]
+    })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+
+    expect(pools.length).to eq(1)
+    expect(pools[0].providedProducts.length).to eq(2)
+
+    provided_ids = provided[0..1].collect { |p| p.id }
+    pools[0].providedProducts.each do |p|
+      expect(provided_ids).to include(p.productId)
+      provided_ids.delete(p.productId)
+    end
+
+    # Remove the old provided products and add a new one...
+    sub.providedProducts = [provided[2]]
+    update_upstream_product(product.id, :provided_products => provided[2])
+    update_upstream_subscription(sub.id, sub)
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+
+    expect(pools.length).to eq(1)
+    expect(pools[0].providedProducts.length).to eq(1)
+    expect(pools[0].providedProducts[0].productId).to eq(provided[2].id)
+  end
+
   it 'detects changes in branding' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)
