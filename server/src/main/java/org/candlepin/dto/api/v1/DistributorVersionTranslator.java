@@ -15,19 +15,22 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
+import org.candlepin.util.Util;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The DistributorVersionTranslator provides translation from DistributorVersion model objects
  * to DistributorVersionDTOs as used by the API.
  */
 public class DistributorVersionTranslator
-    extends TimestampedEntityTranslator<DistributorVersion, DistributorVersionDTO> {
+    implements ObjectTranslator<DistributorVersion, DistributorVersionDTO> {
 
     /**
      * {@inheritDoc}
@@ -60,28 +63,38 @@ public class DistributorVersionTranslator
     public DistributorVersionDTO populate(ModelTranslator modelTranslator, DistributorVersion source,
         DistributorVersionDTO dest) {
 
-        dest = super.populate(modelTranslator, source, dest);
-
-        dest.setId(source.getId());
-        dest.setName(source.getName());
-        dest.setDisplayName(source.getDisplayName());
-
-        if (modelTranslator != null) {
-
-            Set<DistributorVersionCapability> capabilities = source.getCapabilities();
-            if (capabilities != null && !capabilities.isEmpty()) {
-                for (DistributorVersionCapability capability : capabilities) {
-                    if (capability != null) {
-                        dest.addCapability(new DistributorVersionDTO.DistributorVersionCapabilityDTO(
-                            capability.getId(), capability.getName()));
-                    }
-                }
-            }
-            else {
-                dest.setCapabilities(Collections.emptySet());
-            }
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
         }
 
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
+
+        dest.id(source.getId())
+            .name(source.getName())
+            .displayName(source.getDisplayName())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .capabilities(toDto(source.getCapabilities()));
+
         return dest;
+    }
+
+    private Set<DistributorVersionCapabilityDTO> toDto(Set<DistributorVersionCapability> capabilities) {
+        if (capabilities == null || capabilities.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return capabilities.stream()
+            .filter(Objects::nonNull)
+            .map(this::toCapabilityDto)
+            .collect(Collectors.toSet());
+    }
+
+    private DistributorVersionCapabilityDTO toCapabilityDto(DistributorVersionCapability source) {
+        DistributorVersionCapabilityDTO result = new DistributorVersionCapabilityDTO();
+        result.id(source.getId());
+        result.name(source.getName());
+        return result;
     }
 }
