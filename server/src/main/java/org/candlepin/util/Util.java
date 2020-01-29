@@ -40,6 +40,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
@@ -534,5 +536,15 @@ public class Util {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Translates a given date into an OffsetDateTime with UTC timezone.
+     *
+     * @return
+     *  OffsetDateTime or null if the given date is null
+     */
+    public static OffsetDateTime toDateTime(Date date) {
+        return date != null ? date.toInstant().atOffset(ZoneOffset.UTC) : null;
     }
 }

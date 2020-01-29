@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
@@ -22,54 +21,36 @@ import org.candlepin.dto.api.v1.DistributorVersionDTO;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.resource.validation.DTOValidator;
 
 import com.google.inject.Inject;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
 
 import org.apache.commons.lang.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 
 /**
  * DistributorVersionResource
  */
-@Path("/distributor_versions")
-@Api(value = "distributor_versions", authorizations = { @Authorization("basic") })
-public class DistributorVersionResource {
+public class DistributorVersionResource implements DistributorVersionsApi {
 
-    private I18n i18n;
-    private DistributorVersionCurator curator;
-    private ModelTranslator translator;
+    private final I18n i18n;
+    private final DistributorVersionCurator curator;
+    private final ModelTranslator translator;
+    private final DTOValidator validator;
 
     @Inject
     public DistributorVersionResource(I18n i18n, DistributorVersionCurator curator,
-        ModelTranslator translator) {
-
-        this.i18n = i18n;
-        this.curator = curator;
-        this.translator = translator;
+        ModelTranslator translator, DTOValidator validator) {
+        this.i18n = Objects.requireNonNull(i18n);
+        this.curator = Objects.requireNonNull(curator);
+        this.translator = Objects.requireNonNull(translator);
+        this.validator = Objects.requireNonNull(validator);
     }
 
     /**
@@ -116,15 +97,8 @@ public class DistributorVersionResource {
 
     }
 
-    @ApiOperation(notes = "Retrieves list of Distributor Versions", value = "getVersions",
-        response = DistributorVersionDTO.class, responseContainer = "List")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Stream<DistributorVersionDTO> getVersions(
-        @QueryParam("name_search") String nameSearch,
-        @QueryParam("capability") String capability,
-        @Context Principal principal) {
-
+    @Override
+    public Stream<DistributorVersionDTO> getVersions(String nameSearch, String capability) {
         List<DistributorVersion> versions;
         if (!StringUtils.isBlank(nameSearch)) {
             versions = curator.findByNameSearch(nameSearch);
@@ -140,27 +114,18 @@ public class DistributorVersionResource {
             this.translator.getStreamMapper(DistributorVersion.class, DistributorVersionDTO.class));
     }
 
-    @ApiOperation(notes = "Deletes a Distributor Version", value = "delete")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @DELETE
-    @Produces(MediaType.WILDCARD)
-    @Path("/{id}")
-    public void delete(@PathParam("id") String id,
-        @Context Principal principal) {
+    @Override
+    public void delete(String id) {
         DistributorVersion dv = curator.findById(id);
         if (dv != null) {
             curator.delete(dv);
         }
     }
 
-    @ApiOperation(notes = "Creates a Distributor Version", value = "create",
-        response = DistributorVersionDTO.class)
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public DistributorVersionDTO create(
-        @ApiParam(name = "distributorVersion", required = true) DistributorVersionDTO dto,
-        @Context Principal principal) {
+    @Override
+    public DistributorVersionDTO create(DistributorVersionDTO dto) {
+        this.validator.validateConstraints(dto);
+        this.validator.validateCollectionElementsNotNull(dto::getCapabilities);
         DistributorVersion existing = curator.findByName(dto.getName());
         if (existing != null) {
             throw new BadRequestException(
@@ -172,15 +137,11 @@ public class DistributorVersionResource {
         return this.translator.translate(curator.create(toCreate), DistributorVersionDTO.class);
     }
 
-    @ApiOperation(notes = "Updates a Distributor Version", value = "update",
-        response = DistributorVersionDTO.class)
-    @PUT
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{id}")
-    public DistributorVersionDTO update(@PathParam("id") String id,
-        @ApiParam(name = "distributorVersion", required = true) DistributorVersionDTO dto,
-        @Context Principal principal) {
+    @Override
+    public DistributorVersionDTO update(String id, DistributorVersionDTO dto) {
+        this.validator.validateConstraints(dto);
+        this.validator.validateCollectionElementsNotNull(dto::getCapabilities);
+
         DistributorVersion existing = verifyAndLookupDistributorVersion(id);
         existing.setDisplayName(dto.getDisplayName());
         existing.setCapabilities(dto.getCapabilities()
