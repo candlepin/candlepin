@@ -267,6 +267,8 @@ public class AutobindRulesTest {
             engProduct.addContent(content, true);
         }
 
+        mktProduct.addProvidedProduct(engProduct);
+
         Pool pool = TestUtil.createPool(owner, mktProduct);
         pool.setId("DEAD-BEEFX");
 

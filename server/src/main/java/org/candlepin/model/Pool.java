@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
@@ -1046,27 +1045,23 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * (the ProductManager).
      *
      *
-     * @param productCurator
      */
-    public void populateAllTransientProvidedProducts(ProductCurator productCurator) {
+    public void populateAllTransientProvidedProducts() {
         // If we've already populated this field, assume it's correctly populated
         if (this.providedProductDtos == null) {
-            Collection<Product> products = Hibernate.isInitialized(this.providedProducts) ?
-                this.providedProducts :
-                productCurator.getPoolProvidedProductsCached(this.getId());
+            Collection<Product> providedProducts = this.product.getProvidedProducts();
 
             this.providedProductDtos = new HashSet<>();
 
-            for (Product product : products) {
+            for (Product product : providedProducts) {
                 this.providedProductDtos.add(new ProvidedProduct(product));
             }
         }
 
         // If we've already populated this field, assume it's correctly populated
         if (this.derivedProvidedProductDtos == null) {
-            Collection<Product> products = Hibernate.isInitialized(this.derivedProvidedProducts) ?
-                this.derivedProvidedProducts :
-                productCurator.getPoolDerivedProvidedProductsCached(this.getId());
+            Collection<Product> products = this.derivedProduct != null ?
+                this.derivedProduct.getProvidedProducts() : Collections.emptySet();
 
             this.derivedProvidedProductDtos = new HashSet<>();
 

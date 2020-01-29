@@ -363,8 +363,8 @@ public class EntitlementCertificateGenerator {
                     entsToRegen.add(entitlement);
                     continue entLoop;
                 }
-                Set<Product> providedProducts = productCurator
-                    .getPoolProvidedProductsCached(entitlement.getPool().getId());
+                Collection<Product> providedProducts = entitlement.getPool().getProduct()
+                    .getProvidedProducts();
                 for (Product provided : providedProducts) {
                     if (provided.hasContent(contentId)) {
                         entsToRegen.add(entitlement);

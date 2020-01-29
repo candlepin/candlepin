@@ -193,6 +193,10 @@ public class EntitlementCertificateGeneratorTest {
         Product pprod2 = TestUtil.createProduct();
         Product pprod3 = TestUtil.createProduct();
 
+        prod1.setProvidedProducts(Collections.singleton(pprod1));
+        prod2.setProvidedProducts(Collections.singleton(pprod2));
+        prod3.setProvidedProducts(Collections.singleton(pprod3));
+
         prod1.addContent(c1, true);
         pprod2.addContent(c2, true);
         prod3.addContent(c3, true);
