@@ -156,9 +156,8 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        204:
           description: ''
-          content: {}
         404:
           description: A consumer type could not be found using the provided ID
           content:
@@ -206,6 +205,142 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
         default:
           $ref: '#/components/responses/default'
+
+  /distributor_versions:
+    get:
+      tags:
+        - DistributorVersions
+      description: Retrieves a list of Distributor Versions
+      operationId: getVersions
+      x-java-response-container-type: java.util.stream.Stream
+      security: []
+      parameters:
+        - name: name_search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: capability
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/definitions/DistributorVersionDTO'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+    post:
+      tags:
+        - DistributorVersions
+      description: Creates a Distributor Version
+      operationId: create
+      security: []
+      requestBody:
+        description: A new distributor version to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistributorVersionDTO'
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistributorVersionDTO'
+        400:
+          description: A distributor version already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+  /distributor_versions/{id}:
+    put:
+      tags:
+        - DistributorVersions
+      description: Updates a Distributor Version
+      operationId: update
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The fields and updated values to apply to the specified distributor version
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DistributorVersionDTO'
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DistributorVersionDTO'
+        404:
+          description: A distibutor version could not be found using the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+    delete:
+      tags:
+        - DistributorVersions
+      description: Deletes a Distributor Version
+      operationId: delete
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: A successful operation
+        404:
+          description: Distributor version could not be found using the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
 
   /serials:
     get:
@@ -307,6 +442,60 @@ components:
           type: string
         href:
           type: string
+
+    AsyncJobStatusDTO:
+      description: DTO representing an async job status
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+              example: "ff808081554a3e4101554a3e9033005d"
+            key:
+              type: string
+              example: "RefreshPoolsJob"
+            name:
+              type: string
+              example: "refresh pools job"
+            group:
+              type: string
+              example: "refresh"
+            origin:
+              type: string
+              example: "candlepin.myhost.com"
+            executor:
+              type: string
+              example: "candlepin.myhost.com"
+            principal:
+              type: string
+              example: "admin"
+            state:
+              type: string
+              example: "RUNNING"
+            previousState:
+              type: string
+              example: "QUEUED"
+            startTime:
+              type: string
+              format: date-time
+              example: "2019-05-08 09:42:37.000"
+            endTime:
+              type: string
+              format: date-time
+              example: "2019-05-08 09:42:37.000"
+            attempts:
+              type: integer
+              example: "1"
+            maxAttempts:
+              type: integer
+              example: "3"
+            statusPath:
+              type: string
+              example: "/jobs/ff808081554a3e4101554a3e9033005d"
+            resultData:
+              type: object
+              example: "Refresh completed successfully!"
 
     ActivationKeyDTO:
       description: A token that allows registration without username/password and sets subscription and content related properties at registration.
@@ -412,14 +601,14 @@ components:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
           properties:
-           id:
-             type: string
-           key:
-             type: string
-           cert:
-             type: string
-           serial:
-             $ref: '#/components/schemas/CertificateSerialDTO'
+            id:
+              type: string
+            key:
+              type: string
+            cert:
+              type: string
+            serial:
+              $ref: '#/components/schemas/CertificateSerialDTO'
 
     ConsumerTypeDTO:
       description: Represents a consumer type used to differentiate various types of consumers
@@ -469,60 +658,6 @@ components:
             certificate:
               $ref: '#/components/schemas/CertificateDTO'
 
-    AsyncJobStatusDTO:
-      description: DTO representing an async job status
-      allOf:
-        - $ref: '#/components/schemas/TimestampedEntity'
-        - type: object
-          properties:
-            id:
-              type: string
-              example: "ff808081554a3e4101554a3e9033005d"
-            key:
-              type: string
-              example: "RefreshPoolsJob"
-            name:
-              type: string
-              example: "refresh pools job"
-            group:
-              type: string
-              example: "refresh"
-            origin:
-              type: string
-              example: "candlepin.myhost.com"
-            executor:
-              type: string
-              example: "candlepin.myhost.com"
-            principal:
-              type: string
-              example: "admin"
-            state:
-              type: string
-              example: "RUNNING"
-            previousState:
-              type: string
-              example: "QUEUED"
-            startTime:
-              type: string
-              format: date-time
-              example: "2019-05-08 09:42:37.000"
-            endTime:
-              type: string
-              format: date-time
-              example: "2019-05-08 09:42:37.000"
-            attempts:
-              type: integer
-              example: "1"
-            maxAttempts:
-              type: integer
-              example: "3"
-            statusPath:
-              type: string
-              example: "/jobs/ff808081554a3e4101554a3e9033005d"
-            resultData:
-              type: object
-              example: "Refresh completed successfully!"
-
     DeletedConsumerDTO:
       description: Represents a deleted consumer
       allOf:
@@ -540,6 +675,36 @@ components:
               type: string
             principalName:
               type: string
+
+    DistributorVersionDTO:
+      description: A DTO representation of the DistributorVersion
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            displayName:
+              type: string
+            capabilities:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/definitions/DistributorVersionCapabilityDTO'
+
+    DistributorVersionCapabilityDTO:
+      description: A DTO representation of the DistributorVersionCapability
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          minLength: 1
 
     GuestIdDTO:
       description: Represents a guest ID running on a virt host consumer
