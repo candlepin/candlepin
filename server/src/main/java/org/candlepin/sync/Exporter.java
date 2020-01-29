@@ -485,10 +485,6 @@ public class Exporter {
         for (Entitlement entitlement : consumer.getEntitlements()) {
             Pool pool = entitlement.getPool();
 
-            for (Product providedProduct : productCurator.getPoolProvidedProductsCached(pool)) {
-                products.put(providedProduct.getId(), providedProduct);
-            }
-
             // Don't forget the 'main' product!
             Product product = pool.getProduct();
             products.put(product.getId(), product);
@@ -500,10 +496,6 @@ public class Exporter {
             if (derivedProduct != null) {
                 products.put(derivedProduct.getId(), derivedProduct);
                 addProvidedProducts(derivedProduct.getProvidedProducts(), products);
-            }
-            for (Product derivedProvidedProduct : productCurator
-                .getPoolDerivedProvidedProductsCached(pool)) {
-                products.put(derivedProvidedProduct.getId(), derivedProvidedProduct);
             }
         }
 

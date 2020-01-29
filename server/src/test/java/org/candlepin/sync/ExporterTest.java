@@ -231,18 +231,16 @@ public class ExporterTest {
         Set<Product> ppset = new HashSet<>();
         ppset.add(prod);
 
+        prod1.setProvidedProducts(ppset);
+
         Set<Product> sppSet = new HashSet<>();
         sppSet.add(subProvidedProduct);
 
+        subProduct.setProvidedProducts(sppSet);
+
         when(pool.getId()).thenReturn("MockedPoolId");
-        when(pool.getProvidedProducts()).thenReturn(ppset);
-        when(pc.getPoolProvidedProductsCached(pool)).thenReturn(ppset);
         when(pool.getProduct()).thenReturn(prod1);
-
-        when(pool.getDerivedProvidedProducts()).thenReturn(sppSet);
-        when(pc.getPoolDerivedProvidedProductsCached(pool)).thenReturn(sppSet);
         when(pool.getDerivedProduct()).thenReturn(subProduct);
-
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
         when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
