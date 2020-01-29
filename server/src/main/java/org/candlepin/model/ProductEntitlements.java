@@ -34,7 +34,7 @@ public class ProductEntitlements {
     public ProductEntitlements(Collection<Entitlement> entitlements, ProductCurator productCurator) {
         for (Entitlement ent : entitlements) {
             addProductIdToMap(ent.getPool().getProductId(), ent);
-            for (Product pp : productCurator.getPoolProvidedProductsCached(ent.getPool())) {
+            for (Product pp : ent.getPool().getProduct().getProvidedProducts()) {
                 addProductIdToMap(pp.getId(), ent);
             }
         }
