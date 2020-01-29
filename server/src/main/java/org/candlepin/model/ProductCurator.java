@@ -126,7 +126,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     public Set<String> getPoolProvidedProductUuids(String poolId) {
         TypedQuery<String> query = getEntityManager().createQuery(
-            "SELECT product.uuid FROM Pool p INNER JOIN p.providedProducts product where p.id = :poolid",
+            "SELECT product.uuid FROM Pool p INNER JOIN p.product.providedProducts product " +
+            "where p.id = :poolid",
             String.class);
         query.setParameter("poolid", poolId);
         return new HashSet<>(query.getResultList());
@@ -140,7 +141,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     public Set<String> getDerivedPoolProvidedProductUuids(String poolId) {
         TypedQuery<String> query = getEntityManager().createQuery(
-            "SELECT product.uuid FROM Pool p INNER JOIN p.derivedProvidedProducts product " +
+            "SELECT product.uuid FROM Pool p INNER JOIN p.derivedProduct.providedProducts product " +
             "WHERE p.id = :poolid",
             String.class);
         query.setParameter("poolid", poolId);
@@ -250,9 +251,14 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             }
 
             String ppSql =
-                "SELECT pool_id, product_uuid FROM cp2_pool_provided_products WHERE pool_id IN (:poolIds)";
+                "SELECT po.id, pp.provided_product_uuid FROM cp2_product_provided_products pp " +
+                "JOIN cp_pool po on po.product_uuid = pp.product_uuid " +
+                "WHERE po.id IN (:poolIds)";
+
             String dpSql =
-                "SELECT pool_id, product_uuid FROM cp2_pool_derprov_products WHERE pool_id IN (:poolIds)";
+                "SELECT po.id, pp.provided_product_uuid FROM cp2_product_provided_products pp " +
+                "JOIN cp_pool po on po.derived_product_uuid = pp.product_uuid " +
+                "WHERE po.id IN (:poolIds)";
 
             Query ppUuidQuery = entityManager.createNativeQuery(ppSql);
             Query dpUuidQuery = entityManager.createNativeQuery(dpSql);
@@ -300,8 +306,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                     derivedProvidedProducts.add(allProducts.get(uuid));
                 }
 
-                pool.setProvidedProducts(providedProducts);
-                pool.setDerivedProvidedProducts(derivedProvidedProducts);
+                pool.getProduct().setProvidedProducts(providedProducts);
+
+                if (pool.getDerivedProduct() != null) {
+                    pool.getDerivedProduct().setProvidedProducts(derivedProvidedProducts);
+                }
             }
         }
 
@@ -398,9 +407,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  true if the product is linked to one or more subscriptions; false otherwise.
      */
     public boolean productHasSubscriptions(Owner owner, Product product) {
-        return ((Long) currentSession().createCriteria(Pool.class)
-            .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
-            .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
+        return ((Long) currentSession().createCriteria(Pool.class, "Pool")
+            .createAlias("Pool.product", "Product")
+            .createAlias("Pool.derivedProduct", "DProduct")
+            .createAlias("Product.providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
+            .createAlias("DProduct.providedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.or(
                 Restrictions.eq("product.uuid", product.getUuid()),

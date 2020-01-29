@@ -96,11 +96,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Set<Product> providedProducts = new HashSet<>(Arrays.asList(providedProduct));
         Set<Product> derivedProvidedProducts = new HashSet<>(Arrays.asList(derivedProvidedProduct));
+        product.setProvidedProducts(providedProducts);
+        derivedProduct.setProvidedProducts(derivedProvidedProducts);
 
         pool = new Pool(
             owner,
             product,
-            providedProducts,
+            new HashSet<>(),
             16L,
             TestUtil.createDate(2015, 10, 21),
             TestUtil.createDate(2025, 1, 1),
@@ -108,9 +110,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             "2",
             "3"
         );
-
         pool.setDerivedProduct(derivedProduct);
-        pool.setDerivedProvidedProducts(derivedProvidedProducts);
         poolCurator.create(pool);
 
         consumer = this.createMockConsumer(owner, false);
@@ -595,12 +595,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testFuzzyProductMatchingWithoutSubscription() {
         Product product = this.createProduct(owner);
-        Product parent = this.createProduct(owner);
+        Product parentProduct = TestUtil.createProduct("productId", "testProductName");
+        parentProduct.setProvidedProducts(Arrays.asList(product));
+        Product parent = this.createProduct(parentProduct, owner);
 
-        Set<Product> providedProducts = new HashSet<>();
-        providedProducts.add(product);
-
-        Pool p = TestUtil.createPool(owner, parent, providedProducts, 5);
+        Pool p = TestUtil.createPool(owner, parent, 5);
         poolCurator.create(p);
 
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
@@ -610,14 +609,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testPoolProducts() {
         Product another = this.createProduct(owner);
-
-        Set<Product> providedProducts = new HashSet<>();
-        providedProducts.add(another);
-
-        Pool pool = TestUtil.createPool(owner, product, providedProducts, 5);
+        Pool pool = TestUtil.createPool(owner, product, 5);
         poolCurator.create(pool);
         pool = poolCurator.get(pool.getId());
-        assertTrue(pool.getProvidedProducts().size() > 0);
+        assertNotNull(pool.getProduct());
+        assertTrue(pool.getProduct().getProvidedProducts().size() > 0);
     }
 
     // Note:  This simply tests that the multiplier is read and used in pool creation.
@@ -627,7 +623,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Product product = new Product("someProduct", "An Extremely Great Product", 10L);
         product = this.createProduct(product, owner);
 
-        Subscription sub = TestUtil.createSubscription(owner, product, new HashSet<>());
+        Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(16L);
         sub.setStartDate(TestUtil.createDate(2006, 10, 21));
@@ -1328,7 +1324,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void confirmBonusPoolDeleted() {
-        Subscription sub = TestUtil.createSubscription(owner, product, new HashSet<>());
+        Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(16L);
         sub.setStartDate(TestUtil.createDate(2006, 10, 21));
@@ -1549,15 +1545,21 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         this.ownerCurator.create(owner1);
         this.ownerCurator.create(owner2);
 
-        Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "p1"));
-        p1.setDerivedProduct(this.generateProduct(owner1, "dp1", "dp1"));
-        p1.setProvidedProducts(this.generateProductCollection(owner1, "pp-a-", 3));
-        p1.setDerivedProvidedProducts(this.generateProductCollection(owner1, "dpp-a-", 3));
+        Product product1 = this.generateProduct(owner1, "p1", "p1");
+        product1.setProvidedProducts(this.generateProductCollection(owner1, "pp-a-", 3));
+        Product dproduct1 = this.generateProduct(owner1, "dp1", "dp1");
+        dproduct1.setProvidedProducts(this.generateProductCollection(owner1, "dpp-a-", 3));
 
-        Pool p2 = TestUtil.createPool(owner2, this.generateProduct(owner2, "p2", "p2"));
-        p2.setDerivedProduct(this.generateProduct(owner2, "dp2", "dp2"));
-        p2.setProvidedProducts(this.generateProductCollection(owner2, "pp-b-", 3));
-        p2.setDerivedProvidedProducts(this.generateProductCollection(owner2, "dpp-b-", 3));
+        Pool p1 = TestUtil.createPool(owner1, product1);
+        p1.setDerivedProduct(dproduct1);
+
+        Product product2 = this.generateProduct(owner2, "p2", "p2");
+        product2.setProvidedProducts(this.generateProductCollection(owner2, "pp-b-", 3));
+        Product dProduct2 = this.generateProduct(owner2, "dp2", "dp2");
+        dProduct2.setProvidedProducts(this.generateProductCollection(owner2, "dpp-b-", 3));
+
+        Pool p2 = TestUtil.createPool(owner2, product2);
+        p2.setDerivedProduct(dProduct2);
 
         this.poolCurator.create(p1);
         this.poolCurator.create(p2);
@@ -1940,16 +1942,16 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testMarkCertificatesDirtyForPoolsWithProvidedProduct() {
         Consumer consumer = this.createConsumer(owner);
-
-        Product parent = TestUtil.createProduct();
-        productCurator.create(parent);
-
         Set<Product> providedProducts = new HashSet<>();
         Product providedProduct = new Product(product.getId(), "Test Provided Product");
         providedProducts.add(providedProduct);
         productCurator.create(providedProduct);
 
-        Pool pool = TestUtil.createPool(owner, parent, providedProducts, 5);
+        Product parent = TestUtil.createProduct();
+        parent.setProvidedProducts(providedProducts);
+        productCurator.create(parent);
+
+        Pool pool = TestUtil.createPool(owner, parent, 5);
         poolCurator.create(pool);
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);

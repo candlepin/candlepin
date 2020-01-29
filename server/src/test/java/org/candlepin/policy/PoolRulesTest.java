@@ -51,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -132,18 +131,18 @@ public class PoolRulesTest {
         Product product1 = TestUtil.createProduct();
         Product product2 = TestUtil.createProduct();
         Product product3 = TestUtil.createProduct();
-        p.getProvidedProducts().add(product1);
-        p.getProvidedProducts().add(product2);
+        p.getProduct().addProvidedProduct(product1);
+        p.getProduct().addProvidedProduct(product2);
 
         // Setup a pool with a single (different) provided product:
         Pool p1 = TestUtil.clone(p);
-        p1.getProvidedProducts().clear();
-        p1.getProvidedProducts().add(product3);
+        p1.getProduct().getProvidedProducts().clear();
+        p1.getProduct().addProvidedProduct(product3);
 
         List<Pool> existingPools = new LinkedList<>();
         existingPools.add(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.<String, Product>emptyMap());
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         assertTrue(update.getProductsChanged());
@@ -289,20 +288,20 @@ public class PoolRulesTest {
         Product product1 = TestUtil.createProduct();
         Product product2 = TestUtil.createProduct();
         Product product3 = TestUtil.createProduct();
-        p.getDerivedProvidedProducts().add(product1);
-        p.getDerivedProvidedProducts().add(product2);
+        p.getDerivedProduct().addProvidedProduct(product1);
+        p.getDerivedProduct().addProvidedProduct(product2);
 
         // Setup a pool with a single (different) provided product:
         Pool p1 = TestUtil.clone(p);
-        p1.getProvidedProducts().clear();
-        p1.getProvidedProducts().add(product3);
+        p1.getDerivedProduct().getProvidedProducts().clear();
+        p1.getDerivedProduct().addProvidedProduct(product3);
 
         List<Pool> existingPools = Arrays.asList(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.<String, Product>emptyMap());
+            TestUtil.stubChangedProducts(p.getDerivedProduct()));
 
         assertEquals(1, updates.size());
-        assertEquals(2, updates.get(0).getPool().getDerivedProvidedProducts().size());
+        assertEquals(2, updates.get(0).getPool().getDerivedProduct().getProvidedProducts().size());
     }
 
     private Pool createVirtLimitPool(String productId, int quantity, int virtLimit) {
@@ -493,16 +492,16 @@ public class PoolRulesTest {
             .thenReturn(derivedProvidedProd2);
 
         p.setId("mockPoolRuleTestID");
-        p.getProvidedProducts().add(provided1);
-        p.getProvidedProducts().add(provided2);
+        p.getProduct().addProvidedProduct(provided1);
+        p.getProduct().addProvidedProduct(provided2);
         p.setDerivedProduct(derivedProd);
-        p.getDerivedProvidedProducts().add(derivedProvidedProd1);
-        p.getDerivedProvidedProducts().add(derivedProvidedProd2);
+        p.getDerivedProduct().addProvidedProduct(derivedProvidedProd1);
+        p.getDerivedProduct().addProvidedProduct(derivedProvidedProd2);
 
         when(productCurator.getPoolProvidedProductsCached(p))
-            .thenReturn(p.getProvidedProducts());
+            .thenReturn((Set<Product>) p.getProduct().getProvidedProducts());
         when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn(p.getDerivedProvidedProducts());
+            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:
@@ -510,9 +509,11 @@ public class PoolRulesTest {
 
         Pool physicalPool = pools.get(0);
         assertEquals(0, physicalPool.getAttributes().size());
-        assertProvidedProducts(p.getProvidedProducts(), physicalPool.getProvidedProducts());
-        assertProvidedProducts(p.getDerivedProvidedProducts(),
-            physicalPool.getDerivedProvidedProducts());
+        assertProvidedProducts((Set<Product>) p.getProduct().getProvidedProducts(),
+            (Set<Product>) physicalPool.getProduct().getProvidedProducts());
+
+        assertProvidedProducts((Set<Product>) p.getDerivedProduct().getProvidedProducts(),
+            (Set<Product>) physicalPool.getDerivedProduct().getProvidedProducts());
 
         Pool unmappedVirtPool = pools.get(1);
         assert ("true".equals(unmappedVirtPool.getAttributeValue(Product.Attributes.VIRT_ONLY)));
@@ -520,9 +521,9 @@ public class PoolRulesTest {
 
         // The derived provided products of the sub should be promoted to provided products
         // on the unmappedVirtPool
-        assertProvidedProducts(p.getDerivedProvidedProducts(), unmappedVirtPool.getProvidedProducts());
-        assertProvidedProducts(new HashSet<>(), unmappedVirtPool.getDerivedProvidedProducts());
-
+        assertProvidedProducts((Set<Product>) p.getDerivedProduct().getProvidedProducts(),
+            (Set<Product>) unmappedVirtPool.getProduct().getProvidedProducts());
+        assertNull(unmappedVirtPool.getDerivedProduct());
         // Test for BZ 1204311 - Refreshing pools should not change unmapped guest pools
         // Refresh is a no-op in multiorg
         // List<PoolUpdate> updates = poolRules.updatePools(s, pools);
@@ -538,7 +539,7 @@ public class PoolRulesTest {
         when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         p.setId("mockVirtLimitSubCreateDerived");
         when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn(p.getDerivedProvidedProducts());
+            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:
@@ -551,10 +552,11 @@ public class PoolRulesTest {
         Pool unmappedVirtPool = pools.get(1);
         assert ("true".equals(unmappedVirtPool.getAttributeValue(Product.Attributes.VIRT_ONLY)));
         assert ("true".equals(unmappedVirtPool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY)));
-        assertEquals("derivedProd", unmappedVirtPool.getProductId());
 
-        assertProvidedProductsForSub(s.getDerivedProvidedProducts(), unmappedVirtPool.getProvidedProducts());
-        assertProvidedProducts(new HashSet<>(), unmappedVirtPool.getDerivedProvidedProducts());
+        assertEquals("derivedProd", unmappedVirtPool.getProductId());
+        assertProvidedProductsForSub((Set<ProductData>) s.getDerivedProvidedProducts(),
+            (Set<Product>) unmappedVirtPool.getProduct().getProvidedProducts());
+        assertNull(unmappedVirtPool.getDerivedProduct());
         assertTrue(unmappedVirtPool.getProduct().hasAttribute(DERIVED_ATTR));
     }
 
@@ -618,15 +620,13 @@ public class PoolRulesTest {
         when(ownerProdCuratorMock.getProductById(owner, derivedProvided2.getId()))
             .thenReturn(derivedProvided2);
 
+        product.setProvidedProducts(Arrays.asList(provided1, provided2));
+        derivedProd.setProvidedProducts(Arrays.asList(derivedProvided1, derivedProvided2));
 
         Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
         s.setDerivedProduct(derivedProd.toDTO());
 
-        Set<ProductData> derivedProds = new HashSet<>();
-        derivedProds.add(derivedProvided1.toDTO());
-        derivedProds.add(derivedProvided2.toDTO());
-        s.setDerivedProvidedProducts(derivedProds);
         return s;
     }
 

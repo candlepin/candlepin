@@ -150,12 +150,14 @@ public class SystemPurposeComplianceRules {
 
             Set<Product> entitlementProducts = new HashSet<>();
 
-            if (entitlementPool.getProvidedProducts() != null) {
-                entitlementProducts.addAll(entitlementPool.getProvidedProducts());
+            if (entitlementPool.getProduct() != null &&
+                entitlementPool.getProduct().getProvidedProducts() != null) {
+                entitlementProducts.addAll(entitlementPool.getProduct().getProvidedProducts());
             }
 
-            if (entitlementPool.getDerivedProvidedProducts() != null) {
-                entitlementProducts.addAll(entitlementPool.getDerivedProvidedProducts());
+            if (entitlementPool.getDerivedProduct() != null &&
+                entitlementPool.getDerivedProduct().getProvidedProducts() != null) {
+                entitlementProducts.addAll(entitlementPool.getDerivedProduct().getProvidedProducts());
             }
 
             entitlementProducts.add(entitlementPool.getProduct());

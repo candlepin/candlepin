@@ -474,7 +474,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         if (values != null && !values.isEmpty()) {
             if (!joinedProvided) {
-                criteria.createAlias("Pool.providedProducts", "Provided", JoinType.LEFT_OUTER_JOIN);
+                criteria.createAlias("Pool.product.providedProducts", "Provided", JoinType.LEFT_OUTER_JOIN);
                 joinedProvided = true;
             }
 
@@ -497,7 +497,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             if (values != null && !values.isEmpty()) {
                 if (!joinedProvided) {
                     // This was an inner join -- might end up being important later
-                    criteria.createAlias("Pool.providedProducts", "Provided", JoinType.LEFT_OUTER_JOIN);
+                    criteria.createAlias("Pool.product.providedProducts", "Provided",
+                        JoinType.LEFT_OUTER_JOIN);
                     joinedProvided = true;
                 }
 
@@ -1437,14 +1438,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         query = this.currentSession().createQuery(
             "SELECT DISTINCT PP.id " +
-            "FROM Pool P INNER JOIN P.providedProducts AS PP " +
+            "FROM Pool P INNER JOIN P.product.providedProducts AS PP " +
             "WHERE NULLIF(PP.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
 
         query = this.currentSession().createQuery(
             "SELECT DISTINCT DPP.id " +
-            "FROM Pool P INNER JOIN P.derivedProvidedProducts AS DPP " +
+            "FROM Pool P INNER JOIN P.derivedProduct.providedProducts AS DPP " +
             "WHERE NULLIF(DPP.id, '') IS NOT NULL"
         );
         result.addAll(query.list());
@@ -1490,7 +1491,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         query = this.currentSession().createQuery(
             "SELECT DISTINCT PP.id " +
-            "FROM Pool P INNER JOIN P.providedProducts AS PP " +
+            "FROM Pool P INNER JOIN P.product.providedProducts AS PP " +
             "WHERE NULLIF(PP.id, '') IS NOT NULL " +
             "AND P.owner = :owner"
         );
@@ -1499,7 +1500,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         query = this.currentSession().createQuery(
             "SELECT DISTINCT DPP.id " +
-            "FROM Pool P INNER JOIN P.derivedProvidedProducts AS DPP " +
+            "FROM Pool P INNER JOIN P.derivedProduct.providedProducts AS DPP " +
             "WHERE NULLIF(DPP.id, '') IS NOT NULL " +
             "AND P.owner = :owner"
         );
@@ -1604,7 +1605,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Collection<String> productIds) {
 
         String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
-            "(select p.id from Pool p join p.providedProducts pp where pp.id in :productIds)" +
+            "(select p.id from Pool p join p.product.providedProducts pp where pp.id in :productIds)" +
             "and e.owner = :owner";
         Query query = currentSession().createQuery(statement);
         query.setParameter("owner", owner);
@@ -1617,7 +1618,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *
      * Figures out if the pool with poolId provides a product providedProductId.
      * 'provides' means that the product is either Pool product or is linked through
-     * cp2_pool_provided_products table
+     * cp2_provided_products table
+     *
      * @param pool
      * @param providedProductId
      * @return True if and only if providedProductId is provided product or pool product
@@ -1625,7 +1627,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public Boolean provides(Pool pool, String providedProductId) {
         TypedQuery<Long> query = getEntityManager().createQuery(
             "SELECT count(product.uuid) FROM Pool p " +
-            "LEFT JOIN p.providedProducts pproduct " +
+            "LEFT JOIN p.product.providedProducts pproduct " +
             "LEFT JOIN p.product product " +
             "WHERE p.id = :poolid and (pproduct.id = :providedProductId OR product.id = :providedProductId)",
             Long.class);
@@ -1649,7 +1651,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (pool.getDerivedProduct() != null) {
             TypedQuery<Long> query = getEntityManager().createQuery(
                 "SELECT count(product.uuid) FROM Pool p " +
-                "LEFT JOIN p.derivedProvidedProducts pproduct " +
+                "LEFT JOIN p.derivedProduct.providedProducts pproduct " +
                 "LEFT JOIN p.derivedProduct product " + "WHERE p.id = :poolid and " +
                 "(pproduct.id = :providedProductId OR product.id = :providedProductId)",
                 Long.class);

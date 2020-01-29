@@ -25,6 +25,7 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -63,19 +64,17 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
 
         Product searchProduct = TestUtil.createProduct("awesomeos-server", "Awesome OS Server Premium");
         searchProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "CustomSupportLevel");
+
+        Product provided1 = TestUtil.createProduct("101111", "Server Bits");
+        provided1.addContent(content, true);
+        provided1 = this.createProduct(provided1, owner);
+        Product provided2 = this.createProduct("202222", "Containers In This One", owner);
+        searchProduct.setProvidedProducts(Arrays.asList(provided1, provided2));
+
         searchProduct = this.createProduct(searchProduct, owner);
 
         Pool searchPool = createPool(owner, searchProduct, 100L, TestUtil.createDate(2005, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-
-        Product provided = TestUtil.createProduct("101111", "Server Bits");
-        provided.addContent(content, true);
-        provided = this.createProduct(provided, owner);
-
-        searchPool.addProvidedProduct(provided);
-
-        provided = this.createProduct("202222", "Containers In This One", owner);
-        searchPool.addProvidedProduct(provided);
 
         searchPool.setContractNumber("mycontract");
         searchPool.setOrderNumber("myorder");
@@ -84,13 +83,13 @@ public class PoolCuratorFilterTest extends DatabaseTestFixture {
         poolCurator.create(searchPool);
 
         // Create another we don't intend to see in the results:
-        Product hideProduct = this.createProduct("hidden-product", "Not-So-Awesome OS Home Edition", owner);
+        Product hProduct = TestUtil.createProduct("hidden-product", "Not-So-Awesome OS Home Edition");
+        Product provided = this.createProduct("101", "Workstation Bits", owner);
+        hProduct.setProvidedProducts(Arrays.asList(provided));
+        Product hideProduct = this.createProduct(hProduct, owner);
+
         hidePool = createPool(owner, hideProduct, 100L, TestUtil.createDate(2005, 3, 2),
             TestUtil.createDate(2050, 3, 2));
-
-        provided = this.createProduct("101", "Workstation Bits", owner);
-        hidePool.addProvidedProduct(provided);
-        poolCurator.create(hidePool);
 
         return searchPool;
     }

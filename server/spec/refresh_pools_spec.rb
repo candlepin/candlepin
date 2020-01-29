@@ -49,7 +49,7 @@ describe 'Refresh Pools' do
     # Create 6 subscriptions to different products
     6.times do |i|
       product = create_upstream_product(random_string("product-#{i}"))
-      create_upstream_subscription(random_string("sub-#{i}"), owner['key'], product.id)
+      create_upstream_subscription(random_string("sub-#{i}"), owner['key'], {:product => product})
     end
 
     @cp.refresh_pools(owner['key'])
@@ -60,17 +60,56 @@ describe 'Refresh Pools' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)
 
-    product = create_upstream_product(random_string('test_prod'))
     provided = []
 
     3.times do |i|
       provided << create_upstream_product(random_string("provided-#{i}"))
     end
 
-    sub = create_upstream_subscription(random_string('test_sub'), owner_key, product.id, {
-      :provided_products => provided[0..1]
+    product = create_upstream_product(random_string('test_prod'), :providedProducts => provided[0..1])
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, {
+      :product => product
     })
 
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+    expect(pools[0].providedProducts.length).to eq(2)
+
+    provided_ids = provided[0..1].collect { |p| p.id }
+    pools[0].providedProducts.each do |p|
+      expect(provided_ids).to include(p.productId)
+      provided_ids.delete(p.productId)
+    end
+
+    # Remove the old provided products and add a new one...
+    product.providedProducts = [provided[2]]
+    update_upstream_product(product.id, :provided_products => provided[2])
+    update_upstream_subscription(sub.id, {
+        :product => product
+    })
+
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+    expect(pools[0].providedProducts.length).to eq(1)
+    expect(pools[0].providedProducts[0].productId).to eq(provided[2].id)
+  end
+
+  it 'detects changes in provided products with products hierarchy' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    provided = []
+
+    3.times do |i|
+      provided << create_upstream_product(random_string("provided-#{i}"))
+    end
+    product = create_upstream_product(random_string('test_prod'), :providedProducts => provided[0..1])
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, {
+        :product => product
+    })
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
 
@@ -84,8 +123,11 @@ describe 'Refresh Pools' do
     end
 
     # Remove the old provided products and add a new one...
-    sub.providedProducts = [provided[2]]
-    update_upstream_subscription(sub.id, sub)
+    update_upstream_product(product.id, :provided_products => provided[2])
+    product.providedProducts = [provided[2]]
+    update_upstream_subscription(sub.id, {
+        :product => product
+    })
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -105,7 +147,7 @@ describe 'Refresh Pools' do
       :type => 'type2', :name => 'branding2'}
     product = create_upstream_product(random_string('test_prod'), { :branding => [b1] })
 
-    sub = create_upstream_subscription(random_string('test_sub'), owner_key, product.id)
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, {:product => product})
 
     @cp.refresh_pools(owner_key)
 
@@ -145,7 +187,8 @@ describe 'Refresh Pools' do
     owner = create_owner(owner_key)
 
     product = create_upstream_product(random_string('test_prod'))
-    sub = create_upstream_subscription(random_string('test_sub'), owner_key, product.id, { :quantity => 500 })
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, { :quantity => 500,
+      :product => product })
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -179,7 +222,7 @@ describe 'Refresh Pools' do
 
     product1 = create_upstream_product(random_string('test_prod1'))
     product2 = create_upstream_product(random_string('test_prod2'))
-    sub = create_upstream_subscription(random_string('test_sub'), owner_key, product1.id)
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, {:product => product1})
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -201,6 +244,7 @@ describe 'Refresh Pools' do
     update_upstream_subscription(sub.id, {
       :product => { :id => product2.id }
     })
+
     @cp.refresh_pools(owner_key)
 
     consumer = @cp.get_consumer(consumer.uuid)
@@ -230,21 +274,20 @@ describe 'Refresh Pools' do
       }
     })
 
+    derived_eng_product = create_upstream_product(random_string(nil, true))
     derived_product = create_upstream_product(random_string('derived_prod'), {
       :attributes => {
         :cores => 2,
         :sockets=>4
-      }
+      }, :providedProducts => [derived_eng_product]
     })
-
-    derived_eng_product = create_upstream_product(random_string(nil, true))
 
     eng_product = create_upstream_product(random_string('eng_prod'))
 
-    sub = create_upstream_subscription(random_string('dc_sub'), owner_key, datacenter_product.id, {
+    sub = create_upstream_subscription(random_string('dc_sub'), owner_key, {
       :quantity => 10,
       :derived_product => derived_product,
-      :derived_provided_products => [derived_eng_product]
+      :product => datacenter_product
     })
 
     @cp.refresh_pools(owner_key)
@@ -260,8 +303,8 @@ describe 'Refresh Pools' do
     expect(pools.first.derivedProvidedProducts.length).to eq(1)
 
     update_upstream_subscription(sub.id, {
-      :derived_product => nil,
-      :derived_provided_products => []
+        :product => datacenter_product,
+        :derived_product => nil
     })
 
     @cp.refresh_pools(owner_key)
@@ -285,7 +328,7 @@ describe 'Refresh Pools' do
     owner2 = create_owner(owner_key2)
 
     product = create_upstream_product(random_string('test_prod'))
-    sub = create_upstream_subscription(random_string('test_sub'), owner_key1, product.id)
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key1, {:product=>product})
 
     @cp.refresh_pools(owner_key1)
     @cp.refresh_pools(owner_key2)
@@ -296,7 +339,7 @@ describe 'Refresh Pools' do
     expect(pools2.length).to eq(0)
 
     # Update sub to be owned by the second owner
-    update_upstream_subscription(sub.id, { :owner => { :key => owner_key2 }})
+    update_upstream_subscription(sub.id, {:owner => { :key => owner_key2 }, :product => product})
 
     @cp.refresh_pools(owner_key1)
     @cp.refresh_pools(owner_key2)
@@ -314,7 +357,7 @@ describe 'Refresh Pools' do
     owner2 = create_owner(owner_key2)
 
     product = create_upstream_product(random_string('test_prod'))
-    sub = create_upstream_subscription(random_string('test_sub'), owner_key1, product.id)
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key1, {:product => product})
 
     @cp.refresh_pools(owner_key1)
     @cp.refresh_pools(owner_key2)
@@ -325,7 +368,7 @@ describe 'Refresh Pools' do
     expect(pools2.length).to eq(0)
 
     # Update sub to be owned by the second owner
-    update_upstream_subscription(sub.id, { :owner => { :key => owner_key2 }})
+    update_upstream_subscription(sub.id, { :owner => { :key => owner_key2 }, :product => product})
 
     @cp.refresh_pools(owner_key2)
 
@@ -346,8 +389,9 @@ describe 'Refresh Pools' do
       }
     })
 
-    sub = create_upstream_subscription(random_string('multient_sub'), owner_key, product.id, {
-      :quantity => 2
+    sub = create_upstream_subscription(random_string('multient_sub'), owner_key, {
+      :quantity => 2,
+      :product => product
     })
 
     user = user_client(owner, random_string('test_user'))
@@ -366,16 +410,16 @@ describe 'Refresh Pools' do
     expect(consumer.entitlementCount).to eq(2)
 
     # Add a new attribute to the product
-    update_upstream_product(product.id, {
+    product = update_upstream_product(product.id, {
       :attributes => {
         'new_attrib' => 'new value',
         'multi-entitlement' => 'yes'
       }
     })
-
     # ...and reduce the quantity available on the subscription
     update_upstream_subscription(sub.id, {
-      :quantity => 1
+      :quantity => 1,
+      :product => product
     })
 
     # Refresh pools for this org
@@ -415,7 +459,7 @@ describe 'Refresh Pools' do
     add_content_to_product_upstream(product_id, content_id)
 
     sub_id = random_string('test_subscription')
-    create_upstream_subscription(sub_id, owner_key, product_id)
+    create_upstream_subscription(sub_id, owner_key, {:product => product})
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -474,7 +518,7 @@ describe 'Refresh Pools' do
     add_content_to_product_upstream(product_id, content_id)
 
     sub_id = random_string('test_subscription')
-    create_upstream_subscription(sub_id, owner_key, product_id)
+    create_upstream_subscription(sub_id, owner_key, {:product => product})
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -524,11 +568,6 @@ describe 'Refresh Pools' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)
 
-    sku_id1 = random_string('required_prod', true)
-    sku_id2 = random_string('dependent_prod', true)
-    sku_prod1 = create_upstream_product(sku_id1)
-    sku_prod2 = create_upstream_product(sku_id2)
-
     eng_id1 = random_string(nil, true)
     eng_id2 = random_string(nil, true)
     eng_prod1 = create_upstream_product(eng_id1)
@@ -547,11 +586,14 @@ describe 'Refresh Pools' do
     add_content_to_product_upstream(eng_id2, content_id2)
     add_content_to_product_upstream(eng_id2, content_id3)
 
+    sku_id1 = random_string('required_prod', true)
+    sku_id2 = random_string('dependent_prod', true)
+    sku_prod1 = create_upstream_product(sku_id1, {:providedProducts => [eng_prod1]})
+    sku_prod2 = create_upstream_product(sku_id2, {:providedProducts => [eng_prod2]} )
     sub_id1 = random_string('test_subscription_1')
-    sub1 = create_upstream_subscription(sub_id1, owner_key, sku_id1, { :provided_products => [eng_prod1] })
-
+    sub1 = create_upstream_subscription(sub_id1, owner_key, {:product => sku_prod1})
     sub_id2 = random_string('test_subscription_2')
-    sub2 = create_upstream_subscription(sub_id2, owner_key, sku_id2, { :provided_products => [eng_prod2] })
+    sub2 = create_upstream_subscription(sub_id2, owner_key, {:product => sku_prod2 })
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -690,7 +732,7 @@ describe 'Refresh Pools' do
       :type => 'type1', :name => 'branding1'}
     product = create_upstream_product(random_string('test_prod'), { :branding => [b1] })
 
-    sub = create_upstream_subscription(random_string('test_sub'), owner_key, product.id)
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, {:product => product})
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -752,7 +794,7 @@ describe 'Refresh Pools' do
     add_content_to_product_upstream(product_id, content_id)
 
     sub_id = random_string('test_subscription')
-    create_upstream_subscription(sub_id, owner_key, product_id, {:quantity => 5})
+    create_upstream_subscription(sub_id, owner_key, {:quantity => 5, :product => product})
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -782,7 +824,7 @@ describe 'Refresh Pools' do
     expect(entitlements.length).to eq(5)
 
     # Modify the subscription upstream
-    update_upstream_subscription(sub_id, {:quantity => 1})
+    update_upstream_subscription(sub_id, {:quantity => 1, :product => product})
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -807,7 +849,7 @@ describe 'Refresh Pools' do
     add_content_to_product_upstream(product_id, content_id)
 
     sub_id = random_string('test_subscription')
-    create_upstream_subscription(sub_id, owner_key, product_id, {:quantity => 5})
+    create_upstream_subscription(sub_id, owner_key, {:quantity => 5, :product => product})
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -844,7 +886,7 @@ describe 'Refresh Pools' do
     expect(entitlements.length).to eq(5)
 
     # Modify the subscription upstream
-    update_upstream_subscription(sub_id, {:quantity => 1})
+    update_upstream_subscription(sub_id, {:quantity => 1, :product => product})
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -876,7 +918,7 @@ describe 'Refresh Pools' do
     add_content_to_product_upstream(product_id, content_id)
 
     sub_id = random_string('test_subscription')
-    create_upstream_subscription(sub_id, owner_key, product_id, {:quantity => 1})
+    create_upstream_subscription(sub_id, owner_key, {:quantity => 1, :product => product})
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -942,6 +984,68 @@ describe 'Refresh Pools' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)
 
+    prov_product = create_upstream_product(random_string(nil, true), {
+        :name => random_string('prov_prod', true),
+        :attributes => {
+            :version => '6.4',
+            :arch => 'i386, x86_64',
+            :sockets => 4,
+            :cores => 8,
+            :ram => 16,
+            :warning_period => 15,
+            :management_enabled => true,
+            :stacking_id => '8888',
+            :virt_only => 'false',
+            :support_level => 'standard',
+            :support_type => 'excellent'
+        }
+    })
+
+    der_prov_product = create_upstream_product(random_string(nil, true), {
+        :name => random_string('der_prov_prod', true),
+        :attributes => {
+            :version => '6.4',
+            :arch => 'i386, x86_64',
+            :sockets => 4,
+            :cores => 8,
+            :ram => 16,
+            :warning_period => 15,
+            :management_enabled => true,
+            :stacking_id => '8888',
+            :virt_only => 'false',
+            :support_level => 'standard',
+            :support_type => 'excellent'
+        }
+    })
+
+    content_id1 = random_string('test_content_1')
+    content1 = create_upstream_content(content_id1, {
+        :gpg_url => 'gpg_url',
+        :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+        :metadata_expire => 6400,
+        :required_tags => 'TAG1,TAG2'
+    })
+
+    content_id2 = random_string('test_content_2')
+    content2 = create_upstream_content(content_id2, {
+        :gpg_url => 'gpg_url',
+        :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+        :metadata_expire => 6400,
+        :required_tags => 'TAG1,TAG2'
+    })
+
+    content_id3 = random_string('test_content_3')
+    content3 = create_upstream_content(content_id3, {
+        :gpg_url => 'gpg_url',
+        :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+        :metadata_expire => 6400,
+        :required_tags => 'TAG1,TAG2'
+    })
+
+
+    add_content_to_product_upstream(prov_product.id, content_id2, false)
+    add_content_to_product_upstream(der_prov_product.id, content_id3, false)
+
     product = create_upstream_product(random_string(nil, true), {
       :name => random_string('prod', true),
       :attributes => {
@@ -958,88 +1062,27 @@ describe 'Refresh Pools' do
         :virt_only => 'false',
         :support_level => 'standard',
         :support_type => 'excellent'
-      }
+      }, :providedProducts => [prov_product]
     })
 
-    prov_product = create_upstream_product(random_string(nil, true), {
-      :name => random_string('prov_prod', true),
-      :attributes => {
-        :version => '6.4',
-        :arch => 'i386, x86_64',
-        :sockets => 4,
-        :cores => 8,
-        :ram => 16,
-        :warning_period => 15,
-        :management_enabled => true,
-        :stacking_id => '8888',
-        :virt_only => 'false',
-        :support_level => 'standard',
-        :support_type => 'excellent'
-      }
-    })
+    add_content_to_product_upstream(product.id, content_id1, false)
 
     der_product = create_upstream_product(random_string(nil, true), {
       :name => random_string('der_prod', true),
       :attributes => {
         :cores => 2,
         :sockets => 4
-      }
+      }, :providedProducts => [der_prov_product]
     })
-
-    der_prov_product = create_upstream_product(random_string(nil, true), {
-      :name => random_string('der_prov_prod', true),
-      :attributes => {
-        :version => '6.4',
-        :arch => 'i386, x86_64',
-        :sockets => 4,
-        :cores => 8,
-        :ram => 16,
-        :warning_period => 15,
-        :management_enabled => true,
-        :stacking_id => '8888',
-        :virt_only => 'false',
-        :support_level => 'standard',
-        :support_type => 'excellent'
-      }
-    })
-
-    content_id1 = random_string('test_content_1')
-    content1 = create_upstream_content(content_id1, {
-      :gpg_url => 'gpg_url',
-      :content_url => '/content/dist/rhel/$releasever/$basearch/os',
-      :metadata_expire => 6400,
-      :required_tags => 'TAG1,TAG2'
-    })
-
-    content_id2 = random_string('test_content_2')
-    content2 = create_upstream_content(content_id2, {
-      :gpg_url => 'gpg_url',
-      :content_url => '/content/dist/rhel/$releasever/$basearch/os',
-      :metadata_expire => 6400,
-      :required_tags => 'TAG1,TAG2'
-    })
-
-    content_id3 = random_string('test_content_3')
-    content3 = create_upstream_content(content_id3, {
-      :gpg_url => 'gpg_url',
-      :content_url => '/content/dist/rhel/$releasever/$basearch/os',
-      :metadata_expire => 6400,
-      :required_tags => 'TAG1,TAG2'
-    })
-
-    add_content_to_product_upstream(product.id, content_id1, false)
-    add_content_to_product_upstream(prov_product.id, content_id2, false)
-    add_content_to_product_upstream(der_prov_product.id, content_id3, false)
 
     sub_id = random_string('test_subscription_1')
-    sub = create_upstream_subscription(sub_id, owner_key, product.id, {
+    sub = create_upstream_subscription(sub_id, owner_key, {
       :quantity => 10,
       :contract_number => '12345',
       :account_number => '6789',
       :order_number => 'order1',
-      :provided_products => [prov_product],
+      :product => product,
       :derived_product => der_product,
-      :derived_provided_products => [der_prov_product]
     })
 
     @cp.refresh_pools(owner_key)
@@ -1164,7 +1207,7 @@ describe 'Refresh Pools' do
 
       add_content_to_product_upstream(prov_product.id, content_id)
 
-      subscription['providedProducts'].push(prov_product)
+      subscription['product']['providedProducts'].push(prov_product)
 
       subscription
     }
@@ -1175,7 +1218,7 @@ describe 'Refresh Pools' do
 
   it 'regenerates entitlements when provided product is removed' do
     json_body, main_product = test_entitlement_regeneration { |owner, subscription|
-      subscription['providedProducts'] = []
+      subscription['product']['providedProducts'] = []
       subscription
     }
 

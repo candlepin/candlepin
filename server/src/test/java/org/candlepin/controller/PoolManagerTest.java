@@ -689,11 +689,10 @@ public class PoolManagerTest {
         Product subProduct = TestUtil.createProduct();
         Product subProvidedProduct = TestUtil.createProduct();
 
+        subProduct.setProvidedProducts(Arrays.asList(subProvidedProduct));
+
         Subscription sub = TestUtil.createSubscription(owner, product);
         sub.setDerivedProduct(subProduct.toDTO());
-        Set<ProductData> subProvided = new HashSet<>();
-        subProvided.add(subProvidedProduct.toDTO());
-        sub.setDerivedProvidedProducts(subProvided);
 
         this.mockProducts(owner, product, subProduct, subProvidedProduct);
 
@@ -703,7 +702,31 @@ public class PoolManagerTest {
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
-        assertEquals(1, resultPool.getDerivedProvidedProducts().size());
+        assertEquals(1, resultPool.getDerivedProduct().getProvidedProducts().size());
+    }
+
+    @Test
+    public void providedProductsCopiedWhenCreatingPools() {
+        Product product = TestUtil.createProduct();
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        Product p1 = TestUtil.createProduct();
+        Product p2 = TestUtil.createProduct();
+
+        product.addProvidedProduct(p1);
+        product.addProvidedProduct(p2);
+
+        this.mockProducts(owner, product);
+
+        PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
+            mockOwnerProductCurator, mockProductCurator);
+        List<Pool> pools = pRules.createAndEnrichPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertEquals(2, resultPool.getProduct().getProvidedProducts().size());
+        assertTrue(resultPool.getProduct().getProvidedProducts().contains(p1));
+        assertTrue(resultPool.getProduct().getProvidedProducts().contains(p2));
     }
 
     @Test

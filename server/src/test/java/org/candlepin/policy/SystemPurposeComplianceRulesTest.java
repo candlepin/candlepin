@@ -88,13 +88,12 @@ public class SystemPurposeComplianceRulesTest {
 
     private Entitlement mockEntitlement(Consumer consumer, Product product, Date start, Date end,
         Product ... providedProducts) {
-
-        Set<Product> ppset = new HashSet<>(Arrays.asList(providedProducts));
+        product.setProvidedProducts(Arrays.asList(providedProducts));
 
         Pool pool = new Pool(
             owner,
             product,
-            ppset,
+            new HashSet<>(),
             1000L,
             start,
             end,

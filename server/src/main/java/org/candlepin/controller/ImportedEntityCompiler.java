@@ -103,8 +103,6 @@ public class ImportedEntityCompiler {
                 // Add any products attached to this subscription...
                 this.addProducts(subscription.getProduct());
                 this.addProducts(subscription.getDerivedProduct());
-                this.addProducts(subscription.getProvidedProducts());
-                this.addProducts(subscription.getDerivedProvidedProducts());
             }
         }
     }
@@ -161,6 +159,10 @@ public class ImportedEntityCompiler {
 
                 // Add any content attached to this product...
                 this.addProductContent(product.getProductContent());
+
+                if (product.getProvidedProducts() != null) {
+                    addProducts(product.getProvidedProducts());
+                }
             }
         }
     }
