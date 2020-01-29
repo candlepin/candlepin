@@ -57,6 +57,7 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -157,30 +158,27 @@ public class SubscriptionReconcilerTest {
         Product product = convertFromDTO(sub.getProduct());
         Product derivedProduct = convertFromDTO(sub.getDerivedProduct());
 
-        List<Product> providedProducts = new LinkedList<>();
         if (sub.getProvidedProducts() != null) {
             for (ProductDTO pdata : sub.getProvidedProducts()) {
                 if (pdata != null) {
-                    providedProducts.add(convertFromDTO(pdata));
+                    product.addProvidedProduct(convertFromDTO(pdata));
                 }
             }
         }
 
-        List<Product> derivedProvidedProducts = new LinkedList<>();
         if (sub.getDerivedProvidedProducts() != null) {
             for (ProductDTO pdata : sub.getDerivedProvidedProducts()) {
                 if (pdata != null) {
-                    derivedProvidedProducts.add(convertFromDTO(pdata));
+                    derivedProduct.addProvidedProduct(convertFromDTO(pdata));
                 }
             }
         }
 
-        Pool pool = new Pool(this.owner, product, providedProducts, sub.getQuantity(),
+        Pool pool = new Pool(this.owner, product, new HashSet<>(), sub.getQuantity(),
             sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
             sub.getOrderNumber());
 
         pool.setDerivedProduct(derivedProduct);
-        pool.setDerivedProvidedProducts(derivedProvidedProducts);
 
         if (sub.getId() != null) {
             pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));

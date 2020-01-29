@@ -15,15 +15,10 @@
 package org.candlepin.policy.js.pool;
 
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
 
 
 /**
@@ -38,19 +33,12 @@ public class StackedSubPoolValueAccumulator {
     private Entitlement eldestWithVirtLimit;
     private Date startDate;
     private Date endDate;
-    private Set<Product> expectedProvidedProds = new HashSet<>();
-    private ProductCurator productCurator;
 
-    public StackedSubPoolValueAccumulator(Pool stackedSubPool, Collection<Entitlement> stackedEnts,
-        ProductCurator productCurator) {
-
-        this.productCurator = productCurator;
+    public StackedSubPoolValueAccumulator(Collection<Entitlement> stackedEnts) {
         for (Entitlement nextStacked : stackedEnts) {
-            Pool nextStackedPool = nextStacked.getPool();
             updateEldest(nextStacked);
             accumulateDateRange(nextStacked);
             updateEldestWithVirtLimit(nextStacked);
-            accumulateProvidedProducts(stackedSubPool, nextStackedPool);
         }
     }
 
@@ -92,7 +80,7 @@ public class StackedSubPoolValueAccumulator {
      * Check if the entitlement is the eldest with a specified virt limit.
      *
      * @param nextStacked the entitlement to check.
-     * @param nextStackedPool
+     * @param nextStacked
      */
     private void updateEldestWithVirtLimit(Entitlement nextStacked) {
         // Keep track of the eldest with virt limit so that we can change the
@@ -104,30 +92,6 @@ public class StackedSubPoolValueAccumulator {
             if (eldestWithVirtLimit == null ||
                 createdDate.before(eldestWithVirtLimit.getCreated())) {
                 eldestWithVirtLimit = nextStacked;
-            }
-        }
-    }
-
-    /**
-     * Add the provided products from the specified entitlement to the
-     * collection of ProvidedProducts for the stack.
-     *
-     * @param stackedSubPool
-     * @param nextStackedPool
-     */
-    private void accumulateProvidedProducts(Pool stackedSubPool, Pool nextStackedPool) {
-        Product product = nextStackedPool.getDerivedProduct() != null ?
-            nextStackedPool.getDerivedProduct() :
-            nextStackedPool.getProduct();
-
-        if (nextStackedPool.getDerivedProduct() == null) {
-            for (Product provided : productCurator.getPoolProvidedProductsCached(nextStackedPool)) {
-                this.expectedProvidedProds.add(provided);
-            }
-        }
-        else {
-            for (Product provided : productCurator.getPoolDerivedProvidedProductsCached(nextStackedPool)) {
-                this.expectedProvidedProds.add(provided);
             }
         }
     }
@@ -146,10 +110,6 @@ public class StackedSubPoolValueAccumulator {
 
     public Date getEndDate() {
         return endDate;
-    }
-
-    public Set<Product> getExpectedProvidedProds() {
-        return expectedProvidedProds;
     }
 
 }

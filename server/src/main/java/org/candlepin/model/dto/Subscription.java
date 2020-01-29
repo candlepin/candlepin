@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -78,11 +77,10 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         // Intentionally left empty
     }
 
-    public Subscription(Owner ownerIn, ProductData productIn, Set<ProductData> providedProducts,
-        Long maxMembersIn, Date startDateIn, Date endDateIn, Date modified) {
+    public Subscription(Owner ownerIn, ProductData productIn, Long maxMembersIn, Date startDateIn,
+        Date endDateIn, Date modified) {
         this.owner = ownerIn;
         this.product = productIn;
-        this.providedProducts = providedProducts;
         this.quantity = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
@@ -319,16 +317,9 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         return false;
     }
 
-    public Set<ProductData> getProvidedProducts() {
-        return providedProducts;
-    }
-
-    public void setProvidedProducts(Collection<ProductData> providedProducts) {
-        this.providedProducts.clear();
-
-        if (providedProducts != null) {
-            this.providedProducts.addAll(providedProducts);
-        }
+    public Collection<ProductData> getProvidedProducts() {
+        return this.product != null && this.product.getProvidedProducts() != null ?
+            this.product.getProvidedProducts() : null;
     }
 
     public void setUpstreamPoolId(String upstreamPoolId) {
@@ -371,16 +362,9 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.derivedProduct = subProduct;
     }
 
-    public Set<ProductData> getDerivedProvidedProducts() {
-        return derivedProvidedProducts;
-    }
-
-    public void setDerivedProvidedProducts(Collection<ProductData> subProvidedProducts) {
-        this.derivedProvidedProducts.clear();
-
-        if (subProvidedProducts != null) {
-            this.derivedProvidedProducts.addAll(subProvidedProducts);
-        }
+    public Collection<ProductData> getDerivedProvidedProducts() {
+        return this.derivedProduct != null && this.derivedProduct.getProvidedProducts() != null ?
+            this.derivedProduct.getProvidedProducts() : null;
     }
 
     public Cdn getCdn() {
@@ -538,13 +522,11 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setContractNumber(source.getContractNumber());
         this.setAccountNumber(source.getAccountNumber());
         this.setOrderNumber(source.getOrderNumber());
-        this.setProvidedProducts(source.getProvidedProducts());
         this.setUpstreamPoolId(source.getUpstreamPoolId());
         this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
         this.setUpstreamConsumerId(source.getUpstreamConsumerId());
         this.setCertificate(source.getCertificate());
         this.setDerivedProduct(source.getDerivedProduct());
-        this.setDerivedProvidedProducts(source.getDerivedProvidedProducts());
         this.setCdn(source.getCdn());
 
         return this;
@@ -596,38 +578,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setDerivedProduct(
             source.getDerivedProduct() != null ? new ProductData(source.getDerivedProduct()) : null
         );
-
-        // Will work only if source is stored in the database and linked to provided products there!
-        Collection<Product> products = source.getProduct().getProvidedProducts();
-        if (products != null) {
-            Collection<ProductData> pdata = new LinkedList<>();
-
-            for (Product product : products) {
-                pdata.add(product.toDTO());
-            }
-
-            this.setProvidedProducts(pdata);
-        }
-        else {
-            this.setProvidedProducts(null);
-        }
-
-        if (source.getDerivedProduct() != null) {
-            products = source.getDerivedProduct().getProvidedProducts();
-            if (products != null) {
-                Collection<ProductData> pdata = new LinkedList<>();
-
-                for (Product product : products) {
-                    pdata.add(product.toDTO());
-                }
-
-                this.setDerivedProvidedProducts(pdata);
-            }
-            else {
-                this.setDerivedProvidedProducts(null);
-            }
-        }
-
 
         return this;
     }

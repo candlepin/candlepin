@@ -3485,9 +3485,7 @@ public class AutobindRulesTest {
         product.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         derivedProduct.setProvidedProducts(derivedProvided);
 
-        Pool pool = TestUtil.createPool(
-            owner, product, new HashSet<>(), derivedProduct, derivedProvided, 100
-        );
+        Pool pool = TestUtil.createPool(owner, product, derivedProduct, 100);
 
         pool.setId("DEAD-BEEF-DER");
 

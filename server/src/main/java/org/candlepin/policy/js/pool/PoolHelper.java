@@ -34,13 +34,9 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-
-
 
 /**
  * Post Entitlement Helper, and some attribute utility methods.
@@ -101,7 +97,6 @@ public class PoolHelper {
                     pool.getContractNumber(),
                     pool.getAccountNumber(),
                     pool.getOrderNumber(),
-                    productCurator.getPoolProvidedProductsCached(pool),
                     sourceEntitlements.get(pool.getId()),
                     consumer,
                     pool);
@@ -122,7 +117,6 @@ public class PoolHelper {
                     pool.getContractNumber(),
                     pool.getAccountNumber(),
                     pool.getOrderNumber(),
-                    productCurator.getPoolDerivedProvidedProductsCached(pool),
                     sourceEntitlements.get(pool.getId()),
                     consumer,
                     pool);
@@ -159,71 +153,6 @@ public class PoolHelper {
         return poolOperationCallback;
     }
 
-    /**
-     * Copies the provided products from a source pool to a bonus pool. The
-     * logic is not completely straightforward.
-     *
-     * The source has so called 'main product' (source.getProduct()) and also
-     * derived product source.getDerivedProduct(). It also has 'main provided products'
-     * source.getProvidedProducts().
-     *
-     * During the copy, the following takes place.
-     *
-     * If the source has derived product, then the destination will receive source's
-     * derived product as main product (destination.getProduct). Also, it will receive
-     * source's derived provided products as destination main provided products.
-     * In other words:
-     *
-     * IF source.getDerivedProduct is null
-     *
-     *     source.product  >>>   destination.product
-     *     source.providedProducts >>> destionation.providedProducts
-     *
-     * IF source.getDerivedProduct is not null
-     *
-     *     source.derivedProduct >>> destination.product
-     *     source.derivedProvidedProducts >>> destination.providedProducts
-     *
-     * @param source subscription
-     * @param destination bonus pool
-     */
-    private static void copyProvidedProducts(Pool source, Pool destination,
-        OwnerProductCurator curator, ProductCurator productCurator) {
-        Set<Product> products;
-
-        // If the source pool has id filled, we assume that it is stored in the
-        // database and also assume that the provided Products or
-        // derived provided Products are linked with the Pool in the database!
-        if (source.getId() != null) {
-            if (source.getDerivedProduct() != null) {
-                products = productCurator.getPoolDerivedProvidedProductsCached(source);
-            }
-            else {
-                products = productCurator.getPoolProvidedProductsCached(source);
-            }
-        }
-        // Otherwise we just use the products attached directly on the entity
-        else {
-            if (source.getDerivedProduct() != null) {
-                products = source.getDerivedProvidedProducts();
-            }
-            else {
-                products = source.getProvidedProducts();
-            }
-        }
-
-        for (Product product : products) {
-            // If no result is returned here, the product has not been correctly imported
-            // into the organization, indicating a problem somewhere in the sync or refresh code:
-            Product destprod = curator.getProductById(destination.getOwner(), product.getId());
-            if (destprod == null) {
-                throw new RuntimeException("Product " + product.getId() +
-                    " has not been imported into org " + destination.getOwner().getKey());
-            }
-            destination.addProvidedProduct(destprod);
-        }
-    }
-
     public static Pool clonePool(Pool sourcePool, Product product, String quantity,
         Map<String, String> attributes, String subKey, OwnerProductCurator curator,
         Entitlement sourceEntitlement, Consumer sourceConsumer, ProductCurator productCurator) {
@@ -231,15 +160,13 @@ public class PoolHelper {
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
             sourcePool.getStartDate(), sourcePool.getEndDate(),
             sourcePool.getContractNumber(), sourcePool.getAccountNumber(),
-            sourcePool.getOrderNumber(), new HashSet<>(), sourceEntitlement,
+            sourcePool.getOrderNumber(), sourceEntitlement,
             sourceConsumer, sourcePool);
 
         SourceSubscription srcSub = sourcePool.getSourceSubscription();
         if (srcSub != null && srcSub.getSubscriptionId() != null) {
             pool.setSourceSubscription(new SourceSubscription(srcSub.getSubscriptionId(), subKey));
         }
-
-        copyProvidedProducts(sourcePool, pool, curator, productCurator);
 
         // Add in the new attributes
         for (Entry<String, String> entry : attributes.entrySet()) {
@@ -264,25 +191,20 @@ public class PoolHelper {
 
     private static Pool createPool(Product product, Owner owner, String quantity, Date startDate,
         Date endDate, String contractNumber, String accountNumber, String orderNumber,
-        Set<Product> providedProducts, Entitlement sourceEntitlement, Consumer sourceConsumer,
+        Entitlement sourceEntitlement, Consumer sourceConsumer,
         Pool sourcePool) {
 
         Long q = Pool.parseQuantity(quantity);
 
-        Pool pool = new Pool(
-            owner,
-            product,
-            new HashSet<>(),
-            q,
-            startDate,
-            endDate,
-            contractNumber,
-            accountNumber,
-            orderNumber
-        );
-
-        // Must be sure to copy the provided products, not try to re-use them directly:
-        pool.setProvidedProducts(providedProducts);
+        Pool pool = new Pool();
+        pool.setOwner(owner);
+        pool.setProduct(product);
+        pool.setQuantity(q);
+        pool.setStartDate(startDate);
+        pool.setEndDate(endDate);
+        pool.setContractNumber(contractNumber);
+        pool.setAccountNumber(accountNumber);
+        pool.setOrderNumber(orderNumber);
 
         if (sourcePool != null && sourceConsumer != null && sourceEntitlement != null) {
             if (sourcePool.isStacked()) {
