@@ -367,7 +367,8 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   end
 
   it 'should not bind products on host if virt_only are already available for guest' do
-    @second_product = create_product(nil, nil, {:attributes => { :virt_only => true }})
+    @second_product = create_product(nil, nil, {:attributes => { :virt_only => true },
+      :providedProducts => [@virt_limit_product.id]})
     @cp.create_pool(@owner['key'],
       @second_product.id, {:quantity => 10, :provided_products => [@virt_limit_product.id]})
     @cp.refresh_pools(@owner['key'])

@@ -78,11 +78,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         assertThrows(PersistenceException.class, () -> ownerCurator.create(owner1));
     }
 
-    private void associateProductToOwner(Owner o, Product p, Product provided) {
-        Set<Product> providedProducts = new HashSet<>();
-        providedProducts.add(provided);
-
-        Pool pool = TestUtil.createPool(o, p, providedProducts, 5);
+    private void associateProductToOwner(Owner o, Product p) {
+        Pool pool = TestUtil.createPool(o, p, 5);
         poolCurator.create(pool);
 
         Consumer c = createConsumer(o);
@@ -96,13 +93,18 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner = createOwner();
         Owner owner2 = createOwner();
 
-        Product product = this.createProduct(owner);
         Product provided = this.createProduct(owner);
-        Product product2 = this.createProduct(owner2);
-        Product provided2 = this.createProduct(owner2);
+        Product product = TestUtil.createProduct("productId1", "productName1");
+        product.setProvidedProducts(Arrays.asList(provided));
+        Product finalProduct1 = this.createProduct(product, owner);
 
-        associateProductToOwner(owner, product, provided);
-        associateProductToOwner(owner2, product2, provided2);
+        Product provided2 = this.createProduct(owner2);
+        Product product2 = TestUtil.createProduct("productId1", "productName1");
+        product2.setProvidedProducts(Arrays.asList(provided));
+        Product finalProduct2 = this.createProduct(product2, owner);
+
+        associateProductToOwner(owner, finalProduct1);
+        associateProductToOwner(owner2, finalProduct2);
 
         List<String> productIds = new ArrayList<>();
         productIds.add(provided.getId());
@@ -116,10 +118,12 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void testGetOwnerByActiveProduct() {
         Owner owner = createOwner();
 
-        Product product = this.createProduct(owner);
         Product provided = this.createProduct(owner);
+        Product product = TestUtil.createProduct("productId1", "productName1");
+        product.setProvidedProducts(Arrays.asList(provided));
+        Product finalProduct1 = this.createProduct(product, owner);
 
-        associateProductToOwner(owner, product, provided);
+        associateProductToOwner(owner, finalProduct1);
 
         List<String> productIds = new ArrayList<>();
         productIds.add(provided.getId());
@@ -238,8 +242,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         pool1.setOwner(owner1);
         pool1.setProduct(prod4);
         pool1.setDerivedProduct(prod4d);
-        pool1.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o1)));
-        pool1.setDerivedProvidedProducts(new HashSet<>(Arrays.asList(prod2o1)));
+        prod4.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o1)));
+        prod4d.setProvidedProducts(new HashSet<>(Arrays.asList(prod2o1)));
         pool1.setStartDate(TestUtil.createDate(2000, 1, 1));
         pool1.setEndDate(TestUtil.createDate(3000, 1, 1));
         pool1.setQuantity(5L);
@@ -248,8 +252,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         pool2.setOwner(owner2);
         pool2.setProduct(prod5);
         pool2.setDerivedProduct(prod5d);
-        pool2.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o2, prod2o2)));
-        pool2.setDerivedProvidedProducts(new HashSet<>(Arrays.asList(prod3o2)));
+        prod5.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o2, prod2o2)));
+        prod5d.setProvidedProducts(new HashSet<>(Arrays.asList(prod3o2)));
         pool2.setStartDate(TestUtil.createDate(1000, 1, 1));
         pool2.setEndDate(TestUtil.createDate(2000, 1, 1));
         pool2.setQuantity(5L);
@@ -258,8 +262,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         pool3.setOwner(owner3);
         pool3.setProduct(prod6);
         pool3.setDerivedProduct(prod6d);
-        pool3.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o3)));
-        pool3.setDerivedProvidedProducts(new HashSet<>(Arrays.asList(prod3o3)));
+        prod6.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o3)));
+        prod6d.setProvidedProducts(new HashSet<>(Arrays.asList(prod3o3)));
         pool3.setStartDate(new Date());
         pool3.setEndDate(new Date());
         pool3.setQuantity(5L);

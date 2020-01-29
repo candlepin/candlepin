@@ -612,7 +612,7 @@ public class DatabaseTestFixture {
         Pool pool = new Pool(
             owner,
             product,
-            provided,
+            new HashSet<>(),
             quantity,
             startDate,
             endDate,

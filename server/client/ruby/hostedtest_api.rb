@@ -26,8 +26,8 @@ module HostedTest
     subscription = {
       'startDate' => start_date,
       'endDate'   => end_date,
-      'quantity'  =>  quantity,
       'product' =>  { 'id' => product_id },
+      'quantity'  =>  quantity,
       'owner' =>  { 'key' => owner_key }
     }
 
@@ -56,11 +56,11 @@ module HostedTest
     end
 
     if params[:provided_products]
-      subscription['providedProducts'] = params[:provided_products].collect { |pid| {'id' => pid} }
+      subscription['product']['providedProducts'] = params[:provided_products].collect { |pid| {'id' => pid} }
     end
 
     if params[:derived_provided_products]
-      subscription['derivedProvidedProducts'] = params[:derived_provided_products].collect { |pid| {'id' => pid} }
+      subscription['derivedProduct']['providedProducts'] = params[:derived_provided_products].collect { |pid| {'id' => pid} }
     end
     return @cp.post("/hostedtest/subscriptions", {}, subscription)
   end
@@ -140,6 +140,7 @@ module HostedTest
       product[:attributes] = params[:attributes] if params[:attributes]
       product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
       product[:relies_on] = params[:relies_on] if params[:relies_on]
+      product[:providedProducts] = params[:providedProducts] if params[:providedProducts]
 
       @cp.put("/hostedtest/products/#{product_id}", {}, product)
     else
@@ -287,7 +288,7 @@ module HostedTest
 
 
 
-def create_upstream_subscription(subscription_id, owner_key, product_id, params = {})
+def create_upstream_subscription(subscription_id, owner_key, params = {})
     start_date = params.delete(:start_date) || Date.today
     end_date = params.delete(:end_date) || start_date + 365
 
@@ -295,16 +296,13 @@ def create_upstream_subscription(subscription_id, owner_key, product_id, params 
     subscription = {
       :startDate => start_date,
       :endDate   => end_date,
-      :product =>  { :id => product_id },
       :owner =>  { :key => owner_key },
       :quantity => 1
     }
 
     # Merge, but convert some snake-case keys to camel case
     keys = [:account_number, :contract_number, :order_number, :upstream_pool_id,
-      :provided_products, :derived_product, :derived_provided_products,
-      'account_number', 'contract_number', 'order_number', 'upstream_pool_id',
-      'provided_products', 'derived_product', 'derived_provided_products']
+      'account_number', 'contract_number', 'order_number', 'upstream_pool_id']
 
     params.each do |key, value|
       if keys.include?(key)
@@ -316,6 +314,8 @@ def create_upstream_subscription(subscription_id, owner_key, product_id, params 
 
     # Forcefully set identifier
     subscription[:id] = subscription_id
+    subscription[:product] = params[:product] if params[:product]
+    subscription[:derivedProduct] = params[:derived_product] if params[:derived_product]
 
     return @cp.post('hostedtest/subscriptions', {}, subscription)
   end
@@ -332,8 +332,7 @@ def create_upstream_subscription(subscription_id, owner_key, product_id, params 
     subscription = {}
 
     # Merge, but convert some snake-case keys to camel case
-    keys = ['account_number', 'contract_number', 'order_number', 'upstream_pool_id', 'start_date', 'end_date',
-      'provided_products', 'derived_product', 'derived_provided_products']
+    keys = ['account_number', 'contract_number', 'order_number', 'upstream_pool_id', 'start_date', 'end_date']
 
     params.each do |key, value|
       if keys.include?(key.to_s)
@@ -345,6 +344,8 @@ def create_upstream_subscription(subscription_id, owner_key, product_id, params 
 
     # Forcefully set identifier
     subscription[:id] = subscription_id
+    subscription[:product] = params[:product] if params[:product]
+    subscription[:derivedProduct] = params[:derived_product] if params[:derived_product]
 
     return @cp.put("/hostedtest/subscriptions/#{subscription_id}", {}, subscription)
   end

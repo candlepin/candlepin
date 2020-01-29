@@ -14,7 +14,6 @@
  */
 package org.candlepin.service.model;
 
-import java.util.Collection;
 import java.util.Date;
 
 
@@ -56,17 +55,6 @@ public interface SubscriptionInfo {
     ProductInfo getProduct();
 
     /**
-     * Fetches a collection of engineering products this subscription provides. If the provided
-     * products have not yet been set, this method returns null. If this subscription does not
-     * provide any engineering products, this method returns an empty collection.
-     *
-     * @return
-     *  A collection of engineering products provided by this subscription, or null if the provided
-     *  products have not been set
-     */
-    Collection<? extends ProductInfo> getProvidedProducts();
-
-    /**
      * Fetches the derived marketing product (SKU) provided to guests of hosts consuming this
      * subscription. If the derived product has not been set, this method returns null.
      * <p></p>
@@ -78,18 +66,6 @@ public interface SubscriptionInfo {
      *  been set
      */
     ProductInfo getDerivedProduct();
-
-    /**
-     * Fetches a collection of derived engineering products provided to guests of hosts consuming
-     * this subscription. If the derived provided products have not been set, this method returns
-     * null. If this subscription does not provide any derived products, this method returns an
-     * empty collection.
-     *
-     * @return
-     *  A collection of engineering products provided by this subscription, or null if the derived
-     *  provided products have not been set
-     */
-    Collection<? extends ProductInfo> getDerivedProvidedProducts();
 
     /**
      * Fetches the quantity of this subscription. If the quantity has not yet been set, this method
