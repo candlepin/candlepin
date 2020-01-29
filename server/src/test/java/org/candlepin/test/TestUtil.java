@@ -68,7 +68,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -383,37 +382,13 @@ public class TestUtil {
     }
 
     public static Subscription createSubscription(Owner owner, Product product) {
-        return createSubscription(owner, product, null);
+        return createSubscription(owner, product.toDTO());
     }
 
-    public static Subscription createSubscription(Owner owner, Product product,
-        Collection<Product> providedProducts) {
-
-        Collection<ProductData> providedProductsDTOs = new LinkedList<>();
-
-        if (providedProducts != null) {
-            for (Product providedProduct : providedProducts) {
-                providedProductsDTOs.add(providedProduct.toDTO());
-            }
-        }
-
-        return createSubscription(owner, product.toDTO(), providedProductsDTOs);
-    }
-
-    public static Subscription createSubscription(Owner owner, ProductData product) {
-        return createSubscription(owner, product, null);
-    }
-
-    public static Subscription createSubscription(Owner owner, ProductData dto,
-        Collection<ProductData> providedProductsData) {
-
-        Set<ProductData> providedProductsSet = new HashSet<>();
-        providedProductsSet.addAll(providedProductsData);
-
+    public static Subscription createSubscription(Owner owner, ProductData dto) {
         Subscription sub = new Subscription(
             owner,
             dto,
-            providedProductsSet,
             1000L,
             createDate(2000, 1, 1),
             createDate(2050, 1, 1),
@@ -438,47 +413,29 @@ public class TestUtil {
     }
 
     public static Pool createPool(Owner owner, Product product, int quantity) {
-        return createPool(owner, product, null, quantity);
-    }
-
-    public static Pool createPool(Owner owner, Product product, Collection<Product> providedProducts,
-        int quantity) {
-
         String random = String.valueOf(randomInt());
 
-        Set<Product> provided = new HashSet<>();
-        if (providedProducts != null) {
-            provided.addAll(providedProducts);
-        }
-
-        Pool pool = new Pool(
-            owner,
-            product,
-            provided,
-            Long.valueOf(quantity),
-            TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30),
-            "SUB234598S" + random,
-            "ACC123" + random,
-            "ORD222" + random
-        );
-
+        Pool pool = new Pool();
+        pool.setOwner(owner);
+        pool.setProduct(product);
+        pool.setQuantity(Long.valueOf(quantity));
+        pool.setStartDate(TestUtil.createDate(2009, 11, 30));
+        pool.setEndDate(
+            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30));
+        pool.setContractNumber("SUB234598S" + random);
+        pool.setAccountNumber("ACC123" + random);
+        pool.setOrderNumber("ORD222" + random);
         pool.setSourceSubscription(new SourceSubscription("SUB234598S" + random, "master" + random));
 
         return pool;
     }
 
-    public static Pool createPool(Owner owner, Product product, Collection<Product> providedProducts,
-        Product derivedProduct, Collection<Product> subProvidedProducts, int quantity) {
+    public static Pool createPool(Owner owner, Product product, Product derivedProduct, int quantity) {
+        Pool pool = createPool(owner, product, quantity);
 
-        Pool pool = createPool(owner, product, providedProducts, quantity);
-        Set<Product> subProvided = new HashSet<>();
-        if (subProvidedProducts != null) {
-            subProvided.addAll(subProvidedProducts);
+        if (derivedProduct != null) {
+            pool.setDerivedProduct(derivedProduct);
         }
-
-        pool.setDerivedProduct(derivedProduct);
-        pool.setDerivedProvidedProducts(subProvided);
 
         return pool;
     }
@@ -647,13 +604,24 @@ public class TestUtil {
             }
         }
 
-        Pool pool = new Pool(sub.getOwner(), product, providedProducts, sub.getQuantity(),
-            sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
-            sub.getOrderNumber()
-        );
+        Pool pool = new Pool();
+        pool.setOwner(sub.getOwner());
+        pool.setQuantity(sub.getQuantity());
+        pool.setStartDate(sub.getStartDate());
+        pool.setEndDate(sub.getEndDate());
+        pool.setAccountNumber(sub.getContractNumber());
+        pool.setAccountNumber(sub.getAccountNumber());
+        pool.setOrderNumber(sub.getOrderNumber());
 
-        pool.setDerivedProduct(derivedProduct);
-        pool.setDerivedProvidedProducts(derivedProvidedProducts);
+        if (product != null) {
+            product.setProvidedProducts(providedProducts);
+            pool.setProduct(product);
+        }
+
+        if (derivedProduct != null) {
+            derivedProduct.setProvidedProducts(derivedProvidedProducts);
+            pool.setDerivedProduct(derivedProduct);
+        }
 
         if (sub.getId() != null) {
             pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
@@ -685,7 +653,13 @@ public class TestUtil {
             new SourceSubscription(pool.getSubscriptionId(), pool.getSubscriptionSubKey()));
 
         // Copy sub-product data if there is any:
-        p.setDerivedProduct(pool.getDerivedProduct());
+        if (pool.getDerivedProduct() != null) {
+            p.setDerivedProduct((Product) pool.getDerivedProduct().clone());
+        }
+
+        if (pool.getProduct() != null) {
+            p.setProduct((Product) pool.getProduct().clone());
+        }
 
         return p;
     }

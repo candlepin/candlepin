@@ -33,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -227,9 +228,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Pool newPoolUsingProducts(Pool pool, Date startDate, Date endDate) {
         Pool anotherPool = new Pool();
         anotherPool.setProduct(pool.getProduct());
-        anotherPool.setProvidedProducts(pool.getProvidedProducts());
         anotherPool.setDerivedProduct(pool.getDerivedProduct());
-        anotherPool.setDerivedProvidedProducts(pool.getDerivedProvidedProducts());
         anotherPool.setStartDate(startDate);
         anotherPool.setEndDate(endDate);
         return anotherPool;
@@ -679,9 +678,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     protected Pool createPoolWithProducts(Owner owner, String sku, Collection<Product> provided) {
-        Product skuProd = this.createProduct(sku, sku, owner);
+        Product skuProd = TestUtil.createProduct(sku, sku);
+        skuProd.setProvidedProducts(provided);
+        skuProd = this.createProduct(skuProd, owner);
 
-        Pool pool = this.createPool(owner, skuProd, provided, 1000L, TestUtil.createDate(2000, 1, 1),
+        Pool pool = this.createPool(owner, skuProd, 1000L, TestUtil.createDate(2000, 1, 1),
             TestUtil.createDate(2100, 1, 1));
 
         return pool;
@@ -1056,8 +1057,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         List<Product> dependentProduct = this.createDependentProducts(owner, 1, "test_dep_prod_a",
             requiredProducts);
 
+        Product derivedProduct = TestUtil.createProduct("derivedProductId", "dProductName");
+        derivedProduct.setProvidedProducts(requiredProducts);
+        this.createProduct(derivedProduct, owner);
+
         Pool requiredPool = this.createPoolWithProducts(owner, "reqPool1", providedProducts);
-        requiredPool.setDerivedProvidedProducts(requiredProducts);
+        requiredPool.setDerivedProduct(derivedProduct);
         this.poolCurator.merge(requiredPool);
 
         Pool dependentPool = this.createPoolWithProducts(owner, "depPool1", dependentProduct);
@@ -1106,9 +1111,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         List<Product> providedProducts = this.createProducts(owner, 3, "test_prov_prod");
         List<Product> dependentProducts = this.createDependentProducts(owner, 1, "test_dep_prod_a",
             requiredProducts);
+        List<Product> productSet = new LinkedList<>();
 
-        Pool requiredPool = this.createPoolWithProducts(owner, "reqPool1", providedProducts);
-        requiredPool.addProvidedProduct(requiredProducts.get(0));
+        productSet.addAll(providedProducts);
+        productSet.add(requiredProducts.get(0));
+        Pool requiredPool = this.createPoolWithProducts(owner, "reqPool1", productSet);
+
         this.poolCurator.merge(requiredPool);
 
         Pool dependentPool = this.createPoolWithProducts(owner, "depPool1", dependentProducts);
@@ -1147,13 +1155,22 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer distributor = this.createDistributor(owner);
 
         List<Product> requiredProducts = this.createProducts(owner, 3, "test_req_prod");
-        List<Product> providedProducts = this.createProducts(owner, 3, "test_prov_prod");
+
+        Product p1 = TestUtil.createProduct("p1", "p1");
+        p1.setProvidedProducts(Arrays.asList(requiredProducts.get(0)));
+
+        p1 = this.createProduct(p1, owner);
+        Product p2 = this.createProduct("p2", "p2", owner);
+        Product p3 = this.createProduct("p3", "p3", owner);
+
+        List<Product> providedProducts = new ArrayList<>();
+        providedProducts.addAll(Arrays.asList(p1, p2, p3));
         List<Product> dependentProducts = this.createDependentProducts(owner, 1, "test_dep_prod_a",
             requiredProducts);
 
         Pool requiredPool = this.createPoolWithProducts(owner, "reqPool1", providedProducts);
-        requiredPool.setDerivedProduct(providedProducts.get(0));
-        requiredPool.addDerivedProvidedProduct(requiredProducts.get(0));
+        requiredPool.setDerivedProduct(p1);
+
         this.poolCurator.merge(requiredPool);
 
         Pool dependentPool = this.createPoolWithProducts(owner, "depPool1", dependentProducts);

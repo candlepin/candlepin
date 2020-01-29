@@ -55,9 +55,9 @@ describe 'Product Resource' do
   end
 
   def setupOrgProductsAndPools()
-    owner1 = create_owner(random_string("owner"))
-    owner2 = create_owner(random_string("owner"))
-    owner3 = create_owner(random_string("owner"))
+    owner1 = create_owner(random_string("owner-Px"))
+    owner2 = create_owner(random_string("owner-Py"))
+    owner3 = create_owner(random_string("owner-Pz"))
 
     prod1o1 = create_product("p1", "p1", { :owner => owner1['key'] })
     prod1o2 = create_product("p1", "p1", { :owner => owner2['key'] })
@@ -69,12 +69,12 @@ describe 'Product Resource' do
     prod3o2 = create_product("p3", "p3", { :owner => owner2['key'] })
     prod3o3 = create_product("p3", "p3", { :owner => owner3['key'] })
 
-    prod4 = create_product("p4", "p4", { :owner => owner1['key'] })
-    prod4d = create_product("p4d", "p4d", { :owner => owner1['key'] })
-    prod5 = create_product("p5", "p5", { :owner => owner2['key'] })
-    prod5d = create_product("p5d", "p5d", { :owner => owner2['key'] })
-    prod6 = create_product("p6", "p6", { :owner => owner3['key'] })
-    prod6d = create_product("p6d", "p6d", { :owner => owner3['key'] })
+    prod4 = create_product("p4", "p4", { :owner => owner1['key'], :providedProducts => [prod1o1.id] })
+    prod4d = create_product("p4d", "p4d", { :owner => owner1['key'], :providedProducts => [prod2o1.id] })
+    prod5 = create_product("p5", "p5", { :owner => owner2['key'], :providedProducts => [prod1o2.id, prod2o2.id] })
+    prod5d = create_product("p5d", "p5d", { :owner => owner2['key'], :providedProducts => [prod3o2.id] })
+    prod6 = create_product("p6", "p6", { :owner => owner3['key'], :providedProducts => [prod1o3.id] })
+    prod6d = create_product("p6d", "p6d", { :owner => owner3['key'], :providedProducts => [prod3o3.id] })
 
     @cp.create_pool(owner1['key'], "p4", {
       :derived_product_id         => "p4d",

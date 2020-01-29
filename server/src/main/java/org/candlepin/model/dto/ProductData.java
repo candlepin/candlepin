@@ -1099,9 +1099,10 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
 
         if (this.providedProducts != null) {
             copy.providedProducts = new HashSet<>();
-            copy.providedProducts.addAll(this.providedProducts.stream()
-                .map(prodData -> (ProductData) prodData.clone())
-                .collect(Collectors.toSet()));
+
+            for (ProductData productData : this.getProvidedProducts()) {
+                copy.providedProducts.add((ProductData) productData.clone());
+            }
         }
 
         return copy;
@@ -1139,9 +1140,19 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         this.setBranding(source.getBranding());
 
         if (source.getProvidedProducts() != null) {
-            this.setProvidedProducts(source.getProvidedProducts().stream()
-                .map(prod -> new ProductData(prod))
-                .collect(Collectors.toSet()));
+            if (this.providedProducts == null) {
+                this.providedProducts = new HashSet<>();
+            }
+            else {
+                this.providedProducts.clear();
+            }
+
+            for (ProductData pData : source.getProvidedProducts()) {
+                this.providedProducts.add(new ProductData(pData));
+            }
+        }
+        else {
+            this.setProvidedProducts(null);
         }
 
         return this;
@@ -1195,9 +1206,19 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         this.setBranding(source.getBranding());
 
         if (source.getProvidedProducts() != null) {
-            this.setProvidedProducts(source.getProvidedProducts().stream()
-                .map(prod -> new ProductData(prod))
-                .collect(Collectors.toSet()));
+            if (this.providedProducts == null) {
+                this.providedProducts = new HashSet<>();
+            }
+            else {
+                this.providedProducts.clear();
+            }
+
+            for (Product pData : source.getProvidedProducts()) {
+                this.providedProducts.add(new ProductData(pData));
+            }
+        }
+        else {
+            this.setProvidedProducts(null);
         }
 
         return this;
