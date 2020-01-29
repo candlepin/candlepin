@@ -14,13 +14,15 @@ describe 'Conditional Content and Dependent Entitlements' do
     @required_product_3 = create_product()
 
     # This bundled product contains all of the provided products our conditional content will require
-    @bundled_product_1 = create_product()
+    @bundled_product_1 = create_product(nil, nil,
+      {:providedProducts => [@required_product_1.id, @required_product_2.id, @required_product_3.id]})
     @bundled_pool_1 = create_pool_and_subscription(@owner['key'], @bundled_product_1.id, 10,
       [@required_product_1.id, @required_product_2.id, @required_product_3.id])
 
     # This bundled product only contains two of the provided products our conditional content
     # will require
-    @bundled_product_2 = create_product()
+    @bundled_product_2 = create_product(nil, nil,
+      {:providedProducts => [@required_product_1.id, @required_product_2.id]})
     @bundled_pool_2 = create_pool_and_subscription(@owner['key'], @bundled_product_2.id, 10,
       [@required_product_1.id, @required_product_2.id])
 
@@ -35,7 +37,7 @@ describe 'Conditional Content and Dependent Entitlements' do
     @cp.add_content_to_product(@owner['key'], @dependent_provided_product.id, @conditional_content_3.id)
 
     # Create a dependent pool, providing only the product containing our conditional content
-    @dependent_product = create_product()
+    @dependent_product = create_product(nil, nil, {:providedProducts => [@dependent_provided_product.id]})
     @dependent_pool = create_pool_and_subscription(@owner['key'], @dependent_product.id, 10, [@dependent_provided_product.id])
 
     owner_client = user_client(@owner, random_string('testowner'))

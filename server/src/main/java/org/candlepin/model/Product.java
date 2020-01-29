@@ -265,6 +265,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         joinColumns = {@JoinColumn(name = "product_uuid", insertable = false, updatable = false)},
         inverseJoinColumns = {@JoinColumn(name = "provided_product_uuid")})
     @BatchSize(size = 1000)
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     @Immutable
     private Set<Product> providedProducts;
 
