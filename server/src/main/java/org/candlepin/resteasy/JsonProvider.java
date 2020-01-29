@@ -29,6 +29,8 @@ import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.DeletedConsumerDTO;
+import org.candlepin.dto.api.v1.DistributorVersionCapabilityDTO;
+import org.candlepin.dto.api.v1.DistributorVersionDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
@@ -155,21 +157,23 @@ public class JsonProvider extends JacksonJsonProvider {
     private void addMixInAnnotationsForDTOs(ObjectMapper mapper) {
         mapper.addMixIn(ActivationKeyDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ActivationKeyPoolDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(GuestIdDTOArrayElement.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(AsyncJobStatusDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(CdnDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(CertificateDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(CertificateSerialDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ConsumerTypeDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ContentOverrideDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(DeletedConsumerDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(DistributorVersionCapabilityDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(DistributorVersionDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(GuestIdDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(GuestIdDTOArrayElement.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(NestedOwnerDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(PermissionBlueprintDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(RoleDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(StatusDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(TimestampedEntity.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(UserDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(CdnDTO.class, DynamicPropertyFilterMixIn.class);
         //TODO: Add more mix-ins here as more DTOs are ported to openapi spec
     }
 }
