@@ -1710,8 +1710,12 @@ public class PoolManagerTest {
         HashSet<ProductData> providedDTOs = new HashSet<>();
         provided.add(provided1);
         provided.add(provided2);
+
+        product.setProvidedProducts(provided);
+
         providedDTOs.add(provided1DTO);
         providedDTOs.add(provided2DTO);
+        productDTO.setProvidedProducts(providedDTOs);
 
         Long quantity = 42L;
 
@@ -1723,7 +1727,6 @@ public class PoolManagerTest {
 
         when(pool.getOwner()).thenReturn(owner);
         when(pool.getProduct()).thenReturn(product);
-        when(mockProductCurator.getPoolProvidedProductsCached(any(Pool.class))).thenReturn(provided);
         when(pool.getQuantity()).thenReturn(quantity);
         when(pool.getStartDate()).thenReturn(startDate);
         when(pool.getEndDate()).thenReturn(endDate);
@@ -1732,7 +1735,7 @@ public class PoolManagerTest {
         // TODO: Add other attributes to check here.
 
         Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
-        pool.populateAllTransientProvidedProducts(mockProductCurator);
+        pool.populateAllTransientProvidedProducts();
         assertEquals(owner, fabricated.getOwner());
         assertEquals(productDTO, fabricated.getProduct());
         assertEquals(providedDTOs, fabricated.getProvidedProducts());

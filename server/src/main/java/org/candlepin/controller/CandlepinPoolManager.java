@@ -2537,7 +2537,7 @@ public class CandlepinPoolManager implements PoolManager {
             throw new IllegalArgumentException("pool is null");
         }
 
-        return new Subscription(pool, productCurator);
+        return new Subscription(pool);
     }
 
     @Override

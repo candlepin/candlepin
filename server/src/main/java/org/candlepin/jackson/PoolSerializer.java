@@ -15,7 +15,6 @@
 package org.candlepin.jackson;
 
 import org.candlepin.model.Pool;
-import org.candlepin.model.ProductCurator;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -41,21 +40,19 @@ import java.util.Set;
  * that we already have in serialization (filtering, Hateoas)
  */
 public class PoolSerializer extends BeanSerializerBase {
-    private ProductCurator productCurator;
     private BeanSerializerBase base;
 
     @Override
     public final void serialize(Object bean, JsonGenerator jgen, SerializerProvider provider)
         throws IOException {
 
-        ((Pool) bean).populateAllTransientProvidedProducts(productCurator);
+        ((Pool) bean).populateAllTransientProvidedProducts();
         base.serialize(bean, jgen, provider);
     }
 
-    protected PoolSerializer(BeanSerializerBase src, ProductCurator productCurator) {
+    protected PoolSerializer(BeanSerializerBase src) {
         super(src);
 
-        this.productCurator = productCurator;
         this.base = src;
     }
 
