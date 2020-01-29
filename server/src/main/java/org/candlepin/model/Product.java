@@ -1286,7 +1286,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         if (!this.providedProducts.isEmpty()) {
             accumulator = 0;
             for (Product product : this.providedProducts) {
-                accumulator += (product != null ? product.hashCode() : 0);
+                accumulator += (product != null ? product.getEntityVersion() : 0);
             }
 
             builder.append(accumulator);

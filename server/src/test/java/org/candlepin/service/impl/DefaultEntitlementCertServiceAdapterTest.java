@@ -280,12 +280,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 CONTENT_LABEL, CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
 
-        subscription = TestUtil.createSubscription(null, product, new HashSet<>());
+        subscription = TestUtil.createSubscription(null, product);
         subscription.setId("1");
         subscription.setQuantity(1L);
 
         Subscription largeContentSubscription = TestUtil
-            .createSubscription(null, largeContentProduct, new HashSet<>());
+            .createSubscription(null, largeContentProduct);
         largeContentSubscription.setId("2");
         largeContentSubscription.setQuantity(1L);
 

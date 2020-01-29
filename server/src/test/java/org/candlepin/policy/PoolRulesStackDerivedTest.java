@@ -162,25 +162,26 @@ public class PoolRulesStackDerivedTest {
         provided3 = TestUtil.createProduct();
         provided4 = TestUtil.createProduct();
 
+        prod1.addProvidedProduct(provided1);
+        prod2.addProvidedProduct(provided2);
+        prod3.addProvidedProduct(provided3);
+
         // Create three subscriptions with various start/end dates:
         sub1 = createStackedVirtSub(owner, prod1, TestUtil.createDate(2010, 1, 1),
             TestUtil.createDate(2015, 1, 1));
-        sub1.getProvidedProducts().add(provided1.toDTO());
         pool1 = copyFromSub(sub1);
 
         sub2 = createStackedVirtSub(owner, prod2, TestUtil.createDate(2011, 1, 1),
             TestUtil.createDate(2017, 1, 1));
-        sub2.getProvidedProducts().add(provided2.toDTO());
-        pool2 = copyFromSub(sub2);
 
+        pool2 = copyFromSub(sub2);
+        prod2.addProvidedProduct(provided3);
         sub3 = createStackedVirtSub(owner, prod2, TestUtil.createDate(2012, 1, 1),
             TestUtil.createDate(2020, 1, 1));
-        sub3.getProvidedProducts().add(provided3.toDTO());
         pool3 = copyFromSub(sub3);
 
         sub4 = createStackedVirtSub(owner, prod3, TestUtil.createDate(2012, 1, 1),
             TestUtil.createDate(2020, 1, 1));
-        sub4.getProvidedProducts().add(provided4.toDTO());
         pool4 = copyFromSub(sub4);
 
         // Initial entitlement from one of the pools:
@@ -224,9 +225,9 @@ public class PoolRulesStackDerivedTest {
         Pool pool = TestUtil.copyFromSub(sub);
         pool.setId("" + lastPoolId++);
         when(productCurator.getPoolProvidedProductsCached(pool))
-            .thenReturn(pool.getProvidedProducts());
+            .thenReturn((Set<Product>) pool.getProduct().getProvidedProducts());
         when(productCurator.getPoolDerivedProvidedProductsCached(pool))
-            .thenReturn(pool.getDerivedProvidedProducts());
+            .thenReturn((Set<Product>) pool.getProduct().getProvidedProducts());
         return pool;
     }
 
@@ -274,9 +275,9 @@ public class PoolRulesStackDerivedTest {
 
     @Test
     public void initialProvidedProducts() {
-        assertEquals(1, stackDerivedPool.getProvidedProducts().size());
+        assertEquals(1, stackDerivedPool.getProduct().getProvidedProducts().size());
         assertEquals(provided2.getUuid(),
-            stackDerivedPool.getProvidedProducts().iterator().next().getUuid());
+            stackDerivedPool.getProduct().getProvidedProducts().iterator().next().getUuid());
     }
 
     @Test
@@ -318,18 +319,6 @@ public class PoolRulesStackDerivedTest {
 
         assertTrue(update.getProductAttributesChanged());
         assertEquals(pool1.getProductAttributes(), stackDerivedPool.getProductAttributes());
-    }
-
-    @Test
-    public void mergedProvidedProducts() {
-        stackedEnts.add(createEntFromPool(pool1));
-        stackedEnts.add(createEntFromPool(pool3));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
-        assertTrue(update.getProductsChanged());
-        assertEquals(3, stackDerivedPool.getProvidedProducts().size());
-        assertTrue(stackDerivedPool.getProvidedProducts().contains(provided1));
-        assertTrue(stackDerivedPool.getProvidedProducts().contains(provided2));
-        assertTrue(stackDerivedPool.getProvidedProducts().contains(provided3));
     }
 
     @Test

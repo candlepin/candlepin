@@ -310,6 +310,24 @@ describe 'Derived Products' do
   it 'regenerates entitlements when updating derived content' do
     skip("candlepin running in standalone mode") if not is_hosted?
 
+    derived_content = create_upstream_content("twentyTwo", {
+        :type => "yum",
+        :label => "teardropsOnMyGuitar",
+        :name => "swiftrocks",
+        :vendor => "fifteen",
+        :releaseVer => nil
+    })
+
+    derived_eng_product = create_upstream_product(random_string(nil, true))
+    add_content_to_product_upstream(derived_eng_product.id, derived_content.id)
+
+    derived_product = create_upstream_product(random_string('derived_prod'), {
+        :attributes => {
+            :cores => 2,
+            :sockets=>4
+        }, :providedProducts => [derived_eng_product]
+    })
+
     # Create a subscription with an upstream product with a derived product that provides content
     datacenter_product = create_upstream_product(random_string('dc_prod'), {
         :attributes => {
@@ -319,27 +337,11 @@ describe 'Derived Products' do
             'multi-entitlement' => "yes"
         }
     })
-    derived_product = create_upstream_product(random_string('derived_prod'), {
-        :attributes => {
-            :cores => 2,
-            :sockets=>4
-        }
-    })
 
-    derived_eng_product = create_upstream_product(random_string(nil, true))
-    derived_content = create_upstream_content("twentyTwo", {
-        :type => "yum",
-        :label => "teardropsOnMyGuitar",
-        :name => "swiftrocks",
-        :vendor => "fifteen",
-        :releaseVer => nil
-    })
-    add_content_to_product_upstream(derived_eng_product.id, derived_content.id)
-
-    sub = create_upstream_subscription(random_string('dc_sub'), @owner_key, datacenter_product.id, {
+    sub = create_upstream_subscription(random_string('dc_sub'), @owner_key, {
         :quantity => 10,
         :derived_product => derived_product,
-        :derived_provided_products => [derived_eng_product]
+        :product => datacenter_product
     })
 
     @cp.refresh_pools(@owner_key)
