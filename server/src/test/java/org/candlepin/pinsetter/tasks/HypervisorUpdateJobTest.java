@@ -17,7 +17,6 @@ package org.candlepin.pinsetter.tasks;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyString;
@@ -407,32 +406,6 @@ public class HypervisorUpdateJobTest extends BaseJobTest {
             .thenReturn(1L);
 
         assertFalse(HypervisorUpdateJob.isSchedulable(jobCurator, newJob));
-    }
-
-    @Test
-    public void ensureJobFailsWhenAutobindDisabledForTargetOwner() {
-        // Disabled autobind
-        when(owner.isAutobindDisabled()).thenReturn(true);
-        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
-
-        JobDetail detail = HypervisorUpdateJob.forOwner(owner, hypervisorJson, true, principal, null);
-        JobExecutionContext ctx = mock(JobExecutionContext.class);
-        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
-        when(consumerCurator.getHostConsumersMap(eq(owner), any(Set.class)))
-            .thenReturn(new VirtConsumerMap());
-
-        HypervisorUpdateJob job = new HypervisorUpdateJob(
-            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
-        injector.injectMembers(job);
-
-        try {
-            job.execute(ctx);
-            fail("Expected exception due to autobind being disabled.");
-        }
-        catch (JobExecutionException jee) {
-            assertEquals(jee.getCause().getMessage(),
-                "Could not update host/guest mapping. Auto-attach is disabled for owner joe.");
-        }
     }
 
 }
