@@ -939,41 +939,6 @@ describe 'Hypervisor Resource', :type => :virt do
     job_detail["state"].should == "FINISHED"
   end
 
-  it 'should raise bad request exception if owner has autobind disabled' do
-    # Create a new owner and disable autobind.
-    owner = create_owner random_string('test_owner1')
-    owner['autobindDisabled'] = true
-    @cp.update_owner(owner['key'], owner)
-
-    # Attempt to check in.
-    user = user_client(owner, random_string("test-user"))
-    virtwho = create_virtwho_client(user)
-    host_guest_mapping = get_host_guest_mapping(random_string('my-host'), ['g1', 'g2'])
-    lambda do
-      virtwho.hypervisor_check_in(owner['key'], host_guest_mapping)
-    end.should raise_exception(RestClient::BadRequest)
-  end
-
-  it 'should fail update job when autobind is disabled for owner' do
-    # Create Owner and disable autobind
-    owner = create_owner random_string('test_owner1')
-    owner['autobindDisabled'] = true
-    @cp.update_owner(owner['key'], owner)
-    owner = @cp.get_owner(owner['key'])
-    owner.should_not be_nil
-
-    user_cp = user_client(owner, random_string("test-user"))
-    consumer = user_cp.register("foofy", :system, nil, {'cpu.cpu_socket(s)' => '8'}, nil, owner['key'], [], [])
-    consumer_cp = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
-
-    host_hyp_id = random_string('host')
-    host_name = random_string('name')
-    job_detail = run_async_update(owner, consumer_cp, host_name, host_hyp_id, [])
-
-    job_detail['state'].should == 'FAILED'
-    job_detail['result'].should == "Could not update host/guest mapping. Auto-attach is disabled for owner #{owner['key']}."
-  end
-
   it 'Hypervisor Checkin should complete succesfully when a guest with host specific entitlement is migrated' do
     owner_key = random_string('test_owner')
     owner = create_owner owner_key
