@@ -15,19 +15,20 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.resource.util.JobStateMapper;
 import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
 
+import java.time.ZoneOffset;
 
 
 /**
  * The AsyncJobStatusTranslator provides translation from AsyncJobStatus model objects to
  * AsyncJobStatusDTOs
  */
-public class AsyncJobStatusTranslator extends TimestampedEntityTranslator<AsyncJobStatus, AsyncJobStatusDTO> {
+public class AsyncJobStatusTranslator implements ObjectTranslator<AsyncJobStatus, AsyncJobStatusDTO> {
 
     /**
      * {@inheritDoc}
@@ -60,22 +61,37 @@ public class AsyncJobStatusTranslator extends TimestampedEntityTranslator<AsyncJ
     public AsyncJobStatusDTO populate(ModelTranslator translator, AsyncJobStatus source,
         AsyncJobStatusDTO destination) {
 
-        destination = super.populate(translator, source, destination);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        destination.setId(source.getId());
-        destination.setJobKey(source.getJobKey());
-        destination.setName(source.getName());
-        destination.setGroup(source.getGroup());
-        destination.setOrigin(source.getOrigin());
-        destination.setExecutor(source.getExecutor());
-        destination.setPrincipal(source.getPrincipalName());
-        destination.setStartTime(source.getStartTime());
-        destination.setEndTime(source.getEndTime());
-        destination.setAttempts(source.getAttempts());
-        destination.setMaxAttempts(source.getMaxAttempts());
-        destination.setResult(source.getJobResult());
-        destination.setState(translateState(source.getState()));
-        destination.setPreviousState(translateState(source.getPreviousState()));
+        if (destination == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        destination.created(source.getCreated() != null ?
+                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .updated(source.getUpdated() != null ?
+                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .id(source.getId())
+            .key(source.getJobKey())
+            .name(source.getName())
+            .group(source.getGroup())
+            .origin(source.getOrigin())
+            .executor(source.getExecutor())
+            .principal(source.getPrincipalName())
+            .state(source.getState() != null ? source.getState().name() : null)
+            .previousState(source.getPreviousState() != null ?
+                source.getPreviousState().name() : null)
+            .startTime(source.getStartTime() != null ?
+                source.getStartTime().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .endTime(source.getEndTime() != null ?
+                source.getEndTime().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .attempts(source.getAttempts())
+            .maxAttempts(source.getMaxAttempts())
+            .statusPath(source.getId() != null ?
+                String.format("/jobs/%s", source.getId()) : null)
+            .resultData(source.getJobResult());
 
         return destination;
     }
