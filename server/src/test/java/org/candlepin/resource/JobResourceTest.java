@@ -1332,7 +1332,7 @@ public class JobResourceTest extends DatabaseTestFixture {
         AsyncJobStatusDTO result = resource.scheduleJob(jobKey);
 
         assertNotNull(result);
-        assertEquals(jobKey, result.getJobKey());
+        assertEquals(jobKey, result.getKey());
 
         verify(this.jobManager, times(1)).queueJob(captor.capture());
 
