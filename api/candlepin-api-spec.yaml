@@ -232,6 +232,59 @@ components:
             manifest:
               type: boolean
 
+    AsyncJobStatusDTO:
+      description: DTO representing an async job status
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+              example: "ff808081554a3e4101554a3e9033005d"
+            key:
+              type: string
+              example: "RefreshPoolsJob"
+            name:
+              type: string
+              example: "refresh pools job"
+            group:
+              type: string
+              example: "refresh"
+            origin:
+              type: string
+              example: "candlepin.myhost.com"
+            executor:
+              type: string
+              example: "candlepin.myhost.com"
+            principal:
+              type: string
+              example: "admin"
+            state:
+              type: string
+              example: "RUNNING"
+            previousState:
+              type: string
+              example: "QUEUED"
+            startTime:
+              type: string
+              format: date-time
+              example: "2019-05-08 09:42:37.000"
+            endTime:
+              type: string
+              format: date-time
+              example: "2019-05-08 09:42:37.000"
+            attempts:
+              type: integer
+              example: "1"
+            maxAttempts:
+              type: integer
+              example: "3"
+            statusPath:
+              type: string
+              example: "/jobs/ff808081554a3e4101554a3e9033005d"
+            resultData:
+              type: object
+              example: "Refresh completed successfully!"
   securitySchemes:
     basicAuth:
       type: http
