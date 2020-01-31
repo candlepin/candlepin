@@ -48,10 +48,10 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import org.jboss.resteasy.core.ResourceMethodInvoker;
-import org.jboss.resteasy.core.interception.PostMatchContainerRequestContext;
+import org.jboss.resteasy.core.ResteasyContext;
+import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestContext;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -122,8 +122,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
         mockReq = MockHttpRequest.create("GET", "http://localhost/candlepin/status");
 
-        ResteasyProviderFactory.pushContext(ResourceInfo.class, mockInfo);
-        ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(ResourceInfo.class, mockInfo);
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
         when(mockRequestContext.getSecurityContext()).thenReturn(mockSecurityContext);
 
         config.setProperty(ConfigProperties.OAUTH_AUTHENTICATION, "false");
@@ -266,7 +266,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         mockResourceMethod(method);
         interceptor.filter(getContext());
 
-        Principal p = ResteasyProviderFactory.getContextData(Principal.class);
+        Principal p = ResteasyContext.getContextData(Principal.class);
         assertTrue(p instanceof UserPrincipal);
     }
 
@@ -287,7 +287,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
         interceptor.filter(getContext());
 
-        Principal p = ResteasyProviderFactory.getContextData(Principal.class);
+        Principal p = ResteasyContext.getContextData(Principal.class);
         assertTrue(p instanceof NoAuthPrincipal);
     }
 
@@ -313,7 +313,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
         interceptor.filter(getContext());
 
-        Principal p = ResteasyProviderFactory.getContextData(Principal.class);
+        Principal p = ResteasyContext.getContextData(Principal.class);
         assertTrue(p instanceof UserPrincipal);
     }
 
@@ -334,7 +334,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
         interceptor.filter(getContext());
 
-        Principal p = ResteasyProviderFactory.getContextData(Principal.class);
+        Principal p = ResteasyContext.getContextData(Principal.class);
         assertTrue(p instanceof NoAuthPrincipal);
         // Anon should not even bother attempting to create a real principal
         verify(usa, times(0)).validateUser(anyString(), anyString());
@@ -358,7 +358,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         mockReq.header("Authorization", "BASIC QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
         interceptor.filter(getContext());
 
-        Principal p = ResteasyProviderFactory.getContextData(Principal.class);
+        Principal p = ResteasyContext.getContextData(Principal.class);
         assertTrue(p instanceof NoAuthPrincipal);
         // Anon should not even bother attempting to create a real principal
         verify(usa, times(0)).validateUser(anyString(), anyString());
@@ -371,7 +371,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         mockReq.header("Authorization", "Bearer " + TESTTOKEN);
         keycloakSetup();
         interceptor.filter(getContext());
-        Principal p = ResteasyProviderFactory.getContextData(Principal.class);
+        Principal p = ResteasyContext.getContextData(Principal.class);
         assertEquals("qa@redhat.com", p.getName());
     }
 

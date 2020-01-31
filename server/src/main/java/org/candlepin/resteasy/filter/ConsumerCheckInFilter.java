@@ -20,7 +20,7 @@ import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.resteasy.AnnotationLocator;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -32,6 +32,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.ext.Provider;
+
+
 
 /** This filter is applied to resource methods annotated with @UpdateConsumerCheckIn.  It
  * will inspect the principal and if the principal is a ConsumerPrincipal, it will update
@@ -51,10 +53,10 @@ public class ConsumerCheckInFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-        ResourceInfo resourceInfo = ResteasyProviderFactory.getContextData(ResourceInfo.class);
+        ResourceInfo resourceInfo = ResteasyContext.getContextData(ResourceInfo.class);
         Method method = resourceInfo.getResourceMethod();
 
-        Principal principal = ResteasyProviderFactory.getContextData(Principal.class);
+        Principal principal = ResteasyContext.getContextData(Principal.class);
         if (principal instanceof ConsumerPrincipal &&
             annotationLocator.getAnnotation(method, UpdateConsumerCheckIn.class) != null) {
             ConsumerPrincipal p = (ConsumerPrincipal) principal;

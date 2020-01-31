@@ -436,8 +436,20 @@
     </dependency>
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
-      <artifactId>resteasy-jaxrs</artifactId>
-      <version>3.5.1.Final</version>
+      <artifactId>resteasy-core</artifactId>
+      <version>4.4.2.Final</version>
+      <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>*</artifactId>
+          <groupId>*</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-core-spi</artifactId>
+      <version>4.4.2.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -449,7 +461,7 @@
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-jaxb-provider</artifactId>
-      <version>3.5.1.Final</version>
+      <version>4.4.2.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -461,7 +473,7 @@
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-guice</artifactId>
-      <version>3.5.1.Final</version>
+      <version>4.4.2.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -473,7 +485,7 @@
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-atom-provider</artifactId>
-      <version>3.5.1.Final</version>
+      <version>4.4.2.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -485,7 +497,7 @@
     <dependency>
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-multipart-provider</artifactId>
-      <version>3.5.1.Final</version>
+      <version>4.4.2.Final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -582,30 +594,6 @@
       <groupId>javax.annotation</groupId>
       <artifactId>javax.annotation-api</artifactId>
       <version>1.3.2</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>*</artifactId>
-          <groupId>*</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.microprofile.rest.client</groupId>
-      <artifactId>microprofile-rest-client-api</artifactId>
-      <version>1.0.1</version>
-      <scope>compile</scope>
-      <exclusions>
-        <exclusion>
-          <artifactId>*</artifactId>
-          <groupId>*</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.reactivestreams</groupId>
-      <artifactId>reactive-streams</artifactId>
-      <version>1.0.0.final</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>

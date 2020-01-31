@@ -17,8 +17,8 @@ package org.candlepin.auth;
 
 import org.candlepin.common.exceptions.CandlepinException;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.keycloak.adapters.OIDCHttpFacade;
 import org.keycloak.adapters.spi.AuthenticationError;
 import org.keycloak.adapters.spi.HttpFacade;
@@ -120,7 +120,7 @@ public class KeycloakOIDCFacade implements HttpFacade {
 
         @Override
         public String getRemoteAddr() {
-            return ResteasyProviderFactory.getContextData(HttpServletRequest.class).getRemoteAddr();
+            return ResteasyContext.getContextData(HttpServletRequest.class).getRemoteAddr();
         }
 
         @Override

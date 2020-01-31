@@ -14,19 +14,8 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Owner;
@@ -42,12 +31,12 @@ import com.google.inject.Provider;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
-import org.jboss.resteasy.core.ServerResponse;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -55,9 +44,16 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
 
+
+
+/**
+ * Test suite for the CandlepinQueryInterceptor
+ */
 public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
 
     private JsonProvider mockJsonProvider;
@@ -114,7 +110,7 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
         }
 
         // Make sure we don't leave any page request on the context to muck with other tests
-        ResteasyProviderFactory.popContextData(PageRequest.class);
+        ResteasyContext.popContextData(PageRequest.class);
     }
 
     @Test
@@ -123,14 +119,16 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
 
         CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider, this.emProvider);
 
-        ServerResponse response = new ServerResponse();
-        response.setEntity(this.ownerCurator.listAll());
+        ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
+        ContainerResponseContext responseContext = mock(ContainerResponseContext.class);
+        doReturn(this.ownerCurator.listAll()).when(responseContext).getEntity();
 
-        cqi.postProcess(response);
+        cqi.filter(requestContext, responseContext);
 
-        assertTrue(response.getEntity() instanceof StreamingOutput);
+        ArgumentCaptor<StreamingOutput> captor = ArgumentCaptor.forClass(StreamingOutput.class);
+        verify(responseContext, times(1)).setEntity(captor.capture());
 
-        ((StreamingOutput) response.getEntity()).write(this.mockOutputStream);
+        ((StreamingOutput) captor.getValue()).write(this.mockOutputStream);
 
         verify(this.mockJsonGenerator, times(1)).writeStartArray();
         for (Owner owner : owners) {
@@ -172,15 +170,17 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
 
         CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider, this.emProvider);
 
-        ServerResponse response = new ServerResponse();
-        response.setEntity(this.ownerCurator.listAll());
+        ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
+        ContainerResponseContext responseContext = mock(ContainerResponseContext.class);
+        doReturn(this.ownerCurator.listAll()).when(responseContext).getEntity();
 
-        ResteasyProviderFactory.pushContext(PageRequest.class, pageRequest);
-        cqi.postProcess(response);
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+        cqi.filter(requestContext, responseContext);
 
-        assertTrue(response.getEntity() instanceof StreamingOutput);
+        ArgumentCaptor<StreamingOutput> captor = ArgumentCaptor.forClass(StreamingOutput.class);
+        verify(responseContext, times(1)).setEntity(captor.capture());
 
-        ((StreamingOutput) response.getEntity()).write(this.mockOutputStream);
+        ((StreamingOutput) captor.getValue()).write(this.mockOutputStream);
 
         verify(this.mockJsonGenerator, times(1)).writeStartArray();
         for (int i = 0; i < owners.size(); ++i) {
@@ -196,43 +196,56 @@ public class CandlepinQueryInterceptorTest extends DatabaseTestFixture {
         verify(this.mockJsonGenerator, times(1)).writeEndArray();
     }
 
-    @Test
-    public void testNonCandlepinQueryObjectsAreIgnored() {
-        // This test can't possibly be all-inclusive, so we'll just test most our common cases
+    // These tests can't possibly be all-inclusive, so we'll just test most our common cases
 
+    @Test
+    public void testNonCandlepinQueryCollectionsAreIgnored() {
         // List of entities
         List<Owner> owners = this.ownerCurator.listAll().list();
 
         CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider, this.emProvider);
 
-        ServerResponse response = new ServerResponse();
-        response.setEntity(owners);
+        ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
+        ContainerResponseContext responseContext = mock(ContainerResponseContext.class);
+        doReturn(owners).when(responseContext).getEntity();
 
-        cqi.postProcess(response);
+        cqi.filter(requestContext, responseContext);
 
-        assertSame(owners, response.getEntity());
+        verify(responseContext, never()).setEntity(any());
+    }
 
+
+    @Test
+    public void testNonCandlepinQueryObjectsAreIgnored() {
         // Single entity
-        Owner owner = owners.get(0);
-        response.setEntity(owner);
+        Owner owner = this.ownerCurator.listAll().list().get(0);
 
-        cqi.postProcess(response);
+        CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider, this.emProvider);
 
-        assertSame(owner, response.getEntity());
+        ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
+        ContainerResponseContext responseContext = mock(ContainerResponseContext.class);
+        doReturn(owner).when(responseContext).getEntity();
+
+        cqi.filter(requestContext, responseContext);
+
+        verify(responseContext, never()).setEntity(any());
     }
 
     @Test
     public void shouldCloseSessionWhenExceptionOccurs() {
         doThrow(new RuntimeException()).when(this.mockJsonProvider)
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-        final ServerResponse response = new ServerResponse();
-        response.setEntity(this.ownerCurator.listAll());
-        final CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(
-            this.mockJsonProvider, this.emProvider);
+
+        CandlepinQueryInterceptor cqi = new CandlepinQueryInterceptor(this.mockJsonProvider, this.emProvider);
 
         try {
-            cqi.postProcess(response);
-            fail("Should not happen!");
+            ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
+            ContainerResponseContext responseContext = mock(ContainerResponseContext.class);
+            doReturn(this.ownerCurator.listAll()).when(responseContext).getEntity();
+
+            cqi.filter(requestContext, responseContext);
+
+            fail("An expected exception was not thrown");
         }
         catch (RuntimeException e) {
             verify(this.session).close();

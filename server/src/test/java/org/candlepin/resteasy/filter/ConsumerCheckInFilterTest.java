@@ -30,9 +30,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import org.jboss.resteasy.core.interception.PostMatchContainerRequestContext;
+import org.jboss.resteasy.core.ResteasyContext;
+import org.jboss.resteasy.core.interception.jaxrs.PostMatchContainerRequestContext;
 import org.jboss.resteasy.mock.MockHttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -81,8 +81,8 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         this.consumer = createConsumer(owner);
         this.principal = new ConsumerPrincipal(consumer, owner);
 
-        ResteasyProviderFactory.pushContext(ResourceInfo.class, mockInfo);
-        ResteasyProviderFactory.pushContext(Principal.class, this.principal);
+        ResteasyContext.pushContext(ResourceInfo.class, mockInfo);
+        ResteasyContext.pushContext(Principal.class, this.principal);
 
         AnnotationLocator annotationLocator = new AnnotationLocator(injector);
         annotationLocator.init();
@@ -116,7 +116,7 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
         interceptor.filter(getContext());
 
-        ConsumerPrincipal p = (ConsumerPrincipal) ResteasyProviderFactory.getContextData(Principal.class);
+        ConsumerPrincipal p = (ConsumerPrincipal) ResteasyContext.getContextData(Principal.class);
 
         this.consumerCurator.refresh(this.consumer);
 
@@ -143,7 +143,7 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
 
         interceptor.filter(getContext());
 
-        ConsumerPrincipal p = (ConsumerPrincipal) ResteasyProviderFactory.getContextData(Principal.class);
+        ConsumerPrincipal p = (ConsumerPrincipal) ResteasyContext.getContextData(Principal.class);
 
         this.consumerCurator.refresh(this.consumer);
 

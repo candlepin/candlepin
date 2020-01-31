@@ -141,8 +141,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -933,7 +933,7 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr("System name cannot contain most special characters."));
         }
 
-        HttpRequest httpRequest = ResteasyProviderFactory.getContextData(HttpRequest.class);
+        HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
         if (httpRequest != null) {
             List<String> userAgent = httpRequest.getHttpHeaders().getRequestHeader("user-agent");
             if (type.isManifest() && userAgent != null &&
@@ -2243,7 +2243,7 @@ public class ConsumerResource {
             filters, pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
-        ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
+        ResteasyContext.pushContext(Page.class, entitlementsPage);
 
         if (regen) {
             poolManager.regenerateDirtyEntitlements(entitlementsPage.getPageData());

@@ -31,7 +31,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +88,7 @@ public class AdminResource {
             userCurator.getUserCount() == 0) {
             // Push the system principal so we can create all these entries as a
             // superuser:
-            ResteasyProviderFactory.pushContext(Principal.class, new SystemPrincipal());
+            ResteasyContext.pushContext(Principal.class, new SystemPrincipal());
 
             log.info("Creating default super admin.");
             User defaultAdmin = new User("admin", "admin", true);

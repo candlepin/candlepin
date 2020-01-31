@@ -16,7 +16,7 @@ package org.candlepin.resteasy;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.spi.StringParameterUnmarshaller;
-import org.jboss.resteasy.util.FindAnnotation;
+import org.jboss.resteasy.spi.util.FindAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;

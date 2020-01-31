@@ -21,8 +21,8 @@ import org.candlepin.common.paging.PageRequest;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.LinkHeader;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +35,12 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.Provider;
+
+
 
 /**
  * LinkHeaderResponseFilter inserts a Link header into the HTTP response to a request that asked for paging.
@@ -57,6 +60,8 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
     public static final String LINK_HEADER = "Link";
     public static final String TOTAL_RECORDS_COUNT = "X-total-count";
 
+    public static final String LINK_TYPE = MediaType.APPLICATION_JSON;
+
     private String apiUrlPrefixKey;
     private Configuration config;
     private String contextPath;
@@ -70,7 +75,7 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
 
     @SuppressWarnings("rawtypes")
     public void filter(ContainerRequestContext reqContext, ContainerResponseContext respContext) {
-        Page page = ResteasyProviderFactory.getContextData(Page.class);
+        Page page = ResteasyContext.getContextData(Page.class);
 
         // Make sure we have page information in the context
         if (page == null) {
@@ -99,16 +104,16 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
 
             Integer next = getNextPage(page);
             if (next != null) {
-                header.addLink(null, "next", buildPageLink(builder, next), null);
+                header.addLink("next", "next", buildPageLink(builder, next), LINK_TYPE);
             }
 
             Integer prev = getPrevPage(page);
             if (prev != null) {
-                header.addLink(null, "prev", buildPageLink(builder, prev), null);
+                header.addLink("prev", "prev", buildPageLink(builder, prev), LINK_TYPE);
             }
 
-            header.addLink(null, "first", buildPageLink(builder, 1), null);
-            header.addLink(null, "last", buildPageLink(builder, getLastPage(page)), null);
+            header.addLink("first", "first", buildPageLink(builder, 1), LINK_TYPE);
+            header.addLink("last", "last", buildPageLink(builder, getLastPage(page)), LINK_TYPE);
 
             respContext.getHeaders().add(LINK_HEADER, header.toString());
         }
@@ -161,7 +166,7 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
 
     protected UriBuilder buildBaseUrl(ContainerRequestContext reqContext) {
         if (config.containsKey(this.apiUrlPrefixKey) && !"".equals(config.getString(this.apiUrlPrefixKey))) {
-            ServletContext servletContext = ResteasyProviderFactory.getContextData(ServletContext.class);
+            ServletContext servletContext = ResteasyContext.getContextData(ServletContext.class);
             contextPath = servletContext.getContextPath();
 
             StringBuffer url = new StringBuffer(config.getString(this.apiUrlPrefixKey));

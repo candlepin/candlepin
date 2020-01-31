@@ -124,9 +124,9 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -1071,7 +1071,7 @@ public class OwnerResource {
             .listByOwner(owner, productId, filters, pageRequest);
 
         // Store the page for the LinkHeaderPostInterceptor
-        ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
+        ResteasyContext.pushContext(Page.class, entitlementsPage);
 
         List<EntitlementDTO> entitlementDTOs = new ArrayList<>();
         for (Entitlement entitlement : entitlementsPage.getPageData()) {
@@ -1503,7 +1503,7 @@ public class OwnerResource {
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOn);
 
         // Store the page for the LinkHeaderResponseFilter
-        ResteasyProviderFactory.pushContext(Page.class, page);
+        ResteasyContext.pushContext(Page.class, page);
 
         List<PoolDTO> poolDTOs = new ArrayList<>();
         for (Pool pool : poolList) {

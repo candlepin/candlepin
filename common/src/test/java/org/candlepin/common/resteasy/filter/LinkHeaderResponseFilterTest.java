@@ -27,10 +27,10 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,13 +81,13 @@ public class LinkHeaderResponseFilterTest {
     @BeforeEach
     public void setUp() throws Exception {
         this.apiUrlPrefixKey = "test_prefix_key";
-        ResteasyProviderFactory.pushContext(ServletContext.class, mockServletContext);
+        ResteasyContext.pushContext(ServletContext.class, mockServletContext);
         interceptor = new LinkHeaderResponseFilter(config, apiUrlPrefixKey);
     }
 
     @AfterEach
     public void tearDown() throws Exception {
-        ResteasyProviderFactory.clearContextData();
+        ResteasyContext.clearContextData();
     }
 
     @Test
@@ -310,7 +310,7 @@ public class LinkHeaderResponseFilterTest {
 
     @Test
     public void testPostProcessWithNullPageRequest() {
-        ResteasyProviderFactory.pushContext(Page.class, page);
+        ResteasyContext.pushContext(Page.class, page);
         when(page.getPageRequest()).thenReturn(null);
         interceptor.filter(mockRequestContext, mockResponseContext);
         verify(page).getPageRequest();
@@ -320,7 +320,7 @@ public class LinkHeaderResponseFilterTest {
     public void testPostProcessWithNonPagingPresentation() {
         when(page.getPageRequest()).thenReturn(pageRequest);
         when(pageRequest.isPaging()).thenReturn(false);
-        ResteasyProviderFactory.pushContext(Page.class, page);
+        ResteasyContext.pushContext(Page.class, page);
         interceptor.filter(mockRequestContext, mockResponseContext);
         verify(page, times(2)).getPageRequest();
         verify(pageRequest).isPaging();
@@ -339,7 +339,7 @@ public class LinkHeaderResponseFilterTest {
 
         MultivaluedMap<String, Object> map = new MultivaluedMapImpl<>();
 
-        ResteasyProviderFactory.pushContext(Page.class, page);
+        ResteasyContext.pushContext(Page.class, page);
 
         mockReq = MockHttpRequest.create("GET",
                 new URI("/candlepin/resource?order=asc&page=1&per_page=10"),
