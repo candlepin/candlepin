@@ -39,6 +39,9 @@ import io.swagger.annotations.Authorization;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -170,17 +173,21 @@ public class CdnResource {
                 if (certDTO.getSerial() != null) {
                     CertificateSerialDTO certSerialDTO = certDTO.getSerial();
                     CertificateSerial certSerial = new CertificateSerial();
-                    certSerial.setExpiration(certSerialDTO.getExpiration());
+
+                    OffsetDateTime expiration = certSerialDTO.getExpiration();
+                    certSerial.setExpiration(expiration != null ?
+                        new Date(expiration.toInstant().toEpochMilli()) : null);
+
                     if (certSerialDTO.getSerial() != null) {
                         certSerial.setSerial(certSerialDTO.getSerial().longValue());
                     }
 
-                    if (certSerialDTO.isCollected() != null) {
-                        certSerial.setCollected(certSerialDTO.isCollected());
+                    if (certSerialDTO.getCollected() != null) {
+                        certSerial.setCollected(certSerialDTO.getCollected());
                     }
 
-                    if (certSerialDTO.isRevoked() != null) {
-                        certSerial.setRevoked(certSerialDTO.isRevoked());
+                    if (certSerialDTO.getRevoked() != null) {
+                        certSerial.setRevoked(certSerialDTO.getRevoked());
                     }
 
                     cdnCert.setSerial(certSerial);
