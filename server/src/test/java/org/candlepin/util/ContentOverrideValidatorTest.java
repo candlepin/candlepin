@@ -61,9 +61,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         for (int i = 0; i < count; ++i) {
             overrides.add(new ContentOverrideDTO()
-                .setContentLabel("test_label-" + i)
-                .setName("test_name-" + i)
-                .setValue("test_value-" + i));
+                .contentLabel("test_label-" + i)
+                .name("test_name-" + i)
+                .value("test_value-" + i));
         }
 
         return overrides;
@@ -95,9 +95,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // Add our invalid override...
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel(null)
-            .setName("test_name-x")
-            .setValue("test_value-x");
+            .contentLabel(null)
+            .name("test_name-x")
+            .value("test_value-x");
 
         overrides.add(invalid);
 
@@ -114,9 +114,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // Add our invalid override...
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel("")
-            .setName("test_name-x")
-            .setValue("test_value-x");
+            .contentLabel("")
+            .name("test_name-x")
+            .value("test_value-x");
 
         overrides.add(invalid);
 
@@ -138,9 +138,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         }
 
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel(builder.toString())
-            .setName("test_name-x")
-            .setValue("test_value-x");
+            .contentLabel(builder.toString())
+            .name("test_name-x")
+            .value("test_value-x");
 
         overrides.add(invalid);
 
@@ -157,9 +157,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // Add our invalid override...
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel("test_label-x")
-            .setName(null)
-            .setValue("test_value-x");
+            .contentLabel("test_label-x")
+            .name(null)
+            .value("test_value-x");
 
         overrides.add(invalid);
 
@@ -176,9 +176,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // Add our invalid override...
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel("test_label-x")
-            .setName("")
-            .setValue("test_value-x");
+            .contentLabel("test_label-x")
+            .name("")
+            .value("test_value-x");
 
         overrides.add(invalid);
 
@@ -200,9 +200,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         }
 
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel("test_label-x")
-            .setName(builder.toString())
-            .setValue("test_value-x");
+            .contentLabel("test_label-x")
+            .name(builder.toString())
+            .value("test_value-x");
 
         overrides.add(invalid);
 
@@ -236,9 +236,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         ContentOverrideValidator validator = new ContentOverrideValidator(this.config, this.i18n);
 
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel("test_label-x")
-            .setName(property)
-            .setValue("test_value-x");
+            .contentLabel("test_label-x")
+            .name(property)
+            .value("test_value-x");
 
         // This should fail
         assertThrows(BadRequestException.class, () -> this.validator.validate(Arrays.asList(invalid)));
@@ -270,9 +270,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         ContentOverrideValidator validator = new ContentOverrideValidator(this.config, this.i18n);
 
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel("test_label-x")
-            .setName(property)
-            .setValue("test_value-x");
+            .contentLabel("test_label-x")
+            .name(property)
+            .value("test_value-x");
 
         // This should fail
         assertThrows(BadRequestException.class, () -> this.validator.validate(Arrays.asList(invalid)));
@@ -287,9 +287,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // Add our invalid override...
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel("test_label-x")
-            .setName("test_name-x")
-            .setValue(null);
+            .contentLabel("test_label-x")
+            .name("test_name-x")
+            .value(null);
 
         overrides.add(invalid);
 
@@ -306,9 +306,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // Add our invalid override...
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel("test_label-x")
-            .setName("test_name-x")
-            .setValue("");
+            .contentLabel("test_label-x")
+            .name("test_name-x")
+            .value("");
 
         overrides.add(invalid);
 
@@ -330,9 +330,9 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         }
 
         ContentOverrideDTO invalid = new ContentOverrideDTO()
-            .setContentLabel("test_label-x")
-            .setName("test_name-x")
-            .setValue(builder.toString());
+            .contentLabel("test_label-x")
+            .name("test_name-x")
+            .value(builder.toString());
 
         overrides.add(invalid);
 
