@@ -219,6 +219,24 @@ components:
         href:
           type: string
 
+    CertificateSerialDTO:
+      description: Represents a database sequence used to ensure certificates receive unique serial numbers
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            serial:
+              type: string
+            expiration:
+              type: string
+              format: date-time
+            collected:
+              type: boolean
+            revoked:
+              type: boolean
+
     ConsumerTypeDTO:
       description: Represents a consumer type used to differentiate various types of consumers
       allOf:
