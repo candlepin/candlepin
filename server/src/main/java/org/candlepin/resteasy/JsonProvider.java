@@ -20,6 +20,8 @@ import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.jackson.MultiFilter;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.jackson.DateSerializer;
+import org.candlepin.jackson.OffsetDateTimeDeserializer;
+import org.candlepin.jackson.OffsetDateTimeSerializer;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -32,11 +34,13 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.jaxrs.cfg.Annotations;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
+import java.time.OffsetDateTime;
 import java.util.Date;
 
 import javax.ws.rs.Consumes;
@@ -67,6 +71,12 @@ public class JsonProvider extends JacksonJsonProvider {
 
         // Add the JDK8 module to support new goodies, like streams
         mapper.registerModule(new Jdk8Module());
+
+        // Add the new JDK8 date/time module, with custom de/serializers
+        JavaTimeModule timeModule = new JavaTimeModule();
+        timeModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
+        timeModule.addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer());
+        mapper.registerModule(timeModule);
 
         Hibernate5Module hbm = new Hibernate5Module();
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
