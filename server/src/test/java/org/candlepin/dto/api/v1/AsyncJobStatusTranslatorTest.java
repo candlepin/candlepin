@@ -82,15 +82,17 @@ public class AsyncJobStatusTranslatorTest extends
             // childrenGenerated flag
 
             assertEquals(source.getId(), dto.getId());
-            assertEquals(source.getJobKey(), dto.getJobKey());
+            assertEquals(source.getJobKey(), dto.getKey());
             assertEquals(source.getName(), dto.getName());
             assertEquals(source.getGroup(), dto.getGroup());
             assertEquals(source.getOrigin(), dto.getOrigin());
             assertEquals(source.getExecutor(), dto.getExecutor());
             assertEquals(source.getPrincipalName(), dto.getPrincipal());
-            assertEquals(source.getStartTime(), dto.getStartTime());
-            assertEquals(source.getEndTime(), dto.getEndTime());
-            assertEquals(source.getJobResult(), dto.getResult());
+            assertEquals(source.getStartTime(), dto.getStartTime() != null ?
+                new Date(dto.getStartTime().toInstant().toEpochMilli()) : null);
+            assertEquals(source.getEndTime(), dto.getEndTime() != null ?
+                new Date(dto.getEndTime().toInstant().toEpochMilli()) : null);
+            assertEquals(source.getJobResult(), dto.getResultData());
 
             JobState state = source.getState();
             if (state != null) {
