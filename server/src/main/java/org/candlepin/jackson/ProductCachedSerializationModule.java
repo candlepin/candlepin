@@ -41,7 +41,7 @@ public class ProductCachedSerializationModule extends SimpleModule {
             public JsonSerializer<?> modifySerializer(SerializationConfig config,
                 BeanDescription beanDesc, JsonSerializer<?> serializer) {
                 if (beanDesc.getBeanClass() == Pool.class) {
-                    return new PoolSerializer((BeanSerializerBase) serializer, productCurator);
+                    return new PoolSerializer((BeanSerializerBase) serializer);
                 }
                 return serializer;
             }

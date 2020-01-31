@@ -198,6 +198,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     private Entitlement setupListProvidingEntitlement(Product product, Date startDate, Date endDate) {
+
+        product.setProvidedProducts(Arrays.asList(providedProduct1, providedProduct2));
+
         Pool testPool = createPool(owner, product, 1L,
             startDate, endDate);
 
