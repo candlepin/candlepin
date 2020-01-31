@@ -58,6 +58,7 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.FactValidator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.util.Providers;
 
 import org.junit.Before;
@@ -161,7 +162,7 @@ public class HypervisorResourceTest {
 
         this.hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, consumerTypeCurator, i18n, ownerCurator, migrationProvider, modelTranslator,
-            guestIdResource, jobManager);
+            guestIdResource, jobManager, new ObjectMapper());
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class)))

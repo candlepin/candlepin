@@ -19,6 +19,7 @@ import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.HypervisorHeartbeatUpdateJob;
 import org.candlepin.async.tasks.HypervisorUpdateJob;
+import org.candlepin.async.tasks.HypervisorUpdateJob.HypervisorList;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
@@ -45,7 +46,10 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.util.GuestMigration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.inject.persist.Transactional;
 
 import io.swagger.annotations.Api;
@@ -102,12 +106,14 @@ public class HypervisorResource {
     private GuestIdResource guestIdResource;
     private ConsumerType hypervisorType;
     private JobManager jobManager;
+    private ObjectMapper mapper;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, I18n i18n, OwnerCurator ownerCurator,
         Provider<GuestMigration> migrationProvider, ModelTranslator translator,
-        GuestIdResource guestIdResource, JobManager jobManager) {
+        GuestIdResource guestIdResource, JobManager jobManager,
+        @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper mapper) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -117,6 +123,7 @@ public class HypervisorResource {
         this.translator = translator;
         this.guestIdResource = guestIdResource;
         this.jobManager = jobManager;
+        this.mapper = mapper;
 
         this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
     }
@@ -294,11 +301,7 @@ public class HypervisorResource {
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing,
         @QueryParam("reporter_id") String reporterId) throws JobException {
 
-        if (hypervisorJson == null || hypervisorJson.isEmpty()) {
-            log.debug("Host/Guest mapping provided during hypervisor update was null.");
-            throw new BadRequestException(
-                i18n.tr("Host to guest mapping was not provided for hypervisor update."));
-        }
+        validateHypervisorJson(hypervisorJson);
 
         log.info("Hypervisor update by principal: {}", principal);
         Owner owner = this.getOwner(ownerKey);
@@ -406,6 +409,29 @@ public class HypervisorResource {
             owner.getKey(),
             null,
             false);
+    }
+
+    private void validateHypervisorJson(String hypervisorJson) {
+        if (hypervisorJson == null || hypervisorJson.isEmpty()) {
+            log.debug("Host/Guest mapping provided during hypervisor update was null.");
+            throw new BadRequestException(
+                i18n.tr("Host to guest mapping was not provided for hypervisor update."));
+        }
+
+        try {
+            HypervisorList hypervisors = mapper.readValue(hypervisorJson, HypervisorList.class);
+            if (hypervisors == null || hypervisors.getHypervisors() == null) {
+                log.debug("Invalid Host/Guest mapping provided during hypervisor update.");
+                throw new BadRequestException(
+                    i18n.tr("Invalid host to guest mapping was provided for hypervisor update."));
+            }
+        }
+        catch (JsonProcessingException e) {
+            log.error("Failed to parse Host/Guest mapping provided during hypervisor update.", e);
+            throw new BadRequestException(
+                i18n.tr("Invalid host to guest mapping was provided for hypervisor update."));
+        }
+
     }
 
 }
