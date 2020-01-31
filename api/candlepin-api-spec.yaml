@@ -250,6 +250,19 @@ components:
             manifest:
               type: boolean
 
+    ContentOverrideDTO:
+      description: Represents a content override for an activation key or consumer
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            name:
+              type: string
+            contentLabel:
+              type: string
+            value:
+              type: string
+
     AsyncJobStatusDTO:
       description: DTO representing an async job status
       allOf:
