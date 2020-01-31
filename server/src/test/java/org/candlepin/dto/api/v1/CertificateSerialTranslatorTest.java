@@ -73,9 +73,10 @@ public class CertificateSerialTranslatorTest extends
 
             assertEquals(source.getId() == null ? null : source.getId().toString(), dest.getId());
             assertEquals(source.getSerial() == null ? null : source.getSerial().toString(), dest.getSerial());
-            assertEquals(source.getExpiration(), dest.getExpiration());
-            assertEquals(source.isCollected(), dest.isCollected());
-            assertEquals(source.isRevoked(), dest.isRevoked());
+            assertEquals(source.getExpiration(), dest.getExpiration() != null ?
+                new Date(dest.getExpiration().toInstant().toEpochMilli()) : null);
+            assertEquals(source.isCollected(), dest.getCollected());
+            assertEquals(source.isRevoked(), dest.getRevoked());
         }
         else {
             assertNull(dest);

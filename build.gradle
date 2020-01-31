@@ -64,6 +64,7 @@ ext.libraries = [
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:${versions.jackson}",
         "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5:${versions.jackson}",
         "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${versions.jackson}",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${versions.jackson}",
     ],
     swagger: [
         "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${versions.jackson}",
