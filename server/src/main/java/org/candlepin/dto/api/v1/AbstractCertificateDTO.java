@@ -154,7 +154,17 @@ public abstract class AbstractCertificateDTO<T extends AbstractCertificateDTO>
         T copy = (T) super.clone();
 
         CertificateSerialDTO serial = this.getSerial();
-        copy.setSerial(serial != null ? (CertificateSerialDTO) serial.clone() : null);
+        if (serial != null) {
+            copy.setSerial(
+                new CertificateSerialDTO()
+                .id(serial.getId())
+                .serial(serial.getSerial())
+                .expiration(serial.getExpiration())
+                .collected(serial.getCollected())
+                .revoked(serial.getRevoked())
+                .created(serial.getCreated())
+                .updated(serial.getUpdated()));
+        }
 
         return copy;
     }
