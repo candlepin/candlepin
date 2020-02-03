@@ -225,19 +225,13 @@
     <module name="JavadocMethod">
       <property name="id" value="JavadocMethodMain"/>
       <property name="scope" value="public" />
-      <property name="allowUndeclaredRTE" value="true" />
-      <property name="allowThrowsTagsForSubclasses" value="false" />
       <property name="allowMissingParamTags" value="true" />
-      <property name="allowMissingThrowsTags" value="true" />
       <property name="allowMissingReturnTag" value="false" />
     </module>
     <module name="JavadocMethod">
       <property name="id" value="JavadocMethodTest"/>
       <property name="scope" value="nothing" />
-      <property name="allowUndeclaredRTE" value="true" />
-      <property name="allowThrowsTagsForSubclasses" value="true" />
       <property name="allowMissingParamTags" value="true" />
-      <property name="allowMissingThrowsTags" value="true" />
       <property name="allowMissingReturnTag" value="true" />
     </module>
 
