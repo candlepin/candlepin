@@ -1947,14 +1947,14 @@ public class ConsumerResource {
 
         List<CertificateSerialDTO> allCerts = new LinkedList<>();
         for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
-            allCerts.add(new CertificateSerialDTO().setSerial(id.toString()));
+            allCerts.add(new CertificateSerialDTO().serial(id.toString()));
         }
 
         // add content access cert if needed
         try {
             ContentAccessCertificate cac = contentAccessCertService.getCertificate(consumer);
             if (cac != null) {
-                allCerts.add(new CertificateSerialDTO().setSerial(cac.getSerial().getId().toString()));
+                allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId().toString()));
             }
         }
         catch (IOException ioe) {
