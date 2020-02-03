@@ -14,6 +14,9 @@
  */
 package org.candlepin.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
@@ -29,9 +32,6 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Locale;
 
 import javax.inject.Provider;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 

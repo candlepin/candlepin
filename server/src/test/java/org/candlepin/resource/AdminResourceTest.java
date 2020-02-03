@@ -14,6 +14,12 @@
  */
 package org.candlepin.resource;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.common.config.Configuration;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
@@ -24,12 +30,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.inject.Inject;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * AdminResourceTest

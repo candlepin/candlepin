@@ -14,6 +14,8 @@
  */
 package org.candlepin.sync;
 
+import static org.junit.Assert.assertTrue;
+
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.test.TestUtil;
@@ -26,8 +28,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.HashMap;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * MetaExporterTest

@@ -14,6 +14,12 @@
  */
 package org.candlepin.sync;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
@@ -28,12 +34,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.HashSet;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * ConsumerTypeImporterTest

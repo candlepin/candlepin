@@ -14,6 +14,13 @@
  */
 package org.candlepin.model.dto;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -27,13 +34,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.stream.Stream;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test suite for the CandlepinDTO class

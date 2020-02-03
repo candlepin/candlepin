@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import static org.junit.Assert.assertTrue;
+
 import org.candlepin.model.activationkeys.ActivationKey;
 
 import com.google.inject.matcher.Matcher;
@@ -28,8 +30,6 @@ import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * HibernateAnnotationTest

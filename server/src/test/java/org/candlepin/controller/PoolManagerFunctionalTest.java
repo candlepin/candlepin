@@ -14,6 +14,17 @@
  */
 package org.candlepin.controller;
 
+import static org.apache.commons.collections.CollectionUtils.containsAny;
+import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.reset;
+
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.paging.Page;
@@ -70,17 +81,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.EntityNotFoundException;
-
-import static org.apache.commons.collections.CollectionUtils.containsAny;
-import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.reset;
 
 
 

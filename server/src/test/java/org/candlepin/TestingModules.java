@@ -14,6 +14,10 @@
  */
 package org.candlepin;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -147,10 +151,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
-
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Guice modules for unit testing

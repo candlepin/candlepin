@@ -14,6 +14,8 @@
  */
 package org.candlepin.auth;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,8 +27,6 @@ import java.security.cert.PKIXParameters;
 import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * some useful sources of certificate-related information:

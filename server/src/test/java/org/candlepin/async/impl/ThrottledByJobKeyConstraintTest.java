@@ -15,6 +15,9 @@
 
 package org.candlepin.async.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.candlepin.async.JobConstraint;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.model.AsyncJobStatus;
@@ -25,9 +28,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ThrottledByJobKeyConstraintTest {
 

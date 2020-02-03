@@ -14,6 +14,11 @@
  */
 package org.candlepin.sync;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -32,11 +37,6 @@ import java.io.IOException;
 import java.io.StringReader;
 
 import javax.inject.Inject;
-
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * RulesImporterTest

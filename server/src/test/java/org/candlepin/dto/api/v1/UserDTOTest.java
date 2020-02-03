@@ -14,6 +14,10 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import org.candlepin.dto.AbstractDTOTest;
 import org.candlepin.util.Util;
 
@@ -22,10 +26,6 @@ import org.junit.Test;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 
 

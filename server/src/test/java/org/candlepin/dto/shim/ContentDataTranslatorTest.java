@@ -14,15 +14,15 @@
  */
 package org.candlepin.dto.shim;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.model.dto.ContentData;
 
 import java.util.Arrays;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 
 

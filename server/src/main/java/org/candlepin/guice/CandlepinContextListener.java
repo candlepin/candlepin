@@ -14,6 +14,10 @@
  */
 package org.candlepin.guice;
 
+import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
+import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
+import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
+
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ActiveMQContextListener;
@@ -73,10 +77,6 @@ import javax.cache.CacheManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-
-import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
-import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
-import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 /**
  * Customized Candlepin version of

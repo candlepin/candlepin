@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
@@ -30,8 +32,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 

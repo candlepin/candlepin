@@ -14,6 +14,14 @@
  */
 package org.candlepin.resource;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
@@ -41,14 +49,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 
 

@@ -15,6 +15,9 @@
 
 package org.candlepin.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
@@ -23,9 +26,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class CertificateTest extends DatabaseTestFixture {
     @Inject private SubscriptionsCertificateCurator certificateCurator;

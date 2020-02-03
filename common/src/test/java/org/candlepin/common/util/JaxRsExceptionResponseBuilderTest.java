@@ -14,6 +14,10 @@
  */
 package org.candlepin.common.util;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.candlepin.common.exceptions.CandlepinParameterParseException;
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.exceptions.mappers.TestExceptionMapperBase.MapperTestModule;
@@ -27,10 +31,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.ws.rs.core.Response;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**

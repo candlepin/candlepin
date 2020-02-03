@@ -14,10 +14,10 @@
  */
 package org.candlepin.common.resteasy.auth;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 public class AuthUtilTest {

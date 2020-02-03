@@ -14,6 +14,8 @@
  */
 package org.candlepin.sync;
 
+import static org.junit.Assert.assertTrue;
+
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.StandardTranslator;
@@ -31,8 +33,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * ProductExporterTest

@@ -15,11 +15,11 @@
 
 package org.candlepin.pki;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 
 import org.junit.Test;
-
-import static org.junit.Assert.assertArrayEquals;
 
 public class SubjectKeyIdentifierWriterTest {
 

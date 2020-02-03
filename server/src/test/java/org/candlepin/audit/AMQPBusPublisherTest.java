@@ -14,6 +14,11 @@
  */
 package org.candlepin.audit;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.guice.PrincipalProvider;
@@ -29,11 +34,6 @@ import org.mockito.Mockito;
 import java.io.IOException;
 
 import javax.jms.JMSException;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 /**
  * AMQPBusPublisherTest
  */

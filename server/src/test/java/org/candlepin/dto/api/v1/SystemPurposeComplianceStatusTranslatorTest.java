@@ -14,6 +14,12 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.dto.AbstractTranslatorTest;
@@ -31,12 +37,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 /**
  * Test suite for the ComplianceStatusTranslator class

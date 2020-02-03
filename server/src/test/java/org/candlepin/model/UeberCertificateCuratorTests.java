@@ -14,6 +14,11 @@
  */
 package org.candlepin.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.hibernate.exception.ConstraintViolationException;
@@ -22,11 +27,6 @@ import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * UeberCertificateCuratorTests

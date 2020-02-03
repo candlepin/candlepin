@@ -14,13 +14,13 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.jboss.resteasy.spi.BadRequestException;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * BadRequestExceptionMapperTest

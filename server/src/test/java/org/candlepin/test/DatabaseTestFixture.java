@@ -14,6 +14,9 @@
  */
 package org.candlepin.test;
 
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.TestingInterceptor;
 import org.candlepin.TestingModules;
 import org.candlepin.auth.Access;
@@ -110,9 +113,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
 
 
 

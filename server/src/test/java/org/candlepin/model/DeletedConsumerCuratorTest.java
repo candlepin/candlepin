@@ -14,6 +14,10 @@
  */
 package org.candlepin.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -23,10 +27,6 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * DeletedConsumerCuratorTest

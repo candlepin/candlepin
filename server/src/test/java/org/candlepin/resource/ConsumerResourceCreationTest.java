@@ -14,6 +14,13 @@
  */
 package org.candlepin.resource;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -92,13 +99,6 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.inject.Provider;
-
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 
 

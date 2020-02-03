@@ -14,6 +14,9 @@
  */
 package org.candlepin.common.filter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.common.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -30,9 +33,6 @@ import java.util.Map;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 
 
 /**

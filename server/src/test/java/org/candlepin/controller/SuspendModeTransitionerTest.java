@@ -14,6 +14,10 @@
  */
 package org.candlepin.controller;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.audit.ActiveMQStatus;
 import org.candlepin.audit.QpidStatus;
 import org.candlepin.common.config.Configuration;
@@ -34,10 +38,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
 
 
 

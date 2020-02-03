@@ -14,6 +14,10 @@
  */
 package org.candlepin.hibernate;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.hibernate.annotations.Type;
 import org.junit.After;
 import org.junit.Before;
@@ -28,10 +32,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
 import javax.persistence.Persistence;
 import javax.persistence.Table;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * EmptyStringUserTypeTest
