@@ -21,6 +21,7 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.GuestId;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,6 +56,8 @@ public class GuestIdTranslatorTest extends AbstractTranslatorTest<GuestId, Guest
         source.setId("test_id");
         source.setGuestId("test_guest_id");
         source.setAttributes(attributes);
+        source.setCreated(new Date());
+        source.setUpdated(new Date());
 
         return source;
     }
@@ -71,6 +74,10 @@ public class GuestIdTranslatorTest extends AbstractTranslatorTest<GuestId, Guest
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getGuestId(), dto.getGuestId());
             assertEquals(source.getAttributes(), dto.getAttributes());
+            assertEquals(source.getCreated(), dto.getCreated() != null ?
+                new Date(dto.getCreated().toInstant().toEpochMilli()) : null);
+            assertEquals(source.getUpdated(), dto.getUpdated() != null ?
+                new Date(dto.getUpdated().toInstant().toEpochMilli()) : null);
         }
         else {
             assertNull(dto);

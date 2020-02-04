@@ -851,7 +851,13 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
                 if (dto == null || dto.getGuestId() == null) {
                     throw new IllegalArgumentException("guest is null or incomplete");
                 }
-                this.guestIds.add(new GuestIdDTO(dto));
+                this.guestIds.add(new GuestIdDTO()
+                    .id(dto.getId())
+                    .guestId(dto.getGuestId())
+                    .attributes(dto.getAttributes())
+                    .created(dto.getCreated())
+                    .updated(dto.getUpdated())
+                );
             }
         }
         else {

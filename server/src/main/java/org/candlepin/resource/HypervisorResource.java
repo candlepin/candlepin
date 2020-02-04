@@ -30,7 +30,6 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.AsyncJobStatus;
@@ -149,7 +148,7 @@ public class HypervisorResource {
     @UpdateConsumerCheckIn
     @SuppressWarnings("checkstyle:indentation")
     public HypervisorUpdateResultDTO hypervisorUpdate(
-        Map<String, List<GuestIdDTO>> hostGuestDTOMap, @Context Principal principal,
+        Map<String, List<String>> hostGuestMap, @Context Principal principal,
         @QueryParam("owner") @Verify(value = Owner.class,
             require = Access.READ_ONLY,
             subResource = SubResource.HYPERVISOR) String ownerKey,
@@ -159,7 +158,7 @@ public class HypervisorResource {
         @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
         log.debug("Hypervisor check-in by principal: {}", principal);
 
-        if (hostGuestDTOMap == null) {
+        if (hostGuestMap == null) {
             log.debug("Host/Guest mapping provided during hypervisor checkin was null.");
             throw new BadRequestException(
                 i18n.tr("Host to guest mapping was not provided for hypervisor check-in."));
@@ -172,20 +171,20 @@ public class HypervisorResource {
 
         // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
         VirtConsumerMap hypervisorConsumersMap =
-            consumerCurator.getHostConsumersMap(owner, hostGuestDTOMap.keySet());
+            consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
 
         int emptyGuestIdCount = 0;
         Set<String> allGuestIds = new HashSet<>();
 
-        Collection<List<GuestIdDTO>> idsLists = hostGuestDTOMap.values();
-        for (List<GuestIdDTO> guestIds : idsLists) {
+        Collection<List<String>> idsLists = hostGuestMap.values();
+        for (List<String> guestIds : idsLists) {
             // ignore null guest lists
             // See bzs 1332637, 1332635
             if (guestIds == null) {
                 continue;
             }
-            for (Iterator<GuestIdDTO> guestIdsItr = guestIds.iterator(); guestIdsItr.hasNext();) {
-                String id = guestIdsItr.next().getGuestId();
+            for (Iterator<String> guestIdsItr = guestIds.iterator(); guestIdsItr.hasNext();) {
+                String id = guestIdsItr.next();
 
                 if (StringUtils.isEmpty(id)) {
                     emptyGuestIdCount++;
@@ -202,7 +201,7 @@ public class HypervisorResource {
         }
 
         HypervisorUpdateResultDTO result = new HypervisorUpdateResultDTO();
-        for (Entry<String, List<GuestIdDTO>> hostEntry : hostGuestDTOMap.entrySet()) {
+        for (Entry<String, List<String>> hostEntry : hostGuestMap.entrySet()) {
             String hypervisorId = hostEntry.getKey();
             // Treat null guest list as an empty list.
             // We can get an empty list here from katello due to an update
