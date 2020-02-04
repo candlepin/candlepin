@@ -56,8 +56,6 @@ import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -403,26 +401,6 @@ public class HypervisorUpdateJobTest {
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
             translator, hypervisorUpdateAction, i18n, objectMapper);
         job.execute(ctx);
-    }
-
-    @Test
-    public void ensureJobFailsWhenAutobindDisabledForTargetOwner() {
-        // Disabled autobind
-        when(owner.isAutobindDisabled()).thenReturn(true);
-        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
-
-        JobConfig config = createJobConfig(null);
-        JobExecutionContext ctx = mock(JobExecutionContext.class);
-        when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
-        when(consumerCurator.getHostConsumersMap(eq(owner), Mockito.<Consumer>anyList()))
-            .thenReturn(new VirtConsumerMap());
-
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
-
-        JobExecutionException e = assertThrows(JobExecutionException.class, () -> job.execute(ctx));
-        assertThat(e.getMessage(),
-            containsString("Could not update host/guest mapping. Auto-attach is disabled for owner joe."));
     }
 
     private JobConfig createJobConfig(final String reporterId) {
