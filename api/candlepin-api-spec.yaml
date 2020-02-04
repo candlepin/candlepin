@@ -379,6 +379,21 @@ components:
             principalName:
               type: string
 
+    GuestIdDTO:
+      description: Represents a guest ID running on a virt host consumer
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            guestId:
+              type: string
+            attributes:
+              type: object
+              additionalProperties:
+                type: string
+
   securitySchemes:
     basicAuth:
       type: http

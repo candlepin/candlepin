@@ -22,6 +22,7 @@ import org.candlepin.dto.AbstractDTOTest;
 
 import org.junit.Test;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,7 +43,6 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
     protected ConsumerInstalledProductDTOTest cipDTOTest = new ConsumerInstalledProductDTOTest();
     protected CapabilityDTOTest capabilityDTOTest = new CapabilityDTOTest();
     protected HypervisorIdDTOTest hypervisorIdDTOTest = new HypervisorIdDTOTest();
-    protected GuestIdDTOTest guestIdDTOTest = new GuestIdDTOTest();
 
     public ConsumerDTOTest() {
         super(ConsumerDTO.class);
@@ -82,8 +82,8 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
 
         List<GuestIdDTO> guestIdDTOS = new ArrayList<>();
         for (int i = 0; i < 5; ++i) {
-            GuestIdDTO guestIdDTO = guestIdDTOTest.getPopulatedDTOInstance();
-            guestIdDTOS.add(guestIdDTO.setId("guest-Id-" + i));
+            GuestIdDTO guestIdDTO = getGuestIdDTOForTest();
+            guestIdDTOS.add(guestIdDTO.id("guest-Id-" + i));
         }
 
         Set<String> addOns = new HashSet<>();
@@ -128,7 +128,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("Updated", new Date());
         this.values.put("ActivationKeys", keys);
 
-        GuestIdDTO guestIdDTO = guestIdDTOTest.getPopulatedDTOInstance();
+        GuestIdDTO guestIdDTO = getGuestIdDTOForTest();
         guestIdDTO.setGuestId("guest-Id-x");
         this.values.put("addGuestId", guestIdDTO);
         this.values.put("removeGuestId", guestIdDTO.getGuestId());
@@ -141,6 +141,23 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         CertificateDTO idCert = new CertificateDTO();
         cert.setId("cert-id");
         this.values.put("IdCert", idCert);
+    }
+
+    private GuestIdDTO getGuestIdDTOForTest() {
+        Map<String, String> attributes = new HashMap<>();
+
+        for (int i = 0; i < 5; ++i) {
+            attributes.put("attrib-" + i, "value-" + i);
+        }
+
+        GuestIdDTO guestIdDTO = new GuestIdDTO()
+            .id("test_value")
+            .guestId("test_value")
+            .attributes(attributes)
+            .created(OffsetDateTime.now())
+            .updated(OffsetDateTime.now());
+
+        return guestIdDTO;
     }
 
     /**
@@ -197,7 +214,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
 
     @Test
     public void testAddToEmptyGuestIdCollection() throws Exception {
-        GuestIdDTO guestIdDTO = guestIdDTOTest.getPopulatedDTOInstance();
+        GuestIdDTO guestIdDTO = this.getGuestIdDTOForTest();
         guestIdDTO.setGuestId("guest-Id-x");
         ConsumerDTO dto = new ConsumerDTO();
         assertTrue(dto.addGuestId(guestIdDTO));
@@ -223,7 +240,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
 
     @Test
     public void testAddDuplicateToGuestIdCollection() throws Exception {
-        GuestIdDTO guestIdDTO = guestIdDTOTest.getPopulatedDTOInstance();
+        GuestIdDTO guestIdDTO = this.getGuestIdDTOForTest();
         guestIdDTO.setGuestId("guest-Id-x");
         ConsumerDTO dto = new ConsumerDTO();
         assertTrue(dto.addGuestId(guestIdDTO));
@@ -252,7 +269,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
 
     @Test
     public void testRemoveFromGuestIdCollectionWhenPresent() throws Exception {
-        GuestIdDTO guestIdDTO = guestIdDTOTest.getPopulatedDTOInstance();
+        GuestIdDTO guestIdDTO = this.getGuestIdDTOForTest();
         guestIdDTO.setGuestId("guest-Id-x");
         ConsumerDTO dto = new ConsumerDTO();
         assertTrue(dto.addGuestId(guestIdDTO));
@@ -279,7 +296,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
 
     @Test
     public void testRemoveFromGuestIdCollectionWhenAbsent() throws Exception {
-        GuestIdDTO guestIdDTO = guestIdDTOTest.getPopulatedDTOInstance();
+        GuestIdDTO guestIdDTO = this.getGuestIdDTOForTest();
         guestIdDTO.setGuestId("guest-Id-x");
         ConsumerDTO dto = new ConsumerDTO();
         assertTrue(dto.addGuestId(guestIdDTO));

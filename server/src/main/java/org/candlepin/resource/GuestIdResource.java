@@ -155,34 +155,31 @@ public class GuestIdResource {
     }
 
     /**
-     * Populates the specified entities with data from the provided DTOs.
+     * Populates the specified entities with data from the provided guestIds.
      *
      * @param entities
      *  The entities instance to populate
      *
-     * @param dtos
-     *  The DTO containing the data with which to populate the entity
+     * @param guestIds
+     *  The list of string containing the guestIds to populate the entity
      *
      * @throws IllegalArgumentException
      *  if either entity or dto are null
      */
-    protected void populateEntities(List<GuestId> entities, List<GuestIdDTO> dtos) {
+    protected void populateEntities(List<GuestId> entities, List<String> guestIds) {
         if (entities == null) {
             throw new IllegalArgumentException("the guestId model entity is null");
         }
 
-        if (dtos == null) {
-            throw new IllegalArgumentException("the guestId dto is null");
+        if (guestIds == null) {
+            throw new IllegalArgumentException("the list of guestId is null");
         }
 
-        for (GuestIdDTO dto : dtos) {
-            if (dto == null) {
+        for (String guestId : guestIds) {
+            if (guestId == null) {
                 continue;
             }
-
-            GuestId guestId = new GuestId();
-            populateEntity(guestId, dto);
-            entities.add(guestId);
+            entities.add(new GuestId(guestId));
         }
     }
 
@@ -243,7 +240,7 @@ public class GuestIdResource {
 
         if (updatedDTO == null) {
             // If they're not sending attributes, we can get the guestId from the url
-            updatedDTO = new GuestIdDTO().setGuestId(guestId);
+            updatedDTO = new GuestIdDTO().guestId(guestId);
         }
 
         // Allow the id to be left out in this case, we can use the path param

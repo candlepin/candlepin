@@ -15,14 +15,16 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.GuestId;
+
+import java.time.ZoneOffset;
 
 /**
  * The GuestIdTranslator provides translation from GuestId model objects to
  * GuestIdDTOs
  */
-public class GuestIdTranslator extends TimestampedEntityTranslator<GuestId, GuestIdDTO> {
+public class GuestIdTranslator implements ObjectTranslator<GuestId, GuestIdDTO> {
 
     /**
      * {@inheritDoc}
@@ -53,11 +55,23 @@ public class GuestIdTranslator extends TimestampedEntityTranslator<GuestId, Gues
      */
     @Override
     public GuestIdDTO populate(ModelTranslator translator, GuestId source, GuestIdDTO dest) {
-        dest = super.populate(translator, source, dest);
 
-        dest.setId(source.getId());
-        dest.setGuestId(source.getGuestId());
-        dest.setAttributes(source.getAttributes());
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        dest.created(source.getCreated() != null ?
+                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .updated(source.getUpdated() != null ?
+                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .id(source.getId())
+            .guestId(source.getGuestId())
+            .attributes(source.getAttributes());
+
         return dest;
     }
 

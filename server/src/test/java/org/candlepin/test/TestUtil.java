@@ -549,8 +549,8 @@ public class TestUtil {
 
     public static GuestIdDTO createGuestIdDTO(String guestId) {
         GuestIdDTO dto = new GuestIdDTO()
-            .setGuestId(guestId)
-            .setAttributes(Collections.<String, String>emptyMap());
+            .guestId(guestId)
+            .attributes(Collections.<String, String>emptyMap());
 
         return dto;
     }

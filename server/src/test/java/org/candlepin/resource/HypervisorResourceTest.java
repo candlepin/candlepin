@@ -31,7 +31,6 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
@@ -220,9 +219,8 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("admin");
         owner.setId("test-id");
 
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
-        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
-            TestUtil.createGuestIdDTO("GUEST_B"))));
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
+        hostGuestMap.put("test-host", new ArrayList(Arrays.asList("GUEST_A", "GUEST_B")));
 
         when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
@@ -260,10 +258,10 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("owner-key-1", "Owner Name 1");
         owner.setId("owner-id-1");
 
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
         String hypervisorId = "test-host";
         hostGuestMap.put(hypervisorId, new ArrayList(Collections
-            .singletonList(TestUtil.createGuestIdDTO("GUEST_B"))));
+            .singletonList("GUEST_B")));
 
         Owner o = new Owner("owner-key-2", "Owner Name 2");
         o.setId("owner-id-2");
@@ -303,10 +301,9 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("admin");
         owner.setId("admin-id");
 
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
         String expectedHostVirtId = "test-host-id";
-        hostGuestMap.put(expectedHostVirtId, new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
-            TestUtil.createGuestIdDTO("GUEST_B"))));
+        hostGuestMap.put(expectedHostVirtId, new ArrayList(Arrays.asList("GUEST_A", "GUEST_B")));
 
         when(consumerCurator.getHostConsumersMap(any(Owner.class), any(Set.class)))
             .thenReturn(new VirtConsumerMap());
@@ -340,9 +337,8 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("admin");
         owner.setId("admin-id");
 
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
-        hostGuestMap.put("test-host", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
-            TestUtil.createGuestIdDTO("GUEST_B"))));
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
+        hostGuestMap.put("test-host", new ArrayList(Arrays.asList("GUEST_A", "GUEST_B")));
 
         when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
 
@@ -381,11 +377,9 @@ public class HypervisorResourceTest {
         Owner owner = new Owner("admin");
         owner.setId("admin-id");
 
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
-        hostGuestMap.put("", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"),
-            TestUtil.createGuestIdDTO("GUEST_B"))));
-        hostGuestMap.put("HYPERVISOR_A", new ArrayList(Arrays.asList(TestUtil.createGuestIdDTO("GUEST_C"),
-            TestUtil.createGuestIdDTO("GUEST_D"))));
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
+        hostGuestMap.put("", new ArrayList(Arrays.asList("GUEST_A", "GUEST_B")));
+        hostGuestMap.put("HYPERVISOR_A", new ArrayList(Arrays.asList("GUEST_C", "GUEST_D")));
 
         when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
         when(ownerCurator.findOwnerById(any(String.class))).thenReturn(owner);
@@ -417,9 +411,8 @@ public class HypervisorResourceTest {
         owner.setId("test-id");
         owner.setKey("test-key");
 
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
-        hostGuestMap.put("HYPERVISOR_A", new ArrayList(
-            Arrays.asList(TestUtil.createGuestIdDTO("GUEST_A"), TestUtil.createGuestIdDTO(""))));
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
+        hostGuestMap.put("HYPERVISOR_A", new ArrayList(Arrays.asList("GUEST_A", "")));
         when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
         when(ownerCurator.findOwnerById(any(String.class))).thenReturn(owner);
 
@@ -441,8 +434,6 @@ public class HypervisorResourceTest {
 
         List<HypervisorConsumerDTO> created = new ArrayList<>(result.getCreated());
         assertEquals(1, created.size());
-        assertEquals(1, hostGuestMap.get("HYPERVISOR_A").size());
-        assertEquals("GUEST_A", hostGuestMap.get("HYPERVISOR_A").get(0).getGuestId());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
@@ -452,7 +443,7 @@ public class HypervisorResourceTest {
         owner.setId("test-id");
         owner.setKey("test-key");
 
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
         hostGuestMap.put("HYPERVISOR_A", null);
         when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
         when(ownerCurator.findOwnerById(any(String.class))).thenReturn(owner);
@@ -473,6 +464,25 @@ public class HypervisorResourceTest {
         assertNotNull(result.getCreated());
         List<HypervisorConsumerDTO> created = new ArrayList<>(result.getCreated());
         assertEquals(1, created.size());
-        assertEquals(0, hostGuestMap.get("HYPERVISOR_A").size());
+    }
+
+    @Test
+    public void ensureFailureWhenAutobindIsDisabledOnOwner() {
+        Owner owner = new Owner("test_admin");
+        owner.setId("admin-id");
+        owner.setAutobindDisabled(true);
+
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
+        hostGuestMap.put("HYPERVISOR_A", new ArrayList<>());
+        when(ownerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
+
+        try {
+            hypervisorResource.hypervisorUpdate(hostGuestMap, principal, owner.getKey(), true);
+            fail("Exception should have been thrown since autobind was disabled for the owner.");
+        }
+        catch (BadRequestException bre) {
+            assertEquals("Could not update host/guest mapping. Auto-attach is disabled for owner test_admin.",
+                bre.getMessage());
+        }
     }
 }
