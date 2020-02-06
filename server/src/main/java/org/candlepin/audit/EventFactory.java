@@ -180,6 +180,11 @@ public class EventFactory {
              .buildEvent();
     }
 
+    public Event ownerContentAccessModeChanged(Owner owner) {
+        return getEventBuilder(Target.OWNER_CONTENT_ACCESS_MODE, Type.MODIFIED).setEventData(owner)
+            .buildEvent();
+    }
+
     public Event complianceCreated(Consumer consumer, ComplianceStatus compliance) {
         Map<String, Object> eventData = new HashMap<>();
         eventData.put("status", compliance.getStatus());
@@ -234,4 +239,5 @@ public class EventFactory {
                 e);
         }
     }
+
 }
