@@ -15,14 +15,16 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.DeletedConsumer;
+
+import java.time.ZoneOffset;
+import java.util.Date;
 
 /**
  * This translator provides translation from DeletedConsumer model objects to DeletedConsumerDTOs
  */
-public class DeletedConsumerTranslator extends
-    TimestampedEntityTranslator<DeletedConsumer, DeletedConsumerDTO> {
+public class DeletedConsumerTranslator implements ObjectTranslator<DeletedConsumer, DeletedConsumerDTO> {
 
     /**
      * {@inheritDoc}
@@ -55,14 +57,26 @@ public class DeletedConsumerTranslator extends
     public DeletedConsumerDTO populate(ModelTranslator modelTranslator, DeletedConsumer source,
         DeletedConsumerDTO dest) {
 
-        dest = super.populate(modelTranslator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId())
-            .setConsumerUuid(source.getConsumerUuid())
-            .setOwnerId(source.getOwnerId())
-            .setOwnerKey(source.getOwnerKey())
-            .setOwnerDisplayName(source.getOwnerDisplayName())
-            .setPrincipalName(source.getPrincipalName());
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        dest.id(source.getId())
+            .consumerUuid(source.getConsumerUuid())
+            .ownerId(source.getOwnerId())
+            .ownerKey(source.getOwnerKey())
+            .ownerDisplayName(source.getOwnerDisplayName())
+            .principalName(source.getPrincipalName());
+
+        Date created = source.getCreated();
+        dest.setCreated(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
+
+        Date updated = source.getUpdated();
+        dest.setUpdated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
 
         return dest;
     }
