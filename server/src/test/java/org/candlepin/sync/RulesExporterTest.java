@@ -14,6 +14,10 @@
  */
 package org.candlepin.sync;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 
@@ -21,10 +25,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.StringWriter;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * RulesExporterTest

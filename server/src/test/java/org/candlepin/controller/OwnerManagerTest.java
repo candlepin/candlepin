@@ -14,6 +14,9 @@
  */
 package org.candlepin.controller;
 
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -36,9 +39,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
 
 
 /**

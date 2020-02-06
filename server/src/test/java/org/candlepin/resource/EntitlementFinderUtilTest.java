@@ -14,12 +14,12 @@
  */
 package org.candlepin.resource;
 
+import static org.junit.Assert.assertEquals;
+
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 
 public class EntitlementFinderUtilTest {

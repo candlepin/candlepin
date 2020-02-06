@@ -14,13 +14,13 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.dto.AbstractTranslatorTest;
-import org.candlepin.dto.ModelTranslator;
-import org.candlepin.model.User;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+
+import org.candlepin.dto.AbstractTranslatorTest;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.model.User;
 
 
 

@@ -14,17 +14,17 @@
  */
 package org.candlepin.dto.api.v1;
 
-import org.candlepin.dto.AbstractTranslatorTest;
-import org.candlepin.dto.ModelTranslator;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import org.candlepin.dto.AbstractTranslatorTest;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 
 
 /**

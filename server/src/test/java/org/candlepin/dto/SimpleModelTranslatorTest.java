@@ -14,14 +14,14 @@
  */
 package org.candlepin.dto;
 
-import org.candlepin.model.ModelEntity;
-
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+
+import org.candlepin.model.ModelEntity;
+
+import org.junit.Test;
 
 
 /**

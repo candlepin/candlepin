@@ -14,6 +14,9 @@
  */
 package org.candlepin.dto.manifest.v1;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import org.candlepin.dto.AbstractDTOTest;
 import org.candlepin.model.Pool;
 
@@ -24,9 +27,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test suite for the PoolDTO (manifest import/export) class

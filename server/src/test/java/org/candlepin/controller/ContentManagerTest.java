@@ -14,20 +14,6 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.model.Content;
-import org.candlepin.model.Owner;
-import org.candlepin.model.Product;
-import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -42,6 +28,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
+
+import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.model.Content;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Product;
+import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.Arrays;
 
 
 /**

@@ -17,14 +17,6 @@ package org.candlepin.controller.mode;
 // import static org.hamcrest.MatcherAssert.*;
 // import static org.hamcrest.Matchers.*;
 
-import org.candlepin.controller.mode.CandlepinModeManager.Mode;
-
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.util.Iterator;
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.eq;
@@ -32,6 +24,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+
+import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+import java.util.Iterator;
+import java.util.Set;
 
 
 

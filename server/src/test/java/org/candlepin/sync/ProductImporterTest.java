@@ -14,6 +14,8 @@
  */
 package org.candlepin.sync;
 
+import static org.junit.Assert.assertEquals;
+
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.manifest.v1.ContentDTO;
@@ -36,8 +38,6 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-
-import static org.junit.Assert.assertEquals;
 
 
 /**

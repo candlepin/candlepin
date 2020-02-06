@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.GuestId;
@@ -33,8 +35,6 @@ import org.mockito.quality.Strictness;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 

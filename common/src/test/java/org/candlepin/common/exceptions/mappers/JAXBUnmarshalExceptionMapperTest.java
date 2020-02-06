@@ -14,14 +14,14 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBUnmarshalException;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * JAXBUnmarshalExceptionMapperTest

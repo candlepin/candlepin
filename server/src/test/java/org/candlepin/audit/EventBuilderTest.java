@@ -14,6 +14,10 @@
  */
 package org.candlepin.audit;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
@@ -25,10 +29,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class EventBuilderTest {
 

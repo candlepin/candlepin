@@ -15,6 +15,8 @@
 
 package org.candlepin.config;
 
+import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
+
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CRLUpdateJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
@@ -27,8 +29,6 @@ import org.candlepin.common.config.Configuration;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
 
 

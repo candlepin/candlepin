@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import static org.junit.Assert.assertEquals;
+
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.DatabaseConfigFactory;
@@ -31,8 +33,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * CPRestrictionsTest

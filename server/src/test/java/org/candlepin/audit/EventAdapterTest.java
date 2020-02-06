@@ -14,6 +14,11 @@
  */
 package org.candlepin.audit;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import org.candlepin.TestingModules;
 import org.candlepin.auth.PrincipalData;
 import org.candlepin.common.config.MapConfiguration;
@@ -33,11 +38,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 
 /**

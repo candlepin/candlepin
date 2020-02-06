@@ -14,11 +14,11 @@
  */
 package org.candlepin.resteasy.parameter;
 
+import static org.junit.Assert.assertEquals;
+
 import org.candlepin.common.exceptions.CandlepinParameterParseException;
 
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * KeyValueParameterTest

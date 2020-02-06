@@ -14,6 +14,11 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
+import static org.candlepin.common.test.RegexMatcher.matchesRegex;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
+
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.guice.CommonI18nProvider;
 import org.candlepin.common.guice.TestingScope;
@@ -29,11 +34,6 @@ import org.xnap.commons.i18n.I18n;
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-
-import static org.candlepin.common.test.RegexMatcher.matchesRegex;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.mock;
 
 /**
  * TestExceptionMapperBase

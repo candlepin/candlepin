@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy.js.compliance;
 
+import static org.junit.Assert.assertEquals;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -34,8 +36,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * StatusReasonMessageGeneratorTest

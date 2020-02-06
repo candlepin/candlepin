@@ -14,6 +14,9 @@
  */
 package org.candlepin.dto.manifest.v1;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Certificate;
@@ -21,9 +24,6 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.IdentityCertificate;
 
 import java.util.Date;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 
 /**

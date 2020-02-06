@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy.js;
 
+import static org.junit.Assert.assertFalse;
+
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -38,8 +40,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static org.junit.Assert.assertFalse;
 
 
 

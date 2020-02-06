@@ -14,14 +14,14 @@
  */
 package org.candlepin.async.tasks;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.PoolManager;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 /**
  * Test suite for the ExpiredPoolsCleanupJob class
