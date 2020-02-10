@@ -24,7 +24,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
@@ -349,7 +348,7 @@ public class Entitler {
      * @return the newly created developer pool (note: not yet persisted)
      */
     protected Pool assembleDevPool(Consumer consumer, Owner owner, String sku) {
-        DeveloperProducts devProducts = getDeveloperPoolProducts(consumer, owner, sku);
+        DeveloperProducts devProducts = getDeveloperPoolProducts(owner, sku);
         Product skuProduct = devProducts.getSku();
         Date startDate = consumer.getCreated();
         Date endDate = getEndDate(skuProduct, startDate);
@@ -362,26 +361,39 @@ public class Entitler {
         return pool;
     }
 
-    private DeveloperProducts getDeveloperPoolProducts(Consumer consumer, Owner owner, String sku) {
-        DeveloperProducts devProducts = getDevProductMap(consumer, owner, sku);
-        verifyDevProducts(consumer, sku, devProducts);
+    private DeveloperProducts getDeveloperPoolProducts(Owner owner, String sku) {
+        DeveloperProducts devProducts = getDevProductMap(owner, sku);
+        verifyDevProducts(sku, devProducts);
         return devProducts;
     }
 
     /**
-     * Looks up all Products matching the specified SKU and the consumer's
-     * installed products.
+     * Looks up all Products and their provided products
+     * matching the specified SKU.
      *
-     * @param consumer the consumer to pull the installed product id list from.
      * @param sku the product id of the SKU.
      * @return a {@link DeveloperProducts} object that contains the Product objects
      *         from the adapter.
      */
-    private DeveloperProducts getDevProductMap(Consumer consumer, Owner owner, String sku) {
-        List<String> devProductIds = new ArrayList<>();
-        devProductIds.add(sku);
-        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            devProductIds.add(ip.getProductId());
+    private DeveloperProducts getDevProductMap(Owner owner, String sku) {
+
+        Collection<? extends ProductInfo> productsByIds = this.productAdapter
+            .getProductsByIds(owner.getKey(), Arrays.asList(sku));
+
+        Collection<String> devProductIds = new ArrayList<>();
+        if (productsByIds.iterator().hasNext()) {
+            ProductInfo devProduct = productsByIds.iterator().next();
+            devProductIds.add(devProduct.getId());
+
+            Collection<? extends ProductInfo> provided = devProduct.getProvidedProducts();
+
+            if (provided != null) {
+                provided.forEach(product -> {
+                    if (product != null) {
+                        devProductIds.add(product.getId());
+                    }
+                });
+            }
         }
 
         log.debug("Importing products for dev pool resolution...");
@@ -408,28 +420,19 @@ public class Entitler {
     }
 
     /**
-     * Verifies that the expected developer SKU product was found and logs any
-     * consumer installed products that were not found by the adapter.
+     * Verifies that the expected developer SKU product was found.
      *
-     * @param consumer the consumer who's installed products are to be checked.
      * @param expectedSku the product id of the developer sku that must be found
      *                    in order to build the development pool.
      * @param devProducts all products retrieved from the adapter that are validated.
      * @throws ForbiddenException thrown if the sku was not found by the adapter.
      */
-    protected void verifyDevProducts(Consumer consumer, String expectedSku, DeveloperProducts devProducts)
+    protected void verifyDevProducts(String expectedSku, DeveloperProducts devProducts)
         throws ForbiddenException {
 
         if (!devProducts.foundSku()) {
             throw new ForbiddenException(i18n.tr("SKU product not available to this " +
                 "development unit: \"{0}\"", expectedSku));
-        }
-
-        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            if (!devProducts.containsProduct(ip.getProductId())) {
-                log.warn(i18n.tr("Installed product not available to this " +
-                    "development unit: \"{0}\"", ip.getProductId()));
-            }
         }
     }
 
