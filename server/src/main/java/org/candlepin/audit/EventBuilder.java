@@ -23,6 +23,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.util.Util;
 
@@ -123,6 +124,21 @@ public class EventBuilder {
                 catch (JsonProcessingException e) {
                     log.error("Error while building JSON for pool.created event.", e);
                     throw new IseException("Error while building JSON for pool.created event.", e);
+                }
+            }
+
+            if (event.getTarget().equals(Target.OWNER_CONTENT_ACCESS_MODE) &&
+                event.getType().equals(Type.MODIFIED)) {
+                Map<String, String> eventData = new HashMap<>();
+                eventData.put("contentAccessMode", ((Owner) entity).getContentAccessMode());
+
+                try {
+                    event.setEventData(Util.toJson(eventData));
+                }
+                catch (JsonProcessingException e) {
+                    log.error("Error while building JSON for owner content access mode changed event.", e);
+                    throw new IseException(
+                        "Error while building JSON for owner content access mode changed event.", e);
                 }
             }
         }

@@ -19,11 +19,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.Event.Target;
+import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.Owner;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -153,5 +156,21 @@ public class EventFactoryTest {
             "}";
         Event event = eventFactory.complianceCreated(consumer, status);
         assertEquals(expectedEventData, event.getEventData());
+    }
+
+    @Test
+    public void testOwnerContentAccessModeChanged() {
+        Owner owner = mock(Owner.class);
+
+        when(owner.getName()).thenReturn("owner-name");
+        when(owner.getOwnerId()).thenReturn("owner-id");
+        when(owner.getContentAccessMode()).thenReturn("org_environment");
+
+        Event event = eventFactory.ownerContentAccessModeChanged(owner);
+        assertEquals(Target.OWNER_CONTENT_ACCESS_MODE, event.getTarget());
+        assertEquals(Type.MODIFIED, event.getType());
+        assertEquals(owner.getName(), event.getTargetName());
+        assertEquals(owner.getOwnerId(), event.getOwnerId());
+        assertEquals("{\"contentAccessMode\":\"org_environment\"}", event.getEventData());
     }
 }

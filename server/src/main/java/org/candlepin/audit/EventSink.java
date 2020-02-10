@@ -60,5 +60,7 @@ public interface EventSink {
 
     void emitCompliance(Consumer consumer, SystemPurposeComplianceStatus compliance);
 
+    void emitOwnerContentAccessModeChanged(Owner owner);
+
     List<QueueStatus> getQueueInfo();
 }

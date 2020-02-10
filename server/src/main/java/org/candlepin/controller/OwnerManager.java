@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
@@ -78,6 +79,7 @@ public class OwnerManager {
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private UeberCertificateCurator uberCertificateCurator;
     private OwnerServiceAdapter ownerServiceAdapter;
+    private EventSink sink;
 
     @Inject
     public OwnerManager(ConsumerCurator consumerCurator,
@@ -95,7 +97,8 @@ public class OwnerManager {
         ContentAccessCertificateCurator contentAccessCertCurator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
         UeberCertificateCurator uberCertificateCurator,
-        OwnerServiceAdapter ownerServiceAdapter) {
+        OwnerServiceAdapter ownerServiceAdapter,
+        EventSink sink) {
 
         this.consumerCurator = consumerCurator;
         this.activationKeyCurator = activationKeyCurator;
@@ -113,6 +116,7 @@ public class OwnerManager {
         this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.uberCertificateCurator = uberCertificateCurator;
         this.ownerServiceAdapter = ownerServiceAdapter;
+        this.sink = sink;
     }
 
     @Transactional
@@ -284,6 +288,7 @@ public class OwnerManager {
             ownerCurator.flush();
 
             this.refreshOwnerForContentAccess(owner);
+            this.sink.emitOwnerContentAccessModeChanged(owner);
         }
     }
 

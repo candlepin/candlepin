@@ -226,6 +226,11 @@ public class EventSinkImpl implements EventSink {
         queueEvent(eventFactory.complianceCreated(consumer, compliance));
     }
 
+    @Override
+    public void emitOwnerContentAccessModeChanged(Owner owner) {
+        queueEvent(eventFactory.ownerContentAccessModeChanged(owner));
+    }
+
     /**
      * An internal class responsible for encapsulating a single session to the
      * event message broker.

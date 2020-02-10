@@ -119,8 +119,15 @@ public class NoopEventSinkImpl implements EventSink {
     }
 
     @Override
+    public void emitOwnerContentAccessModeChanged(Owner owner) {
+        log.debug("emitOwnerContentAccessModeChanged: OwnerId: {}, ContentAccessMode: {}",
+            owner.getOwnerId(), owner.getContentAccessMode());
+    }
+
+    @Override
     public List<QueueStatus> getQueueInfo() {
         return null;
     }
+
 
 }

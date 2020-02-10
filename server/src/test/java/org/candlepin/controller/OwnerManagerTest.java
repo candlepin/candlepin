@@ -14,9 +14,12 @@
  */
 package org.candlepin.controller;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.audit.EventSink;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -80,6 +83,8 @@ public class OwnerManagerTest {
     private UeberCertificateCurator uberCertificateCurator;
     @Mock
     private OwnerServiceAdapter ownerServiceAdapter;
+    @Mock
+    private EventSink sink;
 
 
     @Before
@@ -88,7 +93,7 @@ public class OwnerManagerTest {
             exportCurator, importRecordCurator, permissionCurator, ownerProductCurator, productManager,
             ownerContentCurator, contentManager, ownerCurator, contentAccessCertService,
             contentAccessCertCurator, ownerEnvContentAccessCurator, uberCertificateCurator,
-            ownerServiceAdapter);
+            ownerServiceAdapter, sink);
     }
 
     @Test
@@ -151,5 +156,22 @@ public class OwnerManagerTest {
         when(ownerServiceAdapter.getContentAccessModeList(eq(owner.getKey()))).thenReturn("");
         when(ownerServiceAdapter.getContentAccessMode(eq(owner.getKey()))).thenReturn("three");
         ownerManager.refreshContentAccessMode(ownerServiceAdapter, owner);
+    }
+
+    @Test
+    public void testContentAccessModeChanged() {
+        Owner owner = new Owner();
+        when(ownerCurator.lockAndLoad(eq(owner))).thenReturn(owner);
+        when(ownerServiceAdapter.getContentAccessModeList(eq(owner.getKey()))).thenReturn(
+            ContentAccessCertServiceAdapter.ENTITLEMENT_ACCESS_MODE + "," +
+            ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE);
+        when(ownerServiceAdapter.getContentAccessMode(eq(owner.getKey())))
+            .thenReturn(ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE);
+        ownerManager.refreshContentAccessMode(ownerServiceAdapter, owner);
+        doAnswer((o) -> {
+            Assert.assertEquals(ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE,
+                ((Owner) o).getContentAccessMode());
+            return null;
+        }).when(sink).emitOwnerContentAccessModeChanged(any(Owner.class));
     }
 }
