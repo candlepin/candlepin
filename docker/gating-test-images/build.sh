@@ -76,7 +76,7 @@ docker build --no-cache --tag=cp_latest_stage cp-latest-stage/
 evalrc $? "cp_latest_stage image build was not successful."
 
 echo "============ Pushing images to registry... ============ "
-REGISTRY=docker-registry.engineering.redhat.com/candlepin
+REGISTRY=docker-registry.upshift.redhat.com/chainsaw
 
 # Find out the candlepin version used in stage
 curl -k -u admin:admin https://subscription.rhsm.stage.redhat.com/subscription/status > stage_status.json
