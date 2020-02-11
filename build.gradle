@@ -16,7 +16,6 @@ buildscript {
 plugins {
     id "io.spring.dependency-management" version "1.0.8.RELEASE"
     id "nebula.lint" version "11.5.0"
-    id "checkstyle"
 }
 
 version = "2.0"
@@ -213,9 +212,6 @@ subprojects {
 
 project(":api") {
     apply plugin: "org.openapi.generator"
-
-    // This project should only contain generated code.  No point in running checkstyle
-    checkstyle.sourceSets = []
 
     ext {
         api_spec_path = "${projectDir}/candlepin-api-spec.yaml"
