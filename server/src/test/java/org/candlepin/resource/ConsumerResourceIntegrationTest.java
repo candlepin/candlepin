@@ -198,8 +198,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(4, certificates.size());
 
-        String serial1 = certificates.get(0).getSerial().getId();
-        String serial2 = certificates.get(3).getSerial().getId();
+        Long serial1 = certificates.get(0).getSerial().getId();
+        Long serial2 = certificates.get(3).getSerial().getId();
 
         String serialsToFilter = serial1.toString() + "," + serial2.toString();
 
@@ -372,7 +372,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
 
-        consumerResource.unbindBySerial(consumer.getUuid(), Long.valueOf(serials.get(0).getSerial().getId()));
+        consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0).getSerial().getId());
         assertEquals(0, consumerResource.listEntitlements(
             consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
     }
@@ -669,9 +669,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         CertificateDTO original = serials.get(0);
         CertificateSerialDTO serialDTO  = original.getSerial();
-        CertificateSerial serial = new CertificateSerial(Long.valueOf(serialDTO.getId()),
-            serialDTO.getExpiration());
-        serial.setSerial(Long.valueOf(serialDTO.getSerial()));
+        CertificateSerial serial = new CertificateSerial(serialDTO.getId(), serialDTO.getExpiration());
+        serial.setSerial(serialDTO.getSerial().longValue());
         serial.setCollected(serialDTO.isCollected());
         serial.setRevoked(serialDTO.isRevoked());
 

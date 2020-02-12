@@ -84,7 +84,7 @@ describe 'Certificate Revocation List', :serial => true do
     new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
     new_time.should_not == old_time
     crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
-    expect(crl.revoked.map { |i| i.serial.to_s }).to include(serial)
+    expect(crl.revoked.map { |i| i.serial }).to include(serial)
   end
 
   it 'should regenerate the on-disk crl' do
@@ -135,7 +135,7 @@ describe 'Certificate Revocation List', :serial => true do
   it 'should put revoked id cert on CRL' do
     id_cert = OpenSSL::X509::Certificate.new(@system.identity_certificate)
     @system.unregister
-    expect(revoked_serials).to include(id_cert.serial.to_s)
+    expect(revoked_serials).to include(id_cert.serial.to_i)
   end
 
   it 'should put revoked content access cert on CRL' do
@@ -171,7 +171,7 @@ end
   end
 
   def revoked_serials
-    return @cp.get_crl.revoked.map {|entry| entry.serial.to_s}
+    return @cp.get_crl.revoked.map {|entry| entry.serial.to_i }
   end
 
 end
