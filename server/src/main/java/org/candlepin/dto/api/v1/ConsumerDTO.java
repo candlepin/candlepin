@@ -1105,9 +1105,6 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             copy.setType(null);
         }
 
-        CertificateDTO idCert = this.getIdCertificate();
-        copy.setIdCertificate(idCert != null ? idCert.clone() : null);
-
         copy.setFacts(this.getFacts());
         copy.setInstalledProducts(this.getInstalledProducts());
         copy.setCapabilities(this.getCapabilities());

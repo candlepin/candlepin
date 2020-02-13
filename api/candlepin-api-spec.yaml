@@ -245,7 +245,7 @@ paths:
       security: []
       responses:
         200:
-          description: ''
+          description: Status information about running Candlepin server
           content:
             application/json:
               schema:
@@ -301,6 +301,21 @@ components:
               type: boolean
             revoked:
               type: boolean
+
+    CertificateDTO:
+      description: Represents certificate details
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+           id:
+             type: string
+           key:
+             type: string
+           cert:
+             type: string
+           serial:
+             $ref: '#/components/schemas/CertificateSerialDTO'
 
     ConsumerTypeDTO:
       description: Represents a consumer type used to differentiate various types of consumers

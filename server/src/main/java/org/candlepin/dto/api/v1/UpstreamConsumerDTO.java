@@ -237,9 +237,6 @@ public class UpstreamConsumerDTO extends TimestampedCandlepinDTO<UpstreamConsume
             copy.setConsumerType(null);
         }
 
-        CertificateDTO cert = this.getIdCertificate();
-        copy.setIdCertificate(cert != null ? (CertificateDTO) cert.clone() : null);
-
         return copy;
     }
 
