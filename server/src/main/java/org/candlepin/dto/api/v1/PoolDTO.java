@@ -1433,9 +1433,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
         OwnerDTO owner = this.getOwner();
         copy.setOwner(owner != null ? owner.clone() : null);
 
-        CertificateDTO certificate = this.getCertificate();
-        copy.setCertificate(certificate != null ? certificate.clone() : null);
-
         copy.setAttributes(this.getAttributes());
         copy.setCalculatedAttributes(this.getCalculatedAttributes());
         copy.setProductAttributes(this.getProductAttributes());
