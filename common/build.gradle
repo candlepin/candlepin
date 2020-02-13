@@ -48,9 +48,6 @@ task pom {
     doLast {
         conf2ScopeMappings.addMapping(MavenPlugin.COMPILE_PRIORITY + 1, configurations.implementation, 'compile')
         pom {
-            // Exclude all transitive dependencies
-            configurations.all*.exclude module: "*"
-
             project {
                 name "Candlepin Common"
                 description "Common code for Candlepin"
@@ -83,6 +80,8 @@ task pom {
                     }
                 }
             }
+        }.withXml {
+            dependencyManagement.pomConfigurer.configurePom(asNode())
         }.writeTo("pom.xml")
     }
 }
