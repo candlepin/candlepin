@@ -21,6 +21,7 @@ import io.swagger.annotations.ApiModel;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import java.math.BigInteger;
 import java.util.Date;
 
 
@@ -32,8 +33,8 @@ import java.util.Date;
 public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSerialDTO> {
     public static final long serialVersionUID = 1L;
 
-    protected String id;
-    protected String serial;
+    protected Long id;
+    protected BigInteger serial;
     protected Date expiration;
     protected Boolean collected;
     protected Boolean revoked;
@@ -57,20 +58,20 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
         super(source);
     }
 
-    public String getId() {
+    public Long getId() {
         return this.id;
     }
 
-    public CertificateSerialDTO setId(String id) {
+    public CertificateSerialDTO setId(Long id) {
         this.id = id;
         return this;
     }
 
-    public String getSerial() {
+    public BigInteger getSerial() {
         return this.serial;
     }
 
-    public CertificateSerialDTO setSerial(String serial) {
+    public CertificateSerialDTO setSerial(BigInteger serial) {
         this.serial = serial;
         return this;
     }

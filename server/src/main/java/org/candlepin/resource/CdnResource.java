@@ -172,7 +172,7 @@ public class CdnResource {
                     CertificateSerial certSerial = new CertificateSerial();
                     certSerial.setExpiration(certSerialDTO.getExpiration());
                     if (certSerialDTO.getSerial() != null) {
-                        certSerial.setSerial(Long.valueOf(certSerialDTO.getSerial()));
+                        certSerial.setSerial(certSerialDTO.getSerial().longValue());
                     }
 
                     if (certSerialDTO.isCollected() != null) {

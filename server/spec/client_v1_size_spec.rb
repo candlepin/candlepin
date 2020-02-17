@@ -120,6 +120,6 @@ describe 'Entitlement Certificate V1 Size' do
   end
 
   def revoked_serials
-    return @cp.get_crl.revoked.map {|entry| entry.serial.to_s }
+    return @cp.get_crl.revoked.map {|entry| entry.serial.to_i }
   end
 end
