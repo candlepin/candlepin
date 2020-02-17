@@ -40,6 +40,7 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.persist.UnitOfWork;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -55,6 +56,7 @@ public class JobMessageReceiverTest {
     private Configuration config;
     private CPMSessionFactory cpmSessionFactory;
     private ObjectMapper mapper;
+    private UnitOfWork unitOfWork;
 
     // Collected state issued on a per-test basis
     private CPMSession session;
@@ -66,6 +68,7 @@ public class JobMessageReceiverTest {
         this.config = new CandlepinCommonTestConfig();
         this.jobManager = mock(JobManager.class);
         this.mapper = new ObjectMapper();
+        this.unitOfWork = mock(UnitOfWork.class);
 
         // Set the number of threads/consumers to 1 so we don't have to worry about
         // clobbering any collected state during consumer creation
@@ -140,7 +143,7 @@ public class JobMessageReceiverTest {
     private JobMessageReceiver buildJobMessageReceiver() {
         try {
             JobMessageReceiver receiver = new JobMessageReceiver(this.config, this.cpmSessionFactory,
-                this.mapper);
+                this.mapper, this.unitOfWork);
 
             receiver.initialize(this.jobManager);
 
@@ -164,6 +167,9 @@ public class JobMessageReceiverTest {
         verify(message, times(1)).acknowledge();
         verify(this.session, times(1)).commit();
         verify(this.session, never()).rollback();
+
+        verify(this.unitOfWork, times(1)).begin();
+        verify(this.unitOfWork, times(1)).end();
     }
 
     @Test
@@ -181,6 +187,9 @@ public class JobMessageReceiverTest {
         verify(message, times(1)).acknowledge();
         verify(this.session, times(1)).commit();
         verify(this.session, never()).rollback();
+
+        verify(this.unitOfWork, times(1)).begin();
+        verify(this.unitOfWork, times(1)).end();
     }
 
     @Test
@@ -201,6 +210,9 @@ public class JobMessageReceiverTest {
         verify(message, times(1)).acknowledge();
         verify(this.session, times(1)).commit();
         verify(this.session, never()).rollback();
+
+        verify(this.unitOfWork, times(1)).begin();
+        verify(this.unitOfWork, times(1)).end();
     }
 
     @Test
@@ -221,6 +233,9 @@ public class JobMessageReceiverTest {
         verify(message, times(1)).acknowledge();
         verify(this.session, never()).commit();
         verify(this.session, times(1)).rollback();
+
+        verify(this.unitOfWork, times(1)).begin();
+        verify(this.unitOfWork, times(1)).end();
     }
 
     @Test
@@ -238,6 +253,9 @@ public class JobMessageReceiverTest {
         verify(message, times(1)).acknowledge();
         verify(this.session, never()).commit();
         verify(this.session, times(1)).rollback();
+
+        verify(this.unitOfWork, times(1)).begin();
+        verify(this.unitOfWork, times(1)).end();
     }
 
     @Test
@@ -255,6 +273,9 @@ public class JobMessageReceiverTest {
         verify(message, times(1)).acknowledge();
         verify(this.session, times(1)).commit();
         verify(this.session, never()).rollback();
+
+        verify(this.unitOfWork, times(1)).begin();
+        verify(this.unitOfWork, times(1)).end();
     }
 
     @Test
@@ -271,6 +292,9 @@ public class JobMessageReceiverTest {
         verify(message, times(1)).acknowledge();
         verify(this.session, never()).commit();
         verify(this.session, times(1)).rollback();
+
+        verify(this.unitOfWork, times(1)).begin();
+        verify(this.unitOfWork, times(1)).end();
     }
 
     @Test
@@ -289,6 +313,9 @@ public class JobMessageReceiverTest {
         verify(message, times(1)).acknowledge();
         verify(this.session, never()).commit();
         verify(this.session, times(1)).rollback();
+
+        verify(this.unitOfWork, times(0)).begin();
+        verify(this.unitOfWork, times(1)).end();
     }
 
 }
