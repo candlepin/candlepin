@@ -18,7 +18,7 @@ import org.candlepin.auth.Principal;
 
 import com.google.inject.Inject;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -50,7 +50,7 @@ public class SuperAdminAuthorizationFilter extends AbstractAuthorizationFilter {
         log.debug("Authorization check for {}", requestContext.getUriInfo().getPath());
 
         Principal principal = (Principal) requestContext.getSecurityContext().getUserPrincipal();
-        ResourceInfo resourceInfo = ResteasyProviderFactory.getContextData(ResourceInfo.class);
+        ResourceInfo resourceInfo = ResteasyContext.getContextData(ResourceInfo.class);
         Method method = resourceInfo.getResourceMethod();
 
         if (!principal.hasFullAccess()) {

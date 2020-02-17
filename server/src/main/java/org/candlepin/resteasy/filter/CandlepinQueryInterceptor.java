@@ -29,24 +29,25 @@ import com.google.inject.Provider;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.core.ServerResponse;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
+import org.jboss.resteasy.core.ResteasyContext;
 
 import java.util.Objects;
 
 import javax.persistence.EntityManager;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.StreamingOutput;
+
+
 
 /**
  * The CandlepinQueryInterceptor handles the streaming of a query and applies any paging
  * configuration.
  */
 @javax.ws.rs.ext.Provider
-@ServerInterceptor
-public class CandlepinQueryInterceptor implements PostProcessInterceptor {
+public class CandlepinQueryInterceptor implements ContainerResponseFilter {
 
     protected final JsonProvider jsonProvider;
     protected final Provider<EntityManager> emProvider;
@@ -64,38 +65,41 @@ public class CandlepinQueryInterceptor implements PostProcessInterceptor {
      * @return a newly opened session
      */
     protected Session openSession() {
-        final Session currentSession = (Session) this.emProvider.get().getDelegate();
-        final SessionFactory factory = currentSession.getSessionFactory();
+        Session currentSession = (Session) this.emProvider.get().getDelegate();
+        SessionFactory factory = currentSession.getSessionFactory();
 
         return factory.openSession();
     }
 
     @Override
-    public void postProcess(ServerResponse response) {
-        final Object entity = response.getEntity();
+    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
+        Object entity = responseContext.getEntity();
 
         if (entity instanceof CandlepinQuery) {
-            final PageRequest pageRequest = ResteasyProviderFactory.getContextData(PageRequest.class);
-            final Session session = this.openSession();
+            PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+            Session session = this.openSession();
+
             try {
-                final CandlepinQuery query = (CandlepinQuery) entity;
+                CandlepinQuery query = (CandlepinQuery) entity;
 
                 // Use a separate session so we aren't at risk of lazy loading or interceptors closing
                 // our cursor mid-stream.
                 query.useSession(session);
 
                 // Apply any paging config we may have
-                applyPaging(pageRequest, query);
+                this.applyPaging(pageRequest, query);
 
                 // Set the output streamer that will stream our query result
-                response.setEntity(buildOutputStreamer(session, query));
+                responseContext.setEntity(this.buildOutputStreamer(session, query));
             }
-            catch (final RuntimeException e) {
+            catch (RuntimeException e) {
                 if (session != null) {
                     session.close();
                 }
+
                 throw e;
             }
+
         }
     }
 
@@ -103,6 +107,7 @@ public class CandlepinQueryInterceptor implements PostProcessInterceptor {
         if (pageRequest == null) {
             return;
         }
+
         // Impl note:
         // Sorting will always be required (for consistency) if a page request object is
         // present -- either isPaging() will be true, or we'll have ordering config.
@@ -124,25 +129,23 @@ public class CandlepinQueryInterceptor implements PostProcessInterceptor {
             query.setMaxResults(pageRequest.getPerPage());
 
             // Create a page object for the link header response
-            final Page page = new Page();
+            Page page = new Page();
             page.setMaxRecords(query.getRowCount()); // This is expensive :(
             page.setPageRequest(pageRequest);
             // Note: we don't need to store the page data in the page
 
-            ResteasyProviderFactory.pushContext(Page.class, page);
+            ResteasyContext.pushContext(Page.class, page);
         }
     }
 
-    private StreamingOutput buildOutputStreamer(
-        final Session session, final CandlepinQuery query) {
-
-        final ObjectMapper mapper = this.jsonProvider
+    private StreamingOutput buildOutputStreamer(Session session, CandlepinQuery query) {
+        ObjectMapper mapper = this.jsonProvider
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
         return stream -> {
             try (
-                final JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
-                final ResultIterator<Object> iterator = query.iterate()) {
+                JsonGenerator generator = mapper.getJsonFactory().createGenerator(stream);
+                ResultIterator<Object> iterator = query.iterate()) {
 
                 generator.writeStartArray();
 

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class DynamicPropertyFilter extends CheckableBeanPropertyFilter {
     public boolean isSerializable(Object obj, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider, PropertyWriter writer) {
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
 
         if (filterData != null) {
             List<String> path = new ArrayList<>(10);

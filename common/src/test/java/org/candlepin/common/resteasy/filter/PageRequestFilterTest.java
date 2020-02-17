@@ -24,8 +24,8 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.guice.CommonI18nProvider;
 import org.candlepin.common.paging.PageRequest;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.mock.MockHttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -66,7 +66,7 @@ public class PageRequestFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
+        PageRequest p = ResteasyContext.getContextData(PageRequest.class);
         assertNull(p);
     }
 
@@ -78,7 +78,7 @@ public class PageRequestFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
+        PageRequest p = ResteasyContext.getContextData(PageRequest.class);
         assertEquals(Integer.valueOf(10), p.getPerPage());
         assertEquals(Integer.valueOf(4), p.getPage());
         assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
@@ -93,7 +93,7 @@ public class PageRequestFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
+        PageRequest p = ResteasyContext.getContextData(PageRequest.class);
         assertEquals(PageRequest.DEFAULT_PER_PAGE, p.getPerPage());
         assertEquals(Integer.valueOf(5), p.getPage());
         assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
@@ -108,7 +108,7 @@ public class PageRequestFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
+        PageRequest p = ResteasyContext.getContextData(PageRequest.class);
         assertEquals(Integer.valueOf(10), p.getPerPage());
         assertEquals(PageRequest.DEFAULT_PAGE, p.getPage());
         assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
@@ -141,7 +141,7 @@ public class PageRequestFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
+        PageRequest p = ResteasyContext.getContextData(PageRequest.class);
         assertFalse(p.isPaging());
         assertEquals(PageRequest.Order.ASCENDING, p.getOrder());
         assertEquals("id", p.getSortBy());
@@ -155,7 +155,7 @@ public class PageRequestFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
+        PageRequest p = ResteasyContext.getContextData(PageRequest.class);
         assertFalse(p.isPaging());
         assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
         assertEquals("id", p.getSortBy());
@@ -169,7 +169,7 @@ public class PageRequestFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
+        PageRequest p = ResteasyContext.getContextData(PageRequest.class);
         assertFalse(p.isPaging());
         assertEquals(PageRequest.Order.DESCENDING, p.getOrder());
         assertEquals("id", p.getSortBy());

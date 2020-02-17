@@ -20,7 +20,7 @@ import org.candlepin.common.paging.PageRequest.Order;
 
 import com.google.inject.Inject;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
 
 import javax.annotation.Priority;
@@ -91,7 +91,7 @@ public class PageRequestFilter implements ContainerRequestFilter {
             }
         }
 
-        ResteasyProviderFactory.pushContext(PageRequest.class, p);
+        ResteasyContext.pushContext(PageRequest.class, p);
     }
 
     private Order readOrder(String order) {

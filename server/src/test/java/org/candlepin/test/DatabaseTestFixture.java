@@ -74,7 +74,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.resteasy.AnnotationLocator;
-import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.Util;
 
@@ -155,8 +154,6 @@ public class DatabaseTestFixture {
     @Inject protected UserCurator userCurator;
 
     @Inject protected PermissionFactory permissionFactory;
-
-    @Inject protected ResourceLocatorMap locatorMap;
     @Inject protected AnnotationLocator annotationLocator;
     @Inject protected ModelTranslator modelTranslator;
 
@@ -207,9 +204,6 @@ public class DatabaseTestFixture {
         Module testingModule = new TestingModules.StandardTest(this.config);
         this.injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
-
-        locatorMap = this.injector.getInstance(ResourceLocatorMap.class);
-        locatorMap.init();
 
         annotationLocator = this.injector.getInstance(AnnotationLocator.class);
         annotationLocator.init();

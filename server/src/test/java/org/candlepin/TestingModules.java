@@ -74,7 +74,6 @@ import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resteasy.AnnotationLocator;
-import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -317,7 +316,6 @@ public class TestingModules {
 
             bind(ExportExtensionAdapter.class).to(DefaultExportExtensionAdapter.class);
 
-            bind(ResourceLocatorMap.class);
             bind(AnnotationLocator.class);
             bind(StoreFactory.class);
             VerifyAuthorizationFilterFactory amf = new VerifyAuthorizationFilterFactory();

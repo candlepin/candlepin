@@ -19,7 +19,7 @@ import com.google.inject.OutOfScopeException;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,11 +37,11 @@ public class CandlepinRequestScope implements Scope {
 
     public void enter() {
         CandlepinRequestScopeData data = new CandlepinRequestScopeData();
-        ResteasyProviderFactory.pushContext(CandlepinRequestScopeData.class, data);
+        ResteasyContext.pushContext(CandlepinRequestScopeData.class, data);
     }
 
     public void exit() {
-        ResteasyProviderFactory.popContextData(CandlepinRequestScopeData.class);
+        ResteasyContext.popContextData(CandlepinRequestScopeData.class);
     }
 
     public <T> Provider<T> scope(final Key<T> key, final Provider<T> unscoped) {
@@ -55,14 +55,14 @@ public class CandlepinRequestScope implements Scope {
                     current = unscoped.get();
                     scopedObjects.put(key, current);
                 }
+
                 return current;
             }
         };
     }
 
     private <T> Map<Key<?>, Object> getScopedObjectMap(Key<T> key) {
-        CandlepinRequestScopeData scopeData = ResteasyProviderFactory
-            .getContextData(CandlepinRequestScopeData.class);
+        CandlepinRequestScopeData scopeData = ResteasyContext.getContextData(CandlepinRequestScopeData.class);
 
         if (scopeData == null) {
             throw new OutOfScopeException("Cannot access " + key + " outside of a scoping block");

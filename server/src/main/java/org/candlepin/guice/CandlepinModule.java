@@ -147,7 +147,6 @@ import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.DateFormatter;
 import org.candlepin.resteasy.JsonProvider;
-import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.candlepin.resteasy.filter.AuthorizationFeature;
 import org.candlepin.resteasy.filter.CandlepinQueryInterceptor;
@@ -409,7 +408,6 @@ public class CandlepinModule extends AbstractModule {
         bind(SuperAdminAuthorizationFilter.class);
         bind(SecurityHoleAuthorizationFilter.class);
         bind(AuthenticationFilter.class);
-        bind(ResourceLocatorMap.class).asEagerSingleton();
     }
 
     private void configureInterceptors() {

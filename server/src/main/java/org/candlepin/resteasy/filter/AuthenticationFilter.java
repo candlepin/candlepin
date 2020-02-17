@@ -37,8 +37,8 @@ import com.google.inject.Injector;
 
 import io.swagger.jaxrs.listing.ApiListingResource;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -125,8 +125,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         throws IOException {
         log.debug("Authentication check for {}", requestContext.getUriInfo().getPath());
 
-        HttpRequest httpRequest = ResteasyProviderFactory.getContextData(HttpRequest.class);
-        ResourceInfo resourceInfo = ResteasyProviderFactory.getContextData(ResourceInfo.class);
+        HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
+        ResourceInfo resourceInfo = ResteasyContext.getContextData(ResourceInfo.class);
         Method method = resourceInfo.getResourceMethod();
 
         SecurityHole hole = annotationLocator.getAnnotation(method, SecurityHole.class);
@@ -169,7 +169,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         requestContext.setSecurityContext(securityContext);
 
         // Push the principal into the context for the PrincipalProvider to access directly
-        ResteasyProviderFactory.pushContext(Principal.class, principal);
+        ResteasyContext.pushContext(Principal.class, principal);
     }
 
 }

@@ -22,8 +22,8 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.common.jackson.DynamicFilterData;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.mock.MockHttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,12 +51,12 @@ public class DynamicJsonFilterTest {
     @BeforeEach
     public void init() {
         this.interceptor = new DynamicJsonFilter();
-        ResteasyProviderFactory.popContextData(DynamicFilterData.class);
+        ResteasyContext.popContextData(DynamicFilterData.class);
     }
 
     @AfterEach
     public void tearDown() {
-        ResteasyProviderFactory.clearContextData();
+        ResteasyContext.clearContextData();
     }
 
     @Test
@@ -68,7 +68,7 @@ public class DynamicJsonFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
         assertNull(filterData);
     }
 
@@ -81,7 +81,7 @@ public class DynamicJsonFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
 
         assertFalse(filterData.isAttributeExcluded("a1"));
@@ -114,7 +114,7 @@ public class DynamicJsonFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
 
         assertFalse(filterData.isAttributeExcluded("a1"));
@@ -147,7 +147,7 @@ public class DynamicJsonFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
 
         assertFalse(filterData.isAttributeExcluded("a1"));
@@ -180,7 +180,7 @@ public class DynamicJsonFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
 
         assertTrue(filterData.isAttributeExcluded("a1"));
@@ -213,7 +213,7 @@ public class DynamicJsonFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
 
         assertFalse(filterData.isAttributeExcluded("a1"));
@@ -246,7 +246,7 @@ public class DynamicJsonFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
 
         assertTrue(filterData.isAttributeExcluded("a1"));
@@ -279,7 +279,7 @@ public class DynamicJsonFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
 
         // a: { b1: { c1, c2, c3 }, b2: { d1, d2, d3 } }
@@ -314,7 +314,7 @@ public class DynamicJsonFilterTest {
 
         interceptor.filter(mockRequestContext);
 
-        DynamicFilterData filterData = ResteasyProviderFactory.getContextData(DynamicFilterData.class);
+        DynamicFilterData filterData = ResteasyContext.getContextData(DynamicFilterData.class);
         assertNotNull(filterData);
 
         // a: { b1: { c1, c2, c3 }, b2: { d1, d2, d3 } }

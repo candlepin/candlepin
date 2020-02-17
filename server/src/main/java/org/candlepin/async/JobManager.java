@@ -39,7 +39,7 @@ import com.google.inject.persist.Transactional;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.Job;
@@ -1339,7 +1339,7 @@ public class JobManager implements ModeChangeListener {
         String name = status.getPrincipalName();
         Principal principal = name != null ? new JobPrincipal(name) : new SystemPrincipal();
 
-        ResteasyProviderFactory.pushContext(Principal.class, principal);
+        ResteasyContext.pushContext(Principal.class, principal);
     }
 
     /**
@@ -1350,7 +1350,7 @@ public class JobManager implements ModeChangeListener {
      */
     private void teardownJobRuntimeEnvironment() {
         // Pop principal info
-        ResteasyProviderFactory.popContextData(Principal.class);
+        ResteasyContext.popContextData(Principal.class);
 
         // Restore original MDC state
         Map<String, String> state = this.mdcState.get();

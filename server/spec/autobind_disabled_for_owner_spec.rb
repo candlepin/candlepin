@@ -37,7 +37,7 @@ describe 'Autobind Disabled On Owner' do
     @owner['autobindHypervisorDisabled'] = true
     @cp.update_owner(@owner['key'], @owner)
     @owner = @cp.get_owner(@owner['key'])
-    puts (@owner.inspect())
+
     begin
       consumer = @user_cp.register("foofy", :hypervisor, nil, {}, nil, @owner['key'], [], [])
       consumer_cp = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])

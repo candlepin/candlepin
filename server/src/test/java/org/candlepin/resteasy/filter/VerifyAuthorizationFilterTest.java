@@ -15,8 +15,7 @@
 package org.candlepin.resteasy.filter;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SSLAuth;
@@ -25,7 +24,6 @@ import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.model.Consumer;
-import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.test.DatabaseTestFixture;
 
 import ch.qos.logback.classic.Level;
@@ -35,16 +33,10 @@ import ch.qos.logback.classic.LoggerContext;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
-import org.jboss.resteasy.core.InjectorFactoryImpl;
-import org.jboss.resteasy.core.ValueInjector;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.mock.MockHttpRequest;
-import org.jboss.resteasy.spi.ApplicationException;
-import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.HttpResponse;
-import org.jboss.resteasy.spi.MethodInjector;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.metadata.ResourceLocator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -63,10 +55,13 @@ import javax.inject.Provider;
 import javax.security.auth.x500.X500Principal;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.UriInfo;
+
+
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -74,62 +69,17 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     @Inject private Provider<I18n> i18nProvider;
     @Inject private StoreFactory storeFactory;
     @Inject private SSLAuth sslAuth;
-    @Inject private ResourceLocatorMap resourceMap;
 
     @Mock private CandlepinSecurityContext mockSecurityContext;
     @Mock private ContainerRequestContext mockRequestContext;
 
     private VerifyAuthorizationFilter interceptor;
-    private StubMethodInjector methodInjector;
     private MockHttpRequest mockReq;
 
-    public static class StubInjectorFactoryImpl extends InjectorFactoryImpl {
-        private MethodInjector methodInjector;
-
-        public void setMethodInjector(MethodInjector injector) {
-            this.methodInjector = injector;
-        }
-
-        @Override
-        public MethodInjector createMethodInjector(ResourceLocator locator, ResteasyProviderFactory factory) {
-            return methodInjector;
-        }
-    }
-
-    public static class StubMethodInjector implements MethodInjector {
-        private Object[] arguments;
-
-        @Override
-        public Object invoke(HttpRequest request, HttpResponse response,
-            Object target) throws Failure, ApplicationException,
-            WebApplicationException {
-            return null;
-        }
-
-        public Object[] getArguments() {
-            return arguments;
-        }
-
-        public void setArguments(Object[] arguments) {
-            this.arguments = arguments;
-        }
-
-        @Override
-        public Object[] injectArguments(HttpRequest request,
-            HttpResponse response) throws Failure {
-            return arguments;
-        }
-
-        @Override
-        public ValueInjector[] getParams() {
-            return null;
-        }
-
-        @Override
-        public boolean expectsBody() {
-            return false;
-        }
-    }
+    private UriInfo mockUriInfo;
+    private MultivaluedHashMap<String, String> mockPathParameters;
+    private MultivaluedHashMap<String, String> mockQueryParameters;
+    private MultivaluedHashMap<String, String> mockHeaders;
 
 
     protected Module getGuiceOverrideModule() {
@@ -143,24 +93,20 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         Logger logger = lc.getLogger(AbstractAuthorizationFilter.class);
         logger.setLevel(Level.INFO);
 
-        ResteasyProviderFactory.getInstance().registerProvider(
-            StubInjectorFactoryImpl.class);
+        this.mockUriInfo = mock(UriInfo.class);
 
-        StubInjectorFactoryImpl factory = (StubInjectorFactoryImpl)
-            ResteasyProviderFactory.getInstance().getInjectorFactory();
-
-        methodInjector = new StubMethodInjector();
-        factory.setMethodInjector(methodInjector);
-
-        ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
+        this.mockPathParameters = new MultivaluedHashMap<>();
+        this.mockQueryParameters = new MultivaluedHashMap<>();
+        this.mockHeaders = new MultivaluedHashMap<>();
 
         when(mockRequestContext.getSecurityContext()).thenReturn(mockSecurityContext);
-        when(mockRequestContext.getUriInfo()).thenReturn(mock(UriInfo.class));
 
-        resourceMap.init();
+        doReturn(this.mockUriInfo).when(this.mockRequestContext).getUriInfo();
+        doReturn(this.mockPathParameters).when(this.mockUriInfo).getPathParameters(anyBoolean());
+        doReturn(this.mockQueryParameters).when(this.mockUriInfo).getQueryParameters(anyBoolean());
+        doReturn(this.mockHeaders).when(this.mockRequestContext).getHeaders();
 
-        interceptor = new VerifyAuthorizationFilter(i18nProvider, storeFactory, resourceMap,
-            annotationLocator);
+        interceptor = new VerifyAuthorizationFilter(i18nProvider, storeFactory, annotationLocator);
     }
 
     private void configureResourceClass(Class<?> resourceClass) throws NoSuchMethodException {
@@ -170,7 +116,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         Class clazz = FakeResource.class;
         when(mockInfo.getResourceClass()).thenReturn(clazz);
 
-        ResteasyProviderFactory.pushContext(ResourceInfo.class, mockInfo);
+        ResteasyContext.pushContext(ResourceInfo.class, mockInfo);
     }
 
     @Test
@@ -185,12 +131,14 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
 
     void testAccessToConsumerForResource(Class<?> resourceClass) throws Exception {
         configureResourceClass(resourceClass);
+
         mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fake/123");
-        ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
         mockReq.setAttribute(ResteasyProviderFactory.class.getName(), ResteasyProviderFactory.getInstance());
 
         Consumer c = createConsumer(createOwner());
-        methodInjector.setArguments(new Object[] {c.getUuid()});
+
+        this.mockPathParameters.add("uuid", c.getUuid());
 
         X500Principal dn = new X500Principal("CN=" + c.getUuid() + ", C=US, L=Raleigh");
 
@@ -221,12 +169,12 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     void noAccessToOtherConsumerForResource(Class<?> resourceClass) throws Exception {
         configureResourceClass(resourceClass);
         mockReq = MockHttpRequest.create("POST", "http://localhost/candlepin/fake/123");
-        ResteasyProviderFactory.pushContext(HttpRequest.class, mockReq);
+        ResteasyContext.pushContext(HttpRequest.class, mockReq);
         mockReq.setAttribute(ResteasyProviderFactory.class.getName(), ResteasyProviderFactory.getInstance());
 
         Consumer c = createConsumer(createOwner());
         Consumer c2 = createConsumer(createOwner());
-        methodInjector.setArguments(new Object[] {c2.getUuid()});
+        this.mockPathParameters.add("uuid", c2.getUuid());
 
         X500Principal dn = new X500Principal("CN=" + c.getUuid() + ", C=US, L=Raleigh");
 
@@ -253,7 +201,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     public static class FakeResource {
         @POST
         @Path("/{uuid}")
-        public String someMethod(@Verify(Consumer.class) String uuid) {
+        public String someMethod(@PathParam("uuid") @Verify(Consumer.class) String uuid) {
             return uuid;
         }
     }
@@ -265,7 +213,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     @Path("fake")
     public interface FakeApi {
         @Path("/{uuid}")
-        String someMethod(String uuid);
+        String someMethod(@PathParam("uuid") String uuid);
     }
 
     /**

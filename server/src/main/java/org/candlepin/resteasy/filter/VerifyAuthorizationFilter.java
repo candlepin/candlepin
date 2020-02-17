@@ -23,17 +23,11 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Persisted;
 import org.candlepin.resteasy.AnnotationLocator;
-import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
-import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.HttpResponse;
-import org.jboss.resteasy.spi.InjectorFactory;
-import org.jboss.resteasy.spi.MethodInjector;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.metadata.ResourceLocator;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -50,11 +44,16 @@ import java.util.Map;
 
 import javax.annotation.Priority;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Priorities;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
+
+
 
 /**
  * VerifyAuthorizationFilter is responsible for determining whether or not
@@ -65,25 +64,23 @@ import javax.ws.rs.container.ResourceInfo;
 @Priority(Priorities.AUTHORIZATION)
 public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
     private static final Logger log = LoggerFactory.getLogger(VerifyAuthorizationFilter.class);
+
     private StoreFactory storeFactory;
-    private ResourceLocatorMap locatorMap;
     private AnnotationLocator annotationLocator;
 
     @Inject
     public VerifyAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider, StoreFactory storeFactory,
-        ResourceLocatorMap locatorMap, AnnotationLocator annotationLocator) {
+        AnnotationLocator annotationLocator) {
+
         this.i18nProvider = i18nProvider;
         this.storeFactory = storeFactory;
-        this.locatorMap = locatorMap;
         this.annotationLocator = annotationLocator;
     }
 
     @Override
     public void runFilter(ContainerRequestContext requestContext) {
-
-        HttpRequest request = ResteasyProviderFactory.getContextData(HttpRequest.class);
         Principal principal = (Principal) requestContext.getSecurityContext().getUserPrincipal();
-        ResourceInfo resourceInfo = ResteasyProviderFactory.getContextData(ResourceInfo.class);
+        ResourceInfo resourceInfo = ResteasyContext.getContextData(ResourceInfo.class);
         Method method = resourceInfo.getResourceMethod();
 
         if (log.isDebugEnabled()) {
@@ -93,7 +90,7 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
                 method.getName());
         }
 
-        Map<Verify, Object> argMap = getArguments(request, method);
+        Map<Verify, Object> argMap = getArguments(requestContext, method);
 
         // Couldn't find a match in Resteasy for method
         if (argMap.isEmpty()) {
@@ -111,38 +108,79 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
         }
     }
 
-    protected Map<Verify, Object> getArguments(HttpRequest request, Method method) {
-        ResteasyProviderFactory resourceFactory = ResteasyProviderFactory.getInstance();
-        InjectorFactory injectorFactory = resourceFactory.getInjectorFactory();
-
-        ResourceLocator locator = locatorMap.get(method);
-
-        if (null == locator) {
-            throw new IseException("Method " + method.getName() + " not registered as RESTful.");
-        }
-
-        MethodInjector methodInjector = injectorFactory.createMethodInjector(locator, resourceFactory);
-        HttpResponse response = ResteasyProviderFactory.popContextData(HttpResponse.class);
-        Object[] args = methodInjector.injectArguments(request, response);
+    /**
+     * Fetches the arguments for parameters flagged with the Verify annotation from the request
+     * context. If the method does not have any Verify-annotated parameters, this method returns
+     * an empty map.
+     *
+     * @param requestContext
+     *  the context data for the request
+     *
+     * @param method
+     *  the method handling the request
+     *
+     * @return
+     *  a mapping of verify annotations to their respective arguments
+     */
+    protected Map<Verify, Object> getArguments(ContainerRequestContext requestContext, Method method) {
 
         // LinkedHashMap preserves insertion order
         Map<Verify, Object> argMap = new LinkedHashMap<>();
 
-        Annotation[][] allAnnotations = annotationLocator.getParameterAnnotations(method);
+        Annotation[][] annotations = annotationLocator.getParameterAnnotations(method);
 
-        // Any occurrence of the Verify annotation means the method is not superadmin exclusive.
-        for (int i = 0; i < allAnnotations.length; i++) {
-            for (Annotation a : allAnnotations[i]) {
-                if (a instanceof Verify) {
-                    Verify v = (Verify) a;
+        Map<String, List<String>> pathParams = null;
+        Map<String, List<String>> queryParams = null;
+        Map<String, List<String>> headers = null;
 
-                    if (!v.nullable() && args[i] == null) {
-                        throw new IllegalStateException("Null passed to a non-nullable Verify annotation.");
+        for (int i = 0; i < annotations.length; ++i) {
+            Verify verify = null;
+            Object value = null;
+
+            for (Annotation annotation : annotations[i]) {
+                if (annotation instanceof Verify) {
+                    verify = (Verify) annotation;
+                }
+                else {
+                    List<String> values = null;
+
+                    if (annotation instanceof PathParam) {
+                        if (pathParams == null) {
+                            pathParams = requestContext.getUriInfo().getPathParameters(true);
+                        }
+
+                        values = pathParams.get(((PathParam) annotation).value());
                     }
-                    else {
-                        argMap.put(v, args[i]);
+                    else if (annotation instanceof QueryParam) {
+                        if (queryParams == null) {
+                            queryParams = requestContext.getUriInfo().getQueryParameters(true);
+                        }
+
+                        values = queryParams.get(((QueryParam) annotation).value());
+                    }
+                    else if (annotation instanceof HeaderParam) {
+                        if (headers == null) {
+                            headers = requestContext.getHeaders();
+                        }
+
+                        values = headers.get(((HeaderParam) annotation).value());
+                    }
+
+                    // This is technically incorrect, as we should be returning either the collection
+                    // or individual value based on the parameter typing. However, this works for the
+                    // purposes of performing the verification task.
+                    if (values != null) {
+                        value = values.size() > 1 ? values : values.get(0);
                     }
                 }
+            }
+
+            if (verify != null) {
+                if (!verify.nullable() && value == null) {
+                    throw new IllegalStateException("Null passed to a non-nullable Verify annotation.");
+                }
+
+                argMap.put(verify, value);
             }
         }
 

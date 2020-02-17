@@ -26,7 +26,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,7 +57,7 @@ public class DynamicPropertyFilterTest {
 
     @Test
     public void emptyFilterData() {
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, null);
+        ResteasyContext.pushContext(DynamicFilterData.class, null);
         DynamicPropertyFilter propertyFilter = new DynamicPropertyFilter();
         assertTrue(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
         verifyZeroInteractions(jsonGenerator, writer);
@@ -75,7 +75,7 @@ public class DynamicPropertyFilterTest {
         when(context.getParent()).thenReturn(context).thenReturn(null);
         when(context.getCurrentName()).thenReturn("CONTEXT_NAME_1");
         when(writer.getName()).thenReturn("WRITER_NAME");
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, dynamicFilterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, dynamicFilterData);
         DynamicPropertyFilter propertyFilter = new DynamicPropertyFilter();
         assertTrue(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
         verify(jsonGenerator).getOutputContext();
@@ -91,7 +91,7 @@ public class DynamicPropertyFilterTest {
         when(context.getParent()).thenReturn(context).thenReturn(null);
         when(context.getCurrentName()).thenReturn("CONTEXT_NAME_1");
         when(writer.getName()).thenReturn("WRITER_NAME");
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, dynamicFilterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, dynamicFilterData);
         DynamicPropertyFilter propertyFilter = new DynamicPropertyFilter();
         assertFalse(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
         verify(jsonGenerator).getOutputContext();

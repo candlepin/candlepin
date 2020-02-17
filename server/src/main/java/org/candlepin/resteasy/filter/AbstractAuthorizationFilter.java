@@ -20,7 +20,7 @@ import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.common.filter.ServletLogger;
 import org.candlepin.common.filter.TeeHttpServletRequest;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -37,14 +37,14 @@ import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 
+
+
 /**
  * AbstractAuthorizationFilter offers a simple wrapper around the ContainerRequestFilter
  * interface that will log the HTTP request details after the filter has finished.
  */
 @Priority(Priorities.AUTHORIZATION)
-public abstract class AbstractAuthorizationFilter
-    implements ContainerRequestFilter {
-
+public abstract class AbstractAuthorizationFilter implements ContainerRequestFilter {
     private static Logger log = LoggerFactory.getLogger(AbstractAuthorizationFilter.class);
 
     protected Provider<I18n> i18nProvider;
@@ -74,7 +74,7 @@ public abstract class AbstractAuthorizationFilter
                     duplicate : null;
                 try {
                     TeeHttpServletRequest teeRequest = new TeeHttpServletRequest(
-                        ResteasyProviderFactory.getContextData(HttpServletRequest.class));
+                        ResteasyContext.getContextData(HttpServletRequest.class));
                     log.debug(m, "{}", ServletLogger.logBasicRequestInfo(teeRequest));
                     log.debug(m, "{}", ServletLogger.logRequest(teeRequest));
                 }

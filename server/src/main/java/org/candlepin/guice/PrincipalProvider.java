@@ -18,7 +18,7 @@ import org.candlepin.auth.Principal;
 
 import com.google.inject.Provider;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 
 import javax.inject.Singleton;
 
@@ -30,6 +30,6 @@ import javax.inject.Singleton;
 public class PrincipalProvider implements Provider<Principal> {
     @Override
     public Principal get() {
-        return ResteasyProviderFactory.getContextData(Principal.class);
+        return ResteasyContext.getContextData(Principal.class);
     }
 }

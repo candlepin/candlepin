@@ -53,7 +53,7 @@ import io.swagger.annotations.Authorization;
 
 import org.jboss.resteasy.annotations.providers.jaxb.DoNotUseJAXBProvider;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -194,7 +194,7 @@ public class PoolResource {
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);
 
         // Store the page for the LinkHeaderResponseFilter
-        ResteasyProviderFactory.pushContext(Page.class, page);
+        ResteasyContext.pushContext(Page.class, page);
 
         List<PoolDTO> poolDTOs = new ArrayList<>();
         for (Pool pool : poolList) {
