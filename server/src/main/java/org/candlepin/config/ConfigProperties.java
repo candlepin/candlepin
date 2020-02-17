@@ -203,6 +203,8 @@ public class ConfigProperties {
 
     public static final String STANDALONE = "candlepin.standalone";
     public static final String ENV_CONTENT_FILTERING = "candlepin.environment_content_filtering";
+    public static final String ARCH_CONTENT_FILTERING = "candlepin.arch_content_filtering";
+    public static final String ARCH_CONTENT_FILTERING_FOR_DEBIAN = "candlepin.arch_content_filtering_for_debian";
     public static final String USE_SYSTEM_UUID_FOR_MATCHING = "candlepin.use_system_uuid_for_matching";
 
     public static final String CONSUMER_SYSTEM_NAME_PATTERN = "candlepin.consumer_system_name_pattern";
@@ -442,6 +444,8 @@ public class ConfigProperties {
             this.put(STANDALONE, "true");
 
             this.put(ENV_CONTENT_FILTERING, "true");
+            this.put(ARCH_CONTENT_FILTERING, "true");
+            this.put(ARCH_CONTENT_FILTERING_FOR_DEBIAN, "false");
             this.put(USE_SYSTEM_UUID_FOR_MATCHING, "true");
 
             // what constitutes a valid consumer name

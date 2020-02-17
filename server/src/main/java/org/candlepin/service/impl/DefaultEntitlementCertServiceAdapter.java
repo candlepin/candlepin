@@ -339,7 +339,13 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             consumer, pool);
 
         int contentCounter = 0;
-        boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+        boolean enableEnvContentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+        boolean enableArchContentFiltering = config.getBoolean(ConfigProperties.ARCH_CONTENT_FILTERING);
+
+        String distribution_name = consumer.getFact("distribution.name");
+        if (("Ubuntu".equalsIgnoreCase(distribution_name)) || ("Debian GNU/Linux".equalsIgnoreCase(distribution_name))) {
+          enableArchContentFiltering = config.getBoolean(ConfigProperties.ARCH_CONTENT_FILTERING_FOR_DEBIAN);
+        }
 
         Product skuProd = pool.getProduct();
 
@@ -348,10 +354,12 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             result.addAll(extensionUtil.productExtensions(prod));
 
             Set<ProductContent> filteredContent = extensionUtil.filterProductContent(
-                prod, consumer, promotedContent, enableEnvironmentFiltering, entitledProductIds);
+                prod, consumer, promotedContent, enableEnvContentFiltering, entitledProductIds);
 
-            filteredContent = extensionUtil.filterContentByContentArch(filteredContent,
-                consumer, prod);
+            if (enableArchContentFiltering) {
+              filteredContent = extensionUtil.filterContentByContentArch(filteredContent,
+                  consumer, prod);
+            }
 
             // Keep track of the number of content sets that are being added.
             contentCounter += filteredContent.size();

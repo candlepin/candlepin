@@ -361,19 +361,27 @@ public class X509V3ExtensionUtil extends X509Util {
         Map<String, EnvironmentContent> promotedContent, Consumer consumer, Product product) {
 
         List<Content> toReturn = new ArrayList<>();
+        Set<ProductContent> archApproriateProductContent = productContent;
 
-        boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+        boolean enableEnvContentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+        boolean enableArchContentFiltering = config.getBoolean(ConfigProperties.ARCH_CONTENT_FILTERING);
+
+        String distribution_name = consumer.getFact("distribution.name");
+        if (("Ubuntu".equalsIgnoreCase(distribution_name)) || ("Debian GNU/Linux".equalsIgnoreCase(distribution_name))) {
+          enableArchContentFiltering = config.getBoolean(ConfigProperties.ARCH_CONTENT_FILTERING_FOR_DEBIAN);
+        }
 
         // Return only the contents that are arch appropriate
-        Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
-            productContent, consumer, product);
+        if (enableArchContentFiltering) {
+          archApproriateProductContent = filterContentByContentArch(productContent, consumer, product);
+        }
 
         List<String> skuDisabled = sku.getSkuDisabledContentIds();
         List<String> skuEnabled = sku.getSkuEnabledContentIds();
 
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
-            if (enableEnvironmentFiltering && consumer.getEnvironmentId() != null &&
+            if (enableEnvContentFiltering && consumer.getEnvironmentId() != null &&
                 !promotedContent.containsKey(pc.getContent().getId())) {
 
                 log.debug("Skipping content not promoted to environment: {}", pc.getContent());
@@ -419,7 +427,7 @@ public class X509V3ExtensionUtil extends X509Util {
             }
 
             // Check if we should override the enabled flag due to setting on promoted content
-            if (enableEnvironmentFiltering && consumer.getEnvironmentId() != null) {
+            if (enableEnvContentFiltering && consumer.getEnvironmentId() != null) {
                 // we know content has been promoted at this point
                 Boolean enabledOverride = promotedContent.get(pc.getContent().getId()).getEnabled();
                 if (enabledOverride != null) {
