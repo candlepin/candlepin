@@ -982,8 +982,7 @@ public class JobManager implements ModeChangeListener {
      *  an AsyncJobStatus instance representing the queued job's status, or the status of the
      *  existing job if it already exists
      */
-    public synchronized AsyncJobStatus queueJob(JobConfig config) throws JobException {
-
+    public AsyncJobStatus queueJob(JobConfig config) throws JobException {
         ManagerState state = this.getManagerState();
         if (state != ManagerState.RUNNING) {
             // Check if we're paused. If so, and if the "queue while paused" config is not set,
@@ -1177,10 +1176,9 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  a JobStatus instance representing the job's status
      */
-    public synchronized AsyncJobStatus executeJob(JobMessage message) throws JobException {
-
+    public AsyncJobStatus executeJob(JobMessage message) throws JobException {
         ManagerState state = this.getManagerState();
-        if (this.getManagerState() != ManagerState.RUNNING) {
+        if (state != ManagerState.RUNNING) {
             String msg = String.format("Jobs cannot be executed while the manager is in the %s state", state);
             throw new IllegalStateException(msg);
         }
@@ -1602,7 +1600,7 @@ public class JobManager implements ModeChangeListener {
      *  could be found
      */
     @Transactional
-    public synchronized AsyncJobStatus cancelJob(String jobId) {
+    public AsyncJobStatus cancelJob(String jobId) {
         if (jobId == null || jobId.isEmpty()) {
             throw new IllegalArgumentException("jobId is null or empty");
         }
@@ -1651,7 +1649,7 @@ public class JobManager implements ModeChangeListener {
      *  the number of jobs deleted as a result of this operation
      */
     @Transactional
-    public synchronized int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
+    public int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
         // Prepare for the defaults...
         if (queryBuilder == null) {
             queryBuilder = new AsyncJobStatusCurator.AsyncJobStatusQueryBuilder();

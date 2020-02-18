@@ -59,7 +59,7 @@ public class ArtemisSession implements CPMSession {
      * {@inheritDoc}
      */
     @Override
-    public void start() throws CPMException {
+    public synchronized void start() throws CPMException {
         try {
             this.session.start();
         }
@@ -72,7 +72,7 @@ public class ArtemisSession implements CPMSession {
      * {@inheritDoc}
      */
     @Override
-    public void stop() throws CPMException {
+    public synchronized void stop() throws CPMException {
         try {
             this.session.stop();
         }
@@ -85,7 +85,7 @@ public class ArtemisSession implements CPMSession {
      * {@inheritDoc}
      */
     @Override
-    public void close() throws CPMException {
+    public synchronized void close() throws CPMException {
         try {
             this.session.close();
         }
@@ -106,7 +106,7 @@ public class ArtemisSession implements CPMSession {
      * {@inheritDoc}
      */
     @Override
-    public void commit() throws CPMException {
+    public synchronized void commit() throws CPMException {
         try {
             this.session.commit();
         }
@@ -119,7 +119,7 @@ public class ArtemisSession implements CPMSession {
      * {@inheritDoc}
      */
     @Override
-    public void rollback() throws CPMException {
+    public synchronized void rollback() throws CPMException {
         try {
             this.session.rollback();
         }
