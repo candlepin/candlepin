@@ -228,10 +228,6 @@ public class CdnDTO extends TimestampedCandlepinDTO<CdnDTO> {
     @Override
     public CdnDTO clone() {
         CdnDTO copy = super.clone();
-
-        CertificateDTO cdnCert = this.getCertificate();
-        copy.setCertificate(cdnCert != null ? cdnCert.clone() : null);
-
         return copy;
     }
 
