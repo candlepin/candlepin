@@ -28,6 +28,7 @@
     </scm>
 
     <modules>
+        <module>api</module>
         <module>common</module>
         <module>server</module>
     </modules>

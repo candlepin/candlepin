@@ -4,12 +4,13 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 // vim: set expandtab sts=4 sw=4 ai:
 
 buildscript {
+    ext.openapi_version = '4.2.3'
     repositories {
         mavenCentral()
     }
     dependencies {
         classpath group: 'org.yaml', name: 'snakeyaml', version: '1.19'
-        classpath "org.openapitools:openapi-generator-gradle-plugin:4.2.3"
+        classpath "org.openapitools:openapi-generator-gradle-plugin:${openapi_version}"
     }
 }
 
@@ -217,6 +218,7 @@ subprojects {
 
 project(":api") {
     apply plugin: "org.openapi.generator"
+    apply plugin: "org.candlepin.gradle.SpecVersion"
 
     ext {
         api_spec_path = "${projectDir}/candlepin-api-spec.yaml"
@@ -260,6 +262,55 @@ project(":api") {
         generateModelTests = false
         generateApiTests = false
         withXml = false
+    }
+
+    task pom {
+        doLast {
+            conf2ScopeMappings.addMapping(MavenPlugin.COMPILE_PRIORITY + 1, configurations.implementation, 'compile')
+            pom {
+                project {
+                    name "Candlepin API"
+                    description "OpenAPI-based API for Candlepin"
+                    parent {
+                        groupId "org.candlepin"
+                        artifactId "candlepin-parent"
+                        version "2.0"
+                        relativePath ".."
+                    }
+                    packaging "jar"
+                    build([:]) {
+                        plugins {
+                            plugin {
+                                groupId 'org.openapitools'
+                                artifactId 'openapi-generator-maven-plugin'
+                                version "$openapi_version"
+                                executions {
+                                    execution {
+                                        goals {
+                                            goal 'generate'
+                                        }
+                                        configuration {
+                                            inputSpec '${project.basedir}/candlepin-api-spec.yaml'
+                                            generatorName 'jaxrs-spec'
+                                            configurationFile '${project.basedir}/candlepin-api-config.json'
+                                            configOptions {
+                                                interfaceOnly 'true'
+                                                generatePom 'false'
+                                                dateLibrary 'java8'
+                                                sourceFolder 'src/gen/java/main'
+                                            }
+                                            templateDirectory '../buildSrc/src/main/resources/templates'
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }.withXml {
+                dependencyManagement.pomConfigurer.configurePom(asNode())
+            }.writeTo("pom.xml")
+        }
     }
 
     processResources {
