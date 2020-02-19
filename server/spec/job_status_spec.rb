@@ -59,6 +59,39 @@ describe 'Job Status' do
     status['id'].should == job['id']
   end
 
+  it 'should successfully run jobs concurrently' do
+    total_threads = 6
+    t_count = 0
+    threads = []
+    jobs = []
+
+    # First create as many owners as the total threads we have
+    owners = []
+    total_threads.times do
+      owners << create_owner(random_string("test_owner"))
+    end
+
+    # For each owner create a Thread which refreshes that owner, and saves the job status
+    owners.each { |owner|
+      t = Thread.new do
+          jobs << @cp.autoheal_org(owner['key'])
+        t_count = t_count + 1
+      end
+      threads << t
+    }
+
+    # Run all the threads
+    threads.each(&:join)
+    t_count.should == total_threads
+
+    # Check that all jobs finished successfully
+    jobs.each { |job|
+        wait_for_job(job['id'], 30)
+        status = @cp.get_job(job['id'])
+        status['state'].should == 'FINISHED'
+    }
+  end
+
   it 'should allow user to view status of own job' do
     job = @user.autoheal_org(@owner['key'])
     wait_for_job(job['id'], 15)

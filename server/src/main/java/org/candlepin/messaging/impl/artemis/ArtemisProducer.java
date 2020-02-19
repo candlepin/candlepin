@@ -90,7 +90,7 @@ public class ArtemisProducer implements CPMProducer {
     /**
      * {@inheritDoc}
      */
-    public void send(String address, CPMMessage message) throws CPMException {
+    public synchronized void send(String address, CPMMessage message) throws CPMException {
         if (address == null || address.isEmpty()) {
             throw new IllegalArgumentException("address is null or empty");
         }
