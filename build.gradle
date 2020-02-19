@@ -9,13 +9,13 @@ buildscript {
     }
     dependencies {
         classpath group: 'org.yaml', name: 'snakeyaml', version: '1.19'
-        classpath "org.openapitools:openapi-generator-gradle-plugin:4.0.1"
+        classpath "org.openapitools:openapi-generator-gradle-plugin:4.2.3"
     }
 }
 
 plugins {
     id "io.spring.dependency-management" version "1.0.8.RELEASE"
-    id "nebula.lint" version "11.5.0"
+    id "nebula.lint" version "16.0.2"
 }
 
 version = "2.0"
@@ -229,8 +229,8 @@ project(":api") {
       configFile = config_file
       outputDir = "$buildDir/generated"
       configOptions = [
-          interfaceOnly: true,
-          generatePom: false,
+          interfaceOnly: "true",
+          generatePom: "false",
           dateLibrary: "java8"
       ]
       templateDir = "$rootDir/buildSrc/src/main/resources/templates"
