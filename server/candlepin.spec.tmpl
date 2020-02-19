@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.4
+Version: 3.1.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,9 @@ fi
 
 #raw
 %changelog
+* Wed Feb 19 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.5-1
+- Adjust pom generation to handle spec-first changes (khowell@redhat.com)
+
 * Wed Feb 19 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.4-1
 - ENT-2107: Make jobs run in parallel (nmoumoul@redhat.com)
 - ENT-2049: Use new hibernate session per job (nmoumoul@redhat.com)
