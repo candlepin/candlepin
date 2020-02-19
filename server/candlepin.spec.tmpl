@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.3
+Version: 3.1.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,28 @@ fi
 
 #raw
 %changelog
+* Wed Feb 19 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.4-1
+- ENT-2107: Make jobs run in parallel (nmoumoul@redhat.com)
+- ENT-2049: Use new hibernate session per job (nmoumoul@redhat.com)
+- ENT-2068: 1798699: Found (local) serial# [9160844745519149032L]; Expected
+  (UEP) serial# [u'9160844745519149032'] - Revert "1476028: ENT-528: Changed
+  serialnumber datatype to String" - This reverts commit
+  6be9ea3d1ad620ae1c7313d8d65bce5d13fe9d34. - CertificateSerialDto.java is not
+  reverted from this commit. Updated   CertificateSerialDTO in place of
+  CertificateSerialDto (sonalidhome@gmail.com)
+- Upgraded Resteasy to 4.4.2 (crog@redhat.com)
+- 1790994: raise owner content access mode change event (abhiskum@redhat.com)
+- Fix the checkstyle to put static imports at the top of each file.
+  (bcourt@redhat.com)
+- 1469259: validate hypervisor update json (abhiskum@redhat.com)
+- 1792529: Virt-who is not able to upload the Hypervisor list if the manifest
+  has content access mode as org_environment (wpoteat@redhat.com)
+- Added the AnnotationLocator to the context listener and Candlepin module
+  (crog@redhat.com)
+- Refactor root resource to spec-first (khowell@redhat.com)
+- Lookup annotations on concrete resource implementations (khowell@redhat.com)
+- Add spec-first build changes (khowell@redhat.com)
+
 * Mon Jan 13 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.3-1
 - 1790468: Fixed transaction requirement in JobCleaner task (crog@redhat.com)
 
