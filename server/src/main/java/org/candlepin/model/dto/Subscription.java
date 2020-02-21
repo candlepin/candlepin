@@ -376,7 +376,8 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     }
 
     public boolean isStacked() {
-        return !StringUtils.isBlank(this.product.getAttributeValue(Product.Attributes.STACKING_ID));
+        return this.product != null &&
+            !StringUtils.isBlank(this.product.getAttributeValue(Product.Attributes.STACKING_ID));
     }
 
     public String getStackId() {

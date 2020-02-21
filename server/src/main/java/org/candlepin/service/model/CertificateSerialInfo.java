@@ -32,7 +32,7 @@ import java.util.Date;
  *  building functionality around it is not advised.
  */
 @Deprecated
-public interface CertificateSerialInfo {
+public interface CertificateSerialInfo extends ServiceAdapterModel {
 
     /**
      * Fetches the serial of the linking certificate. If the serial has not been set, this method

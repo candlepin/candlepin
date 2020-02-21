@@ -25,7 +25,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 
@@ -39,7 +38,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * there is nothing that stops us from using standard
  * uuid for the link.
  */
-@XmlRootElement
 @Entity
 @Table(name = OwnerContent.DB_TABLE)
 @IdClass(OwnerContentKey.class)
@@ -116,9 +114,7 @@ public class OwnerContent implements Persisted, Serializable {
         }
 
         if (this.owner.getId() == null) {
-            throw new IllegalStateException(
-                "Owner must be persisted before it can be linked to content"
-            );
+            throw new IllegalStateException("Owner must be persisted before it can be linked to content");
         }
 
         if (this.content == null) {
@@ -126,9 +122,7 @@ public class OwnerContent implements Persisted, Serializable {
         }
 
         if (this.content.getUuid() == null) {
-            throw new IllegalStateException(
-                "Content must be persisted before it can be linked to an owner"
-            );
+            throw new IllegalStateException("Content must be persisted before it can be linked to an owner");
         }
 
         this.ownerId = owner.getId();

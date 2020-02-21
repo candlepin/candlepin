@@ -116,6 +116,10 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
             throw new IllegalStateException("subscription already exists: " + sinfo.getId());
         }
 
+        if (sinfo.getProduct() == null) {
+            throw new IllegalArgumentException("subscription lacks a product: " + sinfo);
+        }
+
         // TODO: Add any other subscription validation we want here
 
         Subscription sdata = new Subscription();

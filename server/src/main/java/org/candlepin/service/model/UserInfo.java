@@ -26,7 +26,7 @@ import java.util.Date;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface UserInfo {
+public interface UserInfo extends ServiceAdapterModel {
 
     // /**
     //  * Fetches the ID of this user. If the ID has not yet been set, this method returns null.

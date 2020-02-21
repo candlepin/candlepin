@@ -286,36 +286,39 @@ module HostedTest
   end
 
 
+  # TODO: Delete everything above this
 
 
-def create_upstream_subscription(subscription_id, owner_key, params = {})
+  def create_upstream_subscription(subscription_id, owner_key, params = {})
     start_date = params.delete(:start_date) || Date.today
     end_date = params.delete(:end_date) || start_date + 365
 
     # Define subscription with defaults & specified params
     subscription = {
-      :startDate => start_date,
-      :endDate   => end_date,
-      :owner =>  { :key => owner_key },
-      :quantity => 1
+      'startDate' => start_date,
+      'endDate'   => end_date,
+      'quantity'  => 1
     }
 
-    # Merge, but convert some snake-case keys to camel case
-    keys = [:account_number, :contract_number, :order_number, :upstream_pool_id,
-      'account_number', 'contract_number', 'order_number', 'upstream_pool_id']
+    # Do not copy these with the rest of the merged keys
+    filter = ['id', 'owner', 'ownerId']
 
     params.each do |key, value|
-      if keys.include?(key)
-        key = key.to_s.gsub!(/_(\w)/){$1.upcase}
-      end
+      # Convert the key to snake case so we can support whatever is thrown at us
+      key = key.to_s.gsub(/_(\w)/){$1.upcase}
 
-      subscription[key] = value
+      if !filter.include?(key)
+        subscription[key] = value
+      end
     end
 
-    # Forcefully set identifier
-    subscription[:id] = subscription_id
-    subscription[:product] = params[:product] if params[:product]
-    subscription[:derivedProduct] = params[:derived_product] if params[:derived_product]
+    # Forcefully set critical identifiers
+    subscription['id'] = subscription_id
+    subscription['owner'] = { :key => owner_key }
+
+    if !subscription['product']
+      raise "Attempting to create a subscription without a product"
+    end
 
     return @cp.post('hostedtest/subscriptions', {}, subscription)
   end
@@ -331,21 +334,20 @@ def create_upstream_subscription(subscription_id, owner_key, params = {})
   def update_upstream_subscription(subscription_id, params = {})
     subscription = {}
 
-    # Merge, but convert some snake-case keys to camel case
-    keys = ['account_number', 'contract_number', 'order_number', 'upstream_pool_id', 'start_date', 'end_date']
+    # Do not copy these with the rest of the merged keys
+    filter = ['id', 'ownerId']
 
     params.each do |key, value|
-      if keys.include?(key.to_s)
-        key = key.to_s.gsub!(/_(\w)/){$1.upcase}
-      end
+      # Convert the key to snake case so we can support whatever is thrown at us
+      key = key.to_s.gsub(/_(\w)/){$1.upcase}
 
-      subscription[key] = value
+      if !filter.include?(key)
+        subscription[key] = value
+      end
     end
 
-    # Forcefully set identifier
-    subscription[:id] = subscription_id
-    subscription[:product] = params[:product] if params[:product]
-    subscription[:derivedProduct] = params[:derived_product] if params[:derived_product]
+    # Forcefully set critical identifiers
+    subscription['id'] = subscription_id
 
     return @cp.put("/hostedtest/subscriptions/#{subscription_id}", {}, subscription)
   end
@@ -362,15 +364,24 @@ def create_upstream_subscription(subscription_id, owner_key, params = {})
 
     # Create a product with some defaults for required fields
     product = {
-      :multiplier => 1
+      'multiplier' => 1
     }
 
-    # Merge provided params in
-    product.merge!(params)
+    # Do not copy these with the rest of the merged keys
+    filter = ['id']
+
+    params.each do |key, value|
+      # Convert the key to snake case so we can support whatever is thrown at us
+      key = key.to_s.gsub(/_(\w)/){$1.upcase}
+
+      if !filter.include?(key)
+        product[key] = value
+      end
+    end
 
     # Forcefully set identifier and name (if absent)
-    product[:id] = product_id
-    product[:name] = product_id if !product[:name] && !product['name']
+    product['id'] = product_id
+    product['name'] = product_id if !product['name']
 
     return @cp.post('hostedtest/products', {}, product)
   end
@@ -384,10 +395,22 @@ def create_upstream_subscription(subscription_id, owner_key, params = {})
   end
 
   def update_upstream_product(product_id, params = {})
-    product = {}.merge(params)
+    product = {}
+
+    # Do not copy these with the rest of the merged keys
+    filter = ['id']
+
+    params.each do |key, value|
+      # Convert the key to snake case so we can support whatever is thrown at us
+      key = key.to_s.gsub(/_(\w)/){$1.upcase}
+
+      if !filter.include?(key)
+        product[key] = value
+      end
+    end
 
     # Forcefully set identifier
-    product[:id] = product_id
+    product['id'] = product_id
 
     return @cp.put("/hostedtest/products/#{product_id}", {}, product)
   end
@@ -404,25 +427,26 @@ def create_upstream_subscription(subscription_id, owner_key, params = {})
 
     # Create a content with some defaults for required fields
     content = {
-      :label => 'label',
-      :type => 'yum',
-      :vendor => 'vendor'
+      'label' => 'label',
+      'type' => 'yum',
+      'vendor' => 'vendor'
     }
 
-    # Merge, but convert some snake-case keys to camel case
-    keys = ['content_url', 'gpg_url', 'modified_product_ids', 'metadata_expire', 'required_tags']
+    # Do not copy these with the rest of the merged keys
+    filter = ['id']
 
     params.each do |key, value|
-      if keys.include?(key.to_s)
-        key = key.to_s.gsub!(/_(\w)/){$1.upcase}
-      end
+      # Convert the key to snake case so we can support whatever is thrown at us
+      key = key.to_s.gsub(/_(\w)/){$1.upcase}
 
-      content[key] = value
+      if !filter.include?(key)
+        content[key] = value
+      end
     end
 
-    # Forcefully assign the ID and name (if absent)
-    content[:id] = content_id
-    content[:name] = content_id if !content[:name]
+    # Forcefully set identifier and name (if absent)
+    content['id'] = content_id
+    content['name'] = content_id if !content['name']
 
     return @cp.post('hostedtest/content', {}, content)
   end
@@ -438,19 +462,20 @@ def create_upstream_subscription(subscription_id, owner_key, params = {})
   def update_upstream_content(content_id, params = {})
     content = {}
 
-    # Merge, but convert some snake-case keys to camel case
-    keys = ['content_url', 'gpg_url', 'modified_product_ids', 'metadata_expire', 'required_tags']
+    # Do not copy these with the rest of the merged keys
+    filter = ['id']
 
     params.each do |key, value|
-      if keys.include?(key.to_s)
-        key = key.to_s.gsub!(/_(\w)/){$1.upcase}
-      end
+      # Convert the key to snake case so we can support whatever is thrown at us
+      key = key.to_s.gsub(/_(\w)/){$1.upcase}
 
-      content[key] = value
+      if !filter.include?(key)
+        content[key] = value
+      end
     end
 
     # Forcefully set identifier
-    content[:id] = content_id
+    content['id'] = content_id
 
     return @cp.put("/hostedtest/content/#{content_id}", {}, content)
   end

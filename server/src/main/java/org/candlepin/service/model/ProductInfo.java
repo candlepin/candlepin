@@ -27,7 +27,7 @@ import java.util.Map;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface ProductInfo {
+public interface ProductInfo extends ServiceAdapterModel {
 
     /**
      * Fetches the Red Hat ID of this product. If the ID has not yet been set, this method returns

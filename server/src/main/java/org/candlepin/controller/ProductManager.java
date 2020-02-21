@@ -1032,7 +1032,7 @@ public class ProductManager {
      * @return
      *  true if this product would be changed by the given product info; false otherwise
      */
-    public static boolean isChangedBy(Product entity, ProductInfo update) {
+    public static boolean isChangedBy(ProductInfo entity, ProductInfo update) {
 
         // Check simple properties first
         if (update.getId() != null && !update.getId().equals(entity.getId())) {
@@ -1069,11 +1069,11 @@ public class ProductManager {
         if (productContent != null) {
             Comparator comparator = new Comparator() {
                 public int compare(Object lhs, Object rhs) {
-                    ProductContent existing = (ProductContent) lhs;
+                    ProductContentInfo existing = (ProductContentInfo) lhs;
                     ProductContentInfo update = (ProductContentInfo) rhs;
 
                     if (existing != null && update != null) {
-                        Content content = existing.getContent();
+                        ContentInfo content = existing.getContent();
                         ContentInfo cdto = update.getContent();
 
                         if (content != null && cdto != null) {
@@ -1108,24 +1108,11 @@ public class ProductManager {
         }
 
         if (update.getProvidedProducts() != null) {
-            // Quick Id Check
-            if (!Util.collectionsAreEqual(entity.getProvidedProducts().stream()
-                .map(Product::getId)
-                .collect(Collectors.toSet()),
-                update.getProvidedProducts().stream()
-                .map(ProductInfo::getId)
-                .collect(Collectors.toSet()))) {
-                return true;
-            }
-
-            Comparator productComparator = new Comparator() {
-                public int compare(Object lhs, Object rhs) {
-                    Product existing = (Product) lhs;
-                    ProductInfo update = (ProductInfo) rhs;
-
-                    if (existing != null && update != null) {
-                        if (existing.getId().equals(update.getId())) {
-                            return ProductManager.isChangedBy(existing, update) ? 1 : 0;
+            Comparator<ProductInfo> productComparator = new Comparator<ProductInfo>() {
+                public int compare(ProductInfo lhs, ProductInfo rhs) {
+                    if (lhs != null && rhs != null) {
+                        if (lhs.getId().equals(rhs.getId())) {
+                            return ProductManager.isChangedBy(lhs, rhs) ? 1 : 0;
                         }
                     }
 
@@ -1133,11 +1120,19 @@ public class ProductManager {
                 }
             };
 
-            if (!Util.collectionsAreEqual((Collection) entity.getProvidedProducts(),
-                (Collection) update.getProvidedProducts(), productComparator)) {
+            if (!Util.collectionsAreEqual((Collection<ProductInfo>) entity.getProvidedProducts(),
+                (Collection<ProductInfo>) update.getProvidedProducts(), productComparator)) {
+
+                log.debug("Product's derived products are changed: {}", entity.getId());
+
                 return true;
             }
-
+            else {
+                log.debug("Product's derived products are unchanged: {}", entity.getId());
+            }
+        }
+        else {
+            log.debug("Updated product does not have any provided product changes: {}", update.getId());
         }
 
         return false;

@@ -798,8 +798,11 @@ public class ContentManager {
      * Determines whether or not this entity would be changed if the given DTO were applied to this
      * object.
      *
-     * @param dto
-     *  The content DTO to check for changes
+     * @param entity
+     *  The existing entity to check for changes
+     *
+     * @param update
+     *  the updated entity to check for changes
      *
      * @throws IllegalArgumentException
      *  if dto is null
@@ -807,54 +810,56 @@ public class ContentManager {
      * @return
      *  true if this content would be changed by the given DTO; false otherwise
      */
-    public static boolean isChangedBy(Content entity, ContentInfo dto) {
-        if (dto.getId() != null && !dto.getId().equals(entity.getId())) {
+    public static boolean isChangedBy(ContentInfo entity, ContentInfo update) {
+        if (update.getId() != null && !update.getId().equals(entity.getId())) {
             return true;
         }
 
-        if (dto.getType() != null && !dto.getType().equals(entity.getType())) {
+        if (update.getType() != null && !update.getType().equals(entity.getType())) {
             return true;
         }
 
-        if (dto.getLabel() != null && !dto.getLabel().equals(entity.getLabel())) {
+        if (update.getLabel() != null && !update.getLabel().equals(entity.getLabel())) {
             return true;
         }
 
-        if (dto.getName() != null && !dto.getName().equals(entity.getName())) {
+        if (update.getName() != null && !update.getName().equals(entity.getName())) {
             return true;
         }
 
-        if (dto.getVendor() != null && !dto.getVendor().equals(entity.getVendor())) {
+        if (update.getVendor() != null && !update.getVendor().equals(entity.getVendor())) {
             return true;
         }
 
-        if (dto.getContentUrl() != null && !dto.getContentUrl().equals(entity.getContentUrl())) {
+        if (update.getContentUrl() != null && !update.getContentUrl().equals(entity.getContentUrl())) {
             return true;
         }
 
-        if (dto.getRequiredTags() != null && !dto.getRequiredTags().equals(entity.getRequiredTags())) {
+        if (update.getRequiredTags() != null && !update.getRequiredTags().equals(entity.getRequiredTags())) {
             return true;
         }
 
-        if (dto.getReleaseVersion() != null && !dto.getReleaseVersion().equals(entity.getReleaseVersion())) {
-            return true;
-        }
-
-        if (dto.getGpgUrl() != null && !dto.getGpgUrl().equals(entity.getGpgUrl())) {
-            return true;
-        }
-
-        if (dto.getMetadataExpiration() != null &&
-            !dto.getMetadataExpiration().equals(entity.getMetadataExpiration())) {
+        if (update.getReleaseVersion() != null &&
+            !update.getReleaseVersion().equals(entity.getReleaseVersion())) {
 
             return true;
         }
 
-        if (dto.getArches() != null && !dto.getArches().equals(entity.getArches())) {
+        if (update.getGpgUrl() != null && !update.getGpgUrl().equals(entity.getGpgUrl())) {
             return true;
         }
 
-        Collection<String> requiredProductIds = dto.getRequiredProductIds();
+        if (update.getMetadataExpiration() != null &&
+            !update.getMetadataExpiration().equals(entity.getMetadataExpiration())) {
+
+            return true;
+        }
+
+        if (update.getArches() != null && !update.getArches().equals(entity.getArches())) {
+            return true;
+        }
+
+        Collection<String> requiredProductIds = update.getRequiredProductIds();
         if (requiredProductIds != null &&
             !Util.collectionsAreEqual(entity.getRequiredProductIds(), requiredProductIds)) {
 
