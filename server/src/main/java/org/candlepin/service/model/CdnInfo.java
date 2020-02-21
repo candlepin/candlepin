@@ -22,7 +22,7 @@ package org.candlepin.service.model;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface CdnInfo {
+public interface CdnInfo extends ServiceAdapterModel {
 
     /**
      * Fetches the name of this CDN. If the name has not been set, this method returns null.
