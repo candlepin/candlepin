@@ -301,6 +301,29 @@ public class CandlepinPoolManager implements PoolManager {
             System.currentTimeMillis() - now.getTime());
     }
 
+    private void doImportPoC(ImportedEntityCompiler compiler) {
+
+
+
+
+
+
+
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
     private Owner resolveOwner(Owner owner) {
         if (owner == null || (owner.getKey() == null && owner.getId() == null)) {
             throw new IllegalArgumentException(
