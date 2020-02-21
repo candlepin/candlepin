@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-11 10:33-0400\n"
+"POT-Creation-Date: 2020-02-21 11:16-0500\n"
 "PO-Revision-Date: 2019-10-16 09:48+0000\n"
 "Last-Translator: Eun-Ju Kim <eukim@redhat.com>\n"
 "Language-Team: Korean\n"
@@ -384,7 +384,7 @@ msgid "Error getting OAuth unit key"
 msgstr "OAuth 장치 키를 가져오는 도중 오류 발생  "
 
 #: server/src/main/java/org/candlepin/auth/UserAuth.java:55
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1096
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1097
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:133
 #: server/src/main/java/org/candlepin/resource/UserResource.java:111
 #, java-format
@@ -497,8 +497,8 @@ msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 "UUID {0}을 갖는 시스템은 가상 게스트입니다. 이는 게스트를 갖을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:994
-#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:1004
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:997
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:1007
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:168
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
@@ -530,16 +530,6 @@ msgstr "소유자 {0}의 ueber 인증서를 생성하는 도중 문제 발생 "
 #, java-format
 msgid "Auto-attach is disabled for owner {0}{1}."
 msgstr "{0}{1} 소유자의 자동 연결이 비활성화되어 있습니다."
-
-#: server/src/main/java/org/candlepin/pinsetter/tasks/HypervisorUpdateJob.java:159
-#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:160
-#, java-format
-msgid ""
-"Could not update host/guest mapping. Auto-attach is disabled for owner {0}"
-"{1}."
-msgstr ""
-"호스트/게스트 매핑을 업데이트할 수 없습니다. {0}{1} 소유자의 자동 연결이 비활"
-"성화되어 있습니다."
 
 #: server/src/main/java/org/candlepin/pinsetter/tasks/UndoImportsJob.java:141
 #, java-format
@@ -854,8 +844,8 @@ msgstr "최소 하나 이상의 검색 기준을 지정해야 합니다."
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:421
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1159
-#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:332
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1160
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:322
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1659
 #, java-format
 msgid "owner with key: {0} was not found."
@@ -875,168 +865,168 @@ msgstr "UUID가 없습니다. "
 msgid "Environment \"{0}\" could not be found."
 msgstr "환경 \"{0}\"을/를 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:744
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:745
 msgid "Unit type must be specified."
 msgstr "장치 유형을 지정해야 합니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:749
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:750
 #, java-format
 msgid "Invalid unit type: {0}"
 msgstr "잘못된 장치 유형: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:771
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:772
 #: server/src/main/java/org/candlepin/resource/ContentOverrideResource.java:228
 msgid "Insufficient permissions"
 msgstr "권한이 충분하지 않음"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:876
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:877
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "장치 {0}을 생성하는 도중 문제 발생"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:886
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1372
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:887
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1373
 msgid "The consumer cannot be assigned a content access mode."
 msgstr "소비자는 컨텐츠 액세스 모드를 할당받을 수 없습니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:890
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1364
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:891
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1365
 msgid "The consumer cannot use the supplied content access mode."
 msgstr "소비자는 지정된 컨텐츠 액세스 모드를 사용할 수 없습니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:898
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:899
 msgid "Org required to register with activation keys."
 msgstr "조직은 활성화키에 등록해야 합니다. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:902
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:903
 msgid "Cannot specify username with activation keys."
 msgstr "활성화 키와 함께 사용자 이름을 지정할 수 없음"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:912
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:913
 msgid "A unit type of \"person\" cannot be used with activation keys"
 msgstr "\"person\" 장치 유형을 활성화키와 함께 사용할 수 없습니다. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:916
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:923
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:917
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:924
 msgid "System name cannot contain most special characters."
 msgstr "시스템 이름에 대부분의 특수 문자를 포함시킬 수 없음."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:932
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:933
 msgid "You may not create a manifest consumer via Subscription Manager."
 msgstr "서브스크립션 관리자를 통해 매니페스트 소비자를 생성할 수 없습니다 "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:952
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:953
 msgid "None of the activation keys specified exist for this org."
 msgstr "이 조직에 대해 지정된 활성키가 존재하지 않습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1044
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1045
 msgid "System name cannot begin with # character"
 msgstr "시스템 이름을 # 문자로 시작할 수 없음"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1077
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1078
 #, java-format
 msgid "Activation key \"{0}\" not found for organization \"{1}\"."
 msgstr "조직 ''{1}''에 대한 활성화키 ''{0}''을/를 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1102
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1103
 #, java-format
 msgid "User \"{0}\" has no roles for organization \"{1}\""
 msgstr "사용자 ''{0}''은/는 조직 ''{1}''에 대한 역할을 가지고 있지 않습니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1115
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1116
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
 msgstr "사용자 {0}은/는 개별 고객으로 이미 등록되어 있습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1131
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1132
 msgid "You must specify an organization for new units."
 msgstr "새 장치에 대한 조직을 지정해야 합니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1141
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1142
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "조직 {0}이 존재하지 않습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1155
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1156
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
 msgstr "{0}은/는 조직 {1}에 등록을 승인하지 않습니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1261
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1262
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr "장치 {0}을 업데이트하는 도중 문제 발생 "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1324
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1325
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr "ID ''{0}''인 환경을 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1453
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1454
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr ""
 "장치 {0}을/를 업데이트하는 도중 문제가 발생했습니다. 하이퍼바이저 ID: {1}은/"
 "는 이미 사용되고 있습니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1678
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1689
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1679
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1690
 #, java-format
 msgid "Consumer with UUID {0} was already deleted."
 msgstr "UUID {0}인 소유자가 삭제되었습니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1705
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1706
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:312
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "다음과 같은 이유로 {0} {1}을 등록 취소할 수 없음: {2} "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1754
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1757
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1794
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1807
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1810
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1910
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1913
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1755
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1758
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1795
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1808
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1811
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1911
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1914
 msgid "Cannot retrieve content access certificate"
 msgstr "컨텐츠 액세스 인증서를 가져올 수 없습니다 "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1780
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1781
 msgid "Content access mode does not allow this request."
 msgstr "컨텐츠 액세스 모드에서는 이 요청을 허용하지 않습니다 "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1848
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1849
 msgid "Unable to create entitlement certificate archive"
 msgstr "인타이틀먼트 인증서 아카이브를 생성할 수 없습니다 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1935
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1936
 msgid "Cannot bind by multiple parameters."
 msgstr "여러 매개 변수로 바인딩할 수 없음 "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1939
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1940
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "자동 바인딩 시 수량을 지정할 수 없습니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2052
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2053
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2102
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2103
 #, java-format
 msgid ""
 "Organization \"{0}\" has auto-attach disabled because of the content access "
@@ -1045,13 +1035,13 @@ msgstr ""
 "\"{0}\" 조직에서 컨텐츠 액세스 모드 설정으로 인해 자동 연결이 해제되었습니"
 "다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2107
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2108
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "\"{0}\" 조직에 자동 연결이 해제되었습니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2146
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2256
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2147
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2257
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:198
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:237
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:256
@@ -1061,33 +1051,33 @@ msgstr "\"{0}\" 조직에 자동 연결이 해제되었습니다. "
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "ID ''{0}''인 인타이틀먼트를 찾을 수 없습니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2279
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2280
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr "시리얼 번호 ''{0}''인 인타이틀먼트 인증서를 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2301
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2302
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "풀 ID ''{1}''인 소비자 ''{0}''의 인타이틀먼트가 없습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2372
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2373
 msgid "Unable to create export archive"
 msgstr "내보내기 아카이브를 생성할 수 없음 "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2583
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2584
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "장치 {0}의 ID 인증서를 다시 생성하는 도중 문제 발생 "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2627
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2628
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0}를 갖는 시스템은 가상 게스트가 아닙니다. "
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2728
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2729
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "하이퍼바이저 ''{0}''의 삭제 기록을 찾을 수 없습니다."
@@ -1236,12 +1226,12 @@ msgstr "UUID {0}인 게스트를 찾을 수 없습니다."
 msgid "Host to guest mapping was not provided for hypervisor check-in."
 msgstr "호스트에서 게스트로의 매핑은 하이퍼바이저 체크인에 제공되지 않습니다."
 
-#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:221
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:211
 #, java-format
 msgid "Unable to find hypervisor in org \"{0}\""
 msgstr "조직 ''{0}''에서 하이퍼바이저를 찾을 수 없습니다 "
 
-#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:293
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:283
 msgid "Host to guest mapping was not provided for hypervisor update."
 msgstr ""
 "호스트에서 게스트로의 매핑은 하이퍼바이저 업데이트에 제공되지 않습니다."
