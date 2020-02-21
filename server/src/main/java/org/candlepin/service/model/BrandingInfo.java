@@ -24,7 +24,7 @@ import java.util.Comparator;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface BrandingInfo {
+public interface BrandingInfo extends ServiceAdapterModel {
 
     /**
      * Fetches the name of this branding instance. If the name has not been set, this method

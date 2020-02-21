@@ -23,7 +23,7 @@ package org.candlepin.service.model;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface ProductContentInfo {
+public interface ProductContentInfo extends ServiceAdapterModel {
 
     /**
      * Fetches the content associated with the parent product. If the content has not been set,

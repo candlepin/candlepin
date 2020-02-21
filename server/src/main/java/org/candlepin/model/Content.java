@@ -550,6 +550,14 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      *  a version hash for this entity
      */
     public int getEntityVersion() {
+        return this.getEntityVersion(false);
+    }
+
+    public int getEntityVersion(boolean useCache) {
+        if (useCache && this.entityVersion != null) {
+            return this.entityVersion;
+        }
+
         // This must always be a subset of equals
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.id)

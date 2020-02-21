@@ -23,7 +23,7 @@ package org.candlepin.service.model;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface PermissionBlueprintInfo {
+public interface PermissionBlueprintInfo extends ServiceAdapterModel {
 
     // /**
     //  * Fetches the ID of this role. If the ID has not yet been set, this method returns null.

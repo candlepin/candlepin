@@ -1242,6 +1242,25 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  a version hash for this entity
      */
     public int getEntityVersion() {
+        return this.getEntityVersion(false);
+    }
+
+    /**
+     * Fetches the entity version, using the last-calcualted cache if available
+     *
+     * @param useCache
+     *  whether or not to returned the cached entity version, if available
+     *
+     * @return
+     *  a version hash for this entity
+     */
+    public int getEntityVersion(boolean useCache) {
+        if (useCache && this.entityVersion != null) {
+            // It would be super nice if we just cleared entityVersion on any setter, and then
+            // always returned it if it were available.
+            return this.entityVersion;
+        }
+
         // This must always be a subset of equals
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.id)
@@ -1319,7 +1338,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return A reference to this product.
      */
     public Product setProvidedProducts(Collection<Product> providedProducts) {
-
         if (providedProducts != null) {
             this.providedProducts = new HashSet<>(providedProducts);
         }
