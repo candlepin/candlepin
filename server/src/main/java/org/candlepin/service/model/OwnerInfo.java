@@ -25,7 +25,7 @@ import java.util.Date;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface OwnerInfo {
+public interface OwnerInfo extends ServiceAdapterModel {
 
     /**
      * Fetches the key of this owner. If the key has not been set, this method returns null.

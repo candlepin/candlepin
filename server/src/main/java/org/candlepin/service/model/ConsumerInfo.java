@@ -24,7 +24,7 @@ import java.util.Map;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface ConsumerInfo {
+public interface ConsumerInfo extends ServiceAdapterModel {
 
     // /**
     //  * Fetches the ID of this consumer. If the ID has not yet been generated or set, this method
