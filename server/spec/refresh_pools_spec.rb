@@ -83,12 +83,7 @@ describe 'Refresh Pools' do
     end
 
     # Remove the old provided products and add a new one...
-    product.providedProducts = [provided[2]]
-    update_upstream_product(product.id, :provided_products => provided[2])
-    update_upstream_subscription(sub.id, {
-        :product => product
-    })
-
+    update_upstream_product(product.id, :provided_products => [provided[2]])
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -123,11 +118,7 @@ describe 'Refresh Pools' do
     end
 
     # Remove the old provided products and add a new one...
-    update_upstream_product(product.id, :provided_products => provided[2])
-    product.providedProducts = [provided[2]]
-    update_upstream_subscription(sub.id, {
-        :product => product
-    })
+    update_upstream_product(product.id, :provided_products => [provided[2]])
 
     @cp.refresh_pools(owner_key)
     pools = @cp.list_pools({:owner => owner.id})
@@ -141,13 +132,20 @@ describe 'Refresh Pools' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)
 
-    b1 = {:productId => 'prodid1',
-      :type => 'type1', :name => 'branding1'}
-    b2 = {:productId => 'prodid2',
-      :type => 'type2', :name => 'branding2'}
-    product = create_upstream_product(random_string('test_prod'), { :branding => [b1] })
+    b1 = {
+        :productId => 'prodid1',
+        :type => 'type1',
+        :name => 'branding1'
+    }
 
-    sub = create_upstream_subscription(random_string('test_sub'), owner_key, {:product => product})
+    b2 = {
+        :productId => 'prodid2',
+        :type => 'type2',
+        :name => 'branding2'
+    }
+
+    product = create_upstream_product(random_string('test_prod'), { :branding => [b1] })
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, { :product => product })
 
     @cp.refresh_pools(owner_key)
 

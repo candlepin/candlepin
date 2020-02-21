@@ -194,6 +194,10 @@ public class TestUtil {
         return String.valueOf(randomInt());
     }
 
+    public static String randomString(String prefix) {
+        return String.format("%s-%06d", prefix, RANDOM.nextInt(1000000));
+    }
+
     public static Content createContent(String id, String name) {
         Content content = new Content(id, name, "test-type", "test-label", "test-vendor");
         content.setContentUrl("https://test.url.com");
