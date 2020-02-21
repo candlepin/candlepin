@@ -29,10 +29,15 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.persistence.TypedQuery;
+
+
 
 /**
  * The OwnerContentCurator provides functionality for managing the mapping between owners and
@@ -327,6 +332,61 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
+     * Retrieves a map containing all known versions of the content specified by IDs, for all orgs
+     * <em>except</em> the org specified. If no content is found for the specified IDs in other
+     * orgs, this method returns an empty map.
+     *
+     * @param owner
+     *  The owner to exclude from the content lookup. If this value is null, no owner-filtering
+     *  will be performed.
+     *
+     * @param contentIds
+     *  A collection of content IDs for which to fetch all known versions
+     *
+     * @return
+     *  A map containing all known versions of the given content, mapped by Red Hat ID
+     */
+    public Map<String, Set<Content>> getVersionedContentById(Owner owner, Collection<String> contentIds) {
+        Map<String, Set<Content>> result = new HashMap<>();
+
+        if (contentIds != null && !contentIds.isEmpty()) {
+            String jpql;
+
+            if (owner != null) {
+                jpql = "SELECT c FROM OwnerContent oc JOIN oc.content c " +
+                    "WHERE oc.owner.id != :owner_id AND c.id IN (:cids)";
+            }
+            else {
+                jpql = "SELECT c FROM Content c WHERE c.id IN (:cids)";
+            }
+
+            TypedQuery<Content> query = this.getEntityManager().createQuery(jpql, Content.class);
+
+            if (owner != null) {
+                query.setParameter("owner_id", owner.getId());
+            }
+
+            for (Collection<String> block : this.partition(contentIds)) {
+                List<Content> fetched = query.setParameter("cids", block)
+                    .getResultList();
+
+                for (Content entity : fetched) {
+                    Set<Content> idSet = result.get(entity.getId());
+
+                    if (idSet == null) {
+                        idSet = new HashSet<>();
+                        result.put(entity.getId(), idSet);
+                    }
+
+                    idSet.add(entity);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Retrieves a criteria which can be used to fetch a list of content with the specified Red Hat
      * content ID and entity version belonging to owners other than the owner provided. If no
      * content were found matching the given criteria, this method returns an empty list.
@@ -418,6 +478,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return this.cpQueryFactory.<Content>buildQuery();
     }
 
+
     /**
      * Updates the content references currently pointing to the original content to instead point to
      * the updated content for the specified owners.
@@ -468,7 +529,8 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         // the product manager to fork/update products when a related content entity changes.
 
         // environment content
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = :ownerId")
+        List<String> ids = session
+            .createSQLQuery("SELECT id FROM " + Environment.DB_TABLE + " WHERE owner_id = :ownerId")
             .setParameter("ownerId", owner.getId())
             .list();
 
