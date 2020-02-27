@@ -1397,6 +1397,7 @@ public class OwnerResource {
      * @httpcode 404
      * @httpcode 200
      */
+    @Transactional
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
