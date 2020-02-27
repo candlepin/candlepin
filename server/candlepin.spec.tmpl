@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.24
+Version: 2.9.25
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Thu Feb 27 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.25-1
+- 1806575 - GET /owners/{owner_key}/pools is very slow - Added @Transactional
+  annotation to the method listPools() (sonalidhome@gmail.com)
+
 * Fri Feb 21 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.24-1
 - 1792528: Virt-who is not able to upload the Hypervisor list if the manifest
   has content access mode as org_environment (wpoteat@redhat.com)
