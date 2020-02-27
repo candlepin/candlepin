@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.6
+Version: 3.1.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Thu Feb 27 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.7-1
+- 1806578 - GET /owners/{owner_key}/pools is very slow - Added @Transactional
+  annotation to the method listPools() (sonalidhome@gmail.com)
+
 * Thu Feb 20 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.6-1
 - Update mead build chain for api sub-project (khowell@redhat.com)
 
