@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.persistence.TypedQuery;
 
 
 
@@ -440,6 +441,52 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         }
 
         return this.cpQueryFactory.<Product>buildQuery();
+    }
+
+    /**
+     * Retrieves a set containing all known versions of the products specified by IDs, for all orgs
+     * <em>except</em> the org specified. If no products are found for the specified IDs in other
+     * orgs, this method returns an empty set.
+     *
+     * @param owner
+     *  The owner to exclude from the product lookup. If this value is null, no owner-filtering
+     *  will be performed.
+     *
+     * @param productIds
+     *  A collection of productIds for which to fetch all known versions
+     *
+     * @return
+     *  A set containing all known versions of the given products
+     */
+    public Set<Product> getVersionedProductsById(Owner owner, Collection<String> productIds) {
+        Set<Product> result = new HashSet<>();
+
+        if (productIds != null && !productIds.isEmpty()) {
+            String jpql;
+
+            if (owner != null) {
+                jpql = "SELECT p FROM OwnerProducts op JOIN op.product p " +
+                    "WHERE op.owner.id != :owner_id AND p.productId IN (:pids)";
+            }
+            else {
+                jpql = "SELECT p FROM Products p WHERE p.productId IN (:pids)";
+            }
+
+            TypedQuery<Product> query = this.getEntityManager().createTypedQuery(jpql, Product.class);
+
+            if (owner != null) {
+                query.setParameter("owner_id", owner.getId());
+            }
+
+            for (Collection<String> block : this.partition(productIds)) {
+                List<Product> fetched = query.setParameter("pids", block)
+                    .getResultList();
+
+                result.addAll(fetched);
+            }
+        }
+
+        return result;
     }
 
     /**

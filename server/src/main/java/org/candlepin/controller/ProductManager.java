@@ -903,7 +903,7 @@ public class ProductManager {
      * @return
      *  true if this product would be changed by the given product info; false otherwise
      */
-    public static boolean isChangedBy(Product entity, ProductInfo update) {
+    public static boolean isChangedBy(ProductInfo entity, ProductInfo update) {
 
         // Check simple properties first
         if (update.getId() != null && !update.getId().equals(entity.getId())) {
@@ -940,7 +940,7 @@ public class ProductManager {
         if (productContent != null) {
             Comparator comparator = new Comparator() {
                 public int compare(Object lhs, Object rhs) {
-                    ProductContent existing = (ProductContent) lhs;
+                    ProductContentInfo existing = (ProductContentInfo) lhs;
                     ProductContentInfo update = (ProductContentInfo) rhs;
 
                     if (existing != null && update != null) {

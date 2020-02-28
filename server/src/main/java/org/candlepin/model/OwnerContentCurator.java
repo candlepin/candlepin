@@ -327,6 +327,52 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
+     * Retrieves a set containing all known versions of the content specified by IDs, for all orgs
+     * <em>except</em> the org specified. If no content is found for the specified IDs in other
+     * orgs, this method returns an empty set.
+     *
+     * @param owner
+     *  The owner to exclude from the content lookup. If this value is null, no owner-filtering
+     *  will be performed.
+     *
+     * @param contentIds
+     *  A collection of content IDs for which to fetch all known versions
+     *
+     * @return
+     *  A set containing all known versions of the given content
+     */
+    public Set<Content> getVersionedContentById(Owner owner, Collection<String> contentIds) {
+        Set<Content> result = new HashSet<>();
+
+        if (contentIds != null && !contentIds.isEmpty()) {
+            String jpql;
+
+            if (owner != null) {
+                jpql = "SELECT c FROM OwnerContent oc JOIN op.content c " +
+                    "WHERE oc.owner.id != :owner_id AND c.contentId IN (:cids)";
+            }
+            else {
+                jpql = "SELECT c FROM Content c WHERE p.contentId IN (:cids)";
+            }
+
+            TypedQuery<Content> query = this.getEntityManager().createTypedQuery(jpql, Content.class);
+
+            if (owner != null) {
+                query.setParameter("owner_id", owner.getId());
+            }
+
+            for (Collection<String> block : this.partition(contentIds)) {
+                List<Content> fetched = query.setParameter("cids", block)
+                    .getResultList();
+
+                result.addAll(fetched);
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Retrieves a criteria which can be used to fetch a list of content with the specified Red Hat
      * content ID and entity version belonging to owners other than the owner provided. If no
      * content were found matching the given criteria, this method returns an empty list.

@@ -1319,7 +1319,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return A reference to this product.
      */
     public Product setProvidedProducts(Collection<Product> providedProducts) {
-
         if (providedProducts != null) {
             this.providedProducts = new HashSet<>(providedProducts);
         }

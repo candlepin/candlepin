@@ -133,8 +133,10 @@ public class ActualRefresher {
     /**
      * Adds the specified products to this refresher. If a given product has already
      * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced. Content attached to the products will be mapped by this
-     * compiler. Null products will be silently ignored.
+     * previous entry will be replaced.
+     * <p></p>
+     * Child entities attached to the product (such as provided products and content) will also be
+     * added to this refresher. Null products and children will be silently discarded.
      *
      * @param products
      *  The products to add to this compiler
@@ -318,12 +320,12 @@ public class ActualRefresher {
     /**
      * Performs the import operation on the currently compiled objects
      */
-    public void execute() {
+    public RefreshResult execute(Owner owner) {
 
         // Step 01: Determine which entities are to be created, updated, or skipped
         // Step 02: From the entities being updated, find all existing entities *not* being imported
         //          that will be implicitly updated
-        // Step 03: Initialize a list of "finished" entities
+        // Step 03: Initialize a collection of "finished" entities
         // Step 04: Invoke the recursive block with the combined list of entities to be created or
         //          updated as the current list.
 
@@ -335,7 +337,9 @@ public class ActualRefresher {
         //          the current list
         // Step R4: Apply the received changes to the entity, using only the finished entities for
         //          resolution of child entity referencing
-        // Step R5: Store the updated entity in the finished entity collection
+        // Step R5: Check if an existing version of the updated entity already exists locally. If so,
+        //          store existing version in the finished entity collection; Otherwise, store updated
+        //          entity in finished entity collection
         // Step R6: If current entity list has more entities, continue to next entity in the list;
         //          otherwise, break out of the current invocation of the recursive block
 
@@ -343,11 +347,642 @@ public class ActualRefresher {
         // Step 06: Update entity references not already corrected in the traversal above. This
         //          should include updating owners, pools, activation keys, and other such objects
         //          which reference products or content, but are not part of the tree.
-
         // Step 07: Return the collections of the finalized imported entities
+
+        RefreshResult result = new RefreshResult();
+
+
+
+
+
+        StateCache<ProductInfo> productStateCache = new StateCache<>();
+        StateCache<ContentInfo> contentStateCache = new StateCache<>();
+
+        this.categorizeContent(contentStateCache);
+        this.categorizeProducts(productStateCache);
+
+        Set<ProductInfo> affectedProducts = new HashSet<>();
+        this.getProductsUsingContent(contentStateCache.updated.keySet(), affectedProducts);
+        this.getProductsUsingProducts(productStateCache.updated.keySet(), affectedProducts);
+
+        List<ServiceModelInfo> imported = new ArrayList<>();
+        imported.addAll(productStateCache.created.values());
+        imported.addAll(productStateCache.updated.values());
+        imported.addAll(contentStateCache.created.values());
+        imported.addAll(contentStateCache.updated.values());
+
+
+        // Step through all of our entities and update
+        this.processEntities(imported);
+
+        // Persist the entity changes
+
+        // Update entity references
+
+        // Return the collection of updated things
+
+
+
+
+        // Give up on "true" tree processing; the entities are separate, and keeping track of all of them
+        // in a singular operation is going to be a nightmare. Unless we create some type-aware collections
+        // to store everything. Even then, there are difficulties to deal with.
+
+        /*
+            ActualRefresher (this class)
+                - Should be instantiated/created via provider
+                - collects inbound objects (*Info) to import/refresh
+                - performs the core refresh process (execute)
+                    - May call out to other classes to perform the various bits of work
+                - returns a collection of final entity objects, sorted into
+                    - This may not be needed long-term if even the pool updating gets rolled into
+                      this class. However, for the short-term, this is still something we need to
+                      refresh
+
+            RefreshResult
+                - Contains a set of collections of the various objects that were refreshed
+                - Could also act as the cache of "finalized" entity changes; would act as a passable
+                  state cache
+                - Needs to perform lookup duties according to the object type
+                - Needs to be able to generate typed collections of "imported" entities (created+updated)
+                - Loooots of collections nested in here; but ideally those are encapsulated away so it's
+                  a hidden detail
+
+            ServiceModelInfo
+                - Parent interface to all interfaces for the service models
+                - Provides no inherent functionality other than the ability to collect disparate
+                  objects in a single collection
+                - Probably unnecessary at this point
+
+            StateCache
+                - A collection of collections. Probably unnecessary at the moment without some
+                  better encapsulation to justify its existence. Could be used to store all of
+                  the various components we need with methods for doing the lookup effectively
+                  without needing to know the type ahead of time. Performance concerns lie here
+                  if the polymorphic lookups prove to be slow or cumbersome compared to just
+                  doing it directly.
+
+            Things currently unaccounted for:
+                - Source UUID tracking
+                    - Need to carry around a map of objects that represent our source entities
+                      to be able to look up the original UUID; may also act as a local cache to
+                      avoid repeated lookups, but is not strictly necessary... probably
+                - If we don't do method recursion, we'll need some structure to hold the various
+                  collections we'll be iterating through
+
+            Other difficulties:
+                - Categorization involves stepping through every imported object once to identify
+                  whether or not the object is going to be updated, created, or skipped entirely.
+                  This is fine on its own, but means we'll be doing two iterations through
+                  everything: once for categorization, and again to apply the changes. This seems
+                  horrid but necessary, as it provides us an opportunity to fetch an optimized
+                  list of entities that are affected by the changes we'll be applying.
+
+        */
+
+
+
+        NodeMapper mapper = new NodeMapper();
+        VersionMapper mapper = new VersionMapper();
+
+        // Step through each of our collections and build our forest of treeeeeeeees
+        for (Product existingEntity : this.ownerProductCurator.getProductsByOwner(owner)) {
+            this.buildNode(mapper, null, existingEntity);
+        }
+
+        for (ProductInfo importedEntity : this.importedProducts.values()) {
+            this.buildNode(mapper, null, importedEntity);
+        }
+
+        for (Content existingEntity : this.ownerContentCurator.getContentByOwner(owner)) {
+            this.buildNode(mapper, null, existingEntity);
+        }
+
+        for (ContentInfo importedEntity : this.importedContent.values()) {
+            this.buildNode(mapper, null, importedEntity);
+        }
+
+        // At this point we should have a stable set of nodes representing our roots
+        Iterator<EntityNode> rootIterator = mapper.getRootIterator();
+
+        // From here we can walk each tree, check for updates, apply updates and determine which
+        // trees can be skipped entirely
+
+        // Step through the nodes and get the IDs for any created or updated entity, so we can do
+        // versioning lookups
+        if (mapper.hasNodesOfType(EntityNode.Type.PRODUCT)) {
+            Set<String> pids = mapper.getNodesByType(EntityNode.Type.PRODUCT).stream()
+                .filter(entry -> entry.getValue().changed())
+                .map(entry -> entry.getKey())
+                .collect(Collectors.toSet());
+
+            Map<String, Set<Product>> versions = this.ownerProductCurator
+                .getVersionedProductsById(owner, pids);
+
+
+        }
+
+        if (mapper.hasNodesOfType(EntityNode.Type.CONTENT)) {
+            Set<String> cids = mapper.getNodesByType(EntityNode.Type.CONTENT).stream()
+                .filter(entry -> entry.getValue().changed())
+                .map(entry -> entry.getKey())
+                .collect(Collectors.toSet());
+
+            Map<String, Set<Content>> versions = this.ownerContentCurator
+                .getVersionedContentById(owner, cids);
+
+
+
+        }
+
+
+
+
+
+
+        while (rootIterator.hasNext()) {
+            EntityNode node = rootIterator.next();
+            this.processNode(node);
+        }
+    }
+
+    private EntityNode buildNode(NodeMapper mapper, EntityNode parent, ProductInfo existingEntity) {
+        String entityId = existingEntity.getId();
+        EntityNode node = mapper.getNode(EntityNode.Type.PRODUCT, entityId);
+
+        // Check if we already have a node for this entity
+        if (node != null) {
+            return node;
+        }
+
+        // Otherwise, we need to create a node for this entity and its children
+        node = new EntityNode<Product, ProductInfo>(EntityNode.Type.PRODUCT)
+            .setParent(parent);
+
+        ProductInfo importedEntity = this.importProducts.get(entityId);
+        if (importedEntity != null) {
+            node.setImportedEntity(importedEntity);
+
+            if (existingEntity != importedEntity) {
+                node.setExistingEntity(existingEntity);
+
+                if (ProductManager.isChangedBy(existingEntity, importedEntity)) {
+                    node.markChanged();
+                }
+            }
+            else {
+                // Net new products are always "changed"
+                node.markChanged();
+            }
+        }
+        else {
+            node.setExistingEntity(existingEntity);
+        }
+
+        // Add provided products
+        Collection<ProductInfo> providedProducts = existingEntity.getProvidedProducts();
+        if (providedProducts != null) {
+            for (ProductInfo provided : providedProducts) {
+                EntityNode child = this.buildNode(mapper, node, provided);
+
+                node.addChildNode(child);
+                child.addParentNode(node);
+            }
+        }
+
+        // Add content nodes
+        Collection<ProductContentInfo> productContent = existingEntity.getProductContent();
+
+        // Product content processing is a bit... weird. We don't care about the join object for
+        // our purposes here. It will be properly updated accordingly when we apply updates later.
+        // However, we do want to track the content referencing for the tree construction.
+
+        if (productContent != null) {
+            for (ProductContentInfo pc : productContent) {
+                Content content = pc.getContent();
+
+                if (content == null) {
+                    // This is so very bad. Fail out immediately.
+                    throw new IllegalStateException("Product content references a null or invalid content");
+                }
+
+                EntityNode child = this.buildNode(mapper, node, content);
+
+                node.addChildNode(child);
+                child.addParentNode(node);
+            }
+        }
+
+        mapper.putNode(EntityNode.Type.PRODUCT, entityId, node);
+        return node;
+    }
+
+    private EntityNode buildNode(NodeMapper mapper, EntityNode parent, ContentInfo existingEntity) {
+        String entityId = existingEntity.getId();
+        EntityNode node = mapper.getNode(EntityNode.Type.CONTENT, entityId);
+
+        // Check if we already have a node for this entity
+        if (node != null) {
+            return node;
+        }
+
+        // Otherwise, we need to create a node for this entity and its children
+        node = new EntityNode<Content, ContentInfo>(EntityNode.Type.CONTENT)
+            .setParent(parent);
+
+        ContentInfo importedEntity = this.importContent.get(entityId);
+        if (importedEntity != null) {
+            node.setImportedEntity(importedEntity);
+
+            if (existingEntity != importedEntity) {
+                node.setExistingEntity(existingEntity);
+
+                if (ContentManager.isChangedBy(existingEntity, importedEntity)) {
+                    node.markChanged();
+                }
+            }
+        }
+        else {
+            node.setExistingEntity(existingEntity);
+        }
+
+        mapper.putNode(EntityNode.Type.CONTENT, entityId, node);
+        return node;
+    }
+
+    private void processNode(NodeMapper mapper, EntityNode node) {
+        // Ensure we don't re-process nodes we've already visited
+        if (node.visited()) {
+            return;
+        }
+
+        boolean childrenUpdated = false;
+
+        // Process children nodes first (depth-first), so we can update references and avoid
+        // rework; also check if we need to make reference updates on this entity.
+        for (EntityNode child : node.getChildren()) {
+            this.processNode(mapper, child);
+            childrenUpdated |= child.changed();
+        }
+
+        // Apply changes as necessary...
+
+        // Scenarios here:
+
+        /*
+                Existing Entity     Imported Entity     Children Updated            Operation
+
+        1       non-null            non-null            true                        entity update
+        2       non-null            non-null            false                       entity update
+        3       non-null            null                true                        reference update (affected entity)
+        4       non-null            null                false                       skip
+        5       null                non-null            true                        entity creation
+        6       null                non-null            false                       entity creation
+        7       null                null                true                        - ERROR -
+        8       null                null                false                       - ERROR -
+
+        */
+
+        // Check if we have changes
+        if (node.changed()) {
+            if (node.hasExistingEntity()) {
+
+
+            }
+        }
+
+
+        if (node.hasExistingEntity()) {
+            if (node.hasImportedEntity()) {
+                // 1, 2, maybe (depends on isChangedBy)
+
+
+
+
+
+            }
+            else if (childrenUpdated) {
+                // 3
+            }
+
+            // 4
+        }
+        else if (node.hasImportedEntity()) {
+            // 5, 6
+        }
+        else {
+            throw new IllegalStateException("Invalid node state: no existing nor imported entity");
+        }
+
+
+
+
+
+
+
+
+        // Flag the node as visited so we don't risk rework or making changes multiple
+        // times, screwing up our entity refs
+        node.markVisited();
+    }
+
+
+    private static class VersionMapper<E extends AbstractHibernateObject> {
+
+        private Map<EntityType.type, Map<Integer, Set<E>>> typeMap;
+
+        public VersionMapper() {
+            this.typeMap = new HashMap<>();
+        }
+
+        public void addEntities(EntityType.type, Collection<E> entities) {
+            if (type == null) {
+                throw new IllegalArgumentException("type is null");
+            }
+
+            if (entities == null) {
+                throw new IllegalArgumentException("entities is null");
+            }
+
+
+            Map<Integer, Set<E>>
+
+            for (E entity : entities) {
+                Map<Integer, Set<E>> versionMap =
+
+
+
+
+
+
+
+            }
+        }
+
+        public E checkForPreexisting(E candidate) {
+
+            return candidate;
+
+
+
+
+        }
+
 
 
     }
+
+
+
+    private static class NodeMapper {
+
+        private static class RootIterator implements Iterator<EntityNode> {
+
+            private final Iterator<Map<String, EntityNode>> typeIterator;
+
+            private Iterator<EntityNode> nodeIterator;
+            private EntityNode next;
+
+            public RootIterator(Iterator<Map<String, EntityNode>> typeIterator) {
+                if (typeIterator == null) {
+                    throw new IllegalArgumentException("typeIterator is null");
+                }
+
+                this.typeIterator = typeIterator;
+                this.scan();
+            }
+
+            private void scan() {
+                while (true) {
+                    if (this.nodeIterator != null) {
+                        while (this.nodeIterator.hasNext()) {
+                            EntityNode candidate = this.nodeIterator.next();
+
+                            if (candidate.getParents().isEmpty()) {
+                                this.next = candidate;
+                                return;
+                            }
+                        }
+                    }
+
+                    if (!this.typeIterator.hasNext()) {
+                        break;
+                    }
+
+                    this.nodeIterator = this.typeIterator.next()
+                        .values()
+                        .iterator();
+                }
+
+                this.next = null;
+            }
+
+            @Override
+            public boolean hasNext() {
+                return this.next != null;
+            }
+
+            @Override
+            public EntityNode next() {
+                if (this.next == null) {
+                    throw new NoSuchElementException();
+                }
+
+                EntityNode output = this.next;
+                this.scan();
+
+                return output;
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("remove is not supported on RootIterator instances");
+            }
+        }
+
+
+        protected Map<EntityNode.Type, Map<String, EntityNode>> typeMap;
+
+
+        public NodeMapper() {
+            this.typeMap = new HashMap<>();
+        }
+
+        public boolean hasNode(EntityNode.Type type, String id) {
+            Map<String, EntityNode> nodeMap = this.typeMap.get(type);
+            return nodeMap != null && nodeMap.containsKey(id);
+        }
+
+        public boolean hasNodesOfType(EntityNode.Type type) {
+            Map<String, EntityNode> nodeMap = this.typeMap.get(type);
+            return nodeMap != null;
+        }
+
+        public EntityNode getNode(EntityNode.Type type, String id) {
+            Map<String, EntityNode> nodeMap = this.typeMap.get(type);
+            return nodeMap != null ? nodeMap.get(id) : null;
+        }
+
+        public Set<Map.Entry<String, EntityNode>> getNodesByType(EntityNode.Type type) {
+            Map<String, EntityNode> nodeMap = this.typeMap.get(type);
+            return nodeMap != null ? nodeMap.values() : null;
+        }
+
+        public EntityNode putNode(EntityNode.Type type, String id, EntityNode node) {
+            if (type == null) {
+                throw new IllegalArgumentException("type is null");
+            }
+
+            if (id == null || id.isEmpty()) {
+                throw new IllegalArgumentException("node id is null or empty");
+            }
+
+            if (node == null) {
+                throw new IllegalArgumentException("node is null");
+            }
+
+            Map<String, EntityNode> nodeMap = this.typeMap.get(type);
+
+            if (nodeMap == null) {
+                nodeMap = new HashMap<>();
+                this.typeMap.put(type, nodeMap);
+            }
+
+            return nodeMap.put(id, node);
+        }
+
+        public Iterator<EntityNode> getRootIterator() {
+            return new RootIterator(this.typeMap.values().iterator());
+        }
+    }
+
+
+    private static class EntityNode<E extends AbstractHibernateObject, I extends ServiceModelInfo> {
+
+        public static final enum Type {
+            PRODUCT,
+            CONTENT
+        };
+
+        private final Type type;
+
+        private E existingEntity;
+        private I importedEntity;
+        private E updatedEntity;
+
+        private boolean changed; // Eventually change this to a full set of changes detected
+        private boolean visited;
+
+        private Set<EntityNode> parents;
+        private Set<EntityNode> children;
+
+
+        public EntityNode(Type type) {
+            if (type == null) {
+                throw new IllegalArgumentException("type is null");
+            }
+
+            this.type = type;
+
+            this.parents = new HashSet<>();
+            this.children = new HashSet<>();
+        }
+
+        public Type getType() {
+            return this.type;
+        }
+
+        public EntityNode addParentNode(EntityNode parent) {
+            if (parent == null) {
+                throw new IllegalArgumentException("parent is null");
+            }
+
+            this.parents.add(parent);
+        }
+
+        public EntityNode addChildNode(EntityNode child) {
+            if (child == null) {
+                throw new IllegalArgumentException("child is null");
+            }
+
+            this.children.add(child);
+            return this;
+        }
+
+        public Set<EntityNode> getParents() {
+            return this.parents;
+        }
+
+        public Set<EntityNode> getChildren() {
+            return this.children;
+        }
+
+        public EntityNode setExistingEntity(E entity) {
+            this.exitingEntity = entity;
+            return this;
+        }
+
+        public EntityNode setImportedEntity(I entity) {
+            this.importedEntity = entity;
+            return this;
+        }
+
+        public EntityNode setUpdatedEntity(E entity) {
+            this.updatedEntity = entity;
+            return this;
+        }
+
+        public boolean hasExistingEntity() {
+            return this.existingEntity != null;
+        }
+
+        public boolean hasImportedEntity() {
+            return this.importedEntity != null;
+        }
+
+        public boolean hasUpdatedEntity() {
+            return this.updatedEntity != null;
+        }
+
+        public EntityNode markChanged() {
+            this.changed = true;
+        }
+
+        public EntityNode markVisited() {
+            this.visited = true;
+        }
+
+        public boolean changed() {
+            return this.changed;
+        }
+
+        public boolean visited() {
+            return this.visited;
+        }
+
+
+
+/*
+            EntityNode
+                - Existing Entity
+                    - Children entities
+                - hasChanged flag
+                - Change container (*Info)
+                - Children EntityNode collection
+*/
+
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
