@@ -65,6 +65,15 @@ public abstract class X509Util {
     public static final String ARCH_FACT = "uname.machine";
 
     /**
+     * The 'supported_architectures' fact is used to provide the information which
+     * architectures (like i386, amd64) a host supports. This is used e.g. on
+     * Debian / Ubuntu hosts to support multiple architectures. A common scenario is to
+     * use amd64 and i386 on Debian / Ubuntu. Therefore, the host needs to be able to install
+     * packages from amd64 and i386 repositories.
+     */
+    public static final String SUPPORTED_ARCH_FACT = "supported_architectures";
+
+    /**
      * Scan the product content looking for any we should filter out.
      *
      * Will filter out any content which modifies another product if the consumer does
@@ -151,17 +160,25 @@ public abstract class X509Util {
     public Set<ProductContent> filterContentByContentArch(
         Set<ProductContent> pcSet, Consumer consumer, Product product) {
         Set<ProductContent> filtered = new HashSet<>();
+        Set<String> consumerArches = new HashSet<>();
 
+        String supportedArches = consumer.getFact(SUPPORTED_ARCH_FACT);
 
-        String consumerArch = consumer.getFact(ARCH_FACT);
+        if (supportedArches != null) {
+            consumerArches = Arch.parseArches(supportedArches);
+        }
 
-        if (consumerArch == null) {
+        String archFact = consumer.getFact(ARCH_FACT);
+        if (archFact != null) {
+            consumerArches.add(archFact);
+        }
+
+        if (consumerArches.isEmpty()) {
             log.debug("consumer: " + consumer.getId() + " has no " +
-                ARCH_FACT + " attribute.");
+                ARCH_FACT + " / " + SUPPORTED_ARCH_FACT + " attribute.");
             log.debug("Not filtering by arch");
             return pcSet;
         }
-
 
         for (ProductContent pc : pcSet) {
             boolean canUse = true;
@@ -184,14 +201,19 @@ public abstract class X509Util {
                 }
             }
 
-            for (String contentArch : contentArches) {
+            searchArch: {
+                for (String contentArch : contentArches) {
 
-                if (Arch.contentForConsumer(contentArch, consumerArch)) {
-                    canUse = true;
-                    break;
-                }
-                else {
-                    canUse = false;
+                    for (String consumerArch : consumerArches) {
+
+                        if (Arch.contentForConsumer(contentArch, consumerArch)) {
+                            canUse = true;
+                            break searchArch;
+                        }
+                        else {
+                            canUse = false;
+                        }
+                    }
                 }
             }
 
