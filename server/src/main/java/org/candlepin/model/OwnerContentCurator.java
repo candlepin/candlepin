@@ -327,9 +327,9 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
-     * Retrieves a set containing all known versions of the content specified by IDs, for all orgs
+     * Retrieves a map containing all known versions of the content specified by IDs, for all orgs
      * <em>except</em> the org specified. If no content is found for the specified IDs in other
-     * orgs, this method returns an empty set.
+     * orgs, this method returns an empty map.
      *
      * @param owner
      *  The owner to exclude from the content lookup. If this value is null, no owner-filtering
@@ -339,10 +339,10 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      *  A collection of content IDs for which to fetch all known versions
      *
      * @return
-     *  A set containing all known versions of the given content
+     *  A map containing all known versions of the given content, mapped by Red Hat ID
      */
-    public Set<Content> getVersionedContentById(Owner owner, Collection<String> contentIds) {
-        Set<Content> result = new HashSet<>();
+    public Map<String, Set<Content>> getVersionedContentById(Owner owner, Collection<String> contentIds) {
+        Map<String, Set<Content>> result = new HashMap<>();
 
         if (contentIds != null && !contentIds.isEmpty()) {
             String jpql;
@@ -365,7 +365,16 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
                 List<Content> fetched = query.setParameter("cids", block)
                     .getResultList();
 
-                result.addAll(fetched);
+                for (Content entity : fetched) {
+                    Set<Content> idSet = result.get(entity.getId());
+
+                    if (idSet == null) {
+                        idSet = new HashSet<>();
+                        result.put(entity.getId(), idSet);
+                    }
+
+                    idSet.add(entity);
+                }
             }
         }
 

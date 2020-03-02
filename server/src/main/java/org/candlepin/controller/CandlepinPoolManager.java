@@ -224,44 +224,49 @@ public class CandlepinPoolManager implements PoolManager {
         owner = this.resolveOwner(owner);
         log.info("Refreshing pools for owner: {}", owner);
 
-        ImportedEntityCompiler compiler = new ImportedEntityCompiler();
+        // ImportedEntityCompiler compiler = new ImportedEntityCompiler();
+
+        ActualRefresher refresher = new ActualRefresher(this.ownerProductCurator, this.ownerContentCurator);
 
         log.debug("Fetching subscriptions from adapter...");
-        compiler.addSubscriptions(subAdapter.getSubscriptions(owner.getKey()));
+        // compiler.addSubscriptions(subAdapter.getSubscriptions(owner.getKey()));
+        refresher.addSubscriptions(subAdapter.getSubscriptions(owner.getKey()));
 
-        Map<String, ? extends SubscriptionInfo> subscriptionMap = compiler.getSubscriptions();
-        Map<String, ? extends ProductInfo> productMap = compiler.getProducts();
-        Map<String, ? extends ContentInfo> contentMap = compiler.getContent();
+        // Map<String, ? extends SubscriptionInfo> subscriptionMap = compiler.getSubscriptions();
+        // Map<String, ? extends ProductInfo> productMap = compiler.getProducts();
+        // Map<String, ? extends ContentInfo> contentMap = compiler.getContent();
 
-        // If trace output is enabled, dump some JSON representing the subscriptions we received so
-        // we can simulate this in a testing environment.
-        if (log.isTraceEnabled() || "TRACE".equalsIgnoreCase(owner.getLogLevel())) {
-            try {
-                ObjectMapper mapper = this.jsonProvider
-                    .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+        // // If trace output is enabled, dump some JSON representing the subscriptions we received so
+        // // we can simulate this in a testing environment.
+        // if (log.isTraceEnabled() || "TRACE".equalsIgnoreCase(owner.getLogLevel())) {
+        //     try {
+        //         ObjectMapper mapper = this.jsonProvider
+        //             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
-                log.trace("Received {} subscriptions from upstream:", subscriptionMap.size());
-                log.trace(mapper.writeValueAsString(subscriptionMap.values()));
-                log.trace("Finished outputting upstream subscriptions");
-            }
-            catch (Exception e) {
-                log.trace("Exception occurred while outputting upstream subscriptions", e);
-            }
-        }
+        //         log.trace("Received {} subscriptions from upstream:", subscriptionMap.size());
+        //         log.trace(mapper.writeValueAsString(subscriptionMap.values()));
+        //         log.trace("Finished outputting upstream subscriptions");
+        //     }
+        //     catch (Exception e) {
+        //         log.trace("Exception occurred while outputting upstream subscriptions", e);
+        //     }
+        // }
 
-        // Persist content changes
-        log.debug("Importing {} content...", contentMap.size());
+        // // Persist content changes
+        // log.debug("Importing {} content...", contentMap.size());
 
-        Map<String, Content> importedContent = this.contentManager
-            .importContent(owner, contentMap, productMap.keySet())
-            .getImportedEntities();
+        // Map<String, Content> importedContent = this.contentManager
+        //     .importContent(owner, contentMap, productMap.keySet())
+        //     .getImportedEntities();
 
-        log.debug("Importing {} product(s)...", productMap.size());
-        ImportResult<Product> importResult = this.productManager
-            .importProducts(owner, productMap, importedContent);
+        // log.debug("Importing {} product(s)...", productMap.size());
+        // ImportResult<Product> importResult = this.productManager
+        //     .importProducts(owner, productMap, importedContent);
 
-        Map<String, Product> importedProducts = importResult.getImportedEntities();
-        Map<String, Product> updatedProducts = importResult.getUpdatedEntities();
+        RefreshResult refreshResult = refresher.execute();
+
+        Map<String, Product> importedProducts = refreshResult.getImportedProducts();
+        Map<String, Product> updatedProducts = refreshResult.getUpdatedProducts();
 
         log.debug("Refreshing {} pool(s)...", subscriptionMap.size());
         for (Iterator<? extends SubscriptionInfo> si = subscriptionMap.values().iterator(); si.hasNext();) {
@@ -300,29 +305,6 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),
             System.currentTimeMillis() - now.getTime());
     }
-
-    private void doImportPoC(ImportedEntityCompiler compiler) {
-
-
-
-
-
-
-
-
-
-    }
-
-
-
-
-
-
-
-
-
-
-
 
     private Owner resolveOwner(Owner owner) {
         if (owner == null || (owner.getKey() == null && owner.getId() == null)) {

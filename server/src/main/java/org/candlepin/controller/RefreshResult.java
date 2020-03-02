@@ -121,7 +121,36 @@ public class RefreshResult {
 
 
 
+    public Map<String, Product> getUpdatedProducts() {
+        // This should be encapsulated, probably
+        return this.updatedProducts;
+    }
 
+    public Map<String, Product> getImportedProducts() {
+        // Make this more efficient/safe/more gooder
+        Map<String, Product> imported = new HashMap<>();
+
+        imported.putAll(this.createdProducts);
+        imported.putAll(this.updatedProducts);
+
+        return imported;
+    }
+
+
+    public Map<String, Content> getUpdatedContent() {
+        // This should be encapsulated, probably
+        return this.updatedContent;
+    }
+
+    public Map<String, Content> getImportedContent() {
+        // Make this more efficient/safe/more gooder
+        Map<String, Content> imported = new HashMap<>();
+
+        imported.putAll(this.createdContent);
+        imported.putAll(this.updatedContent);
+
+        return imported;
+    }
 
 
 

@@ -1242,6 +1242,19 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  a version hash for this entity
      */
     public int getEntityVersion() {
+        return this.getEntityVersion(false);
+    }
+
+    /**
+     * Fetches the entity version, using the last-calcualted cache if available
+     */
+    public int getEntityVersion(boolean useCache) {
+        if (useCache && this.entityVersion != null) {
+            // It would be super nice if we just cleared entityVersion on any setter, and then
+            // always returned it if it were available.
+            return this.entityVersion;
+        }
+
         // This must always be a subset of equals
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.id)
