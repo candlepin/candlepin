@@ -1,8 +1,13 @@
 apply plugin: "java"
 apply plugin: "java-gradle-plugin"
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
-    implementation gradleApi()
+    implementation(gradleApi())
+    implementation("org.openapitools:openapi-generator:4.0.1")
 }
 
 gradlePlugin {
