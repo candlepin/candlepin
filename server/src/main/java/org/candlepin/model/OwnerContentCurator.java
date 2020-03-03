@@ -29,10 +29,15 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.persistence.TypedQuery;
+
+
 
 /**
  * The OwnerContentCurator provides functionality for managing the mapping between owners and
@@ -355,7 +360,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
                 jpql = "SELECT c FROM Content c WHERE p.contentId IN (:cids)";
             }
 
-            TypedQuery<Content> query = this.getEntityManager().createTypedQuery(jpql, Content.class);
+            TypedQuery<Content> query = this.getEntityManager().createQuery(jpql, Content.class);
 
             if (owner != null) {
                 query.setParameter("owner_id", owner.getId());

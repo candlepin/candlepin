@@ -18,7 +18,7 @@ package org.candlepin.service.model;
 /**
  * Parent interface for all service model interfaces.
  */
-public interface ServiceModelInfo extends ServiceModelInfo {
+public interface ServiceModelInfo {
 
     // Intentionally left empty... for now.
 

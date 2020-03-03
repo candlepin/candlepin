@@ -14,13 +14,20 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.model.AbstractHibernateObject;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
+import org.candlepin.service.model.ServiceModelInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import org.slf4j.Logger;
@@ -28,8 +35,17 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
+
 
 
 /**
@@ -46,8 +62,10 @@ public class ActualRefresher {
 
     private static Logger log = LoggerFactory.getLogger(ImportedEntityCompiler.class);
 
+    private ContentCurator contentCurator;
     private OwnerContentCurator ownerContentCurator;
     private OwnerProductCurator ownerProductCurator;
+    private ProductCurator productCurator;
 
     private Map<String, SubscriptionInfo> importSubscriptions;
     private Map<String, ProductInfo> importProducts;
@@ -59,8 +77,12 @@ public class ActualRefresher {
     public ActualRefresher(OwnerProductCurator ownerProductCurator,
         OwnerContentCurator ownerContentCurator) {
 
+        // TODO: Actually use the proper curators in a real implementation
+
+        // this.contentCurator = Objects.requireNonNull(contentCurator);
         this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
         this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        // this.productCurator = Objects.requireNonNull(productCurator);
 
         this.importSubscriptions = new HashMap<>();
         this.importProducts = new HashMap<>();
@@ -437,7 +459,7 @@ public class ActualRefresher {
             this.buildNode(mapper, null, existingEntity);
         }
 
-        for (ProductInfo importedEntity : this.importedProducts.values()) {
+        for (ProductInfo importedEntity : this.importProducts.values()) {
             this.buildNode(mapper, null, importedEntity);
         }
 
@@ -445,7 +467,7 @@ public class ActualRefresher {
             this.buildNode(mapper, null, existingEntity);
         }
 
-        for (ContentInfo importedEntity : this.importedContent.values()) {
+        for (ContentInfo importedEntity : this.importContent.values()) {
             this.buildNode(mapper, null, importedEntity);
         }
 
@@ -463,10 +485,11 @@ public class ActualRefresher {
                 .map(entry -> entry.getKey())
                 .collect(Collectors.toSet());
 
-            Map<String, Set<Product>> versions = this.ownerProductCurator
-                .getVersionedProductsById(owner, pids);
+            // These casts are ridiculous. Java's implementation of generics are such a pain at times.
+            Map versions = this.ownerProductCurator.getVersionedProductsById(owner, pids);
 
-            vMap.addEntities(EntityNode.Type.PRODUCT, versions);
+            vMap.addEntities(EntityNode.Type.PRODUCT,
+                (Map<String, Set<? extends AbstractHibernateObject>>) versions);
         }
 
         if (mapper.hasNodesOfType(EntityNode.Type.CONTENT)) {
@@ -475,10 +498,10 @@ public class ActualRefresher {
                 .map(entry -> entry.getKey())
                 .collect(Collectors.toSet());
 
-            Map<String, Set<Content>> versions = this.ownerContentCurator
-                .getVersionedContentById(owner, cids);
+            Map versions = this.ownerContentCurator.getVersionedContentById(owner, cids);
 
-            vMap.addEntities(EntityNode.Type.CONTENT, versions);
+            vMap.addEntities(EntityNode.Type.CONTENT,
+                (Map<String, Set<? extends AbstractHibernateObject>>) versions);
         }
 
         // Process our nodes for real this timm
@@ -489,11 +512,17 @@ public class ActualRefresher {
 
         // At this point our nodes should be completely processed. One final walk through it to grab the
         // updated entities should be all we need (as well as DB hits to update ancillary refs)
-        for (EntityNode node : mapper.streamNodes().iterator()) {
+
+
+        // This is slow; update the streamNodes method to not exist or return an iterator much like
+        // RootIterator does
+        for (EntityNode node : mapper.streamNodes().collect(Collectors.toList())) {
             if (node.changed()) {
                 switch (node.getType()) {
                     case CONTENT:
-                        this.ownerContentCurator.merge((Content) node.getUpdatedEntity());
+                        // TODO: Update this to use the correct curator instead of getting the EM directly
+
+                        this.ownerContentCurator.getEntityManager().merge((Content) node.getUpdatedEntity());
 
                         if (node.isNewEntity()) {
                             result.addCreatedContent((Content) node.getUpdatedEntity());
@@ -505,7 +534,7 @@ public class ActualRefresher {
                         break;
 
                     case PRODUCT:
-                        this.ownerProductCurator.merge((Product) node.getUpdatedEntity());
+                        this.ownerProductCurator.getEntityManager().merge((Product) node.getUpdatedEntity());
 
                         if (node.isNewEntity()) {
                             result.addCreatedProduct((Product) node.getUpdatedEntity());
@@ -523,11 +552,17 @@ public class ActualRefresher {
         }
 
         this.ownerProductCurator.flush();
+
+        // TODO: Add owner-product and owner-content reference updating/creation
+        // TODO: Update external references
+
+        return result;
     }
 
     private EntityNode buildNode(NodeMapper mapper, EntityNode parent, ProductInfo existingEntity) {
         String entityId = existingEntity.getId();
-        EntityNode node = mapper.getNode(EntityNode.Type.PRODUCT, entityId);
+        EntityNode<Product, ProductInfo> node = (EntityNode<Product, ProductInfo>) mapper
+            .getNode(EntityNode.Type.PRODUCT, entityId);
 
         // Check if we already have a node for this entity
         if (node != null) {
@@ -536,14 +571,14 @@ public class ActualRefresher {
 
         // Otherwise, we need to create a node for this entity and its children
         node = new EntityNode<Product, ProductInfo>(EntityNode.Type.PRODUCT)
-            .setParent(parent);
+            .addParentNode(parent);
 
         ProductInfo importedEntity = this.importProducts.get(entityId);
         if (importedEntity != null) {
             node.setImportedEntity(importedEntity);
 
             if (existingEntity != importedEntity) {
-                node.setExistingEntity(existingEntity);
+                node.setExistingEntity((Product) existingEntity);
 
                 if (ProductManager.isChangedBy(existingEntity, importedEntity)) {
                     node.markChanged();
@@ -555,11 +590,11 @@ public class ActualRefresher {
             }
         }
         else {
-            node.setExistingEntity(existingEntity);
+            node.setExistingEntity((Product) existingEntity);
         }
 
         // Add provided products
-        Collection<ProductInfo> providedProducts = existingEntity.getProvidedProducts();
+        Collection<? extends ProductInfo> providedProducts = existingEntity.getProvidedProducts();
         if (providedProducts != null) {
             for (ProductInfo provided : providedProducts) {
                 EntityNode child = this.buildNode(mapper, node, provided);
@@ -570,7 +605,7 @@ public class ActualRefresher {
         }
 
         // Add content nodes
-        Collection<ProductContentInfo> productContent = existingEntity.getProductContent();
+        Collection<? extends ProductContentInfo> productContent = existingEntity.getProductContent();
 
         // Product content processing is a bit... weird. We don't care about the join object for
         // our purposes here. It will be properly updated accordingly when we apply updates later.
@@ -578,7 +613,7 @@ public class ActualRefresher {
 
         if (productContent != null) {
             for (ProductContentInfo pc : productContent) {
-                Content content = pc.getContent();
+                ContentInfo content = pc.getContent();
 
                 if (content == null) {
                     // This is so very bad. Fail out immediately.
@@ -598,7 +633,8 @@ public class ActualRefresher {
 
     private EntityNode buildNode(NodeMapper mapper, EntityNode parent, ContentInfo existingEntity) {
         String entityId = existingEntity.getId();
-        EntityNode node = mapper.getNode(EntityNode.Type.CONTENT, entityId);
+        EntityNode<Content, ContentInfo> node = (EntityNode<Content, ContentInfo>) mapper
+            .getNode(EntityNode.Type.CONTENT, entityId);
 
         // Check if we already have a node for this entity
         if (node != null) {
@@ -607,14 +643,14 @@ public class ActualRefresher {
 
         // Otherwise, we need to create a node for this entity and its children
         node = new EntityNode<Content, ContentInfo>(EntityNode.Type.CONTENT)
-            .setParent(parent);
+            .addParentNode(parent);
 
         ContentInfo importedEntity = this.importContent.get(entityId);
         if (importedEntity != null) {
             node.setImportedEntity(importedEntity);
 
             if (existingEntity != importedEntity) {
-                node.setExistingEntity(existingEntity);
+                node.setExistingEntity((Content) existingEntity);
 
                 if (ContentManager.isChangedBy(existingEntity, importedEntity)) {
                     node.markChanged();
@@ -622,7 +658,7 @@ public class ActualRefresher {
             }
         }
         else {
-            node.setExistingEntity(existingEntity);
+            node.setExistingEntity((Content) existingEntity);
         }
 
         mapper.putNode(EntityNode.Type.CONTENT, entityId, node);
@@ -639,7 +675,7 @@ public class ActualRefresher {
 
         // Process children nodes first (depth-first), so we can update references and avoid
         // rework; also check if we need to make reference updates on this entity.
-        for (EntityNode child : node.getChildren()) {
+        for (EntityNode child : (Set<EntityNode>) node.getChildren()) {
             this.processNode(mapper, vMap, child);
             childrenUpdated |= child.changed();
         }
@@ -669,16 +705,16 @@ public class ActualRefresher {
 
                 switch (node.getType()) {
                     case PRODUCT:
-                        node.setUpdatedEntity(this.createEntity(
+                        node.setUpdatedEntity(this.createEntity(mapper, vMap,
                             (Product) null,
-                            (Product) node.getImportedEntity());
+                            (Product) node.getImportedEntity()));
 
                         break;
 
                     case CONTENT:
-                        node.setUpdatedEntity(this.createEntity(
+                        node.setUpdatedEntity(this.createEntity(mapper, vMap,
                             (Content) null,
-                            (Content) node.getImportedEntity());
+                            (Content) node.getImportedEntity()));
 
                         break;
 
@@ -691,14 +727,14 @@ public class ActualRefresher {
 
                 switch (node.getType()) {
                     case PRODUCT:
-                        node.setUpdatedEntity(this.createEntity(mapper, vmap,
-                            (Product) node.getExistingEntity(), (ProductInfo) node.getImportedEntity());
+                        node.setUpdatedEntity(this.createEntity(mapper, vMap,
+                            (Product) node.getExistingEntity(), (ProductInfo) node.getImportedEntity()));
 
                         break;
 
                     case CONTENT:
-                        node.setUpdatedEntity(this.createEntity(mapper, vmap,
-                            (Content) node.getExistingEntity(), (ContentInfo) node.getImportedEntity());
+                        node.setUpdatedEntity(this.createEntity(mapper, vMap,
+                            (Content) node.getExistingEntity(), (ContentInfo) node.getImportedEntity()));
 
                         break;
 
@@ -713,16 +749,16 @@ public class ActualRefresher {
             // Resolve children references
             switch (node.getType()) {
                 case PRODUCT:
-                    node.setUpdatedEntity(this.createEntity(mapper, vmap,
+                    node.setUpdatedEntity(this.createEntity(mapper, vMap,
                         (Product) null,
-                        (Product) node.getImportedEntity());
+                        (Product) node.getImportedEntity()));
 
                     break;
 
                 case CONTENT:
-                    node.setUpdatedEntity(this.createEntity(mapper, vmap,
+                    node.setUpdatedEntity(this.createEntity(mapper, vMap,
                         (Content) null,
-                        (Content) node.getImportedEntity());
+                        (Content) node.getImportedEntity()));
 
                     break;
 
@@ -773,7 +809,7 @@ public class ActualRefresher {
                     for (BrandingInfo binfo : importedEntity.getBranding()) {
                         if (binfo != null) {
                             branding.add(new Branding(
-                                entity,
+                                updatedEntity,
                                 binfo.getProductId(),
                                 binfo.getName(),
                                 binfo.getType()
@@ -787,9 +823,10 @@ public class ActualRefresher {
         }
 
         // Perform child resolution
+        ProductInfo sourceEntity = (importedEntity != null ? importedEntity : existingEntity);
 
         // Update products
-        Collection<? extends ProductInfo> providedProducts = existingEntity.getProvidedProducts();
+        Collection<? extends ProductInfo> providedProducts = sourceEntity.getProvidedProducts();
 
         if (providedProducts != null) {
             updatedEntity.setProvidedProducts(null);
@@ -806,19 +843,19 @@ public class ActualRefresher {
 
                 if (!childNode.visited()) {
                     String errmsg = String.format("Child node accessed before it has been processed: " +
-                        "%s => %s", existingEntity, product)
+                        "%s => %s", sourceEntity, product);
 
                     throw new IllegalStateException(errmsg);
                 }
 
-                updatedEntity.addProvidedProduct(childNode.updated() ?
-                    (Product) childNode.getUpdatedEntity() :
-                    childNode.getExistingEntity());
+                updatedEntity.addProvidedProduct((Product) (childNode.changed() ?
+                    childNode.getUpdatedEntity() :
+                    childNode.getExistingEntity()));
             }
         }
 
         // Update content
-        Collection<? extends ProductContentInfo> productContent = existingEntity.getProductContent();
+        Collection<? extends ProductContentInfo> productContent = sourceEntity.getProductContent();
 
         if (productContent != null) {
             updatedEntity.setProductContent(null);
@@ -836,15 +873,15 @@ public class ActualRefresher {
 
                 if (!childNode.visited()) {
                     String errmsg = String.format("Child node accessed before it has been processed: " +
-                        "%s => %s", existingEntity, content)
+                        "%s => %s", sourceEntity, content);
 
                     throw new IllegalStateException(errmsg);
                 }
 
-                updatedEntity.addContent(childNode.updated() ?
-                    (Content) childNode.getUpdatedEntity() :
-                    childNode.getExistingEntity(),
-                    pc.isEnabled();
+                updatedEntity.addContent((Content) (childNode.changed() ?
+                    childNode.getUpdatedEntity() :
+                    childNode.getExistingEntity()),
+                    pc.isEnabled());
             }
         }
 
@@ -878,47 +915,47 @@ public class ActualRefresher {
 
         if (importedEntity != null) {
             if (importedEntity.getType() != null) {
-                entity.setType(importedEntity.getType());
+                updatedEntity.setType(importedEntity.getType());
             }
 
             if (importedEntity.getLabel() != null) {
-                entity.setLabel(importedEntity.getLabel());
+                updatedEntity.setLabel(importedEntity.getLabel());
             }
 
             if (importedEntity.getName() != null) {
-                entity.setName(importedEntity.getName());
+                updatedEntity.setName(importedEntity.getName());
             }
 
             if (importedEntity.getVendor() != null) {
-                entity.setVendor(importedEntity.getVendor());
+                updatedEntity.setVendor(importedEntity.getVendor());
             }
 
             if (importedEntity.getContentUrl() != null) {
-                entity.setContentUrl(importedEntity.getContentUrl());
+                updatedEntity.setContentUrl(importedEntity.getContentUrl());
             }
 
             if (importedEntity.getRequiredTags() != null) {
-                entity.setRequiredTags(importedEntity.getRequiredTags());
+                updatedEntity.setRequiredTags(importedEntity.getRequiredTags());
             }
 
             if (importedEntity.getReleaseVersion() != null) {
-                entity.setReleaseVersion(importedEntity.getReleaseVersion());
+                updatedEntity.setReleaseVersion(importedEntity.getReleaseVersion());
             }
 
             if (importedEntity.getGpgUrl() != null) {
-                entity.setGpgUrl(importedEntity.getGpgUrl());
+                updatedEntity.setGpgUrl(importedEntity.getGpgUrl());
             }
 
             if (importedEntity.getMetadataExpiration() != null) {
-                entity.setMetadataExpiration(importedEntity.getMetadataExpiration());
+                updatedEntity.setMetadataExpiration(importedEntity.getMetadataExpiration());
             }
 
             if (importedEntity.getRequiredProductIds() != null) {
-                entity.setModifiedProductIds(importedEntity.getRequiredProductIds());
+                updatedEntity.setModifiedProductIds(importedEntity.getRequiredProductIds());
             }
 
             if (importedEntity.getArches() != null) {
-                entity.setArches(importedEntity.getArches());
+                updatedEntity.setArches(importedEntity.getArches());
             }
         }
 
@@ -951,13 +988,15 @@ public class ActualRefresher {
 
     private static class VersionMapper {
 
-        private Map<EntityNode.Type.type, Map<String, Set<? extends AbstractHibernateEntity>>> typeMap;
+        private Map<EntityNode.Type, Map<String, Set<? extends AbstractHibernateObject>>> typeMap;
 
         public VersionMapper() {
             this.typeMap = new HashMap<>();
         }
 
-        public void addEntities(EntityNode.Type.type, Map<String, Set<? extends AbstractHibernateEntity> map) {
+        public void addEntities(EntityNode.Type type, Map<String,
+            Set<? extends AbstractHibernateObject>> map) {
+
             if (type == null) {
                 throw new IllegalArgumentException("type is null");
             }
@@ -973,8 +1012,8 @@ public class ActualRefresher {
         public <E extends AbstractHibernateObject> Set<E> getCandidateEntities(EntityNode.Type type,
             String id) {
 
-            Map<String, Set<? extends AbstractHibernateEntity>> idMap = this.typeMap.get(type);
-            return (Set<E>) idMap != null ? idMap.get(id) : null;
+            Map<String, Set<? extends AbstractHibernateObject>> idMap = this.typeMap.get(type);
+            return (Set<E>) (idMap != null ? idMap.get(id) : null);
         }
 
     }
@@ -1083,7 +1122,7 @@ public class ActualRefresher {
 
         public Set<Map.Entry<String, EntityNode>> getNodesByType(EntityNode.Type type) {
             Map<String, EntityNode> nodeMap = this.typeMap.get(type);
-            return nodeMap != null ? nodeMap.values() : null;
+            return nodeMap != null ? nodeMap.entrySet() : null;
         }
 
         public Stream<EntityNode> streamNodes() {
@@ -1128,7 +1167,7 @@ public class ActualRefresher {
 
     private static class EntityNode<E extends AbstractHibernateObject, I extends ServiceModelInfo> {
 
-        public static final enum Type {
+        public static enum Type {
             PRODUCT,
             CONTENT
         };
@@ -1167,6 +1206,7 @@ public class ActualRefresher {
             }
 
             this.parents.add(parent);
+            return this;
         }
 
         public EntityNode addChildNode(EntityNode child) {
@@ -1187,7 +1227,7 @@ public class ActualRefresher {
         }
 
         public EntityNode setExistingEntity(E entity) {
-            this.exitingEntity = entity;
+            this.existingEntity = entity;
             return this;
         }
 
@@ -1213,12 +1253,26 @@ public class ActualRefresher {
             return this.updatedEntity != null;
         }
 
+        public E getExistingEntity() {
+            return this.existingEntity;
+        }
+
+        public I getImportedEntity() {
+            return this.importedEntity;
+        }
+
+        public E getUpdatedEntity() {
+            return this.updatedEntity;
+        }
+
         public EntityNode markChanged() {
             this.changed = true;
+            return this;
         }
 
         public EntityNode markVisited() {
             this.visited = true;
+            return this;
         }
 
         public boolean changed() {

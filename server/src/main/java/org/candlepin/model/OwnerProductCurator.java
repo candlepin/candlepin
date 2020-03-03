@@ -472,7 +472,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
                 jpql = "SELECT p FROM Products p WHERE p.productId IN (:pids)";
             }
 
-            TypedQuery<Product> query = this.getEntityManager().createTypedQuery(jpql, Product.class);
+            TypedQuery<Product> query = this.getEntityManager().createQuery(jpql, Product.class);
 
             if (owner != null) {
                 query.setParameter("owner_id", owner.getId());

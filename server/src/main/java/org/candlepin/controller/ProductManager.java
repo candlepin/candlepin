@@ -944,7 +944,7 @@ public class ProductManager {
                     ProductContentInfo update = (ProductContentInfo) rhs;
 
                     if (existing != null && update != null) {
-                        Content content = existing.getContent();
+                        ContentInfo content = existing.getContent();
                         ContentInfo cdto = update.getContent();
 
                         if (content != null && cdto != null) {

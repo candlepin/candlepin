@@ -263,10 +263,11 @@ public class CandlepinPoolManager implements PoolManager {
         // ImportResult<Product> importResult = this.productManager
         //     .importProducts(owner, productMap, importedContent);
 
-        RefreshResult refreshResult = refresher.execute();
+        RefreshResult refreshResult = refresher.execute(owner);
 
         Map<String, Product> importedProducts = refreshResult.getImportedProducts();
         Map<String, Product> updatedProducts = refreshResult.getUpdatedProducts();
+        Map<String, ? extends SubscriptionInfo> subscriptionMap = refresher.getSubscriptions();
 
         log.debug("Refreshing {} pool(s)...", subscriptionMap.size());
         for (Iterator<? extends SubscriptionInfo> si = subscriptionMap.values().iterator(); si.hasNext();) {

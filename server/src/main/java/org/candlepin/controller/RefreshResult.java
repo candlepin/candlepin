@@ -14,7 +14,14 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.model.Content;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 
 public class RefreshResult {
@@ -100,7 +107,7 @@ public class RefreshResult {
             throw new IllegalArgumentException("content is null");
         }
 
-        return (this.createdContents.put(content.getId(), content) != content);
+        return (this.createdContent.put(content.getId(), content) != content);
     }
 
     public boolean addUpdatedContent(Content content) {
@@ -108,7 +115,7 @@ public class RefreshResult {
             throw new IllegalArgumentException("content is null");
         }
 
-        return (this.updatedContents.put(content.getId(), content) != content);
+        return (this.updatedContent.put(content.getId(), content) != content);
     }
 
     public boolean addSkippedContent(String contentId) {
@@ -116,7 +123,7 @@ public class RefreshResult {
             throw new IllegalArgumentException("contentId is null or empty");
         }
 
-        return this.skippedContents.add(contentId);
+        return this.skippedContent.add(contentId);
     }
 
 
