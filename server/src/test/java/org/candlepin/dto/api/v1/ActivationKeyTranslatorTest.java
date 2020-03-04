@@ -34,6 +34,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 
@@ -43,12 +44,12 @@ import java.util.Set;
 public class ActivationKeyTranslatorTest extends
     AbstractTranslatorTest<ActivationKey, ActivationKeyDTO, ActivationKeyTranslator> {
 
-    protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
+    protected NestedOwnerTranslatorTest nestedOwnerTranslatorTest = new NestedOwnerTranslatorTest();
     protected ContentOverrideTranslatorTest overrideTranslatorTest = new ContentOverrideTranslatorTest();
 
     @Override
     protected ActivationKeyTranslator initObjectTranslator() {
-        this.ownerTranslatorTest.initObjectTranslator();
+        this.nestedOwnerTranslatorTest.initObjectTranslator();
         this.overrideTranslatorTest.initObjectTranslator();
 
         this.translator = new ActivationKeyTranslator();
@@ -57,7 +58,7 @@ public class ActivationKeyTranslatorTest extends
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
+        this.nestedOwnerTranslatorTest.initModelTranslator(modelTranslator);
         this.overrideTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(this.translator, ActivationKey.class, ActivationKeyDTO.class);
@@ -69,7 +70,7 @@ public class ActivationKeyTranslatorTest extends
         source.setId("key-id");
         source.setName("key-name");
         source.setDescription("key-description");
-        source.setOwner(this.ownerTranslatorTest.initSourceObject());
+        source.setOwner(this.nestedOwnerTranslatorTest.initSourceObject());
         source.setReleaseVer(new Release("key-release-ver"));
         source.setServiceLevel("key-service-level");
         source.setAutoAttach(true);
@@ -118,44 +119,45 @@ public class ActivationKeyTranslatorTest extends
             assertEquals(source.getName(), dest.getName());
             assertEquals(source.getDescription(), dest.getDescription());
             assertEquals(source.getServiceLevel(), dest.getServiceLevel());
-            assertEquals(source.isAutoAttach(), dest.isAutoAttach());
+            assertEquals(source.isAutoAttach(), dest.getAutoAttach());
 
             // Check product IDs
             Collection<Product> products = source.getProducts();
-            Collection<String> productIds = dest.getProductIds();
+            Collection<ActivationKeyProductDTO> productDTOs = dest.getProducts();
 
             if (products != null) {
-                assertNotNull(productIds);
-                assertEquals(products.size(), productIds.size());
+                assertNotNull(productDTOs);
+                assertEquals(products.size(), productDTOs.size());
 
                 for (Product product : products) {
                     assertNotNull(product);
                     assertNotNull(product.getId());
 
+                    Collection<String> productIds = productDTOs.stream()
+                        .map(ActivationKeyProductDTO::getProductId)
+                        .collect(Collectors.toSet());
+
                     assertTrue(productIds.contains(product.getId()));
                 }
             }
             else {
-                assertNull(productIds);
+                assertNull(productDTOs);
             }
 
             // Check release version
             Release releaseSource = source.getReleaseVer();
-            String releaseDestination = dest.getReleaseVersion();
+            ReleaseVerDTO releaseDestination = dest.getReleaseVer();
 
-            if (releaseSource != null) {
-                assertEquals(releaseSource.getReleaseVer(), releaseDestination);
+            if (releaseSource != null && releaseDestination != null) {
+                assertEquals(releaseSource.getReleaseVer(), releaseDestination.getReleaseVer());
             }
             else {
                 assertNull(releaseDestination);
             }
 
-            // Check nested DTOs
-            if (childrenGenerated) {
-                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
-
+            if (source.getPools() != null) {
                 for (ActivationKeyPool akPool : source.getPools()) {
-                    for (ActivationKeyDTO.ActivationKeyPoolDTO akPoolDto : dest.getPools()) {
+                    for (ActivationKeyPoolDTO akPoolDto : dest.getPools()) {
 
                         assertNotNull(akPoolDto);
 
@@ -164,6 +166,14 @@ public class ActivationKeyTranslatorTest extends
                         }
                     }
                 }
+            }
+            else {
+                assertNull(dest.getPools());
+            }
+
+            // Check nested DTOs
+            if (childrenGenerated) {
+                this.nestedOwnerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
 
                 // Check content overrides
                 Collection<? extends ContentOverride> overrides = source.getContentOverrides();
@@ -199,7 +209,6 @@ public class ActivationKeyTranslatorTest extends
             }
             else {
                 assertNull(dest.getOwner());
-                assertNull(dest.getPools());
             }
         }
         else {
