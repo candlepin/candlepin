@@ -46,12 +46,15 @@ import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
+import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.ImportRecordDTO;
+import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
@@ -95,6 +98,7 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResolverUtil;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.resteasy.DateFormat;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
@@ -147,6 +151,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
 import javax.ws.rs.Consumes;
@@ -204,6 +209,7 @@ public class OwnerResource {
     private OwnerProductCurator ownerProductCurator;
     private ModelTranslator translator;
     private JobManager jobManager;
+    private DTOValidator validator;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator,
@@ -232,7 +238,8 @@ public class OwnerResource {
         ConsumerTypeValidator consumerTypeValidator,
         OwnerProductCurator ownerProductCurator,
         ModelTranslator translator,
-        JobManager jobManager) {
+        JobManager jobManager,
+        DTOValidator validator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -261,6 +268,7 @@ public class OwnerResource {
         this.ownerProductCurator = ownerProductCurator;
         this.translator = translator;
         this.jobManager = jobManager;
+        this.validator = validator;
     }
 
     /**
@@ -587,8 +595,8 @@ public class OwnerResource {
             entity.setDescription(dto.getDescription());
         }
 
-        if (dto.isAutoAttach() != null) {
-            entity.setAutoAttach(dto.isAutoAttach());
+        if (dto.getAutoAttach() != null) {
+            entity.setAutoAttach(dto.getAutoAttach());
         }
 
         if (dto.getServiceLevel() != null) {
@@ -623,8 +631,8 @@ public class OwnerResource {
             }
         }
 
-        if (dto.getReleaseVersion() != null) {
-            entity.setReleaseVer(new Release(dto.getReleaseVersion()));
+        if (dto.getReleaseVer() != null) {
+            entity.setReleaseVer(new Release(dto.getReleaseVer().getReleaseVer()));
         }
 
         if (dto.getUsage() != null) {
@@ -636,7 +644,7 @@ public class OwnerResource {
         }
 
         if (dto.getAddOns() != null) {
-            entity.setAddOns(dto.getAddOns());
+            entity.setAddOns(new HashSet<>(dto.getAddOns()));
         }
 
         if (dto.getPools() != null) {
@@ -644,7 +652,7 @@ public class OwnerResource {
                 entity.setPools(new HashSet<>());
             }
             else {
-                for (ActivationKeyDTO.ActivationKeyPoolDTO poolDTO : dto.getPools()) {
+                for (ActivationKeyPoolDTO poolDTO : dto.getPools()) {
                     if (poolDTO != null) {
                         Pool pool = findPool(poolDTO.getPoolId());
                         entity.addPool(pool, poolDTO.getQuantity());
@@ -653,12 +661,16 @@ public class OwnerResource {
             }
         }
 
-        if (dto.getProductIds() != null) {
-            if (dto.getProductIds().isEmpty()) {
+        if (dto.getProducts() != null) {
+            if (dto.getProducts().isEmpty()) {
                 entity.setProducts(new HashSet<>());
             }
             else {
-                for (String productId : dto.getProductIds()) {
+                Set<String> productIds = dto.getProducts().stream()
+                    .map(ActivationKeyProductDTO::getProductId)
+                    .collect(Collectors.toSet());
+
+                for (String productId : productIds) {
                     if (productId != null) {
                         Product product = findProduct(entity.getOwner(), productId);
                         entity.addProduct(product);
@@ -670,8 +682,17 @@ public class OwnerResource {
 
     /*
      * Populates the specified entity with data from the provided DTO.
+     * TODO: Remove this method once EnvironmentDTO gets moved to spec-first
+     *  and starts using NestedOwnerDTO.
      */
     private Owner lookupOwnerFromDto(OwnerDTO ownerDto) {
+        return this.findOwnerByIdOrKey(ownerDto.getId(), ownerDto.getKey());
+    }
+
+    /*
+     * Populates the specified entity with data from the provided DTO.
+     */
+    private Owner lookupOwnerFromDto(NestedOwnerDTO ownerDto) {
         return this.findOwnerByIdOrKey(ownerDto.getId(), ownerDto.getKey());
     }
 
@@ -1186,6 +1207,10 @@ public class OwnerResource {
         @ApiResponse(code = 400, message = "Invalid activation key") })
     public ActivationKeyDTO createActivationKey(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @ApiParam(name = "activation_key", required = true) ActivationKeyDTO dto) {
+
+        validator.validateConstraints(dto);
+        validator.validateCollectionElementsNotNull(dto::getContentOverrides, dto::getPools,
+            dto::getProducts);
 
         if (StringUtils.isBlank(dto.getName())) {
             throw new BadRequestException(i18n.tr("Must provide a name for activation key."));
