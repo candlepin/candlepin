@@ -25,7 +25,11 @@ import static org.mockito.Mockito.when;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
+import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
+import org.candlepin.dto.api.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -51,6 +55,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.validation.ConstraintViolationException;
 
 /**
  * ActivationKeyResourceTest
@@ -149,7 +154,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
         assertThrows(BadRequestException.class, () ->
             akr.addPoolToKey("testKey", "testPool", 2L)
         );
@@ -168,7 +173,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
         assertThrows(BadRequestException.class, () ->
             akr.addPoolToKey("testKey", "testPool", -3L)
         );
@@ -188,7 +193,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
         akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
@@ -206,7 +211,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
         akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
@@ -225,7 +230,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(
             akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
         assertThrows(BadRequestException.class, () ->
             akr.addPoolToKey("testKey", "testPool", 1L)
         );
@@ -244,7 +249,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
         assertNotNull(akr.addPoolToKey("testKey", "testPool", 1L));
     }
 
@@ -264,7 +269,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
 
         akr.addPoolToKey("testKey", "testPool1", 1L);
         assertEquals(1, ak.getPools().size());
@@ -291,7 +296,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
         akr.addPoolToKey("testKey", "testPool1", 1L);
     }
 
@@ -311,7 +316,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
         akr.addPoolToKey("testKey", "testPool1", 1L);
         assertEquals(1, ak.getPools().size());
         ak.addPool(p1, 1L);
@@ -331,14 +336,14 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
             serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+            new ProductCachedSerializationModule(productCurator), this.modelTranslator, null);
         akr.addPoolToKey("testKey", "testPool", null);
     }
 
     @Test
     public void testUpdateTooLongRelease() {
         ActivationKey key = new ActivationKey();
-        OwnerDTO ownerDto = new OwnerDTO();
+        NestedOwnerDTO ownerDto = new NestedOwnerDTO();
         key.setOwner(owner);
         key.setName("dd");
         key.setServiceLevel("level1");
@@ -346,10 +351,10 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         activationKeyCurator.create(key);
 
         ActivationKeyDTO update = new ActivationKeyDTO();
-        update.setOwner(ownerDto);
-        update.setName("dd");
-        update.setServiceLevel("level1");
-        update.setReleaseVersion(TestUtil.getStringOfSize(256));
+        update.owner(ownerDto)
+            .name("dd")
+            .serviceLevel("level1")
+            .releaseVer(new ReleaseVerDTO().releaseVer(TestUtil.getStringOfSize(256)));
 
         assertThrows(BadRequestException.class, () ->
             activationKeyResource.updateActivationKey(key.getId(), update)
@@ -391,6 +396,215 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKey finalKey = key;
         assertThrows(BadRequestException.class, () ->
             activationKeyResource.addProductIdToKey(finalKey.getId(), product.getId())
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithNullProductId() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ActivationKeyProductDTO> products = new HashSet<>();
+        products.add(new ActivationKeyProductDTO().productId(null));
+        update.products(products);
+
+        assertThrows(ConstraintViolationException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithEmptyProductId() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ActivationKeyProductDTO> products = new HashSet<>();
+        products.add(new ActivationKeyProductDTO().productId(""));
+        update.products(products);
+
+        assertThrows(ConstraintViolationException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithNullProduct() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ActivationKeyProductDTO> products = new HashSet<>();
+        products.add(null);
+        update.products(products);
+
+        assertThrows(IllegalArgumentException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithNullPoolId() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ActivationKeyPoolDTO> pools = new HashSet<>();
+        pools.add(new ActivationKeyPoolDTO().poolId(null));
+        update.pools(pools);
+
+        assertThrows(ConstraintViolationException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithEmptyPoolId() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ActivationKeyPoolDTO> pools = new HashSet<>();
+        pools.add(new ActivationKeyPoolDTO().poolId(""));
+        update.pools(pools);
+
+        assertThrows(ConstraintViolationException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithNullPool() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ActivationKeyPoolDTO> pools = new HashSet<>();
+        pools.add(null);
+        update.pools(pools);
+
+        assertThrows(IllegalArgumentException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithNullContentOverrideName() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ContentOverrideDTO> contentOverrideDTOS = new HashSet<>();
+        contentOverrideDTOS.add(new ContentOverrideDTO().name(null).contentLabel("a label"));
+        update.contentOverrides(contentOverrideDTOS);
+
+        assertThrows(ConstraintViolationException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithEmptyContentOverrideName() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ContentOverrideDTO> contentOverrideDTOS = new HashSet<>();
+        contentOverrideDTOS.add(new ContentOverrideDTO().name("").contentLabel("a label"));
+        update.contentOverrides(contentOverrideDTOS);
+
+        assertThrows(ConstraintViolationException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithNullContentOverrideLabel() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ContentOverrideDTO> contentOverrideDTOS = new HashSet<>();
+        contentOverrideDTOS.add(new ContentOverrideDTO().name("a name").contentLabel(null));
+        update.contentOverrides(contentOverrideDTOS);
+
+        assertThrows(ConstraintViolationException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithEmptyContentOverrideLabel() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ContentOverrideDTO> contentOverrideDTOS = new HashSet<>();
+        contentOverrideDTOS.add(new ContentOverrideDTO().name("a name").contentLabel(""));
+        update.contentOverrides(contentOverrideDTOS);
+
+        assertThrows(ConstraintViolationException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
+        );
+    }
+
+    @Test
+    public void testValidationUpdateWithNullContentOverride() {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("dd");
+        activationKeyCurator.create(key);
+
+        assertNotNull(key.getId());
+
+        ActivationKeyDTO update = new ActivationKeyDTO();
+        Set<ContentOverrideDTO> contentOverrideDTOS = new HashSet<>();
+        contentOverrideDTOS.add(null);
+        update.contentOverrides(contentOverrideDTOS);
+
+        assertThrows(IllegalArgumentException.class, () ->
+            activationKeyResource.updateActivationKey(key.getId(), update)
         );
     }
 
