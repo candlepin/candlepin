@@ -224,6 +224,7 @@ public class TestingModules {
             bind(UnitOfWork.class).toInstance(mock(UnitOfWork.class));
             bind(PersistService.class).toInstance(mock(PersistService.class));
             bind(EntityManager.class).toInstance(em);
+            bind(ValidatorFactory.class).toInstance(mock(ValidatorFactory.class));
 
             /* The JsRunnerProvider is profoundly annoying because when it is created it
              * begins by trying to read the rules out of the database with the RulesCurator.
