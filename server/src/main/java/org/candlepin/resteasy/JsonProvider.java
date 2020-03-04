@@ -19,9 +19,11 @@ import org.candlepin.common.jackson.DynamicPropertyFilter;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.jackson.MultiFilter;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.jackson.DateSerializer;
 import org.candlepin.jackson.OffsetDateTimeDeserializer;
 import org.candlepin.jackson.OffsetDateTimeSerializer;
+import org.candlepin.jackson.ReleaseVersionWrapDeserializer;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -82,10 +84,14 @@ public class JsonProvider extends JacksonJsonProvider {
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);
 
-        SimpleModule dateModule = new SimpleModule("DateModule", new Version(1, 0, 0, null, null, null));
+        SimpleModule customModule = new SimpleModule("CustomModule", new Version(1, 0, 0, null, null,
+            null));
         // Ensure our DateSerializer is used for all Date objects
-        dateModule.addSerializer(Date.class, new DateSerializer());
-        mapper.registerModule(dateModule);
+        customModule.addSerializer(Date.class, new DateSerializer());
+        // Ensure we handle releaseVer fields properly
+        customModule.addDeserializer(ReleaseVerDTO.class, new ReleaseVersionWrapDeserializer());
+        mapper.registerModule(customModule);
+
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         configureHateoasObjectMapper(mapper, indentJson);
         setMapper(mapper);

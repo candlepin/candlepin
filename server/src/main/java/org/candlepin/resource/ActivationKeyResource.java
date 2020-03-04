@@ -29,6 +29,7 @@ import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.TransformedIterator;
 
@@ -62,6 +63,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+
 /**
  * ActivationKeyResource
  */
@@ -76,13 +78,14 @@ public class ActivationKeyResource {
     private ServiceLevelValidator serviceLevelValidator;
     private ActivationKeyRules activationKeyRules;
     private ModelTranslator translator;
+    private DTOValidator validator;
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
         ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
-        ModelTranslator translator) {
+        ModelTranslator translator, DTOValidator validator) {
 
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
@@ -91,6 +94,7 @@ public class ActivationKeyResource {
         this.activationKeyRules = activationKeyRules;
         this.ownerProductCurator = ownerProductCurator;
         this.translator = translator;
+        this.validator = validator;
     }
 
     /**
@@ -161,6 +165,10 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @ApiParam(name = "update", required = true) ActivationKeyDTO update) {
 
+        validator.validateConstraints(update);
+        validator.validateCollectionElementsNotNull(update::getProducts, update::getPools,
+            update::getContentOverrides);
+
         ActivationKey toUpdate = this.fetchActivationKey(activationKeyId);
 
         if (update.getName() != null) {
@@ -181,8 +189,8 @@ public class ActivationKeyResource {
             toUpdate.setServiceLevel(serviceLevel);
         }
 
-        if (update.getReleaseVersion() != null) {
-            toUpdate.setReleaseVer(new Release(update.getReleaseVersion()));
+        if (update.getReleaseVer() != null) {
+            toUpdate.setReleaseVer(new Release(update.getReleaseVer().getReleaseVer()));
         }
 
         if (update.getDescription() != null) {
@@ -203,8 +211,8 @@ public class ActivationKeyResource {
             toUpdate.setAddOns(addOns);
         }
 
-        if (update.isAutoAttach() != null) {
-            toUpdate.setAutoAttach(update.isAutoAttach());
+        if (update.getAutoAttach() != null) {
+            toUpdate.setAutoAttach(update.getAutoAttach());
         }
         toUpdate = activationKeyCurator.merge(toUpdate);
 

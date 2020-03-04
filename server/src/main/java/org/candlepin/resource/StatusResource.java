@@ -41,7 +41,6 @@ import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 
 
@@ -157,7 +156,7 @@ public class StatusResource implements StatusApi {
             .mode(mode != null ? mode.toString() : null)
             .modeReason(mcr != null ? mcr.toString() : null)
             .modeChangeTime(mcr != null ? mcr.getTime().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .managerCapabilities(caps.stream().collect(Collectors.toList()))
+            .managerCapabilities(caps)
             .timeUTC(OffsetDateTime.now());
 
         if (keycloakEnabled) {
