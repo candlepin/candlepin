@@ -191,6 +191,7 @@ dependencies {
 
     // Testing DB Drivers
     testRuntime "org.hsqldb:hsqldb"
+    testRuntimeOnly "org.glassfish:javax.el:3.0.0"
 }
 
 task pom {
