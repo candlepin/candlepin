@@ -20,6 +20,7 @@ import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -70,12 +71,12 @@ public class RoleInfoTranslator implements ObjectTranslator<RoleInfo, RoleDTO> {
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.setCreated(source.getCreated());
-        dest.setUpdated(source.getUpdated());
-
-        // Service model objects don't provide an ID
-        dest.setId(null);
-        dest.setName(source.getName());
+        dest.created(source.getCreated() != null ?
+                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .updated(source.getUpdated() != null ?
+                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .id(null) // Service model objects don't provide an ID
+            .name(source.getName());
 
         if (translator != null) {
             // Users
@@ -84,10 +85,10 @@ public class RoleInfoTranslator implements ObjectTranslator<RoleInfo, RoleDTO> {
             if (users != null) {
                 dest.setUsers(users.stream()
                     .map(translator.getStreamMapper(UserInfo.class, UserDTO.class))
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toSet()));
             }
             else {
-                dest.setUsers(Collections.<UserDTO>emptyList());
+                dest.setUsers(Collections.<UserDTO>emptySet());
             }
 
             // Permissions
@@ -104,7 +105,7 @@ public class RoleInfoTranslator implements ObjectTranslator<RoleInfo, RoleDTO> {
             }
         }
         else {
-            dest.setUsers(Collections.<UserDTO>emptyList());
+            dest.setUsers(Collections.<UserDTO>emptySet());
             dest.setPermissions(Collections.<PermissionBlueprintDTO>emptyList());
         }
 

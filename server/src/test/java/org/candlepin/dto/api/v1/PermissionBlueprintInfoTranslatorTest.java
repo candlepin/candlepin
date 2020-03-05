@@ -28,8 +28,9 @@ import org.candlepin.service.model.PermissionBlueprintInfo;
 
 
 /**
- * Test suite for the EntitlementTranslator class.
+ * Test suite for the PermissionBlueprintInfoTranslatorTest class.
  */
+
 public class PermissionBlueprintInfoTranslatorTest extends
     AbstractTranslatorTest<PermissionBlueprintInfo, PermissionBlueprintDTO,
     PermissionBlueprintInfoTranslator> {
@@ -77,11 +78,8 @@ public class PermissionBlueprintInfoTranslatorTest extends
             assertEquals(source.getTypeName(), dest.getType());
             assertEquals(source.getAccessLevel(), dest.getAccess());
 
-            if (childrenGenerated) {
-                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
-            }
-            else {
-                assertNull(dest.getOwner());
+            if (source.getOwner() != null && dest.getOwner() != null) {
+                assertEquals(source.getOwner().getKey(), dest.getOwner().getKey());
             }
         }
         else {

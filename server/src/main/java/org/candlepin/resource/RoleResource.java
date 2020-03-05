@@ -21,7 +21,10 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
+import org.candlepin.model.Role;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
@@ -66,16 +69,19 @@ public class RoleResource {
     private PermissionBlueprintCurator permissionCurator;
     private I18n i18n;
     private ModelTranslator modelTranslator;
+    private DTOValidator validator;
 
     @Inject
     public RoleResource(UserServiceAdapter userService, OwnerCurator ownerCurator,
-        PermissionBlueprintCurator permCurator, I18n i18n, ModelTranslator modelTranslator) {
+        PermissionBlueprintCurator permCurator, I18n i18n, ModelTranslator modelTranslator,
+        DTOValidator validator) {
 
         this.userService = userService;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
         this.permissionCurator = permCurator;
         this.modelTranslator = modelTranslator;
+        this.validator = validator;
     }
 
     /**
@@ -154,7 +160,8 @@ public class RoleResource {
             throw new ConflictException(this.i18n.tr("Role already exists: {0}", dto.getName()));
         }
 
-        RoleInfo role = this.userService.createRole(dto);
+        validator.validateCollectionElementsNotNull(dto::getUsers, dto::getPermissions);
+        RoleInfo role = this.userService.createRole(this.modelTranslator.translate(dto, Role.class));
         return this.modelTranslator.translate(role, RoleDTO.class);
     }
 
@@ -174,7 +181,10 @@ public class RoleResource {
         // generation
         this.fetchRoleByName(roleName);
 
-        RoleInfo role = this.userService.updateRole(roleName, dto);
+        validator.validateCollectionElementsNotNull(dto::getUsers, dto::getPermissions);
+
+        RoleInfo role = this.userService.updateRole(roleName,
+            this.modelTranslator.translate(dto, Role.class));
         return this.modelTranslator.translate(role, RoleDTO.class);
     }
 
@@ -197,7 +207,9 @@ public class RoleResource {
             throw new BadRequestException(i18n.tr("Access type NONE not supported."));
         }
 
-        RoleInfo role = this.userService.addPermissionToRole(roleName, permission);
+        RoleInfo role = this.userService.addPermissionToRole(roleName,
+            this.modelTranslator.translate(permission, PermissionBlueprint.class));
+
         return this.modelTranslator.translate(role, RoleDTO.class);
     }
 
