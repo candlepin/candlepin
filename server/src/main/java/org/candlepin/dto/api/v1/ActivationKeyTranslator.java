@@ -15,22 +15,25 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ContentOverride;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-
+import java.util.stream.Collectors;
 
 
 /**
  * The ActivationKeyTranslator provides translation from ActivationKey model objects to ActivationKeyDTOs
  */
-public class ActivationKeyTranslator extends TimestampedEntityTranslator<ActivationKey, ActivationKeyDTO> {
+public class ActivationKeyTranslator implements ObjectTranslator<ActivationKey, ActivationKeyDTO> {
 
     /**
      * {@inheritDoc}
@@ -63,15 +66,27 @@ public class ActivationKeyTranslator extends TimestampedEntityTranslator<Activat
     public ActivationKeyDTO populate(ModelTranslator modelTranslator,
         ActivationKey source, ActivationKeyDTO dest) {
 
-        dest = super.populate(modelTranslator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId())
-            .setName(source.getName())
-            .setDescription(source.getDescription())
-            .setServiceLevel(source.getServiceLevel())
-            .setAutoAttach(source.isAutoAttach())
-            .setUsage(source.getUsage())
-            .setRole(source.getRole());
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        Date created = source.getCreated();
+        dest.created(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
+
+        Date updated = source.getUpdated();
+        dest.updated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
+
+        dest.id(source.getId())
+            .name(source.getName())
+            .description(source.getDescription())
+            .serviceLevel(source.getServiceLevel())
+            .autoAttach(source.isAutoAttach())
+            .usage(source.getUsage())
+            .role(source.getRole());
 
         // Set activation key product IDs
         Set<Product> products = source.getProducts();
@@ -83,16 +98,23 @@ public class ActivationKeyTranslator extends TimestampedEntityTranslator<Activat
                     productIds.add(prod.getId());
                 }
             }
+            Set<ActivationKeyProductDTO> productIdObjects = productIds.stream().map(productId ->  {
+                ActivationKeyProductDTO newProduct = new ActivationKeyProductDTO();
+                newProduct.setProductId(productId);
+                return newProduct;
+            }).collect(Collectors.toSet());
 
-            dest.setProductIds(productIds);
+            dest.setProducts(productIdObjects);
         }
         else {
-            dest.setProductIds(null);
+            dest.setProducts(null);
         }
 
         // Set release version
         Release release = source.getReleaseVer();
-        dest.setReleaseVersion(release != null ? release.getReleaseVer() : null);
+        ReleaseVerDTO releaseDTO = release != null ?
+            new ReleaseVerDTO().releaseVer(release.getReleaseVer()) : null;
+        dest.releaseVer(releaseDTO);
 
         // Set addons
         Set<String> addOns = new HashSet<>();
@@ -101,26 +123,29 @@ public class ActivationKeyTranslator extends TimestampedEntityTranslator<Activat
         }
         dest.setAddOns(addOns);
 
+        Set<ActivationKeyPool> pools = source.getPools();
+        if (pools != null) {
+            Set<ActivationKeyPoolDTO> poolDTOs = new HashSet<>();
+
+            for (ActivationKeyPool poolEntry : pools) {
+                if (poolEntry != null) {
+                    ActivationKeyPoolDTO akPoolDTO = new ActivationKeyPoolDTO();
+                    akPoolDTO.poolId(poolEntry.getPool().getId());
+                    akPoolDTO.quantity(poolEntry.getQuantity());
+                    poolDTOs.add(akPoolDTO);
+                }
+            }
+
+            dest.setPools(poolDTOs);
+        }
+        else {
+            dest.setPools(null);
+        }
+
         // Process nested DTO objects if we have a model translator to use to the translation...
         if (modelTranslator != null) {
-            dest.setOwner(modelTranslator.translate(source.getOwner(), OwnerDTO.class));
-
-            Set<ActivationKeyPool> pools = source.getPools();
-            if (pools != null) {
-                Set<ActivationKeyDTO.ActivationKeyPoolDTO> poolDTOs = new HashSet<>();
-
-                for (ActivationKeyPool poolEntry : pools) {
-                    if (poolEntry != null) {
-                        poolDTOs.add(new ActivationKeyDTO.ActivationKeyPoolDTO(
-                            poolEntry.getPool().getId(), poolEntry.getQuantity()));
-                    }
-                }
-
-                dest.setPools(poolDTOs);
-            }
-            else {
-                dest.setPools(null);
-            }
+            Owner owner = source.getOwner();
+            dest.setOwner(owner != null ? modelTranslator.translate(owner, NestedOwnerDTO.class) : null);
 
             // Process content overrides
             Set<? extends ContentOverride> overrides = source.getContentOverrides();
@@ -136,10 +161,6 @@ public class ActivationKeyTranslator extends TimestampedEntityTranslator<Activat
             else {
                 dest.setContentOverrides(null);
             }
-        }
-        else {
-            dest.setOwner(null);
-            dest.setPools(null);
         }
 
         return dest;

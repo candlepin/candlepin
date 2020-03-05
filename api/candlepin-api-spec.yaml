@@ -284,6 +284,86 @@ components:
         href:
           type: string
 
+    ActivationKeyDTO:
+      description: A token that allows registration without username/password and sets subscription and content related properties at registration.
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            description:
+              type: string
+            owner:
+              $ref: '#/components/schemas/NestedOwnerDTO'
+            releaseVer:
+              $ref: '#/components/schemas/ReleaseVerDTO'
+            serviceLevel:
+              type: string
+            usage:
+              type: string
+            role:
+              type: string
+            addOns:
+              type: array
+              uniqueItems: true
+              items:
+                type: string
+            autoAttach:
+              type: boolean
+            pools:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/ActivationKeyPoolDTO'
+            products:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/ActivationKeyProductDTO'
+            contentOverrides:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/ContentOverrideDTO'
+
+    ActivationKeyProductDTO:
+      required:
+        - productId
+      properties:
+        productId:
+          type: string
+          minLength: 1
+
+    ActivationKeyPoolDTO:
+      required:
+        - poolId
+      properties:
+        poolId:
+          type: string
+          minLength: 1
+        quantity:
+          type: integer
+          format: int64
+
+    ReleaseVerDTO:
+      properties:
+        releaseVer:
+          type: string
+
+    NestedOwnerDTO:
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+        displayName:
+          type: string
+        href:
+          type: string
+
     CertificateSerialDTO:
       description: Represents a database sequence used to ensure certificates receive unique serial numbers
       allOf:
@@ -335,11 +415,16 @@ components:
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
+          required:
+            - name
+            - contentLabel
           properties:
             name:
               type: string
+              minLength: 1
             contentLabel:
               type: string
+              minLength: 1
             value:
               type: string
 
@@ -460,6 +545,7 @@ components:
           example: 5.8
         managerCapabilities:
           type: array
+          uniqueItems: true
           items:
             type: string
         keycloakRealm:
