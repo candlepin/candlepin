@@ -40,7 +40,7 @@ GEM
     qpid_proton (0.21.0)
     rainbow (2.2.2)
       rake
-    rake (0.9.2.2)
+    rake (13.0.1)
     rest-client (1.6.9)
       mime-types (~> 1.16)
     rspec (3.6.0)
