@@ -33,14 +33,14 @@ public class PermissionBlueprintTranslatorTest extends
 
     protected PermissionBlueprintTranslator translator = new PermissionBlueprintTranslator();
 
-    protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
+    protected NestedOwnerTranslatorTest nestedOwnerTranslator = new NestedOwnerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.ownerTranslatorTest.initModelTranslator(modelTranslator);
-
         modelTranslator.registerTranslator(this.translator, PermissionBlueprint.class,
             PermissionBlueprintDTO.class);
+
+        this.nestedOwnerTranslator.initModelTranslator(modelTranslator);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class PermissionBlueprintTranslatorTest extends
     @Override
     protected PermissionBlueprint initSourceObject() {
         PermissionBlueprint source = new PermissionBlueprint(
-            PermissionType.OWNER, this.ownerTranslatorTest.initSourceObject(), Access.ALL);
+            PermissionType.OWNER, this.nestedOwnerTranslator.initSourceObject(), Access.ALL);
 
         source.setId("ent-id");
 
@@ -73,7 +73,8 @@ public class PermissionBlueprintTranslatorTest extends
             assertEquals(source.getAccess().toString(), dest.getAccess());
 
             if (childrenGenerated) {
-                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
+                this.nestedOwnerTranslator.verifyOutput(source.getOwner(),
+                    dest.getOwner(), false);
             }
             else {
                 assertNull(dest.getOwner());

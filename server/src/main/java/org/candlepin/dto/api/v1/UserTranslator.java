@@ -15,15 +15,16 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.User;
 
+import java.time.ZoneOffset;
 
 
 /**
  * The UserTranslator provides translation from User model objects to UserDTOs
  */
-public class UserTranslator extends TimestampedEntityTranslator<User, UserDTO> {
+public class UserTranslator implements ObjectTranslator<User, UserDTO> {
 
     /**
      * {@inheritDoc}
@@ -54,14 +55,22 @@ public class UserTranslator extends TimestampedEntityTranslator<User, UserDTO> {
      */
     @Override
     public UserDTO populate(ModelTranslator translator, User source, UserDTO dest) {
-        dest = super.populate(translator, source, dest);
 
-        dest.setId(source.getId());
-        dest.setUsername(source.getUsername());
-        dest.setSuperAdmin(source.isSuperAdmin());
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        // The password field should never be set when populating from an entity
-        dest.setPassword(null);
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        dest.created(source.getCreated() != null ?
+                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .updated(source.getUpdated() != null ?
+                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .username(source.getUsername())
+            .superAdmin(source.isSuperAdmin())
+            .password(null); // The password field should never be set when populating from an entity
 
         return dest;
     }

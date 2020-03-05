@@ -18,6 +18,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.service.model.UserInfo;
 
+import java.time.ZoneOffset;
 
 
 /**
@@ -62,17 +63,13 @@ public class UserInfoTranslator implements ObjectTranslator<UserInfo, UserDTO> {
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.setCreated(source.getCreated());
-        dest.setUpdated(source.getUpdated());
-
-        // We don't have an ID from the adapters, so we'll just null it out.
-        dest.setId(null);
-
-        dest.setUsername(source.getUsername());
-        dest.setSuperAdmin(source.isSuperAdmin());
-
-        // The password field should never be set when populating from an entity
-        dest.setPassword(null);
+        dest.created(source.getCreated() != null ?
+                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .updated(source.getUpdated() != null ?
+                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .username(source.getUsername())
+            .superAdmin(source.isSuperAdmin())
+            .password(null); // The password field should never be set when populating from an entity
 
         return dest;
     }
