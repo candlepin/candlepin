@@ -66,14 +66,12 @@ public class UserInfoTranslatorTest extends AbstractTranslatorTest<UserInfo, Use
             // This DTO does not have any nested objects, so we don't need to worry about the
             // childrenGenerated flag
 
-            assertNull(dest.getId());
-
             assertEquals(source.getUsername(), dest.getUsername());
-            assertEquals(source.isSuperAdmin(), dest.isSuperAdmin());
+            assertEquals(source.isSuperAdmin(), dest.getSuperAdmin());
 
             // Under no circumstance should we be copying over the password field on translation.
             // This should always be null on the DTO.
-            assertNull(dest.getHashedPassword());
+            assertNull(dest.getPassword());
         }
         else {
             assertNull(dest);

@@ -515,6 +515,46 @@ components:
               additionalProperties:
                 type: string
 
+    PermissionBlueprintDTO:
+      description: Represents the permission blueprints exposed to the API layer
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+              example: "ff808081554a3e4101554a3e9033005d"
+            owner:
+              $ref: "#/components/schemas/NestedOwnerDTO"
+            type:
+              type: string
+              example: "OWNER"
+            access:
+              type: string
+              example: "NONE"
+
+    RoleDTO:
+      description: Represent the relationship between users and the permissions they have
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+              example: "ff808081554a3e4101554a3e9033005d"
+            name:
+              type: string
+              example: "admin-all"
+            users:
+              type: array
+              uniqueItems: true
+              items:
+                "$ref": "#/components/schemas/UserDTO"
+            permissions:
+              type: array
+              items:
+                "$ref": "#/components/schemas/PermissionBlueprintDTO"
+
     StatusDTO:
       description: Version and Status information about running Candlepin server
       properties:
@@ -554,6 +594,24 @@ components:
           type: string
         keycloakResource:
           type: string
+
+    UserDTO:
+      description: "Represents user information for a given user"
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            username:
+              type: string
+              example: "admin"
+            password:
+              type: string
+              example: "secret_banana"
+              writeOnly: true
+            superAdmin:
+              type: boolean
+              example: true
+              default: false
 
   securitySchemes:
     basicAuth:

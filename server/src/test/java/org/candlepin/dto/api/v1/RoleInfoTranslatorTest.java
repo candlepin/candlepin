@@ -128,8 +128,8 @@ public class RoleInfoTranslatorTest extends AbstractTranslatorTest<RoleInfo, Rol
                         String pdOwnerKey = pdto.getOwner() != null ? pdto.getOwner().getKey() : null;
 
                         EqualsBuilder builder = new EqualsBuilder()
-                            .append(pinfo.getTypeName(), pdto.getTypeName())
-                            .append(pinfo.getAccessLevel(), pdto.getAccessLevel())
+                            .append(pinfo.getTypeName(), pdto.getType())
+                            .append(pinfo.getAccessLevel(), pdto.getAccess())
                             .append(piOwnerKey, pdOwnerKey);
 
                         if (builder.isEquals()) {

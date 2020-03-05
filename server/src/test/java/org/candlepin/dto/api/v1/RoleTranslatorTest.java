@@ -100,9 +100,8 @@ public class RoleTranslatorTest extends AbstractTranslatorTest<Role, RoleDTO, Ro
                 for (User user : source.getUsers()) {
                     for (UserDTO userDto : dest.getUsers()) {
                         assertNotNull(user.getId());
-                        assertNotNull(userDto.getId());
 
-                        if (user.getId().equals(userDto.getId())) {
+                        if (user.getId() != null) {
                             this.userTranslatorTest.verifyOutput(user, userDto, childrenGenerated);
                         }
                     }

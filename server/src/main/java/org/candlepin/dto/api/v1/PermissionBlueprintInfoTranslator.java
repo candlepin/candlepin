@@ -18,8 +18,6 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.service.model.PermissionBlueprintInfo;
 
-
-
 /**
  * The PermissionBlueprintInfoTranslator provides translation from PermissionBlueprintInfo service
  * model objects to PermissionBlueprintDTOs
@@ -71,8 +69,8 @@ public class PermissionBlueprintInfoTranslator implements
         dest.setType(source.getTypeName());
         dest.setAccess(source.getAccessLevel());
 
-        if (translator != null) {
-            dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
+        if (source.getOwner() != null) {
+            dest.setOwner(new NestedOwnerDTO().key(source.getOwner().getKey()));
         }
         else {
             dest.setOwner(null);
