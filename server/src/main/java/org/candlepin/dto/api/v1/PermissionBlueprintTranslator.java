@@ -17,17 +17,19 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.PermissionBlueprint;
 
+import java.time.ZoneOffset;
 
 
 /**
  * The PermissionBlueprintTranslator provides translation from PermissionBlueprint model objects to
  * PermissionBlueprintDTOs
  */
-public class PermissionBlueprintTranslator extends
-    TimestampedEntityTranslator<PermissionBlueprint, PermissionBlueprintDTO> {
+
+public class PermissionBlueprintTranslator implements
+    ObjectTranslator<PermissionBlueprint, PermissionBlueprintDTO> {
 
     /**
      * {@inheritDoc}
@@ -60,17 +62,28 @@ public class PermissionBlueprintTranslator extends
     public PermissionBlueprintDTO populate(ModelTranslator translator, PermissionBlueprint source,
         PermissionBlueprintDTO dest) {
 
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
 
         PermissionType type = source.getType();
         Access access = source.getAccess();
 
-        dest.setId(source.getId());
-        dest.setType(type != null ? type.name() : null);
-        dest.setAccess(access != null ? access.name() : null);
+        dest.created(source.getCreated() != null ?
+                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .updated(source.getUpdated() != null ?
+                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .id(source.getId())
+            .type(type != null ? type.name() : null)
+            .access(access != null ? access.name() : null);
 
         if (translator != null) {
-            dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
+            dest.setOwner(translator.translate(source.getOwner(), NestedOwnerDTO.class));
         }
         else {
             dest.setOwner(null);

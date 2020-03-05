@@ -46,6 +46,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -157,7 +158,7 @@ public class UserResource {
             // to avoid leaking role details about other users.
             return roles.stream()
                 .map(this.modelTranslator.getStreamMapper(RoleInfo.class, RoleDTO.class))
-                .peek(e -> e.setUsers(users));
+                .map(e -> e.users(new HashSet<>(users)));
         }
 
         return Stream.<RoleDTO>empty();
@@ -187,7 +188,10 @@ public class UserResource {
             throw new ConflictException(this.i18n.tr("User already exists: {0}", dto.getUsername()));
         }
 
-        return this.modelTranslator.translate(userService.createUser(dto), UserDTO.class);
+        return this.modelTranslator.translate(
+            // Translating UserDTO to User Entity as UserDTO is no longer supporting UserInfo
+            userService.createUser(this.modelTranslator.translate(dto, User.class)),
+                UserDTO.class);
     }
 
     @ApiOperation(notes = "Updates a User", value = "updateUser")
@@ -204,7 +208,9 @@ public class UserResource {
         // generation
         UserInfo user = this.fetchUserByUsername(username);
 
-        return this.modelTranslator.translate(userService.updateUser(username, dto), UserDTO.class);
+        return this.modelTranslator.translate(
+            userService.updateUser(username, this.modelTranslator.translate(dto, User.class)),
+                UserDTO.class);
     }
 
     @ApiOperation(notes = "Removes a User", value = "deleteUser")
