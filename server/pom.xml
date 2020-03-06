@@ -82,15 +82,15 @@
     <javax.persistence-javax.persistence-api.version>2.2</javax.persistence-javax.persistence-api.version>
     <org.mozilla-jss.version>4.4.6</org.mozilla-jss.version>
     <ldapjdk-ldapjdk.version>4.19</ldapjdk-ldapjdk.version>
-    <com.fasterxml.jackson.core-jackson-annotations.version>2.9.4</com.fasterxml.jackson.core-jackson-annotations.version>
-    <com.fasterxml.jackson.core-jackson-core.version>2.9.4</com.fasterxml.jackson.core-jackson-core.version>
-    <com.fasterxml.jackson.core-jackson-databind.version>2.9.4</com.fasterxml.jackson.core-jackson-databind.version>
-    <com.fasterxml.jackson.jaxrs-jackson-jaxrs-base.version>2.9.4</com.fasterxml.jackson.jaxrs-jackson-jaxrs-base.version>
-    <com.fasterxml.jackson.jaxrs-jackson-jaxrs-json-provider.version>2.9.4</com.fasterxml.jackson.jaxrs-jackson-jaxrs-json-provider.version>
-    <com.fasterxml.jackson.module-jackson-module-jsonSchema.version>2.9.4</com.fasterxml.jackson.module-jackson-module-jsonSchema.version>
-    <com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>2.9.4</com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>
-    <com.fasterxml.jackson.datatype-jackson-datatype-hibernate5.version>2.9.4</com.fasterxml.jackson.datatype-jackson-datatype-hibernate5.version>
-    <com.fasterxml.jackson.datatype-jackson-datatype-jdk8.version>2.9.4</com.fasterxml.jackson.datatype-jackson-datatype-jdk8.version>
+    <com.fasterxml.jackson.core-jackson-annotations.version>2.10.1</com.fasterxml.jackson.core-jackson-annotations.version>
+    <com.fasterxml.jackson.core-jackson-core.version>2.10.1</com.fasterxml.jackson.core-jackson-core.version>
+    <com.fasterxml.jackson.core-jackson-databind.version>2.10.1</com.fasterxml.jackson.core-jackson-databind.version>
+    <com.fasterxml.jackson.jaxrs-jackson-jaxrs-base.version>2.10.1</com.fasterxml.jackson.jaxrs-jackson-jaxrs-base.version>
+    <com.fasterxml.jackson.jaxrs-jackson-jaxrs-json-provider.version>2.10.1</com.fasterxml.jackson.jaxrs-jackson-jaxrs-json-provider.version>
+    <com.fasterxml.jackson.module-jackson-module-jsonSchema.version>2.10.1</com.fasterxml.jackson.module-jackson-module-jsonSchema.version>
+    <com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>2.10.1</com.fasterxml.jackson.module-jackson-module-jaxb-annotations.version>
+    <com.fasterxml.jackson.datatype-jackson-datatype-hibernate5.version>2.10.1</com.fasterxml.jackson.datatype-jackson-datatype-hibernate5.version>
+    <com.fasterxml.jackson.datatype-jackson-datatype-jdk8.version>2.10.1</com.fasterxml.jackson.datatype-jackson-datatype-jdk8.version>
     <org.liquibase-liquibase-core.version>3.1.0</org.liquibase-liquibase-core.version>
     <ch.qos.logback-logback-core.version>1.2.3</ch.qos.logback-logback-core.version>
     <ch.qos.logback-logback-classic.version>1.2.3</ch.qos.logback-logback-classic.version>
@@ -126,8 +126,8 @@
     <io.swagger-swagger-annotations.version>1.5.7</io.swagger-swagger-annotations.version>
     <org.reflections-reflections.version>0.9.10</org.reflections-reflections.version>
     <org.apache.commons-commons-lang3.version>3.2.1</org.apache.commons-commons-lang3.version>
-    <com.fasterxml.jackson.dataformat-jackson-dataformat-yaml.version>2.9.4</com.fasterxml.jackson.dataformat-jackson-dataformat-yaml.version>
-    <com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>2.9.4</com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>
+    <com.fasterxml.jackson.dataformat-jackson-dataformat-yaml.version>2.10.1</com.fasterxml.jackson.dataformat-jackson-dataformat-yaml.version>
+    <com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>2.10.1</com.fasterxml.jackson.dataformat-jackson-dataformat-xml.version>
     <org.candlepin-candlepin-common.version>2.0.3</org.candlepin-candlepin-common.version>
     <org.postgresql-postgresql.version>42.2.2</org.postgresql-postgresql.version>
     <org.mariadb.jdbc-mariadb-java-client.version>2.3.0</org.mariadb.jdbc-mariadb-java-client.version>

@@ -45,7 +45,7 @@ RESTEASY = [group('resteasy-jaxrs',
             'org.reactivestreams:reactive-streams:jar:1.0.0.final']
 
 JACKSON_NS = "com.fasterxml.jackson"
-JACKSON_VERSION = "2.9.4"
+JACKSON_VERSION = "2.10.1"
 JACKSON = [group('jackson-annotations', 'jackson-core', 'jackson-databind',
                  :under=> "#{JACKSON_NS}.core",
                  :version => JACKSON_VERSION),
