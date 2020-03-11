@@ -67,6 +67,8 @@ import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -140,7 +142,7 @@ public class JobResourceTest extends DatabaseTestFixture {
         SchedulerStatusDTO output = resource.getSchedulerStatus();
 
         assertNotNull(output);
-        assertEquals(expected, output.isRunning());
+        assertEquals(expected, output.getIsRunning());
     }
 
     @Test
@@ -151,7 +153,7 @@ public class JobResourceTest extends DatabaseTestFixture {
         SchedulerStatusDTO output = resource.setSchedulerStatus(true);
 
         assertNotNull(output);
-        assertTrue(output.isRunning());
+        assertTrue(output.getIsRunning());
 
         verify(this.jobManager, times(1)).resume();
     }
@@ -164,7 +166,7 @@ public class JobResourceTest extends DatabaseTestFixture {
         SchedulerStatusDTO output = resource.setSchedulerStatus(false);
 
         assertNotNull(output);
-        assertFalse(output.isRunning());
+        assertFalse(output.getIsRunning());
 
         verify(this.jobManager, times(1)).suspend();
     }
@@ -675,7 +677,7 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
-            null, null, value, null);
+            null, null, value != null ? value.toInstant().atOffset(ZoneOffset.UTC) : null, null);
 
         // Verify the input passthrough is working properly
         verify(this.jobManager, times(1)).findJobs(captor.capture());
@@ -718,7 +720,7 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
-            null, null, null, value);
+            null, null, null, value != null ? value.toInstant().atOffset(ZoneOffset.UTC) : null);
 
         // Verify the input passthrough is working properly
         verify(this.jobManager, times(1)).findJobs(captor.capture());
@@ -856,8 +858,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testListJobStatusesFailsOnInvalidDateRange() {
-        Date start = Util.addDaysToDt(-2);
-        Date end = Util.addDaysToDt(2);
+        OffsetDateTime start = Util.addDaysToDt(-2).toInstant().atOffset(ZoneOffset.UTC);
+        OffsetDateTime end = Util.addDaysToDt(2).toInstant().atOffset(ZoneOffset.UTC);
 
         JobResource resource = this.buildJobResource();
         assertThrows(BadRequestException.class, () ->
@@ -1413,7 +1415,7 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, null, null,
-            null, null, value, null, force);
+            null, null, value != null ? value.toInstant().atOffset(ZoneOffset.UTC) : null, null, force);
 
         // Verify the input passthrough is working properly
         if (force) {
@@ -1458,7 +1460,7 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, null, null,
-            null, null, null, value, force);
+            null, null, null, value != null ? value.toInstant().atOffset(ZoneOffset.UTC) : null, force);
 
         // Verify the input passthrough is working properly
         if (force) {
@@ -1488,8 +1490,8 @@ public class JobResourceTest extends DatabaseTestFixture {
     @ParameterizedTest
     @ValueSource(strings = { "true", "false" })
     public void testCleanupTerminalJobsFailsOnInvalidDateRange(boolean force) {
-        Date start = Util.addDaysToDt(-2);
-        Date end = Util.addDaysToDt(2);
+        OffsetDateTime start = Util.addDaysToDt(-2).toInstant().atOffset(ZoneOffset.UTC);
+        OffsetDateTime end = Util.addDaysToDt(2).toInstant().atOffset(ZoneOffset.UTC);
 
         JobResource resource = this.buildJobResource();
         assertThrows(BadRequestException.class, () ->
