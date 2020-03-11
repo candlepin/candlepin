@@ -34,21 +34,15 @@ import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.resteasy.DateFormat;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -58,22 +52,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 /**
  * JobResource
  */
-@Path("/jobs")
-@Api(value = "jobs", authorizations = { @Authorization("basic") })
-public class JobResource {
+public class JobResource implements JobsApi {
     private static Logger log = LoggerFactory.getLogger(JobResource.class);
 
     private static final String NULL_OWNER_KEY = "null";
@@ -103,43 +86,22 @@ public class JobResource {
         this.triggerableJobKeys = null;
     }
 
-
-    // Scheduler status
-    @ApiOperation(
-        value = "fetches the status of the job scheduler for this Candlepin node",
-        response = AsyncJobStatusDTO.class, responseContainer = "set")
-    @ApiResponses({
-        @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 404, message = "")
-    })
-    @GET
-    @Path("/scheduler")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Transactional
     public SchedulerStatusDTO getSchedulerStatus() {
         SchedulerStatusDTO output = new SchedulerStatusDTO();
 
         JobManager.ManagerState state = this.jobManager.getManagerState();
-        output.setRunning(state == JobManager.ManagerState.RUNNING);
+        output.isRunning(state == JobManager.ManagerState.RUNNING);
 
         // TODO: Add other stuff here as necessary (jobs stats like running, queued, etc.)
 
         return output;
     }
 
-    @ApiOperation(
-        value = "enables or disables the job scheduler for this Candlepin node",
-        response = AsyncJobStatusDTO.class, responseContainer = "set")
-    @ApiResponses({
-        @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 404, message = "")
-    })
-    @POST
-    @Path("/scheduler")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Transactional
-    public SchedulerStatusDTO setSchedulerStatus(
-        @QueryParam("running") @DefaultValue("true") boolean running) {
+    public SchedulerStatusDTO setSchedulerStatus(Boolean running) {
 
         try {
             // Impl note: This is kind of lazy and may run into problems in obscure circumstances where
@@ -162,29 +124,18 @@ public class JobResource {
         return this.getSchedulerStatus();
     }
 
-
-    // Job status
-    @ApiOperation(
-        value = "fetches a set of job statuses matching the given filter options",
-        response = AsyncJobStatusDTO.class, responseContainer = "set")
-    @ApiResponses({
-        @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 404, message = "")
-    })
-    @GET
-    @Path("/")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Transactional
     public Stream<AsyncJobStatusDTO> listJobStatuses(
-        @QueryParam("id") Set<String> ids,
-        @QueryParam("key") Set<String> keys,
-        @QueryParam("state") Set<String> states,
-        @QueryParam("owner") Set<String> ownerKeys,
-        @QueryParam("principal") Set<String> principals,
-        @QueryParam("origin") Set<String> origins,
-        @QueryParam("executor") Set<String> executors,
-        @QueryParam("after") @DateFormat Date after,
-        @QueryParam("before") @DateFormat Date before) {
+        Set<String> ids,
+        Set<String> keys,
+        Set<String> states,
+        Set<String> ownerKeys,
+        Set<String> principals,
+        Set<String> origins,
+        Set<String> executors,
+        OffsetDateTime after,
+        OffsetDateTime before) {
 
         // Convert and validate state names to actual states
         Set<JobState> jobStates = this.translateJobStateNames(states);
@@ -203,56 +154,36 @@ public class JobResource {
             .setPrincipalNames(principals)
             .setOrigins(origins)
             .setExecutors(executors)
-            .setStartDate(after)
-            .setEndDate(before);
+            .setStartDate(after != null ? new Date(after.toInstant().toEpochMilli())  : null)
+            .setEndDate(before != null ? new Date(before.toInstant().toEpochMilli())  : null);
 
         return this.jobManager.findJobs(queryBuilder).stream()
             .map(this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
     }
 
-    @ApiOperation(
-        value = "fetches the job status associated with the specified job ID",
-        response = AsyncJobStatusDTO.class)
-    @ApiResponses({
-        @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 404, message = "")
-    })
-    @GET
-    @Path("/{job_id}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Transactional
-    public AsyncJobStatusDTO getJobStatus(
-        @PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
+    public AsyncJobStatusDTO getJobStatus(@Verify(AsyncJobStatus.class) String id) {
 
-        if (jobId == null || jobId.isEmpty()) {
+        if (id == null || id.isEmpty()) {
             String errmsg = this.i18n.tr("Job ID is null or empty");
             throw new BadRequestException(errmsg);
         }
 
-        AsyncJobStatus status = this.jobManager.findJob(jobId);
+        AsyncJobStatus status = this.jobManager.findJob(id);
         if (status == null) {
-            String errmsg = this.i18n.tr("No job status found associated with the given job ID: {0}", jobId);
+            String errmsg = this.i18n.tr("No job status found associated with the given job ID: {0}", id);
             throw new NotFoundException(errmsg);
         }
 
         return this.translator.translate(status, AsyncJobStatusDTO.class);
     }
 
-    @ApiOperation(
-        value = "cancels the job associated with the specified job ID",
-        response = AsyncJobStatusDTO.class)
-    @ApiResponses({
-        @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 404, message = "")
-    })
-    @DELETE
-    @Path("/{job_id}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Transactional
-    public AsyncJobStatusDTO cancelJob(
-        @PathParam("job_id") @Verify(AsyncJobStatus.class) String jobId) {
+    public AsyncJobStatusDTO cancelJob(@Verify(AsyncJobStatus.class) String id) {
 
-        if (jobId == null || jobId.isEmpty()) {
+        if (id == null || id.isEmpty()) {
             String errmsg = this.i18n.tr("Job ID is null or empty");
             throw new BadRequestException(errmsg);
         }
@@ -260,10 +191,10 @@ public class JobResource {
         try {
             // Due to the race conditions that could occur here, we'll just try and recover on
             // state exception.
-            AsyncJobStatus status = this.jobManager.cancelJob(jobId);
+            AsyncJobStatus status = this.jobManager.cancelJob(id);
             if (status == null) {
                 String errmsg = this.i18n.tr("No job status found associated with the given job ID: {0}",
-                    jobId);
+                    id);
 
                 throw new NotFoundException(errmsg);
             }
@@ -273,33 +204,24 @@ public class JobResource {
         catch (IllegalStateException e) {
             // Job is already in a terminal state.
             String errmsg = this.i18n.tr("Job {0} is already in a terminal state or otherwise cannot be " +
-                "canceled at this time", jobId);
+                "canceled at this time", id);
             throw new BadRequestException(errmsg, e);
         }
     }
 
-    @ApiOperation(
-        value = "cleans up terminal jobs matching the provided criteria",
-        response = AsyncJobStatusDTO.class)
-    @ApiResponses({
-        @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 404, message = "")
-    })
-    @DELETE
-    @Path("/")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Transactional
-    public int cleanupTerminalJobs(
-        @QueryParam("id") Set<String> ids,
-        @QueryParam("key") Set<String> keys,
-        @QueryParam("state") Set<String> states,
-        @QueryParam("owner") Set<String> ownerKeys,
-        @QueryParam("principal") Set<String> principals,
-        @QueryParam("origin") Set<String> origins,
-        @QueryParam("executor") Set<String> executors,
-        @QueryParam("after") @DateFormat Date after,
-        @QueryParam("before") @DateFormat Date before,
-        @QueryParam("force") @DefaultValue("false") boolean force) {
+    public Integer cleanupTerminalJobs(
+        Set<String> ids,
+        Set<String> keys,
+        Set<String> states,
+        Set<String> ownerKeys,
+        Set<String> principals,
+        Set<String> origins,
+        Set<String> executors,
+        OffsetDateTime after,
+        OffsetDateTime before,
+        Boolean force) {
 
         // Convert state names
         Set<JobState> jobStates = this.translateJobStateNames(states);
@@ -318,8 +240,8 @@ public class JobResource {
             .setPrincipalNames(principals)
             .setOrigins(origins)
             .setExecutors(executors)
-            .setStartDate(after)
-            .setEndDate(before);
+            .setStartDate(after != null ? new Date(after.toInstant().toEpochMilli())  : null)
+            .setEndDate(before != null ? new Date(before.toInstant().toEpochMilli())  : null);
 
         int count;
 
@@ -335,19 +257,9 @@ public class JobResource {
         return count;
     }
 
-    @ApiOperation(
-        value = "schedules a job using the specified key and job properties",
-        response = AsyncJobStatusDTO.class)
-    @ApiResponses({
-        @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 404, message = "")
-    })
-    @POST
-    @Path("schedule/{job_key}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Transactional
-    public AsyncJobStatusDTO scheduleJob(
-        @PathParam("job_key") String jobKey) {
+    public AsyncJobStatusDTO scheduleJob(String jobKey) {
 
         if (jobKey == null || jobKey.isEmpty()) {
             String errmsg = this.i18n.tr("Job key is null or empty");
@@ -511,7 +423,7 @@ public class JobResource {
      * @throws BadRequestException
      *  if the start and end dates are not null and the start date is after the end date
      */
-    private void validateDateRange(Date start, Date end) {
+    private void validateDateRange(OffsetDateTime start, OffsetDateTime end) {
         if (start != null && end != null) {
             if (start.compareTo(end) > 0) {
                 String errmsg = this.i18n.tr(
