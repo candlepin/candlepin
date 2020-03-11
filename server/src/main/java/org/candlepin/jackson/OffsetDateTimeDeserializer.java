@@ -70,7 +70,11 @@ public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime>
     public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
         throws IOException {
 
-        TemporalAccessor temporalAccessor = formatter.parseBest(jsonParser.getText(),
+        return deserialize(jsonParser.getText());
+    }
+
+    public OffsetDateTime deserialize(String value) {
+        TemporalAccessor temporalAccessor = formatter.parseBest(value,
             OffsetDateTime::from,
             LocalDateTime::from,
             LocalDate::from);
@@ -84,5 +88,4 @@ public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime>
             return LocalDate.from(temporalAccessor).atStartOfDay().atOffset(ZoneOffset.UTC);
         }
     }
-
 }
