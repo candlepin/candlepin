@@ -1011,7 +1011,7 @@ public abstract class AbstractJavaCodegen extends DefaultCodegen implements Code
         // Remove imports of List, ArrayList, Map and HashMap as they are
         // imported in the template already.
         List<Map<String, String>> imports = (List<Map<String, String>>) objs.get("imports");
-        Pattern pattern = Pattern.compile("java\\.util\\.(List|ArrayList|Set|HashSet|Map|HashMap)");
+        Pattern pattern = Pattern.compile("java\\.util\\.(List|ArrayList|Map|HashMap)");
         for (Iterator<Map<String, String>> itr = imports.iterator(); itr.hasNext(); ) {
             String itrImport = itr.next().get("import");
             if (pattern.matcher(itrImport).matches()) {
