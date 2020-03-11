@@ -3054,6 +3054,9 @@ public class DefaultCodegen implements CodegenConfig {
             } else {
                 codegenParameter.dataType = codegenProperty.dataType;
             }
+            if (ModelUtils.isArraySchema(parameterSchema) || Boolean.TRUE.equals(parameterSchema.getUniqueItems())) {
+                imports.add(codegenProperty.baseType);
+            }
             codegenParameter.dataFormat = codegenProperty.dataFormat;
             codegenParameter.required = codegenProperty.required;
 
@@ -4518,6 +4521,7 @@ public class DefaultCodegen implements CodegenConfig {
                     codegenParameter.isListContainer = true;
                     codegenParameter.description = escapeText(s.getDescription());
                     codegenParameter.dataType = getTypeDeclaration(arraySchema);
+                    codegenParameter.defaultValue = toDefaultValue(s);
                     if (codegenParameter.baseType != null && codegenParameter.enumName != null) {
                         codegenParameter.datatypeWithEnum = codegenParameter.dataType.replace(codegenParameter.baseType, codegenParameter.enumName);
                     } else {
