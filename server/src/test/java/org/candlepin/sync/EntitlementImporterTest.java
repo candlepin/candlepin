@@ -145,12 +145,7 @@ public class EntitlementImporterTest {
         derivedProvidedProducts.add(new Product(derivedProvided1));
         derivedProduct.setProvidedProducts(derivedProvidedProducts);
 
-        Pool pool = TestUtil.createPool(
-            owner, parentProduct, new HashSet<>(), derivedProduct, new HashSet<>(), 3);
-
-        pool.setProvidedProducts(providedProducts);
-        pool.setDerivedProvidedProducts(derivedProvidedProducts);
-
+        Pool pool = TestUtil.createPool(owner, parentProduct, derivedProduct, 3);
 
         Entitlement ent = TestUtil.createEntitlement(owner, consumer, pool, cert);
         ent.setQuantity(3);
@@ -187,12 +182,13 @@ public class EntitlementImporterTest {
         assertEquals(ent.getQuantity().intValue(), sub.getQuantity().intValue());
 
         assertEquals(parentProduct.getId(), sub.getProduct().getId());
-        assertEquals(providedProducts.size(), sub.getProvidedProducts().size());
-        assertEquals(provided1.getId(), sub.getProvidedProducts().iterator().next().getId());
+        assertEquals(providedProducts.size(), parentProduct.getProvidedProducts().size());
+        assertEquals(provided1.getId(), parentProduct.getProvidedProducts().iterator().next().getId());
 
         assertEquals(derivedProduct.getId(), sub.getDerivedProduct().getId());
-        assertEquals(1, sub.getDerivedProvidedProducts().size());
-        assertEquals(derivedProvided1.getId(), sub.getDerivedProvidedProducts().iterator().next().getId());
+        assertEquals(1, derivedProduct.getProvidedProducts().size());
+        assertEquals(derivedProvided1.getId(),
+            derivedProduct.getProvidedProducts().iterator().next().getId());
 
         assertNotNull(sub.getCertificate());
         CertificateSerialDTO serial = sub.getCertificate().getSerial();

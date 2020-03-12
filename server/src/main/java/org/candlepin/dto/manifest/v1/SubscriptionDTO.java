@@ -197,7 +197,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
     /**
      * {@inheritDoc}
      */
-    @Override
     public Collection<ProductDTO> getProvidedProducts() {
         return this.providedProducts != null ? new ListView<>(this.providedProducts) : null;
     }
@@ -262,7 +261,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
     /**
      * {@inheritDoc}
      */
-    @Override
     public Collection<ProductDTO> getDerivedProvidedProducts() {
         return this.derivedProvidedProducts != null ? new ListView<>(this.derivedProvidedProducts) : null;
     }

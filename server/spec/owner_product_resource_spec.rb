@@ -7,10 +7,15 @@ describe 'Owner Product Resource' do
 
   before do
     @owner = create_owner random_string('test_owner')
-    @product = create_product random_string('product')
     @prov_product = create_product random_string('provided_product')
-    @derived_product = create_product random_string('derived_product')
+
+    @product = create_product(random_string('product'), nil,
+                              {:providedProducts => [@prov_product.id]})
+
     @derived_prov_product = create_product random_string('derived_provided_product')
+
+    @derived_product = create_product(random_string('derived_product'), nil,
+                                      {:providedProducts => [@derived_prov_product.id]})
 
     create_pool_and_subscription(@owner['key'], @product.id,
       10, [@prov_product.id], '222', '', '', nil, nil, false,
@@ -102,9 +107,11 @@ describe 'Owner Product Resource' do
 
   it 'retrieves the owners of an active product' do
     owner = create_owner(random_string('owner'), nil)
-    product = create_product(random_string("test_id"), random_string("test_name"), {:owner => owner['key']})
     provided_product = create_product(nil, nil, {:owner => owner['key']})
-    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
+    product = create_product(random_string("test_id"), random_string("test_name"),
+                             {:owner => owner['key'], :providedProducts => [provided_product.id]})
+    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id],
+      nil, nil, nil, nil, nil, false)
     user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system6')
     system.consume_product(product.id)
@@ -125,10 +132,10 @@ describe 'Owner Product Resource' do
       random_string("test_name"),
       {:owner => owner['key']}
     )
-
     provided_product = create_product(nil, nil, {:owner => owner['key']})
 
-    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
+    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id],
+      nil, nil, nil, nil, nil, false)
 
     pool = owner_client.list_pools(:owner => owner.id)
     pool.length.should eq(1)

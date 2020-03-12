@@ -642,13 +642,15 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
             // Ensure we aren't trying to remove product references for products still used by
             // pools for this owner
-            Long poolCount = (Long) session.createCriteria(Pool.class)
-                .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
-                .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
+            Long poolCount = (Long) session.createCriteria(Pool.class, "Pool")
+                .createAlias("Pool.product", "Product")
+                .createAlias("Product.providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("Pool.derivedProduct", "DProduct", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("DProduct.providedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
                 .add(Restrictions.eq("owner", owner))
                 .add(Restrictions.or(
-                    CPRestrictions.in("product.uuid", productUuids),
-                    CPRestrictions.in("derivedProduct.uuid", productUuids),
+                    CPRestrictions.in("Product.uuid", productUuids),
+                    CPRestrictions.in("DProduct.uuid", productUuids),
                     CPRestrictions.in("providedProd.uuid", productUuids),
                     CPRestrictions.in("derivedProvidedProd.uuid", productUuids)))
                 .setProjection(Projections.count("id"))

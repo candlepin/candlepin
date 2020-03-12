@@ -298,13 +298,61 @@ public class ProductManager {
             throw new IllegalArgumentException("owner is null");
         }
 
-        ImportResult<Product> importResult = new ImportResult<>();
-
         if (productData == null || productData.isEmpty()) {
             // Nothing to import
-            return importResult;
+            return new ImportResult<>();
         }
 
+        Map<String, ProductInfo> productWithNoProvidedProducts = new HashMap<>();
+        Map<String, ProductInfo> productWithProvidedProducts = new HashMap<>();
+
+        for (ProductInfo pinfo : productData.values()) {
+            if (pinfo.getProvidedProducts() != null) {
+                if (!pinfo.getProvidedProducts().isEmpty()) {
+                    productWithProvidedProducts.put(pinfo.getId(), pinfo);
+                }
+                else {
+                    productWithNoProvidedProducts.put(pinfo.getId(), pinfo);
+                }
+            }
+            else {
+                productWithNoProvidedProducts.put(pinfo.getId(), pinfo);
+            }
+        }
+
+        ImportResult<Product> importResultR1 = processProductImport(owner,
+            productWithNoProvidedProducts, importedContent);
+        ImportResult<Product> importResultR2 = processProductImport(owner, productWithProvidedProducts,
+            importedContent);
+
+        return mergedResultSet(importResultR1, importResultR2);
+    }
+
+    /**
+     * Creates or updates products from the given product info, using the provided content for
+     * content lookup and resolution.
+     * <p></p>
+     * The product info provided in the given map should be mapped by the product's Red Hat ID. If
+     * the mappings are incorrect or inconsistent, the result of this method is undefined.
+     *
+     * @param owner
+     *  The owner for which to import the given product
+     *
+     * @param productData
+     *  A mapping of Red Hat product ID to product DTOs to import
+     *
+     * @param importedContent
+     *  A mapping of Red Hat content ID to content instances to use to lookup and resolve content
+     *  references on the provided product DTOs.
+     *
+     * @return
+     *  A mapping of Red Hat content ID to content entities representing the imported content
+     */
+    @Traceable
+    public ImportResult<Product> processProductImport(@TraceableParam("owner") Owner owner,
+        Map<String, ? extends ProductInfo> productData, Map<String, Content> importedContent) {
+
+        ImportResult<Product> importResult = new ImportResult<>();
         Map<String, Product> skippedProducts = importResult.getSkippedEntities();
         Map<String, Product> createdProducts = importResult.getCreatedEntities();
         Map<String, Product> updatedProducts = importResult.getUpdatedEntities();
@@ -327,7 +375,7 @@ public class ProductManager {
 
             sourceProducts.put(product.getId(), product);
             product = this.applyProductChanges((Product) product.clone(), update, importedContent);
-
+            product = this.applyProvidedProductChanges(product, update, owner);
             // Prevent this product from being changed by our API
             product.setLocked(true);
 
@@ -347,7 +395,7 @@ public class ProductManager {
 
                 Product product = new Product(update.getId(), update.getName());
                 product = this.applyProductChanges(product, update, importedContent);
-
+                product = this.applyProvidedProductChanges(product, update, owner);
                 // Prevent this product from being changed by our API
                 product.setLocked(true);
 
@@ -446,6 +494,26 @@ public class ProductManager {
 
         // Return
         return importResult;
+    }
+
+    /**
+     * A utility method to merge imported result of products.
+     *
+     * @param resultSetR1
+     *  Imported Result set of Products.
+     *
+     * @param resultSetR2
+     *  Imported Result set of Products.
+     *
+     * @return
+     *  Merged imported Result set of Products.
+     */
+    private ImportResult<Product> mergedResultSet(ImportResult<Product> resultSetR1,
+        ImportResult<Product> resultSetR2) {
+        resultSetR1.getCreatedEntities().putAll(resultSetR2.getCreatedEntities());
+        resultSetR1.getUpdatedEntities().putAll(resultSetR2.getUpdatedEntities());
+        resultSetR1.getSkippedEntities().putAll(resultSetR2.getSkippedEntities());
+        return resultSetR1;
     }
 
     /**
@@ -627,17 +695,58 @@ public class ProductManager {
      *  The updated product entity.
      */
     private Product applyProvidedProductChanges(Product entity, ProductDTO update, Owner owner) {
+        if (update.getProvidedProducts() != null) {
+            if (update.getProvidedProducts().isEmpty()) {
+                entity.getProvidedProducts().clear();
+            }
+            else {
+                entity.getProvidedProducts().clear();
+                for (ProductDTO providedProductDTO : update.getProvidedProducts()) {
+                    if (providedProductDTO != null && providedProductDTO.getId() != null) {
+                        Product newProd = this.ownerProductCurator.getProductById(owner,
+                            providedProductDTO.getId());
 
-        if (update.getProvidedProducts() != null && !update.getProvidedProducts().isEmpty()) {
-            entity.getProvidedProducts().clear();
+                        if (newProd != null) {
+                            entity.addProvidedProduct(newProd);
+                        }
+                    }
+                }
+            }
+        }
 
-            for (ProductDTO providedProductDTO : update.getProvidedProducts()) {
-                if (providedProductDTO != null && providedProductDTO.getId() != null) {
-                    Product newProd = this.ownerProductCurator.getProductById(owner,
-                        providedProductDTO.getId());
+        return entity;
+    }
 
-                    if (newProd != null) {
-                        entity.addProvidedProduct(newProd);
+    /**
+     * Applies the changes related to provided products from the given product Info to the specified entity.
+     *
+     * @param entity
+     *  The entity to modify.
+     *
+     * @param update
+     *  The interface containing the modifications to apply.
+     *
+     * @param owner
+     *  An owner to use for resolving entity references.
+     *
+     * @return
+     *  The updated product entity.
+     */
+    private Product applyProvidedProductChanges(Product entity, ProductInfo update, Owner owner) {
+        if (update.getProvidedProducts() != null) {
+            if (update.getProvidedProducts().isEmpty()) {
+                entity.getProvidedProducts().clear();
+            }
+            else {
+                entity.getProvidedProducts().clear();
+                for (ProductInfo providedProductDTO : update.getProvidedProducts()) {
+                    if (providedProductDTO != null && providedProductDTO.getId() != null) {
+                        Product newProd = this.ownerProductCurator.getProductById(owner,
+                            providedProductDTO.getId());
+
+                        if (newProd != null) {
+                            entity.addProvidedProduct(newProd);
+                        }
                     }
                 }
             }
@@ -873,13 +982,33 @@ public class ProductManager {
         Collection<ProductDTO> providedProducts = dto.getProvidedProducts();
 
         if (providedProducts != null) {
-
+            // Quick Id Check
             if (!Util.collectionsAreEqual(entity.getProvidedProducts().stream()
                 .map(Product::getId)
-                .collect(Collectors.toList()),
+                .collect(Collectors.toSet()),
                 providedProducts.stream()
                 .map(ProductDTO::getId)
-                .collect(Collectors.toList()))) {
+                .collect(Collectors.toSet()))) {
+                return true;
+            }
+
+            Comparator productComparator = new Comparator() {
+                public int compare(Object lhs, Object rhs) {
+                    Product existing = (Product) lhs;
+                    ProductDTO update = (ProductDTO) rhs;
+
+                    if (existing != null && update != null) {
+                        if (existing.getId().equals(update.getId())) {
+                            return ProductManager.isChangedBy(existing, update) ? 1 : 0;
+                        }
+                    }
+
+                    return 1;
+                }
+            };
+
+            if (!Util.collectionsAreEqual((Collection) entity.getProvidedProducts(),
+                (Collection) dto.getProvidedProducts(), productComparator)) {
                 return true;
             }
         }
@@ -976,6 +1105,39 @@ public class ProductManager {
                 (Collection) update.getBranding(), comparator)) {
                 return true;
             }
+        }
+
+        if (update.getProvidedProducts() != null) {
+            // Quick Id Check
+            if (!Util.collectionsAreEqual(entity.getProvidedProducts().stream()
+                .map(Product::getId)
+                .collect(Collectors.toSet()),
+                update.getProvidedProducts().stream()
+                .map(ProductInfo::getId)
+                .collect(Collectors.toSet()))) {
+                return true;
+            }
+
+            Comparator productComparator = new Comparator() {
+                public int compare(Object lhs, Object rhs) {
+                    Product existing = (Product) lhs;
+                    ProductInfo update = (ProductInfo) rhs;
+
+                    if (existing != null && update != null) {
+                        if (existing.getId().equals(update.getId())) {
+                            return ProductManager.isChangedBy(existing, update) ? 1 : 0;
+                        }
+                    }
+
+                    return 1;
+                }
+            };
+
+            if (!Util.collectionsAreEqual((Collection) entity.getProvidedProducts(),
+                (Collection) update.getProvidedProducts(), productComparator)) {
+                return true;
+            }
+
         }
 
         return false;

@@ -80,27 +80,28 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         this.owner = this.createOwner();
 
         product = TestUtil.createProduct();
-        productCurator.create(product);
-
         providedProduct = TestUtil.createProduct();
         productCurator.create(providedProduct);
-
         Set<Product> providedProducts = new HashSet<>();
         providedProducts.add(providedProduct);
 
-        derivedProduct = TestUtil.createProduct();
-        productCurator.create(derivedProduct);
+        product.setProvidedProducts(providedProducts);
+        productCurator.create(product);
 
+        derivedProduct = TestUtil.createProduct();
         derivedProvidedProduct = TestUtil.createProduct();
         productCurator.create(derivedProvidedProduct);
 
         Set<Product> derivedProvidedProducts = new HashSet<>();
         derivedProvidedProducts.add(derivedProvidedProduct);
+        derivedProduct.setProvidedProducts(derivedProvidedProducts);
+
+        productCurator.create(derivedProduct);
 
         pool = new Pool(
             owner,
             product,
-            providedProducts,
+            new HashSet<>(),
             16L,
             TestUtil.createDate(2006, 10, 21),
             TestUtil.createDate(2020, 1, 1),
@@ -110,7 +111,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         );
 
         pool.setDerivedProduct(derivedProduct);
-        pool.setDerivedProvidedProducts(derivedProvidedProducts);
         poolCurator.create(pool);
     }
 
