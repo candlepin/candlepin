@@ -61,9 +61,9 @@ public class UserResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateUser() {
         UserDTO dto = new UserDTO()
-            .setUsername("test-user")
-            .setPassword("banana")
-            .setSuperAdmin(true);
+            .username("test-user")
+            .password("banana")
+            .superAdmin(true);
 
         User existing = this.userCurator.findByLogin(dto.getUsername());
         assertNull(existing);
@@ -72,25 +72,25 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         assertNotNull(output);
         assertEquals(dto.getUsername(), output.getUsername());
-        assertEquals(dto.isSuperAdmin(), output.isSuperAdmin());
+        assertEquals(dto.getSuperAdmin(), output.getSuperAdmin());
 
         // We better not be exposing this, ever.
-        assertNull(output.getHashedPassword());
+        assertNull(output.getPassword());
 
         // Verify we actually created a user
         existing = this.userCurator.findByLogin(dto.getUsername());
 
         assertNotNull(existing);
         assertEquals(dto.getUsername(), existing.getUsername());
-        assertEquals(dto.getHashedPassword(), existing.getHashedPassword());
-        assertEquals(dto.isSuperAdmin(), existing.isSuperAdmin());
+        assertEquals(Util.hash(dto.getPassword()), existing.getHashedPassword());
+        assertEquals(dto.getSuperAdmin(), existing.isSuperAdmin());
     }
 
     @Test
     public void testCreateUserNoUsername() {
         UserDTO dto = new UserDTO()
-            .setPassword("banana")
-            .setSuperAdmin(true);
+            .password("banana")
+            .superAdmin(true);
 
         assertThrows(BadRequestException.class, () -> this.resource.createUser(dto));
     }
@@ -108,10 +108,10 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         assertNotNull(output);
         assertEquals(output.getUsername(), user.getUsername());
-        assertEquals(output.isSuperAdmin(), user.isSuperAdmin());
+        assertEquals(output.getSuperAdmin(), user.isSuperAdmin());
 
         // We better not be exposing this, ever.
-        assertNull(output.getHashedPassword());
+        assertNull(output.getPassword());
     }
 
     @Test
@@ -169,9 +169,9 @@ public class UserResourceTest extends DatabaseTestFixture {
             assertTrue(user.getUsername().startsWith("test-user-"));
 
             // This better be null
-            assertNull(user.getHashedPassword());
+            assertNull(user.getPassword());
 
-            assertTrue(user.isSuperAdmin());
+            assertTrue(user.getSuperAdmin());
         }
     }
 
@@ -278,15 +278,15 @@ public class UserResourceTest extends DatabaseTestFixture {
         this.userCurator.create(user);
 
         UserDTO update = new UserDTO()
-            .setUsername("Luke");
+            .username("Luke");
 
         UserDTO result = this.resource.updateUser("test-user", update);
 
         assertEquals("Luke", result.getUsername());
-        assertFalse(result.isSuperAdmin());
+        assertFalse(result.getSuperAdmin());
 
         // Output should always be null here, so we'll use the direct object to verify
-        assertNull(result.getHashedPassword());
+        assertNull(result.getPassword());
 
         user = this.userCurator.get(user.getId());
         assertNotNull(user);
@@ -303,15 +303,15 @@ public class UserResourceTest extends DatabaseTestFixture {
         this.userCurator.create(user);
 
         UserDTO update = new UserDTO()
-            .setPassword("Skywalker");
+            .password("Skywalker");
 
         UserDTO result = this.resource.updateUser("test-user", update);
 
         assertEquals("test-user", result.getUsername());
-        assertFalse(result.isSuperAdmin());
+        assertFalse(result.getSuperAdmin());
 
         // Output should always be null here, so we'll use the direct object to verify
-        assertNull(result.getHashedPassword());
+        assertNull(result.getPassword());
 
         user = this.userCurator.get(user.getId());
         assertNotNull(user);
@@ -328,15 +328,15 @@ public class UserResourceTest extends DatabaseTestFixture {
         this.userCurator.create(user);
 
         UserDTO update = new UserDTO()
-            .setSuperAdmin(true);
+            .superAdmin(true);
 
         UserDTO result = this.resource.updateUser("test-user", update);
 
         assertEquals("test-user", result.getUsername());
-        assertTrue(result.isSuperAdmin());
+        assertTrue(result.getSuperAdmin());
 
         // Output should always be null here, so we'll use the direct object to verify
-        assertNull(result.getHashedPassword());
+        assertNull(result.getPassword());
 
         user = this.userCurator.get(user.getId());
         assertNotNull(user);
@@ -346,8 +346,8 @@ public class UserResourceTest extends DatabaseTestFixture {
     @Test
     public void testUpdateUsersNoLogin() {
         UserDTO dto = new UserDTO()
-            .setUsername("henri")
-            .setPassword("password");
+            .username("henri")
+            .password("password");
 
         assertThrows(NotFoundException.class, () -> this.resource.updateUser("JarJarIsMyCopilot", dto));
     }
