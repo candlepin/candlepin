@@ -53,7 +53,6 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
     /**
      * Internal DTO object for ProvidedProduct
      */
-    @JsonFilter("ProvidedProductFilter")
     public static class ProvidedProductDTO {
         private final String productId;
         private final String productName;

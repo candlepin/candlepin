@@ -22,7 +22,6 @@ import org.candlepin.jackson.SingleValueWrapSerializer;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -44,7 +43,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@JsonFilter("ConsumerFilter")
 public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
     public static final long serialVersionUID = 1L;
 

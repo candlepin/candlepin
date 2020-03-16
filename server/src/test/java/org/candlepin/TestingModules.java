@@ -370,10 +370,6 @@ public class TestingModules {
                 SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
             filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
                 SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-            filterProvider = filterProvider.addFilter("PoolAttributeFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
-            filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
             filterProvider = filterProvider.addFilter("SubscriptionCertificateFilter",
                 SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
             mapper.setFilterProvider(filterProvider);

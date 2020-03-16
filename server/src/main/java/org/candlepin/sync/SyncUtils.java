@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -82,8 +81,6 @@ public class SyncUtils {
         // Filter specific things we do not want exported:
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setFailOnUnknownId(false);
-        filterProvider = filterProvider.addFilter("EntitlementFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("consumer"));
 
         this.mapper.setFilterProvider(filterProvider);
         this.mapper.registerModule(productCachedModule);
