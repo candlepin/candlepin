@@ -515,6 +515,17 @@ components:
               additionalProperties:
                 type: string
 
+    GuestIdDTOArrayElement:
+      description: Represents a guest ID running on a virt host consumer. Does not include the attributes field
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            guestId:
+              type: string
+
     PermissionBlueprintDTO:
       description: Represents the permission blueprints exposed to the API layer
       allOf:

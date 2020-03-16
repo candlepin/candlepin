@@ -14,33 +14,19 @@
  */
 package org.candlepin.policy.js;
 
+import org.candlepin.dto.rules.v1.ComplianceStatusDTO;
 import org.candlepin.jackson.ProductCachedSerializationModule;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import static org.junit.Assert.assertFalse;
-
 
 
 /**
@@ -51,81 +37,12 @@ public class RulesObjectMapperTest {
     private Map<String, Object> context;
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void begin() {
         context = new HashMap<>();
         owner = new Owner("test");
         ProductCurator productCurator = Mockito.mock(ProductCurator.class);
         objMapper = new RulesObjectMapper(new ProductCachedSerializationModule(productCurator));
-    }
-
-    @Test
-    public void filterConsumerIdCert() {
-        Consumer c = new Consumer();
-        c.setTypeId("test-ctype");
-        IdentityCertificate cert = new IdentityCertificate();
-        cert.setCert("FILTERMEPLEASE");
-        cert.setKey("KEY");
-        c.setIdCert(cert);
-
-        context.put("consumer", c);
-        String output = objMapper.toJsonString(context);
-        assertFalse(output.contains("FILTERMEPLEASE"));
-    }
-
-    @Test
-    public void filterEntitlementConsumer() {
-        Entitlement e = new Entitlement();
-        Consumer c = new Consumer();
-        IdentityCertificate cert = new IdentityCertificate();
-        cert.setCert("FILTERMEPLEASE");
-        cert.setKey("KEY");
-        c.setIdCert(cert);
-        e.setConsumer(c);
-
-        context.put("entitlement", e);
-        String output = objMapper.toJsonString(context);
-        assertFalse(output.contains("consumer"));
-    }
-
-    @Test
-    public void filterEntitlementCert() {
-        List<Entitlement> allEnts = new LinkedList<>();
-
-        Entitlement e = new Entitlement();
-        Set<EntitlementCertificate> entCerts = new HashSet<>();
-        EntitlementCertificate cert = new EntitlementCertificate();
-        cert.setCert("FILTERME");
-        cert.setKey("FILTERME");
-        entCerts.add(cert);
-        e.setCertificates(entCerts);
-
-        allEnts.add(e);
-
-        context.put("entitlements", allEnts);
-        String output = objMapper.toJsonString(context);
-        assertFalse(output.contains("FILTERME"));
-    }
-
-    @Test
-    public void filterTimestampsOffAttributes() {
-        Product prod = TestUtil.createProduct();
-        Pool p = new Pool();
-        p.setProduct(prod);
-
-        prod.setAttribute("a", "1");
-        p.setAttribute("a", "1");
-
-        context.put("pool", p);
-
-        String output = objMapper.toJsonString(context);
-
-        // Shouldn't see timestamps:
-        assertFalse(output, output.contains("\"created\""));
-        assertFalse(output, output.contains("\"updated\""));
-
-        // Shouldn't see a productId:
-        assertFalse(output, output.contains("PRODID"));
     }
 
     /*
@@ -139,7 +56,7 @@ public class RulesObjectMapperTest {
         String json = Util.readFile(is);
 
         // Just need this to parse without error:
-        ComplianceStatus cs = objMapper.toObject(json, ComplianceStatus.class);
+        ComplianceStatusDTO cs = objMapper.toObject(json, ComplianceStatusDTO.class);
     }
 
     /*
@@ -153,6 +70,6 @@ public class RulesObjectMapperTest {
         String json = Util.readFile(is);
 
         // Just need this to parse without error:
-        ComplianceStatus cs = objMapper.toObject(json, ComplianceStatus.class);
+        ComplianceStatusDTO cs = objMapper.toObject(json, ComplianceStatusDTO.class);
     }
 }
