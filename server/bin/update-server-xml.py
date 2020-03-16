@@ -430,7 +430,7 @@ def main():
         AprListenerDeleter(doc).remove()
 
         if options.stdout:
-            print doc.serialize()
+            print (doc.serialize())
         else:
             doc.saveFile(xml_file)
 
