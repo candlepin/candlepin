@@ -418,6 +418,10 @@ public class CandlepinSwaggerModelConverter extends AbstractModelConverter imple
              * particular type should have Hateoas serialization enabled. In
              * other words, if we should create a new Nested* model.
              */
+             // TODO: This needs to be removed (and any potential other relevant code in this class updated.
+             //  More specifically, the changes introduced in b9404080f511054cc3fb89799eb2be7d240a5d42)
+             //  once all DTOs are ported to openapi spec, since all nested entities are going to be
+             //  represented by new DTO classes, instead of using hateoas annotations.
             if (jsonFilter != null && (jsonFilter.value().equals("ConsumerFilter") ||
                 jsonFilter.value().equals("EntitlementFilter") || jsonFilter.value().equals("OwnerFilter") ||
                 jsonFilter.value().equals("GuestFilter"))) {

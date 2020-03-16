@@ -1,6 +1,15 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 
+def hash_diff(h1, h2)
+  h1.keys.inject({}) do |memo, key|
+    unless h1[key] == h2[key]
+      memo[key] = [h1[key], h2[key]]
+    end
+    memo
+  end
+end
+
 # XXX: all these tests need work (but so do tokens)
 describe 'Activation Keys' do
 
@@ -28,6 +37,17 @@ describe 'Activation Keys' do
 
     expect(@activation_key).to_not be_nil
     expect(@activation_key['id']).to_not be_nil
+  end
+
+  it 'should allow activation key field filtering' do
+    activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'))
+    key_full = @cp.get("/activation_keys/#{activation_key.id}")
+    key_filtered = @cp.get("/activation_keys/#{activation_key.id}?exclude=name")
+    newdict = hash_diff(key_full, key_filtered)
+    # There should only be one changed key
+    newdict.keys.size.should == 1
+    # there should be no 'name' field in the new response
+    newdict["name"][1].should == nil
   end
 
   it 'should set autoAttach on activation key' do
