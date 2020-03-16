@@ -59,7 +59,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     /**
      * Internal DTO object for ProvidedProduct
      */
-    @JsonFilter("ProvidedProductFilter")
     public static class ProvidedProductDTO {
         private final String productId;
         private final String productName;

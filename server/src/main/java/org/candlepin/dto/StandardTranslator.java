@@ -42,7 +42,9 @@ import org.candlepin.dto.api.v1.DeletedConsumerDTO;
 import org.candlepin.dto.api.v1.DeletedConsumerTranslator;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.EnvironmentTranslator;
+import org.candlepin.dto.api.v1.GuestIdArrayElementTranslator;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.GuestIdTranslator;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorConsumerTranslator;
@@ -182,6 +184,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new EnvironmentTranslator(), Environment.class, EnvironmentDTO.class);
         this.registerTranslator(
             new GuestIdTranslator(), GuestId.class, GuestIdDTO.class);
+        this.registerTranslator(
+            new GuestIdArrayElementTranslator(), GuestId.class, GuestIdDTOArrayElement.class);
         this.registerTranslator(
             new HypervisorConsumerTranslator(ownerCurator), Consumer.class, HypervisorConsumerDTO.class);
         this.registerTranslator(

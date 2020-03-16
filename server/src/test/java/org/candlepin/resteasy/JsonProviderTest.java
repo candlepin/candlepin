@@ -20,21 +20,28 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.jackson.DynamicFilterData;
+import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.model.ProductCurator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import org.junit.ComparisonFailure;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
@@ -44,12 +51,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.MediaType;
 
 
-
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class JsonProviderTest {
 
     @Mock private Configuration config;
     @Mock private ProductCurator productCurator;
+    private ObjectMapper ourMapper;
+
+    @BeforeEach
+    public void setUp() throws Exception {
+        JsonProvider provider = new JsonProvider(config);
+        ourMapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+
+        ResteasyProviderFactory.clearContextData();
+    }
 
     // This is kind of silly - basically just testing an initial setting...
     @Test
@@ -68,9 +83,7 @@ public class JsonProviderTest {
         SimpleDateFormat iso8601WithoutMilliseconds = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         iso8601WithoutMilliseconds.setTimeZone(TimeZone.getTimeZone("UTC"));
         String expectedDate = "\"" + iso8601WithoutMilliseconds.format(now) + "\"";
-        JsonProvider provider = new JsonProvider(config);
-        ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-        String serializedDate = mapper.writeValueAsString(now);
+        String serializedDate = ourMapper.writeValueAsString(now);
         assertTrue(serializedDate.equals(expectedDate));
     }
 
@@ -84,9 +97,6 @@ public class JsonProviderTest {
      */
     @Test
     public void canSerializeDatesWithLargeTimestampsConcurrently() {
-        JsonProvider provider = new JsonProvider(config);
-        ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-
         final AtomicBoolean processingFailure = new AtomicBoolean(false);
         final AtomicBoolean comparisonFailure = new AtomicBoolean(false);
         ExecutorService ex = Executors.newFixedThreadPool(1000);
@@ -99,11 +109,11 @@ public class JsonProviderTest {
                 String expectedDate = "\"" + iso8601WithoutMilliseconds.format(randomDate) + "\"";
 
                 try {
-                    String receivedDate = mapper.writeValueAsString(randomDate);
+                    String receivedDate = ourMapper.writeValueAsString(randomDate);
                     try {
-                        assertEquals("The date was not serialized properly.", expectedDate, receivedDate);
+                        assertEquals(expectedDate, receivedDate, "The date was not serialized properly.");
                     }
-                    catch (ComparisonFailure cf) {
+                    catch (AssertionError cf) {
                         cf.printStackTrace();
                         comparisonFailure.set(true);
                     }
@@ -138,4 +148,206 @@ public class JsonProviderTest {
         return sConfig.isEnabled(feature);
     }
 
+    @Test
+    public void testDynamicPropertyFilterExcludeSingleProperty() {
+        DynamicFilterData filterData = new DynamicFilterData();
+        filterData.excludeAttribute("name");
+        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+
+        ActivationKeyDTO keyDTO = new ActivationKeyDTO();
+        String serializedKey = "";
+        try {
+            serializedKey = ourMapper.writeValueAsString(keyDTO);
+        }
+        catch (JsonProcessingException e) {
+            fail("Serializing ActivationKeyDTO failed!");
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode akNode = null;
+        try {
+            akNode = mapper.readTree(serializedKey);
+        }
+        catch (JsonProcessingException e) {
+            fail("Parsing serialized ActivationKeyDTO failed!");
+        }
+
+        assertTrue(akNode.has("id"), "The 'id' field should NOT have been excluded!");
+        assertTrue(akNode.has("description"), "The 'description' field should NOT have been excluded!");
+        assertTrue(akNode.has("releaseVer"), "The 'releaseVer' field should NOT have been excluded!");
+        assertFalse(akNode.has("name"), "The 'name' field should have been excluded!");
+    }
+
+    @Test
+    public void testDynamicPropertyFilterExcludeMultipleProperties() {
+        DynamicFilterData filterData = new DynamicFilterData();
+        filterData.excludeAttribute("name");
+        filterData.excludeAttribute("addOns");
+        filterData.excludeAttribute("serviceLevel");
+        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+
+        ActivationKeyDTO keyDTO = new ActivationKeyDTO();
+        String serializedKey = "";
+        try {
+            serializedKey = ourMapper.writeValueAsString(keyDTO);
+        }
+        catch (JsonProcessingException e) {
+            fail("Serializing ActivationKeyDTO failed!");
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode akNode = null;
+        try {
+            akNode = mapper.readTree(serializedKey);
+        }
+        catch (JsonProcessingException e) {
+            fail("Parsing serialized ActivationKeyDTO failed!");
+        }
+
+        assertTrue(akNode.has("id"), "The 'id' field should NOT have been excluded!");
+        assertTrue(akNode.has("description"), "The 'description' field should NOT have been excluded!");
+        assertTrue(akNode.has("releaseVer"), "The 'releaseVer' field should NOT have been excluded!");
+        assertFalse(akNode.has("name"), "The 'name' field should have been excluded!");
+        assertFalse(akNode.has("addOns"), "The 'addOns' field should have been excluded!");
+        assertFalse(akNode.has("serviceLevel"), "The 'serviceLevel' field should have been excluded!");
+    }
+
+    @Test
+    public void testDynamicPropertyFilterIncludeSingleProperty() {
+        DynamicFilterData filterData = new DynamicFilterData();
+        filterData.includeAttribute("name");
+        filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
+        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+
+        ActivationKeyDTO keyDTO = new ActivationKeyDTO();
+        String serializedKey = "";
+        try {
+            serializedKey = ourMapper.writeValueAsString(keyDTO);
+        }
+        catch (JsonProcessingException e) {
+            fail("Serializing ActivationKeyDTO failed!");
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode akNode = null;
+        try {
+            akNode = mapper.readTree(serializedKey);
+        }
+        catch (JsonProcessingException e) {
+            fail("Parsing serialized ActivationKeyDTO failed!");
+        }
+        assertEquals(1, akNode.size());
+        assertTrue(akNode.has("name"), "The 'name' field should have been included!");
+    }
+
+    @Test
+    public void testDynamicPropertyFilterIncludeMultipleProperties() {
+        DynamicFilterData filterData = new DynamicFilterData();
+        filterData.includeAttribute("name");
+        filterData.includeAttribute("releaseVer");
+        filterData.includeAttribute("addOns");
+        filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
+        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+
+        ActivationKeyDTO keyDTO = new ActivationKeyDTO();
+        String serializedKey = "";
+        try {
+            serializedKey = ourMapper.writeValueAsString(keyDTO);
+        }
+        catch (JsonProcessingException e) {
+            fail("Serializing ActivationKeyDTO failed!");
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode akNode = null;
+        try {
+            akNode = mapper.readTree(serializedKey);
+        }
+        catch (JsonProcessingException e) {
+            fail("Parsing serialized ActivationKeyDTO failed!");
+        }
+        assertEquals(3, akNode.size());
+        assertTrue(akNode.has("name"), "The 'name' field should have been included!");
+        assertTrue(akNode.has("releaseVer"), "The 'releaseVer' field should have been included!");
+        assertTrue(akNode.has("addOns"), "The 'addOns' field should have been included!");
+    }
+
+    @Test
+    public void testDynamicPropertyFilterIncludeNestedProperty() {
+        DynamicFilterData filterData = new DynamicFilterData();
+        filterData.includeAttribute("owner.id");
+        filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
+        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+
+        ActivationKeyDTO keyDTO = new ActivationKeyDTO();
+        NestedOwnerDTO ownerDTO = new NestedOwnerDTO()
+            .key("owner_key")
+            .id("owner_id");
+        keyDTO.setOwner(ownerDTO);
+
+        String serializedKey = "";
+        try {
+            serializedKey = ourMapper.writeValueAsString(keyDTO);
+        }
+        catch (JsonProcessingException e) {
+            fail("Serializing ActivationKeyDTO failed!");
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode akNode = null;
+        try {
+            akNode = mapper.readTree(serializedKey);
+        }
+        catch (JsonProcessingException e) {
+            fail("Parsing serialized ActivationKeyDTO failed!");
+        }
+        assertEquals(1, akNode.size());
+        assertTrue(akNode.has("owner"), "The 'owner' field should have been included!");
+        assertEquals(1, akNode.get("owner").size());
+        assertTrue(akNode.get("owner").has("id"), "The 'owner.id' field should have been included!");
+    }
+
+    @Test
+    public void testDynamicPropertyFilterIncludeNestedPropertiesOnListElements() {
+        DynamicFilterData filterData = new DynamicFilterData();
+        filterData.includeAttribute("owner.id");
+        filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
+        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+
+        NestedOwnerDTO ownerDTO = new NestedOwnerDTO()
+            .key("owner_key")
+            .id("owner_id");
+        ActivationKeyDTO keyDTO1 = new ActivationKeyDTO();
+        keyDTO1.setOwner(ownerDTO);
+        ActivationKeyDTO keyDTO2 = new ActivationKeyDTO();
+        keyDTO2.setOwner(ownerDTO);
+        List<ActivationKeyDTO> activationKeys = new ArrayList<>();
+        activationKeys.add(keyDTO1);
+        activationKeys.add(keyDTO2);
+
+        String serializedKeys = "";
+        try {
+            serializedKeys = ourMapper.writeValueAsString(activationKeys);
+            System.out.println(serializedKeys);
+        }
+        catch (JsonProcessingException e) {
+            fail("Serializing a list ActivationKeyDTOs failed!");
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode akNode = null;
+        try {
+            akNode = mapper.readTree(serializedKeys);
+        }
+        catch (JsonProcessingException e) {
+            fail("Parsing serialized ActivationKeyDTO list failed!");
+        }
+        assertEquals(2, akNode.size());
+        assertTrue(akNode.get(0).has("owner"), "The 'owner' field should have been included!");
+        assertEquals(1, akNode.get(0).get("owner").size());
+        assertTrue(akNode.get(0).get("owner").has("id"), "The 'owner.id' field should have been included!");
+        assertTrue(akNode.get(1).has("owner"), "The 'owner' field should have been included!");
+        assertEquals(1, akNode.get(1).get("owner").size());
+        assertTrue(akNode.get(1).get("owner").has("id"), "The 'owner.id' field should have been included!");
+    }
 }

@@ -17,7 +17,6 @@ package org.candlepin.dto.rules.v1;
 import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.dto.CandlepinDTO;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -37,7 +36,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@JsonFilter("EntitlementFilter")
 public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
 
     private static final long serialVersionUID = 1L;

@@ -26,6 +26,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -107,10 +108,11 @@ public class GuestIdResource {
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<GuestIdDTO> getGuestIds(
+    public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        return  translator.translateQuery(guestIdCurator.listByConsumer(consumer), GuestIdDTO.class);
+        return  translator.translateQuery(guestIdCurator.listByConsumer(consumer),
+            GuestIdDTOArrayElement.class);
     }
 
     @ApiOperation(notes = "Retrieves a single Guest By its consumer and the guest UUID", value = "getGuestId")
