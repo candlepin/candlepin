@@ -42,7 +42,7 @@ import java.io.Serializable;
  * @param <T>
  *  DTO type extending this class; should be the name of the subclass
  */
-@JsonFilter("DTOFilter")
+@JsonFilter("LegacyDTOFilter")
 public abstract class CandlepinDTO<T extends CandlepinDTO> implements Cloneable, Serializable {
     public static final long serialVersionUID = 1L;
 

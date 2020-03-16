@@ -28,6 +28,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -125,7 +126,7 @@ public class GuestIdResourceTest {
         CandlepinQuery<GuestIdDTO> dtoQuery = mock(CandlepinQuery.class);
         when(guestIdCurator.listByConsumer(eq(consumer))).thenReturn(query);
         when(query.transform((any(ElementTransformer.class)))).thenReturn(dtoQuery);
-        CandlepinQuery<GuestIdDTO> result = guestIdResource.getGuestIds(consumer.getUuid());
+        CandlepinQuery<GuestIdDTOArrayElement> result = guestIdResource.getGuestIds(consumer.getUuid());
         verify(query, times(1)).transform(any(ElementTransformer.class));
         assertEquals(result, dtoQuery);
     }
