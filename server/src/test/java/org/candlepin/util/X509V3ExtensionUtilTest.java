@@ -149,6 +149,7 @@ public class X509V3ExtensionUtilTest {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
         Owner owner = new Owner("Test Corporation");
+        owner.setId("test-id");
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
@@ -156,10 +157,11 @@ public class X509V3ExtensionUtilTest {
         Pool pool = TestUtil.createPool(mktProd);
         pool.getBranding().add(new Branding(engProdId, "OS", brandedName));
         Consumer consumer = new Consumer();
+        consumer.setOwner(owner);
         Entitlement e = new Entitlement(pool, consumer, owner, 10);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<>(),  new Consumer(), pool);
+            prods, "", new HashMap<>(), consumer, pool);
 
         assertEquals(1, certProds.size());
         assertEquals(brandedName, certProds.get(0).getBrandName());
@@ -171,6 +173,7 @@ public class X509V3ExtensionUtilTest {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
         Owner owner = new Owner("Test Corporation");
+        owner.setId("test-id");
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
@@ -183,9 +186,11 @@ public class X509V3ExtensionUtilTest {
         for (Branding b : pool.getBranding()) {
             possibleBrandNames.add(b.getName());
         }
+        Consumer consumer = new Consumer();
+        consumer.setOwner(owner);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<>(),  new Consumer(), pool);
+            prods, "", new HashMap<>(), consumer, pool);
 
         assertEquals(1, certProds.size());
         // Should get the first name we encountered
