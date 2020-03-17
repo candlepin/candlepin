@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.14
+Version: 2.6.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,11 @@ fi
 
 #raw
 %changelog
+* Tue Mar 17 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.15-1
+- 1813980: EUS Content not available in content access mode
+  (wpoteat@redhat.com)
+- Update jackson to 2.10.1 (bcourt@redhat.com)
+
 * Thu Feb 27 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.14-1
 - 1806574 - GET /owners/{owner_key}/pools is very slow - Added @transactional
   annotation to the method listPools() (sonalidhome@gmail.com)
