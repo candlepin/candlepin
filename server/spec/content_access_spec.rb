@@ -21,9 +21,12 @@ describe 'Content Access' do
       @consumername = random_string("consumer")
       @consumername2 = random_string("consumer")
       @user = user_client(@owner, @username)
+      ## this product is here to show that the modified product does not affect the content in the golden ticket
+      @modified_product = create_product()
 
       @content = @cp.create_content(
-          @owner['key'], "cname", 'test-content', random_string("clabel"), "ctype", "cvendor", {:content_url=>'/this/is/the/path'}, true
+          @owner['key'], "cname", 'test-content', random_string("clabel"), "ctype", "cvendor",
+          {:content_url=>'/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true
       )
 
       @content_id = @content['id']

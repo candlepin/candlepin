@@ -361,6 +361,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         Pool emptyPool = new Pool();
         Product skuProduct = new Product();
         Consumer emptyConsumer = new Consumer();
+        emptyConsumer.setOwner(owner);
 
         containerSet.add(container);
         container.setId("content_access");
