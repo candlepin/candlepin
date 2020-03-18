@@ -14,9 +14,8 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
@@ -46,11 +45,13 @@ import org.candlepin.model.SourceSubscription;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -65,7 +66,8 @@ import java.util.Locale;
 /**
  * EntitlementImporterTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @SuppressWarnings("synthetic-access")
 public class SubscriptionReconcilerTest {
 
@@ -86,7 +88,7 @@ public class SubscriptionReconcilerTest {
     private ModelTranslator translator;
 
 
-    @Before
+    @BeforeEach
     public void init() {
         this.owner = new Owner();
         this.ownerDto = new OwnerDTO();
@@ -208,10 +210,12 @@ public class SubscriptionReconcilerTest {
 
         // Mock these pools as the return value for the owner:
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
 
-        when(poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)).thenReturn(cqmock);
+        doReturn(pools).when(cqmock).list();
+        doReturn(pools.iterator()).when(cqmock).iterator();
+
+        doReturn(cqmock).when(this.poolCurator).listByOwnerAndType(eq(owner), eq(PoolType.NORMAL));
+
         return pools;
     }
 

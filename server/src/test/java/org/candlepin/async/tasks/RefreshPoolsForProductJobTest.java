@@ -31,7 +31,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -45,21 +44,18 @@ public class RefreshPoolsForProductJobTest {
     private ProductCurator productCurator;
     private PoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
-    private OwnerServiceAdapter ownerAdapter;
 
     @BeforeEach
     public void setUp() {
         productCurator = mock(ProductCurator.class);
         poolManager = mock(PoolManager.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
-        ownerAdapter = mock(OwnerServiceAdapter.class);
     }
 
     @Test
     public void shouldSucceed() throws Exception {
         final String expected = "Pools refreshed for product: " + VALID_ID + "\n";
-        final AsyncJob job = new RefreshPoolsForProductJob(
-            productCurator, poolManager, subAdapter, ownerAdapter);
+        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, poolManager, subAdapter);
         final Product product = new Product(INVALID_ID, VALID_NAME);
         product.setUuid(VALID_ID);
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
@@ -68,7 +64,7 @@ public class RefreshPoolsForProductJobTest {
         final JobExecutionContext context = mock(JobExecutionContext.class);
         doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
         doReturn(product).when(productCurator).get(eq(VALID_ID));
-        doReturn(mock(Refresher.class)).when(poolManager).getRefresher(any(), any(), anyBoolean());
+        doReturn(mock(Refresher.class)).when(poolManager).getRefresher(any(), anyBoolean());
 
         final Object actualResult = job.execute(context);
 
@@ -94,8 +90,7 @@ public class RefreshPoolsForProductJobTest {
 
     @Test
     public void shouldFailWhenProductNotFound() throws Exception {
-        final AsyncJob job = new RefreshPoolsForProductJob(
-            productCurator, poolManager, subAdapter, ownerAdapter);
+        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, poolManager, subAdapter);
         final Product product = new Product(INVALID_ID, VALID_NAME);
         final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
             .setProduct(product)

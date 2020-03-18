@@ -43,7 +43,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -91,8 +90,9 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
 
         // Setup common behavior
-        when(this.poolManager.getRefresher(eq(this.subAdapter), any(OwnerServiceAdapter.class), anyBoolean()))
+        when(this.poolManager.getRefresher(eq(this.subAdapter), anyBoolean()))
             .thenReturn(this.refresher);
+
         when(this.refresher.add(any(Owner.class))).thenReturn(this.refresher);
 
         this.undoImportsJob = new UndoImportsJob(

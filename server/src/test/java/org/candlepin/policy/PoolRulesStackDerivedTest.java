@@ -14,16 +14,11 @@
  */
 package org.candlepin.policy;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Mockito.anyListOf;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.bind.PoolOperationCallback;
@@ -50,12 +45,14 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -73,7 +70,8 @@ import java.util.Set;
 /**
  * JsPoolRulesTest: Tests for the default rules.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class PoolRulesStackDerivedTest {
 
     private PoolRules poolRules;
@@ -117,7 +115,7 @@ public class PoolRulesStackDerivedTest {
 
     private static final String STACK = "a-stack";
 
-    @Before
+    @BeforeEach
     public void setUp() {
 
         // Load the default production rules:

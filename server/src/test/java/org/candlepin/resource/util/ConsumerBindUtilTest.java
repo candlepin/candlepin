@@ -14,10 +14,8 @@
  */
 package org.candlepin.resource.util;
 
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
@@ -37,11 +35,13 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ServiceLevelValidator;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -56,10 +56,8 @@ import java.util.Set;
 /**
  *
  */
-@RunWith(MockitoJUnitRunner.class)
-/*
- *
- */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ConsumerBindUtilTest {
 
     private static final String USER = "testuser";
@@ -77,7 +75,7 @@ public class ConsumerBindUtilTest {
 
     private ConsumerBindUtil consumerBindUtil;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
@@ -179,7 +177,7 @@ public class ConsumerBindUtilTest {
         verify(entitler).bindByProducts(eq(ad));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void registerFailWithKeyServiceLevelNotExist() throws Exception {
         List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
@@ -189,7 +187,9 @@ public class ConsumerBindUtilTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
             .validate(eq(owner.getId()), eq(key1.getServiceLevel()));
-        consumerBindUtil.handleActivationKeys(consumer, keys, false);
+
+        assertThrows(BadRequestException.class,
+            () -> consumerBindUtil.handleActivationKeys(consumer, keys, false));
     }
 
     @Test
@@ -205,7 +205,7 @@ public class ConsumerBindUtilTest {
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void registerFailWithNoGoodKeyPool() throws Exception {
         List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
@@ -219,7 +219,9 @@ public class ConsumerBindUtilTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         when(entitler.bindByPoolQuantity(eq(consumer), eq(ghost.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
-        consumerBindUtil.handleActivationKeys(consumer, keys, false);
+
+        assertThrows(BadRequestException.class,
+            () -> consumerBindUtil.handleActivationKeys(consumer, keys, false));
     }
 
     @Test
@@ -292,7 +294,7 @@ public class ConsumerBindUtilTest {
 
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
-                .thenThrow(new ForbiddenException("fail"));
+            .thenThrow(new ForbiddenException("fail"));
         consumerBindUtil.handleActivationKeys(consumer, keys, true);
     }
 

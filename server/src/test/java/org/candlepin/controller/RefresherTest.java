@@ -14,28 +14,24 @@
  */
 package org.candlepin.controller;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,23 +43,23 @@ import java.util.Map;
 /**
  * RefresherTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class RefresherTest {
 
     private CandlepinPoolManager poolManager;
-    private OwnerServiceAdapter ownerAdapter;
     private SubscriptionServiceAdapter subAdapter;
     private OwnerManager ownerManager;
 
     private Refresher refresher;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         poolManager = mock(CandlepinPoolManager.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
         ownerManager = mock(OwnerManager.class);
 
-        refresher = new Refresher(poolManager, subAdapter, ownerAdapter, ownerManager, false);
+        refresher = new Refresher(poolManager, subAdapter, ownerManager, false);
     }
 
     @Test

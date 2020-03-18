@@ -17,8 +17,8 @@ package org.candlepin.resource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentManager;
-import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
@@ -83,7 +83,7 @@ public class OwnerContentResource {
     private ProductCurator productCurator;
     private UniqueIdGenerator idGenerator;
     private ProductCachedSerializationModule productCachedModule;
-    private OwnerManager ownerManager;
+    private ContentAccessManager contentAccessManager;
     private ModelTranslator translator;
 
     @Inject
@@ -91,7 +91,7 @@ public class OwnerContentResource {
         EnvironmentContentCurator envContentCurator, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, PoolManager poolManager, ProductCurator productCurator,
         UniqueIdGenerator idGenerator,  ProductCachedSerializationModule productCachedModule,
-        OwnerManager ownerManager, ModelTranslator translator) {
+        ContentAccessManager contentAccessManager, ModelTranslator translator) {
 
         this.contentCurator = contentCurator;
         this.contentManager = contentManager;
@@ -103,7 +103,7 @@ public class OwnerContentResource {
         this.productCurator = productCurator;
         this.idGenerator = idGenerator;
         this.productCachedModule = productCachedModule;
-        this.ownerManager = ownerManager;
+        this.contentAccessManager = contentAccessManager;
         this.translator = translator;
     }
 
@@ -236,7 +236,7 @@ public class OwnerContentResource {
         Owner owner = this.getOwnerByKey(ownerKey);
         Content entity = this.createContentImpl(owner, content);
 
-        ownerManager.refreshOwnerForContentAccess(owner);
+        this.contentAccessManager.refreshOwnerForContentAccess(owner);
 
         return this.translator.translate(entity, ContentDTO.class);
     }
@@ -258,7 +258,7 @@ public class OwnerContentResource {
             result.add(this.translator.translate(entity, ContentDTO.class));
         }
 
-        ownerManager.refreshOwnerForContentAccess(owner);
+        this.contentAccessManager.refreshOwnerForContentAccess(owner);
         return result;
     }
 
@@ -279,7 +279,7 @@ public class OwnerContentResource {
         }
 
         existing = this.contentManager.updateContent(content, owner, true);
-        ownerManager.refreshOwnerForContentAccess(owner);
+        this.contentAccessManager.refreshOwnerForContentAccess(owner);
 
         return this.translator.translate(existing, ContentDTO.class);
     }
@@ -299,6 +299,6 @@ public class OwnerContentResource {
         }
 
         this.contentManager.removeContent(owner, content, true);
-        ownerManager.refreshOwnerForContentAccess(owner);
+        this.contentAccessManager.refreshOwnerForContentAccess(owner);
     }
 }

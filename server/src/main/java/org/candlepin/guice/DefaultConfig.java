@@ -16,7 +16,6 @@ package org.candlepin.guice;
 
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -24,7 +23,6 @@ import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
-import org.candlepin.service.impl.DefaultContentAccessCertServiceAdapter;
 import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.candlepin.service.impl.DefaultExportExtensionAdapter;
 import org.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
@@ -52,7 +50,6 @@ class DefaultConfig extends AbstractModule {
         bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
         bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
         bind(EntitlementCertServiceAdapter.class).to(DefaultEntitlementCertServiceAdapter.class);
-        bind(ContentAccessCertServiceAdapter.class).to(DefaultContentAccessCertServiceAdapter.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
         bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);
         bind(ManifestFileService.class).to(DBManifestService.class);

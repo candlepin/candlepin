@@ -23,7 +23,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -42,6 +41,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+
 
 /**
  * ComplianceRules
@@ -109,8 +110,7 @@ public class SystemPurposeComplianceRules {
             return status;
         }
 
-        if (consumer.getOwner().getContentAccessMode().equals(
-            ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE)) {
+        if (consumer.getOwner() != null && consumer.getOwner().isContentAccessEnabled()) {
             status.setDisabled(true);
             applyStatus(consumer, status, updateConsumer);
             return status;

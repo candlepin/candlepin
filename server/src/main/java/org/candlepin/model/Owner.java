@@ -15,9 +15,9 @@
 package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.model.OwnerInfo;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -147,13 +147,13 @@ public class Owner extends AbstractHibernateObject<Owner>
      * Determines the behavior of the content access.
      */
     @Column(name = "content_access_mode", nullable = false)
-    private String contentAccessMode = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
+    private String contentAccessMode = ContentAccessMode.getDefault().toDatabaseValue();
 
     /**
      * Determines the allowable modes of the content access.
      */
     @Column(name = "content_access_mode_list", nullable = false)
-    private String contentAccessModeList = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
+    private String contentAccessModeList = ContentAccessMode.getDefault().toDatabaseValue();
 
     /**
      * Default constructor
@@ -534,8 +534,10 @@ public class Owner extends AbstractHibernateObject<Owner>
         return contentAccessMode;
     }
 
-    public void setContentAccessMode(String contentAccessMode) {
+    public Owner setContentAccessMode(String contentAccessMode) {
         this.contentAccessMode = contentAccessMode;
+
+        return this;
     }
 
     /**
@@ -547,8 +549,10 @@ public class Owner extends AbstractHibernateObject<Owner>
         return contentAccessModeList;
     }
 
-    public void setContentAccessModeList(String contentAccessModeList) {
+    public Owner setContentAccessModeList(String contentAccessModeList) {
         this.contentAccessModeList = contentAccessModeList;
+
+        return this;
     }
 
     @XmlTransient
@@ -564,7 +568,7 @@ public class Owner extends AbstractHibernateObject<Owner>
      */
     @XmlTransient
     public boolean isContentAccessEnabled() {
-        return ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(this.getContentAccessMode());
+        return ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue().equals(this.getContentAccessMode());
     }
 
 }

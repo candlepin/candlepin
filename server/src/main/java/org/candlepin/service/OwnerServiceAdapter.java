@@ -34,39 +34,4 @@ public interface OwnerServiceAdapter {
      */
     boolean isOwnerKeyValidForCreation(String ownerKey);
 
-    /**
-     * Retrieves the current content access mode for the owner represented by the given key. If the
-     * owner should not be using. The value returned by this method should always be present in the
-     * list returned by getContentAccessModeList, or null to represent the owner isn't using any
-     * special content access modes.
-     *
-     * @param ownerKey
-     *  A key representing the owner for which to fetch the content access mode
-     *
-     * @throws IllegalArgumentException
-     *  if ownerKey is null, empty or otherwise does not represent a valid owner
-     *
-     * @return
-     *  A string representing the content access mode for the specified owner, or null if the owner
-     *  should not be using any special content access mode
-     */
-    String getContentAccessMode(String ownerKey);
-
-    /**
-     * Retrieves a comma-delimited string representing the content access mode list for the owner
-     * represented by the given key. This method may return a null or empty string, indicating the
-     * owner does not have any special content access modes.
-     *
-     * @param ownerKey
-     *  A key representing the owner for which to fetch the content access mode
-     *
-     * @throws IllegalArgumentException
-     *  if ownerKey is null, empty or otherwise does not represent a valid owner
-     *
-     * @return
-     *  A comma-delimited string representing the content access mode list for the specified owner,
-     *  or null if the owner does not have any special content access modes
-     */
-    String getContentAccessModeList(String ownerKey);
-
 }

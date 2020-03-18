@@ -14,9 +14,8 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
@@ -31,19 +30,21 @@ import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 
+
+
 /**
  * ConsumerExporterTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ConsumerExporterTest {
 
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
@@ -74,7 +75,6 @@ public class ConsumerExporterTest {
         consumer.setContentAccessMode("access_mode");
 
         when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
-        when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
         exporter.export(mapper, writer, consumer, "/subscriptions", "/candlepin");
 
@@ -89,8 +89,8 @@ public class ConsumerExporterTest {
         json.append("\"urlWeb\":\"/subscriptions\",");
         json.append("\"urlApi\":\"/candlepin\",");
         json.append("\"contentAccessMode\":\"access_mode\"}");
-        assertTrue(json.toString() + "\n" + writer.toString(),
-            TestUtil.isJsonEqual(json.toString(), writer.toString()));
+        assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()),
+            json.toString() + "\n" + writer.toString());
 
         // change sibling order to ensure that isJsonEqual can reconcile
         json = new StringBuffer();

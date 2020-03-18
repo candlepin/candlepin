@@ -47,6 +47,7 @@ import org.candlepin.common.exceptions.GoneException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -94,10 +95,8 @@ import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
-import org.candlepin.service.impl.DefaultContentAccessCertServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.FactValidator;
@@ -155,7 +154,6 @@ public class ConsumerResourceTest {
     @Mock private ConsumerCurator mockConsumerCurator;
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private EntitlementCertServiceAdapter mockEntitlementCertServiceAdapter;
-    @Mock private OwnerServiceAdapter mockOwnerServiceAdapter;
     @Mock private SubscriptionServiceAdapter mockSubscriptionServiceAdapter;
     @Mock private PoolManager mockPoolManager;
     @Mock private EntitlementCurator mockEntitlementCurator;
@@ -168,7 +166,7 @@ public class ConsumerResourceTest {
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
-    @Mock private DefaultContentAccessCertServiceAdapter mockContentAccessCertService;
+    @Mock private ContentAccessManager mockContentAccessManager;
     @Mock private EventSink mockSink;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private IdentityCertServiceAdapter mockIdentityCertServiceAdapter;
@@ -207,7 +205,6 @@ public class ConsumerResourceTest {
             mockConsumerTypeCurator,
             null,
             mockSubscriptionServiceAdapter,
-            mockOwnerServiceAdapter,
             mockEntitlementCurator,
             mockIdentityCertServiceAdapter,
             mockEntitlementCertServiceAdapter,
@@ -232,7 +229,7 @@ public class ConsumerResourceTest {
             null,
             consumerBindUtil,
             mockManifestManager,
-            mockContentAccessCertService,
+            mockContentAccessManager,
             factValidator,
             new ConsumerTypeValidator(mockConsumerTypeCurator, i18n),
             consumerEnricher,
@@ -394,8 +391,9 @@ public class ConsumerResourceTest {
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null,
             mockActivationKeyRules, null, null, null, null, null, null, null, null, null, null
         );
+
         ConsumerResource consumerResource = new ConsumerResource(
-            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, null, null, null, null, null,
             poolManager, null, null, null, null, null, null, null, null, null,
             this.config, null, null, null, consumerBindUtil,

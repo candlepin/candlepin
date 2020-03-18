@@ -14,22 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.atMost;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.nullable;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event;
@@ -78,7 +64,6 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -87,14 +72,16 @@ import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.util.Providers;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -113,12 +100,15 @@ import javax.inject.Provider;
 
 
 
-@RunWith(MockitoJUnitRunner.class)
+/**
+ * Test suite for the ConsumerResource class, focusing on updates
+ */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ConsumerResourceUpdateTest {
 
     @Mock private UserServiceAdapter userService;
     @Mock private IdentityCertServiceAdapter idCertService;
-    @Mock private OwnerServiceAdapter ownerService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private OwnerCurator ownerCurator;
@@ -147,7 +137,7 @@ public class ConsumerResourceUpdateTest {
     private Provider<GuestMigration> migrationProvider;
     private GuestMigration testMigration;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         Configuration config = new CandlepinCommonTestConfig();
 
@@ -159,7 +149,7 @@ public class ConsumerResourceUpdateTest {
             this.environmentCurator,
             this.ownerCurator);
         this.resource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
+            this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null,
             this.userService, poolManager, null, ownerCurator,
             this.activationKeyCurator, this.entitler, this.complianceRules, this.systemPurposeComplianceRules,
@@ -508,7 +498,7 @@ public class ConsumerResourceUpdateTest {
     }
 
     // ignored out per mkhusid, see 768872 comment #41
-    @Ignore
+    @Disabled
     @Test
     public void ensureNewGuestIsHealedIfItWasMigratedFromAnotherHost() throws Exception {
         String uuid = "TEST_CONSUMER";
@@ -791,7 +781,7 @@ public class ConsumerResourceUpdateTest {
         verify(sink).queueEvent((Event) any());
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void throwsAnExceptionWhenEnvironmentNotFound() {
         String uuid = "A Consumer";
         EnvironmentDTO changedEnvironment = new EnvironmentDTO()
@@ -808,7 +798,8 @@ public class ConsumerResourceUpdateTest {
         when(consumerCurator.verifyAndLookupConsumer(existing.getUuid())).thenReturn(existing);
         when(environmentCurator.get(changedEnvironment.getId())).thenReturn(null);
 
-        resource.updateConsumer(existing.getUuid(), updated, principal);
+        assertThrows(NotFoundException.class,
+            () -> resource.updateConsumer(existing.getUuid(), updated, principal));
     }
 
     @Test
@@ -864,14 +855,15 @@ public class ConsumerResourceUpdateTest {
         assertEquals("old name", consumer.getName());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void updatingToInvalidCharacterNameNotAllowed() {
         ConsumerDTO consumer = getFakeConsumerDTO();
         consumer.setName("old name");
         ConsumerDTO updated = new ConsumerDTO();
         updated.setName("#a name");
 
-        resource.updateConsumer(consumer.getUuid(), updated, principal);
+        assertThrows(BadRequestException.class,
+            () -> resource.updateConsumer(consumer.getUuid(), updated, principal));
     }
 
     @Test

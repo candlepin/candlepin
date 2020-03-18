@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
@@ -25,7 +25,11 @@ import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 
 
@@ -34,6 +38,8 @@ import org.junit.Test;
  * ConsumerResource.CONSUMER_PERSON_NAME_PATTERN is different than
  * CONSUMER_SYSTEM_NAME_PATTERN, this will need different tests.
  */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class PersonConsumerResourceCreationTest extends ConsumerResourceCreationTest {
 
     public ConsumerType initConsumerType() {

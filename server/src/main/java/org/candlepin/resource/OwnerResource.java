@@ -41,6 +41,8 @@ import org.candlepin.common.exceptions.ResourceMovedException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
@@ -97,7 +99,6 @@ import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.DateFormat;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
@@ -189,6 +190,7 @@ public class OwnerResource {
     private ManifestManager manifestManager;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
+    private ContentAccessManager contentAccessManager;
     private PoolManager poolManager;
     private OwnerManager ownerManager;
     private EntitlementCurator entitlementCurator;
@@ -213,6 +215,7 @@ public class OwnerResource {
         EventSink sink,
         EventFactory eventFactory,
         EventAdapter eventAdapter,
+        ContentAccessManager contentAccessManager,
         ManifestManager manifestManager,
         PoolManager poolManager,
         OwnerManager ownerManager,
@@ -243,6 +246,7 @@ public class OwnerResource {
         this.eventFactory = eventFactory;
         this.exportCurator = exportCurator;
         this.importRecordCurator = importRecordCurator;
+        this.contentAccessManager = contentAccessManager;
         this.poolManager = poolManager;
         this.manifestManager = manifestManager;
         this.ownerManager = ownerManager;
@@ -555,6 +559,9 @@ public class OwnerResource {
         if (dto.isAutobindHypervisorDisabled() != null) {
             entity.setAutobindHypervisorDisabled(dto.isAutobindHypervisorDisabled());
         }
+
+        // Note: Do not set the content access mode list or content access mode here. Those should
+        // be done through ContentAccessManager.updateOwnerContentAccess instead.
     }
 
     /**
@@ -879,35 +886,54 @@ public class OwnerResource {
             throw new BadRequestException(i18n.tr("Owners must be created with a valid key"));
         }
 
-        // Validate and set content access mode list & content access mode
-        if (StringUtils.isBlank(dto.getContentAccessModeList())) {
-            dto.setContentAccessModeList(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
-        }
-
-        if (StringUtils.isBlank(dto.getContentAccessMode())) {
-            dto.setContentAccessMode(ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE);
-        }
-
-        if (!containsContentAccessMode(dto.getContentAccessModeList(), dto.getContentAccessMode())) {
-            throw new BadRequestException(
-                i18n.tr("The content access mode \"{1}\" is not allowed for this owner.",
-                    dto.getContentAccessMode()));
-        }
-
-
-        // Check that the default service level is *not* set at this point
-        if (!StringUtils.isBlank(dto.getDefaultServiceLevel())) {
-            throw new BadRequestException(i18n.tr(
-                "The default service level cannot be specified during owner creation"));
-        }
-
-        // Translate the DTO to an entity Owner.
         Owner owner = new Owner();
         owner.setKey(dto.getKey());
 
+        // Check that the default service level is *not* set at this point
+        if (!StringUtils.isBlank(dto.getDefaultServiceLevel())) {
+            throw new BadRequestException(
+                i18n.tr("The default service level cannot be specified during owner creation"));
+        }
+
+        // Validate and set content access mode list & content access mode
+        boolean configureContentAccess = false;
+
+        final String defaultContentAccess = ContentAccessMode.getDefault().toDatabaseValue();
+        String contentAccessModeList = dto.getContentAccessModeList();
+        String contentAccessMode = dto.getContentAccessMode();
+
+        if (!StringUtils.isBlank(contentAccessMode) && !contentAccessMode.equals(defaultContentAccess)) {
+            if (config.getBoolean(ConfigProperties.STANDALONE)) {
+                throw new BadRequestException(
+                    i18n.tr("The owner content access mode and content access mode list cannot be set " +
+                        "directly in standalone mode."));
+            }
+
+            configureContentAccess = true;
+        }
+        else {
+            contentAccessMode = defaultContentAccess;
+        }
+
+        if (!StringUtils.isBlank(contentAccessModeList) &&
+            !contentAccessModeList.equals(defaultContentAccess)) {
+
+            // Impl note: We have to allow this for the time being due to pre-existing, expected
+            // behaviors. This shouldn't impact actual functionality since the mode can't be set,
+            // but we still need to allow setting the mode list.
+
+            configureContentAccess = true;
+        }
+        else {
+            contentAccessModeList = defaultContentAccess;
+        }
+
+        this.validateContentAccessModeChanges(owner, contentAccessModeList, contentAccessMode);
+
+        // Translate the DTO to an entity Owner.
         this.populateEntity(owner, dto);
-        owner.setContentAccessModeList(dto.getContentAccessModeList());
-        owner.setContentAccessMode(dto.getContentAccessMode());
+        owner.setContentAccessModeList(contentAccessModeList);
+        owner.setContentAccessMode(contentAccessMode);
 
         // Try to persist the owner
         try {
@@ -915,6 +941,13 @@ public class OwnerResource {
 
             if (owner == null) {
                 throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner));
+            }
+
+            if (configureContentAccess) {
+                // Apply content access configuration if the user has given us non-default
+                // content access settings
+                owner = this.contentAccessManager
+                    .updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode);
             }
         }
         catch (Exception e) {
@@ -926,20 +959,6 @@ public class OwnerResource {
         sink.emitOwnerCreated(owner);
 
         return this.translator.translate(owner, OwnerDTO.class);
-    }
-
-    /**
-     * Checks if the provided content access mode list contains the provided access mode.
-     *
-     * @param list the provided content access mode list
-     *
-     * @param mode the provided content access mode
-     *
-     * @return true if the provided content access mode is contained in the list, false otherwise.
-     */
-    public static boolean containsContentAccessMode(String list, String mode) {
-        String[] camList = list.split(",");
-        return ArrayUtils.contains(camList, mode);
     }
 
     /**
@@ -967,37 +986,42 @@ public class OwnerResource {
 
         Owner owner = findOwnerByKey(key);
 
-        // Note: We don't allow updating the content access mode list externally
-
         // Reject changes to the content access mode in standalone mode
-        boolean refreshContentAccess = false;
+        boolean updateContentAccess = false;
+        String contentAccessModeList = dto.getContentAccessModeList();
+        String contentAccessMode = dto.getContentAccessMode();
 
-        String cam = dto.getContentAccessMode();
-        if (cam != null && !cam.equals(owner.getContentAccessMode())) {
+        // Check content access mode bits
+        boolean caListChanged = contentAccessModeList != null &&
+            !contentAccessModeList.equals(owner.getContentAccessModeList());
+
+        boolean caModeChanged = contentAccessMode != null &&
+            !contentAccessMode.equals(owner.getContentAccessMode());
+
+        if (caListChanged || caModeChanged) {
             if (config.getBoolean(ConfigProperties.STANDALONE)) {
                 throw new BadRequestException(
-                    i18n.tr("The owner content access mode cannot be set directly in standalone mode."));
+                    i18n.tr("The owner content access mode and content access mode list cannot be set " +
+                        "directly in standalone mode."));
             }
 
-            if (!owner.isAllowedContentAccessMode(cam)) {
-                throw new BadRequestException(
-                    i18n.tr("The content access mode is not allowed for this owner."));
-            }
-
-            owner.setContentAccessMode(cam);
-            refreshContentAccess = true;
+            // This kinda doubles up on some work here, but at least we nice, clear error messages
+            // rather than spooky ISEs.
+            this.validateContentAccessModeChanges(owner, contentAccessModeList, contentAccessMode);
+            updateContentAccess = true;
         }
 
         // Do the bulk of our entity population
         this.populateEntity(owner, dto);
 
+        // Refresh content access mode if necessary
+        if (updateContentAccess) {
+            owner = this.contentAccessManager
+                .updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode);
+        }
+
         owner = ownerCurator.merge(owner);
         ownerCurator.flush();
-
-        // Refresh content access mode if necessary
-        if (refreshContentAccess) {
-            this.ownerManager.refreshOwnerForContentAccess(owner);
-        }
 
         // Build and queue the owner modified event
         Event event = this.eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)
@@ -1008,6 +1032,56 @@ public class OwnerResource {
 
         // Output the updated owner
         return this.translator.translate(owner, OwnerDTO.class);
+    }
+
+    /**
+     * Validates that the given content access mode changes can be used by the specified owner.
+     *
+     * @param owner
+     *  the owner for which to check if the content access mode list is valid
+     *
+     * @param contentAccessModeList
+     *  the content access mode list to check
+     *
+     * @throws BadRequestException
+     *  if the content access mode list is not currently valid for the given owner
+     */
+    private void validateContentAccessModeChanges(Owner owner, String calist, String camode) {
+        if (calist != null) {
+            if (calist.isEmpty()) {
+                calist = ContentAccessMode.getDefault().toDatabaseValue();
+            }
+
+            String[] modes = calist.split(",");
+            for (String mode : modes) {
+                try {
+                    ContentAccessMode.resolveModeName(mode);
+                }
+                catch (IllegalArgumentException e) {
+                    throw new BadRequestException(this.i18n.tr("Content access mode list contains " +
+                        "an unsupported mode: {0}", mode));
+                }
+            }
+        }
+        else {
+            calist = owner.getContentAccessModeList();
+        }
+
+        if (camode != null) {
+            if (camode.isEmpty()) {
+                camode = ContentAccessMode.getDefault().toDatabaseValue();
+            }
+
+            if (calist == null || calist.isEmpty()) {
+                calist = ContentAccessMode.getDefault().toDatabaseValue();
+            }
+
+            String[] modes = calist.split(",");
+            if (!ArrayUtils.contains(modes, camode)) {
+                throw new BadRequestException(this.i18n.tr("Content access mode is not present " +
+                    "in the content access mode list for this org: {0}", camode));
+            }
+        }
     }
 
     /**

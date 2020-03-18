@@ -68,7 +68,6 @@ import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resteasy.JsonProvider;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.CdnInfo;
 import org.candlepin.service.model.CertificateInfo;
@@ -2462,15 +2461,13 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter) {
-        return this.getRefresher(subAdapter, ownerAdapter, true);
+    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter) {
+        return this.getRefresher(subAdapter, true);
     }
 
     @Override
-    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter,
-        boolean lazy) {
-
-        return new Refresher(this, subAdapter, ownerAdapter, ownerManager, lazy);
+    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy) {
+        return new Refresher(this, subAdapter, ownerManager, lazy);
     }
 
     @Override

@@ -85,10 +85,14 @@ describe 'Autobind Disabled On Owner' do
   end
 
   it 'will still register when content access setting enabled and autobind enabled on activation key' do
+    # org_environment mode cannot be set via API in standalone mode
+    skip("candlepin running in standalone mode") if not is_hosted?
+
     owner = create_owner(random_string("test_owner"), nil, {
-        'contentAccessModeList' => 'org_environment,test_access_mode,entitlement',
+        'contentAccessModeList' => 'org_environment,entitlement',
         'contentAccessMode' => "org_environment"
     })
+
     activation_key = @cp.create_activation_key(owner['key'], random_string('test_token'), nil, true)
     user_cp = user_client(owner, random_string("test-user"))
     user_cp.register(random_string("consumer"), :system, nil, {}, nil, owner['key'], [activation_key['name']])
@@ -103,8 +107,11 @@ describe 'Autobind Disabled On Owner' do
   end
 
   it 'fails to heal entire org if content access is org_environment' do
+    # org_environment mode cannot be set via API in standalone mode
+    skip("candlepin running in standalone mode") if not is_hosted?
+
     owner = create_owner(random_string("test_owner"), nil, {
-      'contentAccessModeList' => 'org_environment,test_access_mode,entitlement',
+      'contentAccessModeList' => 'org_environment,entitlement',
       'contentAccessMode' => "org_environment"
     })
     user_cp = user_client(owner, random_string("test-user"))

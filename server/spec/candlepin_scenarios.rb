@@ -23,7 +23,7 @@ module CandlepinMethods
     # Set the content access mode list for new owners. We do this here instead of doing it explicitly
     # in each test due to some test objects creating owners internally which need this list.
     if not params['contentAccessModeList']
-      params['contentAccessModeList']= 'org_environment,test_access_mode,entitlement'
+      params['contentAccessModeList']= 'org_environment,entitlement'
       params['contentAccessMode'] = 'entitlement'
     end
 

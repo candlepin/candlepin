@@ -30,7 +30,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 
@@ -49,13 +48,12 @@ public class RefreshPoolsJobTest {
     @Mock protected OwnerCurator ownerCurator;
     @Mock protected PoolManager poolManager;
     @Mock protected SubscriptionServiceAdapter subAdapter;
-    @Mock protected OwnerServiceAdapter ownerAdapter;
     @Mock protected Refresher refresher;
     @Mock private JobExecutionContext ctx;
 
     @BeforeEach
     public void setupTest() {
-        job = new RefreshPoolsJob(ownerCurator, poolManager, subAdapter, ownerAdapter);
+        job = new RefreshPoolsJob(ownerCurator, poolManager, subAdapter);
     }
 
     private Owner createTestOwner(String key, String logLevel) {
@@ -128,7 +126,7 @@ public class RefreshPoolsJobTest {
 
         doReturn(jobConfig.getJobArguments()).when(ctx).getJobArguments();
         doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
-        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(ownerAdapter), eq(true));
+        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(true));
         doReturn(refresher).when(refresher).add(eq(owner));
 
         Object actualResult = this.job.execute(ctx);
@@ -146,7 +144,7 @@ public class RefreshPoolsJobTest {
 
         doReturn(jobConfig.getJobArguments()).when(ctx).getJobArguments();
         doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
-        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(ownerAdapter), eq(false));
+        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(false));
         doReturn(refresher).when(refresher).add(eq(owner));
         doThrow(new RuntimeException("something went wrong with refresh")).when(refresher).run();
 

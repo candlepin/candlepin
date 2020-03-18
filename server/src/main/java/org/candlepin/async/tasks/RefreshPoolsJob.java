@@ -26,7 +26,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -45,7 +44,6 @@ public class RefreshPoolsJob implements AsyncJob {
     protected OwnerCurator ownerCurator;
     protected PoolManager poolManager;
     protected SubscriptionServiceAdapter subAdapter;
-    protected OwnerServiceAdapter ownerAdapter;
 
     /**
      * Job configuration object for the refresh pools job
@@ -124,12 +122,11 @@ public class RefreshPoolsJob implements AsyncJob {
 
     @Inject
     public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
-        SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter) {
+        SubscriptionServiceAdapter subAdapter) {
 
         this.ownerCurator = ownerCurator;
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
-        this.ownerAdapter = ownerAdapter;
     }
 
    /**
@@ -151,7 +148,7 @@ public class RefreshPoolsJob implements AsyncJob {
 
         try {
             // Assume that we verified the request in the resource layer:
-            poolManager.getRefresher(this.subAdapter, this.ownerAdapter, lazy)
+            poolManager.getRefresher(this.subAdapter, lazy)
                 .add(owner)
                 .run();
         }

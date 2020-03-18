@@ -28,6 +28,9 @@ public class TestSyncUtils {
 
     }
 
+    // TODO:
+    // Remove this class. This is just setting us up for strange test failures by using mocks that
+    // are thrown away, and thus, never configurable (and likely different from the test's mocks)
     public static ObjectMapper getTestSyncUtils(Configuration config) {
         ProductCurator mockProductCurator = Mockito.mock(ProductCurator.class);
         ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(

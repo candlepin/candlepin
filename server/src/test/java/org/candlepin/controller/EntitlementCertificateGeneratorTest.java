@@ -46,7 +46,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.test.TestUtil;
 
@@ -81,6 +80,7 @@ import java.util.Set;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EntitlementCertificateGeneratorTest {
 
+    @Mock private ContentAccessManager mockContentAccessManager;
     @Mock private EntitlementCertServiceAdapter mockEntCertAdapter;
     @Mock private EntitlementCertificateCurator mockEntCertCurator;
     @Mock private EntitlementCurator mockEntitlementCurator;
@@ -88,7 +88,6 @@ public class EntitlementCertificateGeneratorTest {
     @Mock private EventSink mockEventSink;
     @Mock private EventFactory mockEventFactory;
     @Mock private ProductCurator mockProductCurator;
-    @Mock private ContentAccessCertServiceAdapter mockCertServiceAdapter;
     @Mock private OwnerCurator mockOwnerCurator;
 
     @Captor private ArgumentCaptor<Map<String, Entitlement>> entMapCaptor;
@@ -102,7 +101,7 @@ public class EntitlementCertificateGeneratorTest {
         this.ecGenerator = new EntitlementCertificateGenerator(
             this.mockEntCertCurator, this.mockEntCertAdapter, this.mockEntitlementCurator,
             this.mockPoolCurator, this.mockEventSink, this.mockEventFactory, this.mockProductCurator,
-            this.mockCertServiceAdapter, this.mockOwnerCurator);
+            this.mockContentAccessManager, this.mockOwnerCurator);
     }
 
     @Test
@@ -110,7 +109,8 @@ public class EntitlementCertificateGeneratorTest {
         this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
                 this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
                 this.mockEventSink, this.mockEventFactory, this.mockProductCurator,
-                this.mockCertServiceAdapter, this.mockOwnerCurator);
+                this.mockContentAccessManager, this.mockOwnerCurator);
+
         Consumer consumer = mock(Consumer.class);
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
@@ -134,7 +134,7 @@ public class EntitlementCertificateGeneratorTest {
         this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
             this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
             this.mockEventSink, this.mockEventFactory, this.mockProductCurator,
-                this.mockCertServiceAdapter, this.mockOwnerCurator);
+                this.mockContentAccessManager, this.mockOwnerCurator);
         Consumer consumer = mock(Consumer.class);
         Product product = mock(Product.class);
         Entitlement entitlement = mock(Entitlement.class);

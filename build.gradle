@@ -25,7 +25,7 @@ ext.versions = [
         jackson   : "2.10.1",
         guice     : "4.1.0",
         checkstyle: "8.29",
-        junit5    : "5.4.1"
+        junit5    : "5.4.2"
 ]
 
 ext.libraries = [

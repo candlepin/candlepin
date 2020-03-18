@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -64,6 +65,8 @@ import javax.inject.Singleton;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
+
+
 
 /**
  * ConsumerCurator
@@ -1285,6 +1288,47 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setProjection(Projections.property("consumer.id"))
             .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
             .list();
+    }
+
+    /**
+     * Clears (nulls) the content access mode for any consumer belonging to the given owner, that is
+     * using a mode which is no longer in the provided set of existing modes.
+     *
+     * @param owner
+     *  the owner for which to fetch active consumer content access modes
+     *
+     * @param existingModes
+     *  a var-arg list of existing modes to retain
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null, or the list of existing modes is null
+     *
+     * @return
+     *  the number of consumers updated as a result of this operation
+     */
+    public int cullInvalidConsumerContentAccess(Owner owner, String... existingModes) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        if (existingModes == null) {
+            throw new IllegalArgumentException("existingModes is null");
+        }
+
+        int updated = 0;
+
+        if (existingModes.length > 0) {
+            String jpql = "UPDATE Consumer c SET c.contentAccessMode = NULL " +
+                "WHERE c.owner.id = :owner_id AND c.contentAccessMode NOT IN (:access_modes)";
+
+            updated = this.getEntityManager()
+                .createQuery(jpql)
+                .setParameter("owner_id", owner.getId())
+                .setParameter("access_modes", Arrays.asList(existingModes))
+                .executeUpdate();
+        }
+
+        return updated;
     }
 
 }
