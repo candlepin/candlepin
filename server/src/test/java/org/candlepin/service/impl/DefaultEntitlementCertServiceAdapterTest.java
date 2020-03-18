@@ -708,7 +708,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Mod content should get filtered out because we have no ents providing
         // the product it modifies:
         assertEquals(1, extensionUtil.filterProductContent(
-            modProduct, consumer, new HashMap<>(), false, new HashSet<>()).size());
+            modProduct, consumer, new HashMap<>(), false, new HashSet<>(), false).size());
 
         // Now mock that we have an entitlement providing one of the modified
         // products,
@@ -717,7 +717,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         entitledProdIds.add("product2");
         assertEquals(2, extensionUtil.filterProductContent(
             modProduct, consumer, new HashMap<>(), false,
-            entitledProdIds).size());
+            entitledProdIds, false).size());
 
         // Make sure that we filter by environment when asked.
         Environment environment = this.mockEnvironment(new Environment());
@@ -727,7 +727,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         promotedContent.put(normalContent.getId(), new EnvironmentContent(environment, normalContent, true));
 
         assertEquals(1, extensionUtil.filterProductContent(
-            modProduct, consumer, promotedContent, true, entitledProdIds).size());
+            modProduct, consumer, promotedContent, true, entitledProdIds, false).size());
     }
 
     @Test
