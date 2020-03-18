@@ -23,6 +23,7 @@ import com.google.inject.Injector;
 
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,9 @@ public class ArtemisContextListener implements CPMContextListener {
     public void initialize(Injector injector) throws CPMException {
         this.config = injector.getInstance(Configuration.class);
 
-        // Create the server if we're configured to do so
+        // Create the server if we're configured to do so.
+        // TODO: Change this to use ACTIVEMQ_EMBEDDED_BROKER once configuration upgrades are in
+        // place
         boolean embedded = this.config.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED);
 
         if (embedded) {
@@ -68,6 +71,17 @@ public class ArtemisContextListener implements CPMContextListener {
                     this.activeMQServer.setConfigResourcePath(
                         new File(artemisConfigFilePath).toURI().toString());
                 }
+
+                String invmLoginEntryName = this.config
+                    .getString(ConfigProperties.ACTIVEMQ_JAAS_INVM_LOGIN_NAME);
+
+                String certLoginEntryName = this.config
+                    .getString(ConfigProperties.ACTIVEMQ_JAAS_CERTIFICATE_LOGIN_NAME);
+
+                ActiveMQJAASSecurityManager securityManager =
+                    new ActiveMQJAASSecurityManager(invmLoginEntryName, certLoginEntryName);
+
+                this.activeMQServer.setSecurityManager(securityManager);
             }
 
             try {
