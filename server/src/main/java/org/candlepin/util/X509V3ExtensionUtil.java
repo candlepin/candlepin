@@ -45,7 +45,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -321,7 +320,10 @@ public class X509V3ExtensionUtil extends X509Util {
             archList.add(arch);
         }
         toReturn.setArchitectures(archList);
-        toReturn.setContent(createContent(filterProductContent(engProduct, entitledProductIds), sku,
+        boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+        toReturn.setContent(createContent(
+            filterProductContent(engProduct, consumer, promotedContent, enableEnvironmentFiltering,
+            entitledProductIds, consumer.getOwner().isContentAccessEnabled()), sku,
             contentPrefix, promotedContent, consumer, engProduct));
 
         return toReturn;
@@ -373,12 +375,6 @@ public class X509V3ExtensionUtil extends X509Util {
 
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
-            if (enableEnvironmentFiltering && consumer.getEnvironmentId() != null &&
-                !promotedContent.containsKey(pc.getContent().getId())) {
-
-                log.debug("Skipping content not promoted to environment: {}", pc.getContent());
-                continue;
-            }
 
             // Augment the content path with the prefix if it is passed in
             String contentPath = this.createFullContentPath(contentPrefix, pc);
@@ -451,45 +447,6 @@ public class X509V3ExtensionUtil extends X509Util {
             toReturn.add(content);
         }
         return toReturn;
-    }
-
-    /**
-     * Scan the product content looking for any which modify some other product. If found
-     * we must check that this consumer has another entitlement granting them access
-     * to that modified product. If they do not, we should filter out this content.
-     *
-     * @param prod
-     * @return ProductContent to include in the certificate.
-     */
-    public Set<ProductContent> filterProductContent(Product prod,
-        Set<String> entitledProductIds) {
-        Set<ProductContent> filtered = new HashSet<>();
-
-        for (ProductContent pc : prod.getProductContent()) {
-            boolean include = true;
-            if (pc.getContent().getModifiedProductIds().size() > 0) {
-                include = false;
-                Collection<String> prodIds = pc.getContent().getModifiedProductIds();
-                // If consumer has an entitlement to just one of the modified products,
-                // we will include this content set
-                for (String prodId : prodIds) {
-                    if (entitledProductIds.contains(prodId)) {
-                        include = true;
-                        break;
-                    }
-                }
-            }
-
-            if (include) {
-                filtered.add(pc);
-            }
-            else {
-                log.debug("No entitlements found for modified products.");
-                log.debug("Skipping content set: " + pc.getContent());
-            }
-        }
-
-        return filtered;
     }
 
     protected List<Content> getContentList(EntitlementBody eb) {

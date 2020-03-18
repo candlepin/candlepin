@@ -89,7 +89,7 @@ public abstract class X509Util {
      */
     public Set<ProductContent> filterProductContent(Product prod, Consumer consumer,
         Map<String, EnvironmentContent> promotedContent, boolean filterEnvironment,
-        Set<String> entitledProductIds) {
+        Set<String> entitledProductIds, boolean contentAccessMode) {
         Set<ProductContent> filtered = new HashSet<>();
 
         for (ProductContent pc : prod.getProductContent()) {
@@ -102,7 +102,7 @@ public abstract class X509Util {
             }
 
             boolean include = true;
-            if (pc.getContent().getModifiedProductIds().size() > 0) {
+            if (!contentAccessMode && pc.getContent().getModifiedProductIds().size() > 0) {
                 include = false;
                 Collection<String> prodIds = pc.getContent().getModifiedProductIds();
                 // If consumer has an entitlement to just one of the modified products,
@@ -117,6 +117,10 @@ public abstract class X509Util {
 
             if (include) {
                 filtered.add(pc);
+            }
+            else {
+                log.debug("No entitlements found for modified products.");
+                log.debug("Skipping content set: " + pc.getContent());
             }
         }
         return filtered;

@@ -16,7 +16,6 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.service.model.ContentInfo;
-import org.candlepin.util.SetView;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -421,7 +420,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements C
      *  been defined
      */
     public Collection<String> getModifiedProductIds() {
-        return this.modifiedProductIds != null ? new SetView(this.modifiedProductIds) : null;
+        return this.modifiedProductIds;
     }
 
     /**
