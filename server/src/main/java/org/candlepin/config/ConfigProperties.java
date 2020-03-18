@@ -62,7 +62,8 @@ public class ConfigProperties {
 
     /*
      * XXX The actual property key refers to HornetQ which was ActiveMQ's ancestor.  We have to keep the
-     * key unchanged for compatibility reasons.
+     * key unchanged for compatibility reasons. These are deprecated, however, and should be replaced by
+     * newer configuration values as features are added.
      */
     public static final String ACTIVEMQ_ENABLED = "candlepin.audit.hornetq.enable";
 
@@ -150,8 +151,11 @@ public class ConfigProperties {
     // TODO:
     // Clean up all the messaging configuration. We have all sorts of prefixes and definitions for
     // common broker options, and stuff which is unique to specific brokers. We should be defining
-    // them as "candlepin.<broker type>.<setting>" instead of the various sections we have now.
-
+    // them as "candlepin.messaging.<broker type>.<setting>" instead of the various sections we
+    // have now.
+    public static final String ACTIVEMQ_EMBEDDED_BROKER = "candlepin.messaging.activemq.embedded.enabled";
+    public static final String ACTIVEMQ_EMBEDDED_REQUIRE_JAAS =
+        "candlepin.messaging.activemq.embedded.require_jaas";
 
     // AMQP stuff
     public static final String AMQP_INTEGRATION_ENABLED = "candlepin.amqp.enable";
@@ -362,9 +366,18 @@ public class ConfigProperties {
             this.put(CPM_PROVIDER, "artemis");
 
             this.put(ACTIVEMQ_ENABLED, "true");
+
             this.put(ACTIVEMQ_EMBEDDED, "true");
+
+            // TODO: Delete the above configuration and only use EMBEDDED_BROKER going forward.
+            // This is currently blocked by complexity in supporting moving configuration paths,
+            // and should coincide with an update to the Configuration object
+            this.put(ACTIVEMQ_EMBEDDED_BROKER, "true");
+            this.put(ACTIVEMQ_EMBEDDED_REQUIRE_JAAS, "true");
+
             // By default, connect to embedded artemis (InVM)
             this.put(ACTIVEMQ_BROKER_URL, "vm://0");
+
             // By default use the broker.xml file that is packaged in the war.
             this.put(ACTIVEMQ_SERVER_CONFIG_PATH, "");
             this.put(ACTIVEMQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));

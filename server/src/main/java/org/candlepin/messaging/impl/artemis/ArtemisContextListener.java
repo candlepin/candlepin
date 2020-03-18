@@ -23,6 +23,8 @@ import com.google.inject.Injector;
 
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
+import org.apache.activemq.artemis.spi.core.security.ActiveMQSecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +51,9 @@ public class ArtemisContextListener implements CPMContextListener {
     public void initialize(Injector injector) throws CPMException {
         this.config = injector.getInstance(Configuration.class);
 
-        // Create the server if we're configured to do so
+        // Create the server if we're configured to do so.
+        // TODO: Change this to use ACTIVEMQ_EMBEDDED_BROKER once configuration upgrades are in
+        // place
         boolean embedded = this.config.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED);
 
         if (embedded) {
@@ -67,6 +71,17 @@ public class ArtemisContextListener implements CPMContextListener {
                     log.info("Loading Artemis config file: {}", artemisConfigFilePath);
                     this.activeMQServer.setConfigResourcePath(
                         new File(artemisConfigFilePath).toURI().toString());
+                }
+
+                // Check if we need to add the JAAS security manager for allowing SSL encryption
+                // between the embedded server and message consumers (Katello)
+                boolean requireJAAS = this.config.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED_REQUIRE_JAAS);
+
+                if (requireJAAS) {
+                    ActiveMQSecurityManager securityManager =
+                        new ActiveMQJAASSecurityManager("PropertiesLogin", "CertLogin");
+
+                    this.activeMQServer.setSecurityManager(securityManager);
                 }
             }
 
