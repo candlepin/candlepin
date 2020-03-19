@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.7
+Version: 3.1.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,20 @@ fi
 
 #raw
 %changelog
+* Thu Mar 19 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.8-1
+- 1692411: Added additional product ids into consumer installed products
+  Current rule code is only to consider consumer installed products to
+  calculate the pool's average priority. Hence added any additional products
+  into consumer’s installed products to correctly calculate pool average
+  priority. (abhiskum@redhat.com)
+- 1813982: EUS Content not available in content access mode
+  (wpoteat@redhat.com)
+- Use dependencyManagement plugin to mange versions   - Defined dependencies
+  with version in the dependencyManagement   - Removed dependency version value
+  from build.gradle files (root, candlepin and checks projects)   - Removed
+  transitive dependencies (abhiskum@redhat.com)
+- Add supported_architecture fact (suttner@atix.de)
+
 * Thu Feb 27 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.7-1
 - 1806578 - GET /owners/{owner_key}/pools is very slow - Added @Transactional
   annotation to the method listPools() (sonalidhome@gmail.com)
