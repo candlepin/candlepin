@@ -811,6 +811,72 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
     }
 
+
+    /*
+     * This is a case that happens when:
+     * - We register with activation key, and the activation key has auto-attach set to true, and
+     * - The activation key specifies a product id that refers to a marketing product id
+     *   (Even though normally auto-attach only tries to find pools for engineering product ids), and
+     * - The consumer has an installed product that happens to be provided by the marketing product id
+     *   specified by the activation key, and
+     * - The candidate pools include: a pool that provides the marketing product specified by the
+     *   activation key (and thus, indirectly also provides the engineering product the consumer has
+     *   installed, and another pool that provides the required engineering product through some other
+     *   random marketing product (that is not required).
+     *
+     *  In this case, only the one pool that provides both the marketing and engineering product should be
+     *  chosen, not any extra pools.
+     */
+    @Test
+    public void testSelectBestPoolsShouldNotSelectExtraPoolWhenBothProvidedAndMarketingProductIsRequired() {
+        Product requiredEngProduct = new Product();
+        requiredEngProduct.setId("requiredEngProduct");
+
+        // Consumer has an installed product (requiredEngProduct).
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(requiredEngProduct);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes or products on the consumer ---
+
+        // pool1 provides both the requiredMktProduct and the requiredEngProduct we want.
+        Product requiredMktProduct = new Product();
+        requiredMktProduct.setId("requiredMktProduct");
+
+        Pool pool1 = TestUtil.createPool(owner, requiredMktProduct);
+        pool1.setId("pool1");
+        pool1.setQuantity(1L);
+        pool1.addProvidedProduct(requiredEngProduct);
+
+        // pool2 requires only the requiredEngProduct we want.
+        Product nonRequiredMktProduct = new Product();
+        nonRequiredMktProduct.setId("nonRequiredMktProduct");
+
+        Pool pool2 = TestUtil.createPool(owner, nonRequiredMktProduct);
+        pool2.setId("pool2");
+        pool2.setQuantity(1L);
+        pool2.addProvidedProduct(requiredEngProduct);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(pool1);
+        pools.add(pool2);
+
+        // Usually, the productIds array includes only engineering product ids.
+        // In this case, the productIds array also includes a marketing product id (requiredMktProduct).
+        // This scenario comes up when an activation key has auto-attach set to true, and a marketing
+        // product id specified.
+        String[] requiredProducts = new String[]{"requiredEngProduct", "requiredMktProduct"};
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer, requiredProducts,
+            pools, compliance, null, new HashSet<>(), false);
+
+        // Only pool1 should be attached, because it covers both the marketing product (requiredMktProduct)
+        // which is needed by the activation key, and the engineering product (requiredEngProduct) which is
+        // needed by the consumer:
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(pool1, 1)));
+    }
+
     private Product createSysPurposeProduct(String id, String roles, String addons, String supportLevel,
         String usage) {
 

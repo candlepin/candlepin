@@ -129,7 +129,19 @@ public class AutobindRules {
 
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);
-        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+
+        ConsumerDTO consumerDTO = this.translator.translate(consumer, ConsumerDTO.class);
+
+        // #1692411: Current rule code is only to consider consumer installed products to calculate
+        // the pool's average priority. Hence added any additional products into consumer’s installed
+        // products to correctly calculate pool average priority.
+        for (String productId : productIds) {
+            if (productId != null && !productId.isEmpty()) {
+                consumerDTO.addInstalledProduct(productId);
+            }
+        }
+
+        args.put("consumer", consumerDTO);
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
         args.put("owner", this.translator.translate(owner, OwnerDTO.class));
         args.put("serviceLevelOverride", serviceLevelOverride);
