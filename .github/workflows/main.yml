@@ -12,4 +12,4 @@ jobs:
         uses: nikosmoum/auto-assign-reviewer-team@v0.5
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          teamName: 'candlepin/candlepin-server'
+          teamName: 'candlepin-server'
