@@ -15,14 +15,17 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
+
+import java.time.ZoneOffset;
+import java.util.Date;
 
 /**
  * The CdnTranslator provides translation from Cdn model objects to CdnDTOs
  */
-public class CdnTranslator extends TimestampedEntityTranslator<Cdn, CdnDTO> {
+public class CdnTranslator implements ObjectTranslator<Cdn, CdnDTO> {
 
     /**
      * {@inheritDoc}
@@ -53,12 +56,24 @@ public class CdnTranslator extends TimestampedEntityTranslator<Cdn, CdnDTO> {
      */
     @Override
     public CdnDTO populate(ModelTranslator modelTranslator, Cdn source, CdnDTO dest) {
-        dest = super.populate(modelTranslator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId())
-            .setName(source.getName())
-            .setLabel(source.getLabel())
-            .setUrl(source.getUrl());
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        Date created = source.getCreated();
+        dest.created(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
+
+        Date updated = source.getUpdated();
+        dest.updated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
+
+        dest.id(source.getId())
+            .name(source.getName())
+            .label(source.getLabel())
+            .url(source.getUrl());
 
         // Process nested objects if we have a model translator to use to the translation...
         if (modelTranslator != null) {
