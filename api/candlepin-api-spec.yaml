@@ -428,6 +428,23 @@ components:
             value:
               type: string
 
+    CdnDTO:
+      description: DTO representing a Cdn
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            label:
+              type: string
+            name:
+              type: string
+            url:
+              type: string
+            certificate:
+              $ref: '#/components/schemas/CertificateDTO'
+
     AsyncJobStatusDTO:
       description: DTO representing an async job status
       allOf:
