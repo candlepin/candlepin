@@ -13,3 +13,4 @@ jobs:
         with:
           githubToken: ${{ secrets.AutoAssignReviewerSecret }}
           teamName: 'candlepin-server'
+
