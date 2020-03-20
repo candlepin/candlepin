@@ -23,6 +23,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.v1.CdnDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
@@ -168,6 +169,7 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.addMixIn(StatusDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(TimestampedEntity.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(UserDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(CdnDTO.class, DynamicPropertyFilterMixIn.class);
         //TODO: Add more mix-ins here as more DTOs are ported to openapi spec
     }
 }
