@@ -28,11 +28,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Link'
         default:
-          description: An exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /consumertypes:
     get:
@@ -53,11 +49,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/ConsumerTypeDTO'
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
     post:
       description: Creates a new consumer type
@@ -80,12 +72,7 @@ paths:
                 schema:
                   $ref: '#/components/schemas/ConsumerTypeDTO'
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-
+          $ref: '#/components/responses/default'
 
   /consumertypes/{id}:
     get:
@@ -116,11 +103,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
     put:
       description: Updates an existing consumer type
@@ -156,11 +139,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
     delete:
       description: Deletes an existing consumer type
@@ -187,11 +166,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /deleted_consumers:
     get:
@@ -230,11 +205,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
         default:
-          description: An unexpected exception occurred
+          $ref: '#/components/responses/default'
+
+  /serials:
+    get:
+      description: Retrieves a list of Certificate Serials
+      tags:
+        - CertificateSerial
+      operationId: getCertificateSerials
+      x-java-response-container-type: Iterable
+      security: []
+      responses:
+        200:
+          description: A list of certificate serials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CertificateSerialDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+  /serials/{id}:
+    get:
+      description: Retrieves a single Certificate Serial
+      tags:
+        - CertificateSerial
+      operationId: getCertificateSerial
+      security: []
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the certificate serial to retrieve
+          required: true
+          schema:
+            type: long
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateSerialDTO'
+        404:
+          description: A certificate serial could not be found using the provided ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          $ref: '#/components/responses/default'
 
   /status:
     get:
@@ -251,14 +272,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/StatusDTO'
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-
+          $ref: '#/components/responses/default'
 
 components:
+  responses:
+    default:
+      description: An unexpected exception occurred
+      content:
+        application/json":
+          schema:
+            $ref: '#/components/schemas/ExceptionMessage'
+
   schemas:
     TimestampedEntity:
       properties:

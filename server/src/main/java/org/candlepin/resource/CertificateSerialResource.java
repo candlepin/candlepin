@@ -22,24 +22,12 @@ import org.candlepin.model.CertificateSerialCurator;
 
 import com.google.inject.Inject;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.Authorization;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
 
 
 /**
  * CertificateSerialResource
  */
-@Path("/serials")
-@Api(value = "serials", authorizations = { @Authorization("basic") })
-public class CertificateSerialResource {
+public class CertificateSerialResource implements SerialsApi {
     private CertificateSerialCurator certificateSerialCurator;
     private ModelTranslator translator;
 
@@ -51,21 +39,15 @@ public class CertificateSerialResource {
         this.translator = translator;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Certificate Serials", value = "getCertificateSerials",
-        response = CertificateSerialDTO.class, responseContainer = "list")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
+    public CertificateSerialDTO getCertificateSerial(Long serialId) {
+        CertificateSerial serial = this.certificateSerialCurator.get(serialId);
+        return this.translator.translate(serial, CertificateSerialDTO.class);
+    }
+
+    @Override
     public CandlepinQuery<CertificateSerialDTO> getCertificateSerials() {
         CandlepinQuery<CertificateSerial> query = this.certificateSerialCurator.listAll();
         return this.translator.translateQuery(query, CertificateSerialDTO.class);
-    }
-
-    @ApiOperation(notes = "Retrieves single Certificate Serial", value = "getCertificateSerial")
-    @GET
-    @Path("/{serial_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public CertificateSerialDTO getCertificateSerial(@PathParam("serial_id") Long serialId) {
-        CertificateSerial serial = this.certificateSerialCurator.get(serialId);
-        return this.translator.translate(serial, CertificateSerialDTO.class);
     }
 }
