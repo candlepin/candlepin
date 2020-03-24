@@ -86,14 +86,14 @@ public class UpstreamConsumerTranslatorTest extends
 
             if (childrenGenerated) {
                 this.certificateTranslatorTest
-                    .verifyOutput((Certificate) source.getIdCert(), dest.getIdCertificate(), true);
+                    .verifyOutput((Certificate) source.getIdCert(), dest.getIdCert(), true);
 
                 this.consumerTypeTranslatorTest
-                    .verifyOutput(source.getType(), dest.getConsumerType(), true);
+                    .verifyOutput(source.getType(), dest.getType(), true);
             }
             else {
-                assertNull(dest.getConsumerType());
-                assertNull(dest.getIdCertificate());
+                assertNull(dest.getType());
+                assertNull(dest.getIdCert());
             }
         }
         else {

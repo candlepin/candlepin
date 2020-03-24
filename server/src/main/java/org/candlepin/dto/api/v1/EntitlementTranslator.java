@@ -70,7 +70,7 @@ public class EntitlementTranslator extends TimestampedEntityTranslator<Entitleme
 
         if (modelTranslator != null) {
             Owner owner = source.getOwner();
-            dest.setOwner(owner != null ? modelTranslator.translate(owner, OwnerDTO.class) : null);
+            dest.setOwner(owner != null ? modelTranslator.translate(owner, NestedOwnerDTO.class) : null);
 
             Pool pool = source.getPool();
             dest.setPool(pool != null ? modelTranslator.translate(pool, PoolDTO.class) : null);

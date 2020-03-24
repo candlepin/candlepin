@@ -578,6 +578,15 @@ components:
         href:
           type: string
 
+    NestedUpstreamConsumerDTO:
+      properties:
+        id:
+          type: string
+        uuid:
+          type: string
+        name:
+          type: string
+
     CertificateSerialDTO:
       description: Represents a database sequence used to ensure certificates receive unique serial numbers
       allOf:
@@ -751,6 +760,40 @@ components:
               type: string
               example: "NONE"
 
+    OwnerDTO:
+      description: DTO representing an owner/organization
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            displayName:
+              type: string
+            key:
+              type: string
+            contentPrefix:
+              type: string
+            defaultServiceLevel:
+              type: string
+            logLevel:
+              type: string
+            contentAccessMode:
+              type: string
+            contentAccessModeList:
+              type: string
+            autobindHypervisorDisabled:
+              type: boolean
+            autobindDisabled:
+              type: boolean
+            lastRefreshed:
+              type: string
+              format: date-time
+            parentOwner:
+              $ref: '#/components/schemas/NestedOwnerDTO'
+            upstreamConsumer:
+              $ref: '#/components/schemas/NestedUpstreamConsumerDTO'
+
     RoleDTO:
       description: Represent the relationship between users and the permissions they have
       allOf:
@@ -833,6 +876,40 @@ components:
               type: boolean
               example: true
               default: false
+
+    UpstreamConsumerDTO:
+      description: DTO representing an upstream consumer
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            uuid:
+              type: string
+            name:
+              type: string
+            apiUrl:
+              type: string
+            webUrl:
+              type: string
+            ownerId:
+              type: string
+            contentAccessMode:
+              type: string
+            type:
+              $ref: '#/components/schemas/ConsumerTypeDTO'
+            idCert:
+              $ref: '#/components/schemas/CertificateDTO'
+
+    UpstreamConsumerDTOArrayElement:
+      description: DTO representing an upstream consumer only with certificate attribute
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            idCert:
+              $ref: '#/components/schemas/CertificateDTO'
 
   securitySchemes:
     basicAuth:

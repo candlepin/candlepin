@@ -28,7 +28,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 public class UeberCertificateDTO extends AbstractCertificateDTO<UeberCertificateDTO> {
     public static final long serialVersionUID = 1L;
 
-    protected OwnerDTO owner;
+    protected NestedOwnerDTO owner;
 
 
     /**
@@ -56,7 +56,7 @@ public class UeberCertificateDTO extends AbstractCertificateDTO<UeberCertificate
      * @return
      *  The owner of this certificate, or null if the owner has not been set
      */
-    public OwnerDTO getOwner() {
+    public NestedOwnerDTO getOwner() {
         return this.owner;
     }
 
@@ -69,7 +69,7 @@ public class UeberCertificateDTO extends AbstractCertificateDTO<UeberCertificate
      * @return
      *  a reference to this DTO
      */
-    public UeberCertificateDTO setOwner(OwnerDTO owner) {
+    public UeberCertificateDTO  setOwner(NestedOwnerDTO owner) {
         this.owner = owner;
         return this;
     }
@@ -80,7 +80,7 @@ public class UeberCertificateDTO extends AbstractCertificateDTO<UeberCertificate
     @Override
     public String toString() {
         CertificateSerialDTO serial = this.getSerial();
-        OwnerDTO owner = this.getOwner();
+        NestedOwnerDTO owner = this.getOwner();
 
         return String.format("UeberCertificateDTO [id: %s, owner id: %s, key: %s, serial id: %s]",
             this.getId(), owner != null ? owner.getId() : null, this.getKey(),
@@ -99,8 +99,8 @@ public class UeberCertificateDTO extends AbstractCertificateDTO<UeberCertificate
         if (obj instanceof UeberCertificateDTO && super.equals(obj)) {
             UeberCertificateDTO that = (UeberCertificateDTO) obj;
 
-            OwnerDTO thisOwner = this.getOwner();
-            OwnerDTO thatOwner = that.getOwner();
+            NestedOwnerDTO thisOwner = this.getOwner();
+            NestedOwnerDTO thatOwner = that.getOwner();
             String thisOID = thisOwner != null ? thisOwner.getId() : null;
             String thatOID = thatOwner != null ? thatOwner.getId() : null;
 
@@ -118,7 +118,7 @@ public class UeberCertificateDTO extends AbstractCertificateDTO<UeberCertificate
      */
     @Override
     public int hashCode() {
-        OwnerDTO owner = this.getOwner();
+        NestedOwnerDTO owner = this.getOwner();
 
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(super.hashCode())
@@ -134,8 +134,12 @@ public class UeberCertificateDTO extends AbstractCertificateDTO<UeberCertificate
     public UeberCertificateDTO clone() {
         UeberCertificateDTO copy = (UeberCertificateDTO) super.clone();
 
-        OwnerDTO owner = this.getOwner();
-        copy.setOwner(owner != null ? (OwnerDTO) owner.clone() : null);
+        NestedOwnerDTO owner = this.getOwner();
+        copy.setOwner(owner != null ? new NestedOwnerDTO()
+            .id(owner.getId())
+            .displayName(owner.getDisplayName())
+            .href(owner.getHref())
+            .key(owner.getKey()) : null);
 
         return copy;
     }

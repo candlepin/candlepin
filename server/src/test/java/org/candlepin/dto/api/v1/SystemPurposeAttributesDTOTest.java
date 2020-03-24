@@ -34,16 +34,10 @@ public class SystemPurposeAttributesDTOTest extends AbstractDTOTest<SystemPurpos
 
         this.values = new HashMap<>();
 
-        OwnerDTO owner = new OwnerDTO();
+        NestedOwnerDTO owner = new NestedOwnerDTO();
         owner.setId("owner-id");
         owner.setKey("owner-key");
         owner.setDisplayName("owner-name");
-        owner.setContentPrefix("content-prefix");
-        owner.setDefaultServiceLevel("service-level");
-        owner.setLogLevel("log-level");
-        owner.setAutobindDisabled(true);
-        owner.setContentAccessMode("content-access-mode");
-        owner.setContentAccessModeList("content-access-mode-list");
 
         Map<String, Set<String>> attributes = new HashMap<>();
         Set<String> attrSet = new HashSet<>();

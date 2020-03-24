@@ -15,17 +15,17 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.UpstreamConsumer;
 
-
+import java.time.ZoneOffset;
+import java.util.Date;
 
 /**
  * The UpstreamConsumerTranslator provides translation from UpstreamConsumer model objects to
  * UpstreamConsumerDTOs
  */
-public class UpstreamConsumerTranslator extends
-    TimestampedEntityTranslator<UpstreamConsumer, UpstreamConsumerDTO> {
+public class UpstreamConsumerTranslator implements ObjectTranslator<UpstreamConsumer, UpstreamConsumerDTO> {
 
     /**
      * {@inheritDoc}
@@ -58,24 +58,36 @@ public class UpstreamConsumerTranslator extends
     public UpstreamConsumerDTO populate(ModelTranslator translator, UpstreamConsumer source,
         UpstreamConsumerDTO dest) {
 
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId());
-        dest.setUuid(source.getUuid());
-        dest.setName(source.getName());
-        dest.setOwnerId(source.getOwnerId());
-        dest.setApiUrl(source.getApiUrl());
-        dest.setWebUrl(source.getWebUrl());
-        dest.setContentAccessMode(source.getContentAccessMode());
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        Date created = source.getCreated();
+        dest.created(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
+
+        Date updated = source.getUpdated();
+        dest.updated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
+
+        dest.id(source.getId())
+            .uuid(source.getUuid())
+            .name(source.getName())
+            .ownerId(source.getOwnerId())
+            .apiUrl(source.getApiUrl())
+            .webUrl(source.getWebUrl())
+            .contentAccessMode(source.getContentAccessMode());
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
-            dest.setConsumerType(translator.translate(source.getType(), ConsumerTypeDTO.class));
-            dest.setIdCertificate(translator.translate(source.getIdCert(), CertificateDTO.class));
+            dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));
+            dest.setIdCert(translator.translate(source.getIdCert(), CertificateDTO.class));
         }
         else {
-            dest.setConsumerType(null);
-            dest.setIdCertificate(null);
+            dest.setType(null);
+            dest.setIdCert(null);
         }
 
         return dest;
