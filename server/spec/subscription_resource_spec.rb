@@ -29,23 +29,12 @@ describe 'Subscription Resource' do
       @cp.list_subscriptions(@owner['key']).size.should == 0
   end
 
-  it 'should not allow clients to fetch subscriptions using id' do
-      pool = create_pool_and_subscription(@owner['key'], @one_more_product.id, 2)
-      begin
-          @cp.get_subscription(pool['subscriptionId'])
-          fail("Should not allow to fetch subscription")
-      rescue URI::InvalidURIError => e
-          e.to_s.eql? "bad URI(is not URI?): pools/{pool_id}"
-      end
-  end
+  it 'should activate subscription' do
+      skip("candlepin running in standalone mode") unless is_hosted?
+      pool = create_pool_and_subscription(@owner['key'], @monitoring_product.id, 5)
+      @cp.list_subscriptions(@owner['key']).size.should == 1
+      consumer = @cp.register("goofy", :hypervisor, nil, {}, nil, @owner['key'], [], [])
 
-  it 'should not allow clients to fetch subscription cert using subscription id' do
-      pool = create_pool_and_subscription(@owner['key'], @one_more_product.id, 2)
-      begin
-          @cp.get_subscription_cert(pool['subscriptionId'])
-          fail("Should not allow to fetch subscription")
-      rescue URI::InvalidURIError => e
-          e.to_s.eql? "bad URI(is not URI?): pools/{pool_id}/cert"
-      end
+      @cp.activate_subscription(consumer.uuid, "mail", "locale")
   end
 end

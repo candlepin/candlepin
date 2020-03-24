@@ -17,8 +17,8 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Content;
+import org.candlepin.util.Util;
 
-import java.time.ZoneOffset;
 import java.util.HashSet;
 
 /**
@@ -64,23 +64,22 @@ public class ContentTranslator implements ObjectTranslator<Content, ContentDTO> 
             throw new IllegalArgumentException("destination is null");
         }
 
-        destination.created(source.getCreated() != null ?
-            source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null);
-        destination.updated(source.getUpdated() != null ?
-            source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null);
-        destination.setUuid(source.getUuid());
-        destination.setId(source.getId());
-        destination.setType(source.getType());
-        destination.setLabel(source.getLabel());
-        destination.setName(source.getName());
-        destination.setVendor(source.getVendor());
-        destination.setContentUrl(source.getContentUrl());
-        destination.setRequiredTags(source.getRequiredTags());
-        destination.setReleaseVer(source.getReleaseVersion());
-        destination.setGpgUrl(source.getGpgUrl());
-        destination.setMetadataExpire(source.getMetadataExpiration());
-        destination.setModifiedProductIds(new HashSet<>(source.getModifiedProductIds()));
-        destination.setArches(source.getArches());
+        destination
+            .uuid(source.getUuid())
+            .id(source.getId())
+            .type(source.getType())
+            .label(source.getLabel())
+            .name(source.getName())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .vendor(source.getVendor())
+            .contentUrl(source.getContentUrl())
+            .requiredTags(source.getRequiredTags())
+            .releaseVer(source.getReleaseVersion())
+            .gpgUrl(source.getGpgUrl())
+            .metadataExpire(source.getMetadataExpiration())
+            .modifiedProductIds(new HashSet<>(source.getModifiedProductIds()))
+            .arches(source.getArches());
 
         return destination;
     }

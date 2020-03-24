@@ -29,6 +29,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
@@ -43,6 +44,7 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.resource.validation.DTOValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -61,10 +63,14 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -88,33 +94,36 @@ import javax.ws.rs.core.MediaType;
 public class OwnerProductResource {
     private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
 
-    private Configuration config;
-    private I18n i18n;
-    private OwnerContentCurator ownerContentCurator;
-    private OwnerCurator ownerCurator;
-    private OwnerProductCurator ownerProductCurator;
-    private ProductCertificateCurator productCertCurator;
-    private ProductCurator productCurator;
-    private ProductManager productManager;
-    private ModelTranslator translator;
-    private JobManager jobManager;
+    private final Configuration config;
+    private final I18n i18n;
+    private final OwnerContentCurator ownerContentCurator;
+    private final OwnerCurator ownerCurator;
+    private final OwnerProductCurator ownerProductCurator;
+    private final ProductCertificateCurator productCertCurator;
+    private final ProductCurator productCurator;
+    private final ProductManager productManager;
+    private final ModelTranslator translator;
+    private final JobManager jobManager;
+    private final DTOValidator validator;
 
     @Inject
     public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator productCertCurator, ProductCurator productCurator,
-        ProductManager productManager, ModelTranslator translator, JobManager jobManager) {
+        ProductManager productManager, ModelTranslator translator, JobManager jobManager,
+        DTOValidator validator) {
 
-        this.config = config;
-        this.i18n = i18n;
-        this.ownerContentCurator = ownerContentCurator;
-        this.ownerCurator = ownerCurator;
-        this.ownerProductCurator = ownerProductCurator;
-        this.productCertCurator = productCertCurator;
-        this.productCurator = productCurator;
-        this.productManager = productManager;
-        this.translator = translator;
-        this.jobManager = jobManager;
+        this.config = Objects.requireNonNull(config);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.productCertCurator = Objects.requireNonNull(productCertCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
+        this.productManager = Objects.requireNonNull(productManager);
+        this.translator = Objects.requireNonNull(translator);
+        this.jobManager = Objects.requireNonNull(jobManager);
+        this.validator = Objects.requireNonNull(validator);
     }
 
     /**
@@ -256,6 +265,10 @@ public class OwnerProductResource {
         @PathParam("owner_key") String ownerKey,
         ProductDTO dto) {
 
+        this.validator.validateConstraints(dto);
+        this.validator.validateCollectionElementsNotNull(
+            dto::getBranding, dto::getDependentProductIds, dto::getProductContent);
+
         Owner owner = this.getOwnerByKey(ownerKey);
         Product entity = productManager.createProduct(dto, owner);
 
@@ -282,6 +295,10 @@ public class OwnerProductResource {
                 i18n.tr("Contradictory ids in update request: {0}, {1}", productId, update.getId())
             );
         }
+
+        this.validator.validateConstraints(update);
+        this.validator.validateCollectionElementsNotNull(
+            update::getBranding, update::getDependentProductIds, update::getProductContent);
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
@@ -346,7 +363,7 @@ public class OwnerProductResource {
 
             ContentDTO cdto = this.translator.translate(content, ContentDTO.class);
 
-            changed |= pdto.addContent(cdto, enabled);
+            changed |= addContent(pdto, cdto, enabled);
         }
 
         if (changed) {
@@ -354,6 +371,39 @@ public class OwnerProductResource {
         }
 
         return this.translator.translate(product, ProductDTO.class);
+    }
+
+
+    private boolean addContent(ProductDTO product, ContentDTO dto, boolean enabled) {
+        if (product == null) {
+            throw new IllegalArgumentException("Cannot add content to null product");
+        }
+        if (dto == null || dto.getId() == null) {
+            throw new IllegalArgumentException("dto references incomplete content");
+        }
+
+        ProductContentDTO content = new ProductContentDTO();
+        content.setContent(dto);
+        content.setEnabled(enabled);
+
+        Set<ProductContentDTO> productContent;
+        if (product.getProductContent() == null) {
+            productContent = new HashSet<>();
+        }
+        else {
+            productContent = new HashSet<>(product.getProductContent());
+        }
+
+        boolean changed = productContent.stream()
+            .filter(contentDTO -> contentDTO.getContent().getId().equals(content.getContent().getId()))
+            .noneMatch(contentDTO -> contentDTO.equals(content));
+
+        if (changed) {
+            productContent.add(content);
+            product.setProductContent(productContent);
+        }
+
+        return changed;
     }
 
     @ApiOperation(notes = "Adds a single Content to a Product", value = "addContent")
@@ -407,16 +457,30 @@ public class OwnerProductResource {
         // Alternatively, we can shut off Hibernate's auto-commit junk and get in the habit of
         // calling commit methods as necessary so we don't have to work with DTOs internally.
 
-        boolean changed = false;
-        for (String contentId : contentIds) {
-            changed |= pdto.removeContent(contentId);
-        }
+        boolean changed = removeContent(pdto, new HashSet<>(contentIds));
 
         if (changed) {
             product = this.productManager.updateProduct(pdto, owner, true);
         }
 
         return this.translator.translate(product, ProductDTO.class);
+    }
+
+    public boolean removeContent(ProductDTO product, Set<String> contentIds) {
+        if (contentIds == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+        if (contentIds.isEmpty()) {
+            return false;
+        }
+        int originalSize = product.getProductContent().size();
+        Set<ProductContentDTO> updatedContents = product.getProductContent().stream()
+            .filter(content -> !contentIds.contains(content.getContent().getId()))
+            .collect(Collectors.toSet());
+
+        product.setProductContent(updatedContents);
+
+        return originalSize != updatedContents.size();
     }
 
     @ApiOperation(notes = "Removes a single Content from a Product", value = "removeContent")
@@ -430,7 +494,7 @@ public class OwnerProductResource {
         @PathParam("content_id") String contentId) {
 
         // Package up the params and pass it to our bulk operation
-        return this.removeBatchContent(ownerKey, productId, Collections.<String>singletonList(contentId));
+        return this.removeBatchContent(ownerKey, productId, Collections.singletonList(contentId));
     }
 
     @ApiOperation(notes = "Removes a Product", value = "deleteProduct")

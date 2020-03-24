@@ -166,7 +166,8 @@ public class UtilTest {
 
     @Test(expected = NullPointerException.class)
     public void toDateNull() {
-        Util.toDate(null);
+        String date = null;
+        Util.toDate(date);
     }
 
     @Test
@@ -187,24 +188,6 @@ public class UtilTest {
     @Test(expected = RuntimeException.class)
     public void toDateStdLongForm() {
         Util.toDate("March 17, 2011");
-    }
-
-    @Test
-    public void testAssertNotNullException() {
-        try {
-            Util.assertNotNull(null, "message text");
-        }
-        catch (IllegalArgumentException e) {
-            assertEquals("message text", e.getMessage());
-        }
-    }
-
-    @Test
-    public void testAssertNotNull() {
-        Integer one = Integer.valueOf(1);
-        Integer daone = Util.assertNotNull(one, "shouldn't see this");
-        assertNotNull(daone);
-        assertEquals(one, daone);
     }
 
     @Test
@@ -411,4 +394,5 @@ public class UtilTest {
             fail("getHostname should not throw an exception");
         }
     }
+
 }

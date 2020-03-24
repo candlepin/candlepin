@@ -73,6 +73,7 @@ import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
@@ -114,6 +115,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Validation;
 
 
 
@@ -169,6 +171,7 @@ public class DatabaseTestFixture {
     protected DateSourceForTesting dateSource;
     protected I18n i18n;
     protected Provider<I18n> i18nProvider = () -> i18n;
+    protected DTOValidator validator;
 
     @BeforeAll
     public static void initClass() {
@@ -220,6 +223,7 @@ public class DatabaseTestFixture {
         securityInterceptor = this.injector.getInstance(TestingInterceptor.class);
 
         cpRequestScope = injector.getInstance(CandlepinRequestScope.class);
+        this.validator = new DTOValidator(Validation.buildDefaultValidatorFactory());
 
         // Because all candlepin operations are running in the CandlepinRequestScope
         // we'll force the instance creations to be done inside the scope.

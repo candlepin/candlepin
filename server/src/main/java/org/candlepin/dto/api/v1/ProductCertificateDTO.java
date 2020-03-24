@@ -197,7 +197,20 @@ public class ProductCertificateDTO extends TimestampedCandlepinDTO<ProductCertif
         ProductCertificateDTO copy = super.clone();
 
         ProductDTO product = this.getProduct();
-        copy.product = product != null ? product.clone() : null;
+
+        if (product == null) {
+            copy.product = null;
+        }
+        else {
+            copy.product = new ProductDTO()
+                .id(product.getId())
+                .attributes(product.getAttributes())
+                .productContent(product.getProductContent())
+                .dependentProductIds(product.getDependentProductIds())
+                .branding(product.getBranding())
+                .created(product.getCreated())
+                .updated(product.getUpdated());
+        }
 
         return copy;
     }
