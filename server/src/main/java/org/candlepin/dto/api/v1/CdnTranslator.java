@@ -18,9 +18,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
-
-import java.time.ZoneOffset;
-import java.util.Date;
+import org.candlepin.util.Util;
 
 /**
  * The CdnTranslator provides translation from Cdn model objects to CdnDTOs
@@ -64,15 +62,11 @@ public class CdnTranslator implements ObjectTranslator<Cdn, CdnDTO> {
             throw new IllegalArgumentException("destination is null");
         }
 
-        Date created = source.getCreated();
-        dest.created(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
-
-        Date updated = source.getUpdated();
-        dest.updated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
-
         dest.id(source.getId())
             .name(source.getName())
             .label(source.getLabel())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .url(source.getUrl());
 
         // Process nested objects if we have a model translator to use to the translation...

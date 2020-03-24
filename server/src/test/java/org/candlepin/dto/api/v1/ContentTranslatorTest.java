@@ -24,7 +24,6 @@ import org.candlepin.model.Content;
 import java.util.Arrays;
 
 
-
 /**
  * Test suite for the ContentTranslator class
  */
