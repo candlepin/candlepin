@@ -27,15 +27,19 @@ import org.candlepin.async.JobManager;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
@@ -71,19 +75,24 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         this.ownerProductResource = new OwnerProductResource(this.config, this.i18n, this.ownerCurator,
             this.ownerContentCurator, this.ownerProductCurator, this.productCertificateCurator,
-            this.productCurator, this.productManager, this.modelTranslator, this.jobManager
+            this.productCurator, this.productManager, this.modelTranslator, this.jobManager, this.validator
         );
     }
 
     private ProductDTO buildTestProductDTO() {
         ProductDTO dto = TestUtil.createProductDTO("test_product");
-
-        dto.setAttribute(Product.Attributes.VERSION, "1.0");
-        dto.setAttribute(Product.Attributes.VARIANT, "server");
-        dto.setAttribute(Product.Attributes.TYPE, "SVC");
-        dto.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
+        dto.getAttributes().add(createAttribute(Product.Attributes.VERSION, "1.0"));
+        dto.getAttributes().add(createAttribute(Product.Attributes.VARIANT, "server"));
+        dto.getAttributes().add(createAttribute(Product.Attributes.TYPE, "SVC"));
+        dto.getAttributes().add(createAttribute(Product.Attributes.ARCHITECTURE, "ALL"));
 
         return dto;
+    }
+
+    private AttributeDTO createAttribute(String name, String value) {
+        return new AttributeDTO()
+            .name(name)
+            .value(value);
     }
 
     @Test
@@ -106,14 +115,14 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     public void testCreateProductWithContent() {
         Owner owner = this.createOwner("Example-Corporation");
         Content content = this.createContent("content-1", "content-1", owner);
-        ProductDTO pdto = this.buildTestProductDTO();
-        ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
-        pdto.addContent(cdto, true);
+        ProductDTO product = this.buildTestProductDTO();
+        ContentDTO contentDTO = this.modelTranslator.translate(content, ContentDTO.class);
+        addContent(product, contentDTO);
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId()));
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), product.getId()));
 
-        ProductDTO result = this.ownerProductResource.createProduct(owner.getKey(), pdto);
-        Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
+        ProductDTO result = this.ownerProductResource.createProduct(owner.getKey(), product);
+        Product entity = this.ownerProductCurator.getProductById(owner, product.getId());
         ProductDTO expected = this.modelTranslator.translate(entity, ProductDTO.class);
 
         assertNotNull(result);
@@ -122,7 +131,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         assertNotNull(result.getProductContent());
         assertEquals(1, result.getProductContent().size());
-        assertEquals(cdto, result.getProductContent().iterator().next().getContent());
+        assertEquals(contentDTO, result.getProductContent().iterator().next().getContent());
     }
 
     @Test
@@ -131,11 +140,12 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductDTO pdto = this.buildTestProductDTO();
 
         ProductDTO product = this.ownerProductResource.createProduct(owner.getKey(), pdto);
-        ProductDTO update = new ProductDTO();
+        ProductDTO update = TestUtil.createProductDTO(product.getId());
         update.setName(product.getName());
-        update.setAttribute("attri", "bute");
-        ProductDTO result = this.ownerProductResource.updateProduct(owner.getKey(), product.getId(), update);
-        assertEquals("bute", result.getAttributeValue("attri"));
+        update.getAttributes().add(createAttribute("attri", "bute"));
+        ProductDTO result = this.ownerProductResource
+            .updateProduct(owner.getKey(), product.getId(), update);
+        assertEquals("bute", result.getAttributes().get(0).getValue());
     }
 
     @Test
@@ -159,7 +169,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         OwnerProductResource pr = new OwnerProductResource(
-            config, i18n, oc, null, opc, null, pc, null, this.modelTranslator, this.jobManager);
+            config, i18n, oc, mock(OwnerContentCurator.class), opc, mock(ProductCertificateCurator.class),
+            pc, mock(ProductManager.class), this.modelTranslator, this.jobManager, this.validator);
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);
@@ -254,4 +265,22 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
             ownerProductResource.getProductCertificate(owner.getKey(), entity.getId())
         );
     }
+
+    private void addContent(ProductDTO product, ContentDTO dto) {
+        if (dto == null || dto.getId() == null) {
+            throw new IllegalArgumentException("dto references incomplete content");
+        }
+
+        if (product.getProductContent() == null) {
+            product.setProductContent(new HashSet<>());
+        }
+
+        ProductContentDTO content = new ProductContentDTO();
+        content.setContent(dto);
+        content.setEnabled(true);
+
+        product.getProductContent().add(content);
+
+    }
+
 }

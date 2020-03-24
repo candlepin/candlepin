@@ -19,8 +19,7 @@ import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.PermissionBlueprint;
-
-import java.time.ZoneOffset;
+import org.candlepin.util.Util;
 
 
 /**
@@ -74,12 +73,10 @@ public class PermissionBlueprintTranslator implements
         PermissionType type = source.getType();
         Access access = source.getAccess();
 
-        dest.created(source.getCreated() != null ?
-                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .updated(source.getUpdated() != null ?
-                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .id(source.getId())
+        dest.id(source.getId())
             .type(type != null ? type.name() : null)
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .access(access != null ? access.name() : null);
 
         if (translator != null) {

@@ -22,9 +22,8 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
+import org.candlepin.util.Util;
 
-import java.time.ZoneOffset;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -74,15 +73,11 @@ public class ActivationKeyTranslator implements ObjectTranslator<ActivationKey, 
             throw new IllegalArgumentException("destination is null");
         }
 
-        Date created = source.getCreated();
-        dest.created(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
-
-        Date updated = source.getUpdated();
-        dest.updated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
-
         dest.id(source.getId())
             .name(source.getName())
             .description(source.getDescription())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .serviceLevel(source.getServiceLevel())
             .autoAttach(source.isAutoAttach())
             .usage(source.getUsage())
