@@ -153,11 +153,6 @@ public class ExportJob implements AsyncJob {
                     String errmsg = "consumer has not been set, or the provided consumer lacks a UUID";
                     throw new JobConfigValidationException(errmsg);
                 }
-
-                if (cdnLabel == null || cdnLabel.isEmpty()) {
-                    String errmsg = "CDN label has not been set, or the provided label is empty";
-                    throw new JobConfigValidationException(errmsg);
-                }
             }
             catch (ArgumentConversionException e) {
                 String errmsg = "One or more required arguments are of the wrong type";

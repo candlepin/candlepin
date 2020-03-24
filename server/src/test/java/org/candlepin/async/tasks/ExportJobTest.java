@@ -156,23 +156,23 @@ public class ExportJobTest {
     }
 
     @Test
+    public void testValidateCDNLabelNotRequired() throws JobConfigValidationException {
+        Owner owner = this.createTestOwner("owner_key", "log_level");
+        Consumer consumer = TestUtil.createDistributor(owner);
+
+        JobConfig config = ExportJob.createJobConfig()
+            .setConsumer(consumer);
+
+        config.validate();
+    }
+
+    @Test
     public void testValidateNoConsumer() {
         Owner owner = this.createTestOwner("owner_key", "log_level");
         Consumer consumer = TestUtil.createDistributor(owner);
 
         JobConfig config = ExportJob.createJobConfig()
             .setCdnLabel("test_label");
-
-        assertThrows(JobConfigValidationException.class, config::validate);
-    }
-
-    @Test
-    public void testValidateNoLabel() {
-        Owner owner = this.createTestOwner("owner_key", "log_level");
-        Consumer consumer = TestUtil.createDistributor(owner);
-
-        JobConfig config = ExportJob.createJobConfig()
-            .setConsumer(consumer);
 
         assertThrows(JobConfigValidationException.class, config::validate);
     }
