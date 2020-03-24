@@ -31,6 +31,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
@@ -45,10 +46,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 
@@ -61,7 +66,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     private ProductManager productManager;
 
     @BeforeEach
-    public void setup() throws Exception {
+    public void setup() {
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
 
         this.productManager = new ProductManager(this.mockEntCertGenerator, this.ownerContentCurator,
@@ -294,8 +299,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.ownerContentCurator.mapContentToOwner(content, owner);
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
-        boolean removed = pdto.removeContent(content.getId());
-        assertTrue(removed);
+        removeContent(pdto, content.getId());
 
         Product output = this.productManager.updateProduct(pdto, owner, regenCerts);
         assertFalse(output.hasContent(content.getId()));
@@ -332,8 +336,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.ownerContentCurator.mapContentToOwner(content, owner1);
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
-        boolean removed = pdto.removeContent(content.getId());
-        assertTrue(removed);
+        removeContent(pdto, content.getId());
 
         Product output = this.productManager.updateProduct(pdto, owner1, regenCerts);
 
@@ -368,8 +371,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.ownerContentCurator.mapContentToOwner(content, owner);
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
-        boolean removed = pdto.removeContent(content.getId());
-        assertTrue(removed);
+        pdto.setAttributes(new ArrayList<>());
 
         assertThrows(IllegalStateException.class,
             () -> this.productManager.updateProduct(pdto, owner2, false));
@@ -384,7 +386,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
         ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
-        pdto.addContent(cdto, true);
+        addContent(pdto, cdto);
 
         Product output = this.productManager.updateProduct(pdto, owner, false);
 
@@ -405,7 +407,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
         ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
-        pdto.addContent(cdto, true);
+        addContent(pdto, cdto);
 
         Product output = this.productManager.updateProduct(pdto, owner1, regenCerts);
 
@@ -431,11 +433,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testCreateProductWithBranding() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
-        BrandingDTO brandingDTO = new BrandingDTO();
-        brandingDTO.setProductId("eng_prod_id");
-        brandingDTO.setName("brand_name");
-        brandingDTO.setType("OS");
-        dto.addBranding(brandingDTO);
+        dto.getBranding().add(createBranding("eng_prod_id", "brand_name"));
 
         assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
 
@@ -449,22 +447,14 @@ public class ProductManagerTest extends DatabaseTestFixture {
     public void testUpdateProductWithBranding() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
-        BrandingDTO brandingDTO = new BrandingDTO();
-        brandingDTO.setProductId("eng_prod_id");
-        brandingDTO.setName("brand_name");
-        brandingDTO.setType("OS");
-        dto.addBranding(brandingDTO);
+        dto.getBranding().add(createBranding("eng_prod_id", "brand_name"));
 
         Product output = this.productManager.createProduct(dto, owner);
 
         assertEquals(1, output.getBranding().size());
 
         ProductDTO pdto = this.modelTranslator.translate(output, ProductDTO.class);
-        BrandingDTO brandingDTO2 = new BrandingDTO();
-        brandingDTO2.setProductId("eng_prod_id2");
-        brandingDTO2.setName("brand_name2");
-        brandingDTO2.setType("OS");
-        pdto.addBranding(brandingDTO2);
+        pdto.getBranding().add(createBranding("eng_prod_id2", "brand_name2"));
 
         output = this.productManager.updateProduct(pdto, owner, false);
         assertEquals(2, output.getBranding().size());
@@ -475,11 +465,8 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product = TestUtil.createProduct("p1", "prod1");
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
-        BrandingDTO brand1 = new BrandingDTO();
-        brand1.setProductId("prod_id");
-        brand1.setName("Brand Name");
-        brand1.setType("OS");
-        pdto.addBranding(brand1);
+        pdto.setBranding(new HashSet<>());
+        pdto.getBranding().add(createBranding("prod_id", "Brand Name"));
 
         assertTrue(ProductManager.isChangedBy(product, pdto));
     }
@@ -747,7 +734,10 @@ public class ProductManagerTest extends DatabaseTestFixture {
         this.ownerProductCurator.mapProductToOwners(product, owner1, owner2);
 
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
-        pdto.getProductContent(content.getId()).setEnabled(false);
+        pdto.getProductContent().stream()
+            .filter(pc -> pc.getContent().getId().equals(content.getId()))
+            .findFirst()
+            .ifPresent(pc -> pc.setEnabled(false));
 
         Product output = this.productManager.updateProduct(pdto, owner1, false);
 
@@ -764,4 +754,44 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
+
+    private void addContent(ProductDTO product, ContentDTO dto) {
+        if (dto == null || dto.getId() == null) {
+            throw new IllegalArgumentException("dto references incomplete content");
+        }
+
+        if (product.getProductContent() == null) {
+            product.setProductContent(new HashSet<>());
+        }
+
+        ProductContentDTO content = new ProductContentDTO();
+        content.setContent(dto);
+        content.setEnabled(true);
+
+        product.getProductContent().add(content);
+
+    }
+
+    private BrandingDTO createBranding(String productId, String brandName) {
+        BrandingDTO brandingDTO = new BrandingDTO();
+        brandingDTO.setProductId(productId);
+        brandingDTO.setName(brandName);
+        brandingDTO.setType("OS");
+        return brandingDTO;
+    }
+
+    private void removeContent(ProductDTO product, String contentId) {
+        if (product == null) {
+            throw new IllegalArgumentException("Cannot add content to null product");
+        }
+        if (contentId == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+        Set<ProductContentDTO> updatedContents = product.getProductContent().stream()
+            .filter(content -> !contentId.equals(content.getContent().getId()))
+            .collect(Collectors.toSet());
+
+        product.setProductContent(updatedContents);
+    }
+
 }

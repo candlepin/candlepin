@@ -14,10 +14,11 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
@@ -38,6 +39,7 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -237,7 +239,7 @@ public class ProductManager {
         updated = this.productCurator.create(updated);
 
         this.ownerProductCurator.updateOwnerProductReferences(owner,
-            Collections.<String, String>singletonMap(entity.getUuid(), updated.getUuid()));
+            Collections.singletonMap(entity.getUuid(), updated.getUuid()));
 
         if (regenerateEntitlementCerts) {
             this.entitlementCertGenerator.regenerateCertificatesOf(
@@ -632,7 +634,7 @@ public class ProductManager {
         }
 
         if (update.getAttributes() != null) {
-            entity.setAttributes(update.getAttributes());
+            entity.setAttributes(Util.toMap(update.getAttributes()));
         }
 
         if (update.getProductContent() != null) {
@@ -672,15 +674,15 @@ public class ProductManager {
 
                 if (existingLink == null) {
                     existingLink = new ProductContent(
-                        entity, content, pcd.isEnabled() != null ? pcd.isEnabled() : false);
+                        entity, content, pcd.getEnabled() != null ? pcd.getEnabled() : false);
                 }
                 else {
                     // Build a new content link based on the original but check for changes to the enabled
                     // state. This is because ProductContent is now immutable so we need a new entity
                     // regardless of how little has changed.
                     existingLink = new ProductContent(entity, content, existingLink.isEnabled());
-                    if (pcd.isEnabled() != null) {
-                        existingLink.setEnabled(pcd.isEnabled());
+                    if (pcd.getEnabled() != null) {
+                        existingLink.setEnabled(pcd.getEnabled());
                     }
                 }
 
@@ -761,7 +763,10 @@ public class ProductManager {
         // case-insensitive key/value comparison and similiarities (i.e. management_enabled: 1 is
         // functionally identical to Management_Enabled: true, but it will be detected as a change
         // in attributes.
-        Map<String, String> attributes = dto.getAttributes();
+        Map<String, String> attributes = null;
+        if (dto.getAttributes() != null) {
+            attributes = Util.toMap(dto.getAttributes());
+        }
         if (attributes != null && !attributes.equals(entity.getAttributes())) {
             return true;
         }
@@ -784,8 +789,8 @@ public class ProductManager {
                             // referencing identical products) or the UUID isn't present on the DTO, but
                             // the IDs match (which means we're pointing toward the same product).
 
-                            return (update.isEnabled() != null &&
-                                !update.isEnabled().equals(existing.isEnabled())) ||
+                            return (update.getEnabled() != null &&
+                                !update.getEnabled().equals(existing.isEnabled())) ||
                                 ContentManager.isChangedBy(content, cdto) ? 1 : 0;
                         }
                     }
@@ -803,14 +808,37 @@ public class ProductManager {
 
         Collection<BrandingDTO> brandingDTOs = dto.getBranding();
         if (brandingDTOs != null) {
-            Comparator<BrandingInfo> comparator = BrandingInfo.getBrandingInfoComparator();
-            if (!Util.collectionsAreEqual((Collection) entity.getBranding(), (Collection) brandingDTOs,
-                comparator)) {
+            Comparator comparator = getBrandingDTOComparator();
+            if (!Util.collectionsAreEqual((Collection) entity.getBranding(),
+                (Collection) brandingDTOs, comparator)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+
+    /**
+     * Utility method that returns a Comparator for objects that implement BrandingInfo.
+     *
+     * @return A comparator for Branding objects.
+     */
+    private static Comparator getBrandingDTOComparator() {
+        return (lhs, rhs) -> {
+            Branding existing = (Branding) lhs;
+            BrandingDTO update = (BrandingDTO) rhs;
+            if (existing != null && rhs != null) {
+                boolean equals = new EqualsBuilder()
+                    .append(existing.getProductId(), update.getProductId())
+                    .append(existing.getName(), update.getName())
+                    .append(existing.getType(), update.getType())
+                    .isEquals();
+                return equals ? 0 : 1;
+            }
+
+            return 1;
+        };
     }
 
     /**

@@ -18,8 +18,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.UpstreamConsumer;
-
-import java.time.ZoneOffset;
+import org.candlepin.util.Util;
 
 
 /**
@@ -64,13 +63,11 @@ public class OwnerTranslator implements ObjectTranslator<Owner, OwnerDTO> {
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.created(source.getCreated() != null ?
-            source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .updated(source.getUpdated() != null ?
-            source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .id(source.getId())
+        dest.id(source.getId())
             .key(source.getKey())
             .displayName(source.getDisplayName())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .contentPrefix(source.getContentPrefix())
             .defaultServiceLevel(source.getDefaultServiceLevel())
             .logLevel(source.getLogLevel())
@@ -78,8 +75,7 @@ public class OwnerTranslator implements ObjectTranslator<Owner, OwnerDTO> {
             .autobindHypervisorDisabled(source.isAutobindHypervisorDisabled())
             .contentAccessMode(source.getContentAccessMode())
             .contentAccessModeList(source.getContentAccessModeList())
-            .lastRefreshed(source.getLastRefreshed() != null ?
-            source.getLastRefreshed().toInstant().atOffset(ZoneOffset.UTC) : null);
+            .lastRefreshed(Util.toDateTime(source.getLastRefreshed()));
 
         if (translator != null) {
             Owner parent = source.getParentOwner();

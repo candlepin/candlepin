@@ -17,9 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.DeletedConsumer;
-
-import java.time.ZoneOffset;
-import java.util.Date;
+import org.candlepin.util.Util;
 
 /**
  * This translator provides translation from DeletedConsumer model objects to DeletedConsumerDTOs
@@ -70,13 +68,9 @@ public class DeletedConsumerTranslator implements ObjectTranslator<DeletedConsum
             .ownerId(source.getOwnerId())
             .ownerKey(source.getOwnerKey())
             .ownerDisplayName(source.getOwnerDisplayName())
-            .principalName(source.getPrincipalName());
-
-        Date created = source.getCreated();
-        dest.setCreated(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
-
-        Date updated = source.getUpdated();
-        dest.setUpdated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
+            .principalName(source.getPrincipalName())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()));
 
         return dest;
     }

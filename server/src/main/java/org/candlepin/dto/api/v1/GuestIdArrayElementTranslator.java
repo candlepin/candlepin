@@ -17,8 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.GuestId;
-
-import java.time.ZoneOffset;
+import org.candlepin.util.Util;
 
 /**
  * The GuestIdTranslator provides translation from GuestId model objects to
@@ -54,11 +53,9 @@ public class GuestIdArrayElementTranslator implements ObjectTranslator<GuestId, 
             throw new IllegalArgumentException("destination is null");
         }
 
-        dest.created(source.getCreated() != null ?
-                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .updated(source.getUpdated() != null ?
-                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .id(source.getId())
+        dest.id(source.getId())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .guestId(source.getGuestId());
 
         return dest;

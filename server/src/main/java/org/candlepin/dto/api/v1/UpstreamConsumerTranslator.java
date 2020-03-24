@@ -17,9 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.UpstreamConsumer;
-
-import java.time.ZoneOffset;
-import java.util.Date;
+import org.candlepin.util.Util;
 
 /**
  * The UpstreamConsumerTranslator provides translation from UpstreamConsumer model objects to
@@ -66,15 +64,11 @@ public class UpstreamConsumerTranslator implements ObjectTranslator<UpstreamCons
             throw new IllegalArgumentException("destination is null");
         }
 
-        Date created = source.getCreated();
-        dest.created(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
-
-        Date updated = source.getUpdated();
-        dest.updated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
-
         dest.id(source.getId())
             .uuid(source.getUuid())
             .name(source.getName())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .ownerId(source.getOwnerId())
             .apiUrl(source.getApiUrl())
             .webUrl(source.getWebUrl())
