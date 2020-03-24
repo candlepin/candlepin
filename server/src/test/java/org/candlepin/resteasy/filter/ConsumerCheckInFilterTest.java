@@ -24,6 +24,7 @@ import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.resteasy.AnnotationLocator;
+import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
@@ -84,8 +85,9 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
         ResteasyContext.pushContext(ResourceInfo.class, mockInfo);
         ResteasyContext.pushContext(Principal.class, this.principal);
 
-        AnnotationLocator annotationLocator = new AnnotationLocator(injector);
-        annotationLocator.init();
+        MethodLocator methodLocator = new MethodLocator(injector);
+        methodLocator.init();
+        AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
         interceptor = new ConsumerCheckInFilter(consumerCurator, annotationLocator);
     }
 

@@ -34,6 +34,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.User;
 import org.candlepin.resteasy.AnnotationLocator;
+import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -136,11 +137,11 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
     }
 
     private AuthenticationFilter buildInterceptor() {
-        AnnotationLocator annotationLocator = new AnnotationLocator(injector);
-        annotationLocator.init();
-
-        interceptor = new AuthenticationFilter(this.config, this.consumerCurator, this.deletedConsumerCurator,
-            this.injector, annotationLocator);
+        MethodLocator methodLocator = new MethodLocator(injector);
+        methodLocator.init();
+        AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
+        interceptor = new AuthenticationFilter(config, consumerCurator, deletedConsumerCurator, injector,
+            annotationLocator);
         interceptor.setHttpServletRequest(mockHttpServletRequest);
 
         return interceptor;
