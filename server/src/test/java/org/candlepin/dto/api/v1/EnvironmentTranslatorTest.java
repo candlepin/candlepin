@@ -39,6 +39,7 @@ public class EnvironmentTranslatorTest extends
     protected EnvironmentTranslator environmentTranslator = new EnvironmentTranslator();
     protected ContentTranslatorTest contentTranslatorTest = new ContentTranslatorTest();
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
+    protected NestedOwnerTranslatorTest nestedOwnerTranslatorTest = new NestedOwnerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
@@ -88,7 +89,8 @@ public class EnvironmentTranslatorTest extends
             assertEquals(source.getDescription(), dto.getDescription());
 
             if (childrenGenerated) {
-                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dto.getOwner(), childrenGenerated);
+                this.nestedOwnerTranslatorTest.verifyOutput(source.getOwner(),
+                    dto.getOwner(), childrenGenerated);
                 assertNotNull(dto.getEnvironmentContent());
                 for (EnvironmentContent ec : source.getEnvironmentContent()) {
                     for (EnvironmentContentDTO ecdto : dto.getEnvironmentContent()) {
