@@ -107,7 +107,7 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
     protected String id;
     protected String name;
     protected String description;
-    protected OwnerDTO owner;
+    protected NestedOwnerDTO owner;
     protected Map<String, EnvironmentContentDTO> environmentContent;
 
     /**
@@ -196,7 +196,7 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
      *
      * @return the owner field of this EnvironmentDTO object.
      */
-    public OwnerDTO getOwner() {
+    public NestedOwnerDTO getOwner() {
         return owner;
     }
 
@@ -207,7 +207,7 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
      *
      * @return a reference to this DTO object.
      */
-    public EnvironmentDTO setOwner(OwnerDTO owner) {
+    public EnvironmentDTO setOwner(NestedOwnerDTO owner) {
         this.owner = owner;
         return this;
     }
@@ -389,8 +389,12 @@ public class EnvironmentDTO extends TimestampedCandlepinDTO<EnvironmentDTO> {
     public EnvironmentDTO clone() {
         EnvironmentDTO copy = super.clone();
 
-        OwnerDTO owner = this.getOwner();
-        copy.setOwner(owner != null ? owner.clone() : null);
+        NestedOwnerDTO owner = this.getOwner();
+        copy.setOwner(owner != null ? new NestedOwnerDTO()
+            .id(owner.getId())
+            .displayName(owner.getDisplayName())
+            .href(owner.getHref())
+            .key(owner.getKey()) : null);
 
         copy.setEnvironmentContent(this.getEnvironmentContent());
 
