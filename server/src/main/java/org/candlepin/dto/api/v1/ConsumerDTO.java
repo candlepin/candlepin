@@ -72,7 +72,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     protected Set<String> addOns;
     protected String systemPurposeStatus;
     protected String releaseVer;
-    protected OwnerDTO owner;
+    protected NestedOwnerDTO owner;
     protected EnvironmentDTO environment;
     protected Long entitlementCount;
     protected Map<String, String> facts;
@@ -384,7 +384,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
      *
      * @return the owner of the consumer, or null if it has not yet been defined
      */
-    public OwnerDTO getOwner() {
+    public NestedOwnerDTO getOwner() {
         return this.owner;
     }
 
@@ -395,7 +395,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
      *
      * @return a reference to this DTO object.
      */
-    public ConsumerDTO setOwner(OwnerDTO owner) {
+    public ConsumerDTO setOwner(NestedOwnerDTO owner) {
         this.owner = owner;
         return this;
     }
@@ -1059,8 +1059,12 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     public ConsumerDTO clone() {
         ConsumerDTO copy = super.clone();
 
-        OwnerDTO owner = this.getOwner();
-        copy.setOwner(owner != null ? owner.clone() : null);
+        NestedOwnerDTO owner = this.getOwner();
+        copy.setOwner(owner != null ? new NestedOwnerDTO()
+            .id(owner.getId())
+            .displayName(owner.getDisplayName())
+            .href(owner.getHref())
+            .key(owner.getKey()) : null);
 
         EnvironmentDTO environment = this.getEnvironment();
         copy.setEnvironment(environment != null ? environment.clone() : null);
