@@ -28,7 +28,8 @@ import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.pki.impl.JSSProviderLoader;
-import org.candlepin.resteasy.AnnotationLocator;
+import org.candlepin.resteasy.MethodLocator;
+import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.util.CrlFileUtil;
 
@@ -154,9 +155,11 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         // Must call super.contextInitialized() before accessing injector
         insertValidationEventListeners(injector);
 
-        AnnotationLocator annotationLocator = injector.getInstance(AnnotationLocator.class);
-        annotationLocator.init();
+        MethodLocator methodLocator = injector.getInstance(MethodLocator.class);
+        methodLocator.init();
 
+        ResourceLocatorMap map = injector.getInstance(ResourceLocatorMap.class);
+        map.init();
 
         // make sure our session factory is initialized before we attempt to start something
         // that relies upon it

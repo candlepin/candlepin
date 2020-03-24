@@ -24,6 +24,7 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.model.Consumer;
 import org.candlepin.resteasy.AnnotationLocator;
+import org.candlepin.resteasy.MethodLocator;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -104,8 +105,9 @@ public class AuthorizationFeatureTest {
     @Before
     public void setUp() throws Exception {
         injector = Guice.createInjector(getGuiceOverrideModule());
-        AnnotationLocator annotationLocator = new AnnotationLocator(injector);
-        annotationLocator.init();
+        MethodLocator methodLocator = new MethodLocator(injector);
+        methodLocator.init();
+        AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
         this.authorizationFeature = new AuthorizationFeature(
             verifyFilter, superAdminFilter, securityHoleFilter, annotationLocator);
 

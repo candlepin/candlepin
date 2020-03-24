@@ -607,7 +607,7 @@ public class Util {
         }
         return Arrays.asList(list.split(","));
     }
-    
+
     /*
      * Translates a given date into an OffsetDateTime with UTC timezone.
      *
