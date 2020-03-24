@@ -24,8 +24,8 @@ import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
@@ -319,22 +319,21 @@ public class TestUtil {
             product.setUuid(dto.getUuid());
             product.setMultiplier(dto.getMultiplier());
 
-            product.setAttributes(dto.getAttributes());
+            product.setAttributes(Util.toMap(dto.getAttributes()));
 
             if (dto.getProductContent() != null) {
                 for (ProductContentDTO pcd : dto.getProductContent()) {
                     if (pcd != null) {
-                        Content content = createContent((ContentDTO) pcd.getContent());
+                        Content content = createContent(pcd.getContent());
 
                         if (content != null) {
-                            product.addContent(content, pcd.isEnabled() != null ? pcd.isEnabled() : true);
+                            product.addContent(content, pcd.getEnabled() != null ? pcd.getEnabled() : true);
                         }
                     }
                 }
             }
 
             product.setDependentProductIds(dto.getDependentProductIds());
-            product.setLocked(dto.isLocked() != null ? dto.isLocked() : false);
         }
 
         return product;
@@ -354,7 +353,7 @@ public class TestUtil {
             if (pdata.getProductContent() != null) {
                 for (ProductContentData pcd : pdata.getProductContent()) {
                     if (pcd != null) {
-                        Content content = createContent((ContentData) pcd.getContent());
+                        Content content = createContent(pcd.getContent());
 
                         if (content != null) {
                             product.addContent(content, pcd.isEnabled() != null ? pcd.isEnabled() : true);
@@ -375,6 +374,8 @@ public class TestUtil {
 
         dto.setId(id);
         dto.setName(name);
+        dto.setAttributes(new ArrayList<>());
+        dto.setBranding(new HashSet<>());
 
         return dto;
     }

@@ -19,8 +19,8 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.util.Util;
 
-import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -71,11 +71,9 @@ public class RoleTranslator implements ObjectTranslator<Role, RoleDTO> {
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.created(source.getCreated() != null ?
-                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .updated(source.getUpdated() != null ?
-                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .id(source.getId())
+        dest.id(source.getId())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .name(source.getName());
 
         if (translator != null) {

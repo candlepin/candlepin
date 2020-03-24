@@ -198,9 +198,7 @@ public class HostedTestSubscriptionResource {
         this.createSubscriptionObjects(subscription);
 
         // Create subscription object...
-        SubscriptionInfo sinfo = this.adapter.createSubscription(subscription);
-
-        return sinfo;
+        return this.adapter.createSubscription(subscription);
     }
 
     /**
@@ -367,7 +365,7 @@ public class HostedTestSubscriptionResource {
     public ProductInfo removeContentFromProduct(@PathParam("product_id") String productId,
         @PathParam("content_id") String contentId) {
 
-        return this.removeContentFromProduct(productId, Collections.<String>singletonList(contentId));
+        return this.removeContentFromProduct(productId, Collections.singletonList(contentId));
     }
 
     @GET
