@@ -52,6 +52,7 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
@@ -784,7 +785,7 @@ public class ConsumerResourceUpdateTest {
         OwnerDTO ownerDTO = new OwnerDTO();
         ownerDTO.setId(owner.getId());
         updated.setEnvironment(translator.translate(changedEnvironment, EnvironmentDTO.class));
-        updated.setOwner(new OwnerDTO());
+        updated.setOwner(new NestedOwnerDTO());
 
         when(environmentCurator.get(changedEnvironment.getId())).thenReturn(changedEnvironment);
         when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);

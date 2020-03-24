@@ -127,7 +127,7 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
         // Process nested objects if we have a model translator to use to the translation...
         if (modelTranslator != null) {
             Owner owner = source.getOwner();
-            dest.setOwner(owner != null ? modelTranslator.translate(owner, OwnerDTO.class) : null);
+            dest.setOwner(owner != null ? modelTranslator.translate(owner, NestedOwnerDTO.class) : null);
 
             SubscriptionsCertificate subCertificate = source.getCertificate();
             dest.setCertificate(subCertificate != null ?

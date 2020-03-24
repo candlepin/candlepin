@@ -124,7 +124,7 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
         if (translator != null) {
             if (StringUtils.isNotEmpty(source.getOwnerId())) {
                 Owner owner = ownerCurator.findOwnerById(source.getOwnerId());
-                dest.setOwner(translator.translate(owner, OwnerDTO.class));
+                dest.setOwner(owner != null ? translator.translate(owner, NestedOwnerDTO.class) : null);
             }
 
             Environment environment = this.environmentCurator.getConsumerEnvironment(source);

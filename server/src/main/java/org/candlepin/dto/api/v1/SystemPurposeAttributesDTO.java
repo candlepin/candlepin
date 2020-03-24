@@ -47,7 +47,7 @@ public class SystemPurposeAttributesDTO extends CandlepinDTO<SystemPurposeAttrib
     private static final long serialVersionUID = 1L;
 
     @JsonProperty(access = Access.READ_ONLY)
-    protected OwnerDTO owner;
+    protected NestedOwnerDTO owner;
 
     @JsonProperty(access = Access.READ_ONLY)
     protected Map<String, Set<String>> systemPurposeAttributes;
@@ -69,11 +69,11 @@ public class SystemPurposeAttributesDTO extends CandlepinDTO<SystemPurposeAttrib
         super(source);
     }
 
-    public OwnerDTO getOwner() {
+    public NestedOwnerDTO getOwner() {
         return owner;
     }
 
-    public void setOwner(OwnerDTO owner) {
+    public void setOwner(NestedOwnerDTO owner) {
         this.owner = owner;
     }
 

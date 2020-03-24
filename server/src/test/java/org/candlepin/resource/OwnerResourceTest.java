@@ -72,7 +72,7 @@ import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTOArrayElement;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.AsyncJobStatus;
@@ -1307,7 +1307,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerDTO child = new OwnerDTO();
         child.setKey("child");
         child.setDisplayName("child");
-        child.setParentOwner(parent);
+        child.setParentOwner(new NestedOwnerDTO().id(parent.getId()).key(parent.getKey())
+            .displayName(parent.getDisplayName()));
 
         OwnerDTO pout = this.ownerResource.createOwner(parent);
 
@@ -1334,7 +1335,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         child.setKey("child");
         child.setDisplayName("child");
 
-        OwnerDTO parent = new OwnerDTO();
+        NestedOwnerDTO parent = new NestedOwnerDTO();
         parent.setId("parent");
         parent.setDisplayName("parent");
 
@@ -1349,7 +1350,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         child.setKey("child");
         child.setDisplayName("child");
 
-        OwnerDTO parent = new OwnerDTO();
+        NestedOwnerDTO parent = new NestedOwnerDTO();
         parent.setKey("parent");
         parent.setDisplayName("parent");
 
@@ -1364,7 +1365,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         child.setKey("child");
         child.setDisplayName("child");
 
-        OwnerDTO parent = new OwnerDTO();
+        NestedOwnerDTO parent = new NestedOwnerDTO();
         parent.setDisplayName("parent");
 
         child.setParentOwner(parent);
@@ -1496,7 +1497,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertFalse(owner.isAutobindDisabled());
 
         // Update with Parent Owner only
-        OwnerDTO parentDto = new OwnerDTO();
+        NestedOwnerDTO parentDto = new NestedOwnerDTO();
         parentDto.setId(parentOwner2.getId());
 
         dto = new OwnerDTO();
@@ -1675,7 +1676,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.mockOwnerCurator.getByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
 
-        List<UpstreamConsumerDTO> results = resource.getUpstreamConsumers(p, "admin");
+        List<UpstreamConsumerDTOArrayElement> results = ownerres.getUpstreamConsumers(p, "admin");
 
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -1961,9 +1962,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         SystemPurposeAttributesDTO result = resource.getSyspurpose(owner.getKey());
 
-        assertEquals(modelTranslator.translate(owner, OwnerDTO.class), result.getOwner());
-        Set<String> addons = result.getSystemPurposeAttributes()
-            .get(SystemPurposeAttributeType.ADDONS.toString());
+        assertEquals(modelTranslator.translate(owner, NestedOwnerDTO.class), result.getOwner());
+        Set<String> addons =
+            result.getSystemPurposeAttributes().get(SystemPurposeAttributeType.ADDONS.toString());
         Set<String> expectedAddOns = new HashSet<>(Arrays.asList("hello", "earth", "world"));
         assertEquals(expectedAddOns, addons);
 
@@ -2013,9 +2014,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         SystemPurposeAttributesDTO result = resource.getConsumersSyspurpose(owner.getKey());
 
-        assertEquals(modelTranslator.translate(owner, OwnerDTO.class), result.getOwner());
-        Set<String> addons = result.getSystemPurposeAttributes()
-            .get(SystemPurposeAttributeType.ADDONS.toString());
+        assertEquals(modelTranslator.translate(owner, NestedOwnerDTO.class), result.getOwner());
+        Set<String> addons =
+            result.getSystemPurposeAttributes().get(SystemPurposeAttributeType.ADDONS.toString());
         Set<String> expectedAddOns = new HashSet<>(Arrays.asList("addon1", "addon2", "addon3"));
         assertEquals(expectedAddOns, addons);
 

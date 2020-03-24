@@ -53,6 +53,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
     private EntitlementTranslator entitlementTranslator = new EntitlementTranslator();
 
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
+    private NestedOwnerTranslatorTest nestedOwnerTranslatorTest = new NestedOwnerTranslatorTest();
     private ProductTranslatorTest productTranslatorTest = new ProductTranslatorTest();
     private BrandingTranslatorTest brandingTranslatorTest = new BrandingTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
@@ -236,7 +237,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
 
             // Validate other children that require the model translator
             if (childrenGenerated) {
-                this.ownerTranslatorTest
+                this.nestedOwnerTranslatorTest
                     .verifyOutput(source.getOwner(), dest.getOwner(), true);
 
                 this.certificateTranslatorTest

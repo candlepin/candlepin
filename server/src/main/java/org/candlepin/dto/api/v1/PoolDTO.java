@@ -114,7 +114,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
 
     private String id;
     private String type;
-    private OwnerDTO owner;
+    private NestedOwnerDTO owner;
     private Boolean activeSubscription;
     private EntitlementDTO sourceEntitlement;
     private Long quantity;
@@ -248,7 +248,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      *
      * @return the owner of this pool.
      */
-    public OwnerDTO getOwner() {
+    public NestedOwnerDTO getOwner() {
         return owner;
     }
 
@@ -259,7 +259,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
      *
      * @return a reference to this PoolDTO object.
      */
-    public PoolDTO setOwner(OwnerDTO owner) {
+    public PoolDTO setOwner(NestedOwnerDTO owner) {
         this.owner = owner;
         return this;
     }
@@ -1432,8 +1432,12 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> implements Linkabl
     public PoolDTO clone() {
         PoolDTO copy = super.clone();
 
-        OwnerDTO owner = this.getOwner();
-        copy.setOwner(owner != null ? owner.clone() : null);
+        NestedOwnerDTO owner = this.getOwner();
+        copy.setOwner(owner != null ? new NestedOwnerDTO()
+            .id(owner.getId())
+            .displayName(owner.getDisplayName())
+            .href(owner.getHref())
+            .key(owner.getKey()) : null);
 
         copy.setAttributes(this.getAttributes());
         copy.setCalculatedAttributes(this.getCalculatedAttributes());

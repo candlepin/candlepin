@@ -21,6 +21,7 @@ import org.candlepin.dto.api.v1.EnvironmentDTO.EnvironmentContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.Owner;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -70,7 +71,8 @@ public class EnvironmentTranslator extends TimestampedEntityTranslator<Environme
         dest.setDescription(source.getDescription());
 
         if (translator != null) {
-            dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
+            Owner owner = source.getOwner();
+            dest.setOwner(owner != null ? translator.translate(owner, NestedOwnerDTO.class) : null);
 
             Set<EnvironmentContent> envContents = source.getEnvironmentContent();
             if (envContents != null) {

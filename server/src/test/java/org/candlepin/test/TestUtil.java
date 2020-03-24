@@ -26,6 +26,7 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
@@ -117,9 +118,8 @@ public class TestUtil {
 
     public static ConsumerDTO createConsumerDTO(String name, String userName, OwnerDTO owner,
         ConsumerTypeDTO type) {
-        return (new ConsumerDTO()).setName(name)
+        ConsumerDTO consumer = new ConsumerDTO().setName(name)
             .setUsername(userName)
-            .setOwner(owner)
             .setType(type)
             .setAutoheal(true)
             .setServiceLevel("")
@@ -127,6 +127,19 @@ public class TestUtil {
             .setFacts(new HashMap<>())
             .setInstalledProducts(new HashSet<>())
             .setGuestIds(new ArrayList<>());
+
+        if (owner != null) {
+            consumer.setOwner(new NestedOwnerDTO()
+                .key(owner.getKey())
+                .id(owner.getId())
+                .displayName(owner.getDisplayName()));
+
+        }
+        else {
+            consumer.setOwner(null);
+        }
+
+        return consumer;
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner, String username) {

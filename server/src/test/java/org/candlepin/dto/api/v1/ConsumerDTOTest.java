@@ -38,7 +38,6 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
 
 
     protected Map<String, Object> values;
-    protected OwnerDTOTest ownerDTOTest = new OwnerDTOTest();
     protected EnvironmentDTOTest environmentDTOTest = new EnvironmentDTOTest();
     protected ConsumerInstalledProductDTOTest cipDTOTest = new ConsumerInstalledProductDTOTest();
     protected CapabilityDTOTest capabilityDTOTest = new CapabilityDTOTest();
@@ -96,6 +95,8 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
             keys.add(new ConsumerActivationKeyDTO("keyId" + i, "keyName" + i));
         }
 
+        NestedOwnerDTO owner = new NestedOwnerDTO().id("OwnerId").displayName("Name").key("12345");
+
         this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Uuid", "test-uuid");
@@ -108,7 +109,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("SystemPurposeStatus", "matched");
         this.values.put("AddOns", addOns);
         this.values.put("ReleaseVersion", "test-release-ver");
-        this.values.put("Owner", this.ownerDTOTest.getPopulatedDTOInstance());
+        this.values.put("Owner", owner);
         this.values.put("Environment", this.environmentDTOTest.getPopulatedDTOInstance());
         this.values.put("EntitlementCount", 1L);
         this.values.put("Facts", facts);

@@ -15,6 +15,7 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.UeberCertificate;
 
 
@@ -60,7 +61,9 @@ public class UeberCertificateTranslator
         dest = super.populate(translator, source, dest);
 
         if (translator != null) {
-            dest.setOwner(translator.translate(source.getOwner(), OwnerDTO.class));
+            Owner owner = source.getOwner();
+            dest.setOwner(owner != null ? translator.translate(owner, NestedOwnerDTO.class) : null);
+
         }
         else {
             dest.setOwner(null);
