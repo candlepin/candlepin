@@ -368,8 +368,6 @@ describe 'Content Access' do
       owner['contentAccessMode'].should == 'test_access_mode'
       owner['contentAccessModeList'].should == 'test_access_mode'
 
-      uc = owner.upstreamConsumer['contentAccessMode'].should == 'test_access_mode'
-
       @cp.delete_owner(@import_owner['key'])
       @cp_export.cleanup()
  end

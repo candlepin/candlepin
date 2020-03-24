@@ -92,7 +92,7 @@ public class OwnerInfoTranslatorTest extends
             assertNull(dest.getContentPrefix());
             assertNull(dest.getDefaultServiceLevel());
             assertNull(dest.getLogLevel());
-            assertNull(dest.isAutobindDisabled());
+            assertNull(dest.getAutobindDisabled());
             assertNull(dest.getContentAccessMode());
             assertNull(dest.getContentAccessModeList());
             assertNull(dest.getLastRefreshed());

@@ -59,7 +59,7 @@ import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTOArrayElement;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -519,7 +519,7 @@ public class OwnerResource {
             // We do not allow modifying a parent owner through its children, so all we'll do here
             // is set the parent owner and ignore everything else; including further nested owners.
 
-            OwnerDTO pdto = dto.getParentOwner();
+            NestedOwnerDTO pdto = dto.getParentOwner();
             Owner parent = null;
 
             if (pdto.getId() != null) {
@@ -556,12 +556,12 @@ public class OwnerResource {
             entity.setLogLevel(dto.getLogLevel());
         }
 
-        if (dto.isAutobindDisabled() != null) {
-            entity.setAutobindDisabled(dto.isAutobindDisabled());
+        if (dto.getAutobindDisabled() != null) {
+            entity.setAutobindDisabled(dto.getAutobindDisabled());
         }
 
-        if (dto.isAutobindHypervisorDisabled() != null) {
-            entity.setAutobindHypervisorDisabled(dto.isAutobindHypervisorDisabled());
+        if (dto.getAutobindHypervisorDisabled() != null) {
+            entity.setAutobindHypervisorDisabled(dto.getAutobindHypervisorDisabled());
         }
     }
 
@@ -1266,7 +1266,7 @@ public class OwnerResource {
         @ApiParam(name = "environment", required = true) EnvironmentDTO envDTO) {
 
         Environment env = new Environment();
-        OwnerDTO ownerDTO = new OwnerDTO().setKey(ownerKey);
+        NestedOwnerDTO ownerDTO = new NestedOwnerDTO().key(ownerKey);
         envDTO.setOwner(ownerDTO);
         populateEntity(env, envDTO);
 
@@ -2061,7 +2061,7 @@ public class OwnerResource {
         }
 
         SystemPurposeAttributesDTO dto = new SystemPurposeAttributesDTO();
-        dto.setOwner(translator.translate(owner, OwnerDTO.class));
+        dto.setOwner(translator.translate(owner, NestedOwnerDTO.class));
         dto.setSystemPurposeAttributes(dtoMap);
         return dto;
     }
@@ -2090,7 +2090,7 @@ public class OwnerResource {
         dtoMap.get(SystemPurposeAttributeType.ADDONS.toString()).addAll(consumerAddons);
 
         SystemPurposeAttributesDTO dto = new SystemPurposeAttributesDTO();
-        dto.setOwner(translator.translate(owner, OwnerDTO.class));
+        dto.setOwner(translator.translate(owner, NestedOwnerDTO.class));
         dto.setSystemPurposeAttributes(dtoMap);
         return dto;
     }
@@ -2160,12 +2160,13 @@ public class OwnerResource {
     @ApiOperation(notes = " Retrieves a list of Upstream Consumers for an Owner",
         value = "Get Upstream Consumers")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<UpstreamConsumerDTO> getUpstreamConsumers(@Context Principal principal,
+    public List<UpstreamConsumerDTOArrayElement> getUpstreamConsumers(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
 
         Owner owner = this.findOwnerByKey(ownerKey);
         UpstreamConsumer consumer = owner.getUpstreamConsumer();
-        UpstreamConsumerDTO dto = this.translator.translate(consumer, UpstreamConsumerDTO.class);
+        UpstreamConsumerDTOArrayElement dto =
+            this.translator.translate(consumer, UpstreamConsumerDTOArrayElement.class);
 
         // returning as a list for future proofing. today we support one, but
         // users of this api want to protect against having to change their code
