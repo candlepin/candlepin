@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -36,9 +35,11 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
@@ -59,6 +60,7 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -108,23 +110,21 @@ public class ProductResourceTest extends DatabaseTestFixture {
     private ProductDTO buildTestProductDTO() {
         ProductDTO dto = TestUtil.createProductDTO("test_product");
 
-        dto.setAttribute(Product.Attributes.VERSION, "1.0");
-        dto.setAttribute(Product.Attributes.VARIANT, "server");
-        dto.setAttribute(Product.Attributes.TYPE, "SVC");
-        dto.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
+        List<AttributeDTO> attributes = new ArrayList<>(dto.getAttributes());
+        attributes.add(createAttribute(Product.Attributes.VERSION, "1.0"));
+        attributes.add(createAttribute(Product.Attributes.VARIANT, "server"));
+        attributes.add(createAttribute(Product.Attributes.TYPE, "SVC"));
+        attributes.add(createAttribute(Product.Attributes.ARCHITECTURE, "ALL"));
+
+        dto.setAttributes(attributes);
 
         return dto;
     }
 
-    private Product buildTestProduct() {
-        Product entity = TestUtil.createProduct("test_product");
-
-        entity.setAttribute(Product.Attributes.VERSION, "1.0");
-        entity.setAttribute(Product.Attributes.VARIANT, "server");
-        entity.setAttribute(Product.Attributes.TYPE, "SVC");
-        entity.setAttribute(Product.Attributes.ARCHITECTURE, "ALL");
-
-        return entity;
+    private AttributeDTO createAttribute(String name, String value) {
+        return new AttributeDTO()
+            .name(name)
+            .value(value);
     }
 
     @Test
@@ -140,13 +140,13 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateProductWithContent() {
         Owner owner = this.createOwner("Example-Corporation");
-        ProductDTO pdto = this.buildTestProductDTO();
-        ContentDTO cdto = TestUtil.createContentDTO();
-        pdto.addContent(cdto, true);
+        ProductDTO product = this.buildTestProductDTO();
+        ContentDTO content = TestUtil.createContentDTO();
+        addContent(product, content);
 
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId()));
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), product.getId()));
 
-        assertThrows(BadRequestException.class, () -> productResource.createProduct(pdto));
+        assertThrows(BadRequestException.class, () -> productResource.createProduct(product));
     }
 
     @Test
@@ -361,7 +361,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         status1.setName(RefreshPoolsJob.JOB_NAME);
         status1.setState(AsyncJobStatus.JobState.CREATED); //need to prime the previous state field
         status1.setState(AsyncJobStatus.JobState.QUEUED);
-        when(jobManager.queueJob(anyObject()))
+        when(jobManager.queueJob(any(JobConfig.class)))
             .thenReturn(status1)
             .thenThrow(new JobConfigValidationException("a job config validation error happened!"));
 
@@ -397,4 +397,24 @@ public class ProductResourceTest extends DatabaseTestFixture {
         assertEquals(Integer.valueOf(0), statusDTO2.getAttempts());
         assertEquals(Integer.valueOf(1), statusDTO2.getMaxAttempts());
     }
+
+    private void addContent(ProductDTO product, ContentDTO dto) {
+        if (dto == null || dto.getId() == null) {
+            throw new IllegalArgumentException("dto references incomplete content");
+        }
+
+        if (product.getProductContent() == null) {
+            product.setProductContent(new HashSet<>());
+        }
+
+        ProductContentDTO content = new ProductContentDTO();
+        content.setContent(dto);
+        content.setEnabled(true);
+
+        Set<ProductContentDTO> productContent = new HashSet<>(product.getProductContent());
+        productContent.add(content);
+
+        product.setProductContent(productContent);
+    }
+
 }

@@ -29,6 +29,7 @@ import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
@@ -37,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -155,7 +155,7 @@ public class StatusResource implements StatusApi {
             .rulesSource(rulesSource != null ? rulesSource.toString() : null)
             .mode(mode != null ? mode.toString() : null)
             .modeReason(mcr != null ? mcr.toString() : null)
-            .modeChangeTime(mcr != null ? mcr.getTime().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .modeChangeTime(Util.toDateTime(mcr != null ? mcr.getTime() : null))
             .managerCapabilities(caps)
             .timeUTC(OffsetDateTime.now());
 

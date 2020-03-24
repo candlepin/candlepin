@@ -14,6 +14,9 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.GuestId;
@@ -21,8 +24,6 @@ import org.candlepin.model.GuestId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 
 /**

@@ -15,10 +15,13 @@
 
 package org.candlepin.resource.util;
 
+import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.dto.api.v1.UserDTO;
@@ -245,6 +248,33 @@ public class InfoAdapter {
     }
 
     /**
+     * This method adapts the NestedOwnerDTO
+     * into OwnerInfo object.
+     *
+     * @param source NestedOwnerDTO object
+     *
+     * @return OwnerInfo object
+     */
+    public static OwnerInfo ownerInfoAdapter(OwnerDTO source) {
+        return new OwnerInfo() {
+            @Override
+            public String getKey() {
+                return source.getKey();
+            }
+
+            @Override
+            public Date getCreated() {
+                return null;
+            }
+
+            @Override
+            public Date getUpdated() {
+                return null;
+            }
+        };
+    }
+
+    /**
      * This method adapts the PermissionBlueprintDTO
      * into PermissionBlueprintInfo object.
      *
@@ -330,7 +360,10 @@ public class InfoAdapter {
              */
             @Override
             public Map<String, String> getAttributes() {
-                return source.getAttributes();
+                if (source.getAttributes() == null) {
+                    return null;
+                }
+                return Util.toMap(source.getAttributes());
             }
 
             /**
@@ -338,7 +371,14 @@ public class InfoAdapter {
              */
             @Override
             public String getAttributeValue(String key) {
-                return source.getAttributeValue(key);
+                if (source.getAttributes() == null || key == null) {
+                    return null;
+                }
+                return source.getAttributes().stream()
+                    .filter(attribute -> key.equals(attribute.getName()))
+                    .findFirst()
+                    .map(AttributeDTO::getValue)
+                    .orElse(null);
             }
 
             /**
@@ -348,13 +388,13 @@ public class InfoAdapter {
             public Collection<? extends ProductContentInfo> getProductContent() {
 
                 List<ProductContentInfo> productContentInfos = null;
-                Collection<ProductDTO.ProductContentDTO> productContentDTOs =
+                Collection<ProductContentDTO> productContentDTOs =
                     source.getProductContent();
 
                 if (productContentDTOs != null) {
                     productContentInfos = new ArrayList<>();
 
-                    for (ProductDTO.ProductContentDTO pc : productContentDTOs) {
+                    for (ProductContentDTO pc : productContentDTOs) {
                         if (pc != null && pc.getContent() != null) {
 
                             productContentInfos.add(new ProductContentInfo() {
@@ -365,7 +405,7 @@ public class InfoAdapter {
 
                                 @Override
                                 public Boolean isEnabled() {
-                                    return pc.isEnabled();
+                                    return pc.getEnabled();
                                 }
                             });
                         }
@@ -373,7 +413,7 @@ public class InfoAdapter {
                 }
 
                 return productContentInfos != null ?
-                    new ListView(productContentInfos) : null;
+                    new ListView<>(productContentInfos) : null;
             }
 
             /**
@@ -400,8 +440,39 @@ public class InfoAdapter {
              * {@inheritDoc}
              */
             @Override
+            public ProductInfo getDerivedProduct() {
+                if (source.getDerivedProduct() != null) {
+                    return productInfoAdapter(source.getDerivedProduct());
+                }
+                return null;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Collection<? extends ProductInfo> getProvidedProducts() {
+                Set<ProductInfo> productInfoSet = null;
+                Set<ProductDTO> productDTOSet = source.getProvidedProducts();
+
+                if (productDTOSet != null) {
+                    productInfoSet = new HashSet<>();
+
+                    for (ProductDTO productDTO : productDTOSet) {
+                        productInfoSet.add(productInfoAdapter(productDTO));
+                    }
+                }
+
+                return productInfoSet != null ?
+                    new SetView<>(productInfoSet) : null;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
             public Date getCreated() {
-                return source.getCreated();
+                return Util.toDate(source.getCreated());
             }
 
             /**
@@ -409,7 +480,7 @@ public class InfoAdapter {
              */
             @Override
             public Date getUpdated() {
-                return source.getUpdated();
+                return Util.toDate(source.getUpdated());
             }
         };
     }

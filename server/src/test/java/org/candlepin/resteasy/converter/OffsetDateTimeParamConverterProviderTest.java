@@ -14,6 +14,9 @@
  */
 package org.candlepin.resteasy.converter;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.junit.jupiter.api.Test;
 
 import java.lang.annotation.Annotation;
@@ -23,7 +26,6 @@ import javax.validation.Payload;
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.ext.ParamConverter;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 public class OffsetDateTimeParamConverterProviderTest {
 

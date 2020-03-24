@@ -42,6 +42,8 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.resource.util.InfoAdapter;
+import org.candlepin.resource.validation.DTOValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -62,6 +64,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -85,33 +88,36 @@ import javax.ws.rs.core.MediaType;
 public class OwnerProductResource {
     private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
 
-    private Configuration config;
-    private I18n i18n;
-    private OwnerContentCurator ownerContentCurator;
-    private OwnerCurator ownerCurator;
-    private OwnerProductCurator ownerProductCurator;
-    private ProductCertificateCurator productCertCurator;
-    private ProductCurator productCurator;
-    private ProductManager productManager;
-    private ModelTranslator translator;
-    private JobManager jobManager;
+    private final Configuration config;
+    private final I18n i18n;
+    private final OwnerContentCurator ownerContentCurator;
+    private final OwnerCurator ownerCurator;
+    private final OwnerProductCurator ownerProductCurator;
+    private final ProductCertificateCurator productCertCurator;
+    private final ProductCurator productCurator;
+    private final ProductManager productManager;
+    private final ModelTranslator translator;
+    private final JobManager jobManager;
+    private final DTOValidator validator;
 
     @Inject
     public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator productCertCurator, ProductCurator productCurator,
-        ProductManager productManager, ModelTranslator translator, JobManager jobManager) {
+        ProductManager productManager, ModelTranslator translator, JobManager jobManager,
+        DTOValidator validator) {
 
-        this.config = config;
-        this.i18n = i18n;
-        this.ownerContentCurator = ownerContentCurator;
-        this.ownerCurator = ownerCurator;
-        this.ownerProductCurator = ownerProductCurator;
-        this.productCertCurator = productCertCurator;
-        this.productCurator = productCurator;
-        this.productManager = productManager;
-        this.translator = translator;
-        this.jobManager = jobManager;
+        this.config = Objects.requireNonNull(config);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.productCertCurator = Objects.requireNonNull(productCertCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
+        this.productManager = Objects.requireNonNull(productManager);
+        this.translator = Objects.requireNonNull(translator);
+        this.jobManager = Objects.requireNonNull(jobManager);
+        this.validator = Objects.requireNonNull(validator);
     }
 
     /**
@@ -253,8 +259,12 @@ public class OwnerProductResource {
         @PathParam("owner_key") String ownerKey,
         ProductDTO pdto) {
 
+        this.validator.validateConstraints(pdto);
+        this.validator.validateCollectionElementsNotNull(
+            pdto::getBranding, pdto::getDependentProductIds, pdto::getProductContent);
+
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product entity = productManager.createProduct(owner, pdto);
+        Product entity = productManager.createProduct(owner, InfoAdapter.productInfoAdapter(pdto));
 
         return this.translator.translate(entity, ProductDTO.class);
     }
@@ -280,6 +290,10 @@ public class OwnerProductResource {
             );
         }
 
+        this.validator.validateConstraints(update);
+        this.validator.validateCollectionElementsNotNull(
+            update::getBranding, update::getDependentProductIds, update::getProductContent);
+
         Owner owner = this.getOwnerByKey(ownerKey);
 
         // Get the matching owner_product & lock it while we are doing the update for this org
@@ -294,7 +308,8 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
         }
 
-        Product updated = this.productManager.updateProduct(owner, update, true);
+        Product updated = this.productManager.updateProduct(owner, InfoAdapter.productInfoAdapter(update),
+            true);
 
         return this.translator.translate(updated, ProductDTO.class);
     }
@@ -427,7 +442,7 @@ public class OwnerProductResource {
         @PathParam("content_id") String contentId) {
 
         // Package up the params and pass it to our bulk operation
-        return this.removeBatchContent(ownerKey, productId, Collections.<String>singletonList(contentId));
+        return this.removeBatchContent(ownerKey, productId, Collections.singletonList(contentId));
     }
 
     @ApiOperation(notes = "Removes a Product", value = "deleteProduct")

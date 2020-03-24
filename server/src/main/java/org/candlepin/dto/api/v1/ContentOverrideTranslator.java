@@ -17,9 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ContentOverride;
-
-import java.time.ZoneOffset;
-import java.util.Date;
+import org.candlepin.util.Util;
 
 /**
  * The ContentOverrideTranslator provides the base translation bits for ContentOverride model
@@ -65,15 +63,11 @@ public class ContentOverrideTranslator implements ObjectTranslator<ContentOverri
             throw new IllegalArgumentException("dest is null");
         }
 
-        Date created = source.getCreated();
-        dest.setCreated(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
-
-        Date updated = source.getUpdated();
-        dest.setUpdated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
-
         dest.contentLabel(source.getContentLabel())
             .name(source.getName())
-            .value(source.getValue());
+            .value(source.getValue())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()));
 
         return dest;
     }

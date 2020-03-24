@@ -4,7 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 // vim: set expandtab sts=4 sw=4 ai:
 
 buildscript {
-    ext.openapi_version = '4.2.3'
+    ext.openapi_version = '4.0.1'
     repositories {
         mavenCentral()
     }
@@ -53,9 +53,12 @@ ext.libraries = [
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
         "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5",
         "com.fasterxml.jackson.datatype:jackson-datatype-jdk8",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
     ],
     swagger: [
         "io.swagger:swagger-jaxrs",
+            "io.swagger:swagger-core",
+            "io.swagger:swagger-models",
         "io.swagger:swagger-annotations",
         "org.apache.commons:commons-lang3",
     ],
@@ -218,6 +221,8 @@ allprojects {
             }
             dependencySet(group: "io.swagger", version: "1.5.7") {
                 entry "swagger-jaxrs"
+                entry "swagger-core"
+                entry "swagger-models"
                 entry "swagger-annotations"
             }
             dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson_databind") {
@@ -234,7 +239,7 @@ allprojects {
             dependencySet(group: "com.fasterxml.jackson.datatype", version: "$versions.jackson_general") {
                 entry "jackson-datatype-hibernate5"
                 entry "jackson-datatype-jdk8"
-                //entry "jackson-datatype-jsr310"
+                entry "jackson-datatype-jsr310"
             }
             dependencySet(group: "com.fasterxml.jackson.jaxrs", version: "$versions.jackson_general") {
                 entry "jackson-jaxrs-base"

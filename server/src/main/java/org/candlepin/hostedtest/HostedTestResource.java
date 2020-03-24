@@ -202,9 +202,7 @@ public class HostedTestResource {
         }
 
         // Create owner object...
-        OwnerInfo ownerInfo = this.datastore.createOwner(owner);
-
-        return ownerInfo;
+        return this.datastore.createOwner(InfoAdapter.ownerInfoAdapter(owner));
     }
 
     // TODO: Add remaining owner CRUD operations as needed
@@ -239,9 +237,7 @@ public class HostedTestResource {
         this.createSubscriptionObjects(subscription);
 
         // Create subscription object...
-        SubscriptionInfo sinfo = this.datastore.createSubscription(subscription);
-
-        return sinfo;
+        return this.datastore.createSubscription(subscription);
     }
 
     /**
@@ -408,7 +404,7 @@ public class HostedTestResource {
     public ProductInfo removeContentFromProduct(@PathParam("product_id") String productId,
         @PathParam("content_id") String contentId) {
 
-        return this.removeContentFromProduct(productId, Collections.<String>singletonList(contentId));
+        return this.removeContentFromProduct(productId, Collections.singletonList(contentId));
     }
 
     @GET

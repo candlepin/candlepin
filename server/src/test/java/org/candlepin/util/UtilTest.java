@@ -14,12 +14,13 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -35,8 +36,8 @@ import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.apache.commons.codec.binary.Base64;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,7 @@ public class UtilTest {
     private Logger utilLogger;
     private Appender mockapp;
 
-    @Before
+    @BeforeEach
     public void init() {
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         utilLogger = lc.getLogger(Util.class);
@@ -164,9 +165,10 @@ public class UtilTest {
         assertEquals(2011, c.get(Calendar.YEAR));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void toDateNull() {
-        Util.toDate(null);
+        String date = null;
+        assertThrows(NullPointerException.class, () -> Util.toDate(date));
     }
 
     @Test
@@ -179,32 +181,14 @@ public class UtilTest {
         assertEquals(11, c.get(Calendar.YEAR));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void toDateMilitaryForm() {
-        Util.toDate("17 March 2011");
+        assertThrows(RuntimeException.class, () -> Util.toDate("17 March 2011"));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void toDateStdLongForm() {
-        Util.toDate("March 17, 2011");
-    }
-
-    @Test
-    public void testAssertNotNullException() {
-        try {
-            Util.assertNotNull(null, "message text");
-        }
-        catch (IllegalArgumentException e) {
-            assertEquals("message text", e.getMessage());
-        }
-    }
-
-    @Test
-    public void testAssertNotNull() {
-        Integer one = Integer.valueOf(1);
-        Integer daone = Util.assertNotNull(one, "shouldn't see this");
-        assertNotNull(daone);
-        assertEquals(one, daone);
+        assertThrows(RuntimeException.class, () -> Util.toDate("March 17, 2011"));
     }
 
     @Test
@@ -411,4 +395,5 @@ public class UtilTest {
             fail("getHostname should not throw an exception");
         }
     }
+
 }

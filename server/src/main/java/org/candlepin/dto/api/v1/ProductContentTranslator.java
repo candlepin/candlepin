@@ -16,20 +16,20 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.model.GuestId;
-import org.candlepin.util.Util;
+import org.candlepin.model.ProductContent;
+
 
 /**
- * The GuestIdTranslator provides translation from GuestId model objects to
- * GuestIdDTOs
+ * The ProductContentTranslator provides translation from {@link ProductContent}
+ * model objects to {@link ProductContentDTO}s
  */
-public class GuestIdTranslator implements ObjectTranslator<GuestId, GuestIdDTO> {
+public class ProductContentTranslator implements ObjectTranslator<ProductContent, ProductContentDTO> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public GuestIdDTO translate(GuestId source) {
+    public ProductContentDTO translate(ProductContent source) {
         return this.translate(null, source);
     }
 
@@ -37,39 +37,38 @@ public class GuestIdTranslator implements ObjectTranslator<GuestId, GuestIdDTO> 
      * {@inheritDoc}
      */
     @Override
-    public GuestIdDTO translate(ModelTranslator translator, GuestId source) {
-        return source != null ? this.populate(translator, source, new GuestIdDTO()) : null;
+    public ProductContentDTO translate(ModelTranslator translator, ProductContent source) {
+        return source != null ? this.populate(translator, source, new ProductContentDTO()) : null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public GuestIdDTO populate(GuestId source, GuestIdDTO dest) {
-        return this.populate(null, source, dest);
+    public ProductContentDTO populate(ProductContent source, ProductContentDTO destination) {
+        return this.populate(null, source, destination);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public GuestIdDTO populate(ModelTranslator translator, GuestId source, GuestIdDTO dest) {
-
+    public ProductContentDTO populate(
+        ModelTranslator translator, ProductContent source, ProductContentDTO destination) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
 
-        if (dest == null) {
+        if (destination == null) {
             throw new IllegalArgumentException("destination is null");
         }
 
-        dest.id(source.getId())
-            .guestId(source.getGuestId())
-            .created(Util.toDateTime(source.getCreated()))
-            .updated(Util.toDateTime(source.getUpdated()))
-            .attributes(source.getAttributes());
+        destination.enabled(source.isEnabled());
+        if (translator != null) {
+            destination.content(translator.translate(source.getContent(), ContentDTO.class));
+        }
 
-        return dest;
+        return destination;
     }
 
 }

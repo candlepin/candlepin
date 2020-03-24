@@ -165,7 +165,7 @@ public class HypervisorResource {
         }
 
         Owner owner = this.getOwner(ownerKey);
-        if (hostGuestDTOMap.remove("") != null) {
+        if (hostGuestMap.remove("") != null) {
             log.warn("Ignoring empty hypervisor id");
         }
 

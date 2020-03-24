@@ -15,13 +15,14 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Branding;
+import org.candlepin.util.Util;
 
 /**
  * The BrandingTranslator provides translation from Branding model objects to BrandingDTOs
  */
-public class BrandingTranslator extends TimestampedEntityTranslator<Branding, BrandingDTO> {
+public class BrandingTranslator implements ObjectTranslator<Branding, BrandingDTO> {
 
     /**
      * {@inheritDoc}
@@ -52,11 +53,19 @@ public class BrandingTranslator extends TimestampedEntityTranslator<Branding, Br
      */
     @Override
     public BrandingDTO populate(ModelTranslator modelTranslator, Branding source, BrandingDTO dest) {
-        dest = super.populate(modelTranslator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
 
         dest.setProductId(source.getProductId());
         dest.setName(source.getName());
         dest.setType(source.getType());
+        dest.created(Util.toDateTime(source.getCreated()));
+        dest.updated(Util.toDateTime(source.getUpdated()));
 
         return dest;
     }

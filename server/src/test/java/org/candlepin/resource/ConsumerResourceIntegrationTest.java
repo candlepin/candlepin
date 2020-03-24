@@ -70,6 +70,7 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -82,7 +83,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -196,10 +196,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(4, certificates.size());
 
-        Long serial1 = certificates.get(0).getSerial().getId();
-        Long serial2 = certificates.get(3).getSerial().getId();
+        String serial1 = certificates.get(0).getSerial().getId();
+        String serial2 = certificates.get(3).getSerial().getId();
 
-        String serialsToFilter = serial1.toString() + "," + serial2.toString();
+        String serialsToFilter = serial1 + "," + serial2;
 
         certificates = consumerResource.getEntitlementCertificates(consumer.getUuid(), serialsToFilter);
         assertEquals(2, certificates.size());
@@ -367,7 +367,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
 
-        consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0).getSerial().getId());
+        consumerResource.unbindBySerial(consumer.getUuid(), Long.valueOf(serials.get(0).getSerial().getId()));
         assertEquals(0, consumerResource.listEntitlements(
             consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
     }
@@ -664,10 +664,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         CertificateDTO original = serials.get(0);
         CertificateSerialDTO serialDTO  = original.getSerial();
-        CertificateSerial serial = new CertificateSerial(serialDTO.getId(), serialDTO.getExpiration());
-        serial.setSerial(serialDTO.getSerial().longValue());
-        serial.setCollected(serialDTO.isCollected());
-        serial.setRevoked(serialDTO.isRevoked());
+        CertificateSerial serial = new CertificateSerial(Long.valueOf(serialDTO.getId()),
+            Util.toDate(serialDTO.getExpiration()));
+        serial.setSerial(Long.valueOf(serialDTO.getSerial()));
+        serial.setCollected(serialDTO.getCollected());
+        serial.setRevoked(serialDTO.getRevoked());
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(serial.getExpiration());

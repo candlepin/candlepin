@@ -14,10 +14,10 @@
  */
 package org.candlepin.resteasy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.jackson.DynamicFilterData;
@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -63,7 +63,7 @@ public class JsonProviderTest {
         JsonProvider provider = new JsonProvider(config);
         ourMapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
-        ResteasyProviderFactory.clearContextData();
+        ResteasyContext.clearContextData();
     }
 
     // This is kind of silly - basically just testing an initial setting...
@@ -152,7 +152,7 @@ public class JsonProviderTest {
     public void testDynamicPropertyFilterExcludeSingleProperty() {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.excludeAttribute("name");
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         String serializedKey = "";
@@ -184,7 +184,7 @@ public class JsonProviderTest {
         filterData.excludeAttribute("name");
         filterData.excludeAttribute("addOns");
         filterData.excludeAttribute("serviceLevel");
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         String serializedKey = "";
@@ -217,7 +217,7 @@ public class JsonProviderTest {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.includeAttribute("name");
         filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         String serializedKey = "";
@@ -247,7 +247,7 @@ public class JsonProviderTest {
         filterData.includeAttribute("releaseVer");
         filterData.includeAttribute("addOns");
         filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         String serializedKey = "";
@@ -277,7 +277,7 @@ public class JsonProviderTest {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.includeAttribute("owner.id");
         filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         NestedOwnerDTO ownerDTO = new NestedOwnerDTO()
@@ -312,7 +312,7 @@ public class JsonProviderTest {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.includeAttribute("owner.id");
         filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         NestedOwnerDTO ownerDTO = new NestedOwnerDTO()
             .key("owner_key")

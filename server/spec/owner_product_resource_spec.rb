@@ -1,5 +1,15 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
+require 'json'
+
+def hash_diff(h1, h2)
+  h1.keys.inject({}) do |memo, key|
+    unless h1[key] == h2[key]
+      memo[key] = [h1[key], h2[key]]
+    end
+    memo
+  end
+end
 
 describe 'Owner Product Resource' do
 
@@ -44,6 +54,17 @@ describe 'Owner Product Resource' do
         :contract_number => '222'
       })
     end
+  end
+
+  it 'should allow product field filtering' do
+    product_full = @cp.get("/owners/#{@owner['key']}/products/#{@product['id']}")
+    product_filtered = @cp.get("/owners/#{@owner['key']}/products/#{@product['id']}?exclude=uuid")
+    newdict = hash_diff(product_full, product_filtered)
+
+    # There should only be one changed element
+    newdict.keys.size.should == 1
+    # there should be no 'uuid' field in the new response
+    newdict["uuid"][1].should == nil
   end
 
   it 'should fail when fetching non-existing products' do

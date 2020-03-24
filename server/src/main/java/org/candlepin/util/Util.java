@@ -14,6 +14,7 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.model.CuratorException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,9 +41,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,12 +52,12 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Predicate;
-
-
+import java.util.stream.Collectors;
 
 /**
  * Genuinely random utilities.
@@ -148,11 +149,11 @@ public class Util {
         }
     }
 
-    public static <T> T assertNotNull(T value, String message) {
-        if (value == null) {
-            throw new IllegalArgumentException(message);
+    public static Date toDate(OffsetDateTime dt) {
+        if (dt == null) {
+            return null;
         }
-        return value;
+        return Date.from(dt.toInstant());
     }
 
     public static boolean equals(String str, String str1) {
@@ -616,5 +617,10 @@ public class Util {
      */
     public static OffsetDateTime toDateTime(Date date) {
         return date != null ? date.toInstant().atOffset(ZoneOffset.UTC) : null;
+    }
+
+    public static Map<String, String> toMap(Collection<AttributeDTO> attributes) {
+        return attributes.stream()
+            .collect(Collectors.toMap(AttributeDTO::getName, AttributeDTO::getValue));
     }
 }

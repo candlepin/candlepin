@@ -106,10 +106,10 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
     @Test
     public void testCloudProfileUpdatedOnGuestIdsForHostConsumerUpdates() {
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
         String hypervisorId = "test-host";
-        hostGuestMap.put(hypervisorId, new ArrayList(Collections
-            .singletonList(TestUtil.createGuestIdDTO("GUEST_B"))));
+        hostGuestMap.put(hypervisorId, new ArrayList<>(Collections
+            .singletonList("GUEST_B")));
 
         HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), true);
@@ -119,8 +119,8 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
         assertEquals(1, created.size());
         assertNotNull(consumerCurator.findByUuid(created.get(0).getUuid()).getRHCloudProfileModified());
 
-        hostGuestMap.put(hypervisorId, new ArrayList(Collections
-            .singletonList(TestUtil.createGuestIdDTO("GUEST_C"))));
+        hostGuestMap.put(hypervisorId, new ArrayList<>(Collections
+            .singletonList("GUEST_C")));
 
         result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), true);
@@ -143,7 +143,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
         testConsumer.setHypervisorId(hypervisorId);
         testConsumer = consumerCurator.create(testConsumer);
 
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
         hostGuestMap.put(testConsumer.getName(), new ArrayList<>());
 
         HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
@@ -218,10 +218,10 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
     @Test
     public void testCloudProfileNotUpdatedWithNoUpdatesForHypervisor() {
-        Map<String, List<GuestIdDTO>> hostGuestMap = new HashMap<>();
+        Map<String, List<String>> hostGuestMap = new HashMap<>();
         String hypervisorId = "test-host";
-        hostGuestMap.put(hypervisorId, new ArrayList(Collections
-            .singletonList(TestUtil.createGuestIdDTO("GUEST_B"))));
+        hostGuestMap.put(hypervisorId, new ArrayList<>(Collections
+            .singletonList("GUEST_B")));
 
         HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
             hostGuestMap, principal, owner.getKey(), true);

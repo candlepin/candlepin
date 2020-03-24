@@ -22,6 +22,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductContent;
 
 
 /**
@@ -32,8 +33,7 @@ public class ProductCertificateTranslatorTest extends
 
     protected ProductCertificateTranslator translator = new ProductCertificateTranslator();
 
-    protected ProductTranslatorTest productTranslatorTest =
-        new ProductTranslatorTest();
+    protected ProductTranslatorTest productTranslatorTest = new ProductTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
@@ -41,8 +41,11 @@ public class ProductCertificateTranslatorTest extends
 
         modelTranslator.registerTranslator(
             this.translator, ProductCertificate.class, ProductCertificateDTO.class);
-        modelTranslator.registerTranslator(new ProductTranslator(), Product.class, ProductDTO.class);
+        modelTranslator.registerTranslator(
+            new ProductTranslator(), Product.class, ProductDTO.class);
         modelTranslator.registerTranslator(new ContentTranslator(), Content.class, ContentDTO.class);
+        modelTranslator.registerTranslator(
+            new ProductContentTranslator(), ProductContent.class, ProductContentDTO.class);
     }
 
     @Override

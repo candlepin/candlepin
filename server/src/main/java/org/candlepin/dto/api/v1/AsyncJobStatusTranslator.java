@@ -20,8 +20,7 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.resource.util.JobStateMapper;
 import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
-
-import java.time.ZoneOffset;
+import org.candlepin.util.Util;
 
 
 /**
@@ -69,24 +68,19 @@ public class AsyncJobStatusTranslator implements ObjectTranslator<AsyncJobStatus
             throw new IllegalArgumentException("destination is null");
         }
 
-        destination.created(source.getCreated() != null ?
-                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .updated(source.getUpdated() != null ?
-                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .id(source.getId())
+        destination.id(source.getId())
             .key(source.getJobKey())
             .name(source.getName())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .group(source.getGroup())
             .origin(source.getOrigin())
             .executor(source.getExecutor())
             .principal(source.getPrincipalName())
-            .state(source.getState() != null ? source.getState().name() : null)
-            .previousState(source.getPreviousState() != null ?
-                source.getPreviousState().name() : null)
-            .startTime(source.getStartTime() != null ?
-                source.getStartTime().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .endTime(source.getEndTime() != null ?
-                source.getEndTime().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .state(translateState(source.getState()))
+            .previousState(translateState(source.getPreviousState()))
+            .startTime(Util.toDateTime(source.getStartTime()))
+            .endTime(Util.toDateTime(source.getEndTime()))
             .attempts(source.getAttempts())
             .maxAttempts(source.getMaxAttempts())
             .statusPath(source.getId() != null ?

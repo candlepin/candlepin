@@ -14,6 +14,8 @@
  */
 package org.candlepin.jackson;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 
@@ -22,8 +24,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.time.OffsetDateTime;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 
 /**

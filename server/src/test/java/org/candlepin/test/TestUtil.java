@@ -28,8 +28,8 @@ import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
@@ -51,6 +51,8 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.resource.util.InfoAdapter;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.Transactional;
 import org.candlepin.util.Util;
 
@@ -311,22 +313,21 @@ public class TestUtil {
             product.setUuid(dto.getUuid());
             product.setMultiplier(dto.getMultiplier());
 
-            product.setAttributes(dto.getAttributes());
+            product.setAttributes(Util.toMap(dto.getAttributes()));
 
             if (dto.getProductContent() != null) {
                 for (ProductContentDTO pcd : dto.getProductContent()) {
                     if (pcd != null) {
-                        Content content = createContent((ContentDTO) pcd.getContent());
+                        Content content = createContent(pcd.getContent());
 
                         if (content != null) {
-                            product.addContent(content, pcd.isEnabled() != null ? pcd.isEnabled() : true);
+                            product.addContent(content, pcd.getEnabled() != null ? pcd.getEnabled() : true);
                         }
                     }
                 }
             }
 
             product.setDependentProductIds(dto.getDependentProductIds());
-            product.setLocked(dto.isLocked() != null ? dto.isLocked() : false);
         }
 
         return product;
@@ -346,7 +347,7 @@ public class TestUtil {
             if (pdata.getProductContent() != null) {
                 for (ProductContentData pcd : pdata.getProductContent()) {
                     if (pcd != null) {
-                        Content content = createContent((ContentData) pcd.getContent());
+                        Content content = createContent(pcd.getContent());
 
                         if (content != null) {
                             product.addContent(content, pcd.isEnabled() != null ? pcd.isEnabled() : true);
@@ -367,6 +368,8 @@ public class TestUtil {
 
         dto.setId(id);
         dto.setName(name);
+        dto.setAttributes(new ArrayList<>());
+        dto.setBranding(new HashSet<>());
 
         return dto;
     }
@@ -377,6 +380,26 @@ public class TestUtil {
 
     public static ProductDTO createProductDTO() {
         return createProductDTO("test-product-" + randomInt());
+    }
+
+    public static ProductInfo createProductInfo(String id, String name) {
+        return InfoAdapter.productInfoAdapter(createProductDTO(id, name));
+    }
+
+    public static ProductInfo createProductInfo(String id) {
+        return InfoAdapter.productInfoAdapter(createProductDTO(id));
+    }
+
+    public static ProductInfo createProductInfo() {
+        return InfoAdapter.productInfoAdapter(createProductDTO());
+    }
+
+    public static Branding createBranding(String productId, String brandName) {
+        Branding branding = new Branding();
+        branding.setProductId(productId);
+        branding.setName(brandName);
+        branding.setType("OS");
+        return branding;
     }
 
     public static Subscription createSubscription() {

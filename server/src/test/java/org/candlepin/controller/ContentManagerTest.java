@@ -21,14 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.*;
 
-import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
@@ -69,35 +63,35 @@ public class ContentManagerTest extends DatabaseTestFixture {
     @Test
     public void testCreateContent() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
-        ContentDTO dto = TestUtil.createContentDTO("c1", "content-1");
-        dto.setLabel("test-label");
-        dto.setType("test-test");
-        dto.setVendor("test-vendor");
+        Content content = TestUtil.createContent("c1", "content-1");
+        content.setLabel("test-label");
+        content.setType("test-test");
+        content.setVendor("test-vendor");
 
-        assertNull(this.ownerContentCurator.getContentById(owner, dto.getId()));
+        assertNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
-        Content output = this.contentManager.createContent(owner, dto);
+        Content output = this.contentManager.createContent(owner, content);
 
-        assertEquals(output, this.ownerContentCurator.getContentById(owner, dto.getId()));
+        assertEquals(output, this.ownerContentCurator.getContentById(owner, content.getId()));
     }
 
     @Test
     public void testCreateContentThatAlreadyExists() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
 
-        ContentDTO dto = TestUtil.createContentDTO("c1", "content-1");
-        dto.setLabel("test-label");
-        dto.setType("test-test");
-        dto.setVendor("test-vendor");
+        Content content = TestUtil.createContent("c1", "content-1");
+        content.setLabel("test-label");
+        content.setType("test-test");
+        content.setVendor("test-vendor");
 
-        Content output = this.contentManager.createContent(owner, dto);
+        Content output = this.contentManager.createContent(owner, content);
 
         // Verify the creation worked
         assertNotNull(output);
-        assertEquals(output, this.ownerContentCurator.getContentById(owner, dto.getId()));
+        assertEquals(output, this.ownerContentCurator.getContentById(owner, content.getId()));
 
         // This should fail, since it already exists
-        assertThrows(IllegalStateException.class, () -> this.contentManager.createContent(owner, dto));
+        assertThrows(IllegalStateException.class, () -> this.contentManager.createContent(owner, content));
     }
 
     @Test
@@ -108,8 +102,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Content content1 = TestUtil.createContent("c1", "content-1");
         Content content2 = this.createContent("c1", "content-1", owner2);
 
-        ContentDTO cdto = this.modelTranslator.translate(content1, ContentDTO.class);
-        Content output = this.contentManager.createContent(owner1, cdto);
+        Content output = this.contentManager.createContent(owner1, content1);
 
         assertEquals(content2.getUuid(), output.getUuid());
         assertEquals(content2, output);
@@ -126,8 +119,9 @@ public class ContentManagerTest extends DatabaseTestFixture {
         product.addContent(content, true);
         this.createProduct(product, owner);
 
-        ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
-        Content output = this.contentManager.updateContent(owner, cdto, true);
+        Content clone = content.clone();
+        clone.setUuid(null);
+        Content output = this.contentManager.updateContent(owner, clone, true);
 
         assertEquals(output.getUuid(), content.getUuid());
         assertEquals(output, content);
@@ -143,7 +137,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Content content = this.createContent("c1", "content-1", owner);
         product.addContent(content, true);
         this.createProduct(product, owner);
-        ContentDTO update = TestUtil.createContentDTO("c1", "new content name");
+        Content update = TestUtil.createContent("c1", "new content name");
 
         Content output = this.contentManager.updateContent(owner, update, regenCerts);
 
@@ -178,7 +172,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Product product = new Product("p1", "product-1");
         Content content1 = this.createContent("c1", "content-1", owner1);
         Content content2 = this.createContent("c1", "updated content", owner2);
-        ContentDTO update = TestUtil.createContentDTO("c1", "updated content");
+        Content update = TestUtil.createContent("c1", "updated content");
         product.addContent(content1, true);
         this.createProduct(product, owner1);
 
@@ -213,7 +207,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Product product = new Product("p1", "product-1");
         product.addContent(content, true);
         this.createProduct(product, owner1);
-        ContentDTO update = TestUtil.createContentDTO("c1", "updated content");
+        Content update = TestUtil.createContent("c1", "updated content");
 
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
@@ -239,7 +233,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
     public void testUpdateContentThatDoesntExist() {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         Content content = TestUtil.createContent("c1", "content-1");
-        ContentDTO update = TestUtil.createContentDTO("c1", "new_name");
+        Content update = TestUtil.createContent("c1", "new_name");
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 

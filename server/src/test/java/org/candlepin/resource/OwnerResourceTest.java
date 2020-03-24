@@ -262,7 +262,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.mockUeberCertificateGenerator, this.mockEnvironmentCurator, this.calculatedAttributesUtil,
             this.contentOverrideValidator, this.serviceLevelValidator, this.ownerServiceAdapter, this.config,
             this.resolverUtil, this.consumerTypeValidator, this.mockOwnerProductCurator, this.modelTranslator,
-            this.mockJobManager);
+            this.mockJobManager, this.dtoValidator);
     }
 
     // TODO: This test does not belong here; it does not hit the resource at all
@@ -1676,7 +1676,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.mockOwnerCurator.getByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
 
-        List<UpstreamConsumerDTO> results = ownerres.getUpstreamConsumers(p, "admin");
+        List<UpstreamConsumerDTO> results = resource.getUpstreamConsumers(p, "admin");
 
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -2045,10 +2045,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
         OwnerDTO changes = new OwnerDTO()
-            .setKey("test_owner")
-            .setDisplayName("test_owner")
-            .setContentAccessModeList(entitlementMode + "," + orgEnvMode)
-            .setContentAccessMode(orgEnvMode);
+            .key("test_owner")
+            .displayName("test_owner")
+            .contentAccessModeList(entitlementMode + "," + orgEnvMode)
+            .contentAccessMode(orgEnvMode);
 
         OwnerDTO output = this.ownerResource.createOwner(changes);
 
@@ -2066,9 +2066,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
         OwnerDTO changes = new OwnerDTO()
-            .setKey("test_owner")
-            .setDisplayName("test_owner")
-            .setContentAccessModeList(entitlementMode + "," + orgEnvMode);
+            .key("test_owner")
+            .displayName("test_owner")
+            .contentAccessModeList(entitlementMode + "," + orgEnvMode);
 
         OwnerDTO output = this.ownerResource.createOwner(changes);
 
@@ -2086,9 +2086,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
         OwnerDTO changes = new OwnerDTO()
-            .setKey("test_owner")
-            .setDisplayName("test_owner")
-            .setContentAccessModeList(entitlementMode + ",unsupported_mode");
+            .key("test_owner")
+            .displayName("test_owner")
+            .contentAccessModeList(entitlementMode + ",unsupported_mode");
 
         assertThrows(BadRequestException.class, () -> ownerResource.createOwner(changes));
     }
@@ -2101,10 +2101,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
         OwnerDTO changes = new OwnerDTO()
-            .setKey("test_owner")
-            .setDisplayName("test_owner")
-            .setContentAccessModeList(entitlementMode)
-            .setContentAccessMode(orgEnvMode);
+            .key("test_owner")
+            .displayName("test_owner")
+            .contentAccessModeList(entitlementMode)
+            .contentAccessMode(orgEnvMode);
 
         assertThrows(BadRequestException.class, () -> ownerResource.createOwner(changes));
     }
@@ -2117,9 +2117,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
         OwnerDTO changes = new OwnerDTO()
-            .setKey("test_owner")
-            .setDisplayName("test_owner")
-            .setContentAccessModeList(orgEnvMode);
+            .key("test_owner")
+            .displayName("test_owner")
+            .contentAccessModeList(orgEnvMode);
 
         // This should fail since creation requires that we specify the values, even if those
         // values are defaults. As such, the default value of entitlement should not be allowed
@@ -2136,10 +2136,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
         OwnerDTO changes = new OwnerDTO()
-            .setKey("test_owner")
-            .setDisplayName("test_owner")
-            .setContentAccessModeList(orgEnvMode)
-            .setContentAccessMode(orgEnvMode);
+            .key("test_owner")
+            .displayName("test_owner")
+            .contentAccessModeList(orgEnvMode)
+            .contentAccessMode(orgEnvMode);
 
         assertThrows(BadRequestException.class, () -> ownerResource.createOwner(changes));
     }
@@ -2152,9 +2152,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
         OwnerDTO changes = new OwnerDTO()
-            .setKey("test_owner")
-            .setDisplayName("test_owner")
-            .setContentAccessModeList(entitlementMode + "," + orgEnvMode);
+            .key("test_owner")
+            .displayName("test_owner")
+            .contentAccessModeList(entitlementMode + "," + orgEnvMode);
 
         OwnerDTO output = this.ownerResource.createOwner(changes);
 
@@ -2176,7 +2176,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setContentAccessMode(entitlementMode));
 
         OwnerDTO changes = new OwnerDTO()
-            .setContentAccessModeList(entitlementMode + "," + orgEnvMode);
+            .contentAccessModeList(entitlementMode + "," + orgEnvMode);
 
         OwnerDTO output = this.ownerResource.updateOwner(owner.getKey(), changes);
 
@@ -2198,7 +2198,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setContentAccessMode(entitlementMode));
 
         OwnerDTO changes = new OwnerDTO()
-            .setContentAccessMode(orgEnvMode);
+            .contentAccessMode(orgEnvMode);
 
         OwnerDTO output = this.ownerResource.updateOwner(owner.getKey(), changes);
 
@@ -2220,8 +2220,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setContentAccessMode(entitlementMode));
 
         OwnerDTO changes = new OwnerDTO()
-            .setContentAccessModeList(entitlementMode + "," + orgEnvMode)
-            .setContentAccessMode(orgEnvMode);
+            .contentAccessModeList(entitlementMode + "," + orgEnvMode)
+            .contentAccessMode(orgEnvMode);
 
         OwnerDTO output = this.ownerResource.updateOwner(owner.getKey(), changes);
 
@@ -2243,7 +2243,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setContentAccessMode(entitlementMode));
 
         OwnerDTO changes = new OwnerDTO()
-            .setContentAccessModeList(entitlementMode + ",unsupported_mode");
+            .contentAccessModeList(entitlementMode + ",unsupported_mode");
 
         assertThrows(BadRequestException.class, () -> ownerResource.updateOwner(owner.getKey(), changes));
     }
@@ -2260,7 +2260,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setContentAccessMode(entitlementMode));
 
         OwnerDTO changes = new OwnerDTO()
-            .setContentAccessMode(orgEnvMode);
+            .contentAccessMode(orgEnvMode);
 
         assertThrows(BadRequestException.class, () -> ownerResource.updateOwner(owner.getKey(), changes));
     }
@@ -2277,7 +2277,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setContentAccessMode(entitlementMode));
 
         OwnerDTO changes = new OwnerDTO()
-            .setContentAccessMode(orgEnvMode);
+            .contentAccessMode(orgEnvMode);
 
         assertThrows(BadRequestException.class, () -> ownerResource.updateOwner(owner.getKey(), changes));
     }
@@ -2294,7 +2294,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .setContentAccessMode(entitlementMode));
 
         OwnerDTO changes = new OwnerDTO()
-            .setContentAccessModeList(orgEnvMode);
+            .contentAccessModeList(orgEnvMode);
 
         assertThrows(BadRequestException.class, () -> ownerResource.updateOwner(owner.getKey(), changes));
     }

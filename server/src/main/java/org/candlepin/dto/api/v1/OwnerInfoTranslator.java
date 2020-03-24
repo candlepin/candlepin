@@ -17,8 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.service.model.OwnerInfo;
-
-import java.time.ZoneOffset;
+import org.candlepin.util.Util;
 
 /**
  * The OwnerInfoTranslator provides translation from OwnerInfo service model objects to OwnerDTOs
@@ -62,27 +61,24 @@ public class OwnerInfoTranslator implements ObjectTranslator<OwnerInfo, OwnerDTO
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.created(source.getCreated() != null ?
-            source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .updated(source.getUpdated() != null ?
-            source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null);
-
         // Service model objects do not provide an ID
-        dest.setId(null);
-        dest.setKey(source.getKey());
+        dest.id(null)
+            .key(source.getKey())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
 
         // These fields are not present on the service model
-        dest.setDisplayName(null);
-        dest.setContentPrefix(null);
-        dest.setDefaultServiceLevel(null);
-        dest.setLogLevel(null);
-        dest.setAutobindDisabled(null);
-        dest.setAutobindHypervisorDisabled(null);
-        dest.setContentAccessMode(null);
-        dest.setContentAccessModeList(null);
-        dest.setLastRefreshed(null);
-        dest.setParentOwner(null);
-        dest.setUpstreamConsumer(null);
+            .displayName(null)
+            .contentPrefix(null)
+            .defaultServiceLevel(null)
+            .logLevel(null)
+            .autobindDisabled(null)
+            .autobindHypervisorDisabled(null)
+            .contentAccessMode(null)
+            .contentAccessModeList(null)
+            .lastRefreshed(null)
+            .parentOwner(null)
+            .upstreamConsumer(null);
 
         return dest;
     }

@@ -150,7 +150,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -2008,15 +2007,14 @@ public class ConsumerResource {
 
         List<CertificateSerialDTO> allCerts = new LinkedList<>();
         for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
-            allCerts.add(new CertificateSerialDTO().setSerial(BigInteger.valueOf(id)));
+            allCerts.add(new CertificateSerialDTO().serial(id.toString()));
         }
 
         // add content access cert if needed
         try {
             ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
             if (cac != null) {
-                allCerts.add(new CertificateSerialDTO().setSerial(
-                    BigInteger.valueOf(cac.getSerial().getId())));
+                allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId().toString()));
             }
         }
         catch (IOException ioe) {

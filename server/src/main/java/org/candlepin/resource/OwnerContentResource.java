@@ -30,6 +30,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
@@ -203,7 +204,7 @@ public class OwnerContentResource {
         if (content.getId() == null || content.getId().trim().length() == 0) {
             content.setId(this.idGenerator.generateId());
 
-            entity = this.contentManager.createContent(owner, content);
+            entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
         }
         else {
             Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
@@ -213,10 +214,11 @@ public class OwnerContentResource {
                     throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
                 }
 
-                entity = this.contentManager.updateContent(owner, content, true);
+                entity = this.contentManager.updateContent(owner, InfoAdapter.contentInfoAdapter(content),
+                    true);
             }
             else {
-                entity = this.contentManager.createContent(owner, content);
+                entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
             }
         }
 
@@ -276,7 +278,7 @@ public class OwnerContentResource {
             throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
         }
 
-        existing = this.contentManager.updateContent(owner, content, true);
+        existing = this.contentManager.updateContent(owner, InfoAdapter.contentInfoAdapter(content), true);
         this.contentAccessManager.refreshOwnerForContentAccess(owner);
 
         return this.translator.translate(existing, ContentDTO.class);

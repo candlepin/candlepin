@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2020 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -21,12 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,7 +56,10 @@ public class ProductTranslatorTest extends
         this.brandingTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(this.contentTranslator, Content.class, ContentDTO.class);
-        modelTranslator.registerTranslator(this.productTranslator, Product.class, ProductDTO.class);
+        modelTranslator.registerTranslator(
+            this.productTranslator, Product.class, ProductDTO.class);
+        modelTranslator.registerTranslator(
+            new ProductContentTranslator(), ProductContent.class, ProductContentDTO.class);
     }
 
     @Override
@@ -138,15 +141,15 @@ public class ProductTranslatorTest extends
     }
 
     @Override
-    protected void verifyOutput(Product source, ProductDTO dto, boolean childrenGenerated) {
+    protected void verifyOutput(
+        Product source, ProductDTO dto, boolean childrenGenerated) {
         if (source != null) {
             assertEquals(source.getUuid(), dto.getUuid());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getName(), dto.getName());
             assertEquals(source.getMultiplier(), dto.getMultiplier());
-            assertEquals(source.getAttributes(), dto.getAttributes());
+            assertEquals(source.getAttributes(), Util.toMap(dto.getAttributes()));
             assertEquals(source.getDependentProductIds(), dto.getDependentProductIds());
-            assertEquals(source.isLocked(), dto.isLocked());
             assertEquals(source.getHref(), dto.getHref());
 
             assertNotNull(dto.getProductContent());
@@ -187,7 +190,7 @@ public class ProductTranslatorTest extends
                         assertNotNull(cdto.getUuid());
 
                         if (cdto.getUuid().equals(content.getUuid())) {
-                            assertEquals(pc.isEnabled(), pcdto.isEnabled());
+                            assertEquals(pc.isEnabled(), pcdto.getEnabled());
 
                             // Pass the content off to the ContentTranslatorTest to verify it
                             this.contentTranslatorTest.verifyOutput(content, cdto, childrenGenerated);
@@ -227,4 +230,5 @@ public class ProductTranslatorTest extends
             assertNull(dto);
         }
     }
+
 }

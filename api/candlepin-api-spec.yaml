@@ -36,7 +36,9 @@ paths:
       tags:
         - GuestIds
       operationId: getGuestIds
-      x-java-response-container-type: Iterable
+      x-java-response:
+        type: Iterable
+        isContainer: true
       security: []
       parameters:
         - name: consumer_uuid
@@ -227,7 +229,9 @@ paths:
           - Consumer
           - ConsumerType
       operationId: getConsumerTypes
-      x-java-response-container-type: Iterable
+      x-java-response:
+        type: Iterable
+        isContainer: true
       security: []
       responses:
         200:
@@ -371,7 +375,9 @@ paths:
       tags:
         - Cdn
       operationId: getContentDeliveryNetworks
-      x-java-response-container-type: Iterable
+      x-java-response:
+        type: Iterable
+        isContainer: true
       security: []
       responses:
         200:
@@ -496,7 +502,9 @@ paths:
           schema:
             type: string
           description: Filter deleted consumers to those on or after this date
-      x-java-response-container-type: java.lang.Iterable
+      x-java-response:
+        type: Iterable
+        isContainer: true
       security: []
       responses:
         200:
@@ -534,7 +542,9 @@ paths:
         - DistributorVersions
       description: Retrieves a list of Distributor Versions
       operationId: getVersions
-      x-java-response-container-type: java.util.stream.Stream
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
       security: []
       parameters:
         - name: name_search
@@ -732,7 +742,9 @@ paths:
             type: string
             format: date-time
           description: Filter jobs to those on or before this date
-      x-java-response-container-type: java.util.stream.Stream
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
       security: []
       responses:
         200:
@@ -1064,7 +1076,9 @@ paths:
       tags:
         - CertificateSerial
       operationId: getCertificateSerials
-      x-java-response-container-type: Iterable
+      x-java-response:
+        type: Iterable
+        isContainer: true
       security: []
       responses:
         200:
@@ -1129,6 +1143,96 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /subscriptions:
+    get:
+      description: Retrieves a list of Subscriptions
+      tags:
+        - Subscription
+      operationId: getSubscriptions
+      security: []
+      responses:
+        200:
+          description: A list of subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: Activates a Subscription
+      tags:
+        - Subscription
+      operationId: activateSubscription
+      security: []
+      x-java-response:
+        type: javax.ws.rs.core.Response
+      parameters:
+        - name: consumer_uuid
+          in: query
+          description: The UUID of the consumer of the subscription
+          required: true
+          schema:
+            type: string
+        - name: email
+          in: query
+          description: The email to send a notification to for the activation
+          required: true
+          schema:
+            type: string
+        - name: email_locale
+          in: query
+          description: The locale of the email to send a notification to for the activation
+          required: true
+          schema:
+            type: string
+      responses:
+        202:
+          description: A Subscription is being activated
+        400:
+          description: Invalid request such as missing email/locale or when the consumer with the given uuid was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: The consumer with the given uuid was not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /subscriptions/{id}:
+    delete:
+      description: Removes a Subscription
+      tags:
+        - Subscription
+      operationId: deleteSubscription
+      security: []
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the subscription to remove
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Subscription was successfully deleted
+        404:
+          description: Subscription could not be found using the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Subscription could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
 components:
   responses:
     default:
@@ -1160,6 +1264,7 @@ components:
           type: string
         requestUuid:
           type: string
+
     Link:
       description: Used to represent a link to a top level resource in Candlepin
       properties:
@@ -1286,21 +1391,36 @@ components:
           type: integer
           format: int64
 
-    ReleaseVerDTO:
+    AttributeDTO:
+      description: Represents the attribute as a name-value pair
       properties:
-        releaseVer:
+        name:
+          type: string
+        value:
           type: string
 
-    NestedOwnerDTO:
-      properties:
-        id:
-          type: string
-        key:
-          type: string
-        displayName:
-          type: string
-        href:
-          type: string
+    BrandingDTO:
+      description: Represents the branding. It indicates that a particular engineering product ID is being rebranded by the entitlement to the given name. The type is used by clients to determine what action to take with the brand name.
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          required:
+            - productId
+            - name
+            - type
+          properties:
+            productId:
+              type: string
+              minLength: 1
+              maxLength: 255
+            name:
+              type: string
+              minLength: 1
+              maxLength: 255
+            type:
+              type: string
+              minLength: 1
+              maxLength: 32
 
     CertificateSerialDTO:
       description: Represents a database sequence used to ensure certificates receive unique serial numbers
@@ -1350,15 +1470,20 @@ components:
 
     ContentDTO:
       description: Represents the content data exposed to the API.
+      required:
+        - id
+        - uuid
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
           properties:
             uuid:
               type: string
+              minLength: 1
               example: "ff808081554a3e4101554a3e9033005d"
             id:
               type: string
+              minLength: 1
               example: "5001"
             type:
               type: string
@@ -1554,6 +1679,17 @@ components:
               type: string
               example: "NONE"
 
+    NestedOwnerDTO:
+      properties:
+        id:
+          type: string
+        key:
+          type: string
+        displayName:
+          type: string
+        href:
+          type: string
+
     OwnerDTO:
       description: DTO representing an owner/organization
       allOf:
@@ -1587,6 +1723,70 @@ components:
               $ref: '#/components/schemas/NestedOwnerDTO'
             upstreamConsumer:
               $ref: '#/components/schemas/UpstreamConsumerDTO'
+
+    ProductContentDTO:
+      description: Product content mapping exposed to the API
+      required:
+        - content
+      properties:
+        content:
+          $ref: "#/components/schemas/ContentDTO"
+        enabled:
+          type: boolean
+
+    ProductDTO:
+      description: DTO representing the product data exposed to the API
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+              example: 5051
+            uuid:
+              type: string
+              example: ff808081554a3e4101554a3e9033005d
+            name:
+              type: string
+              example: Admin OS Developer Bits
+            multiplier:
+              type: integer
+              format: int64
+              example: 1
+            attributes:
+              type: array
+              items:
+                $ref: '#/components/schemas/AttributeDTO'
+            productContent:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: "#/components/schemas/ProductContentDTO"
+            dependentProductIds:
+              type: array
+              uniqueItems: true
+              items:
+                type: string
+            branding:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: "#/components/schemas/BrandingDTO"
+            derivedProduct:
+              $ref: "#/components/schemas/ProductDTO"
+            providedProducts:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: "#/components/schemas/ProductDTO"
+            href:
+              type: string
+              example: /products/ff808081554a3e4101554a3e9033005d
+
+    ReleaseVerDTO:
+      properties:
+        releaseVer:
+          type: string
 
     RoleDTO:
       description: Represent the relationship between users and the permissions they have
@@ -1655,6 +1855,70 @@ components:
           type: string
         keycloakResource:
           type: string
+
+    SubscriptionDTO:
+      description: Represents the Subscription data exposed to the API
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            owner:
+              $ref: "#/components/schemas/NestedOwnerDTO"
+            product:
+              $ref: "#/components/schemas/ProductDTO"
+            derivedProduct:
+              $ref: "#/components/schemas/ProductDTO"
+            providedProducts:
+              type: array
+              uniqueItems: true
+              items:
+                "$ref": "#/components/schemas/ProductDTO"
+            derivedProvidedProducts:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: "#/components/schemas/ProductDTO"
+            quantity:
+              type: integer
+              format: int64
+            startDate:
+              type: string
+              format: date-time
+              example: "2019-05-08 09:42:37.000"
+            endDate:
+              type: string
+              format: date-time
+              example: "2019-05-08 09:42:37.000"
+            contractNumber:
+              type: string
+            accountNumber:
+              type: string
+            modified:
+              type: string
+              format: date-time
+              example: "2019-05-08 09:42:37.000"
+            lastModified:
+              type: string
+              format: date-time
+              example: "2019-05-08 09:42:37.000"
+            orderNumber:
+              type: string
+            upstreamPoolId:
+              type: string
+            upstreamEntitlementId:
+              type: string
+            upstreamConsumerId:
+              type: string
+            cert:
+              $ref: "#/components/schemas/CertificateDTO"
+            cdn:
+              $ref: "#/components/schemas/CdnDTO"
+            stacked:
+              type: boolean
+            stackId:
+              type: string
 
     UserDTO:
       description: "Represents user information for a given user"

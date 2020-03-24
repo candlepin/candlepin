@@ -17,8 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.User;
-
-import java.time.ZoneOffset;
+import org.candlepin.util.Util;
 
 
 /**
@@ -64,10 +63,8 @@ public class UserTranslator implements ObjectTranslator<User, UserDTO> {
             throw new IllegalArgumentException("destination is null");
         }
 
-        dest.created(source.getCreated() != null ?
-                source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
-            .updated(source.getUpdated() != null ?
-                source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
+        dest.created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .username(source.getUsername())
             .superAdmin(source.isSuperAdmin())
             .password(null) // The password field should never be set when populating from an entity

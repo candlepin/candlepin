@@ -62,11 +62,15 @@ import org.candlepin.dto.api.v1.PermissionBlueprintInfoTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintTranslator;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductCertificateTranslator;
+import org.candlepin.dto.api.v1.ProductContentDTO;
+import org.candlepin.dto.api.v1.ProductContentTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
 import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.dto.api.v1.RoleInfoTranslator;
 import org.candlepin.dto.api.v1.RoleTranslator;
+import org.candlepin.dto.api.v1.SubscriptionDTO;
+import org.candlepin.dto.api.v1.SubscriptionTranslator;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusTranslator;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
@@ -76,9 +80,7 @@ import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
 import org.candlepin.dto.api.v1.UserDTO;
 import org.candlepin.dto.api.v1.UserInfoTranslator;
 import org.candlepin.dto.api.v1.UserTranslator;
-import org.candlepin.dto.shim.ContentDTOTranslator;
 import org.candlepin.dto.shim.ContentDataTranslator;
-import org.candlepin.dto.shim.ProductDTOTranslator;
 import org.candlepin.dto.shim.ProductDataTranslator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Branding;
@@ -108,6 +110,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.Role;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UpstreamConsumer;
@@ -115,6 +118,7 @@ import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductData;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -122,7 +126,6 @@ import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
-
 
 import com.google.inject.Inject;
 
@@ -218,12 +221,16 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new ProductCertificateTranslator(), ProductCertificate.class, ProductCertificateDTO.class);
         this.registerTranslator(
+            new ProductContentTranslator(), ProductContent.class, ProductContentDTO.class);
+        this.registerTranslator(
             new RoleTranslator(), Role.class, RoleDTO.class);
         this.registerTranslator(
             new RoleInfoTranslator(), RoleInfo.class, RoleDTO.class);
         this.registerTranslator(
             new SystemPurposeComplianceStatusTranslator(), SystemPurposeComplianceStatus.class,
             SystemPurposeComplianceStatusDTO.class);
+        this.registerTranslator(
+            new SubscriptionTranslator(), Subscription.class, SubscriptionDTO.class);
         this.registerTranslator(
             new UeberCertificateTranslator(), UeberCertificate.class, UeberCertificateDTO.class);
         this.registerTranslator(
@@ -283,10 +290,10 @@ public class StandardTranslator extends SimpleModelTranslator {
             new ContentDataTranslator(), ContentData.class, ContentDTO.class);
         this.registerTranslator(
             new ProductDataTranslator(), ProductData.class, ProductDTO.class);
-        this.registerTranslator(
-            new ContentDTOTranslator(), org.candlepin.dto.manifest.v1.ContentDTO.class, ContentData.class);
-        this.registerTranslator(
-            new ProductDTOTranslator(), org.candlepin.dto.manifest.v1.ProductDTO.class, ProductData.class);
+        this.registerTranslator(new org.candlepin.dto.shim.ContentDTOTranslator(),
+            org.candlepin.dto.manifest.v1.ContentDTO.class, ContentData.class);
+        this.registerTranslator(new org.candlepin.dto.shim.ProductDTOTranslator(),
+            org.candlepin.dto.manifest.v1.ProductDTO.class, ProductData.class);
 
         // Rules framework translators
         /////////////////////////////////////////////

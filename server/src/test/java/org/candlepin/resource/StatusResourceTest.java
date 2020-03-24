@@ -14,10 +14,11 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -192,8 +193,8 @@ public class StatusResourceTest {
         StatusResource sr = this.createResource();
 
         StatusDTO statusDTO = sr.status();
-        assertNull("keycloak realm is not null", statusDTO.getKeycloakRealm());
-        assertNull("keycloak auth URL is not null", statusDTO.getKeycloakAuthUrl());
-        assertNull("keycloak resource is not null", statusDTO.getKeycloakResource());
+        assertNull(statusDTO.getKeycloakRealm(), "keycloak realm is not null");
+        assertNull(statusDTO.getKeycloakAuthUrl(), "keycloak auth URL is not null");
+        assertNull(statusDTO.getKeycloakResource(), "keycloak resource is not null");
     }
 }

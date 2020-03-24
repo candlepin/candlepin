@@ -14,6 +14,9 @@
  */
 package org.candlepin.resource.validation;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -33,8 +36,6 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 
 /**
@@ -167,7 +168,7 @@ public class DTOValidatorTest {
         dto.list = new ArrayList<>();
         dto.list.add(new Object());
         dto.queue = new PriorityQueue<>();
-        dto.queue.add(new Object());
+        dto.queue.add(getComparableObject());
         dto.stack = new Stack<>();
         dto.stack.add(new Object());
 
@@ -185,7 +186,7 @@ public class DTOValidatorTest {
         dto.list = new ArrayList<>();
         dto.list.add(new Object());
         dto.queue = new PriorityQueue<>();
-        dto.queue.add(new Object());
+        dto.queue.add(getComparableObject());
         dto.stack = new Stack<>();
         dto.stack.add(null);
 
@@ -227,7 +228,7 @@ public class DTOValidatorTest {
         dto.list = new ArrayList<>();
         dto.list.add(null);
         dto.queue = new PriorityQueue<>();
-        dto.queue.add(new Object());
+        dto.queue.add(getComparableObject());
 
         assertThrows(IllegalArgumentException.class, () ->
             validator.validateCollectionElementsNotNull(dto::getSet, dto::getList, dto::getQueue)
@@ -349,5 +350,9 @@ public class DTOValidatorTest {
         assertThrows(IllegalArgumentException.class, () ->
             validator.validateMapElementsNotNull(dto::getMap1, dto::getMap2, dto::getMap3)
         );
+    }
+
+    private Comparable<String> getComparableObject() {
+        return (Comparable<String>) o -> 0;
     }
 }

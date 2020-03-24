@@ -404,7 +404,7 @@ public class ConsumerResourceTest {
     private void verifyCertificateSerialNumbers(
         List<CertificateSerialDTO> serials) {
         assertEquals(3, serials.size());
-        assertEquals(BigInteger.ONE, serials.get(0).getSerial());
+        assertEquals("1", serials.get(0).getSerial());
     }
 
     private List<EntitlementCertificate> createEntitlementCertificates() {

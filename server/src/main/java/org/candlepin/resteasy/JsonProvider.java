@@ -23,6 +23,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.v1.AttributeDTO;
+import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.CdnDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
@@ -36,15 +38,19 @@ import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.dto.api.v1.StatusDTO;
+import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.dto.api.v1.TimestampedEntity;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UserDTO;
 import org.candlepin.jackson.DateSerializer;
 import org.candlepin.jackson.OffsetDateTimeDeserializer;
 import org.candlepin.jackson.OffsetDateTimeSerializer;
+import org.candlepin.jackson.ProductAttributesMixIn;
 import org.candlepin.jackson.ReleaseVersionWrapDeserializer;
 
 import com.fasterxml.jackson.core.Version;
@@ -160,6 +166,8 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.addMixIn(ActivationKeyDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ActivationKeyPoolDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(AsyncJobStatusDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(AttributeDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(BrandingDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(CdnDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(CertificateDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(CertificateSerialDTO.class, DynamicPropertyFilterMixIn.class);
@@ -172,13 +180,15 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.addMixIn(GuestIdDTOArrayElement.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(NestedOwnerDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(PermissionBlueprintDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(ProductContentDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(ProductDTO.class, ProductAttributesMixIn.class);
         mapper.addMixIn(RoleDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(StatusDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(TimestampedEntity.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(UserDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(OwnerDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(SubscriptionDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(UpstreamConsumerDTO.class, DynamicPropertyFilterMixIn.class);
         //TODO: Add more mix-ins here as more DTOs are ported to openapi spec
     }
 }
-

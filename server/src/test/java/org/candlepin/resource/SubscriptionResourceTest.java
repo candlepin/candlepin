@@ -14,13 +14,18 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -32,33 +37,27 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Collections;
 import java.util.Locale;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
-
 
 
 /**
  * SubscriptionResourceTest
  */
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class SubscriptionResourceTest  {
-    private SubscriptionResource subResource;
-
-    @Mock private ContentAccessManager mockContentAccessManager;
     @Mock private SubscriptionServiceAdapter subService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private PoolManager poolManager;
+    @Mock private ModelTranslator modelTranslator;
+    @Mock private ContentAccessManager mockContentAccessManager;
 
-    @Mock private HttpServletResponse response;
+    private SubscriptionResource subResource;
 
     @BeforeEach
     public void setUp() {
@@ -68,15 +67,14 @@ public class SubscriptionResourceTest  {
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
 
-        this.subResource = new SubscriptionResource(subService, consumerCurator, poolManager,
-            mockContentAccessManager, i18n);
+        this.subResource = new SubscriptionResource(
+            subService, consumerCurator, poolManager, i18n, modelTranslator, mockContentAccessManager);
     }
 
     @Test
     public void testInvalidIdOnDelete() throws Exception {
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
-        when(cqmock.iterator()).thenReturn(Collections.<Pool>emptyList().iterator());
+        when(cqmock.iterator()).thenReturn(Collections.emptyIterator());
         when(poolManager.getPoolsBySubscriptionId(anyString())).thenReturn(cqmock);
 
         assertThrows(NotFoundException.class,
