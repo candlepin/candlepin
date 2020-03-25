@@ -30,6 +30,7 @@ describe 'User Resource' do
     # Try listing for the test user:
     @username = random_string 'user'
     user = create_user(@test_owner, @username, 'password')
+    expect(user.id).to_not be_nil
     new_username = random_string 'username'
     user["username"]= new_username
     newuser = @cp.update_user(user, @username)
