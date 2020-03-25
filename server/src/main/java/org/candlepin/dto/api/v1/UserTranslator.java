@@ -70,7 +70,8 @@ public class UserTranslator implements ObjectTranslator<User, UserDTO> {
                 source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
             .username(source.getUsername())
             .superAdmin(source.isSuperAdmin())
-            .password(null); // The password field should never be set when populating from an entity
+            .password(null) // The password field should never be set when populating from an entity
+            .id(source.getId());
 
         return dest;
     }
