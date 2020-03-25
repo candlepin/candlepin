@@ -45,7 +45,8 @@ public class UserDTOTranslatorTest extends AbstractTranslatorTest<UserDTO, User,
         UserDTO userDTO = new UserDTO()
             .username("user_username")
             .password("user_password")
-            .superAdmin(true);
+            .superAdmin(true)
+            .id("random_id");
 
         return userDTO;
     }
@@ -65,6 +66,8 @@ public class UserDTOTranslatorTest extends AbstractTranslatorTest<UserDTO, User,
             assertEquals(source.getSuperAdmin(), dest.isSuperAdmin());
 
             assertEquals(Util.hash(source.getPassword()), dest.getHashedPassword());
+
+            assertNull(dest.getId()); // we don't translate the id
         }
         else {
             assertNull(dest);

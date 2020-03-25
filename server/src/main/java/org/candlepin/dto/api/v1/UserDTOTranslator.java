@@ -61,6 +61,10 @@ public class UserDTOTranslator implements ObjectTranslator<UserDTO, User> {
             false : source.getSuperAdmin());
         destination.setHashedPassword(source.getPassword() != null ?
             Util.hash(source.getPassword()) : null);
+        // This translator is used to for translating UserDTOs to a User due to its UserInfo implementation,
+        // and then passing them on to the UserServiceAdapter. Since UserInfo does not have an id field, we
+        // should not be setting one:
+        destination.setId(null);
 
         return destination;
     }
