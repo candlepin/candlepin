@@ -375,7 +375,8 @@ paths:
           description: The ID of the certificate serial to retrieve
           required: true
           schema:
-            type: long
+            type: integer
+            format: int64
       responses:
         200:
           description: ''
@@ -818,6 +819,9 @@ components:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
           properties:
+            id:
+              type: string
+              example: "ff808081554a3e4101554a3e9033005d"
             username:
               type: string
               example: "admin"

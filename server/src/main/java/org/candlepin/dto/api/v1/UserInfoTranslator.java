@@ -69,7 +69,8 @@ public class UserInfoTranslator implements ObjectTranslator<UserInfo, UserDTO> {
                 source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null)
             .username(source.getUsername())
             .superAdmin(source.isSuperAdmin())
-            .password(null); // The password field should never be set when populating from an entity
+            .password(null) // The password field should never be set when populating from an entity
+            .id(null);      // We don't have an ID from the adapters, so we'll just null it out.
 
         return dest;
     }
