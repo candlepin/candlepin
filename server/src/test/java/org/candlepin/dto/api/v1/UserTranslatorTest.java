@@ -68,6 +68,7 @@ public class UserTranslatorTest extends AbstractTranslatorTest<User, UserDTO, Us
 
             assertEquals(source.getUsername(), dest.getUsername());
             assertEquals(source.isSuperAdmin(), dest.getSuperAdmin());
+            assertEquals(source.getId(), dest.getId());
 
             // Under no circumstance should we be copying over the password field on translation.
             // This should always be null on the DTO.
