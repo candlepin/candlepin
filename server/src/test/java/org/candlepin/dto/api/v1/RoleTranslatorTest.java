@@ -98,17 +98,22 @@ public class RoleTranslatorTest extends AbstractTranslatorTest<Role, RoleDTO, Ro
             if (childrenGenerated) {
                 // Verify users
                 for (User user : source.getUsers()) {
+                    boolean verified = false;
                     for (UserDTO userDto : dest.getUsers()) {
-                        assertNotNull(user.getId());
+                        assertNotNull(userDto);
+                        assertNotNull(userDto.getId());
 
-                        if (user.getId() != null) {
+                        if (userDto.getId().equals(user.getId())) {
                             this.userTranslatorTest.verifyOutput(user, userDto, childrenGenerated);
+                            verified = true;
                         }
                     }
+                    assertTrue(verified);
                 }
 
                 // Verify permissions
                 for (PermissionBlueprint permission : source.getPermissions()) {
+                    boolean verified = false;
                     for (PermissionBlueprintDTO permissionDto : dest.getPermissions()) {
                         assertNotNull(permission.getId());
                         assertNotNull(permissionDto.getId());
@@ -116,8 +121,10 @@ public class RoleTranslatorTest extends AbstractTranslatorTest<Role, RoleDTO, Ro
                         if (permission.getId().equals(permissionDto.getId())) {
                             this.permTranslatorTest.verifyOutput(permission, permissionDto,
                                 childrenGenerated);
+                            verified = true;
                         }
                     }
+                    assertTrue(verified);
                 }
             }
             else {
