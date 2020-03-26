@@ -38,17 +38,10 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
     public PoolDTOTest() {
         super(PoolDTO.class);
 
-        OwnerDTO owner = new OwnerDTO();
+        NestedOwnerDTO owner = new NestedOwnerDTO();
         owner.setId("owner-id");
         owner.setKey("owner-key");
         owner.setDisplayName("owner-name");
-        owner.setContentPrefix("content-prefix");
-        owner.setDefaultServiceLevel("service-level");
-        owner.setLogLevel("log-level");
-        owner.setAutobindDisabled(true);
-        owner.setContentAccessMode("content-access-mode");
-        owner.setContentAccessModeList("content-access-mode-list");
-
         EntitlementDTO entitlement = new EntitlementDTO();
         entitlement.setId("entitlement-id");
 

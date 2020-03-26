@@ -18,7 +18,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.service.model.OwnerInfo;
 
-
+import java.time.ZoneOffset;
 
 /**
  * The OwnerInfoTranslator provides translation from OwnerInfo service model objects to OwnerDTOs
@@ -62,8 +62,10 @@ public class OwnerInfoTranslator implements ObjectTranslator<OwnerInfo, OwnerDTO
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.setCreated(source.getCreated());
-        dest.setUpdated(source.getUpdated());
+        dest.created(source.getCreated() != null ?
+            source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null)
+            .updated(source.getUpdated() != null ?
+            source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null);
 
         // Service model objects do not provide an ID
         dest.setId(null);

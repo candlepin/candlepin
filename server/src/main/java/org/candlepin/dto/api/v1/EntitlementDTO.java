@@ -52,7 +52,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
     private static final long serialVersionUID = 1L;
 
     private String id;
-    private OwnerDTO owner;
+    private NestedOwnerDTO owner;
     private ConsumerDTO consumer;
     private PoolDTO pool;
     private Integer quantity;
@@ -107,7 +107,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
      * @return the owner of this entitlement.
      */
     @JsonIgnore
-    public OwnerDTO getOwner() {
+    public NestedOwnerDTO getOwner() {
         return this.owner;
     }
 
@@ -119,7 +119,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
      * @return a reference to this EntitlementDTO object.
      */
     @JsonProperty
-    public EntitlementDTO setOwner(OwnerDTO owner) {
+    public EntitlementDTO setOwner(NestedOwnerDTO owner) {
         this.owner = owner;
         return this;
     }
@@ -459,8 +459,12 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
     public EntitlementDTO clone() {
         EntitlementDTO copy = super.clone();
 
-        OwnerDTO owner = this.getOwner();
-        copy.setOwner(owner != null ? owner.clone() : null);
+        NestedOwnerDTO owner = this.getOwner();
+        copy.setOwner(owner != null ? new NestedOwnerDTO()
+            .id(owner.getId())
+            .displayName(owner.getDisplayName())
+            .href(owner.getHref())
+            .key(owner.getKey()) : null);
 
         PoolDTO pool = this.getPool();
         copy.setPool(pool != null ? pool.clone() : null);

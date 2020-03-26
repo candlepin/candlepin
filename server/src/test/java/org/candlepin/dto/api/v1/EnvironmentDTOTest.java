@@ -29,7 +29,6 @@ import java.util.Map;
 public class EnvironmentDTOTest extends AbstractDTOTest<EnvironmentDTO> {
 
     protected ContentDTOTest contentDTOTest = new ContentDTOTest();
-    protected OwnerDTOTest ownerDTOTest = new OwnerDTOTest();
 
     protected Map<String, Object> values;
 
@@ -43,13 +42,14 @@ public class EnvironmentDTOTest extends AbstractDTOTest<EnvironmentDTO> {
             content.setId(content.getId() + "-" + i);
             environmentContent.add(new EnvironmentContentDTO(content, i % 2 != 0));
         }
+        NestedOwnerDTO owner = new NestedOwnerDTO().id("OwnerId").displayName("Name").key("12345");
 
         this.values = new HashMap<>();
         this.values.put("Id", "test_value");
         this.values.put("Name", "test_value");
         this.values.put("Description", "test_value");
         this.values.put("EnvironmentContent", environmentContent);
-        this.values.put("Owner", ownerDTOTest.getPopulatedDTOInstance());
+        this.values.put("Owner", owner);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
     }

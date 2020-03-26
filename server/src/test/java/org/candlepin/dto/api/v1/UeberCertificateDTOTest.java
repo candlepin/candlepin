@@ -41,16 +41,10 @@ public class UeberCertificateDTOTest extends AbstractDTOTest<UeberCertificateDTO
         serial.setCollected(true);
         serial.setRevoked(true);
 
-        OwnerDTO owner = new OwnerDTO();
+        NestedOwnerDTO owner = new NestedOwnerDTO();
         owner.setId("owner_id");
         owner.setKey("owner_key");
         owner.setDisplayName("owner_name");
-        owner.setContentPrefix("content_prefix");
-        owner.setDefaultServiceLevel("service_level");
-        owner.setLogLevel("log_level");
-        owner.setAutobindDisabled(true);
-        owner.setContentAccessMode("content_access_mode");
-        owner.setContentAccessModeList("content_access_mode_list");
 
         this.values = new HashMap<>();
         this.values.put("Id", "test-id");
