@@ -439,8 +439,20 @@ describe 'Import Test Group:', :serial => true do
 
       upstream = @cp.get_owner(@import_owner['key'])['upstreamConsumer']
       upstream.uuid.should == consumer['uuid']
+      upstream.apiUrl.should == "api1"
+      upstream.webUrl.should == "webapp1"
       upstream.id.should_not be_nil
+      upstream.idCert.should_not be_nil
       upstream.name.should == consumer['name']
+
+      # Delete the created and updated fields, as the DTO does not contain these fields
+      upstream['type'].delete('created');
+      upstream['type'].delete('updated');
+      consumer['type'].delete('created');
+      consumer['type'].delete('updated');
+
+      # upstream.type caused a failure on some machines
+      upstream['type'].should == consumer['type']
     end
 
     it 'should contain all derived product data' do
