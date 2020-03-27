@@ -30,9 +30,9 @@ describe 'OAuth' do
   def make_request(oauth_consumer, oauth_secret, uri, headers = {})
     consumer = OAuth::Consumer.new(oauth_consumer, oauth_secret, @oauth_params)
 
-    request = Net::HTTP::Get.new("#{@site}#{uri}")
-    consumer.sign!(request)
     url = URI.parse("#{@site}#{uri}")
+    request = Net::HTTP::Get.new(url)
+    consumer.sign!(request)
 
     headers.each_pair do |k, v|
       request[k] = v
