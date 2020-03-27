@@ -33,14 +33,14 @@ public class OwnerTranslatorTest extends
     AbstractTranslatorTest<Owner, OwnerDTO, OwnerTranslator> {
 
     protected OwnerTranslator translator = new OwnerTranslator();
-    protected NestedUpstreamConsumerTranslatorTest nestedUpstreamConsumerTranslatorTest =
-        new NestedUpstreamConsumerTranslatorTest();
+    protected UpstreamConsumerTranslatorTest upstreamConsumerTranslatorTest =
+        new UpstreamConsumerTranslatorTest();
     protected NestedOwnerTranslatorTest nestedOwnerTranslatorTest =
         new NestedOwnerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.nestedUpstreamConsumerTranslatorTest.initModelTranslator(modelTranslator);
+        this.upstreamConsumerTranslatorTest.initModelTranslator(modelTranslator);
         this.nestedOwnerTranslatorTest.initModelTranslator(modelTranslator);
         modelTranslator.registerTranslator(this.translator, Owner.class, OwnerDTO.class);
     }
@@ -63,7 +63,7 @@ public class OwnerTranslatorTest extends
             owner.setParentOwner(parent);
             owner.setContentPrefix("content_prefix-" + i);
             owner.setDefaultServiceLevel("service_level-" + i);
-            owner.setUpstreamConsumer(this.nestedUpstreamConsumerTranslatorTest.initSourceObject());
+            owner.setUpstreamConsumer(this.upstreamConsumerTranslatorTest.initSourceObject());
             owner.setLogLevel("log_level-" + i);
             owner.setAutobindDisabled(true);
             owner.setAutobindHypervisorDisabled(true);
@@ -107,8 +107,8 @@ public class OwnerTranslatorTest extends
             }
 
             if (childrenGenerated) {
-                this.nestedUpstreamConsumerTranslatorTest
-                    .verifyOutput(source.getUpstreamConsumer(), dest.getUpstreamConsumer(), true);
+                this.upstreamConsumerTranslatorTest.verifyOutput(source.getUpstreamConsumer(),
+                    dest.getUpstreamConsumer(), true);
             }
             else {
                 assertNull(dest.getUpstreamConsumer());

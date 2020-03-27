@@ -93,7 +93,7 @@ public class OwnerTranslator implements ObjectTranslator<Owner, OwnerDTO> {
         if (translator != null) {
             UpstreamConsumer consumer = source.getUpstreamConsumer();
             dest.upstreamConsumer(consumer != null ?
-                translator.translate(consumer, NestedUpstreamConsumerDTO.class) : null);
+                translator.translate(consumer, UpstreamConsumerDTO.class) : null);
         }
         else {
             dest.setUpstreamConsumer(null);
