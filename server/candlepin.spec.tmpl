@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.15
+Version: 2.6.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,11 @@ fi
 
 #raw
 %changelog
+* Fri Mar 27 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.16-1
+- Update spec test for vagrant (wpoteat@redhat.com)
+- 1767981: Unable to enable the tools repository for Satellite 6.6
+  (wpoteat@redhat.com)
+
 * Tue Mar 17 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.15-1
 - 1813980: EUS Content not available in content access mode
   (wpoteat@redhat.com)
