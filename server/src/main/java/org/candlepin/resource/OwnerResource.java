@@ -61,7 +61,7 @@ import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTOArrayElement;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -2240,13 +2240,13 @@ public class OwnerResource {
     @ApiOperation(notes = " Retrieves a list of Upstream Consumers for an Owner",
         value = "Get Upstream Consumers")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<UpstreamConsumerDTOArrayElement> getUpstreamConsumers(@Context Principal principal,
+    public List<UpstreamConsumerDTO> getUpstreamConsumers(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
 
         Owner owner = this.findOwnerByKey(ownerKey);
         UpstreamConsumer consumer = owner.getUpstreamConsumer();
-        UpstreamConsumerDTOArrayElement dto =
-            this.translator.translate(consumer, UpstreamConsumerDTOArrayElement.class);
+        UpstreamConsumerDTO dto =
+            this.translator.translate(consumer, UpstreamConsumerDTO.class);
 
         // returning as a list for future proofing. today we support one, but
         // users of this api want to protect against having to change their code
