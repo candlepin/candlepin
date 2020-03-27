@@ -578,15 +578,6 @@ components:
         href:
           type: string
 
-    NestedUpstreamConsumerDTO:
-      properties:
-        id:
-          type: string
-        uuid:
-          type: string
-        name:
-          type: string
-
     CertificateSerialDTO:
       description: Represents a database sequence used to ensure certificates receive unique serial numbers
       allOf:
@@ -792,7 +783,7 @@ components:
             parentOwner:
               $ref: '#/components/schemas/NestedOwnerDTO'
             upstreamConsumer:
-              $ref: '#/components/schemas/NestedUpstreamConsumerDTO'
+              $ref: '#/components/schemas/UpstreamConsumerDTO'
 
     RoleDTO:
       description: Represent the relationship between users and the permissions they have
@@ -899,15 +890,6 @@ components:
               type: string
             type:
               $ref: '#/components/schemas/ConsumerTypeDTO'
-            idCert:
-              $ref: '#/components/schemas/CertificateDTO'
-
-    UpstreamConsumerDTOArrayElement:
-      description: DTO representing an upstream consumer only with certificate attribute
-      allOf:
-        - $ref: '#/components/schemas/TimestampedEntity'
-        - type: object
-          properties:
             idCert:
               $ref: '#/components/schemas/CertificateDTO'
 

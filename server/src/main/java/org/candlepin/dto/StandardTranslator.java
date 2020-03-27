@@ -56,8 +56,6 @@ import org.candlepin.dto.api.v1.ImportUpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.ImportUpstreamConsumerTranslator;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTOTranslator;
-import org.candlepin.dto.api.v1.NestedUpstreamConsumerDTO;
-import org.candlepin.dto.api.v1.NestedUpstreamConsumerTranslator;
 import org.candlepin.dto.api.v1.OwnerInfoTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTOTranslator;
@@ -76,8 +74,6 @@ import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusTranslator;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UeberCertificateTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTOArrayElement;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTOArrayElementTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
 import org.candlepin.dto.api.v1.UserDTO;
 import org.candlepin.dto.api.v1.UserDTOTranslator;
@@ -238,12 +234,6 @@ public class StandardTranslator extends SimpleModelTranslator {
             new UeberCertificateTranslator(), UeberCertificate.class, UeberCertificateDTO.class);
         this.registerTranslator(
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
-        this.registerTranslator(
-            new UpstreamConsumerDTOArrayElementTranslator(),
-            UpstreamConsumer.class, UpstreamConsumerDTOArrayElement.class);
-        this.registerTranslator(
-            new NestedUpstreamConsumerTranslator(),
-            UpstreamConsumer.class, NestedUpstreamConsumerDTO.class);
         this.registerTranslator(
             new UserTranslator(), User.class, UserDTO.class);
         this.registerTranslator(

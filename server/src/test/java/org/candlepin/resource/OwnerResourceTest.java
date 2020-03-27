@@ -72,7 +72,7 @@ import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTOArrayElement;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.AsyncJobStatus;
@@ -1676,7 +1676,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.mockOwnerCurator.getByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
 
-        List<UpstreamConsumerDTOArrayElement> results = ownerres.getUpstreamConsumers(p, "admin");
+        List<UpstreamConsumerDTO> results = ownerres.getUpstreamConsumers(p, "admin");
 
         assertNotNull(results);
         assertEquals(1, results.size());
