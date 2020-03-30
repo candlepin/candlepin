@@ -47,7 +47,7 @@ public class LoggingFilter implements Filter {
 
     public static final String CSID_KEY = "csid";
     private static final int CSID_MAX_LENGTH = 40;
-    private static final Pattern CSID_REGEX = Pattern.compile("^([a-zA-Z0-9-]){1," + CSID_MAX_LENGTH + "}$");
+    private static final Pattern CSID_REGEX = Pattern.compile("^([a-zA-Z0-9-]){1,}$");
 
     /** The metadata key used to display the owner's key or display name */
     public static final String OWNER_KEY = "org"; // This value must match that set in logback.xml
@@ -95,11 +95,15 @@ public class LoggingFilter implements Filter {
 
             if (correlationId != null) {
                 if (CSID_REGEX.matcher(correlationId).matches()) {
+                    if (correlationId.length() > CSID_MAX_LENGTH) {
+                        log.warn("Correlation Id {} has more characters than {}, hence truncating to {}",
+                            correlationId, CSID_MAX_LENGTH, CSID_MAX_LENGTH);
+                        correlationId = correlationId.substring(0, CSID_MAX_LENGTH);
+                    }
                     MDC.put(CSID_KEY, correlationId);
                 }
                 else {
-                    log.warn("Correlation Id must consist of alphanumeric characters or hypens and " +
-                        "be {} or fewer characters in length.", CSID_MAX_LENGTH);
+                    log.warn("Correlation Id must consist of alphanumeric characters or hypens");
                 }
             }
 
