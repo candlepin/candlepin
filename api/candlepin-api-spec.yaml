@@ -166,6 +166,126 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
         default:
           $ref: '#/components/responses/default'
+  /cdn:
+    get:
+      description: Retrieves a list of CDN's
+      tags:
+        - Cdn
+      operationId: getContentDeliveryNetworks
+      x-java-response-container-type: Iterable
+      security: []
+      responses:
+        200:
+          description: A list of CDN's
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CdnDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      tags:
+        - Cdn
+      description: Creates a new CDN
+      operationId: createCdn
+      security: []
+      requestBody:
+        description: CDN to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CdnDTO'
+      responses:
+        200:
+          description: CDN successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CdnDTO'
+        400:
+          description: CDN label already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception has occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+  /cdn/{label}:
+    put:
+      tags:
+        - Cdn
+      description: Updates a CDN
+      operationId: updateCdn
+      security: []
+      parameters:
+        - name: label
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Fields that needs to be updated for specified CDN
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CdnDTO'
+      responses:
+        200:
+          description: CDN successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CdnDTO'
+        404:
+          description: No such content delivery network
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception has occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+    delete:
+      tags:
+        - Cdn
+      description: Deletes a CDN
+      operationId: deleteCdn
+      security: []
+      parameters:
+        - name: label
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: CDN successfully deleted
+        500:
+          description: Multiple CDN instances found with the same label
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception has occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
 
   /deleted_consumers:
     get:
