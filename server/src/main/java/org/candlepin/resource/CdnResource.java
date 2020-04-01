@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CdnManager;
@@ -30,35 +29,15 @@ import org.candlepin.model.CertificateSerial;
 
 import com.google.inject.Inject;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-
 /**
  * CdnResource
  */
-@Path("/cdn")
-@Api(value = "cdn", authorizations = { @Authorization("basic") })
-public class CdnResource {
+public class CdnResource implements CdnApi {
 
     private I18n i18n;
     private CdnCurator curator;
@@ -73,34 +52,21 @@ public class CdnResource {
         this.translator = translator;
     }
 
-    @ApiOperation(notes = "Retrieves a list of CDN's", value = "getContentDeliveryNetworks",
-        response = CdnDTO.class, responseContainer = "list")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     public CandlepinQuery<CdnDTO> getContentDeliveryNetworks() {
         return this.translator.translateQuery(curator.listAll(), CdnDTO.class);
     }
 
-    @ApiOperation(notes = "Removes a CDN", value = "delete")
-    @ApiResponses({ @ApiResponse(code =  400, message = ""), @ApiResponse(code =  404, message = "") })
-    @DELETE
-    @Produces(MediaType.WILDCARD)
-    @Path("/{label}")
-    public void delete(@PathParam("label") String label,
-        @Context Principal principal) {
+    @Override
+    public void deleteCdn(String label) {
         Cdn cdn = curator.getByLabel(label);
         if (cdn != null) {
             cdnManager.deleteCdn(cdn);
         }
     }
 
-    @ApiOperation(notes = "Creates a CDN @return a Cdn object", value = "create")
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public CdnDTO create(
-        @ApiParam(name = "cdn", required = true) CdnDTO cdnDTOInput,
-        @Context Principal principal) {
+    @Override
+    public CdnDTO createCdn(CdnDTO cdnDTOInput) {
         Cdn existing = curator.getByLabel(cdnDTOInput.getLabel());
         if (existing != null) {
             throw new BadRequestException(i18n.tr(
@@ -117,14 +83,8 @@ public class CdnResource {
         return this.translator.translate(cdnManager.createCdn(cndToCreate), CdnDTO.class);
     }
 
-    @ApiOperation(notes = "Updates a CDN @return a Cdn object", value = "update")
-    @PUT
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{label}")
-    public CdnDTO update(@PathParam("label") String label,
-        @ApiParam(name = "cdn", required = true) CdnDTO cdnDTOInput,
-        @Context Principal principal) {
+    @Override
+    public CdnDTO updateCdn(String label, CdnDTO cdnDTOInput) {
         Cdn existing = verifyAndLookupCdn(label);
         this.populateEntity(existing, cdnDTOInput);
         cdnManager.updateCdn(existing);
