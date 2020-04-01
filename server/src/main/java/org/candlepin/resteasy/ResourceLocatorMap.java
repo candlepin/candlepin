@@ -62,14 +62,16 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
     private static final Logger log = LoggerFactory.getLogger(ResourceLocatorMap.class);
 
     private Map<Method, ResourceLocator> internalMap;
+    private MethodLocator methodLocator;
     private boolean hasBeenInitialized = false;
 
     private Injector injector;
 
     @Inject
-    public ResourceLocatorMap(Injector injector) {
+    public ResourceLocatorMap(Injector injector, MethodLocator methodLocator) {
         // Maintain the insertion order for nice output in debug statement
         internalMap = new LinkedHashMap<>();
+        this.methodLocator = methodLocator;
         this.injector = injector;
     }
 
@@ -95,6 +97,10 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
 
     @Override
     public ResourceLocator get(Object key) {
+        Method concreteMethod = methodLocator.getConcreteMethod((Method) key);
+        if (concreteMethod != null) {
+            return internalMap.get(concreteMethod);
+        }
         return internalMap.get(key);
     }
 
@@ -140,10 +146,10 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
         }
 
         List<Binding<?>> rootResourceBindings = new ArrayList<>();
-        for (final Binding<?> binding : injector.getBindings().values()) {
-            final Type type = binding.getKey().getTypeLiteral().getType();
+        for (Binding<?> binding : injector.getBindings().values()) {
+            Type type = binding.getKey().getTypeLiteral().getType();
             if (type instanceof Class) {
-                final Class<?> beanClass = (Class) type;
+                Class<?> beanClass = (Class) type;
                 if (GetRestful.isRootResource(beanClass)) {
                     rootResourceBindings.add(binding);
                 }

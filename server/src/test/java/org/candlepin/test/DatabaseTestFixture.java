@@ -71,6 +71,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.resteasy.AnnotationLocator;
+import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.Util;
@@ -153,12 +154,12 @@ public class DatabaseTestFixture {
     @Inject protected PoolCurator poolCurator;
     @Inject protected RoleCurator roleCurator;
     @Inject protected UserCurator userCurator;
-
     @Inject protected PermissionFactory permissionFactory;
-
-    @Inject protected ResourceLocatorMap locatorMap;
-    @Inject protected AnnotationLocator annotationLocator;
     @Inject protected ModelTranslator modelTranslator;
+
+    protected ResourceLocatorMap locatorMap;
+    protected MethodLocator methodLocator;
+    protected AnnotationLocator annotationLocator;
 
     private static Injector parentInjector;
     protected Injector injector;
@@ -208,11 +209,13 @@ public class DatabaseTestFixture {
         this.injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
 
-        locatorMap = this.injector.getInstance(ResourceLocatorMap.class);
+        methodLocator = new MethodLocator(injector);
+        methodLocator.init();
+
+        locatorMap = new ResourceLocatorMap(injector, methodLocator);
         locatorMap.init();
 
-        annotationLocator = this.injector.getInstance(AnnotationLocator.class);
-        annotationLocator.init();
+        annotationLocator = new AnnotationLocator(methodLocator);
 
         securityInterceptor = this.injector.getInstance(TestingInterceptor.class);
 
