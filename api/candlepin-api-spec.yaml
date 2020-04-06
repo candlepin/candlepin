@@ -462,6 +462,394 @@ paths:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
 
+  /jobs:
+    get:
+      description: Fetches a set of job statuses matching the given filter options
+      tags:
+        - Jobs
+      operationId: listJobStatuses
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Filter jobs based on ids
+        - in: query
+          name: key
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Filter jobs based on keys
+        - in: query
+          name: state
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Filter jobs based on statuses
+        - in: query
+          name: owner
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Filter jobs based on owners
+        - in: query
+          name: principal
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Filter jobs based on principals
+        - in: query
+          name: origin
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Filter jobs based on origins
+        - in: query
+          name: executor
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Filter jobs based on executors
+        - in: query
+          name: after
+          schema:
+            type: string
+            format: date-time
+          description: Filter jobs to those on or after this date
+        - in: query
+          name: before
+          schema:
+            type: string
+            format: date-time
+          description: Filter jobs to those on or before this date
+      x-java-response-container-type: java.util.stream.Stream
+      security: []
+      responses:
+        200:
+          description: A set of job statuses matching the given filter options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: Invalid date range.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        404:
+          description: Unknown job states.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+    delete:
+      description: Cleans up terminal jobs matching the provided criteria
+      tags:
+        - Jobs
+      operationId: cleanupTerminalJobs
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Cleans up jobs based on ids
+        - in: query
+          name: key
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Cleans up jobs based on keys
+        - in: query
+          name: state
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Cleans up jobs based on statuses
+        - in: query
+          name: owner
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Cleans up jobs based on owners
+        - in: query
+          name: principal
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Cleans up jobs based on principals
+        - in: query
+          name: origin
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Cleans up jobs based on origins
+        - in: query
+          name: executor
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+          description: Cleans up jobs based on executors
+        - in: query
+          name: after
+          schema:
+            type: string
+            format: date-time
+          description: Cleans up jobs to those on or after this date
+        - in: query
+          name: before
+          schema:
+            type: string
+            format: date-time
+          description: Cleans up jobs to those on or before this date
+        - in: query
+          name: force
+          schema:
+            type: boolean
+            default: false
+          description: Cleans up job forcefully
+      security: []
+      responses:
+        200:
+          description: Cleaned up jobs count
+          content:
+            application/json:
+              schema:
+                type: integer
+        400:
+          description: Invalid date range
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        404:
+          description: Unknown job states
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+  /jobs/{id}:
+    get:
+      description: Fetches the job status associated with the specified job ID
+      tags:
+        - Jobs
+      operationId: getJobStatus
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the job to retrieve
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Job status associated with the specified job ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: when job ID is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        404:
+          description: A job could not be found using the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+    delete:
+      description: Cancels the job associated with the specified job ID
+      tags:
+        - Jobs
+      operationId: cancelJob
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the job to cancel
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Job status associated with the specified job ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: When job ID is null or empty. When job is already in a terminal state or otherwise cannot be canceled at this time
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        404:
+          description: A job could not be found using the provided ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+  /jobs/scheduler:
+    get:
+      description: Fetches the status of the job scheduler for this Candlepin node
+      tags:
+        - Jobs
+      operationId: getSchedulerStatus
+      security: []
+      responses:
+        200:
+          description: Status of the job scheduler for this Candlepin node
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulerStatusDTO'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+    post:
+      description: Enables or disables the job scheduler for this Candlepin node
+      tags:
+        - Jobs
+      parameters:
+        - in: query
+          name: running
+          description: Boolean value to set running status
+          schema:
+            type: boolean
+            default: true
+      operationId: setSchedulerStatus
+      security: []
+      responses:
+        200:
+          description: Status of the job scheduler for this Candlepin node
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulerStatusDTO'
+        500:
+          description: Error setting scheduler status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
+  /jobs/schedule/{jobKey}:
+    post:
+      description: Schedules a job using the specified key and job properties
+      parameters:
+        - in: path
+          name: jobKey
+          description: Job key
+          required: true
+          schema:
+            type: string
+      tags:
+        - Jobs
+      operationId: scheduleJob
+      security: []
+      responses:
+        200:
+          description: Status of the job scheduler for this Candlepin node
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: When job key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        403:
+          description: Job is not configured for manual scheduling
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        500:
+          description: An unexpected exception occurred while scheduling job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          description: An unexpected exception occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+
   /serials:
     get:
       description: Retrieves a list of Certificate Serials
@@ -926,6 +1314,12 @@ components:
               type: array
               items:
                 "$ref": "#/components/schemas/PermissionBlueprintDTO"
+
+    SchedulerStatusDTO:
+      description: Represents scheduler status
+      properties:
+        isRunning:
+          type: boolean
 
     StatusDTO:
       description: Version and Status information about running Candlepin server
