@@ -82,7 +82,7 @@ public class ContentDTOTranslator implements ObjectTranslator<ContentDTO, Conten
         dest.setGpgUrl(source.getGpgUrl());
         dest.setMetadataExpiration(source.getMetadataExpiration());
         dest.setArches(source.getArches());
-        dest.setModifiedProductIds(source.getRequiredProductIds());
+        dest.setModifiedProductIds(source.getModifiedProductIds());
 
         // We manually set this to false since it is not included in the exported data.
         dest.setLocked(false);

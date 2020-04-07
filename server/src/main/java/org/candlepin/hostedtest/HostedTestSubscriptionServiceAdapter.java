@@ -422,7 +422,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         cdata.setGpgUrl(cinfo.getGpgUrl());
         cdata.setArches(cinfo.getArches());
         cdata.setMetadataExpiration(cinfo.getMetadataExpiration());
-        cdata.setRequiredProductIds(cinfo.getRequiredProductIds());
+        cdata.setModifiedProductIds(cinfo.getModifiedProductIds());
         cdata.setCreated(new Date());
         cdata.setUpdated(new Date());
 
@@ -490,8 +490,8 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
             cdata.setMetadataExpiration(cinfo.getMetadataExpiration());
         }
 
-        if (cinfo.getRequiredProductIds() != null) {
-            cdata.setRequiredProductIds(cinfo.getRequiredProductIds());
+        if (cinfo.getModifiedProductIds() != null) {
+            cdata.setModifiedProductIds(cinfo.getModifiedProductIds());
         }
 
         cdata.setUpdated(new Date());

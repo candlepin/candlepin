@@ -396,22 +396,16 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     /**
-     * Retrieves the collection of IDs representing products that are modified by this content. If
-     * the modified product IDs have not yet been defined, this method returns an empty collection.
+     * Fetches a collection of product IDs required by this content. If this content has no required
+     * products, this method returns an empty collection.
      *
      * @return
-     *  the modified product IDs of the content
-     */
-    public Collection<String> getModifiedProductIds() {
-        return new SetView(this.modifiedProductIds);
-    }
-
-    /**
-     * {@inheritDoc}
+     *  a collection of product IDs required by this content, or null if the required products have
+     *  not been set
      */
     @Override
-    public Collection<String> getRequiredProductIds() {
-        return this.getModifiedProductIds();
+    public Collection<String> getModifiedProductIds() {
+        return new SetView(this.modifiedProductIds);
     }
 
     /**

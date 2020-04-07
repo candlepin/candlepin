@@ -134,7 +134,7 @@ public interface ContentInfo {
      *  a collection of product IDs required by this content, or null if the required products have
      *  not been set
      */
-    Collection<String> getRequiredProductIds();
+    Collection<String> getModifiedProductIds();
 
     /**
      * Fetches the date this content was created. If the creation date has not been set, this method

@@ -467,31 +467,25 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
     }
 
     /**
-     * Retrieves the collection of IDs representing products that are modified by this content. If
-     * the modified product IDs have not yet been defined, this method returns null.
+     * Fetches a collection of product IDs required by this content. If the required products have
+     * not yet been set, this method returns null. If this content has no required products, this
+     * method returns an empty collection.
      *
      * @return
-     *  the modified product IDs of the content, or null if the modified product IDs have not yet
-     *  been defined
+     *  a collection of product IDs required by this content, or null if the required products have
+     *  not been set
      */
+    @Override
     public Collection<String> getModifiedProductIds() {
         return this.modifiedProductIds != null ? new SetView(this.modifiedProductIds) : null;
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Collection<String> getRequiredProductIds() {
-        return this.getModifiedProductIds();
-    }
-
-    /**
-     * Adds the specified product ID as a product ID to be modified by the content represented by
-     * this DTO. If the product ID is already modified in this DTO, it will not be added again.
+     * Adds the specified product ID as a product ID to be required by the content represented by
+     * this DTO. If the product ID is already required in this DTO, it will not be added again.
      *
      * @param productId
-     *  The product ID to add as a modified product ID to this DTO
+     *  The product ID to add as a required product ID to this DTO
      *
      * @return
      *  true if the product ID was added successfully; false otherwise
@@ -509,12 +503,12 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
     }
 
     /**
-     * Removes the specified product ID from the collection of product IDs to be modified by the
-     * content represented by this DTO. If the product ID is not modified by this DTO, this method
+     * Removes the specified product ID from the collection of product IDs to be required by the
+     * content represented by this DTO. If the product ID is not required by this DTO, this method
      * does nothing
      *
      * @param productId
-     *  The product ID to remove from the modified product IDs on this DTO
+     *  The product ID to remove from the required product IDs on this DTO
      *
      * @throws IllegalArgumentException
      *  if productId is null
@@ -531,12 +525,12 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
     }
 
     /**
-     * Sets the modified product IDs for the content represented by this DTO. Any previously
-     * existing modified product IDs will be cleared before assigning the given product IDs.
+     * Sets the required product IDs for the content represented by this DTO. Any previously
+     * existing required product IDs will be cleared before assigning the given product IDs.
      *
      * @param modifiedProductIds
-     *  A collection of product IDs to be modified by the content, or null to clear the
-     *  existing modified product IDs
+     *  A collection of product IDs to be required by the content, or null to clear the
+     *  existing required product IDs
      *
      * @return
      *  a reference to this DTO
@@ -557,20 +551,6 @@ public class ContentData extends CandlepinDTO implements ContentInfo {
         }
 
         return this;
-    }
-
-    /**
-     * New name for the old setModifiedProductIds method.
-     *
-     * @param requiredProductIds
-     *  A collection of product IDs to be required by the content, or null to clear the
-     *  existing required product IDs
-     *
-     * @return
-     *  a reference to this DTO
-     */
-    public ContentData setRequiredProductIds(Collection<String> requiredProductIds) {
-        return this.setModifiedProductIds(requiredProductIds);
     }
 
     /**

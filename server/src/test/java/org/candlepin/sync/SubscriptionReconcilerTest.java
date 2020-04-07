@@ -116,7 +116,7 @@ public class SubscriptionReconcilerTest {
             content.setReleaseVersion(dto.getReleaseVersion());
             content.setGpgUrl(dto.getGpgUrl());
             content.setMetadataExpiration(dto.getMetadataExpiration());
-            content.setModifiedProductIds(dto.getRequiredProductIds());
+            content.setModifiedProductIds(dto.getModifiedProductIds());
             content.setArches(dto.getArches());
         }
 
