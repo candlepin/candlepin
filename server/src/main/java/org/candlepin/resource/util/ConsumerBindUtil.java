@@ -40,6 +40,7 @@ import org.candlepin.version.CertVersionConflictException;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +86,7 @@ public class ConsumerBindUtil {
 
         boolean listSuccess = false;
         boolean isCAModeEnabledForAny = false;
+        boolean isAutoheal = BooleanUtils.isTrue(consumer.isAutoheal());
         for (ActivationKey key : keys) {
             boolean keySuccess = true;
             handleActivationKeyOverrides(consumer, key.getContentOverrides());
@@ -97,13 +99,22 @@ public class ConsumerBindUtil {
             if (key.isAutoAttach() != null && key.isAutoAttach()) {
                 if (autoattachDisabledForOwner || key.getOwner().isContentAccessEnabled()) {
                     String caMessage = "";
+                    String autohealMessage = "";
                     if (key.getOwner().isContentAccessEnabled()) {
                         caMessage = " because of the content access mode setting";
                         isCAModeEnabledForAny = true;
                     }
+                    if (!isAutoheal) {
+                        autohealMessage = " .Also, the consumer autoheal value is false";
+                    }
                     log.warn(
-                        "Auto-attach is disabled for owner{}. Skipping auto-attach for consumer/key: {}/{}",
-                        caMessage, consumer.getUuid(), key.getName());
+                        "Auto-attach is disabled for owner{}{}. Skipping auto-attach for consumer/key: {}/{}",
+                        caMessage, autohealMessage, consumer.getUuid(), key.getName());
+                }
+                else if (!isAutoheal) {
+                    log.warn(
+                        "The consumer autoheal value is false. Skipping auto-attach for consumer/key: {}/{}",
+                        consumer.getUuid(), key.getName());
                 }
                 else {
                     handleActivationKeyAutoBind(consumer, key);
