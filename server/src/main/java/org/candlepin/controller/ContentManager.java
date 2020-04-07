@@ -854,9 +854,9 @@ public class ContentManager {
             return true;
         }
 
-        Collection<String> requiredProductIds = dto.getRequiredProductIds();
+        Collection<String> requiredProductIds = dto.getModifiedProductIds();
         if (requiredProductIds != null &&
-            !Util.collectionsAreEqual(entity.getRequiredProductIds(), requiredProductIds)) {
+            !Util.collectionsAreEqual(entity.getModifiedProductIds(), requiredProductIds)) {
 
             return true;
         }
@@ -999,8 +999,8 @@ public class ContentManager {
             entity.setMetadataExpiration(update.getMetadataExpiration());
         }
 
-        if (update.getRequiredProductIds() != null) {
-            entity.setModifiedProductIds(update.getRequiredProductIds());
+        if (update.getModifiedProductIds() != null) {
+            entity.setModifiedProductIds(update.getModifiedProductIds());
         }
 
         if (update.getArches() != null) {

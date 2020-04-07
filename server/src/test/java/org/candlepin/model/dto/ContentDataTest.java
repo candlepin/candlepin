@@ -474,9 +474,9 @@ public class ContentDataTest {
         // Verify only the specified field was set
         for (Method method : ContentData.class.getDeclaredMethods()) {
             if (method.getName().matches("^(get|is)\\w+") &&
-                !method.getName().equals("getRequiredProductIds")) {
+                !method.getName().equals("getModifiedProductIds")) {
 
-                // The getRequiredProductIds method is a special case that would require large architectural
+                // The getModifiedProductIds method is a special case that would require large architectural
                 // changes to these tests to handle properly. Basically, it's just another
 
                 Object output = method.invoke(base);

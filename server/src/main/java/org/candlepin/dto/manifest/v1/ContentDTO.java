@@ -18,8 +18,6 @@ import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.util.SetView;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -332,21 +330,21 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements C
      * {@inheritDoc}
      */
     @Override
-    public Collection<String> getRequiredProductIds() {
+    public Collection<String> getModifiedProductIds() {
         return this.requiredProductIds != null ? new SetView(this.requiredProductIds) : null;
     }
 
     /**
-     * Adds the specified product ID as a product ID to be modified by the content represented by
-     * this DTO. If the product ID is already modified in this DTO, it will not be added again.
+     * Adds the specified product ID as a product ID to be required by the content represented by
+     * this DTO. If the product ID is already required in this DTO, it will not be added again.
      *
      * @param productId
-     *  The product ID to add as a modified product ID to this DTO
+     *  The product ID to add as a required product ID to this DTO
      *
      * @return
      *  true if the product ID was added successfully; false otherwise
      */
-    public boolean addRequiredProductId(String productId) {
+    public boolean addModifiedProductId(String productId) {
         if (productId == null) {
             throw new IllegalArgumentException("productId is null");
         }
@@ -359,12 +357,12 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements C
     }
 
     /**
-     * Removes the specified product ID from the collection of product IDs to be modified by the
-     * content represented by this DTO. If the product ID is not modified by this DTO, this method
+     * Removes the specified product ID from the collection of product IDs to be required by the
+     * content represented by this DTO. If the product ID is not required by this DTO, this method
      * does nothing
      *
      * @param productId
-     *  The product ID to remove from the modified product IDs on this DTO
+     *  The product ID to remove from the required product IDs on this DTO
      *
      * @throws IllegalArgumentException
      *  if productId is null
@@ -372,7 +370,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements C
      * @return
      *  true if the product ID was removed successfully; false otherwise
      */
-    public boolean removeRequiredProductId(String productId) {
+    public boolean removeModifiedProductId(String productId) {
         if (productId == null) {
             throw new IllegalArgumentException("productId is null");
         }
@@ -381,18 +379,17 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements C
     }
 
     /**
-     * Sets the modified product IDs for the content represented by this DTO. Any previously
-     * existing modified product IDs will be cleared before assigning the given product IDs.
+     * Sets the required product IDs for the content represented by this DTO. Any previously
+     * existing required product IDs will be cleared before assigning the given product IDs.
      *
      * @param requiredProductIds
-     *  A collection of product IDs to be modified by the content content, or null to clear the
-     *  existing modified product IDs
+     *  A collection of product IDs to be required by the content content, or null to clear the
+     *  existing required product IDs
      *
      * @return
      *  a reference to this DTO
      */
-    @JsonProperty("modifiedProductIds")
-    public ContentDTO setRequiredProductIds(Collection<String> requiredProductIds) {
+    public ContentDTO setModifiedProductIds(Collection<String> requiredProductIds) {
         if (requiredProductIds != null) {
             if (this.requiredProductIds == null) {
                 this.requiredProductIds = new HashSet<String>();
@@ -489,7 +486,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements C
                 .append(this.getGpgUrl(), that.getGpgUrl())
                 .append(this.getMetadataExpiration(), that.getMetadataExpiration())
 
-                .append(this.getRequiredProductIds(), that.getRequiredProductIds())
+                .append(this.getModifiedProductIds(), that.getModifiedProductIds())
                 .append(this.getArches(), that.getArches());
 
             return builder.isEquals();
@@ -513,7 +510,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements C
             .append(this.getReleaseVersion())
             .append(this.getGpgUrl())
             .append(this.getMetadataExpiration())
-            .append(this.getRequiredProductIds())
+            .append(this.getModifiedProductIds())
             .append(this.getArches());
 
         return builder.toHashCode();
@@ -523,7 +520,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements C
     public ContentDTO clone() {
         ContentDTO copy = super.clone();
 
-        copy.setRequiredProductIds(this.getRequiredProductIds());
+        copy.setModifiedProductIds(this.getModifiedProductIds());
 
         return copy;
     }
@@ -555,7 +552,7 @@ public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements C
         this.setReleaseVersion(source.getReleaseVersion());
         this.setGpgUrl(source.getGpgUrl());
         this.setMetadataExpiration(source.getMetadataExpiration());
-        this.setRequiredProductIds(source.getRequiredProductIds());
+        this.setModifiedProductIds(source.getModifiedProductIds());
         this.setArches(source.getArches());
 
         return this;
