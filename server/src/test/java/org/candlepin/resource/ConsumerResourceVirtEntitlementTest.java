@@ -32,7 +32,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
@@ -59,7 +58,6 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
     @Inject private ConsumerResource consumerResource;
     @Inject private PoolManager poolManager;
-    @Inject private OwnerServiceAdapter ownerAdapter;
     @Inject private SubscriptionServiceAdapter subAdapter;
 
     private ConsumerType manifestType;
@@ -214,7 +212,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                 p = poolManager.get(p.getId());
                 assertEquals(20L, p.getConsumed());
                 assertEquals(-1L, p.getQuantity());
-                poolManager.getRefresher(subAdapter, ownerAdapter).add(owner).run();
+                poolManager.getRefresher(subAdapter).add(owner).run();
                 // double check after pools refresh
                 assertEquals(20L, p.getConsumed());
                 assertEquals(-1L, p.getQuantity());

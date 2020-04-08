@@ -78,7 +78,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         this.jobManager = mock(JobManager.class);
 
         or = new OwnerResource(
-            ownerCurator, null, consumerCurator, i18n, null, null, null,
+            ownerCurator, null, consumerCurator, i18n, null, null, null, null,
             null, poolManager, null, null,
             null, null, entitlementCurator,
             ueberCertCurator, ueberCertGenerator, null,  null, contentOverrideValidator,

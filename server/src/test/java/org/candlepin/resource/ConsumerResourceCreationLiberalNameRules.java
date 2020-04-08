@@ -14,20 +14,29 @@
  */
 package org.candlepin.resource;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.HashMap;
+
+
 
 /**
  * ConsumerResourceCreationLiberalNameRules
  */
-public class ConsumerResourceCreationLiberalNameRules extends
-    ConsumerResourceCreationTest {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+public class ConsumerResourceCreationLiberalNameRules extends ConsumerResourceCreationTest {
+
     private static class ConfigForTesting extends MapConfiguration {
         @SuppressWarnings("serial")
         public ConfigForTesting() {
@@ -47,13 +56,14 @@ public class ConsumerResourceCreationLiberalNameRules extends
 
     @Test
     public void containsMultibyteKorean() {
-        Assert.assertNotNull(createConsumer("서브스크립션 "));
+        assertNotNull(createConsumer("서브스크립션 "));
     }
 
     @Test
     public void containsMultibyteOriya() {
-        Assert.assertNotNull(createConsumer("ପରିବେଶ"));
+        assertNotNull(createConsumer("ପରିବେଶ"));
     }
+
     // This fails with the normal regex, but should be okay here
     @Test
     public void containsBadCharacter() {

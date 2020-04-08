@@ -17,7 +17,6 @@ package org.candlepin.controller;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -26,7 +25,6 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
@@ -34,14 +32,11 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,9 +69,6 @@ public class OwnerManager {
     private OwnerContentCurator ownerContentCurator;
     private ContentManager contentManager;
     private OwnerCurator ownerCurator;
-    private ContentAccessCertServiceAdapter contentAccessCertService;
-    private ContentAccessCertificateCurator contentAccessCertCurator;
-    private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private UeberCertificateCurator uberCertificateCurator;
     private OwnerServiceAdapter ownerServiceAdapter;
     private EventSink sink;
@@ -93,9 +85,6 @@ public class OwnerManager {
         OwnerContentCurator ownerContentCurator,
         ContentManager contentManager,
         OwnerCurator ownerCurator,
-        ContentAccessCertServiceAdapter contentAccessCertService,
-        ContentAccessCertificateCurator contentAccessCertCurator,
-        OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
         UeberCertificateCurator uberCertificateCurator,
         OwnerServiceAdapter ownerServiceAdapter,
         EventSink sink) {
@@ -111,9 +100,6 @@ public class OwnerManager {
         this.ownerContentCurator = ownerContentCurator;
         this.contentManager = contentManager;
         this.ownerCurator = ownerCurator;
-        this.contentAccessCertService = contentAccessCertService;
-        this.contentAccessCertCurator = contentAccessCertCurator;
-        this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.uberCertificateCurator = uberCertificateCurator;
         this.ownerServiceAdapter = ownerServiceAdapter;
         this.sink = sink;
@@ -197,124 +183,8 @@ public class OwnerManager {
         ownerCurator.flush();
     }
 
-    /**
-     * Refreshes the content access mode and content access mode list for the given owner using the
-     * default owner service adapter.
-     *
-     * @param owner
-     *  The owner to refresh
-     *
-     * @throws IllegalArgumentException
-     *  if adapter is null or owner is null or invalid
-     */
-    public void refreshContentAccessMode(Owner owner) {
-        this.refreshContentAccessMode(this.ownerServiceAdapter, owner);
-    }
-
-    /**
-     * Refreshes the content access mode and content access mode list for the given owner using the
-     * specified owner service adapter.
-     *
-     * @param adapter
-     *  The OwnerServiceAdapter instance to use for refreshing the owner's content access
-     *
-     * @param owner
-     *  The owner to refresh
-     *
-     * @throws IllegalArgumentException
-     *  if adapter is null or owner is null or invalid
-     */
-    @Transactional
-    public void refreshContentAccessMode(OwnerServiceAdapter adapter, Owner owner) {
-        if (adapter == null) {
-            throw new IllegalArgumentException("adapter is null");
-        }
-
-        if (owner == null) {
-            throw new IllegalArgumentException("owner is null");
-        }
-
-        // Lock the owner
-        this.ownerCurator.lock(owner);
-
-        // Fetch the upstream list and mode
-        String upstreamList = adapter.getContentAccessModeList(owner.getKey());
-        String upstreamMode = adapter.getContentAccessMode(owner.getKey());
-        String currentMode = owner.getContentAccessMode();
-
-        // This shouldn't happen, but in the event our upstream source is having issues, let's
-        // not put ourselves in a bad state as well.
-        if (!StringUtils.isEmpty(upstreamList)) {
-            // Not empty list. Verify that the upstream mode is present.
-            String[] modes = upstreamList.split(",");
-
-            if (!StringUtils.isEmpty(upstreamMode)) {
-                if (!ArrayUtils.contains(modes, upstreamMode)) {
-                    throw new IllegalStateException(
-                        "Upstream content access mode is not present in the upstream access mode list");
-                }
-            }
-            else {
-                upstreamMode = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
-
-                if (!ArrayUtils.contains(modes, upstreamMode)) {
-                    throw new IllegalStateException(
-                        "Upstream content access mode list does not allow the default content access mode");
-                }
-            }
-        }
-        else {
-            // Empty list. Verify the upstream mode is also empty.
-            if (!StringUtils.isEmpty(upstreamMode)) {
-                throw new IllegalStateException(
-                    "Upstream content access mode is not present in the upstream access mode list");
-            }
-
-            // In this case, we're using the defaults
-            upstreamList = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
-            upstreamMode = ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE;
-        }
-
-        // Set new values
-        owner.setContentAccessModeList(upstreamList);
-
-        // If the content access mode changed, we'll need to update it and refresh the access certs
-        if (!StringUtils.isEmpty(currentMode) ? !currentMode.equals(upstreamMode) :
-            !StringUtils.isEmpty(upstreamMode)) {
-
-            owner.setContentAccessMode(upstreamMode);
-
-            ownerCurator.merge(owner);
-            ownerCurator.flush();
-
-            this.refreshOwnerForContentAccess(owner);
-            this.sink.emitOwnerContentAccessModeChanged(owner);
-        }
-    }
-
-    /**
-     * Refreshes the content access certificates for the given owner.
-     *
-     * @param owner
-     *  The owner for which to refresh content access
-     */
-    @Transactional
-    public void refreshOwnerForContentAccess(Owner owner) {
-        // we need to update the owner's consumers if the content access mode has changed
-        this.ownerCurator.lock(owner);
-
-        String cam = owner.getContentAccessMode();
-        if (ContentAccessCertServiceAdapter.ENTITLEMENT_ACCESS_MODE.equals(cam)) {
-            contentAccessCertCurator.deleteForOwner(owner);
-        }
-
-        // removed cached versions of content access cert data
-        ownerEnvContentAccessCurator.removeAllForOwner(owner.getId());
-        ownerCurator.flush();
-    }
-
-    public void updateRefreshDate(Owner owner) {
+    public Owner updateRefreshDate(Owner owner) {
         owner.setLastRefreshed(new Date());
-        ownerCurator.merge(owner);
+        return ownerCurator.merge(owner);
     }
 }

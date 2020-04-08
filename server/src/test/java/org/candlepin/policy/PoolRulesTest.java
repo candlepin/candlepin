@@ -14,13 +14,8 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
@@ -43,11 +38,13 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -64,7 +61,8 @@ import java.util.Set;
 /**
  * JsPoolRulesTest: Tests for the default rules.
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class PoolRulesTest {
 
     private PoolRules poolRules;
@@ -80,7 +78,7 @@ public class PoolRulesTest {
     private UserPrincipal principal;
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void setUp() {
 
         // Load the default production rules:
@@ -910,14 +908,16 @@ public class PoolRulesTest {
         assertEquals("derived", pools.get(0).getSubscriptionSubKey());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void cantCreateMasterPoolFromDerivedPoolTest() {
         Product product = TestUtil.createProduct();
         List<Pool> existingPools = new ArrayList<>();
         Pool masterPool = TestUtil.createPool(product);
         masterPool.setSubscriptionSubKey("derived");
         existingPools.add(masterPool);
-        List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
+
+        assertThrows(IllegalStateException.class,
+            () -> poolRules.createAndEnrichPools(masterPool, existingPools));
     }
 
 }

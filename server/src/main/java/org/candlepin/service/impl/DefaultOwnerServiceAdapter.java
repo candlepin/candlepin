@@ -14,7 +14,6 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.OwnerServiceAdapter;
 
@@ -47,33 +46,5 @@ public class DefaultOwnerServiceAdapter implements OwnerServiceAdapter {
     @Override
     public boolean isOwnerKeyValidForCreation(String ownerKey) {
         return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getContentAccessMode(String ownerKey) {
-        // Since we're acting as the upstream source, we'll just pass-through any existing value.
-        Owner owner = ownerKey != null ? this.ownerCurator.getByKey(ownerKey) : null;
-        if (owner == null) {
-            throw new IllegalArgumentException("ownerKey does not represent a valid owner: " + ownerKey);
-        }
-
-        return owner.getContentAccessMode();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getContentAccessModeList(String ownerKey) {
-        // Since we're acting as the upstream source, we'll just pass-through any existing value.
-        Owner owner = ownerKey != null ? this.ownerCurator.getByKey(ownerKey) : null;
-        if (owner == null) {
-            throw new IllegalArgumentException("ownerKey does not represent a valid owner: " + ownerKey);
-        }
-
-        return owner.getContentAccessModeList();
     }
 }

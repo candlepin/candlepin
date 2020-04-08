@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2016 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,8 +12,9 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service.impl;
+package org.candlepin.controller;
 
+import org.candlepin.audit.EventSink;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -41,7 +42,6 @@ import org.candlepin.model.Product;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.util.OIDUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
@@ -49,6 +49,8 @@ import org.candlepin.util.X509V3ExtensionUtil;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,13 +67,116 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
+
+
 /**
- * DefaultEntitlementCertServiceAdapter
+ * The ContentAccessManager provides management operations for organization and consumer level
+ * content access modes.
  */
-public class DefaultContentAccessCertServiceAdapter implements ContentAccessCertServiceAdapter {
-    private static Logger log = LoggerFactory.getLogger(DefaultContentAccessCertServiceAdapter.class);
+public class ContentAccessManager {
+    private static Logger log = LoggerFactory.getLogger(ContentAccessManager.class);
+
+    /**
+     * The ContentAccessMode enum specifies the supported content access modes, as well as some
+     * utility methods for resolving, matching, and converting to database-compatible values.
+     */
+    public static enum ContentAccessMode {
+        ENTITLEMENT,
+        ORG_ENVIRONMENT;
+
+        /**
+         * Returns the a value to represent this ContentAccessMode instance in a database, which
+         * can be resolved back to a valid ContentAccessMode.
+         *
+         * @return
+         *  a database value to represent this ContentAccessMode instance
+         */
+        public String toDatabaseValue() {
+            return this.name().toLowerCase();
+        }
+
+        /**
+         * Checks if the provided content access mode name matches the name of this
+         * ContentAccessMode instance.
+         *
+         * @param name
+         *  the content access mode name to check
+         *
+         * @return
+         *  true if the content access mode name matches the name of this ContentAccessMode
+         *  instance; false otherwise
+         */
+        public boolean matches(String name) {
+            return this.toDatabaseValue().equals(name);
+        }
+
+        /**
+         * Fetches the default content access mode
+         *
+         * @return
+         *  the default ContentAccessMode instance
+         */
+        public static ContentAccessMode getDefault() {
+            return ENTITLEMENT;
+        }
+
+        /**
+         * Resolves the mode name to a ContentAccessMode enum, using the default mode for empty
+         * values. If the content access mode name is null, this function returns null.
+         *
+         * @param name
+         *  the name to resolve
+         *
+         * @throws IllegalArgumentException
+         *  if the name cannot be resolved to a valid content access mode
+         *
+         * @return
+         *  the ContentAccessMode value representing the given mode name, or null if the provided
+         *  content access mode name is null
+         */
+        public static ContentAccessMode resolveModeName(String name) {
+            return ContentAccessMode.resolveModeName(name, false);
+        }
+
+        /**
+         * Resolves the mode name to a ContentAccessMode enum, using the default mode for empty
+         * values. If resolveNull is set to true, null values will be converted into the default
+         * content access mode as well, otherwise this function will return null.
+         *
+         * @param name
+         *  the name to resolve
+         *
+         * @param resolveNull
+         *  whether or not to treat null values as empty values for resolution
+         *
+         * @throws IllegalArgumentException
+         *  if the name cannot be resolved to a valid content access mode
+         *
+         * @return
+         *  the ContentAccessMode value representing the given mode name, or null if the provided
+         *  content access mode name isn null and resolveNull is not set
+         */
+        public static ContentAccessMode resolveModeName(String name, boolean resolveNull) {
+            if (name == null) {
+                return resolveNull ? ContentAccessMode.getDefault() : null;
+            }
+
+            if (name.isEmpty()) {
+                return ContentAccessMode.getDefault();
+            }
+
+            for (ContentAccessMode mode : ContentAccessMode.values()) {
+                if (mode.matches(name)) {
+                    return mode;
+                }
+            }
+
+            throw new IllegalArgumentException("Content access mode name cannot be resolved: " + name);
+        }
+    }
 
     private PKIUtility pki;
     private KeyPairCurator keyPairCurator;
@@ -84,10 +189,11 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private EnvironmentCurator environmentCurator;
-
+    private ContentAccessCertificateCurator contentAccessCertCurator;
+    private EventSink eventSink;
 
     @Inject
-    public DefaultContentAccessCertServiceAdapter(PKIUtility pki,
+    public ContentAccessManager(PKIUtility pki,
         X509V3ExtensionUtil v3extensionUtil,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         KeyPairCurator keyPairCurator,
@@ -97,21 +203,34 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        EnvironmentCurator environmentCurator) {
+        EnvironmentCurator environmentCurator,
+        ContentAccessCertificateCurator contentAccessCertCurator,
+        EventSink eventSink) {
 
-        this.pki = pki;
-        this.contentAccessCertificateCurator = contentAccessCertificateCurator;
-        this.keyPairCurator = keyPairCurator;
-        this.serialCurator = serialCurator;
-        this.v3extensionUtil = v3extensionUtil;
-        this.ownerContentCurator = ownerContentCurator;
-        this.ownerCurator = ownerCurator;
-        this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
-        this.consumerCurator = consumerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.environmentCurator = environmentCurator;
+        this.pki = Objects.requireNonNull(pki);
+        this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
+        this.keyPairCurator = Objects.requireNonNull(keyPairCurator);
+        this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
+        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.ownerEnvContentAccessCurator = Objects.requireNonNull(ownerEnvContentAccessCurator);
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.environmentCurator = Objects.requireNonNull(environmentCurator);
+        this.contentAccessCertCurator = Objects.requireNonNull(contentAccessCertCurator);
+        this.eventSink = Objects.requireNonNull(eventSink);
     }
 
+    /**
+     * Generate an entitlement certificate, used to grant access to some
+     * content.
+     * End date specified explicitly to allow for flexible termination policies.
+     *
+     * @return Client entitlement certificates.
+     * @throws IOException thrown if there's a problem reading the cert.
+     * @throws GeneralSecurityException thrown security problem
+     */
     @Transactional
     public ContentAccessCertificate getCertificate(Consumer consumer)
         throws GeneralSecurityException, IOException {
@@ -164,21 +283,24 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
             existing.setCert(pem);
             consumer.setContentAccessCert(existing);
             contentAccessCertificateCurator.create(existing);
-            consumerCurator.merge(consumer);
+            consumer = consumerCurator.merge(consumer);
         }
         else {
             pem = existing.getCert();
         }
 
         Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
+
         // we need to see if this is newer than the previous result
-        OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator.getContentAccess(owner.getId(),
-            env == null ? null : env.getId());
+        OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator
+            .getContentAccess(owner.getId(), env == null ? null : env.getId());
+
         if (oeca == null) {
             String contentJson = createPayloadAndSignature(owner, env);
             oeca = new OwnerEnvContentAccess(owner, env, contentJson);
-            ownerEnvContentAccessCurator.saveOrUpdate(oeca);
+            oeca = ownerEnvContentAccessCurator.saveOrUpdate(oeca);
         }
+
         pem += oeca.getContentJson();
 
         result.setCert(pem);
@@ -188,31 +310,11 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         result.setConsumer(existing.getConsumer());
         result.setKey(existing.getKey());
         result.setSerial(existing.getSerial());
+
         return result;
     }
 
-    @Transactional
-    public void removeContentAccessCert(Consumer consumer) {
-        if (consumer.getContentAccessCert() == null) {
-            return;
-        }
-        contentAccessCertificateCurator.delete(consumer.getContentAccessCert());
-        consumer.setContentAccessCert(null);
-    }
-
-    public boolean hasCertChangedSince(Consumer consumer, Date date) {
-        if (date == null) {
-            return true;
-        }
-
-        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
-        OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator.getContentAccess(
-            consumer.getOwnerId(), env == null ? null : env.getId());
-        return oeca == null || consumer.getContentAccessCert() == null ||
-            oeca.getUpdated().getTime() > date.getTime();
-    }
-
-    public String createPayloadAndSignature(Owner owner, Environment environment)
+    private String createPayloadAndSignature(Owner owner, Environment environment)
         throws IOException {
 
         byte[] payloadBytes = createContentAccessDataPayload(owner, environment);
@@ -228,7 +330,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return payload + signature;
     }
 
-    public X509Certificate createX509Certificate(Consumer consumer, Owner owner, BigInteger serialNumber,
+    private X509Certificate createX509Certificate(Consumer consumer, Owner owner, BigInteger serialNumber,
         KeyPair keyPair, Date startDate, Date endDate)
         throws GeneralSecurityException, IOException {
 
@@ -330,7 +432,7 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return sb.toString();
     }
 
-    public Set<X509ExtensionWrapper> prepareV3Extensions() {
+    private Set<X509ExtensionWrapper> prepareV3Extensions() {
         Set<X509ExtensionWrapper> result = v3extensionUtil.getExtensions();
         X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY), false, "OrgLevel");
@@ -339,12 +441,11 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return result;
     }
 
-    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(org.candlepin.model.dto.Product container)
+    private Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(org.candlepin.model.dto.Product container)
         throws IOException {
         List<org.candlepin.model.dto.Product> products = new ArrayList<>();
         products.add(container);
-        Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(null, products,
-            null,  null);
+        Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(null, products, null,  null);
         return result;
     }
 
@@ -388,4 +489,171 @@ public class DefaultContentAccessCertServiceAdapter implements ContentAccessCert
         return v3extensionUtil.createEntitlementDataPayload(productModels,
             emptyConsumer, emptyPool, null);
     }
+
+    public boolean hasCertChangedSince(Consumer consumer, Date date) {
+        if (date == null) {
+            return true;
+        }
+
+        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
+        OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator
+            .getContentAccess(consumer.getOwnerId(), env == null ? null : env.getId());
+
+        return oeca == null ||
+            consumer.getContentAccessCert() == null ||
+            oeca.getUpdated().getTime() > date.getTime();
+    }
+
+    @Transactional
+    public void removeContentAccessCert(Consumer consumer) {
+        if (consumer.getContentAccessCert() == null) {
+            return;
+        }
+        contentAccessCertificateCurator.delete(consumer.getContentAccessCert());
+        consumer.setContentAccessCert(null);
+    }
+
+
+    /**
+     * Updates the content access mode state for the given owner using the updated content access mode
+     * list and content access mode provided.
+     *
+     * @param owner
+     *  The owner to refresh
+     *
+     * @param updatedList
+     *  the updated content access mode list to apply, or an empty string to restore the default value
+     *
+     * @param updatedMode
+     *  the updated content access mode to apply, or an empty string to restore the default value
+     *
+     * @throws IllegalStateException
+     *  if the requested content access mode is not in the provided content access mode list
+     *
+     * @return
+     *  the refreshed owner; may be a different instance than the input owner
+     */
+    @Transactional
+    public Owner updateOwnerContentAccess(Owner owner, String updatedList, String updatedMode) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        boolean listUpdated = false;
+        boolean modeUpdated = false;
+
+        this.ownerCurator.lock(owner);
+
+        final String defaultMode = ContentAccessMode.getDefault().toDatabaseValue();
+
+        // Grab the current list and mode
+        String currentList = this.resolveContentAccessValue(owner.getContentAccessModeList(), true);
+        String currentMode = this.resolveContentAccessValue(owner.getContentAccessMode(), true);
+
+        // Resolve the updated list and mode
+        updatedList = this.resolveContentAccessValue(updatedList, false);
+        updatedMode = this.resolveContentAccessValue(updatedMode, false);
+
+        if (updatedList != null) {
+            String[] modes = updatedList.split(",");
+
+            // We're not interested in storing access modes that we don't support
+            for (String mode : modes) {
+                // This will throw an IAE if the mode isn't one we support.
+                ContentAccessMode.resolveModeName(mode);
+            }
+
+            listUpdated = !updatedList.equals(currentList);
+            currentList = updatedList;
+
+            // If we're not updating the mode as well, we need to ensure the mode is either valid
+            // with the change, or becomes valid by force.
+            if (updatedMode == null) {
+                // if the current mode is no longer valid, check if we have the default mode
+                // available. If so, use it. Otherwise, use the first mode in the list.
+                if (!ArrayUtils.contains(modes, currentMode)) {
+                    updatedMode = ArrayUtils.contains(modes, defaultMode) ? defaultMode : modes[0];
+                }
+            }
+        }
+
+        if (updatedMode != null) {
+            // Verify that the mode is present in the access mode list
+            String[] modes = currentList.split(",");
+
+            if (!ArrayUtils.contains(modes, updatedMode)) {
+                throw new IllegalArgumentException(
+                    "Content access mode is not present in the owner's access mode list");
+            }
+
+            // If the current mode is empty, we want to treat that as the default value and assume
+            // it hasn't been set yet. Otherwise, do a standard equality check here.
+            modeUpdated = !(StringUtils.isEmpty(currentMode) ?
+                ContentAccessMode.getDefault().matches(updatedMode) :
+                currentMode.equals(updatedMode));
+        }
+
+        if (listUpdated) {
+            // Set new values & refresh as necessary
+            owner.setContentAccessModeList(updatedList);
+        }
+
+        // If the content access mode changed, we'll need to update it and refresh the access certs
+        if (modeUpdated) {
+            owner.setContentAccessMode(updatedMode);
+
+            owner = this.ownerCurator.merge(owner);
+            ownerCurator.flush();
+
+            this.refreshOwnerForContentAccess(owner);
+            this.eventSink.emitOwnerContentAccessModeChanged(owner);
+        }
+        else if (listUpdated) {
+            owner = ownerCurator.merge(owner);
+            ownerCurator.flush();
+        }
+
+        if (listUpdated) {
+            // Ensure that the org's consumers are not using any modes which are no longer present
+            // in the lists
+            int culled = this.consumerCurator.cullInvalidConsumerContentAccess(owner, updatedList.split(","));
+            log.debug("Corrected {} consumers with content access modes which are no longer valid", culled);
+        }
+
+        return owner;
+
+    }
+
+    private String resolveContentAccessValue(String value, boolean resolveNull) {
+        if (value == null) {
+            return resolveNull ? ContentAccessMode.getDefault().toDatabaseValue() : null;
+        }
+
+        if (value.isEmpty()) {
+            return ContentAccessMode.getDefault().toDatabaseValue();
+        }
+
+        return value;
+    }
+
+    /**
+     * Refreshes the content access certificates for the given owner.
+     *
+     * @param owner
+     *  The owner for which to refresh content access
+     */
+    @Transactional
+    public void refreshOwnerForContentAccess(Owner owner) {
+        // we need to update the owner's consumers if the content access mode has changed
+        this.ownerCurator.lock(owner);
+
+        if (!owner.isContentAccessEnabled()) {
+            this.contentAccessCertCurator.deleteForOwner(owner);
+        }
+
+        // removed cached versions of content access cert data
+        this.ownerEnvContentAccessCurator.removeAllForOwner(owner.getId());
+        ownerCurator.flush();
+    }
+
 }

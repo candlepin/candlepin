@@ -16,6 +16,8 @@ package org.candlepin.sync;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.dto.ModelTranslator;
@@ -45,8 +47,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
@@ -146,6 +146,8 @@ public class Importer {
     private ImportRecordCurator importRecordCurator;
     private SubscriptionReconciler subscriptionReconciler;
     private ModelTranslator translator;
+    private ContentAccessManager contentAccessManager;
+
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
@@ -154,7 +156,8 @@ public class Importer {
         ExporterMetadataCurator emc, CertificateSerialCurator csc, EventSink sink, I18n i18n,
         DistributorVersionCurator distVerCurator, CdnCurator cdnCurator, SyncUtils syncUtils,
         ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler,
-        EntitlementCurator entitlementCurator, ModelTranslator translator) {
+        EntitlementCurator entitlementCurator, ContentAccessManager contentAccessManager,
+        ModelTranslator translator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -177,6 +180,7 @@ public class Importer {
         this.subscriptionReconciler = subscriptionReconciler;
         this.entitlementCurator = entitlementCurator;
         this.translator = translator;
+        this.contentAccessManager = contentAccessManager;
     }
 
     public ImportRecord loadExport(Owner owner, File archive, ConflictOverrides overrides,
@@ -570,8 +574,7 @@ public class Importer {
             ProductImporter importer = new ProductImporter();
 
             Set<ProductDTO> productsToImport = importProducts(
-                importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner
-            );
+                importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner);
 
             importSubs = importEntitlements(
                 owner, productsToImport, entitlements.listFiles(), consumer.getUuid(), meta);
@@ -583,31 +586,18 @@ public class Importer {
         }
 
         // Setup our import subscription adapter with the subscriptions imported:
-        final String contentAccessMode = StringUtils.isEmpty(consumer.getContentAccessMode()) ?
-            ContentAccessCertServiceAdapter.DEFAULT_CONTENT_ACCESS_MODE :
-            consumer.getContentAccessMode();
+        final String contentAccessMode = ContentAccessMode
+            .resolveModeName(consumer.getContentAccessMode(), true)
+            .toDatabaseValue();
 
         SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importSubs);
-        OwnerServiceAdapter ownerAdapter = new OwnerServiceAdapter() {
-            @Override
-            public boolean isOwnerKeyValidForCreation(String ownerKey) {
-                return true;
-            }
 
-            @Override
-            public String getContentAccessMode(String ownerKey) {
-                return contentAccessMode;
-            }
-
-            @Override
-            public String getContentAccessModeList(String ownerKey) {
-                return contentAccessMode;
-            }
-        };
-
-        Refresher refresher = poolManager.getRefresher(subAdapter, ownerAdapter);
+        Refresher refresher = poolManager.getRefresher(subAdapter);
         refresher.add(owner);
         refresher.run();
+
+        // Make sure we update the content access mode bits now that we've updated everything else
+        this.contentAccessManager.updateOwnerContentAccess(owner, contentAccessMode, contentAccessMode);
 
         return importSubs;
     }

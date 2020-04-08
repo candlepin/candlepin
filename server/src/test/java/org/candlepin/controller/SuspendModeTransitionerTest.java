@@ -15,12 +15,11 @@
 package org.candlepin.controller;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.ActiveMQStatus;
 import org.candlepin.audit.QpidStatus;
 import org.candlepin.common.config.Configuration;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
@@ -29,7 +28,6 @@ import org.candlepin.controller.mode.ModeChangeReason;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -43,14 +41,15 @@ import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SuspendModeTransitionerTest {
-    @Mock private Configuration config;
+    private Configuration config;
 
     private CandlepinModeManager modeManager;
     private SuspendModeTransitioner transitioner;
 
     @Before
     public void setUp() {
-        when(config.getBoolean(eq(ConfigProperties.SUSPEND_MODE_ENABLED))).thenReturn(true);
+        this.config = new CandlepinCommonTestConfig();
+        this.config.setProperty(ConfigProperties.SUSPEND_MODE_ENABLED, "true");
 
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 

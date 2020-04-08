@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentManager;
-import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.jackson.ProductCachedSerializationModule;
@@ -51,18 +51,19 @@ import javax.inject.Inject;
  */
 public class OwnerContentResourceTest extends DatabaseTestFixture {
 
+    @Inject protected ContentAccessManager contentAccessManager;
     @Inject protected ContentManager contentManager;
     @Inject protected PoolManager poolManager;
-    @Inject protected OwnerManager ownerManager;
 
     private OwnerContentResource ownerContentResource;
 
     @BeforeEach
     public void setup() {
         this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
-        this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
-        this.poolManager, this.productCurator, new DefaultUniqueIdGenerator(),
-        new ProductCachedSerializationModule(productCurator), ownerManager, this.modelTranslator);
+            this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
+            this.poolManager, this.productCurator, new DefaultUniqueIdGenerator(),
+            new ProductCachedSerializationModule(productCurator), this.contentAccessManager,
+            this.modelTranslator);
     }
 
     @Test

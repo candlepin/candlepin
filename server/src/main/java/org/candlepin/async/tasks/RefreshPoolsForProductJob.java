@@ -24,7 +24,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
@@ -40,7 +39,6 @@ public class RefreshPoolsForProductJob implements AsyncJob {
     private final PoolManager poolManager;
     private final ProductCurator productCurator;
     private final SubscriptionServiceAdapter subAdapter;
-    private final OwnerServiceAdapter ownerAdapter;
 
     public static final String JOB_KEY = "RefreshPoolsForProductJob";
     private static final String JOB_NAME = "refresh pools for product";
@@ -52,12 +50,11 @@ public class RefreshPoolsForProductJob implements AsyncJob {
     public RefreshPoolsForProductJob(
         final ProductCurator productCurator,
         final PoolManager poolManager,
-        final SubscriptionServiceAdapter subAdapter,
-        final OwnerServiceAdapter ownerAdapter) {
+        final SubscriptionServiceAdapter subAdapter) {
+
         this.poolManager = Objects.requireNonNull(poolManager);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.subAdapter = Objects.requireNonNull(subAdapter);
-        this.ownerAdapter = Objects.requireNonNull(ownerAdapter);
     }
 
     @Override
@@ -71,7 +68,7 @@ public class RefreshPoolsForProductJob implements AsyncJob {
         final Product product = this.productCurator.get(productUuid);
 
         if (product != null) {
-            final Refresher refresher = poolManager.getRefresher(this.subAdapter, this.ownerAdapter, lazy);
+            final Refresher refresher = poolManager.getRefresher(this.subAdapter, lazy);
 
             refresher.add(product);
             refresher.run();

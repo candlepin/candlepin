@@ -28,7 +28,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.version.CertVersionConflictException;
@@ -67,7 +66,7 @@ public class EntitlementCertificateGenerator {
 
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private EntitlementCertServiceAdapter entCertServiceAdapter;
-    private ContentAccessCertServiceAdapter contentAccessCertServiceAdapter;
+    private ContentAccessManager contentAccessManager;
     private OwnerCurator ownerCurator;
     private EntitlementCurator entitlementCurator;
     private PoolCurator poolCurator;
@@ -80,12 +79,12 @@ public class EntitlementCertificateGenerator {
     public EntitlementCertificateGenerator(EntitlementCertificateCurator entitlementCertificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
         PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory,
-        ProductCurator productCurator, ContentAccessCertServiceAdapter contentAccessCertServiceAdapter,
+        ProductCurator productCurator, ContentAccessManager contentAccessManager,
         OwnerCurator ownerCurator) {
 
         this.entitlementCertificateCurator = entitlementCertificateCurator;
         this.entCertServiceAdapter = entCertServiceAdapter;
-        this.contentAccessCertServiceAdapter = contentAccessCertServiceAdapter;
+        this.contentAccessManager = contentAccessManager;
         this.ownerCurator = ownerCurator;
         this.entitlementCurator = entitlementCurator;
         this.poolCurator = poolCurator;
@@ -325,8 +324,9 @@ public class EntitlementCertificateGenerator {
         // we need to clear the content access cert on regenerate
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
         if (owner.isContentAccessEnabled()) {
-            contentAccessCertServiceAdapter.removeContentAccessCert(consumer);
+            this.contentAccessManager.removeContentAccessCert(consumer);
         }
+
         // TODO - Assumes only 1 entitlement certificate exists per entitlement
         this.regenerateCertificatesOf(consumer.getEntitlements(), lazy);
     }

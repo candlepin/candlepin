@@ -15,8 +15,9 @@
 package org.candlepin.util;
 
 import static org.candlepin.test.MatchesPattern.matchesPattern;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.TestingModules;
 import org.candlepin.common.config.Configuration;
@@ -30,12 +31,14 @@ import com.google.inject.Injector;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -53,10 +56,13 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+
+
 /**
  * CrlFileUtilTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class CrlFileUtilTest {
     private CrlFileUtil cfu;
 
@@ -67,7 +73,7 @@ public class CrlFileUtilTest {
     private File temp;
     private Set<BigInteger> initialEntry;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
@@ -83,7 +89,7 @@ public class CrlFileUtilTest {
         this.initialEntry.add(BigInteger.ONE);
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         temp.delete();
     }

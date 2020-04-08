@@ -40,6 +40,7 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
@@ -63,7 +64,6 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
@@ -608,7 +608,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Provider<GuestMigration> migrationProvider = Providers.of(testMigration);
 
         ConsumerResource cr = new ConsumerResource(
-            this.consumerCurator, this.consumerTypeCurator, null, null, null, this.entitlementCurator, null,
+            this.consumerCurator, this.consumerTypeCurator, null, null, this.entitlementCurator, null,
             null, null, null, null, null, null, this.poolManager, null, null, null, null,
             null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
@@ -656,8 +656,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testContentAccessExpireRegen() {
-        owner.setContentAccessModeList(ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE);
-        owner.setContentAccessMode(ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE);
+        owner.setContentAccessModeList(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        owner.setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         ownerCurator.merge(owner);
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);

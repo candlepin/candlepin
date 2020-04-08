@@ -36,7 +36,6 @@ import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -179,8 +178,7 @@ public class ComplianceRules {
 
 
         // Status can only be 'disabled' when in golden ticket mode
-        if (consumer.getOwner() != null && ContentAccessCertServiceAdapter.ORG_ENV_ACCESS_MODE.equals(
-            consumer.getOwner().getContentAccessMode())) {
+        if (consumer.getOwner() != null && consumer.getOwner().isContentAccessEnabled()) {
             ComplianceStatus cs = new ComplianceStatus(new Date());
             cs.setDisabled(true);
             applyStatus(consumer, cs, updateConsumer);

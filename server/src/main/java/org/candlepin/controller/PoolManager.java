@@ -29,7 +29,6 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -131,9 +130,8 @@ public interface PoolManager {
 
     List<Pool> getBySubscriptionIds(String ownerId, Collection<String> id);
 
-    Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter);
-    Refresher getRefresher(SubscriptionServiceAdapter subAdapter, OwnerServiceAdapter ownerAdapter,
-        boolean lazy);
+    Refresher getRefresher(SubscriptionServiceAdapter subAdapter);
+    Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy);
 
     void regenerateCertificatesOf(Entitlement e, boolean lazy);
 

@@ -14,15 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event.Target;
@@ -62,7 +55,6 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -71,11 +63,13 @@ import org.candlepin.util.FactValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.util.Providers;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -93,12 +87,17 @@ import java.util.Set;
 
 import javax.inject.Provider;
 
-@RunWith(MockitoJUnitRunner.class)
+
+
+/**
+ * Test suite for the HypervisorResource test class
+ */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class HypervisorResourceTest {
     @Mock private UserServiceAdapter userService;
     @Mock private IdentityCertServiceAdapter idCertService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
-    @Mock private OwnerServiceAdapter ownerService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
@@ -128,7 +127,7 @@ public class HypervisorResourceTest {
     private Provider<GuestMigration> migrationProvider;
     private GuestMigration testMigration;
 
-    @Before
+    @BeforeEach
     public void setupTest() {
         Configuration config = new CandlepinCommonTestConfig();
 
@@ -146,7 +145,7 @@ public class HypervisorResourceTest {
             this.ownerCurator);
 
         this.consumerResource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, null, this.subscriptionService, this.ownerService, null,
+            this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null,
             this.userService, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules, this.systemPurposeComplianceRules,
@@ -368,9 +367,10 @@ public class HypervisorResourceTest {
     }
 
     @SuppressWarnings("deprecation")
-    @Test(expected = BadRequestException.class)
+    @Test
     public void ensureBadRequestWhenNoMappingIsIncludedInRequest() {
-        hypervisorResource.hypervisorUpdate(null, principal, "an-owner", false);
+        assertThrows(BadRequestException.class,
+            () -> hypervisorResource.hypervisorUpdate(null, principal, "an-owner", false));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })

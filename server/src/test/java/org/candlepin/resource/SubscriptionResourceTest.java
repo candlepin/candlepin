@@ -14,11 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -29,11 +26,13 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -48,7 +47,8 @@ import javax.ws.rs.core.Response;
 /**
  * SubscriptionResourceTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SubscriptionResourceTest  {
     private SubscriptionResource subResource;
 
@@ -58,7 +58,7 @@ public class SubscriptionResourceTest  {
 
     @Mock private HttpServletResponse response;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         I18n i18n = I18nFactory.getI18n(
             getClass(),
@@ -69,29 +69,33 @@ public class SubscriptionResourceTest  {
         this.subResource = new SubscriptionResource(subService, consumerCurator, poolManager, i18n);
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void testInvalidIdOnDelete() throws Exception {
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(Collections.<Pool>emptyList());
         when(cqmock.iterator()).thenReturn(Collections.<Pool>emptyList().iterator());
         when(poolManager.getPoolsBySubscriptionId(anyString())).thenReturn(cqmock);
 
-        subResource.deleteSubscription("JarJarBinks");
+        assertThrows(NotFoundException.class,
+            () -> subResource.deleteSubscription("JarJarBinks"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void activateNoEmail() {
-        subResource.activateSubscription("random", null, "en_us");
+        assertThrows(BadRequestException.class,
+            () -> subResource.activateSubscription("random", null, "en_us"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void activateNoEmailLocale() {
-        subResource.activateSubscription("random", "random@somthing.com", null);
+        assertThrows(BadRequestException.class,
+            () -> subResource.activateSubscription("random", "random@somthing.com", null));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void activateBadConsumer() {
-        subResource.activateSubscription("test_consumer", "email@whatever.net", "en_us");
+        assertThrows(BadRequestException.class,
+            () -> subResource.activateSubscription("test_consumer", "email@whatever.net", "en_us"));
     }
 
     @Test

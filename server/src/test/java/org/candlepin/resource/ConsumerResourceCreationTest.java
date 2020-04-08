@@ -14,12 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
@@ -65,7 +61,6 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -75,13 +70,14 @@ import org.candlepin.util.ServiceLevelValidator;
 import com.google.inject.util.Providers;
 
 import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,14 +98,12 @@ import javax.inject.Provider;
 
 
 
-/**
- *
- */
-@RunWith(MockitoJUnitRunner.class)
 /*
  * FIXME: this seems to only test creating
  * system consumers.
  */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ConsumerResourceCreationTest {
 
     private static Logger log = LoggerFactory.getLogger(ConsumerResourceCreationTest.class);
@@ -119,7 +113,6 @@ public class ConsumerResourceCreationTest {
     @Mock protected UserServiceAdapter userService;
     @Mock protected IdentityCertServiceAdapter idCertService;
     @Mock protected SubscriptionServiceAdapter subscriptionService;
-    @Mock protected OwnerServiceAdapter ownerService;
     @Mock protected ConsumerCurator consumerCurator;
     @Mock protected ConsumerTypeCurator consumerTypeCurator;
     @Mock protected OwnerCurator ownerCurator;
@@ -151,7 +144,7 @@ public class ConsumerResourceCreationTest {
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
@@ -163,7 +156,7 @@ public class ConsumerResourceCreationTest {
 
         this.config = initConfig();
         this.resource = new ConsumerResource(
-            this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService, this.ownerService,
+            this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService,
             null, this.idCertService, null, this.i18n, this.sink, null, null, this.userService, null,
             null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
             this.systemPurposeComplianceRules, this.deletedConsumerCurator, null, null, this.config, null,
@@ -288,85 +281,94 @@ public class ConsumerResourceCreationTest {
 
     @Test
     public void acceptedConsumerName() {
-        Assert.assertNotNull(createConsumer("test_user"));
+        assertNotNull(createConsumer("test_user"));
     }
 
     @Test
     public void camelCaseName() {
-        Assert.assertNotNull(createConsumer("ConsumerTest32953"));
+        assertNotNull(createConsumer("ConsumerTest32953"));
     }
 
     @Test
     public void startsWithUnderscore() {
-        Assert.assertNotNull(createConsumer("__init__"));
+        assertNotNull(createConsumer("__init__"));
     }
 
     @Test
     public void startsWithDash() {
-        Assert.assertNotNull(createConsumer("-dash"));
+        assertNotNull(createConsumer("-dash"));
     }
 
     @Test
     public void containsNumbers() {
-        Assert.assertNotNull(createConsumer("testmachine99"));
+        assertNotNull(createConsumer("testmachine99"));
     }
 
     @Test
     public void startsWithNumbers() {
-        Assert.assertNotNull(createConsumer("001test7"));
+        assertNotNull(createConsumer("001test7"));
     }
 
     @Test
     public void containsPeriods() {
-        Assert.assertNotNull(createConsumer("test-system.resource.net"));
+        assertNotNull(createConsumer("test-system.resource.net"));
     }
 
     @Test
     public void containsUserServiceChars() {
-        Assert.assertNotNull(createConsumer("{bob}'s_b!g_#boi.`?uestlove!x"));
+        assertNotNull(createConsumer("{bob}'s_b!g_#boi.`?uestlove!x"));
     }
 
     // These fail with the default consumer name pattern
-    @Test(expected = BadRequestException.class)
+    @Test
     public void containsMultibyteKorean() {
-        createConsumer("서브스크립션 ");
+        assertThrows(BadRequestException.class,
+            () -> createConsumer("서브스크립션 "));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void containsMultibyteOriya() {
-        createConsumer("ପରିବେଶ");
+        assertThrows(BadRequestException.class,
+            () -> createConsumer("ପରିବେଶ"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void startsWithPound() {
-        createConsumer("#pound");
+        assertThrows(BadRequestException.class,
+            () -> createConsumer("#pound"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void emptyConsumerName() {
-        createConsumer("");
+        assertThrows(BadRequestException.class,
+            () -> createConsumer(""));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void nullConsumerName() {
-        createConsumer(null);
+        assertThrows(BadRequestException.class,
+            () -> createConsumer(null));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void startsWithBadCharacter() {
-        createConsumer("#foo");
+        assertThrows(BadRequestException.class,
+            () -> createConsumer("#foo"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void containsBadCharacter() {
-        createConsumer("bar$%camp");
+        assertThrows(BadRequestException.class,
+            () -> createConsumer("bar$%camp"));
     }
 
-    @Test(expected = ForbiddenException.class)
+    @Test
     public void authRequired() {
         Principal p = new NoAuthPrincipal();
         List<String> empty = Collections.emptyList();
-        createConsumer("sys.example.com", p, empty);
+
+        assertThrows(ForbiddenException.class,
+            () -> createConsumer("sys.example.com", p, empty));
     }
 
     private List<String> mockActivationKeys() {
@@ -425,29 +427,35 @@ public class ConsumerResourceCreationTest {
         resource.create(consumer, p, null, owner.getKey(), key.getName(), true);
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void orgRequiredWithActivationKeys() {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
-        resource.create(consumer, p, null, null, createKeysString(keys), true);
+
+        assertThrows(BadRequestException.class,
+            () -> resource.create(consumer, p, null, null, createKeysString(keys), true));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void cannotMixUsernameWithActivationKeys() {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
-        resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys), true);
+
+        assertThrows(BadRequestException.class,
+            () -> resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys), true));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void failIfOnlyActivationKeyDoesNotExistForOrg() {
         Principal p = new NoAuthPrincipal();
         List<String> keys = new ArrayList<>();
         keys.add("NoSuchKey");
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
-        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
+
+        assertThrows(BadRequestException.class,
+            () -> resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true));
     }
 
     @Test

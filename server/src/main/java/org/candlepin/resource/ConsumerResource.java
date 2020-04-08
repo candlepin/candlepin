@@ -46,6 +46,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -115,10 +116,8 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.DateFormat;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
-import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
-import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.UserInfo;
@@ -139,7 +138,6 @@ import io.swagger.annotations.Authorization;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -198,11 +196,10 @@ public class ConsumerResource {
     private ConsumerTypeCurator consumerTypeCurator;
     private OwnerProductCurator ownerProductCurator;
     private SubscriptionServiceAdapter subAdapter;
-    private OwnerServiceAdapter ownerAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
-    private ContentAccessCertServiceAdapter contentAccessCertService;
+    private ContentAccessManager contentAccessManager;
     private UserServiceAdapter userService;
     private I18n i18n;
     private EventSink sink;
@@ -236,22 +233,31 @@ public class ConsumerResource {
         ConsumerTypeCurator consumerTypeCurator,
         OwnerProductCurator ownerProductCurator,
         SubscriptionServiceAdapter subAdapter,
-        OwnerServiceAdapter ownerAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
-        EntitlementCertServiceAdapter entCertServiceAdapter, I18n i18n,
-        EventSink sink, EventFactory eventFactory,
-        EventAdapter eventAdapter, UserServiceAdapter userService, PoolManager poolManager,
-        ConsumerRules consumerRules, OwnerCurator ownerCurator,
-        ActivationKeyCurator activationKeyCurator, Entitler entitler,
-        ComplianceRules complianceRules, SystemPurposeComplianceRules systemPurposeComplianceRules,
-        DeletedConsumerCurator deletedConsumerCurator, EnvironmentCurator environmentCurator,
+        EntitlementCertServiceAdapter entCertServiceAdapter,
+        I18n i18n,
+        EventSink sink,
+        EventFactory eventFactory,
+        EventAdapter eventAdapter,
+        UserServiceAdapter userService,
+        PoolManager poolManager,
+        ConsumerRules consumerRules,
+        OwnerCurator ownerCurator,
+        ActivationKeyCurator activationKeyCurator,
+        Entitler entitler,
+        ComplianceRules complianceRules,
+        SystemPurposeComplianceRules systemPurposeComplianceRules,
+        DeletedConsumerCurator deletedConsumerCurator,
+        EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
-        Configuration config, ContentCurator contentCurator,
-        CdnCurator cdnCurator, CalculatedAttributesUtil calculatedAttributesUtil,
+        Configuration config,
+        ContentCurator contentCurator,
+        CdnCurator cdnCurator,
+        CalculatedAttributesUtil calculatedAttributesUtil,
         ConsumerBindUtil consumerBindUtil,
         ManifestManager manifestManager,
-        ContentAccessCertServiceAdapter contentAccessCertService,
+        ContentAccessManager contentAccessManager,
         FactValidator factValidator,
         ConsumerTypeValidator consumerTypeValidator,
         ConsumerEnricher consumerEnricher,
@@ -263,7 +269,6 @@ public class ConsumerResource {
         this.consumerTypeCurator = consumerTypeCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.subAdapter = subAdapter;
-        this.ownerAdapter = ownerAdapter;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
@@ -291,7 +296,7 @@ public class ConsumerResource {
         this.calculatedAttributesUtil = calculatedAttributesUtil;
         this.consumerBindUtil = consumerBindUtil;
         this.manifestManager = manifestManager;
-        this.contentAccessCertService = contentAccessCertService;
+        this.contentAccessManager = contentAccessManager;
         this.factValidator = factValidator;
         this.consumerTypeValidator = consumerTypeValidator;
         this.consumerEnricher = consumerEnricher;
@@ -1220,7 +1225,7 @@ public class ConsumerResource {
 
                 existingOwner = ownerCurator.create(owner);
 
-                poolManager.getRefresher(this.subAdapter, this.ownerAdapter)
+                poolManager.getRefresher(this.subAdapter)
                     .add(existingOwner)
                     .run();
             }
@@ -1345,22 +1350,30 @@ public class ConsumerResource {
 
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(toUpdate);
 
-        if (updated.getContentAccessMode() != null &&
-            !updated.getContentAccessMode().equals(toUpdate.getContentAccessMode()) &&
-            ctype.isManifest()) {
+        // Apply consumer-level content access changes
+        String updatedContentAccessMode = updated.getContentAccessMode();
+        if (updatedContentAccessMode != null) {
+            if (!updatedContentAccessMode.isEmpty()) {
+                if (!ctype.isManifest()) {
+                    throw new BadRequestException(
+                        i18n.tr("This consumer cannot be assigned a content access mode"));
+                }
 
-            Owner toUpdateOwner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
-            if (!toUpdateOwner.isAllowedContentAccessMode(updated.getContentAccessMode())) {
-                throw new BadRequestException(i18n.tr(
-                    "The consumer cannot use the supplied content access mode."));
+                Owner toUpdateOwner = toUpdate.getOwner();
+                if (!toUpdateOwner.isAllowedContentAccessMode(updatedContentAccessMode)) {
+                    throw new BadRequestException(i18n.tr(
+                        "This consumer cannot use the supplied content access mode: {0}",
+                        updatedContentAccessMode));
+                }
+
+                toUpdate.setContentAccessMode(updatedContentAccessMode);
+                changesMade = true;
             }
-
-            toUpdate.setContentAccessMode(updated.getContentAccessMode());
-            changesMade = true;
-        }
-
-        if (!StringUtils.isEmpty(updated.getContentAccessMode()) && !ctype.isManifest()) {
-            throw new BadRequestException(i18n.tr("The consumer cannot be assigned a content access mode."));
+            else if (toUpdate.getContentAccessMode() != null) {
+                // Allow falling back to "inherit" mode
+                toUpdate.setContentAccessMode(null);
+                changesMade = true;
+            }
         }
 
         if (updated.getLastCheckin() != null) {
@@ -1434,7 +1447,7 @@ public class ConsumerResource {
 
             if (owner.isContentAccessEnabled()) {
                 toUpdate.setContentAccessCert(null);
-                contentAccessCertService.removeContentAccessCert(toUpdate);
+                this.contentAccessManager.removeContentAccessCert(toUpdate);
             }
 
             // lazily regenerate certs, so the client can still work
@@ -1797,7 +1810,7 @@ public class ConsumerResource {
 
         // we want to insert the content access cert to this list if appropriate
         try {
-            Certificate cert = contentAccessCertService.getCertificate(consumer);
+            Certificate cert = this.contentAccessManager.getCertificate(consumer);
             if (cert != null) {
                 returnCerts.add(translator.translate(cert, CertificateDTO.class));
             }
@@ -1832,7 +1845,7 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
 
-        if (!contentAccessCertService.hasCertChangedSince(consumer, since)) {
+        if (!this.contentAccessManager.hasCertChangedSince(consumer, since)) {
             return Response.status(Response.Status.NOT_MODIFIED)
                 .entity("Not modified since date supplied.")
                 .build();
@@ -1841,7 +1854,7 @@ public class ConsumerResource {
         ContentAccessListing result = new ContentAccessListing();
 
         try {
-            ContentAccessCertificate cac = contentAccessCertService.getCertificate(consumer);
+            ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
             if (cac == null) {
                 throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
             }
@@ -1953,7 +1966,7 @@ public class ConsumerResource {
 
         // add content access cert if needed
         try {
-            ContentAccessCertificate cac = contentAccessCertService.getCertificate(consumer);
+            ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
             if (cac != null) {
                 allCerts.add(new CertificateSerialDTO().setSerial(
                     BigInteger.valueOf(cac.getSerial().getId())));

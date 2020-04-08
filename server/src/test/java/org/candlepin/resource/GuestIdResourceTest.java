@@ -14,17 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.nullable;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
@@ -57,12 +48,14 @@ import org.candlepin.util.Util;
 
 import com.google.inject.util.Providers;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -77,7 +70,8 @@ import javax.inject.Provider;
 /**
  * GuestIdResourceTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class GuestIdResourceTest {
 
     private I18n i18n;
@@ -104,7 +98,7 @@ public class GuestIdResourceTest {
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         testMigration = spy(new GuestMigration(consumerCurator));
         migrationProvider = Providers.of(testMigration);
@@ -136,10 +130,12 @@ public class GuestIdResourceTest {
         assertEquals(result, dtoQuery);
     }
 
-    @Test(expected = NotFoundException.class)
+    @Test
     public void getGuestIdNoGuests() {
         when(guestIdCurator.findByConsumerAndId(eq(consumer), any(String.class))).thenReturn(null);
-        GuestIdDTO result = guestIdResource.getGuestId(consumer.getUuid(), "some-id");
+
+        assertThrows(NotFoundException.class,
+            () -> guestIdResource.getGuestId(consumer.getUuid(), "some-id"));
     }
 
     @Test
@@ -195,10 +191,12 @@ public class GuestIdResourceTest {
         assertEquals(consumer, result.getConsumer());
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void updateGuestMismatchedGuestId() {
         GuestIdDTO guest = TestUtil.createGuestIdDTO("some_guest");
-        guestIdResource.updateGuest(consumer.getUuid(), "other_id", guest);
+
+        assertThrows(BadRequestException.class,
+            () -> guestIdResource.updateGuest(consumer.getUuid(), "other_id", guest));
     }
 
     /*
@@ -305,7 +303,7 @@ public class GuestIdResourceTest {
      */
     private class ConsumerResourceForTesting extends ConsumerResource {
         public ConsumerResourceForTesting() {
-            super(null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+            super(null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, consumerEnricher, null, modelTranslator, jobManager);
         }
