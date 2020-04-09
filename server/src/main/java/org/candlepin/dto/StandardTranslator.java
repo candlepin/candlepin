@@ -126,6 +126,7 @@ import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
+
 import com.google.inject.Inject;
 
 /**

@@ -239,12 +239,11 @@ public class TestUtil {
             content.setVendor(dto.getVendor());
             content.setContentUrl(dto.getContentUrl());
             content.setRequiredTags(dto.getRequiredTags());
-            content.setReleaseVersion(dto.getReleaseVersion());
+            content.setReleaseVersion(dto.getReleaseVer());
             content.setGpgUrl(dto.getGpgUrl());
-            content.setMetadataExpiration(dto.getMetadataExpiration());
+            content.setMetadataExpiration(dto.getMetadataExpire());
             content.setModifiedProductIds(dto.getModifiedProductIds());
             content.setArches(dto.getArches());
-            content.setLocked(dto.isLocked());
         }
 
         return content;

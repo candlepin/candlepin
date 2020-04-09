@@ -33,13 +33,10 @@ import java.util.Map;
 import java.util.Set;
 
 
-
 /**
  * Test suite for the ProductDTO class
  */
 public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
-
-    protected ContentDTOTest contentDTOTest = new ContentDTOTest();
 
     protected Map<String, Object> values;
 
@@ -49,7 +46,7 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         Collection<ProductContentDTO> productContent = new LinkedList<>();
 
         for (int i = 0; i < 5; ++i) {
-            ContentDTO content = this.contentDTOTest.getPopulatedDTOInstance();
+            ContentDTO content = TestUtil.createContentDTO("test-id", "test_name");
             content.setId(content.getId() + "-" + i);
 
             productContent.add(new ProductContentDTO(content, i % 2 != 0));
