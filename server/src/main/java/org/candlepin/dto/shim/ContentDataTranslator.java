@@ -19,6 +19,8 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.model.dto.ContentData;
 
+import java.time.ZoneOffset;
+import java.util.Set;
 
 
 /**
@@ -64,8 +66,10 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.setCreated(source.getCreated());
-        dest.setUpdated(source.getUpdated());
+        dest.created(source.getCreated() != null ?
+            source.getCreated().toInstant().atOffset(ZoneOffset.UTC) : null);
+        dest.updated(source.getUpdated() != null ?
+            source.getUpdated().toInstant().atOffset(ZoneOffset.UTC) : null);
 
         dest.setUuid(source.getUuid());
         dest.setId(source.getId());
@@ -75,12 +79,11 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
         dest.setVendor(source.getVendor());
         dest.setContentUrl(source.getContentUrl());
         dest.setRequiredTags(source.getRequiredTags());
-        dest.setReleaseVersion(source.getReleaseVersion());
+        dest.setReleaseVer(source.getReleaseVersion());
         dest.setGpgUrl(source.getGpgUrl());
-        dest.setMetadataExpiration(source.getMetadataExpiration());
-        dest.setModifiedProductIds(source.getModifiedProductIds());
+        dest.setMetadataExpire(source.getMetadataExpiration());
+        dest.setModifiedProductIds((Set<String>) source.getModifiedProductIds());
         dest.setArches(source.getArches());
-        dest.setLocked(source.isLocked());
 
         return dest;
     }
