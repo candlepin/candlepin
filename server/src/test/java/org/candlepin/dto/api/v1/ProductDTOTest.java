@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractDTOTest;
 import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
 
@@ -34,13 +35,10 @@ import java.util.LinkedList;
 import java.util.Map;
 
 
-
 /**
  * Test suite for the ProductDTO class
  */
 public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
-
-    protected ContentDTOTest contentDTOTest = new ContentDTOTest();
 
     protected Map<String, Object> values;
 
@@ -50,7 +48,7 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         Collection<ProductContentDTO> productContent = new LinkedList<>();
 
         for (int i = 0; i < 5; ++i) {
-            ContentDTO content = this.contentDTOTest.getPopulatedDTOInstance();
+            ContentDTO content = TestUtil.createContentDTO("test-id", "test_name");
             content.setId(content.getId() + "-" + i);
 
             productContent.add(new ProductContentDTO(content, i % 2 != 0));

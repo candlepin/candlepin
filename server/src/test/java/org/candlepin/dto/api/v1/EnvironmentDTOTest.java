@@ -16,6 +16,7 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
 import org.candlepin.dto.api.v1.EnvironmentDTO.EnvironmentContentDTO;
+import org.candlepin.test.TestUtil;
 
 import java.util.Collection;
 import java.util.Date;
@@ -28,8 +29,6 @@ import java.util.Map;
  */
 public class EnvironmentDTOTest extends AbstractDTOTest<EnvironmentDTO> {
 
-    protected ContentDTOTest contentDTOTest = new ContentDTOTest();
-
     protected Map<String, Object> values;
 
     public EnvironmentDTOTest() {
@@ -38,7 +37,7 @@ public class EnvironmentDTOTest extends AbstractDTOTest<EnvironmentDTO> {
         Collection<EnvironmentContentDTO> environmentContent = new HashSet<>();
 
         for (int i = 0; i < 5; ++i) {
-            ContentDTO content = this.contentDTOTest.getPopulatedDTOInstance();
+            ContentDTO content = TestUtil.createContentDTO("test-id", "test_name");
             content.setId(content.getId() + "-" + i);
             environmentContent.add(new EnvironmentContentDTO(content, i % 2 != 0));
         }
@@ -70,4 +69,5 @@ public class EnvironmentDTOTest extends AbstractDTOTest<EnvironmentDTO> {
         // Nothing to do here
         return input;
     }
+
 }

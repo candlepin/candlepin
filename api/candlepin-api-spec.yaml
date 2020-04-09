@@ -1132,6 +1132,56 @@ components:
             manifest:
               type: boolean
 
+    ContentDTO:
+      description: Represents the content data exposed to the API.
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            uuid:
+              type: string
+              example: "ff808081554a3e4101554a3e9033005d"
+            id:
+              type: string
+              example: "5001"
+            type:
+              type: string
+              example: "yum"
+            label:
+              type: string
+              example: "content_label"
+            name:
+              type: string
+              example: "content_name"
+            vendor:
+              type: string
+              example: "example-vendor"
+            contentUrl:
+              type: string
+              example: "/admin/foo/example/path"
+            requiredTags:
+              type: string
+              example: "TAG1,TAG2"
+            releaseVer:
+              type: string
+              example: "1.2.3"
+            gpgUrl:
+              type: string
+              example: "/admin/foo/example/gpg/path"
+            modifiedProductIds:
+              type: array
+              uniqueItems: true
+              example: "[5051,5052,5053]"
+              items:
+                type: string
+            arches:
+              type: string
+              example: "x86_64"
+            metadataExpire:
+              type: integer
+              format: int64
+              example: 1467124079
+
     ContentOverrideDTO:
       description: Represents a content override for an activation key or consumer
       allOf:
