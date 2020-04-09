@@ -81,8 +81,10 @@ Requires:	selinux-policy >= %{_selinux_policy_version}
 Requires:       %{name} = %{version}-%{release}
 Requires(post):   /usr/sbin/semodule
 Requires(post):   /sbin/restorecon
+Requires(post):   /usr/sbin/semanage
 Requires(postun): /usr/sbin/semodule
 Requires(postun): /sbin/restorecon
+Requires(postun): /usr/sbin/semanage
 
 %description selinux
 SELinux policy module supporting candlepin
@@ -170,6 +172,7 @@ for selinuxvariant in %{selinux_variants}
 do
   /usr/sbin/semodule -s $selinuxvariant -i %{_datadir}/selinux/$selinuxvariant/%{modulename}.pp &> /dev/null || :
 done
+/usr/sbin/semanage port -a -t candlepin_activemq_port_t -p tcp 61613 &> /dev/null || :
 /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
 /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
 /sbin/restorecon -R %{_localstatedir}/cache/%{name}/ &> /dev/null || :
@@ -180,6 +183,8 @@ done
 %postun selinux
 #raw
 if [ $1 -eq 0 ] ; then
+  /usr/sbin/semanage port -d 61613 -p tcp &> /dev/null || :
+
   for selinuxvariant in %{selinux_variants}
   do
      /usr/sbin/semodule -s $selinuxvariant -r %{modulename} &> /dev/null || :

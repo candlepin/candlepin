@@ -50,3 +50,5 @@ make -f /usr/share/selinux/devel/Makefile || exit
 /sbin/restorecon -F -R -v /var/cache/candlepin
 /sbin/restorecon -F -R -v /var/lib/candlepin
 /sbin/restorecon -F -R -v /var/log/candlepin
+
+/usr/sbin/semanage port -a -t candlepin_activemq_port_t -p tcp 61613
