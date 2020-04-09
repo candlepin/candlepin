@@ -758,7 +758,7 @@ public class ContentManager {
             return true;
         }
 
-        if (dto.getReleaseVersion() != null && !dto.getReleaseVersion().equals(entity.getReleaseVersion())) {
+        if (dto.getReleaseVer() != null && !dto.getReleaseVer().equals(entity.getReleaseVersion())) {
             return true;
         }
 
@@ -766,17 +766,13 @@ public class ContentManager {
             return true;
         }
 
-        if (dto.getMetadataExpiration() != null &&
-            !dto.getMetadataExpiration().equals(entity.getMetadataExpiration())) {
+        if (dto.getMetadataExpire() != null &&
+            !dto.getMetadataExpire().equals(entity.getMetadataExpiration())) {
 
             return true;
         }
 
         if (dto.getArches() != null && !dto.getArches().equals(entity.getArches())) {
-            return true;
-        }
-
-        if (dto.isLocked() != null && !dto.isLocked().equals(entity.isLocked())) {
             return true;
         }
 
@@ -908,16 +904,16 @@ public class ContentManager {
             entity.setRequiredTags(update.getRequiredTags());
         }
 
-        if (update.getReleaseVersion() != null) {
-            entity.setReleaseVersion(update.getReleaseVersion());
+        if (update.getReleaseVer() != null) {
+            entity.setReleaseVersion(update.getReleaseVer());
         }
 
         if (update.getGpgUrl() != null) {
             entity.setGpgUrl(update.getGpgUrl());
         }
 
-        if (update.getMetadataExpiration() != null) {
-            entity.setMetadataExpiration(update.getMetadataExpiration());
+        if (update.getMetadataExpire() != null) {
+            entity.setMetadataExpiration(update.getMetadataExpire());
         }
 
         if (update.getModifiedProductIds() != null) {
@@ -926,10 +922,6 @@ public class ContentManager {
 
         if (update.getArches() != null) {
             entity.setArches(update.getArches());
-        }
-
-        if (update.isLocked() != null) {
-            entity.setLocked(update.isLocked());
         }
 
         return entity;
