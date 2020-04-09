@@ -64,6 +64,52 @@ describe 'Consumer Resource Activation Key' do
     @cp.get_pool(pool1.id).consumed.should == 1
   end
 
+  it 'should auto-attach a consumer with autoheal true with an activation key with an auto-attach' do
+    # create extra product/pool to show selectivity
+    prod1 = create_product(random_string('product1'), random_string('product1'))
+    prod2 = create_product(random_string('product2'), random_string('product2'))
+    create_pool_and_subscription(@owner['key'], prod1.id, 10, [], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], prod2.id, 10)
+    pool1 = @cp.list_pools(:owner => @owner['id'], :product => prod1.id).first
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1')
+    @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
+    @cp.add_prod_id_to_key(key1['id'], prod1.id)
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
+      @owner['key'], ["key1"], [{'productId' => prod1.id, 'productName' => prod1.name}],
+      nil, [], nil,
+      [], nil, nil,
+      nil, nil, nil,
+      0, nil, nil, nil, nil,
+      nil, nil, true)
+    consumer.uuid.should_not be_nil
+    consumer.entitlementStatus.should == 'valid'
+    @cp.get_pool(pool1.id).consumed.should == 1
+  end
+
+  it 'should not auto-attach a consumer with autoheal false with an activation key with an auto-attach' do
+    # create extra product/pool to show selectivity
+    prod1 = create_product(random_string('product1'), random_string('product1'))
+    prod2 = create_product(random_string('product2'), random_string('product2'))
+    create_pool_and_subscription(@owner['key'], prod1.id, 10, [], '', '', '', nil, nil, true)
+    create_pool_and_subscription(@owner['key'], prod2.id, 10)
+    pool1 = @cp.list_pools(:owner => @owner['id'], :product => prod1.id).first
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1')
+    @cp.update_activation_key({'id' => key1['id'], "autoAttach" => "true"})
+    @cp.add_prod_id_to_key(key1['id'], prod1.id)
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
+      @owner['key'], ["key1"], [{'productId' => prod1.id, 'productName' => prod1.name}],
+      nil, [], nil,
+      [], nil, nil,
+      nil, nil, nil,
+      0, nil, nil, nil, nil,
+      nil, nil, false)
+    consumer.uuid.should_not be_nil
+    consumer.entitlementStatus.should == 'invalid'
+    @cp.get_pool(pool1.id).consumed.should == 0
+  end
+
  it 'should allow a consumer to register with activation keys with content overrides' do
     key1 = @cp.create_activation_key(@owner['key'], 'key1')
 
