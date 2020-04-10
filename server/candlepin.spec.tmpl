@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.8
+Version: 3.1.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,21 @@ fi
 
 #raw
 %changelog
+* Thu Apr 09 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.9-1
+- Regenerate pom files based on updates to gradle build files
+  (bcourt@redhat.com)
+- Remove non-ASCII character that breaks tito rpm build (nmoumoul@redhat.com)
+- 1792278: use autoheal value during registration  Leverage auto-heal value
+  available in consumer during registration with auto-attach enable activation
+  key. (abhiskum@redhat.com)
+- Added support for changing content access parameters via API
+  (crog@redhat.com)
+- Removed the constraint on the CDN label in ExportJob (crog@redhat.com)
+- Fix oauth spec test   oauth spec tests are failing with the newly created
+  vagrant box (destroy and up). As per my investigation, either we need to pass
+  only #{uri} or URL object instead of #{site}#{uri} in Net::HTTP::Get.new.
+  (abhiskum@redhat.com)
+
 * Thu Mar 19 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.8-1
 - 1692411: Added additional product ids into consumer installed products
   Current rule code is only to consider consumer installed products to
