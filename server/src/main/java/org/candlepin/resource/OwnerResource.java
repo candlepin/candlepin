@@ -18,6 +18,7 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.HealEntireOrgJob;
+import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.audit.Event;
@@ -765,11 +766,11 @@ public class OwnerResource {
         }
 
         if (dto.getStartDate() != null) {
-            entity.setStartDate(dto.getStartDate());
+            entity.setStartDate(Util.toDate(dto.getStartDate()));
         }
 
         if (dto.getEndDate() != null) {
-            entity.setEndDate(dto.getEndDate());
+            entity.setEndDate(Util.toDate(dto.getEndDate()));
         }
 
         if (dto.getQuantity() != null) {
@@ -781,7 +782,7 @@ public class OwnerResource {
                 entity.setAttributes(Collections.emptyMap());
             }
             else {
-                entity.setAttributes(dto.getAttributes());
+                entity.setAttributes(Util.toMap(dto.getAttributes()));
             }
         }
 
@@ -1786,6 +1787,10 @@ public class OwnerResource {
 
         log.info("Creating custom pool for owner {}: {}", ownerKey, inputPoolDTO);
 
+        this.validator.validateConstraints(inputPoolDTO);
+        this.validator.validateCollectionElementsNotNull(
+            inputPoolDTO::getDerivedProvidedProducts, inputPoolDTO::getProvidedProducts);
+
         Pool pool = new Pool();
 
         // Correct owner
@@ -1840,6 +1845,10 @@ public class OwnerResource {
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @ApiParam(name = "pool", required = true) PoolDTO newPoolDTO) {
+
+        this.validator.validateConstraints(newPoolDTO);
+        this.validator.validateCollectionElementsNotNull(
+            newPoolDTO::getDerivedProvidedProducts, newPoolDTO::getProvidedProducts);
 
         Pool currentPool = this.poolManager.get(newPoolDTO.getId());
         if (currentPool == null) {

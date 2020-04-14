@@ -96,7 +96,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
         Owner owner2 = this.createOwner("test-owner-2", "Test Owner 2");
 
-        ProductInfo product1 = TestUtil.createProductInfo("p1", "prod1");
+        Product product1 = TestUtil.createProduct("p1", "prod1");
         Product product2 = this.createProduct("p1", "prod1", owner2);
 
         Product output = this.productManager.createProduct(owner1, product1);

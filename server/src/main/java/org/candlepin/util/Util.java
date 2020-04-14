@@ -620,6 +620,9 @@ public class Util {
     }
 
     public static Map<String, String> toMap(Collection<AttributeDTO> attributes) {
+        if (attributes.isEmpty()) {
+            return Collections.emptyMap();
+        }
         return attributes.stream()
             .collect(Collectors.toMap(AttributeDTO::getName, AttributeDTO::getValue));
     }

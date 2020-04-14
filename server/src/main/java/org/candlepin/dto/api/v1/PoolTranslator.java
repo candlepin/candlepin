@@ -15,25 +15,27 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.util.Util;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
-
 
 
 /**
  * The PoolTranslator provides translation from Pool model objects to PoolDTOs.
  */
-public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
+public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
 
     /**
      * {@inheritDoc}
@@ -65,32 +67,41 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
     @Override
     @SuppressWarnings("checkstyle:methodlength")
     public PoolDTO populate(ModelTranslator modelTranslator, Pool source, PoolDTO dest) {
-        dest = super.populate(modelTranslator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId());
-        dest.setType(source.getType() != null ? source.getType().name() : null);
-        dest.setActiveSubscription(source.getActiveSubscription());
-        dest.setQuantity(source.getQuantity());
-        dest.setStartDate(source.getStartDate());
-        dest.setEndDate(source.getEndDate());
-        dest.setAttributes(source.getAttributes());
-        dest.setRestrictedToUsername(source.getRestrictedToUsername());
-        dest.setContractNumber(source.getContractNumber());
-        dest.setAccountNumber(source.getAccountNumber());
-        dest.setOrderNumber(source.getOrderNumber());
-        dest.setConsumed(source.getConsumed());
-        dest.setExported(source.getExported());
-        dest.setCalculatedAttributes(source.getCalculatedAttributes());
-        dest.setUpstreamPoolId(source.getUpstreamPoolId());
-        dest.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
-        dest.setUpstreamConsumerId(source.getUpstreamConsumerId());
-        dest.setStackId(source.getStackId());
-        dest.setStacked(source.isStacked());
-        dest.setDevelopmentPool(source.isDevelopmentPool());
-        dest.setSourceStackId(source.getSourceStackId());
-        dest.setSubscriptionSubKey(source.getSubscriptionSubKey());
-        dest.setSubscriptionId(source.getSubscriptionId());
-        dest.setLocked(source.isLocked());
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        dest.id(source.getId())
+            .type(source.getType() != null ? source.getType().name() : null)
+            .activeSubscription(source.getActiveSubscription())
+            .quantity(source.getQuantity())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .startDate(Util.toDateTime(source.getStartDate()))
+            .endDate(Util.toDateTime(source.getEndDate()))
+            .attributes(createAttributes(source.getAttributes()))
+            .restrictedToUsername(source.getRestrictedToUsername())
+            .contractNumber(source.getContractNumber())
+            .accountNumber(source.getAccountNumber())
+            .orderNumber(source.getOrderNumber())
+            .consumed(source.getConsumed())
+            .exported(source.getExported())
+            .calculatedAttributes(source.getCalculatedAttributes())
+            .upstreamPoolId(source.getUpstreamPoolId())
+            .upstreamEntitlementId(source.getUpstreamEntitlementId())
+            .upstreamConsumerId(source.getUpstreamConsumerId())
+            .stackId(source.getStackId())
+            .stacked(source.isStacked())
+            .developmentPool(source.isDevelopmentPool())
+            .sourceStackId(source.getSourceStackId())
+            .subscriptionSubKey(source.getSubscriptionSubKey())
+            .subscriptionId(source.getSubscriptionId())
+            .href(source.getId() != null ? String.format("/pools/%s", source.getId()) : null)
+            .locked(source.isLocked());
 
         // Set product fields
         Product product = source.getProduct();
@@ -99,7 +110,7 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
         if (product != null) {
             dest.setProductId(product.getId());
             dest.setProductName(product.getName());
-            dest.setProductAttributes(product.getAttributes());
+            dest.setProductAttributes(createAttributes(product.getAttributes()));
             dest.setProvidedProducts(this.translateProvidedProducts(product.getProvidedProducts()));
 
             derived = product.getDerivedProduct();
@@ -107,20 +118,20 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
         else {
             dest.setProductId(null);
             dest.setProductName(null);
-            dest.setProductAttributes(Collections.emptyMap());
+            dest.setProductAttributes(Collections.emptyList());
             dest.setProvidedProducts(Collections.emptySet());
         }
 
         if (derived != null) {
             dest.setDerivedProductId(derived.getId());
             dest.setDerivedProductName(derived.getName());
-            dest.setDerivedProductAttributes(derived.getAttributes());
+            dest.setDerivedProductAttributes(createAttributes(derived.getAttributes()));
             dest.setDerivedProvidedProducts(this.translateProvidedProducts(derived.getProvidedProducts()));
         }
         else {
             dest.setDerivedProductId(null);
             dest.setDerivedProductName(null);
-            dest.setDerivedProductAttributes(Collections.emptyMap());
+            dest.setDerivedProductAttributes(Collections.emptyList());
             dest.setDerivedProvidedProducts(Collections.emptySet());
         }
 
@@ -129,13 +140,7 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
             Owner owner = source.getOwner();
             dest.setOwner(owner != null ? modelTranslator.translate(owner, NestedOwnerDTO.class) : null);
 
-            SubscriptionsCertificate subCertificate = source.getCertificate();
-            dest.setCertificate(subCertificate != null ?
-                modelTranslator.translate(subCertificate, CertificateDTO.class) : null);
-
-            Entitlement sourceEntitlement = source.getSourceEntitlement();
-            dest.setSourceEntitlement(sourceEntitlement != null ?
-                modelTranslator.translate(sourceEntitlement, EntitlementDTO.class) : null);
+            dest.sourceEntitlement(createEntitlement(source.getSourceEntitlement()));
 
             if (product != null && product.getBranding() != null) {
                 dest.setBranding(product.getBranding().stream()
@@ -151,17 +156,40 @@ public class PoolTranslator extends TimestampedEntityTranslator<Pool, PoolDTO> {
         return dest;
     }
 
-    private Collection<PoolDTO.ProvidedProductDTO> translateProvidedProducts(Collection<Product> provided) {
-        Collection<PoolDTO.ProvidedProductDTO> output = new ArrayList<>();
+    private Set<ProvidedProductDTO> translateProvidedProducts(Collection<Product> provided) {
+        Set<ProvidedProductDTO> output = new HashSet<>();
 
         if (provided != null) {
             // Impl note: This does not handle n-tier properly. Update this as necessary to add support
             // when we figure out exactly what n-tier means/needs.
             for (Product product : provided) {
-                output.add(new PoolDTO.ProvidedProductDTO(product.getId(), product.getName()));
+                output.add(new ProvidedProductDTO()
+                    .productId(product.getId())
+                    .productName(product.getName())
+                );
             }
         }
 
         return output;
+    }
+
+    private NestedEntitlementDTO createEntitlement(Entitlement source) {
+        if (source == null) {
+            return null;
+        }
+        return new NestedEntitlementDTO()
+            .id(source.getId())
+            .href(source.getHref());
+    }
+
+    private List<AttributeDTO> createAttributes(Map<String, String> source) {
+        if (source == null) {
+            return Collections.emptyList();
+        }
+        return source.entrySet().stream()
+            .map(entry -> new AttributeDTO()
+                .name(entry.getKey())
+                .value(entry.getValue()))
+            .collect(Collectors.toList());
     }
 }

@@ -1808,8 +1808,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolCurator.listByOwner(owner).list();
         assertEquals(2, pools.size());
 
-        poolDto.setStartDate(new Date(System.currentTimeMillis() - 5 * 24 * 60 * 60 * 1000));
-        poolDto.setEndDate(new Date(System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000));
+        poolDto.setStartDate(Util.toDateTime(new Date(System.currentTimeMillis() - 5 * 24 * 60 * 60 * 1000)));
+        poolDto.setEndDate(Util.toDateTime(new Date(System.currentTimeMillis() - 3 * 24 * 60 * 60 * 1000)));
         ownerResource.updatePool(owner.getKey(), poolDto);
         pools = poolCurator.listByOwner(owner).list();
         assertEquals(0, pools.size());

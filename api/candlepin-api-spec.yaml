@@ -1715,23 +1715,12 @@ components:
             guestId:
               type: string
 
-    PermissionBlueprintDTO:
-      description: Represents the permission blueprints exposed to the API layer
-      allOf:
-        - $ref: '#/components/schemas/TimestampedEntity'
-        - type: object
-          properties:
-            id:
-              type: string
-              example: "ff808081554a3e4101554a3e9033005d"
-            owner:
-              $ref: "#/components/schemas/NestedOwnerDTO"
-            type:
-              type: string
-              example: "OWNER"
-            access:
-              type: string
-              example: "NONE"
+    NestedEntitlementDTO:
+      properties:
+        id:
+          type: string
+        href:
+          type: string
 
     NestedOwnerDTO:
       properties:
@@ -1777,6 +1766,125 @@ components:
               $ref: '#/components/schemas/NestedOwnerDTO'
             upstreamConsumer:
               $ref: '#/components/schemas/UpstreamConsumerDTO'
+
+    PermissionBlueprintDTO:
+      description: Represents the permission blueprints exposed to the API layer
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+              example: "ff808081554a3e4101554a3e9033005d"
+            owner:
+              $ref: "#/components/schemas/NestedOwnerDTO"
+            type:
+              type: string
+              example: "OWNER"
+            access:
+              type: string
+              example: "NONE"
+
+    PoolDTO:
+      description: Represents a pool of products eligible to be consumed (entitled)
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+            owner:
+              $ref: '#/components/schemas/NestedOwnerDTO'
+            activeSubscription:
+              type: boolean
+            sourceEntitlement:
+              $ref: '#/components/schemas/NestedEntitlementDTO'
+            quantity:
+              type: integer
+              format: int64
+            startDate:
+              type: string
+              format: date-time
+            endDate:
+              type: string
+              format: date-time
+            attributes:
+              type: array
+              items:
+                $ref: '#/components/schemas/AttributeDTO'
+            restrictedToUsername:
+              type: string
+            contractNumber:
+              type: string
+            accountNumber:
+              type: string
+            orderNumber:
+              type: string
+            consumed:
+              type: integer
+              format: int64
+            exported:
+              type: integer
+              format: int64
+            branding:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/BrandingDTO'
+            calculatedAttributes:
+              type: object
+              additionalProperties:
+                type: string
+            upstreamPoolId:
+              type: string
+            upstreamEntitlementId:
+              type: string
+            upstreamConsumerId:
+              type: string
+            productName:
+              type: string
+            productId:
+              type: string
+            productAttributes:
+              type: array
+              items:
+                $ref: '#/components/schemas/AttributeDTO'
+            stackId:
+              type: string
+            stacked:
+              type: boolean
+            sourceStackId:
+              type: string
+            developmentPool:
+              type: boolean
+            href:
+              type: string
+            derivedProductAttributes:
+              type: array
+              items:
+                $ref: '#/components/schemas/AttributeDTO'
+            derivedProductId:
+              type: string
+            derivedProductName:
+              type: string
+            providedProducts:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/ProvidedProductDTO'
+            derivedProvidedProducts:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/ProvidedProductDTO'
+            subscriptionSubKey:
+              type: string
+            subscriptionId:
+              type: string
+            locked:
+              type: boolean
 
     ProductContentDTO:
       description: Product content mapping exposed to the API
@@ -1836,6 +1944,17 @@ components:
             href:
               type: string
               example: /products/ff808081554a3e4101554a3e9033005d
+
+    ProvidedProductDTO:
+      description: ProvidedProduct DTO representation
+      required:
+        - productId
+      properties:
+        productId:
+          type: string
+          minLength: 1
+        productName:
+          type: string
 
     ReleaseVerDTO:
       properties:
