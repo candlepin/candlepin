@@ -467,7 +467,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
             .key(owner.getKey()) : null);
 
         PoolDTO pool = this.getPool();
-        copy.setPool(pool != null ? pool.clone() : null);
+        copy.setPool(copyPool(pool));
 
         ConsumerDTO consumer = this.getConsumer();
         copy.setConsumer(consumer != null ? consumer.clone() : null);
@@ -481,6 +481,48 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> impl
         copy.setCertificates(this.getCertificates());
 
         return copy;
+    }
+
+    private PoolDTO copyPool(PoolDTO pool) {
+        if (pool == null) {
+            return null;
+        }
+        return new PoolDTO()
+            .id(pool.getId())
+            .type(pool.getType())
+            .owner(pool.getOwner())
+            .activeSubscription(pool.getActiveSubscription())
+            .sourceEntitlement(pool.getSourceEntitlement())
+            .quantity(pool.getQuantity())
+            .startDate(pool.getStartDate())
+            .endDate(pool.getEndDate())
+            .attributes(pool.getAttributes())
+            .restrictedToUsername(pool.getRestrictedToUsername())
+            .contractNumber(pool.getContractNumber())
+            .accountNumber(pool.getAccountNumber())
+            .orderNumber(pool.getOrderNumber())
+            .consumed(pool.getConsumed())
+            .exported(pool.getExported())
+            .branding(pool.getBranding())
+            .calculatedAttributes(pool.getCalculatedAttributes())
+            .upstreamPoolId(pool.getUpstreamPoolId())
+            .upstreamEntitlementId(pool.getUpstreamEntitlementId())
+            .upstreamConsumerId(pool.getUpstreamConsumerId())
+            .productName(pool.getProductName())
+            .productId(pool.getProductId())
+            .productAttributes(pool.getProductAttributes())
+            .stackId(pool.getStackId())
+            .stacked(pool.getStacked())
+            .sourceStackId(pool.getSourceStackId())
+            .developmentPool(pool.getDevelopmentPool())
+            .derivedProductAttributes(pool.getDerivedProductAttributes())
+            .derivedProductId(pool.getDerivedProductId())
+            .derivedProductName(pool.getDerivedProductName())
+            .providedProducts(pool.getProvidedProducts())
+            .derivedProvidedProducts(pool.getDerivedProvidedProducts())
+            .subscriptionSubKey(pool.getSubscriptionSubKey())
+            .subscriptionId(pool.getSubscriptionId())
+            .locked(pool.getLocked());
     }
 
     /**
