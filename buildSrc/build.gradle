@@ -5,9 +5,22 @@ repositories {
     mavenCentral()
 }
 
+ext {
+    openApiVersion = "4.3.0"
+    swaggerParserVersion = "2.0.14-OpenAPITools.org-1"
+}
+
 dependencies {
     implementation(gradleApi())
-    implementation("org.openapitools:openapi-generator:4.0.1")
+    
+    implementation("org.openapitools:openapi-generator:${openApiVersion}")
+    implementation("org.openapitools:openapi-generator-gradle-plugin:${openApiVersion}")
+ 
+    implementation("org.openapitools.swagger.parser:swagger-parser-v3:${swaggerParserVersion}")
+    implementation("org.openapitools.swagger.parser:swagger-parser-v2-converter:${swaggerParserVersion}")
+    implementation("org.openapitools.swagger.parser:swagger-parser-core:${swaggerParserVersion}")
+    implementation("org.openapitools.swagger.parser:swagger-parser:${swaggerParserVersion}")
+    implementation("org.openapitools.swagger.parser:swagger-parser-project:${swaggerParserVersion}")
 }
 
 gradlePlugin {

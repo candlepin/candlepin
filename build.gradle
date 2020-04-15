@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         classpath group: 'org.yaml', name: 'snakeyaml', version: '1.19'
-        classpath "org.openapitools:openapi-generator-gradle-plugin:4.0.1"
+        classpath "org.openapitools:openapi-generator-gradle-plugin:4.3.0"
     }
 }
 
@@ -229,8 +229,8 @@ project(":api") {
       configFile = config_file
       outputDir = "$buildDir/generated"
       configOptions = [
-          interfaceOnly: true,
-          generatePom: false,
+          interfaceOnly: "true",
+          generatePom: "false",
           dateLibrary: "java8"
       ]
       templateDir = "$rootDir/buildSrc/src/main/resources/templates"

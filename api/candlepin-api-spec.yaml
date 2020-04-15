@@ -956,6 +956,7 @@ components:
       description: DTO representing an async job status
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1010,6 +1011,7 @@ components:
       description: A token that allows registration without username/password and sets subscription and content related properties at registration.
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1090,6 +1092,7 @@ components:
       description: Represents a database sequence used to ensure certificates receive unique serial numbers
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1108,6 +1111,7 @@ components:
       description: Represents certificate details
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1123,6 +1127,7 @@ components:
       description: Represents a consumer type used to differentiate various types of consumers
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1136,6 +1141,7 @@ components:
       description: Represents a content override for an activation key or consumer
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           required:
             - name
@@ -1154,6 +1160,7 @@ components:
       description: DTO representing a Cdn
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1171,6 +1178,7 @@ components:
       description: Represents a deleted consumer
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - properties:
             id:
               type: string
@@ -1189,6 +1197,7 @@ components:
       description: A DTO representation of the DistributorVersion
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1219,6 +1228,7 @@ components:
       description: Represents a guest ID running on a virt host consumer
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1234,6 +1244,7 @@ components:
       description: Represents a guest ID running on a virt host consumer. Does not include the attributes field
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1245,6 +1256,7 @@ components:
       description: Represents the permission blueprints exposed to the API layer
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1263,6 +1275,7 @@ components:
       description: DTO representing an owner/organization
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1297,6 +1310,7 @@ components:
       description: Represent the relationship between users and the permissions they have
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1308,10 +1322,12 @@ components:
             users:
               type: array
               uniqueItems: true
+              nullable: true
               items:
                 "$ref": "#/components/schemas/UserDTO"
             permissions:
               type: array
+              nullable: true
               items:
                 "$ref": "#/components/schemas/PermissionBlueprintDTO"
 
@@ -1365,6 +1381,7 @@ components:
       description: "Represents user information for a given user"
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1386,6 +1403,7 @@ components:
       description: DTO representing an upstream consumer
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
+        - $ref: '#/components/schemas/PreventInheritance'
         - type: object
           properties:
             id:
@@ -1406,6 +1424,9 @@ components:
               $ref: '#/components/schemas/ConsumerTypeDTO'
             idCert:
               $ref: '#/components/schemas/CertificateDTO'
+
+    PreventInheritance:
+      description: Dummy dependency to prevent inheritance & apply composition.
 
   securitySchemes:
     basicAuth:
