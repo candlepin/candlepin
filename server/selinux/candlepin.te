@@ -1,9 +1,18 @@
-policy_module(candlepin, 1.0.0)
+policy_module(candlepin, 1.1.0)
 
 ########################################
 #
 # Declarations
 #
+
+## <desc>
+##   <p>
+##     Allow tomcat to bind to the port used
+##     by candlepin's embedded activemq artemis,
+##     labeled candlepin_activemq_port_t
+##   </p>
+## </desc>
+gen_tunable(candlepin_can_bind_activemq_port, false)
 
 type candlepin_t;
 type candlepin_exec_t;
@@ -29,6 +38,8 @@ files_type(candlepin_var_lib_t)
 type candlepin_var_log_t;
 logging_log_file(candlepin_var_log_t)
 
+type candlepin_activemq_port_t;
+corenet_port(candlepin_activemq_port_t)
 
 ########################################
 #
@@ -81,6 +92,7 @@ require {
     type postgresql_port_t;
     class file { read getattr open };
     class dir search;
+    class tcp_socket { name_connect name_bind };
 }
 
 # for httpd/katello, access to the candlepin ca certs
@@ -103,3 +115,7 @@ allow tomcat_t candlepin_var_lib_t:file { manage_file_perms };
 allow tomcat_t candlepin_var_log_t:dir { manage_dir_perms };
 allow tomcat_t candlepin_var_log_t:file { manage_file_perms };
 allow tomcat_t postgresql_port_t:tcp_socket name_connect;
+
+tunable_policy(`candlepin_can_bind_activemq_port',`
+    allow tomcat_t candlepin_activemq_port_t:tcp_socket name_bind;
+')
