@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.9
+Version: 3.1.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,10 @@ fi
 
 #raw
 %changelog
+* Thu Apr 16 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.10-1
+- Added support for JAAS in the embedded ActiveMQ broker (crog@redhat.com)
+- 1812110: Expose artemis port with SELinux boolean (nmoumoul@redhat.com)
+
 * Thu Apr 09 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.9-1
 - Regenerate pom files based on updates to gradle build files
   (bcourt@redhat.com)
