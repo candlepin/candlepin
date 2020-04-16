@@ -187,7 +187,12 @@ public class ActiveMQSessionFactory {
     private String generateServerUrl() {
         StringBuilder serverUrlBuilder =
             new StringBuilder(this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL));
-        if (!this.config.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED)) {
+
+        // TODO: Change this to use ACTIVEMQ_EMBEDDED_BROKER once configuration upgrades are in
+        // place
+        boolean embedded = this.config.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED);
+
+        if (!embedded) {
             serverUrlBuilder.append("?sslEnabled=true")
                 .append("&trustStorePath=")
                 .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_TRUSTSTORE))
@@ -198,6 +203,7 @@ public class ActiveMQSessionFactory {
                 .append("&keyStorePassword=")
                 .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_KEYSTORE_PASSWORD));
         }
+
         return serverUrlBuilder.toString();
     }
 

@@ -19,15 +19,87 @@
                xsi:schemaLocation="urn:activemq /schema/artemis-configuration.xsd">
 
     <core xmlns="urn:activemq:core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="urn:activemq:core ">
+        xsi:schemaLocation="urn:activemq:core ">
 
+        <!--
+            By default, Candlepin only enables the in-vm connection with no security manager, but
+            supports adding additional acceptors which can then be secured using JAAS modules.
+
+            Below is a commented-out example acceptor that accepts clients using the STOMP protocol,
+            over an SSL connection. In addition to the acceptor, the remaining JAAS configuration
+            needs to be added, such as the login.config file loaded with the Java runtime.
+
+            When configuring the login.config, Candlepin uses two sections for certificate-based
+            and non-certificate logins attempts. By default, these are named "CertificateLogin" and
+            "InVMLogin" respectively, but can be modified in candlepin.conf if necessary [1].
+
+            As Candlepin's in-vm connection does not provide any credentials, it is imperative that
+            the guest login module is present in the non-certificate login section when using the
+            embedded broker. Omitting or misconfiguring this module will prevent Candlepin from
+            communicating with its own broker, leading to an inability to operate normally and being
+            permanently stuck in suspend mode, or not starting at all.
+
+            An example of a login.config configured for Candlepin's embedded broker to allow both
+            external SSL connections and Candlepin's own in-vm connection is given below [2].
+
+            Beyond this, the security settings will need to be configured to allow the various users
+            to actually use the broker. Again, when using the embedded broker, Candlepin's in-vm
+            connection should be configured to perform any action to prevent operation failure. The
+            security settings section below has a commented-out block for the in-vm role to perform
+            any operation on any address/queue.
+
+            [1] candlepin.conf properties renaming:
+                - "candlepin.messaging.activemq.embedded.jaas_properties_login_name"
+                - "candlepin.messaging.activemq.embedded.jaas_certificate_login_name"
+
+            [2] Example login.config for an embedded broker with external clients:
+                CertificateLogin {
+                    org.apache.activemq.artemis.spi.core.security.jaas.TextFileCertificateLoginModule required
+                        debug=true
+                        org.apache.activemq.jaas.textfiledn.user="cert-users.properties"
+                        org.apache.activemq.jaas.textfiledn.role="cert-roles.properties";
+                };
+
+                InVMLogin {
+                    org.apache.activemq.artemis.spi.core.security.jaas.GuestLoginModule required
+                        debug=true
+                        credentialsInvalidate=true
+                        org.apache.activemq.jaas.guest.user="invm-user"
+                        org.apache.activemq.jaas.guest.role="invm-role";
+                };
+        -->
 
         <acceptors>
             <acceptor name="in-vm">vm://0</acceptor>
-            <!-- <acceptor name="netty">tcp://localhost:61617?sslEnabled=true;keyStorePath=${artemis.instance}/certs/artemis-server.ks;keyStorePassword=securepassword;needClientAuth=true;trustStorePath=${artemis.instance}/certs/artemis-server.ts;trustStorePassword=securepassword</acceptor> -->
+
+            <!-- <acceptor name="netty">
+                tcp://localhost:61613?protocols=STOMP;needClientAuth=true;sslEnabled=true;keyStorePath=${artemis.instance}/certs/server-side-keystore.jks;keyStorePassword=changeme;trustStorePath=${artemis.instance}/certs/server-side-truststore.jks;trustStorePassword=changeme
+            </acceptor> -->
         </acceptors>
 
+        <!-- set this to true if using external clients -->
         <security-enabled>false</security-enabled>
+
+        <security-settings>
+            <!--
+                Enable this when using the embedded broker with the security manager enabled.
+                Remember sure to update the role name to match the role given to the "guest"
+                in-vm user, following the login details provided above.
+
+            <security-setting match="#">
+                <permission type="createAddress" roles="invm-role"/>
+                <permission type="deleteAddress" roles="invm-role"/>
+                <permission type="createDurableQueue" roles="invm-role"/>
+                <permission type="deleteDurableQueue" roles="invm-role"/>
+                <permission type="createNonDurableQueue" roles="invm-role"/>
+                <permission type="deleteNonDurableQueue" roles="invm-role"/>
+                <permission type="send" roles="invm-role"/>
+                <permission type="consume" roles="invm-role"/>
+                <permission type="browse" roles="invm-role"/>
+                <permission type="manage" roles="invm-role"/>
+            </security-setting>
+            -->
+        </security-settings>
 
         <!-- Silence warnings on server startup -->
         <cluster-user></cluster-user>
