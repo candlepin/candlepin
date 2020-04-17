@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.EnvironmentDTO.EnvironmentContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
@@ -101,7 +100,7 @@ public class EnvironmentTranslatorTest extends
                         assertNotNull(cdto.getUuid());
 
                         if (cdto.getUuid().equals(content.getUuid())) {
-                            assertEquals(ec.getEnabled(), ecdto.isEnabled());
+                            assertEquals(ec.getEnabled(), ecdto.getEnabled());
 
                             // Pass the content off to the ContentTranslatorTest to verify it
                             this.contentTranslatorTest.verifyOutput(content, cdto, childrenGenerated);
