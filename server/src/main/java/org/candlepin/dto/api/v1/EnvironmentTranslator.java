@@ -16,22 +16,19 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
-import org.candlepin.dto.api.v1.EnvironmentDTO.EnvironmentContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Owner;
+import org.candlepin.util.Util;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
- * The CapabilityTranslator provides translation from ConsumerCapability model objects to
- * CapabilityDTOs
+ * The EnvironmentTranslator provides translation from Environment model objects to EnvironmentDTOs
  */
-public class EnvironmentTranslator extends TimestampedEntityTranslator<Environment, EnvironmentDTO> {
+public class EnvironmentTranslator implements ObjectTranslator<Environment, EnvironmentDTO> {
 
     /**
      * {@inheritDoc}
@@ -64,11 +61,19 @@ public class EnvironmentTranslator extends TimestampedEntityTranslator<Environme
     public EnvironmentDTO populate(ModelTranslator translator, Environment source,
         EnvironmentDTO dest) {
 
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId());
-        dest.setName(source.getName());
-        dest.setDescription(source.getDescription());
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        dest.created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .id(source.getId())
+            .name(source.getName())
+            .description(source.getDescription());
 
         if (translator != null) {
             Owner owner = source.getOwner();
@@ -76,23 +81,24 @@ public class EnvironmentTranslator extends TimestampedEntityTranslator<Environme
 
             Set<EnvironmentContent> envContents = source.getEnvironmentContent();
             if (envContents != null) {
-                Collection<EnvironmentContent> envContent = source.getEnvironmentContent();
-                dest.setEnvironmentContent(Collections.<EnvironmentContentDTO>emptyList());
+                Set<EnvironmentContentDTO> setOfEnvironmentContents = new HashSet<>();
 
-                if (envContent != null) {
-                    ObjectTranslator<Content, ContentDTO> contentTranslator = translator
-                        .findTranslatorByClass(Content.class, ContentDTO.class);
+                ObjectTranslator<Content, ContentDTO> contentTranslator = translator
+                    .findTranslatorByClass(Content.class, ContentDTO.class);
 
-                    for (EnvironmentContent ec : envContent) {
-                        if (ec != null) {
-                            ContentDTO dto = contentTranslator.translate(translator, ec.getContent());
+                for (EnvironmentContent ec : envContents) {
+                    if (ec != null) {
+                        ContentDTO dto = contentTranslator.translate(translator, ec.getContent());
 
-                            if (dto != null) {
-                                dest.addContent(dto, ec.getEnabled());
-                            }
+                        if (dto != null) {
+                            setOfEnvironmentContents.add(new EnvironmentContentDTO()
+                                .content(dto)
+                                .enabled(ec.getEnabled()));
                         }
                     }
                 }
+
+                dest.setEnvironmentContent(setOfEnvironmentContents);
             }
         }
         else {
