@@ -15,11 +15,13 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
+import org.candlepin.util.Util;
 
 import org.junit.Test;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,7 +40,6 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
 
 
     protected Map<String, Object> values;
-    protected EnvironmentDTOTest environmentDTOTest = new EnvironmentDTOTest();
     protected ConsumerInstalledProductDTOTest cipDTOTest = new ConsumerInstalledProductDTOTest();
     protected CapabilityDTOTest capabilityDTOTest = new CapabilityDTOTest();
     protected HypervisorIdDTOTest hypervisorIdDTOTest = new HypervisorIdDTOTest();
@@ -92,6 +93,22 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
 
         NestedOwnerDTO owner = new NestedOwnerDTO().id("OwnerId").displayName("Name").key("12345");
 
+        ContentDTO cDTO = new ContentDTO()
+            .id("ContentId")
+            .name("ContentName")
+            .modifiedProductIds(new HashSet<>(Arrays.asList("ID1", "ID2")));
+
+        Set<EnvironmentContentDTO> envContentDTO = Util.asSet(new EnvironmentContentDTO()
+            .content(cDTO)
+            .enabled(false));
+
+        EnvironmentDTO envDTO = new EnvironmentDTO()
+            .id("envID")
+            .name("EnvName")
+            .owner(owner)
+            .environmentContent(envContentDTO)
+            .description("test");
+
         this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Uuid", "test-uuid");
@@ -105,7 +122,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("AddOns", addOns);
         this.values.put("ReleaseVersion", "test-release-ver");
         this.values.put("Owner", owner);
-        this.values.put("Environment", this.environmentDTOTest.getPopulatedDTOInstance());
+        this.values.put("Environment", envDTO);
         this.values.put("EntitlementCount", 1L);
         this.values.put("Facts", facts);
         this.values.put("LastCheckin", new Date());
