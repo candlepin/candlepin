@@ -1265,6 +1265,35 @@ components:
           type: string
           minLength: 1
 
+    EnvironmentContentDTO:
+      description: EnvironmentContent represents the promotion of content into a particular environment.
+      properties:
+        content:
+          $ref: "#/components/schemas/ContentDTO"
+        enabled:
+          type: boolean
+
+    EnvironmentDTO:
+      description: Represents an environment within an org used to enable/disable/promote content
+        in specific places.
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            description:
+              type: string
+            owner:
+              $ref: "#/components/schemas/NestedOwnerDTO"
+            environmentContent:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: "#/components/schemas/EnvironmentContentDTO"
+
     GuestIdDTO:
       description: Represents a guest ID running on a virt host consumer
       allOf:

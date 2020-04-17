@@ -801,8 +801,8 @@ public class ConsumerResourceUpdateTest {
     public void throwsAnExceptionWhenEnvironmentNotFound() {
         String uuid = "A Consumer";
         EnvironmentDTO changedEnvironment = new EnvironmentDTO()
-            .setId("42")
-            .setName("environment");
+            .id("42")
+            .name("environment");
 
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
