@@ -1091,7 +1091,56 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             .key(owner.getKey()) : null);
 
         EnvironmentDTO environment = this.getEnvironment();
-        copy.setEnvironment(environment != null ? environment.clone() : null);
+
+        if (environment != null) {
+            EnvironmentDTO clonedEnv = new EnvironmentDTO();
+            clonedEnv.id(environment.getId())
+                .name(environment.getName())
+                .description(environment.getDescription());
+
+            NestedOwnerDTO own = environment.getOwner();
+            clonedEnv.setOwner(own != null ? new NestedOwnerDTO()
+                .id(own.getId())
+                .displayName(own.getDisplayName())
+                .href(own.getHref())
+                .key(own.getKey()) : null);
+
+            if (environment.getEnvironmentContent() != null) {
+                Set<EnvironmentContentDTO> envContent = new HashSet<>();
+
+                for (EnvironmentContentDTO envC : environment.getEnvironmentContent()) {
+                    ContentDTO content = envC.getContent();
+                    ContentDTO clonedContent = new ContentDTO().uuid(content.getUuid())
+                        .id(content.getId())
+                        .type(content.getType())
+                        .label(content.getLabel())
+                        .name(content.getName())
+                        .vendor(content.getVendor())
+                        .contentUrl(content.getContentUrl())
+                        .requiredTags(content.getRequiredTags())
+                        .releaseVer(content.getReleaseVer())
+                        .gpgUrl(content.getGpgUrl())
+                        .arches(content.getArches())
+                        .modifiedProductIds(new HashSet<>(content.getModifiedProductIds() != null ?
+                        content.getModifiedProductIds() : null))
+                        .metadataExpire(content.getMetadataExpire());
+
+                    envContent.add(new EnvironmentContentDTO()
+                        .content(clonedContent)
+                        .enabled(envC.getEnabled()));
+                }
+
+                clonedEnv.setEnvironmentContent(envContent);
+            }
+            else {
+                clonedEnv.setEnvironmentContent(null);
+            }
+
+            copy.setEnvironment(clonedEnv);
+        }
+        else {
+            copy.setEnvironment(null);
+        }
 
         HypervisorIdDTO hid = this.getHypervisorId();
         copy.setHypervisorId(hid != null ? hid.clone() : null);
