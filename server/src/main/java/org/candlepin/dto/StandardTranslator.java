@@ -58,7 +58,6 @@ import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTOTranslator;
 import org.candlepin.dto.api.v1.OwnerInfoTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
-import org.candlepin.dto.api.v1.PermissionBlueprintDTOTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintInfoTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintTranslator;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
@@ -66,7 +65,6 @@ import org.candlepin.dto.api.v1.ProductCertificateTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
 import org.candlepin.dto.api.v1.RoleDTO;
-import org.candlepin.dto.api.v1.RoleDTOTranslator;
 import org.candlepin.dto.api.v1.RoleInfoTranslator;
 import org.candlepin.dto.api.v1.RoleTranslator;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
@@ -76,7 +74,6 @@ import org.candlepin.dto.api.v1.UeberCertificateTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
 import org.candlepin.dto.api.v1.UserDTO;
-import org.candlepin.dto.api.v1.UserDTOTranslator;
 import org.candlepin.dto.api.v1.UserInfoTranslator;
 import org.candlepin.dto.api.v1.UserTranslator;
 import org.candlepin.dto.shim.ContentDTOTranslator;
@@ -208,8 +205,6 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new PermissionBlueprintTranslator(), PermissionBlueprint.class, PermissionBlueprintDTO.class);
         this.registerTranslator(
-            new PermissionBlueprintDTOTranslator(), PermissionBlueprintDTO.class, PermissionBlueprint.class);
-        this.registerTranslator(
             new PermissionBlueprintInfoTranslator(),
             PermissionBlueprintInfo.class, PermissionBlueprintDTO.class);
         this.registerTranslator(
@@ -225,8 +220,6 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new RoleTranslator(), Role.class, RoleDTO.class);
         this.registerTranslator(
-            new RoleDTOTranslator(), RoleDTO.class, Role.class);
-        this.registerTranslator(
             new RoleInfoTranslator(), RoleInfo.class, RoleDTO.class);
         this.registerTranslator(
             new SystemPurposeComplianceStatusTranslator(), SystemPurposeComplianceStatus.class,
@@ -237,8 +230,6 @@ public class StandardTranslator extends SimpleModelTranslator {
             new UpstreamConsumerTranslator(), UpstreamConsumer.class, UpstreamConsumerDTO.class);
         this.registerTranslator(
             new UserTranslator(), User.class, UserDTO.class);
-        this.registerTranslator(
-            new UserDTOTranslator(), UserDTO.class, User.class);
         this.registerTranslator(
             new UserInfoTranslator(), UserInfo.class, UserDTO.class);
 

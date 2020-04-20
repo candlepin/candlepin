@@ -18,7 +18,6 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
-import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -27,29 +26,21 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UniqueIdGenerator;
-import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.OwnerInfo;
-import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
-import org.candlepin.util.ListView;
-import org.candlepin.util.SetView;
 
 import com.google.inject.persist.Transactional;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -460,7 +451,7 @@ public class HostedTestResource {
             throw new ConflictException("product already exists: " + product.getId());
         }
 
-        return this.datastore.createProduct(productInfoAdapter(product));
+        return this.datastore.createProduct(InfoAdapter.productInfoAdapter(product));
     }
 
     @PUT
@@ -480,7 +471,7 @@ public class HostedTestResource {
             throw new NotFoundException("product does not yet exist: " + productId);
         }
 
-        return this.datastore.updateProduct(productId, productInfoAdapter(update));
+        return this.datastore.updateProduct(productId, InfoAdapter.productInfoAdapter(update));
     }
 
     @DELETE
@@ -531,7 +522,7 @@ public class HostedTestResource {
             throw new ConflictException("content already exists: " + content.getId());
         }
 
-        return this.datastore.createContent(contentInfoAdapter(content));
+        return this.datastore.createContent(InfoAdapter.contentInfoAdapter(content));
     }
 
     @PUT
@@ -551,7 +542,7 @@ public class HostedTestResource {
             throw new NotFoundException("content does not yet exist: " + contentId);
         }
 
-        return this.datastore.updateContent(contentId, contentInfoAdapter(update));
+        return this.datastore.updateContent(contentId, InfoAdapter.contentInfoAdapter(update));
     }
 
     @DELETE
@@ -561,274 +552,5 @@ public class HostedTestResource {
         return this.datastore.deleteContent(contentId) != null;
     }
 
-    @SuppressWarnings("checkstyle:methodlength")
-    private static ContentInfo contentInfoAdapter(ContentDTO source) {
-        return new ContentInfo() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getId() {
-                return source.getId();
-            }
 
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getType() {
-                return source.getType();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getLabel() {
-                return source.getLabel();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getName() {
-                return source.getName();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getVendor() {
-                return source.getVendor();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getContentUrl() {
-                return source.getContentUrl();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getRequiredTags() {
-                return source.getRequiredTags();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getReleaseVersion() {
-                return source.getReleaseVer();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getGpgUrl() {
-                return source.getGpgUrl();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getArches() {
-                return source.getArches();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Long getMetadataExpiration() {
-                return source.getMetadataExpire();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Collection<String> getRequiredProductIds() {
-                return source.getModifiedProductIds();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Date getCreated() {
-                return source.getCreated() != null ?
-                    new Date(source.getCreated().toInstant().toEpochMilli()) : null;
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Date getUpdated() {
-                return source.getUpdated() != null ?
-                    new Date(source.getUpdated().toInstant().toEpochMilli()) : null;
-            }
-        };
-    }
-
-    @SuppressWarnings("checkstyle:methodlength")
-    private static ProductInfo productInfoAdapter(ProductDTO source) {
-        return new ProductInfo() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getId() {
-                return source.getId();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getName() {
-                return source.getName();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Long getMultiplier() {
-                return source.getMultiplier();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Collection<String> getDependentProductIds() {
-                return source.getDependentProductIds();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Map<String, String> getAttributes() {
-                return source.getAttributes();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getAttributeValue(String key) {
-                return source.getAttributeValue(key);
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Collection<? extends ProductContentInfo> getProductContent() {
-
-                List<ProductContentInfo> productContentInfos = null;
-                Collection<ProductDTO.ProductContentDTO> productContentDTOs =
-                    source.getProductContent();
-
-                if (productContentDTOs != null) {
-                    productContentInfos = new ArrayList<>();
-
-                    for (ProductDTO.ProductContentDTO pc : productContentDTOs) {
-                        if (pc != null && pc.getContent() != null) {
-
-                            productContentInfos.add(new ProductContentInfo() {
-                                @Override
-                                public ContentInfo getContent() {
-                                    return contentInfoAdapter(pc.getContent());
-                                }
-
-                                @Override
-                                public Boolean isEnabled() {
-                                    return pc.isEnabled();
-                                }
-                            });
-                        }
-                    }
-                }
-
-                return productContentInfos != null ?
-                    new ListView(productContentInfos) : null;
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Collection<? extends BrandingInfo> getBranding() {
-                Set<BrandingInfo> brandingInfoSet = null;
-                Set<BrandingDTO> brandingDTOSet = source.getBranding();
-
-                if (brandingDTOSet != null) {
-                    brandingInfoSet = new HashSet<>();
-
-                    for (BrandingDTO branding : brandingDTOSet) {
-                        brandingInfoSet.add(brandingInfoAdapter(branding));
-                    }
-                }
-
-                return brandingInfoSet != null ?
-                    new SetView<>(brandingInfoSet) : null;
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Date getCreated() {
-                return source.getCreated();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Date getUpdated() {
-                return source.getUpdated();
-            }
-        };
-    }
-
-    private static BrandingInfo brandingInfoAdapter(BrandingDTO source) {
-        return new BrandingInfo() {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getName() {
-                return source.getName();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getType() {
-                return source.getType();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public String getProductId() {
-                return source.getProductId();
-            }
-        };
-    }
 }
