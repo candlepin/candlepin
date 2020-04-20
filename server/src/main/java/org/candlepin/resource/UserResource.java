@@ -26,6 +26,7 @@ import org.candlepin.dto.api.v1.UserDTO;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.User;
+import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.RoleInfo;
@@ -189,8 +190,8 @@ public class UserResource {
         }
 
         return this.modelTranslator.translate(
-            // Translating UserDTO to User Entity as UserDTO is no longer supporting UserInfo
-            userService.createUser(this.modelTranslator.translate(dto, User.class)),
+            // Translating UserDTO to User Info because UserDTO is no longer supporting UserInfo
+            userService.createUser(InfoAdapter.userInfoAdapter(dto)),
                 UserDTO.class);
     }
 
@@ -209,7 +210,7 @@ public class UserResource {
         UserInfo user = this.fetchUserByUsername(username);
 
         return this.modelTranslator.translate(
-            userService.updateUser(username, this.modelTranslator.translate(dto, User.class)),
+            userService.updateUser(username, InfoAdapter.userInfoAdapter(dto)),
                 UserDTO.class);
     }
 
@@ -274,7 +275,5 @@ public class UserResource {
 
         return null;
     }
-
-
 
 }
