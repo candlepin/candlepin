@@ -21,9 +21,8 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
-import org.candlepin.model.Role;
+import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.RoleInfo;
@@ -161,7 +160,7 @@ public class RoleResource {
         }
 
         validator.validateCollectionElementsNotNull(dto::getUsers, dto::getPermissions);
-        RoleInfo role = this.userService.createRole(this.modelTranslator.translate(dto, Role.class));
+        RoleInfo role = this.userService.createRole(InfoAdapter.roleInfoAdapter(dto));
         return this.modelTranslator.translate(role, RoleDTO.class);
     }
 
@@ -183,8 +182,7 @@ public class RoleResource {
 
         validator.validateCollectionElementsNotNull(dto::getUsers, dto::getPermissions);
 
-        RoleInfo role = this.userService.updateRole(roleName,
-            this.modelTranslator.translate(dto, Role.class));
+        RoleInfo role = this.userService.updateRole(roleName, InfoAdapter.roleInfoAdapter(dto));
         return this.modelTranslator.translate(role, RoleDTO.class);
     }
 
@@ -208,7 +206,7 @@ public class RoleResource {
         }
 
         RoleInfo role = this.userService.addPermissionToRole(roleName,
-            this.modelTranslator.translate(permission, PermissionBlueprint.class));
+            InfoAdapter.permissionBlueprintInfoAdapter(permission));
 
         return this.modelTranslator.translate(role, RoleDTO.class);
     }
@@ -296,5 +294,4 @@ public class RoleResource {
         Collection<? extends RoleInfo> roles = this.userService.listRoles();
         return roles.stream().map(this.modelTranslator.getStreamMapper(RoleInfo.class, RoleDTO.class));
     }
-
 }
