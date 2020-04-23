@@ -226,7 +226,7 @@ public class GuestIdResourceTest {
         when(consumerCurator.findByVirtUuid(guest.getGuestId(),
             consumer.getOwnerId())).thenReturn(null);
         guestIdResource.deleteGuest(consumer.getUuid(),
-            guest.getGuestId(), false, null);
+            guest.getGuestId(), false);
         verify(guestIdCurator, times(1)).delete(eq(guest));
         verify(consumerResource, never()).checkForMigration(eq(consumer), any(Consumer.class));
     }
@@ -267,7 +267,7 @@ public class GuestIdResourceTest {
         when(consumerCurator.findByVirtUuid(guest.getGuestId(),
             consumer.getOwnerId())).thenReturn(guestConsumer);
         guestIdResource.deleteGuest(consumer.getUuid(),
-            guest.getGuestId(), true, null);
+            guest.getGuestId(), true);
         verify(guestIdCurator, times(1)).delete(eq(guest));
         verify(consumerResource, never())
             .checkForMigration(eq(consumer), eq(guestConsumer));
@@ -286,7 +286,7 @@ public class GuestIdResourceTest {
         when(consumerCurator.findByVirtUuid(guest.getGuestId(), consumer.getOwnerId()))
             .thenReturn(null);
 
-        guestIdResource.deleteGuest(consumer.getUuid(), guest.getGuestId(), true, null);
+        guestIdResource.deleteGuest(consumer.getUuid(), guest.getGuestId(), true);
 
         verify(guestIdCurator, times(1)).delete(eq(guest));
         verify(consumerResource, never())
