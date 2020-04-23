@@ -102,6 +102,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A consumer type could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
 
@@ -138,6 +141,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A consumer type could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
 
@@ -164,6 +170,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A consumer type could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
   /cdn:
@@ -212,12 +221,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: CDN label already exists
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception has occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /cdn/{label}:
     put:
@@ -252,12 +260,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: No such content delivery network
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception has occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
     delete:
       tags:
@@ -280,12 +287,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Multiple CDN instances found with the same label
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception has occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /deleted_consumers:
     get:
@@ -312,17 +318,23 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeletedConsumerDTO'
         400:
-          description: When date is invalid
+          description: Date is invalid
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Date is invalid
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Not Found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
 
@@ -353,13 +365,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/definitions/DistributorVersionDTO'
+                  $ref: '#/components/schemas/DistributorVersionDTO'
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
     post:
       tags:
@@ -387,12 +395,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A distributor version already exists
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /distributor_versions/{id}:
     put:
@@ -427,12 +434,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A distibutor version could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
     delete:
       tags:
@@ -455,12 +461,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Distributor version could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /jobs:
     get:
@@ -554,18 +559,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid date range.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Unknown job states.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unknown job states.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
+
     delete:
       description: Cleans up terminal jobs matching the provided criteria
       tags:
@@ -660,18 +668,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid date range
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: Unknown job states
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unknown job states
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /jobs/{id}:
     get:
@@ -695,23 +705,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/AsyncJobStatusDTO'
         400:
-          description: when job ID is null or empty
+          description: Job ID is null or empty
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Job ID is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: A job could not be found using the provided ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A job could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
+
     delete:
       description: Cancels the job associated with the specified job ID
       tags:
@@ -733,23 +746,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/AsyncJobStatusDTO'
         400:
-          description: When job ID is null or empty. When job is already in a terminal state or otherwise cannot be canceled at this time
+          description: Job ID is null or empty or
+            job is already in a terminal state or otherwise cannot be canceled at this time
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Job ID is null or empty.
+                  job is already in a terminal state or otherwise cannot be canceled at this time
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: A job could not be found using the provided ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A job could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /jobs/scheduler:
     get:
@@ -766,11 +783,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SchedulerStatusDTO'
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
+
     post:
       description: Enables or disables the job scheduler for this Candlepin node
       tags:
@@ -797,12 +811,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Error setting scheduler status
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /jobs/schedule/{jobKey}:
     post:
@@ -826,29 +839,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/AsyncJobStatusDTO'
         400:
-          description: When job key is null or empty
+          description: Job key is null or empty
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Job key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         403:
           description: Job is not configured for manual scheduling
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Job is not configured for manual scheduling
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         500:
-          description: An unexpected exception occurred while scheduling job
+          description: An unexpected exception has occurred while scheduling job
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An unexpected exception has occurred while scheduling job
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
-          description: An unexpected exception occurred
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
+          $ref: '#/components/responses/default'
 
   /serials:
     get:
@@ -898,6 +916,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A certificate serial could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
 
@@ -921,11 +942,14 @@ paths:
 components:
   responses:
     default:
-      description: An unexpected exception occurred
+      description: An unexpected exception has occurred
       content:
-        application/json":
+        application/json:
           schema:
             $ref: '#/components/schemas/ExceptionMessage'
+          example:
+            displayMessage: An unexpected exception has occurred
+            requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
 
   schemas:
     TimestampedEntity:
@@ -933,12 +957,14 @@ components:
         created:
           type: string
           format: date-time
+          example: "2020-04-23 03:23:50.927000"
         updated:
           type: string
           format: date-time
+          example: "2020-04-23 03:23:50.927000"
 
     ExceptionMessage:
-      description: An exception occurred
+      description: An exception has occurred
       properties:
         displayMessage:
           type: string
@@ -1251,7 +1277,7 @@ components:
               type: array
               uniqueItems: true
               items:
-                $ref: '#/definitions/DistributorVersionCapabilityDTO'
+                $ref: '#/components/schemas/DistributorVersionCapabilityDTO'
 
     DistributorVersionCapabilityDTO:
       description: A DTO representation of the DistributorVersionCapability
