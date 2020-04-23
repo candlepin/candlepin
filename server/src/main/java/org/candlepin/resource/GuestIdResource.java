@@ -27,6 +27,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -39,13 +40,6 @@ import org.candlepin.resource.util.GuestMigration;
 
 import com.google.inject.Inject;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -55,24 +49,11 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Provider;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 
 /**
  * API Gateway for registered consumers guests
  */
-@Path("/consumers/{consumer_uuid}/guestids")
-@Api(value = "consumers", authorizations = { @Authorization("basic") })
-public class GuestIdResource {
+public class GuestIdResource implements ConsumersApi{
 
     private static Logger log = LoggerFactory.getLogger(GuestIdResource.class);
 
@@ -85,6 +66,9 @@ public class GuestIdResource {
     private EventFactory eventFactory;
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
+
+    @Inject
+    private PrincipalProvider principalProvider;
 
     @Inject
     public GuestIdResource(GuestIdCurator guestIdCurator, ConsumerCurator consumerCurator,
@@ -103,25 +87,15 @@ public class GuestIdResource {
         this.translator = translator;
     }
 
-    @ApiOperation(notes = "Retrieves the List of a Consumer's Guests", value = "getGuestIds",
-        response = GuestIdDTO.class, responseContainer = "list")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+    @Override
+    public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         return  translator.translateQuery(guestIdCurator.listByConsumer(consumer),
             GuestIdDTOArrayElement.class);
     }
 
-    @ApiOperation(notes = "Retrieves a single Guest By its consumer and the guest UUID", value = "getGuestId")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{guest_id}")
-    public GuestIdDTO getGuestId(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @PathParam("guest_id") String guestId) {
+    @Override
+    public GuestIdDTO getGuestId(@Verify(Consumer.class) String consumerUuid, String guestId) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         GuestId result = validateGuestId(
             guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
@@ -185,16 +159,8 @@ public class GuestIdResource {
         }
     }
 
-    @ApiOperation(notes = "Updates the List of Guests on a Consumer This method should work " +
-        "just like updating the consumer, except that it only updates GuestIds. " +
-        " Eventually we should move All the logic here, and depricate updating guests " +
-        "through the consumer update.", value = "updateGuests")
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public void updateGuests(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @ApiParam(name = "guestIds", required = true) List<GuestIdDTO> guestIdDTOs) {
+    @Override
+    public void updateGuests(@Verify(Consumer.class) String consumerUuid, List<GuestIdDTO> guestIdDTOs) {
         Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
 
         // Create a skeleton consumer for consumerResource.performConsumerUpdates
@@ -220,19 +186,9 @@ public class GuestIdResource {
         }
     }
 
-    @ApiOperation(notes = "Updates a single Guest on a Consumer. Allows virt-who to avoid uploading" +
-        " an entire list of guests", value = "updateGuest")
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/{guest_id}")
+    @Override
     public void updateGuest(
-        @ApiParam("consumer who owns or hosts the guest in question")
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @ApiParam("guest virtual uuid")
-        @PathParam("guest_id") String guestId,
-        @ApiParam(name = "updated", required = true, value = "updated guest data to use")
-        GuestIdDTO updatedDTO) {
+        @Verify(Consumer.class) String consumerUuid, String guestId, GuestIdDTO updatedDTO) {
 
         // I'm not sure this can happen
         if (guestId == null || guestId.isEmpty()) {
@@ -268,22 +224,13 @@ public class GuestIdResource {
         guestIdCurator.merge(guestIdEntity);
     }
 
-    @ApiOperation(notes = "Removes the Guest from the Consumer", value = "deleteGuest")
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{guest_id}")
-    public void deleteGuest(
-        @ApiParam("consumer who owns or hosts the guest in question")
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @PathParam("guest_id") String guestId,
-        @QueryParam("unregister") @DefaultValue("false") boolean unregister,
-        @Context Principal principal) {
-
+    @Override
+    public void deleteGuest(@Verify(Consumer.class) String consumerUuid, String guestId, Boolean unregister) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        GuestId toDelete = validateGuestId(
-            guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
+        GuestId toDelete = validateGuestId(guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
 
-        if (unregister) {
+        if (unregister.booleanValue()) {
+            Principal principal = (this.principalProvider == null ? null : this.principalProvider.get());
             unregisterConsumer(toDelete, principal);
         }
 

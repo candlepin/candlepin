@@ -30,6 +30,196 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /consumers/{consumer_uuid}/guestids:
+    get:
+      description: Retrieves the list of a Consumer's Guests
+      tags:
+        - GuestIds
+      operationId: getGuestIds
+      x-java-response-container-type: Iterable
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GuestIdDTOArrayElement'
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Updates the list of guests on a consumer.
+      tags:
+        - GuestIds
+      operationId: updateGuests
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the consumer who owns or hosts the guest
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of the guests to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/GuestIdDTO'
+      responses:
+        200:
+          description: A successful operation
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/guestids/{guest_id}:
+    get:
+      description: Retrieves a single Guest by its consumer and the guest UUID
+      tags:
+        - GuestIds
+      operationId: getGuestId
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the consumer to retrieve guest
+          required: true
+          schema:
+            type: string
+        - name: guest_id
+          in: path
+          description: The UUID of the guest to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestIdDTO'
+        404:
+          description: A Guest could not be found using the provided UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Updates a single Guest on a Consumer. Allows virt-who to avoid uploading an entire list of guests
+      tags:
+        - GuestIds
+      operationId: updateGuest
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the consumer who owns or hosts the guest
+          required: true
+          schema:
+            type: string
+        - name: guest_id
+          in: path
+          description: The UUID of the guest to be updated
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Updated guest data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestIdDTO'
+      responses:
+        200:
+          description: A successful operation
+        400:
+          description: Provided Guest UUID is not valid or does not match with guest UUID in JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        404:
+          description: A Consumer could not be found using the provided UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes the guest from the consumer
+      tags:
+        - GuestIds
+      operationId: deleteGuest
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the consumer who owns or hosts the guest
+          required: true
+          schema:
+            type: string
+        - name: guest_id
+          in: path
+          description: The UUID of the guest to be deleted
+          required: true
+          schema:
+            type: string
+        - name: unregister
+          in: query
+          description: Unregister the consumer
+          required: true
+          schema:
+            type: boolean
+            default: false
+      responses:
+        200:
+          description: A successful operation
+        400:
+          description: Provided guest uuid is not valid or does not match with guest uuid in JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        403:
+          description: The consumer cannot unregister becuase of unknown type or invalid credentails
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        404:
+          description: The consumer and/or guest could not be found using the provided uuid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        410:
+          description: A consumer was already deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+        default:
+          $ref: '#/components/responses/default'
+
   /consumertypes:
     get:
       description: Retrieves a list of known consumer types
