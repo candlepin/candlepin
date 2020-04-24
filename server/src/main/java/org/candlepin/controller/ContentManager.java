@@ -16,8 +16,8 @@ package org.candlepin.controller;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
@@ -247,23 +247,20 @@ public class ContentManager {
                     .list();
 
                 this.ownerContentCurator.updateOwnerContentReferences(owner,
-                    Collections.<String, String>singletonMap(entity.getUuid(), alt.getUuid()));
+                    Collections.singletonMap(entity.getUuid(), alt.getUuid()));
 
                 log.debug("Updating {} affected products", affectedProducts.size());
-                ContentDTO cdto = this.modelTranslator.translate(alt, ContentDTO.class);
+                ContentDTO updatedContent = this.modelTranslator.translate(alt, ContentDTO.class);
 
                 // TODO: Should we bulk this up like we do in importContent? Probably.
                 for (Product product : affectedProducts) {
                     log.debug("Updating affected product: {}", product);
                     ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
 
-                    ProductContentDTO pcdto = pdto.getProductContent(cdto.getId());
-                    if (pcdto != null) {
-                        pdto.addContent(cdto, pcdto.isEnabled());
+                    addContent(pdto, updatedContent);
 
-                        // Impl note: This should also take care of our entitlement cert regeneration
-                        this.productManager.updateProduct(pdto, owner, regenerateEntitlementCerts);
-                    }
+                    // Impl note: This should also take care of our entitlement cert regeneration
+                    this.productManager.updateProduct(pdto, owner, regenerateEntitlementCerts);
                 }
 
                 return alt;
@@ -306,28 +303,67 @@ public class ContentManager {
         updated = this.contentCurator.create(updated);
 
         this.ownerContentCurator.updateOwnerContentReferences(owner,
-            Collections.<String, String>singletonMap(entity.getUuid(), updated.getUuid()));
+            Collections.singletonMap(entity.getUuid(), updated.getUuid()));
 
         // Impl note:
         // This block is a consequence of products and contents not being strongly related.
         log.debug("Updating {} affected products", affectedProducts.size());
-        ContentDTO cdto = this.modelTranslator.translate(updated, ContentDTO.class);
+        ContentDTO updatedContent = this.modelTranslator.translate(updated, ContentDTO.class);
 
         // TODO: Should we bulk this up like we do in importContent? Probably.
         for (Product product : affectedProducts) {
             log.debug("Updating affected product: {}", product);
+
             ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+            addContent(pdto, updatedContent);
 
-            ProductContentDTO pcdto = pdto.getProductContent(cdto.getId());
-            if (pcdto != null) {
-                pdto.addContent(cdto, pcdto.isEnabled());
-
-                // Impl note: This should also take care of our entitlement cert regeneration
-                this.productManager.updateProduct(pdto, owner, regenerateEntitlementCerts);
-            }
+            // Impl note: This should also take care of our entitlement cert regeneration
+            this.productManager.updateProduct(pdto, owner, regenerateEntitlementCerts);
         }
 
         return updated;
+    }
+
+    private ProductContentDTO findContent(Set<ProductContentDTO> contents, String id) {
+        if (id == null) {
+            return null;
+        }
+        for (ProductContentDTO content : contents) {
+            if (id.equals(content.getContent().getId())) {
+                return content;
+            }
+        }
+        return null;
+    }
+
+    private void addContent(ProductDTO product, ContentDTO update) {
+        if (product == null) {
+            throw new IllegalArgumentException("Cannot add content to null product");
+        }
+        if (update == null || update.getId() == null) {
+            throw new IllegalArgumentException("update references incomplete content");
+        }
+
+        Set<ProductContentDTO> productContent;
+        if (product.getProductContent() == null) {
+            productContent = new HashSet<>();
+        }
+        else {
+            productContent = new HashSet<>(product.getProductContent());
+        }
+        ProductContentDTO oldContent = findContent(productContent, update.getId());
+
+        ProductContentDTO content = new ProductContentDTO();
+        content.setContent(update);
+        boolean enabled = oldContent != null && oldContent.getEnabled();
+        content.setEnabled(enabled);
+
+        if (oldContent != null) {
+            productContent.remove(oldContent);
+        }
+        productContent.add(content);
+
+        product.setProductContent(productContent);
     }
 
     /**

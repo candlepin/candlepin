@@ -17,9 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Certificate;
-
-import java.time.ZoneOffset;
-import java.util.Date;
+import org.candlepin.util.Util;
 
 /**
  * The CertificateTranslator provides translation from Certificate model objects to
@@ -64,14 +62,11 @@ public class CertificateTranslator implements ObjectTranslator<Certificate, Cert
             throw new IllegalArgumentException("destination is null");
         }
 
-        Date created = source.getCreated();
-        dest.created(created != null ? created.toInstant().atOffset(ZoneOffset.UTC) : null);
-
-        Date updated = source.getUpdated();
-        dest.updated(updated != null ? updated.toInstant().atOffset(ZoneOffset.UTC) : null);
 
         dest.id(source.getId())
             .key(source.getKey())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .cert(source.getCert())
             .serial(translator != null ?
             translator.translate(source.getSerial(), CertificateSerialDTO.class) : null);
