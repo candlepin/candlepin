@@ -19,25 +19,6 @@ describe 'Content Resource' do
     @cp.add_content_to_product(@owner['key'], @product['id'], @content_id)
   end
 
-
-  it 'should throw exceptions on write operations' do
-    lambda do
-      @cp.post("/content", {}, {})
-    end.should raise_exception(RestClient::BadRequest)
-
-    lambda do
-      @cp.put("/content/dummyid", {}, {})
-    end.should raise_exception(RestClient::BadRequest)
-
-    lambda do
-      @cp.post("/content/batch", {}, [])
-    end.should raise_exception(RestClient::BadRequest)
-
-    lambda do
-      @cp.delete("/content/dummyid")
-    end.should raise_exception(RestClient::BadRequest)
-  end
-
   it 'should show content on products' do
     @product = @cp.get_product(@owner['key'], @product['id'])
     @product.productContent.size.should == 1
