@@ -489,6 +489,60 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /content:
+    get:
+      tags:
+        - Content
+      description: Retrieves list of Content
+      operationId: listContent
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: Content successfully listed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+  /content/{content_uuid}:
+    get:
+      tags:
+        - Content
+      description: Retrieves a single Content
+      operationId: getContent
+      security: []
+      parameters:
+        - name: content_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Content successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentDTO'
+        404:
+          description: Content with the given UUID was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Content with the given UUID was not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /deleted_consumers:
     get:
       description: Retrieves a list of deleted consumers by deletion date or all. List returned is the deleted Consumers.
