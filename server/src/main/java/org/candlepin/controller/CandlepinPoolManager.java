@@ -661,19 +661,21 @@ public class CandlepinPoolManager implements PoolManager {
             long newConsumed = pool.getConsumed();
 
             // deletes ents in order of date since we retrieved and put them in the map in order.
-            for (Entitlement ent : entitlements) {
-                if (newConsumed > pool.getQuantity()) {
-                    entitlementsToRevoke.add(ent);
-                    newConsumed -= ent.getQuantity();
-                }
-                else {
-                    break;
+            if (entitlements != null) {
+                for (Entitlement ent : entitlements) {
+                    if (newConsumed > pool.getQuantity()) {
+                        entitlementsToRevoke.add(ent);
+                        newConsumed -= ent.getQuantity();
+                    }
+                    else {
+                        break;
+                    }
                 }
             }
         }
 
         // revoke the entitlements amassed above
-        return revokeEntitlements(new ArrayList<>(entitlementsToRevoke));
+        return revokeEntitlements(entitlementsToRevoke);
     }
 
     /**
