@@ -75,13 +75,13 @@ public class HypervisorConsumerTranslator implements ObjectTranslator<Consumer, 
             throw new IllegalArgumentException("destination is null");
         }
 
-        dest.setUuid(source.getUuid())
-            .setName(source.getName());
+        dest.uuid(source.getUuid())
+            .name(source.getName());
 
         if (source.getOwnerId() != null) {
             Owner owner = this.ownerCurator.findOwnerById(source.getOwnerId());
             if (owner != null && owner.getKey() != null) {
-                HypervisorConsumerDTO.OwnerDTO ownerDTO = new HypervisorConsumerDTO.OwnerDTO();
+                NestedOwnerDTO ownerDTO = new NestedOwnerDTO();
                 ownerDTO.setKey(owner.getKey());
                 dest.setOwner(ownerDTO);
             }

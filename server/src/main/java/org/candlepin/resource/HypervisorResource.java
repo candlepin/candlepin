@@ -26,12 +26,14 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UpdateConsumerCheckIn;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -51,13 +53,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.inject.persist.Transactional;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,25 +69,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.inject.Provider;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-
-
 
 /**
  * HypervisorResource
  */
-@Path("/hypervisors")
-@Api(value = "hypervisors", authorizations = { @Authorization("basic") })
-public class HypervisorResource {
+public class HypervisorResource implements HypervisorsApi {
     private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
 
     private ConsumerCurator consumerCurator;
@@ -106,12 +87,13 @@ public class HypervisorResource {
     private ConsumerType hypervisorType;
     private JobManager jobManager;
     private ObjectMapper mapper;
+    private PrincipalProvider principalProvider;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, I18n i18n, OwnerCurator ownerCurator,
         Provider<GuestMigration> migrationProvider, ModelTranslator translator,
-        GuestIdResource guestIdResource, JobManager jobManager,
+        GuestIdResource guestIdResource, JobManager jobManager, PrincipalProvider principalProvider,
         @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper mapper) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
@@ -125,37 +107,26 @@ public class HypervisorResource {
         this.mapper = mapper;
 
         this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
+        this.principalProvider = principalProvider;
     }
 
     /**
      * @deprecated Use the asynchronous method
      * @return HypervisorCheckInResult
      */
-    @ApiOperation(notes = "Updates the list of Hypervisor Guests Allows agents such as " +
-        "virt-who to update its host list and associate the guests for each host. This is " +
-        "typically used when a host is unable to register to candlepin via subscription" +
-        " manager.  In situations where consumers already exist it is probably best not " +
-        "to allow creation of new hypervisor consumers.  Most consumers do not have a" +
-        " hypervisorId attribute, so that should be added manually when necessary by the " +
-        "management environment. @deprecated Use the asynchronous method",
-        value = "hypervisorUpdate")
-    @ApiResponses({ @ApiResponse(code = 202, message = "") })
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Deprecated
     @Transactional
     @UpdateConsumerCheckIn
-    @SuppressWarnings("checkstyle:indentation")
+    @SuppressWarnings({"checkstyle:indentation", "checkstyle:methodlength"})
     public HypervisorUpdateResultDTO hypervisorUpdate(
-        Map<String, List<String>> hostGuestMap, @Context Principal principal,
-        @QueryParam("owner") @Verify(value = Owner.class,
-            require = Access.READ_ONLY,
-            subResource = SubResource.HYPERVISOR) String ownerKey,
-        @ApiParam("specify whether or not to create missing hypervisors." +
-            "Default is true.  If false is specified, hypervisorIds that are not found" +
-            "will result in failed entries in the resulting HypervisorCheckInResult")
-        @QueryParam("create_missing") @DefaultValue("true") boolean createMissing) {
+        @Verify(value = Owner.class, require = Access.READ_ONLY,
+        subResource = SubResource.HYPERVISOR) String ownerKey,
+        Map<String, List<String>> hostGuestMap,
+        Boolean createMissing) {
+
+        Principal principal = this.principalProvider.get();
+
         log.debug("Hypervisor check-in by principal: {}", principal);
 
         if (hostGuestMap == null) {
@@ -219,10 +190,11 @@ public class HypervisorResource {
                 // Attempt to find a consumer for the given hypervisorId
                 Consumer consumer = null;
                 if (hypervisorConsumersMap.get(hypervisorId) == null) {
-                    if (!createMissing) {
+                    if (!createMissing.booleanValue()) {
                         log.info("Unable to find hypervisor with id {} in org {}", hypervisorId, ownerKey);
-                        result.addFailed(hypervisorId, i18n.tr(
-                            "Unable to find hypervisor in org \"{0}\"", ownerKey));
+                        result.setFailedUpdate(addFailed(result.getFailedUpdate(),
+                            hypervisorId + ": " +
+                            i18n.tr("Unable to find hypervisor in org \"{0}\"", ownerKey)));
                         continue;
                     }
                     log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
@@ -245,52 +217,36 @@ public class HypervisorResource {
                 consumer.setLastCheckin(now);
                 // Populate the result with the processed consumer.
                 if (hostConsumerCreated) {
-                    result.addCreated(this.translator.translate(consumer, HypervisorConsumerDTO.class));
+                    result.setCreated(addHypervisorConsumerDTO(result.getCreated(), consumer));
                 }
                 else if (guestIdsUpdated || updatedType) {
-                    result.addUpdated(this.translator.translate(consumer, HypervisorConsumerDTO.class));
+                    result.setUpdated(addHypervisorConsumerDTO(result.getUpdated(), consumer));
                 }
                 else {
-                    result.addUnchanged(this.translator.translate(consumer, HypervisorConsumerDTO.class));
+                    result.setUnchanged(addHypervisorConsumerDTO(result.getUnchanged(), consumer));
                 }
             }
             catch (Exception e) {
                 log.error("Hypervisor checkin failed", e);
-                result.addFailed(hypervisorId, e.getMessage());
+                result.setFailedUpdate(addFailed(result.getFailedUpdate(),
+                    hypervisorId + ": " + e.getMessage()));
             }
         }
         log.info("Summary of hypervisor checkin by principal \"{}\": {}", principal, result);
         return result;
     }
 
-    @ApiOperation(notes = "Creates or Updates the list of Hypervisor hosts Allows agents such" +
-        " as virt-who to update hosts' information . This is typically used when a host is" +
-        " unable to register to candlepin via subscription manager. In situations where " +
-        "consumers already exist it is probably best not to allow creation of new hypervisor" +
-        " consumers.  Most consumers do not have a hypervisorId attribute, so that should be" +
-        " added manually when necessary by the management environment. Default is true.  " +
-        "If false is specified, hypervisorIds that are not found will result in a failed " +
-        "state of the job.", value = "hypervisorUpdateAsync")
-    @ApiResponses({ @ApiResponse(code = 202, message = "") })
-    @POST
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{owner}")
+    @Override
     @UpdateConsumerCheckIn
     @SuppressWarnings("checkstyle:indentation")
     public AsyncJobStatusDTO hypervisorUpdateAsync(
-        String hypervisorJson, @Context Principal principal,
-        @PathParam("owner") @Verify(value = Owner.class,
-            require = Access.READ_ONLY,
-            subResource = SubResource.HYPERVISOR) String ownerKey,
-        @ApiParam("specify whether or not to create missing hypervisors." +
-            "Default is true.  If false is specified, hypervisorIds that are not found" +
-            "will result in failed entries in the resulting HypervisorCheckInResult")
-
-        @QueryParam("create_missing") @DefaultValue("true") boolean createMissing,
-        @QueryParam("reporter_id") String reporterId) throws JobException {
+        @Verify(value = Owner.class, require = Access.READ_ONLY,
+        subResource = SubResource.HYPERVISOR) String ownerKey,
+        Boolean createMissing, String reporterId, String hypervisorJson) {
 
         validateHypervisorJson(hypervisorJson);
+
+        Principal principal = this.principalProvider.get();
 
         log.info("Hypervisor update by principal: {}", principal);
         Owner owner = this.getOwner(ownerKey);
@@ -298,31 +254,28 @@ public class HypervisorResource {
         JobConfig config = HypervisorUpdateJob.createJobConfig()
             .setOwner(owner)
             .setData(hypervisorJson)
-            .setCreateMissing(createMissing)
+            .setCreateMissing(createMissing.booleanValue())
             .setPrincipal(principal)
             .setReporter(reporterId);
 
-        AsyncJobStatus status = jobManager.queueJob(config);
-        return translator.translate(status, AsyncJobStatusDTO.class);
+        try {
+            AsyncJobStatus status = jobManager.queueJob(config);
+            return translator.translate(status, AsyncJobStatusDTO.class);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                config.getJobKey());
+            log.error(errmsg, e);
+            throw new IseException(errmsg, e);
+        }
     }
 
-    @ApiOperation(notes = "Updates last check in date of all consumers of the given reporterId.",
-        value = "hypervisorHeartbeatUpdate")
-    @ApiResponses({
-        @ApiResponse(code = 202, message = ""),
-        @ApiResponse(code = 400, message = "Illegal reporter ID was provided"),
-        @ApiResponse(code = 404, message = "Target owner not found.")})
-    @PUT
-    @Consumes(MediaType.WILDCARD)
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Transactional
-    @Path("/{owner}/heartbeat")
     public AsyncJobStatusDTO hypervisorHeartbeatUpdate(
-        @PathParam("owner")
-        @Verify(value = Owner.class, require = Access.READ_ONLY, subResource = SubResource.HYPERVISOR)
-        final String ownerKey,
-        @QueryParam("reporter_id") final String reporterId)
-        throws JobException {
+        @Verify(value = Owner.class, require = Access.READ_ONLY,
+        subResource = SubResource.HYPERVISOR)
+        final String ownerKey, final String reporterId) {
 
         if (reporterId == null || reporterId.isEmpty()) {
             throw new BadRequestException("reporter_id is absent or empty");
@@ -334,8 +287,17 @@ public class HypervisorResource {
             .setOwner(owner)
             .setReporterId(reporterId);
 
-        AsyncJobStatus job = this.jobManager.queueJob(config);
-        return this.translator.translate(job, AsyncJobStatusDTO.class);
+        try {
+            AsyncJobStatus job = this.jobManager.queueJob(config);
+            return this.translator.translate(job, AsyncJobStatusDTO.class);
+
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                config.getJobKey());
+            log.error(errmsg, e);
+            throw new IseException(errmsg, e);
+        }
     }
 
     /*
@@ -423,4 +385,25 @@ public class HypervisorResource {
 
     }
 
+    public Set<HypervisorConsumerDTO> addHypervisorConsumerDTO(Set<HypervisorConsumerDTO> consumerDTOSet,
+        Consumer consumer) {
+
+        HypervisorConsumerDTO consumerDTO = this.translator.translate(consumer, HypervisorConsumerDTO.class);
+
+        if (consumerDTOSet == null) {
+            consumerDTOSet = new HashSet<>();
+        }
+        consumerDTOSet.add(consumerDTO);
+
+        return consumerDTOSet;
+    }
+
+    public Set<String> addFailed(Set<String> failedSet, String failed) {
+        if (failedSet == null) {
+            failedSet = new HashSet<>();
+        }
+        failedSet.add(failed);
+
+        return failedSet;
+    }
 }

@@ -148,8 +148,9 @@ public class HypervisorUpdateAction {
         }
         if (resultHost == null) {
             if (!create) {
-                result.addFailed(hypervisorId,
-                    "Unable to find hypervisor with id " + hypervisorId + " in org " + owner.getKey());
+                result.setFailedUpdate(addFailed(result.getFailedUpdate(),
+                    hypervisorId + ": " + "Unable to find hypervisor with id " + hypervisorId +
+                    " in org " + owner.getKey()));
             }
             else {
                 log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
@@ -166,14 +167,14 @@ public class HypervisorUpdateAction {
                 }
                 try {
                     consumerCurator.create(resultHost);
-                    result.addCreated(this.translator.translate(resultHost, HypervisorConsumerDTO.class));
+                    result.setCreated(addHypervisorConsumerDTO(result.getCreated(), resultHost));
                     Event event = evtFactory.consumerCreated(resultHost);
                     sink.queueEvent(event);
                 }
                 catch (Exception e) {
-                    result.addFailed(hypervisorId,
-                        "Unable to create hypervisor with id " + hypervisorId +
-                        " in org " + owner.getKey());
+                    result.setFailedUpdate(addFailed(result.getFailedUpdate(),
+                        hypervisorId + ": " + "Unable to create hypervisor with id " + hypervisorId +
+                        " in org " + owner.getKey()));
                     throw e;
                 }
             }
@@ -215,11 +216,10 @@ public class HypervisorUpdateAction {
 
                 resultHost.setLastCheckin(new Date());
                 guestMigration.migrate(false);
-                result.addUpdated(this.translator.translate(resultHost, HypervisorConsumerDTO.class));
+                result.setUpdated(addHypervisorConsumerDTO(result.getUpdated(), resultHost));
             }
             else {
-                result.addUnchanged(
-                    this.translator.translate(resultHost, HypervisorConsumerDTO.class));
+                result.setUnchanged(addHypervisorConsumerDTO(result.getUnchanged(), resultHost));
             }
 
             // update reporter id if it changed
@@ -235,9 +235,10 @@ public class HypervisorUpdateAction {
                 consumerCurator.update(resultHost);
             }
             catch (Exception e) {
-                result.addFailed(hypervisorId,
+                result.setFailedUpdate(addFailed(result.getFailedUpdate(),
+                    hypervisorId + ": " +
                     "Unable to update hypervisor with id " + hypervisorId +
-                    " in org " + owner.getKey());
+                    " in org " + owner.getKey()));
                 throw e;
             }
         }
@@ -406,6 +407,28 @@ public class HypervisorUpdateAction {
         public VirtConsumerMap getKnownConsumers() {
             return hypervisorKnownConsumersMap;
         }
+    }
+
+    public Set<HypervisorConsumerDTO> addHypervisorConsumerDTO(Set<HypervisorConsumerDTO> consumerDTOSet,
+        Consumer consumer) {
+
+        HypervisorConsumerDTO consumerDTO = this.translator.translate(consumer, HypervisorConsumerDTO.class);
+
+        if (consumerDTOSet == null) {
+            consumerDTOSet = new HashSet<>();
+        }
+        consumerDTOSet.add(consumerDTO);
+
+        return consumerDTOSet;
+    }
+
+    public Set<String> addFailed(Set<String> failedSet, String failed) {
+        if (failedSet == null) {
+            failedSet = new HashSet<>();
+        }
+        failedSet.add(failed);
+
+        return failedSet;
     }
 
 }
