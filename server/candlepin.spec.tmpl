@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.26
+Version: 2.9.27
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,11 @@ fi
 
 #raw
 %changelog
+* Wed Apr 29 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.27-1
+- 1826545: Added an additional null check during entitlement revocation
+  (crog@redhat.com)
+- Fix oauth spec test (abhiskum@redhat.com)
+
 * Wed Mar 18 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.26-1
 - 1813981: EUS Content not available in content access mode
   (wpoteat@redhat.com)
