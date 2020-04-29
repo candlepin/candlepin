@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.10
+Version: 3.1.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,10 @@ fi
 
 #raw
 %changelog
+* Wed Apr 29 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.11-1
+- 1827426: Added an additional null check during entitlement revocation
+  (crog@redhat.com)
+
 * Thu Apr 16 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.10-1
 - Added support for JAAS in the embedded ActiveMQ broker (crog@redhat.com)
 - 1812110: Expose artemis port with SELinux boolean (nmoumoul@redhat.com)

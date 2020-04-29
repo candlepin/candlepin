@@ -9,7 +9,7 @@
   </parent>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin</artifactId>
-  <version>3.1.10</version>
+  <version>3.1.11</version>
   <packaging>war</packaging>
   <name>Candlepin</name>
   <description>The Candlepin Entitlement Engine</description>
@@ -40,13 +40,13 @@
     <dependency>
       <groupId>org.candlepin</groupId>
       <artifactId>candlepin-common</artifactId>
-      <version>3.1.10</version>
+      <version>3.1.11</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.candlepin</groupId>
       <artifactId>api</artifactId>
-      <version>3.1.10</version>
+      <version>3.1.11</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -428,7 +428,7 @@
     <dependency>
       <groupId>org.candlepin</groupId>
       <artifactId>candlepin-common</artifactId>
-      <version>3.1.10</version>
+      <version>3.1.11</version>
       <type>tar.gz</type>
       <classifier>complete</classifier>
       <scope>provided</scope>
