@@ -1124,6 +1124,390 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /roles:
+    get:
+      description: Retrieves a list of Roles
+      tags:
+        - Roles
+      operationId: getRoles
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: A list of roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      tags:
+        - Roles
+      description: Creates a Role
+      operationId: createRole
+      security: []
+      requestBody:
+        description: A role to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleDTO'
+      responses:
+        200:
+          description: Role successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleDTO'
+        400:
+          description: Role is null or empty or role name not specified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role is null or empty or role name not specified
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        409:
+          description: Role already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role already exists
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /roles/{role_name}:
+    get:
+      description: Retrieves a single role by its name.
+      tags:
+        - Roles
+      operationId: getRoleByName
+      parameters:
+        - in: path
+          name: role_name
+          description: Role name
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Returns a role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleDTO'
+        400:
+          description: Role name is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role name is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Updates Role. To avoid race conditions, we do not support updating the user or permission
+        collections. Currently this call will only update the role name. See the specific nested POST/DELETE
+        calls for modifying users and permissions.
+      tags:
+        - Roles
+      operationId: updateRole
+      security: []
+      parameters:
+        - name: role_name
+          in: path
+          description: Role name
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Role
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleDTO'
+      responses:
+        200:
+          description: Returns updated role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleDTO'
+        400:
+          description: Role name is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role name is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes a Role
+      tags:
+        - Roles
+      operationId: deleteRoleByName
+      parameters:
+        - in: path
+          name: role_name
+          description: Role name
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        204:
+          description: Role successfully deleted.
+        400:
+          description: Role name is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role name is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /roles/{role_name}/users/{username}:
+    post:
+      tags:
+        - Roles
+      description: Adds a User to a Role
+      operationId: addUserToRole
+      security: []
+      parameters:
+        - in: path
+          name: role_name
+          description: Role name
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: username
+          description: User name
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User added to the role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleDTO'
+        400:
+          description: Either role or username is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Either role or username is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Role or Username not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role or Username not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes a User from a Role
+      tags:
+        - Roles
+      operationId: deleteUserFromRole
+      parameters:
+        - in: path
+          name: role_name
+          description: Role name
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: username
+          description: User name
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: User from a role is removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleDTO'
+        400:
+          description: Either role or username is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Either role or username is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Role or Username not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role or Username not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /roles/{role_name}/permissions:
+    post:
+      tags:
+        - Roles
+      description: Adds a Permission to a Role
+      operationId: addRolePermission
+      security: []
+      parameters:
+        - in: path
+          name: role_name
+          description: Role name
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Permission Blueprint
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PermissionBlueprintDTO'
+      responses:
+        200:
+          description: Permission to a Role is added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleDTO'
+        400:
+          description: Access type NONE not supported, or role name is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Access type NONE not supported
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /roles/{role_name}/permissions/{perm_id}:
+    delete:
+      description: Removes a Permission from a Role
+      tags:
+        - Roles
+      operationId: removeRolePermission
+      parameters:
+        - in: path
+          name: role_name
+          description: Role name
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: perm_id
+          description: Permission Id
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Permission is removed from a role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleDTO'
+        400:
+          description: Role name is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role name is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Role not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Role not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /serials:
     get:
       description: Retrieves a list of Certificate Serials
