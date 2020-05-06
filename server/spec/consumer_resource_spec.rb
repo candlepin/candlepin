@@ -972,7 +972,8 @@ describe 'Consumer Resource' do
     pool.subscriptionId.should == pool2.subscriptionId
   end
 
-  it "should allow a consumer dry run an autoattach based on SLA and filter on their existing entitlement SLAs" do
+  it "should allow a consumer dry run an autoattach based on SLA and do not filter pool on their existing
+    entitlement SLAs" do
     product1 = create_product(random_string('product'),
       random_string('product'),
       {:attributes => {:support_level => 'VIP'},
@@ -1010,13 +1011,17 @@ describe 'Consumer Resource' do
     consumer_client.consume_pool(pool2.id, {:quantity => 1})
 
     # dry run against the set service level:
-    # should return only one pool because we no longer filter on consumer's sla,
-    # but we do filter on the consumer's existing entitlements' SLA's, and in this case
+    # NOTE : we do NOT filter on the consumer's existing entitlements' SLA's, and in this case
     # the consumer has an existing entitlement whose SLA is 'Ultra-VIP',
-    # so only 'Ultra-VIP' pools are eligible during autoattach (and the 'VIP' pool is not).
+    # so 'Ultra-VIP' & 'VIP' both pools are considered and eligible during auto attach.
     returned_pools = @cp.autobind_dryrun(consumer['uuid'])
-    returned_pools.length.should == 1
+    returned_pools.length.should == 2
     returned_pool_id = returned_pools.first.pool.id
+    returned_pool = @cp.get_pool(returned_pool_id)
+    returned_pool.subscriptionId.should == pool1.subscriptionId
+    expect(get_attribute_value(returned_pool['productAttributes'], 'support_level')).to eq('VIP')
+
+    returned_pool_id = returned_pools[1].pool.id
     returned_pool = @cp.get_pool(returned_pool_id)
     returned_pool.subscriptionId.should == pool3.subscriptionId
     expect(get_attribute_value(returned_pool['productAttributes'], 'support_level')).to eq('Ultra-VIP')

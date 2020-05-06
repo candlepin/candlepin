@@ -522,15 +522,24 @@ public class AutobindRulesTest {
     }
 
     @Test
-    public void selectBestPoolsDoesNotFilterPoolsBySLAWhenConsumerHasNonNullMatchingEntitlementSLAs() {
+    @SuppressWarnings("checkstyle:LineLength")
+    public void selectBestPoolsDoesNotFilterPoolsByConsumerEntitlementInsteadPrioritizePoolsMatchingConsumerSLA() {
         // Create Premium SLA prod
-        String slaPremiumProdId = "premium-sla-product";
-        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
+        Product slaPremiumProduct = TestUtil.createProduct(productId, "Product with SLA Permium");
         slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
 
         Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
         slaPremiumPool.setId("pool-with-premium-sla");
         slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+
+        // Create Standard SLA Product
+        String slaStandardProdId = "standard-sla-product";
+        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
+        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
+
+        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
+        slaStandardPool.setId("pool-with-standard-sla");
+        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
 
         // Create a product with no SLA.
         Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
@@ -540,247 +549,29 @@ public class AutobindRulesTest {
         List<Pool> pools = new LinkedList<>();
         pools.add(noSLAPool);
         pools.add(slaPremiumPool);
+        // ^ A Standard SLA pool is not in the list of candidate pools.
 
-        // The consumer has set their SLA to Premium, and also has an existing entitlement with Premium SLA
-        // which means the pool with Premium SLA should not be filtered.
+        // The consumer has set their SLA to Premium.
         consumer.setServiceLevel("Premium");
-        Entitlement entitlementWithPremiumSLA = new Entitlement();
-        entitlementWithPremiumSLA.setPool(slaPremiumPool);
-        compliance.addCompliantProduct("2432", entitlementWithPremiumSLA);
+
+        // Here Consumer entitlement SLA will have no effect on auto attach.
+        // All pools (noSLAPool & slaPremiumPool) are considered, & prioritized based on SLA.
+        Entitlement entitlementWithStandardSLA = new Entitlement();
+        entitlementWithStandardSLA.setPool(slaStandardPool);
+        compliance.addPartiallyCompliantProduct("b4b4b4", entitlementWithStandardSLA);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId, slaPremiumProdId },
-            pools, compliance, null, new HashSet<>(), false);
+            new String[]{ productId, slaStandardProdId}, pools, compliance, null,
+            new HashSet<>(), false);
 
-        assertEquals(2, bestPools.size());
-        // The Premium SLA pool should NOT have gotten filtered because the customer had
-        // existing entitlements that included one with a Premium SLA.
+        // Pool will get prioritized by SLA matching Consumer SLA preference.
+        assertEquals(1, bestPools.size());
+
+        // The Premium SLA pool will get more priority as it matches consumer SLA preference.
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
-        // Also, check pool with no sla is not filtered (as always)
-        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
-    }
 
-    @Test
-    @SuppressWarnings("checkstyle:LineLength")
-    public void selectBestPoolsFiltersPoolsBySLAWhenConsumerHasNonNullNonMatchingEntitlementSLAsAndConsumerSLAIsUsed() {
-        // Create Premium SLA prod
-        String slaPremiumProdId = "premium-sla-product";
-        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
-        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-
-        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
-        slaPremiumPool.setId("pool-with-premium-sla");
-        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-
-        // Create Standard SLA Product
-        String slaStandardProdId = "standard-sla-product";
-        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
-        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
-
-        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
-        slaStandardPool.setId("pool-with-standard-sla");
-        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
-
-        // Create a product with no SLA.
-        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
-        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
-        noSLAPool.setId("pool-1");
-
-        List<Pool> pools = new LinkedList<>();
-        pools.add(noSLAPool);
-        pools.add(slaPremiumPool);
-        // ^ A Standard SLA pool is not in the list of candidate pools.
-
-        // The consumer has set their SLA to Premium, and also has an existing entitlement with Standard SLA
-        // which means the pool with Premium SLA SHOULD get filtered.
-        consumer.setServiceLevel("Premium");
-        Entitlement entitlementWithStandardSLA = new Entitlement();
-        entitlementWithStandardSLA.setPool(slaStandardPool);
-        compliance.addPartiallyCompliantProduct("b4b4b4", entitlementWithStandardSLA);
-
-        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId, slaStandardProdId},
-            pools, compliance, null, new HashSet<>(), false);
-
-        assertEquals(1, bestPools.size());
-        // The Premium SLA pool should get filtered because the customer had existing entitlements that
-        // did not include one with a Premium SLA.
-        assertFalse(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
-        // Also, check pool with no sla is not filtered (as always)
-        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
-    }
-
-    @Test
-    @SuppressWarnings("checkstyle:LineLength")
-    public void selectBestPoolsFiltersPoolsBySLAWhenConsumerWithSLAHasNonNullNonMatchingEntitlementSLAsAndOverrideSLAIsUsed() {
-        // Create Premium SLA prod
-        String slaPremiumProdId = "premium-sla-product";
-        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
-        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-
-        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
-        slaPremiumPool.setId("pool-with-premium-sla");
-        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-
-        // Create Standard SLA Product
-        String slaStandardProdId = "standard-sla-product";
-        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
-        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
-
-        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
-        slaStandardPool.setId("pool-with-standard-sla");
-        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
-
-        // Create Sub-Standard SLA Product
-        String slaSubStandardProdId = "sub-standard-sla-product";
-        Product slaSubStandardProduct = TestUtil.createProduct(slaSubStandardProdId, "Product with SLA Sub-Standard");
-        slaSubStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Sub-Standard");
-
-        Pool slaSubStandardPool = TestUtil.createPool(owner, slaSubStandardProduct);
-        slaSubStandardPool.setId("pool-with-sub-standard-sla");
-        slaSubStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Sub-Standard");
-
-        // Create a product with no SLA.
-        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
-        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
-        noSLAPool.setId("pool-1");
-
-        List<Pool> pools = new LinkedList<>();
-        pools.add(noSLAPool);
-        pools.add(slaPremiumPool);
-        pools.add(slaSubStandardPool);
-        // ^ A Standard SLA pool is not in the list of candidate pools.
-
-        // The consumer has set their SLA to Premium, but will be ignored because we specify an override SLA,
-        // and also the consumer has an existing entitlement with Standard SLA
-        // which means the candidate pools with Premium SLA and Sub-Standard SLA SHOULD BOTH get filtered.
-        consumer.setServiceLevel("Premium");
-        Entitlement entitlementWithStandardSLA = new Entitlement();
-        entitlementWithStandardSLA.setPool(slaStandardPool);
-        compliance.addPartiallyCompliantProduct("b4b4b4", entitlementWithStandardSLA);
-
-        String overrideSLA = "Sub-Standard";
-
-        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId, slaStandardProdId},
-            pools, compliance, overrideSLA, new HashSet<>(), false);
-
-        assertEquals(1, bestPools.size());
-        // Both The Premium SLA and Sub-Standard SLA pools should get filtered
-        // because the customer had existing entitlements that
-        // did not include one with a Premium or Sub-Standard SLA.
-        assertFalse(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
-        assertFalse(bestPools.contains(new PoolQuantity(slaSubStandardPool, 1)));
-        // Also, check pool with no sla is not filtered (as always)
-        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
-    }
-
-    @Test
-    @SuppressWarnings("checkstyle:LineLength")
-    public void selectBestPoolsFiltersPoolsBySLAWhenConsumerWithSLAHasNonNullNonMatchingEntitlementSLAsAndOwnerDefaultSLAIsUsed() {
-        // Create Premium SLA prod
-        String slaPremiumProdId = "premium-sla-product";
-        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
-        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-
-        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
-        slaPremiumPool.setId("pool-with-premium-sla");
-        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-
-        // Create Standard SLA Product
-        String slaStandardProdId = "standard-sla-product";
-        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
-        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
-
-        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
-        slaStandardPool.setId("pool-with-standard-sla");
-        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
-
-        // Create a product with no SLA.
-        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
-        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
-        noSLAPool.setId("pool-1");
-
-        List<Pool> pools = new LinkedList<>();
-        pools.add(noSLAPool);
-        pools.add(slaPremiumPool);
-        // ^ A Standard SLA pool is not in the list of candidate pools.
-
-        // The consumer has set their SLA to nothing, so it will be ignored in favor of the
-        // owner default SLA which is set to Premium,
-        // but the consumer also has an existing entitlement with Standard SLA
-        // which means the candidate pool with Premium SLA SHOULD get filtered.
-        consumer.setServiceLevel("");
-        owner.setDefaultServiceLevel("Premium");
-        Entitlement entitlementWithStandardSLA = new Entitlement();
-        entitlementWithStandardSLA.setPool(slaStandardPool);
-        compliance.addPartiallyCompliantProduct("b4b4b4", entitlementWithStandardSLA);
-
-        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId, slaStandardProdId},
-            pools, compliance, null, new HashSet<>(), false);
-
-        assertEquals(1, bestPools.size());
-        // The Premium SLA pool should get filtered because the customer had existing entitlements that
-        // did not include one with a Premium SLA.
-        assertFalse(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
-        // Also, check pool with no sla is not filtered (as always)
-        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
-    }
-
-    @Test
-    public void selectBestPoolsDoesNotFilterPoolsBySLAWhenConsumerHasOnlyNullEntitlementSLAs() {
-        // Create Premium SLA prod
-        String slaPremiumProdId = "premium-sla-product";
-        Product slaPremiumProduct = TestUtil.createProduct(slaPremiumProdId, "Product with SLA Permium");
-        slaPremiumProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-
-        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
-        slaPremiumPool.setId("pool-with-premium-sla");
-        slaPremiumPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-
-        // Create Standard SLA Product
-        String slaStandardProdId = "standard-sla-product";
-        Product slaStandardProduct = TestUtil.createProduct(slaStandardProdId, "Product with SLA Standard");
-        slaStandardProduct.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
-
-        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
-        slaStandardPool.setId("pool-with-standard-sla");
-        slaStandardPool.getProduct().setAttribute(Product.Attributes.SUPPORT_LEVEL, "Standard");
-
-        // Create a product with no SLA.
-        Product noSLAProduct = TestUtil.createProduct(productId, "A test product");
-        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
-        noSLAPool.setId("pool-with-NO-sla-1");
-
-        // Create another product with no SLA.
-        String noSLAProdId2 = "no-sla-product2";
-        Product noSLAProduct2 = TestUtil.createProduct(noSLAProdId2, "A test product 2");
-        Pool noSLAPool2 = TestUtil.createPool(owner, noSLAProduct2);
-        noSLAPool2.setId("pool-with-NO-sla-2");
-
-        List<Pool> pools = new LinkedList<>();
-        pools.add(noSLAPool);
-        pools.add(slaPremiumPool);
-        pools.add(slaStandardPool);
-
-        // The consumer has set their SLA to Premium, and also has an existing entitlement with no SLA
-        // which means no pools should get filtered.
-        consumer.setServiceLevel("Premium");
-        Entitlement entitlementWithNoSLA = new Entitlement();
-        entitlementWithNoSLA.setPool(noSLAPool2);
-        compliance.addPartiallyCompliantProduct("b4b4b4", entitlementWithNoSLA);
-
-        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId, slaStandardProdId, slaPremiumProdId },
-            pools, compliance, null, new HashSet<>(), false);
-
-        assertEquals(3, bestPools.size());
-        // Check that no pools were filtered, since the customer has an existing entitlement with a null SLA.
-        assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
-        assertTrue(bestPools.contains(new PoolQuantity(slaStandardPool, 1)));
-        // Also, check pool with no sla is not filtered (as always)
-        assertTrue(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
+        // Pool with no SLA will get filtered out (De-Prioritized).
+        assertFalse(bestPools.contains(new PoolQuantity(noSLAPool, 1)));
     }
 
     private Product createSysPurposeProduct(String id, String roles, String addons, String supportLevel,
