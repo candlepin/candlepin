@@ -119,6 +119,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A Guest could not be found using the provided UUID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
 
@@ -157,12 +160,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Provided Guest UUID is not valid or does not match with guest UUID in JSON
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: A Consumer could not be found using the provided UUID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A Consumer could not be found using the provided UUID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
 
@@ -201,24 +210,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Provided guest uuid is not valid or does not match with guest uuid in JSON
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         403:
           description: The consumer cannot unregister becuase of unknown type or invalid credentails
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: The consumer cannot unregister becuase of unknown type or invalid credentails
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
           description: The consumer and/or guest could not be found using the provided uuid
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: The consumer and/or guest could not be found using the provided uuid
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         410:
           description: A consumer was already deleted
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: A consumer was already deleted
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
 
@@ -717,6 +738,169 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
                 displayMessage: Distributor version could not be found using the provided ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /hypervisors:
+    post:
+      tags:
+        - Hypervisors
+      description: Updates the list of Hypervisor Guests Allows agents such as virt-who to update its host list and associate the guests for each host. This is typically used when a host is unable to register to candlepin via subscription manager.  In situations where consumers already exist it is probably best not to allow creation of new hypervisor consumers.  Most consumers do not have a hypervisorId attribute, so that should be added manually when necessary by the management environment. @deprecated Use the asynchronous method.
+      operationId: hypervisorUpdate
+      security: []
+      requestBody:
+        description: Host and Guest mapping details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+      parameters:
+        - name: owner
+          in: query
+          description: Owner key
+          required: true
+          schema:
+            type: string
+        - name: create_missing
+          in: query
+          description: Specify whether or not to create missing hypervisors. Default is true.  If false is specified, hypervisorIds that are not found will result in failed entries in the resulting HypervisorCheckInResult.
+          schema:
+            type: boolean
+            default: true
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HypervisorUpdateResultDTO'
+        400:
+          description: Could not update host/guest mapping. Host to guest mapping was not provided for hypervisor check-in or Auto-attach is disabled for owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Could not update host/guest mapping. Host to guest mapping was not provided for hypervisor check-in or Auto-attach is disabled for owner
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner with provided key was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner with provided key was not found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /hypervisors/{owner}:
+    post:
+      tags:
+        - Hypervisors
+      description: Creates or Updates the list of Hypervisor hosts Allows agents such as virt-who to update hosts' information . This is typically used when a host is unable to register to candlepin via subscription manager. In situations where consumers already exist it is probably best not to allow creation of new hypervisor consumers.  Most consumers do not have a hypervisorId attribute, so that should be added manually when necessary by the management environment. Default is true. If false is specified, hypervisorIds that are not found will result in a failed state of the job.
+      operationId: hypervisorUpdateAsync
+      security: []
+      requestBody:
+        description: Host and Guest mapping details
+        content:
+          text/plain:
+            schema:
+              type: string
+      parameters:
+        - name: owner
+          in: path
+          description: Owner key
+          required: true
+          schema:
+            type: string
+        - name: create_missing
+          in: query
+          description: Specify whether or not to create missing hypervisors. Default is true.  If false is specified, hypervisorIds that are not found will result in failed entries in the resulting HypervisorCheckInResult.
+          schema:
+            type: boolean
+            default: true
+        - name: reporter_id
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: Host to guest mapping was not provided for hypervisor update.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Host to guest mapping was not provided for hypervisor update.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner with provided key was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner with provided key was not found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /hypervisors/{owner}/heartbeat:
+    put:
+      tags:
+        - hypervisors
+      description: Updates last check in date of all consumers of the given reporterId.
+      operationId: hypervisorHeartbeatUpdate
+      security: []
+      parameters:
+        - name: owner
+          in: path
+          description: Owner key
+          required: true
+          schema:
+            type: string
+        - name: reporter_id
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: Provided reporter_id is absent or empty.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Provided reporter_id is absent or empty.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner with provided key was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner with provided key was not found.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
@@ -2098,6 +2282,43 @@ components:
               type: string
             guestId:
               type: string
+
+    HypervisorConsumerDTO:
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        owner:
+          $ref: "#/components/schemas/NestedOwnerDTO"
+
+    HypervisorUpdateResultDTO:
+      required:
+        - failedUpdate
+        - updated
+        - created
+        - unchanged
+      properties:
+        created:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/HypervisorConsumerDTO"
+        updated:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/HypervisorConsumerDTO"
+        unchanged:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/HypervisorConsumerDTO"
+        failedUpdate:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
 
     NestedEntitlementDTO:
       properties:
