@@ -1,4 +1,4 @@
-// Version: 5.37
+// Version: 5.37.1
 
 /*
  * Default Candlepin rule set.
@@ -592,46 +592,6 @@ function get_pool_priority(pool, consumer) {
     }
     log.debug("Final overall score for pool {}: {}", pool.id, priority);
     return priority;
-}
-
-/*
- * Returns true if the following are all true:
- * - the pool's SLA is non-null, non-empty and not in the exempt list.
- * - at least one of these is non-null and non-empty: SLA override, consumer's SLA, owner's default SLA.
- * - the pool's SLA matches either the SLA override, the consumer's SLA, or the owner's default SLA
- *   (Order of priority is: SLA override > consumer's SLA > owner's default SLA.)
- *
- * False otherwise.
- */
-function should_pool_be_prioritized_for_sla(context, pool) {
-    var poolSLA = pool.getProductAttribute('support_level');
-
-    log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
-    var consumerSLA = context.serviceLevelOverride;
-    if (!consumerSLA || consumerSLA == "") {
-        consumerSLA = context.consumer.serviceLevel;
-            if (!consumerSLA || consumerSLA == "") {
-                consumerSLA = context.owner.defaultServiceLevel;
-            }
-    }
-
-    if (!is_pool_sla_null_or_exempt(context, poolSLA) &&
-        consumerSLA && consumerSLA !== "" &&
-        Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
-        return true;
-    }
-    return false;
-}
-
-/*
- * Returns true if the pool's SLA is null or empty, or is included in the exempt list; false otherwise.
- */
-function is_pool_sla_null_or_exempt(context, poolSLA) {
-    if (!poolSLA || poolSLA === "") {
-        return true;
-    }
-
-    return isLevelExempt(poolSLA, context.exemptList);
 }
 
 /* Utility functions */
@@ -1469,18 +1429,7 @@ function comparePools(pool1, pool2) {
 
 }
 
-function isLevelExempt (level, exemptList) {
-    for (var j = 0; j < exemptList.length; j++) {
-        var exemptLevel = exemptList[j];
-
-        if (Utils.equalsIgnoreCase(exemptLevel, level)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-/*
+/**
  * Code to validate pools before adding them to an activation key.
  * This way we can't create activation keys that can never successfully
  * register a consumer.
@@ -2703,81 +2652,6 @@ var Autobind = {
         return true;
     },
 
-    /*
-     * The pool is valid if any of these is true:
-     *  - The pool's SLA is null or in the exempt list.
-     *  - The pool's SLA is non-null, non-exempt, and the consumer does not have any existing entitlements.
-     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
-     *    but none of their products has an SLA or a product has an SLA and it is exempt.
-     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
-     *    and at least one of them has a product with a non-null SLA that matches the pool SLA.
-     *
-     * The pool is invalid if this is true:
-     *  - The pool's SLA is non-null, non-exempt, and the consumer has existing entitlements,
-     *    and one or more of those have products with non-null SLAs,
-     *    but those SLAs do not match with the pool's SLA.
-     */
-    is_pool_sla_valid: function(context, pool) {
-        var poolSLA = pool.getProductAttribute('support_level');
-
-        if (is_pool_sla_null_or_exempt(context, poolSLA)) {
-            return true;
-        }
-
-        var consumer_entitlement_slas = this.get_slas_of_existing_consumer_entitlements_from_compliance_status(context);
-        if (consumer_entitlement_slas.length <= 0) {
-            return true;
-        }
-
-        var is_valid = false;
-        for (i = 0 ; i < consumer_entitlement_slas.length ; i++) {
-            if (Utils.equalsIgnoreCase(poolSLA, consumer_entitlement_slas[i])) {
-                is_valid = true;
-                break;
-            }
-        }
-
-        if (!is_valid) {
-            log.debug("Skipping pool " + pool.id +
-            " since SLA is non-null, non-exempt, and does not match any of the consumer's entitlements' SLAs.");
-        }
-        return is_valid;
-    },
-
-    /*
-     * Traverses the ComplianceStatus object's product maps to find and return a list of
-     * the consumer's entitlements' SLAs. Null SLAs are not returned.
-     */
-    get_slas_of_existing_consumer_entitlements_from_compliance_status: function(context) {
-        var listOfProductMaps = [];
-        listOfProductMaps.push(context.compliance.compliantProducts);
-        listOfProductMaps.push(context.compliance.partiallyCompliantProducts);
-        listOfProductMaps.push(context.compliance.partialStacks);
-
-        var sla_list = [];
-        listOfProductMaps.forEach(function(productMap) {
-            Object.keys(productMap).forEach(function(productId) {
-                var setOfEntitlements = productMap[productId];
-                setOfEntitlements.forEach(function(entitlement) {
-                    var sla = entitlement.pool.getProductAttribute('support_level');
-                    var exempt = entitlement.pool.getProductAttribute('support_level_exempt');
-                    var exists = false;
-                    for (i = 0 ; i < sla_list.length ; i++) {
-                        if (Utils.equalsIgnoreCase(sla_list[i], sla)) {
-                            exists = true;
-                            break;
-                        }
-                    }
-
-                    if (!exists && sla  && !exempt) {
-                        sla_list.push(sla);
-                    }
-                });
-            });
-        });
-        return sla_list;
-    },
-
     is_pool_not_empty: function(pool) {
         if (pool.currently_available > 0) {
             return true;
@@ -2805,7 +2679,6 @@ var Autobind = {
              */
             if (this.is_pool_arch_valid(context, pool, consumerArch) &&
                     this.is_pool_virt_valid(pool, isGuest) &&
-                    this.is_pool_sla_valid(context, pool) &&
                     pool_not_empty) {
                 valid_pools.push(pool);
             }
