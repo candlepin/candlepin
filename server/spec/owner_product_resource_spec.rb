@@ -7,22 +7,48 @@ describe 'Owner Product Resource' do
 
   before do
     @owner = create_owner random_string('test_owner')
-    @prov_product = create_product random_string('provided_product')
 
-    @product = create_product(random_string('product'), nil,
-                              {:providedProducts => [@prov_product.id]})
-
-    @derived_prov_product = create_product random_string('derived_provided_product')
-
-    @derived_product = create_product(random_string('derived_product'), nil,
-                                      {:providedProducts => [@derived_prov_product.id]})
-
-    create_pool_and_subscription(@owner['key'], @product.id,
-      10, [@prov_product.id], '222', '', '', nil, nil, false,
-      {
-        :derived_product_id => @derived_product.id,
-        :derived_provided_products => [@derived_prov_product.id]
+    if is_hosted? then
+      @prov_product = create_upstream_product(random_string('pp'))
+      @product = create_upstream_product(random_string('test_prod'), {
+        :provided_products => [@prov_product]
       })
+
+      @derived_prov_product = create_upstream_product(random_string('dpp'))
+      @derived_product = create_upstream_product(random_string('dp'), {
+        :provided_products => [@derived_prov_product]
+      })
+
+      @pool = create_upstream_subscription(random_str('source_sub'), @owner['key'], {
+        :quantity => 10,
+        :contract_number => '222',
+        :product => @product,
+        :provided_products => [@prov_product],
+        :derived_product => @derived_product
+      })
+
+      @cp.refresh_pools(@owner['key'])
+    else
+      @prov_product = create_product(random_string('pp'))
+      @product = create_product(random_string('product'), nil, {
+        :providedProducts => [@prov_product.id]
+      })
+
+      @derived_prov_product = create_product(random_string('dpp'))
+      @derived_product = create_product(random_string('dp'), nil, {
+        :providedProducts => [@derived_prov_product.id]
+      })
+
+      @pool = @cp.create_pool(@owner['key'], @product['id'], {
+        :subscription_id => random_str('source_sub'),
+        :upstream_pool_id => random_str('upstream'),
+        :quantity => 10,
+        :contract_number => '222',
+        :provided_products => [@prov_product['id']],
+        :derived_product_id => @derived_product['id'],
+        :derived_provided_products => [@derived_prov_product['id']]
+      })
+    end
   end
 
   it 'should fail when fetching non-existing products' do
@@ -118,34 +144,6 @@ describe 'Owner Product Resource' do
     product_owners = @cp.get_product_owners([provided_product.id])
     product_owners.length.should eq(1)
     product_owners[0]['key'].should == owner['key']
-  end
-
-  it 'refreshes pools for owner on subscription creation' do
-    owner = create_owner(random_string('owner'))
-    owner2 = create_owner(random_string('owner2'))
-
-    owner_client = user_client(owner, random_string('testuser'))
-    owner2_client = user_client(owner2, random_string('testuser'))
-
-    product = create_product(
-      random_string("test_id"),
-      random_string("test_name"),
-      {:owner => owner['key']}
-    )
-    provided_product = create_product(nil, nil, {:owner => owner['key']})
-
-    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id],
-      nil, nil, nil, nil, nil, false)
-
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.length.should eq(1)
-
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.length.should eq(1)
-    pool[0]['owner']['key'].should == owner['key']
-
-    pool = owner2_client.list_pools(:owner => owner2.id)
-    pool.length.should eq(0)
   end
 
   def setupOrgProductsAndPools()

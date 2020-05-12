@@ -33,6 +33,7 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
@@ -179,12 +180,15 @@ public class ConsumerResourceTest {
     @Mock private UserServiceAdapter userServiceAdapter;
     @Mock private DeletedConsumerCurator mockDeletedConsumerCurator;
     @Mock private JobManager mockJobManager;
+    @Mock private RefreshWorker mockRefreshWorker;
 
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
     private ConsumerResource mockedConsumerResource;
+
+    private Provider<RefreshWorker> refreshWorkerProvider;
 
 
     @BeforeEach
@@ -241,6 +245,8 @@ public class ConsumerResourceTest {
             mockJobManager);
 
         mockedConsumerResource = Mockito.spy(consumerResource);
+
+        this.refreshWorkerProvider = () -> this.mockRefreshWorker;
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
@@ -392,8 +398,9 @@ public class ConsumerResourceTest {
         CandlepinPoolManager poolManager = new CandlepinPoolManager(
             null, null, null, this.config, null, null, mockEntitlementCurator,
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null,
-            mockActivationKeyRules, null, null, null, null, null, null, null, null, null, null
-        );
+            mockActivationKeyRules, null, null, null, null, null, null, null, null, null, null,
+            this.refreshWorkerProvider);
+
         ConsumerResource consumerResource = new ConsumerResource(
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, null, null, null, null, null,
