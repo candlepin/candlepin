@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -518,5 +519,78 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         consumer = consumerCurator.get(cid);
         assertTrue(consumer.getUsage().isEmpty());
+    }
+
+    @Test
+    public void testCloudProfileFactDidNotChange() {
+        Consumer consumer = new Consumer();
+        consumer.setFact("dmi.bios.vendor", "vendorA");
+        consumer.setFact("lscpu.model", "78");
+
+        Map<String, String> newFacts = new HashMap<>();
+        newFacts.put("dmi.bios.vendor", "vendorA");
+        newFacts.put("lscpu.model", "100");
+
+        // this should return false because the only cloud fact  the consumer has did not change
+        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
+    }
+
+    @Test
+    public void testCloudProfileFactDidNotChangeWhenPassingSingleFact() {
+        Consumer consumer = new Consumer();
+        consumer.setFact("dmi.bios.vendor", "vendorA");
+        consumer.setFact("lscpu.model", "78");
+
+        Map<String, String> newFacts = new HashMap<>();
+        newFacts.put("dmi.bios.vendor", "vendorA");
+
+        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
+    }
+
+    @Test
+    public void testCloudProfileFactOnEmptyExistingFacts() {
+        Consumer consumer = new Consumer();
+
+        Map<String, String> newFacts = new HashMap<>();
+        newFacts.put("dmi.bios.vendor", "vendorA");
+
+        assertTrue(consumer.checkForCloudProfileFacts(newFacts));
+    }
+
+    @Test
+    public void testCloudProfileFactOnEmptyIncomingFacts() {
+        Consumer consumer = new Consumer();
+        consumer.setFact("dmi.bios.vendor", "vendorA");
+
+        Map<String, String> newFacts = null;
+
+        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
+    }
+
+    @Test
+    public void testCloudProfileFactOnNullValueOfIncomingFacts() {
+        Consumer consumer = new Consumer();
+        consumer.setFact("dmi.bios.vendor", "vendorA");
+
+        Map<String, String> newFacts = new HashMap<>();
+        newFacts.put("dmi.bios.vendor", null);
+
+        assertTrue(consumer.checkForCloudProfileFacts(newFacts));
+
+        newFacts = new HashMap<>();
+        newFacts.put("null", "vendorA");
+
+        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
+    }
+
+    @Test
+    public void testCloudProfileFactExistingIncomingFacts() {
+        Consumer consumer = new Consumer();
+        consumer.setFact("dmi.bios.vendor", "vendorA");
+
+        Map<String, String> newFacts = new HashMap<>();
+        newFacts.put("dmi.bios.vendor", "vendorA");
+
+        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
     }
 }

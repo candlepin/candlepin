@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
+
+    <changeSet id="20200430172317-1" author="sdhome">
+        <comment>Adding column rh_cloud_profile_modified for Swatch Profile Timestamp feature.
+        </comment>
+
+        <addColumn tableName="cp_consumer">
+            <column name="rh_cloud_profile_modified" type="${timestamp.type}"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

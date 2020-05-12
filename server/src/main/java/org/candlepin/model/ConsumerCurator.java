@@ -541,7 +541,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         existingConsumer.setFacts(updatedConsumer.getFacts());
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
-        existingConsumer.setTypeId(updatedConsumer.getTypeId());
+
+        // Set TypeId only if the existing consumer and update consumer typeId is not equal.
+        // This check has been added for updating Swatch timestamp
+        if (updatedConsumer.getTypeId() != null &&
+            !Util.equals(existingConsumer.getTypeId(), updatedConsumer.getTypeId())) {
+            existingConsumer.setTypeId(updatedConsumer.getTypeId());
+        }
+
         existingConsumer.setUuid(updatedConsumer.getUuid());
 
         if (flush) {

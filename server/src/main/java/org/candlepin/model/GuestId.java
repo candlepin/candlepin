@@ -145,6 +145,7 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
 
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
+        this.consumer.updateRHCloudProfileModified();
     }
 
     public void setAttributes(Map<String, String> attributes) {
