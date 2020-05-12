@@ -32,6 +32,24 @@ import java.util.Map;
  */
 public class RefreshResult {
 
+    // TODO: Flesh out the collection types here a bit more, in accordance with the table below
+    //
+    // Existing     Imported    Merged entity       Result
+    // not-null     not-null    not-null            updated entity
+    // not-null     not-null    null                unchanged entity (imported but unchanged)
+    // not-null     null        not-null            children updated
+    // not-null     null        null                unchanged entity (not imported, no changes to children)
+    // null         not-null    not-null            created entity
+    // null         not-null    null                ERROR STATE - creation failed
+    // null         null        null                ERROR STATE - uninitialized node
+    //
+    // Following this, we have 3 states to report, and 2 pseudo-states:
+    // - resultant states: created (5), updated (1, 3), unchanged (2, 4)
+    // - pseudo-states: imported (1, 2, 5) and skipped (3, 4)
+    //
+    // At the time of writing, we can kind of discern the pseudo-states by getting the collections
+    // back out of the refresh worker, so maybe this is a non-issue.
+
     private Map<String, Pool> createdPools;
     private Map<String, Pool> updatedPools;
     private Map<String, Pool> skippedPools;
