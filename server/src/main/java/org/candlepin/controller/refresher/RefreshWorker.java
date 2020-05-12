@@ -37,6 +37,7 @@ import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +106,9 @@ public class RefreshWorker {
      *  if any provided subscription does not contain a valid subscription ID
      */
     public void addSubscriptions(SubscriptionInfo... subscriptions) {
-        this.addSubscriptions(Arrays.asList(subscriptions));
+        if (subscriptions != null) {
+            this.addSubscriptions(Arrays.asList(subscriptions));
+        }
     }
 
     /**
@@ -162,7 +165,9 @@ public class RefreshWorker {
      *  if any provided product does not contain a valid product ID
      */
     public void addProducts(ProductInfo... products) {
-        this.addProducts(Arrays.asList(products));
+        if (products != null) {
+            this.addProducts(Arrays.asList(products));
+        }
     }
 
     /**
@@ -223,7 +228,9 @@ public class RefreshWorker {
      *  if any provided content does not contain a valid content ID
      */
     public void addProductContent(ProductContentInfo... contents) {
-        this.addProductContent(Arrays.asList(contents));
+        if (contents != null) {
+            this.addProductContent(Arrays.asList(contents));
+        }
     }
 
     /**
@@ -284,7 +291,9 @@ public class RefreshWorker {
      *  if any provided content does not contain a valid content ID
      */
     public void addContent(ContentInfo... contents) {
-        this.addContent(Arrays.asList(contents));
+        if (contents != null) {
+            this.addContent(Arrays.asList(contents));
+        }
     }
 
     /**
@@ -362,6 +371,7 @@ public class RefreshWorker {
      * @return
      *  the result of this refresh operation
      */
+    @Transactional
     public RefreshResult execute(Owner owner) {
         NodeMapper nodeMapper = new NodeMapper();
 

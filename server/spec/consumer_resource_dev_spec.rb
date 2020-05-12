@@ -8,53 +8,61 @@ describe 'Consumer Dev Resource' do
   include CandlepinMethods
 
   before(:each) do
+    skip("candlepin running in standalone mode") if not is_hosted?
+
     @owner = create_owner random_string('test_owner')
     @username = random_string("user")
     @consumername = random_string("dev_consumer")
     @user = user_client(@owner, @username)
 
     # active subscription to allow this all to work
-    active_prod = create_product()
-    @active_sub = create_pool_and_subscription(@owner['key'], active_prod.id, 10)
-    pools = @cp.list_owner_pools(@owner['key'])
-    pools.length.should eq(1)
+    active_product = create_product
+    active_subscription = @cp.create_pool(@owner['key'], active_product['id'], {
+      :subscription_id => random_str('source_sub'),
+      :upstream_pool_id => random_str('upstream'),
+      :quantity => 10
+    })
 
-    @p_product1 = create_product("p_product_1",
-      "Provided Product 1")
-    @p_product2 = create_product("p_product",
-      "Provided Product 2")
-    @dev_product = create_product("dev_product",
-                                  "Dev Product",
-                                  {:attributes => { :expires_after => "60"}, :providedProducts =>
-                                    [@p_product1["id"], @p_product2["id"]]})
-    @dev_product_2 = create_product("2nd_dev_product",
-                                  "Dev Product",
-                                  {:attributes => { :expires_after => "60"},  :providedProducts =>
-                                    [@p_product1["id"], @p_product2["id"]]})
+    provided_product_1 = create_product("prov_product_1", "provided product 1")
+    provided_product_2 = create_product("prov_product_2", "provided product 2")
 
-    @consumer = consumer_client(@user, @consumername, :system, 'dev_user', facts = {:dev_sku => "dev_product"})
-    installed = [
-        {'productId' => @p_product1.id, 'productName' => @p_product1.name},
-        {'productId' => @p_product2.id, 'productName' => @p_product2.name}]
-    @consumer.update_consumer({:installedProducts => installed})
+    @dev_product_1 = create_product("dev_product_1", "dev product 1", {
+      :attributes => {
+        :expires_after => "60"
+      },
+      :providedProducts => [provided_product_1['id'], provided_product_2['id']]
+    })
+
+    @dev_product_2 = create_product("dev_product_2", "dev product 2", {
+      :attributes => {
+        :expires_after => "60"
+      },
+      :providedProducts => [provided_product_1['id'], provided_product_2['id']]
+    })
+
+    @consumer = consumer_client(@user, @consumername, :system, 'dev_user', facts = {
+      :dev_sku => @dev_product_1['id']
+    })
+
+    @consumer.update_consumer({:installedProducts => [
+      {'productId' => provided_product_1['id'], 'productName' => provided_product_1['name']},
+      {'productId' => provided_product_2['id'], 'productName' => provided_product_2['name']}
+    ]})
   end
 
   it 'should create entitlement to newly created dev pool' do
-    skip("candlepin running in standalone mode") if not is_hosted?
-    auto_attach_and_verify_dev_product("dev_product")
+    auto_attach_and_verify_dev_product(@dev_product_1['id'])
   end
 
   it 'should create new entitlement when dev pool already exists' do
-    skip("candlepin running in standalone mode") if not is_hosted?
-    initial_ent = auto_attach_and_verify_dev_product("dev_product")
-    auto_attach_and_verify_dev_product("dev_product", initial_ent.id)
+    initial_ent = auto_attach_and_verify_dev_product(@dev_product_1['id'])
+    auto_attach_and_verify_dev_product(@dev_product_1['id'], initial_ent.id)
   end
 
   it 'should create new entitlement when dev_sku attribute changes' do
-    skip("candlepin running in standalone mode") if not is_hosted?
-    ent = auto_attach_and_verify_dev_product("dev_product")
-    @consumer.update_consumer({:facts => {:dev_sku => "2nd_dev_product"}})
-    auto_attach_and_verify_dev_product("2nd_dev_product", ent.id)
+    ent = auto_attach_and_verify_dev_product(@dev_product_1['id'])
+    @consumer.update_consumer({:facts => { :dev_sku => @dev_product_2['id'] }})
+    auto_attach_and_verify_dev_product(@dev_product_2['id'], ent.id)
   end
 
   def auto_attach_and_verify_dev_product(expected_product_id, old_ent_id=nil)
@@ -72,29 +80,27 @@ describe 'Consumer Dev Resource' do
   end
 
   it 'should allow sub-man-gui process for auto-bind' do
-    skip("candlepin running in standalone mode") if not is_hosted?
-
     pools = @consumer.autobind_dryrun()
-    pools.length.should eq(1)
+    expect(pools.length).to eq(1)
     ents = @consumer.consume_pool(pools[0].pool.id)
     ents.length.should eq(1)
     ent_pool = ents[0].pool
     ent_pool.type.should eq("DEVELOPMENT")
-    ent_pool.productId.should eq("dev_product")
+    ent_pool.productId.should eq(@dev_product_1['id'])
     ent_pool.providedProducts.length.should eq(2)
     ent_pool.id.should eq(pools[0].pool.id)
   end
 
 it 'should not allow entitlement for consumer past expiration' do
-    skip("candlepin running in standalone mode") if not is_hosted?
     created_date = '2015-05-09T13:23:55+0000'
-    consumer = @user.register(random_string('system'), type=:system, nil, facts = {:dev_sku => "dev_product"}, @username,
-              @owner['key'], [], [], nil, [], nil, [], created_date)
+    consumer = @user.register(random_string('system'), type=:system, nil, facts = {:dev_sku => @dev_product_1['id']},
+      @username, @owner['key'], [], [], nil, [], nil, [], created_date)
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
-    expected_error = "Unable to attach subscription for the product \"dev_product\": Subscriptions for dev_product expired on:"
+    expected_error = "Unable to attach subscription for the product \"#{@dev_product_1['id']}\": Subscriptions for #{@dev_product_1['id']} expired on:"
+
     begin
-        consumer_client.consume_product()
-        fail("Expected Forbidden since consumer is older than product expiry")
+      consumer_client.consume_product()
+      fail("Expected Forbidden since consumer is older than product expiry")
     rescue RestClient::Forbidden => e
       message = JSON.parse(e.http_body)['displayMessage']
       message.should start_with(expected_error)
