@@ -21,17 +21,13 @@ import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContent;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.model.ContentInfo;
-import org.candlepin.util.Traceable;
-import org.candlepin.util.TraceableParam;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -46,7 +42,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -328,231 +323,6 @@ public class ContentManager {
         }
 
         return updated;
-    }
-
-    /**
-     * Creates or updates content from the given content DTOs, omitting product updates for the
-     * provided Red Hat product IDs.
-     * <p></p>
-     * The content DTOs provided in the given map should be mapped by the content's Red Hat ID. If
-     * the mappings are incorrect or inconsistent, the result of this method is undefined.
-     *
-     * @param owner
-     *  The owner for which to import the given content
-     *
-     * @param contentData
-     *  A mapping of Red Hat content ID to content DTOs to import
-     *
-     * @param importedProductIds
-     *  A set of Red Hat product IDs specifying products which are being imported and should not be
-     *  updated as part of this import operation
-     *
-     * @return
-     *  A mapping of Red Hat content ID to content entities representing the imported content
-     */
-    @SuppressWarnings("checkstyle:methodlength")
-    @Transactional
-    @Traceable
-    public ImportResult<Content> importContent(@TraceableParam("owner") Owner owner,
-        Map<String, ? extends ContentInfo> contentData, Set<String> importedProductIds) {
-
-        if (owner == null) {
-            throw new IllegalArgumentException("owner is null");
-        }
-
-        ImportResult<Content> importResult = new ImportResult<>();
-
-        if (contentData == null || contentData.isEmpty()) {
-            // Nothing to import
-            return importResult;
-        }
-
-        Map<String, Content> skippedContent = importResult.getSkippedEntities();
-        Map<String, Content> createdContent = importResult.getCreatedEntities();
-        Map<String, Content> updatedContent = importResult.getUpdatedEntities();
-
-        Map<String, Integer> contentVersions = new HashMap<>();
-        Map<String, Content> sourceContent = new HashMap<>();
-        Map<String, List<Content>> existingVersions = new HashMap<>();
-        List<OwnerContent> ownerContentBuffer = new LinkedList<>();
-
-        // - Divide imported products into sets of updates and creates
-        log.debug("Fetching existing content for update...");
-        for (Content content : this.ownerContentCurator.getContentByIds(owner, contentData.keySet())) {
-            ContentInfo update = contentData.get(content.getId());
-
-            if (content.isLocked() && !this.isChangedBy(content, update)) {
-                // This content won't be changing, so we'll just pretend it's not being imported at all
-                skippedContent.put(content.getId(), content);
-                continue;
-            }
-
-            // Content is coming from an upstream source; lock it so only upstream can make
-            // further changes to it. If we ever use this method for anything other than
-            // imports, we'll need to stop doing this.
-            sourceContent.put(content.getId(), content);
-            content = this.applyContentChanges((Content) content.clone(), update);
-
-            // Prevent this content from being changed by our API
-            content.setLocked(true);
-
-            updatedContent.put(content.getId(), content);
-            contentVersions.put(content.getId(), content.getEntityVersion());
-        }
-
-        log.debug("Validating new content...");
-        for (ContentInfo update : contentData.values()) {
-            if (!skippedContent.containsKey(update.getId()) && !updatedContent.containsKey(update.getId())) {
-                // Ensure content is minimally populated
-                if (update.getId() == null || update.getType() == null || update.getLabel() == null ||
-                    update.getName() == null || update.getVendor() == null) {
-                    throw new IllegalStateException("Content data is incomplete: " + update);
-                }
-
-                Content content = this.applyContentChanges(new Content(update.getId()), update);
-
-                // Prevent this content from being changed by our API
-                content.setLocked(true);
-
-                createdContent.put(content.getId(), content);
-                contentVersions.put(content.getId(), content.getEntityVersion());
-            }
-        }
-
-        log.debug("Checking for existing content versions...");
-        for (Content alt : this.ownerContentCurator.getContentByVersions(owner, contentVersions)) {
-            List<Content> alternates = existingVersions.get(alt.getId());
-            if (alternates == null) {
-                alternates = new LinkedList<>();
-                existingVersions.put(alt.getId(), alternates);
-            }
-
-            alternates.add(alt);
-        }
-
-        contentVersions.clear();
-        contentVersions = null;
-
-        // We're about to start modifying the maps, so we need to clone the created set before we
-        // start adding the update forks to it.
-        Map<String, Content> stagedEntities = new HashMap<>(createdContent);
-
-        // Process the created group...
-        // Check our created set for existing versions:
-        //  - If there's an existing version, we'll remove the staged entity from the creation
-        //    set, and stage an owner-content mapping for the existing version
-        //  - Otherwise, we'll stage the new entity for persistence by leaving it in the created
-        //    set, and stage an owner-content mapping to the new entity
-        Iterator<Content> iterator = stagedEntities.values().iterator();
-        createdContentLoop: while (iterator.hasNext()) {
-            Content created = iterator.next();
-            List<Content> alternates = existingVersions.get(created.getId());
-
-            if (alternates != null) {
-                for (Content alt : alternates) {
-                    if (created.equals(alt)) {
-                        ownerContentBuffer.add(new OwnerContent(owner, alt));
-                        createdContent.put(alt.getId(), alt);
-                        iterator.remove();
-
-                        continue createdContentLoop;
-                    }
-                }
-            }
-
-            ownerContentBuffer.add(new OwnerContent(owner, created));
-        }
-
-        // Process the updated group...
-        // Check our updated set for existing versions:
-        //  - If there's an existing versions, we'll update the update set to point to the existing
-        //    version
-        //  - Otherwise, we need to stage the updated entity for persistence
-        updatedContentLoop: for (Map.Entry<String, Content> entry : updatedContent.entrySet()) {
-            Content updated = entry.getValue();
-            List<Content> alternates = existingVersions.get(updated.getId());
-            if (alternates != null) {
-                for (Content alt : alternates) {
-                    if (!updated.getUuid().equals(alt.getUuid()) && updated.equals(alt)) {
-                        updated = alt;
-                        entry.setValue(alt);
-
-                        continue updatedContentLoop;
-                    }
-                }
-            }
-
-            // We need to stage the updated entity for persistence. We'll reuse the now-empty
-            // createdContent map for this.
-            updated.setUuid(null);
-            stagedEntities.put(updated.getId(), updated);
-        }
-
-        // Persist our staged entities
-        // We probably don't want to evict the content yet, as they'll appear as unmanaged if
-        // they're used later. However, the join objects can be evicted safely since they're only
-        // really used here.
-        log.debug("Persisting content changes...");
-        this.contentCurator.saveAll(stagedEntities.values(), true, false);
-        this.ownerContentCurator.saveAll(ownerContentBuffer, true, true);
-
-        // Fetch collection of products affected by this import that aren't being imported themselves
-        log.debug("Updating non-imported, affected products...");
-        List<Product> affectedProducts = this.productCurator
-            .getProductsByContent(owner, sourceContent.keySet(), importedProductIds)
-            .list();
-
-        if (affectedProducts != null && !affectedProducts.isEmpty()) {
-            // Get the collection of content those products use
-            Map<String, Content> affectedProductsContent = new HashMap<>();
-            for (Content content : this.contentCurator.getContentByProducts(affectedProducts)) {
-                affectedProductsContent.put(content.getId(), content);
-            }
-
-            // Update the content map so it references the updated content
-            affectedProductsContent.putAll(updatedContent);
-
-            Map<String, ProductData> affectedProductData = new HashMap<>();
-            Map<String, ContentData> contentDTOCache = new HashMap<>();
-
-            for (Product product : affectedProducts) {
-                ProductData pdto = product.toDTO();
-
-                for (ProductContent pcdata : product.getProductContent()) {
-                    Content content = pcdata.getContent();
-                    Content updated = updatedContent.get(content.getId());
-
-                    if (updated != null) {
-                        ContentData cdto = contentDTOCache.get(content.getId());
-
-                        if (cdto == null) {
-                            cdto = content.toDTO();
-                            contentDTOCache.put(cdto.getId(), cdto);
-                        }
-
-                        pdto.addContent(cdto, pcdata.isEnabled());
-                    }
-                }
-
-                affectedProductData.put(pdto.getId(), pdto);
-            }
-
-            // Perform a micro-import for these products using the content map we just built
-            this.productManager.importProducts(owner, affectedProductData, affectedProductsContent);
-        }
-
-        // Perform bulk reference update
-        Map<String, String> contentUuidMap = new HashMap<>();
-        for (Content update : updatedContent.values()) {
-            Content source = sourceContent.get(update.getId());
-
-            contentUuidMap.put(source.getUuid(), update.getUuid());
-        }
-
-        this.ownerContentCurator.updateOwnerContentReferences(owner, contentUuidMap);
-
-        // Return
-        return importResult;
     }
 
     /**

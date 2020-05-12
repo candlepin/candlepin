@@ -2199,8 +2199,8 @@ public class ConsumerResource {
             else {
                 message = (i18n.tr("Organization \"{0}\" has auto-attach disabled.", owner.getKey()));
             }
-            throw new BadRequestException(message);
 
+            throw new BadRequestException(message);
         }
 
         List<PoolQuantity> dryRunPools = new ArrayList<>();
@@ -2217,13 +2217,16 @@ public class ConsumerResource {
             throw bre;
         }
         catch (RuntimeException re) {
+            log.debug("Unexpected exception occurred while performing dry-run:", re);
             return Collections.<PoolQuantityDTO>emptyList();
         }
+
         if (dryRunPools != null) {
             List<PoolQuantityDTO> dryRunPoolDtos = new ArrayList<>();
             for (PoolQuantity pq : dryRunPools) {
                 dryRunPoolDtos.add(this.translator.translate(pq, PoolQuantityDTO.class));
             }
+
             return dryRunPoolDtos;
         }
         else {

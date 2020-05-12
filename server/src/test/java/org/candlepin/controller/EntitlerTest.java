@@ -18,16 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyMap;
-import static org.mockito.Mockito.anySet;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.nullable;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -36,20 +27,25 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.refresher.RefreshResult;
+import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.dto.ContentData;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationError;
@@ -70,6 +66,7 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -80,9 +77,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.inject.Provider;
 
 // TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
 // wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.
+
 
 
 /**
@@ -109,6 +108,14 @@ public class EntitlerTest {
     @Mock private ContentManager contentManager;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
 
+    @Mock private ContentCurator mockContentCurator;
+    @Mock private OwnerContentCurator mockOwnerContentCurator;
+    @Mock private ProductCurator mockProductCurator;
+    @Mock private OwnerProductCurator mockOwnerProductCurator;
+
+    private RefreshWorker refreshWorker;
+    private Provider<RefreshWorker> refreshWorkerProvider;
+
     private ValidationResult fakeOutResult(String msg) {
         ValidationResult result = new ValidationResult();
         ValidationError err = new ValidationError(msg);
@@ -125,74 +132,35 @@ public class EntitlerTest {
         );
         translator = new EntitlementRulesTranslator(i18n);
 
+        this.refreshWorker = spy(new RefreshWorker(this.mockProductCurator, this.mockOwnerProductCurator,
+            this.mockContentCurator, this.mockOwnerContentCurator));
+
+        this.refreshWorkerProvider = () -> refreshWorker;
+
         entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator, config,
             ownerCurator, poolCurator, productManager, productAdapter,
-            contentManager, consumerTypeCurator);
+            contentManager, consumerTypeCurator, this.refreshWorkerProvider);
     }
 
-    private void mockProductImport(Map<String, Product> products) {
-        when(productManager.importProducts(any(Owner.class), anyMap(), anyMap()))
-            .thenAnswer(invocation -> {
-                Object[] args = invocation.getArguments();
-                Map<String, ProductData> productData = (Map<String, ProductData>) args[1];
-                ImportResult<Product> importResult = new ImportResult<>();
-                Map<String, Product> output = importResult.getCreatedEntities();
+    private void mockRefresh(Owner owner, Collection<Product> products, Collection<Content> contents) {
+        doAnswer(iom -> {
+            RefreshResult output = new RefreshResult();
 
-                if (productData != null) {
-                    for (String pid : productData.keySet()) {
-                        Product product = products.get(pid);
-
-                        if (product != null) {
-                            output.put(product.getId(), product);
-                        }
-                    }
+            if (products != null) {
+                for (Product product : products) {
+                    output.addCreatedProduct(product);
                 }
+            }
 
-                return importResult;
-            });
-    }
-
-    private void mockProductImport(Product... products) {
-        this.mockContentImport(Collections.emptyMap());
-        Map<String, Product> productMap = new HashMap<>();
-
-        for (Product product : products) {
-            productMap.put(product.getId(), product);
-        }
-
-        this.mockProductImport(productMap);
-    }
-
-    private void mockContentImport(Map<String, Content> contents) {
-        when(contentManager.importContent(any(), anyMap(), anySet()))
-            .thenAnswer(invocation -> {
-                Object[] args = invocation.getArguments();
-                Map<String, ContentData> contentData = (Map<String, ContentData>) args[1];
-                ImportResult<Content> importResult = new ImportResult<>();
-                Map<String, Content> output = importResult.getCreatedEntities();
-
-                if (contentData != null) {
-                    for (String pid : contentData.keySet()) {
-                        Content content = contents.get(pid);
-
-                        if (content != null) {
-                            output.put(content.getId(), content);
-                        }
-                    }
+            if (contents != null) {
+                for (Content content : contents) {
+                    output.addCreatedContent(content);
                 }
+            }
 
-                return importResult;
-            });
-    }
-
-    private void mockContentImport(Content... contents) {
-        Map<String, Content> contentMap = new HashMap<>();
-
-        for (Content content : contents) {
-            contentMap.put(content.getId(), content);
-        }
-
-        this.mockContentImport(contentMap);
+            return output;
+        })
+        .when(this.refreshWorker).execute(eq(owner));
     }
 
     @Test
@@ -512,8 +480,7 @@ public class EntitlerTest {
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
         doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
-        this.mockProductImport(p);
-        this.mockContentImport(Collections.emptyMap());
+        this.mockRefresh(owner, Arrays.asList(p), null);
 
         when(pm.createPool(any(Pool.class))).thenReturn(devPool);
         when(devPool.getId()).thenReturn("test_pool_id");
@@ -571,8 +538,7 @@ public class EntitlerTest {
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
         doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
-        mockProductImport(p, ip);
-        mockContentImport();
+        this.mockRefresh(owner, Arrays.asList(p, ip), null);
 
         AutobindData ad = new AutobindData(devSystem, owner);
         try {
@@ -603,8 +569,7 @@ public class EntitlerTest {
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
         doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
-        this.mockProductImport(p, ip1, ip2);
-        this.mockContentImport(Collections.emptyMap());
+        this.mockRefresh(owner, Arrays.asList(p, ip1, ip2), null);
 
         Pool expectedPool = entitler.assembleDevPool(devSystem, owner, p.getId());
         when(pm.createPool(any(Pool.class))).thenReturn(expectedPool);
@@ -630,8 +595,7 @@ public class EntitlerTest {
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
         doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
-        this.mockProductImport(p1, p2, p3);
-        this.mockContentImport(Collections.emptyMap());
+        this.mockRefresh(owner, Arrays.asList(p1, p2, p3), null);
 
         Pool created = entitler.assembleDevPool(devSystem, owner, devSystem.getFact("dev_sku"));
         Calendar cal = Calendar.getInstance();
