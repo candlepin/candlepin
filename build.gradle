@@ -22,121 +22,121 @@ plugins {
 version = "2.0"
 
 ext.versions = [
-        jackson   : "2.10.1",
-        guice     : "4.1.0",
-        checkstyle: "8.29",
-        junit5    : "5.4.2"
+    jackson   : "2.10.1",
+    guice     : "4.1.0",
+    checkstyle: "8.29",
+    junit5    : "5.4.2"
 ]
 
 ext.libraries = [
-        resteasy              : [
-                "org.jboss.resteasy:resteasy-jaxb-provider",
-                "org.jboss.resteasy:resteasy-guice",
-                "org.jboss.resteasy:resteasy-atom-provider",
-                "org.jboss.resteasy:resteasy-multipart-provider",
-                "javax.ws.rs:javax.ws.rs-api",
-                "org.eclipse.microprofile.config:microprofile-config-api",
-        ],
-        jackson               : [
-                "com.fasterxml.jackson.core:jackson-annotations",
-                "com.fasterxml.jackson.core:jackson-core",
-                "com.fasterxml.jackson.core:jackson-databind",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-                "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
-                "com.fasterxml.jackson.module:jackson-module-jsonSchema",
-                "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
-                "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5",
-                "com.fasterxml.jackson.datatype:jackson-datatype-jdk8",
-        ],
-        swagger               : [
-                "io.swagger:swagger-jaxrs",
-                "io.swagger:swagger-annotations",
-                "org.apache.commons:commons-lang3",
-        ],
-        sun_jaxb              : [
-                "com.sun.xml.bind:jaxb-impl",
-                "com.sun.xml.bind:jaxb-core",
-        ],
-        core_testing          : [
-                "org.junit.jupiter:junit-jupiter-api",
-                "org.junit.jupiter:junit-jupiter-params",
-                "org.junit.jupiter:junit-jupiter-engine",
-                "org.junit.vintage:junit-vintage-engine",
-                "org.hamcrest:hamcrest-library",
-                "org.hamcrest:hamcrest-core",
-                "org.mockito:mockito-junit-jupiter",
-                "org.mockito:mockito-core",
-                "junit:junit",
-        ],
-        logging_deps          : [
-                "ch.qos.logback:logback-classic",
-                // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
-                // JCL for example.
-                "org.slf4j:jcl-over-slf4j",
-                "org.slf4j:log4j-over-slf4j",
-                "net.logstash.logback:logstash-logback-encoder",
-        ],
-        javax                 : [
-                "org.hibernate.javax.persistence:hibernate-jpa-2.1-api",
-                "javax.transaction:jta",
-                "javax.persistence:javax.persistence-api",
-                "javax.xml.bind:jaxb-api",
-        ],
-        commons               : [
-                "commons-codec:commons-codec",
-                "commons-collections:commons-collections",
-                "commons-io:commons-io",
-                "commons-lang:commons-lang",
-        ],
-        guice                 : [
-                "com.google.inject.extensions:guice-assistedinject",
-                "com.google.inject.extensions:guice-multibindings",
-                "com.google.inject.extensions:guice-servlet",
-                "com.google.inject.extensions:guice-throwingproviders",
-                "com.google.inject.extensions:guice-persist",
-                "com.google.inject:guice",
-                "aopalliance:aopalliance",
-                "javax.inject:javax.inject",
-        ],
-        liquibase             : "org.liquibase:liquibase-core",
-        liquibase_slf4j       : "com.mattbertolini:liquibase-slf4j",
-        oauth                 : [
-                "net.oauth.core:oauth",
-                "net.oauth.core:oauth-provider",
-        ],
-        collections           : "com.google.guava:guava:25.1-jre",
-        hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor",
-        checkstyle            : [
-                "com.puppycrawl.tools:checkstyle",
-                "com.github.sevntu-checkstyle:sevntu-checks"
-        ],
-        gettext               : "com.googlecode.gettext-commons:gettext-commons",
-        javax_servlet         : "javax.servlet:servlet-api",
-        javax_validation      : "javax.validation:validation-api",
-        jmock                 : [
-                "org.jmock:jmock",
-                "org.jmock:jmock-junit4",
-        ],
-        validator             : [
-                "org.hibernate.validator:hibernate-validator",
-                "org.hibernate.validator:hibernate-validator-annotation-processor",
-        ],
-        keycloak              : "org.keycloak:keycloak-servlet-filter-adapter",
-        hibernate             : "org.hibernate:hibernate-c3p0",
-        ehcache               : [
-                "org.hibernate:hibernate-jcache",
-                "org.ehcache:ehcache",
-                "javax.cache:cache-api",
-        ],
-        artemis               : [
-                "org.apache.activemq:artemis-server",
-                "org.apache.activemq:artemis-stomp-protocol",
-        ],
-        amqp                  : [
-                "org.apache.qpid:qpid-common",
-                "org.apache.qpid:qpid-client",
-                "geronimo-spec:geronimo-spec-jms",
-        ],
+    resteasy: [
+        "org.jboss.resteasy:resteasy-jaxb-provider",
+        "org.jboss.resteasy:resteasy-guice",
+        "org.jboss.resteasy:resteasy-atom-provider",
+        "org.jboss.resteasy:resteasy-multipart-provider",
+        "javax.ws.rs:javax.ws.rs-api",
+        "org.eclipse.microprofile.config:microprofile-config-api",
+    ],
+    jackson: [
+        "com.fasterxml.jackson.core:jackson-annotations",
+        "com.fasterxml.jackson.core:jackson-core",
+        "com.fasterxml.jackson.core:jackson-databind",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
+        "com.fasterxml.jackson.module:jackson-module-jsonSchema",
+        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
+        "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jdk8",
+    ],
+    swagger: [
+        "io.swagger:swagger-jaxrs",
+        "io.swagger:swagger-annotations",
+        "org.apache.commons:commons-lang3",
+    ],
+    sun_jaxb: [
+        "com.sun.xml.bind:jaxb-impl",
+        "com.sun.xml.bind:jaxb-core",
+    ],
+    core_testing: [
+        "org.junit.jupiter:junit-jupiter-api",
+        "org.junit.jupiter:junit-jupiter-params",
+        "org.junit.jupiter:junit-jupiter-engine",
+        "org.junit.vintage:junit-vintage-engine",
+        "org.hamcrest:hamcrest-library",
+        "org.hamcrest:hamcrest-core",
+        "org.mockito:mockito-junit-jupiter",
+        "org.mockito:mockito-core",
+        "junit:junit",
+    ],
+    logging_deps: [
+        "ch.qos.logback:logback-classic",
+        // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
+        // JCL for example.
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:log4j-over-slf4j",
+        "net.logstash.logback:logstash-logback-encoder",
+    ],
+    javax: [
+        "org.hibernate.javax.persistence:hibernate-jpa-2.1-api",
+        "javax.transaction:jta",
+        "javax.persistence:javax.persistence-api",
+        "javax.xml.bind:jaxb-api",
+    ],
+    commons: [
+        "commons-codec:commons-codec",
+        "commons-collections:commons-collections",
+        "commons-io:commons-io",
+        "commons-lang:commons-lang",
+    ],
+    guice: [
+        "com.google.inject.extensions:guice-assistedinject",
+        "com.google.inject.extensions:guice-multibindings",
+        "com.google.inject.extensions:guice-servlet",
+        "com.google.inject.extensions:guice-throwingproviders",
+        "com.google.inject.extensions:guice-persist",
+        "com.google.inject:guice",
+        "aopalliance:aopalliance",
+        "javax.inject:javax.inject",
+    ],
+    liquibase: "org.liquibase:liquibase-core",
+    liquibase_slf4j: "com.mattbertolini:liquibase-slf4j",
+    oauth: [
+        "net.oauth.core:oauth",
+        "net.oauth.core:oauth-provider",
+    ],
+    collections: "com.google.guava:guava:25.1-jre",
+    hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor",
+    checkstyle: [
+        "com.puppycrawl.tools:checkstyle",
+        "com.github.sevntu-checkstyle:sevntu-checks"
+    ],
+    gettext: "com.googlecode.gettext-commons:gettext-commons",
+    javax_servlet: "javax.servlet:servlet-api",
+    javax_validation: "javax.validation:validation-api",
+    jmock                 : [
+        "org.jmock:jmock",
+        "org.jmock:jmock-junit4",
+    ],
+    validator             : [
+        "org.hibernate.validator:hibernate-validator",
+        "org.hibernate.validator:hibernate-validator-annotation-processor",
+    ],
+    keycloak: "org.keycloak:keycloak-servlet-filter-adapter",
+    hibernate: "org.hibernate:hibernate-c3p0",
+    ehcache: [
+        "org.hibernate:hibernate-jcache",
+        "org.ehcache:ehcache",
+        "javax.cache:cache-api",
+    ],
+    artemis: [
+        "org.apache.activemq:artemis-server",
+        "org.apache.activemq:artemis-stomp-protocol",
+    ],
+    amqp: [
+        "org.apache.qpid:qpid-common",
+        "org.apache.qpid:qpid-client",
+        "geronimo-spec:geronimo-spec-jms",
+    ],
 ]
 
 allprojects {
@@ -207,7 +207,7 @@ allprojects {
                 entry "hibernate-validator"
                 entry "hibernate-validator-annotation-processor"
             }
-            dependencySet(group: "org.apache.activemq", version: "2.10.1") {
+            dependencySet(group: "org.apache.activemq", version: "2.12.0") {
                 entry "artemis-server"
                 entry "artemis-stomp-protocol"
             }
