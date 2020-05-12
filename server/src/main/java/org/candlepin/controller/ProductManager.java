@@ -269,6 +269,10 @@ public class ProductManager {
      * The product info provided in the given map should be mapped by the product's Red Hat ID. If
      * the mappings are incorrect or inconsistent, the result of this method is undefined.
      *
+     * @deprecated
+     *  This method has been replaced by the RefreshWorker and its various components. New code
+     *  should avoid using this method if at all possible, instead opting to use the RefreshWorker.
+     *
      * @param owner
      *  The owner for which to import the given product
      *
@@ -284,6 +288,7 @@ public class ProductManager {
      */
     @Transactional
     @Traceable
+    @Deprecated
     public ImportResult<Product> importProducts(@TraceableParam("owner") Owner owner,
         Map<String, ? extends ProductInfo> productData, Map<String, Content> importedContent) {
 
@@ -335,6 +340,10 @@ public class ProductManager {
      * The product info provided in the given map should be mapped by the product's Red Hat ID. If
      * the mappings are incorrect or inconsistent, the result of this method is undefined.
      *
+     * @deprecated
+     *  This method has been replaced by the RefreshWorker and its various components. New code
+     *  should avoid using this method if at all possible, instead opting to use the RefreshWorker.
+     *
      * @param owner
      *  The owner for which to import the given product
      *
@@ -349,6 +358,7 @@ public class ProductManager {
      *  A mapping of Red Hat content ID to content entities representing the imported content
      */
     @Traceable
+    @Deprecated
     public ImportResult<Product> processProductImport(@TraceableParam("owner") Owner owner,
         Map<String, ? extends ProductInfo> productData, Map<String, Content> importedContent) {
 
@@ -1123,16 +1133,8 @@ public class ProductManager {
             if (!Util.collectionsAreEqual((Collection<ProductInfo>) entity.getProvidedProducts(),
                 (Collection<ProductInfo>) update.getProvidedProducts(), productComparator)) {
 
-                log.debug("Product's derived products are changed: {}", entity.getId());
-
                 return true;
             }
-            else {
-                log.debug("Product's derived products are unchanged: {}", entity.getId());
-            }
-        }
-        else {
-            log.debug("Updated product does not have any provided product changes: {}", update.getId());
         }
 
         return false;
