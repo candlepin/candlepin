@@ -127,9 +127,14 @@ else
         arg
       end
     end
-    val = cli.send(method_name, *args)
 
-    pp val
+    begin
+      pp cli.send(method_name, *args)
+    rescue RestClient::Exception => e
+      errmsg = JSON.parse(e.http_body)['displayMessage']
+      puts "Error: #{e.message} -- #{errmsg}"
+    end
+
   else
     puts "#{method_name} is not a valid command!"
   end
