@@ -51,6 +51,43 @@ public class {{classname}} {{#parent}}extends {{{parent}}}{{/parent}} {{#seriali
     this.{{name}} = {{name}};
   }
 
+  {{#isListContainer}}
+  public boolean add{{nameInCamelCase}}({{{items.datatypeWithEnum}}} {{name}}) {
+    if (this.{{name}} == null) {
+      this.{{name}} = {{{defaultValue}}};
+    }
+
+    return this.{{name}}.add({{name}});
+  }
+
+  public boolean remove{{nameInCamelCase}}({{{items.datatypeWithEnum}}} {{name}}) {
+    if ({{name}} != null && this.{{name}} != null) {
+      this.{{name}}.remove({{name}});
+    }
+
+    return false;
+  }
+  {{/isListContainer}}
+
+  {{#isMapContainer}}
+  public {{classname}} put{{nameInCamelCase}}(String key, {{{items.datatypeWithEnum}}} {{name}}) {
+    if (this.{{name}} == null) {
+      this.{{name}} = {{{defaultValue}}};
+    }
+
+    this.{{name}}.put(key, {{name}});
+    return this;
+  }
+
+  public {{classname}} remove{{nameInCamelCase}}({{{items.datatypeWithEnum}}} {{name}}) {
+    if ({{name}} != null && this.{{name}} != null) {
+      this.{{name}}.remove({{name}});
+    }
+
+    return this;
+  }
+  {{/isMapContainer}}
+
   {{/vars}}
 
   @Override
