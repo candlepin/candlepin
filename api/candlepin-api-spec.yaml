@@ -2501,6 +2501,17 @@ components:
         enabled:
           type: boolean
 
+    ProductCertificateDTO:
+      description: DTO representing product certificates presented to the API
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            key:
+              type: string
+            cert:
+              type: string
+
     ProductDTO:
       description: DTO representing the product data exposed to the API
       allOf:
