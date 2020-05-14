@@ -42,6 +42,7 @@ import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
+import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProvidedProductDTO;
@@ -191,6 +192,7 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.addMixIn(OwnerDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(PermissionBlueprintDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(PoolDTO.class, PoolAnnotationMixIn.class);
+        mapper.addMixIn(ProductCertificateDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ProductContentDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ProductDTO.class, ProductAttributesMixIn.class);
         mapper.addMixIn(ProvidedProductDTO.class, DynamicPropertyFilterMixIn.class);

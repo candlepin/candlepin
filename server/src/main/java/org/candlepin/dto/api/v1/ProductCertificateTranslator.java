@@ -15,16 +15,17 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ProductCertificate;
+import org.candlepin.util.Util;
 
 
 /**
- * The CertificateTranslator provides translation from Certificate model objects to
- * CertificateDTOs
+ * The ProductCertificateTranslator provides translation from Product Certificate
+ * model objects to ProductCertificateDTO
  */
 public class ProductCertificateTranslator
-    extends TimestampedEntityTranslator<ProductCertificate, ProductCertificateDTO> {
+    implements ObjectTranslator<ProductCertificate, ProductCertificateDTO> {
 
     /**
      * {@inheritDoc}
@@ -56,18 +57,18 @@ public class ProductCertificateTranslator
     @Override
     public ProductCertificateDTO populate(ModelTranslator translator,
         ProductCertificate source, ProductCertificateDTO dest) {
-        dest = super.populate(translator, source, dest);
-
-        dest.setId(source.getId());
-        dest.setKey(source.getKey());
-        dest.setCert(source.getCert());
-
-        if (translator != null) {
-            dest.setProduct(translator.translate(source.getProduct(), ProductDTO.class));
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
         }
-        else {
-            dest.setProduct(null);
+
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
         }
+
+        dest.created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .key(source.getKey())
+            .cert(source.getCert());
 
         return dest;
     }
