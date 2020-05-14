@@ -19,10 +19,7 @@ import static org.junit.Assert.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.model.Content;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductContent;
 
 
 /**
@@ -33,19 +30,10 @@ public class ProductCertificateTranslatorTest extends
 
     protected ProductCertificateTranslator translator = new ProductCertificateTranslator();
 
-    protected ProductTranslatorTest productTranslatorTest = new ProductTranslatorTest();
-
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.productTranslatorTest.initModelTranslator(modelTranslator);
-
         modelTranslator.registerTranslator(
             this.translator, ProductCertificate.class, ProductCertificateDTO.class);
-        modelTranslator.registerTranslator(
-            new ProductTranslator(), Product.class, ProductDTO.class);
-        modelTranslator.registerTranslator(new ContentTranslator(), Content.class, ContentDTO.class);
-        modelTranslator.registerTranslator(
-            new ProductContentTranslator(), ProductContent.class, ProductContentDTO.class);
     }
 
     @Override
@@ -57,10 +45,8 @@ public class ProductCertificateTranslatorTest extends
     protected ProductCertificate initSourceObject() {
         ProductCertificate cert = new ProductCertificate();
 
-        cert.setId("123");
         cert.setKey("cert_key");
         cert.setCert("cert_cert");
-        cert.setProduct(this.productTranslatorTest.initSourceObject());
 
         return cert;
     }
@@ -75,16 +61,8 @@ public class ProductCertificateTranslatorTest extends
     protected void verifyOutput(
         ProductCertificate source, ProductCertificateDTO dest, boolean childrenGenerated) {
         if (source != null) {
-            assertEquals(source.getId(), dest.getId());
             assertEquals(source.getKey(), dest.getKey());
             assertEquals(source.getCert(), dest.getCert());
-
-            if (childrenGenerated) {
-                this.productTranslatorTest.verifyOutput(source.getProduct(), dest.getProduct(), true);
-            }
-            else {
-                assertNull(dest.getProduct());
-            }
         }
         else {
             assertNull(dest);
