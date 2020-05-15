@@ -30,6 +30,325 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /activation_keys:
+    get:
+      description: Retrieves a list of activation keys
+      tags:
+        - Activation Key
+      operationId: findActivationKey
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: List of activation keys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActivationKeyDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+  /activation_keys/{activation_key_id}:
+    get:
+      description: Retrieves a single activation key
+      tags:
+        - Activation Key
+      operationId: getActivationKey
+      security: []
+      parameters:
+        - name: activation_key_id
+          in: path
+          description: The ID of the activation key to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationKeyDTO'
+        400:
+          description: Activation key ID is null, empty or could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Activation key ID is null, empty or could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Updates an Activation Key
+      tags:
+        - Activation Key
+      operationId: updateActivationKey
+      security: []
+      parameters:
+        - name: activation_key_id
+          in: path
+          description: The ID of the activation key to be updated
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Activation key to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationKeyDTO'
+      responses:
+        200:
+          description: Updated the activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationKeyDTO'
+        400:
+          description: Invalid inputs, could not update activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, could not update activation key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Deletes an activation key
+      tags:
+        - Activation Key
+      operationId: deleteActivationKey
+      security: []
+      parameters:
+        - name: activation_key_id
+          in: path
+          description: The ID of the activation key to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: A successful operation
+        400:
+          description: Activation key ID is null, empty or could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Activation key ID is null, empty or could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /activation_keys/{activation_key_id}/pools:
+    get:
+      description: Retrieves a list of pools based on the activation key
+      tags:
+        - Activation Key
+      operationId: getActivationKeyPools
+      security: []
+      parameters:
+        - name: activation_key_id
+          in: path
+          description: The ID of the activation key
+          required: true
+          schema:
+            type: string
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of pools based on the Activation Key
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PoolDTO'
+        400:
+          description: Activation key ID is null, empty or could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Activation key ID is null, empty or could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /activation_keys/{activation_key_id}/pools/{pool_id}:
+    post:
+      description: Adds a Pool to an Activation Key
+      tags:
+        - Activation Key
+      operationId: addPoolToKey
+      security: []
+      parameters:
+        - in: path
+          name: activation_key_id
+          description: ID of the activation key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: pool_id
+          description: ID of the pool
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: quantity
+          schema:
+            type: integer
+            format: int64
+      responses:
+        200:
+          description: Pool added to activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationKeyDTO'
+        400:
+          description: Invalid inputs, pool could not be added to activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, pool could not be added to activation key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes a Pool from an Activation Key
+      tags:
+        - Activation Key
+      operationId: removePoolFromKey
+      security: []
+      parameters:
+        - name: activation_key_id
+          in: path
+          description: The ID of the activation key
+          required: true
+          schema:
+            type: string
+        - name: pool_id
+          in: path
+          description: The ID of a pool to be removed
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Pool removed from activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationKeyDTO'
+        400:
+          description: Invalid inputs, pool could not be removed from activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, pool could not be removed from activation key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /activation_keys/{activation_key_id}/product/{product_id}:
+    post:
+      description: Adds an Product ID to an Activation Key
+      tags:
+        - Activation Key
+      operationId: addProductIdToKey
+      security: []
+      parameters:
+        - in: path
+          name: activation_key_id
+          description: ID of the activation key
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: product_id
+          description: ID of the product
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Product ID added to an activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationKeyDTO'
+        400:
+          description: Invalid inputs, product ID could not be added to activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, product ID could not be added to activation key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes a Product ID from an Activation Key
+      tags:
+        - Activation Key
+      operationId: removeProductIdFromKey
+      security: []
+      parameters:
+        - name: activation_key_id
+          in: path
+          description: The ID of the activation key
+          required: true
+          schema:
+            type: string
+        - name: product_id
+          in: path
+          description: The ID of the product
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Product ID removed from activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationKeyDTO'
+        400:
+          description: Invalid inputs, product ID could not remove from activation key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, product ID could not remove from activation key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers/{consumer_uuid}/guestids:
     get:
       description: Retrieves the list of a Consumer's Guests
