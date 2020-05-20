@@ -996,6 +996,28 @@ describe 'Hypervisor Resource', :type => :virt do
     result['created'][0]['uuid'].should == test_host['uuid']
   end
 
+  it 'should merge consumer that does not specify owner key into hypervisor with the same uuid' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    virtwho = create_virtwho_client(user)
+    host_hyp_id = "test-uuid"
+    guests = ['g1', 'g2']
+    hostguestmapping = get_host_guest_mapping(host_hyp_id, guests)
+    result = virtwho.hypervisor_check_in(owner['key'], hostguestmapping)
+    result.should_not be_nil
+
+    # NOTE: we don't specify owner key during registration so that candlepin will have to resolve the owner
+    # based on the user principal:
+    test_host = user.register("test-host", :system, nil,
+      {"dmi.system.uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, nil)
+
+    @cp.list_consumers({:owner=>owner['key']}).length.should == 2
+    test_host = @cp.get_consumer(test_host['uuid'])
+    test_host['type']['label'].should == 'hypervisor'
+    result['created'][0]['uuid'].should == test_host['uuid']
+  end
+
   it 'should merge consumer into hypervisor with the same uuid - async' do
     owner = create_owner random_string('owner')
     user = user_client(owner, random_string('user'))
