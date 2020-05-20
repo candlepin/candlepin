@@ -111,13 +111,14 @@ public class ActivationKeyResource {
      */
     protected ActivationKey fetchActivationKey(String keyId) {
         if (keyId == null || keyId.isEmpty()) {
-            throw new BadRequestException(i18n.tr("activation key ID is null or empty"));
+            throw new BadRequestException(i18n.tr("Activation key ID is null or empty"));
         }
 
         ActivationKey key = this.activationKeyCurator.secureGet(keyId);
 
         if (key == null) {
-            throw new BadRequestException(i18n.tr("ActivationKey with id {0} could not be found.", keyId));
+            throw new BadRequestException(i18n.tr("Activation key with ID \"{0}\" could not be found.",
+                keyId));
         }
 
         return key;
