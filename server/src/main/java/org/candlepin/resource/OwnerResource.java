@@ -2091,7 +2091,10 @@ public class OwnerResource {
     @Path("{owner_key}/system_purpose")
     @Produces(MediaType.APPLICATION_JSON)
     public SystemPurposeAttributesDTO getSyspurpose(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        @PathParam("owner_key")
+        @Verify(value = Owner.class, subResource = SubResource.POOLS, require = Access.READ_ONLY)
+        String ownerKey) {
+
         Owner owner = findOwnerByKey(ownerKey);
         List<Product> products = ownerProductCurator.getProductsByOwner(owner).list();
 

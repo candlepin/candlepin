@@ -622,6 +622,30 @@ describe 'Owner Resource' do
     expect(res["systemPurposeAttributes"]["support_level"]).to include("mysla")
   end
 
+  it 'user with owner pools permission can see system purpose of the owner products' do
+    test_owner = @cp.create_owner(random_string('test_owner'))
+
+    # Create user with the OwnerPoolsPermission
+    perms = [
+      {
+        :type => 'OWNER_POOLS',
+        :owner => {:key => test_owner['key']},
+        :access => 'ALL',
+      }
+    ]
+    username = "USER_WITH_OWNER_POOLS_PERM"
+    user_client = user_client_with_perms(username, 'password', perms)
+
+    # Make sure we see the role
+    roles = user_client.get_user_roles(username)
+    roles.size.should == 1
+
+    # The user should have access to the owner's system purpose attributes (expecting this will not return
+    # an error)
+    res = user_client.get_owner_syspurpose(test_owner['key'])
+    expect(res["owner"]["key"]).to eq(test_owner['key'])
+  end
+
   it 'lists system purpose attributes of its consumers' do
     owner1_key = random_string("owner1")
     owner1 = @cp.create_owner(owner1_key)
