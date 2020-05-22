@@ -45,11 +45,14 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.CloudProfileFacts;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -84,6 +87,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -685,5 +689,118 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         CertificateDTO updated = serials.get(0);
         assertThat(updated, instanceOf(CertificateDTO.class));
         assertNotEquals(original.getSerial().getId(), updated.getSerial().getId());
+    }
+
+    @Test
+    public void testCloudProfileUpdatedOnConsumerSysRoleUpdate() {
+        ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
+        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+
+        consumer.setRole("test-role");
+        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
+
+        assertNotNull(consumerCurator.get(consumer.getId()).getRHCloudProfileModified());
+
+        consumer.setRole("update-role");
+        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        Date updatedProfileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
+
+        assertNotNull(consumerCurator.get(consumer.getId()).getRHCloudProfileModified());
+        assertNotEquals(profileModified, updatedProfileModified);
+    }
+
+    @Test
+    public void testCloudProfileUpdatedOnInstalledProductsUpdate() {
+        ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
+        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+
+        Date beforeUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
+            .getRHCloudProfileModified();
+
+        Product prod = TestUtil.createProduct("Product One");
+        ConsumerInstalledProductDTO updatedInstalledProduct =
+            new ConsumerInstalledProductDTO(prod.getId(), prod.getName());
+        consumer.addInstalledProduct(updatedInstalledProduct);
+        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+
+        Date afterUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
+            .getRHCloudProfileModified();
+
+        assertNotNull(afterUpdateTimestamp);
+        assertNotEquals(beforeUpdateTimestamp, afterUpdateTimestamp);
+    }
+
+    @Test
+    public void testCloudProfileUpdatedOnHypervisorUpdate() {
+        ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
+        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+
+        Date beforeUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
+            .getRHCloudProfileModified();
+
+        HypervisorIdDTO updatedHypervisorId = new HypervisorIdDTO();
+        consumer.setHypervisorId(updatedHypervisorId);
+        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+
+        Date afterUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
+            .getRHCloudProfileModified();
+
+        assertNotNull(afterUpdateTimestamp);
+        assertNotEquals(beforeUpdateTimestamp, afterUpdateTimestamp);
+    }
+
+    @Test
+    public void testCloudProfileUpdatedOnSpecificConsumerFactsUpdate() {
+        ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
+        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        Date modifiedDateOnCreate = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
+
+        ConsumerDTO updatedConsumerDTO = new ConsumerDTO();
+        updatedConsumerDTO.setFact("FACT", "FACT_VALUE");
+        consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO, principal);
+        Date modifiedTSOnUnnecessaryFactUpdate = consumerCurator.get(consumer.getId())
+            .getRHCloudProfileModified();
+
+        assertEquals(modifiedDateOnCreate, modifiedTSOnUnnecessaryFactUpdate);
+
+        updatedConsumerDTO = new ConsumerDTO();
+        updatedConsumerDTO.setFact(CloudProfileFacts.CPU_CORES_PERSOCKET.getFact(), "1");
+        consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO, principal);
+        Date modifiedTSOnNecessaryFactUpdate = consumerCurator.get(consumer.getId())
+            .getRHCloudProfileModified();
+
+        assertNotNull(consumerCurator.get(consumer.getId()).getRHCloudProfileModified());
+        assertNotEquals(modifiedTSOnUnnecessaryFactUpdate, modifiedTSOnNecessaryFactUpdate);
+    }
+
+    @Test
+    public void testCloudProfileNotUpdatedOnConsumerUpdates() {
+        ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
+        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        Date profileCreated = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
+
+        consumer.setAutoheal(true);
+        consumer.setSystemPurposeStatus("test-status");
+        consumer.setReleaseVersion("test-release-version");
+        consumer.setFact("lscpu.model", "78");
+        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
+
+        assertEquals(profileCreated, profileModified);
+    }
+
+    @Test
+    public void testCloudProfileNotUpdatedOnNonCloudFactUpdates() {
+        ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
+        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        Date profileCreated = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
+
+        consumer.setFact("lscpu.model", "78");
+        consumer.setFact("test-dmi.bios.vendor", "vendorA");
+        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
+
+        assertEquals(profileCreated, profileModified);
     }
 }

@@ -261,6 +261,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JoinColumn(name = "owner_id", insertable = false, updatable = false)
     private Owner owner;
 
+    @Column(name = "rh_cloud_profile_modified")
+    private Date rhCloudProfileModified;
+
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
 
@@ -390,6 +393,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     public void setTypeId(String typeId) {
         this.typeId = typeId;
+        this.updateRHCloudProfileModified();
     }
 
     /**
@@ -402,8 +406,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         if (type == null || type.getId() == null) {
             throw new IllegalArgumentException("type is null or has not been persisted");
         }
-
         this.typeId = type.getId();
+        this.updateRHCloudProfileModified();
     }
 
     /**
@@ -473,6 +477,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @param factsIn facts about this consumer.
      */
     public void setFacts(Map<String, String> factsIn) {
+        if (this.checkForCloudProfileFacts(factsIn)) {
+            this.updateRHCloudProfileModified();
+        }
         facts = factsIn;
     }
 
@@ -519,9 +526,16 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @param value to set
      */
     public void setFact(String name, String value) {
-        if (facts == null) {
-            facts = new HashMap<>();
+        if (this.facts == null) {
+            this.facts = new HashMap<>();
         }
+
+        HashMap<String, String> fact = new HashMap<>();
+        fact.put(name, value);
+        if (this.checkForCloudProfileFacts(fact)) {
+            this.updateRHCloudProfileModified();
+        }
+
         this.facts.put(name, value);
     }
 
@@ -631,6 +645,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setInstalledProducts(Set<ConsumerInstalledProduct> installedProducts) {
         this.installedProducts = installedProducts;
+        this.updateRHCloudProfileModified();
     }
 
     public void addInstalledProduct(ConsumerInstalledProduct installed) {
@@ -640,6 +655,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
         installed.setConsumer(this);
         installedProducts.add(installed);
+        this.updateRHCloudProfileModified();
     }
 
     public Boolean isAutoheal() {
@@ -656,6 +672,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JsonProperty
     public void setGuestIds(List<GuestId> guests) {
         this.guestIds = guests;
+        this.updateRHCloudProfileModified();
     }
 
     /**
@@ -672,6 +689,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         }
         guestId.setConsumer(this);
         guestIds.add(guestId);
+        this.updateRHCloudProfileModified();
     }
 
     public String getEntitlementStatus() {
@@ -688,6 +706,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setServiceLevel(String level) {
         this.serviceLevel = level;
+        this.updateRHCloudProfileModified();
     }
 
     public String getRole() {
@@ -696,6 +715,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setRole(String role) {
         this.role = role;
+        this.updateRHCloudProfileModified();
     }
 
     public String getUsage() {
@@ -704,6 +724,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setUsage(String usage) {
         this.usage = usage;
+        this.updateRHCloudProfileModified();
     }
 
     public String getSystemPurposeStatus() {
@@ -837,6 +858,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
             hypervisorId.setConsumer(this);
         }
         this.hypervisorId = hypervisorId;
+        this.updateRHCloudProfileModified();
     }
 
     @XmlTransient
@@ -893,13 +915,60 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setAddOns(Set<String> addOns) {
         this.addOns = addOns;
+        this.updateRHCloudProfileModified();
     }
 
     public void addAddOn(String addOn) {
         this.addOns.add(addOn);
+        this.updateRHCloudProfileModified();
     }
 
     public void removeAddOn(String addOn) {
         this.addOns.remove(addOn);
+        this.updateRHCloudProfileModified();
+    }
+
+    public Date getRHCloudProfileModified() {
+        return this.rhCloudProfileModified;
+    }
+
+    public void setRHCloudProfileModified(Date rhCloudProfileModified) {
+        this.rhCloudProfileModified = rhCloudProfileModified;
+    }
+
+    public void updateRHCloudProfileModified() {
+        this.rhCloudProfileModified = new Date();
+    }
+
+    /**
+     * Check if the consumers facts have changed and contains the cloud profile facts.
+     * It returns true if incoming facts are cloud profile facts
+     *
+     * @param incomingFacts incoming facts
+     * @return a boolean
+     */
+    public boolean checkForCloudProfileFacts(Map<String, String> incomingFacts) {
+
+        if (incomingFacts == null) {
+            return false;
+        }
+
+        if (this.facts != null && this.facts.equals(incomingFacts)) {
+            return false;
+        }
+
+        for (CloudProfileFacts profileFact : CloudProfileFacts.values()) {
+
+            if (incomingFacts.containsKey(profileFact.getFact())) {
+
+                if (this.facts == null ||
+                    !this.facts.containsKey(profileFact.getFact()) ||
+                    !this.facts.get(profileFact.getFact()).equals(incomingFacts.get(profileFact.getFact()))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

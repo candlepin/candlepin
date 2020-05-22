@@ -147,4 +147,5 @@
     <include file="db/changelog/20190919132617-create-product-branding-join-table.xml"/>
     <include file="db/changelog/20190927153020-index-facts-element.xml"/>
     <include file="db/changelog/20191009160315-remove-duplicate-indexes.xml"/>
+    <include file="db/changelog/20200430172317-add-column-rh-cloud-profile-modified.xml"/>
 </databaseChangeLog>

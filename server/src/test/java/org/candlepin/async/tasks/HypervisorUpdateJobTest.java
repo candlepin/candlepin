@@ -16,6 +16,7 @@ package org.candlepin.async.tasks;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -65,6 +66,7 @@ import org.mockito.Mockito;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.Date;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
@@ -425,4 +427,116 @@ public class HypervisorUpdateJobTest {
             .findFirst()
             .orElse(null);
     }
+
+    @Test
+    public void testCloudProfileUpdatedOnHypervisorIdIsUpdated() throws JobExecutionException {
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
+        Consumer hypervisor = new Consumer();
+        hypervisor.ensureUUID();
+        hypervisor.setName("hyper-name");
+        hypervisor.setOwner(owner);
+        hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
+        hypervisor.setId("the-id");
+        String hypervisorId = "existing_hypervisor_id";
+        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
+            any(String.class))).thenReturn(hypervisor);
+        when(config.getBoolean(eq(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING))).thenReturn(true);
+
+        hypervisorJson =
+            "{\"hypervisors\":" +
+                "[{" +
+                "\"name\" : \"hypervisor_999\"," +
+                "\"hypervisorId\" : {\"hypervisorId\":\"expected_hypervisor_id\"}," +
+                "\"facts\" : {\"dmi.system.uuid\" : \"myUuid\"}" +
+                "}]}";
+
+        JobConfig config = createJobConfig(null);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
+            translator, hypervisorUpdateAction, i18n, objectMapper);
+        job.execute(ctx);
+
+        ArgumentCaptor<Consumer> updateCaptor = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerCurator, times(1)).update(updateCaptor.capture());
+        Consumer updated = updateCaptor.getValue();
+
+        assertNotNull(updated.getRHCloudProfileModified());
+    }
+
+    @Test
+    public void testCloudProfileUpdatedOnGuestIdIsUpdated() throws Exception {
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
+
+        hypervisorJson =
+            "{\"hypervisors\":" +
+                "[{" +
+                "\"hypervisorId\" : {\"hypervisorId\" : \"hypervisor_999\"}," +
+                "\"name\" : \"hypervisor_999\"," +
+                "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}, {\"guestId\" : \"\"}]" +
+                "}]}";
+
+        JobConfig config = createJobConfig(null);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
+
+        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
+            any(String.class))).thenReturn(new Consumer());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
+            translator, hypervisorUpdateAction, i18n, objectMapper);
+        job.execute(ctx);
+
+        ArgumentCaptor<Consumer> updateCaptor = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerCurator, times(1)).create(updateCaptor.capture());
+        Consumer updated = updateCaptor.getValue();
+
+        assertNotNull(updated.getRHCloudProfileModified());
+    }
+
+    @Test
+    public void testCloudProfileNotUpdatedOnNonCloudFactChange() throws JobExecutionException {
+        when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
+        when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
+
+        Consumer hypervisor = new Consumer();
+        hypervisor.ensureUUID();
+        hypervisor.setName("hypervisor_name");
+        hypervisor.setOwner(owner);
+        String hypervisorId = "uuid_999";
+        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        Date currentDate = new Date();
+        hypervisor.setRHCloudProfileModified(currentDate);
+        hypervisor.setType(consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true));
+
+        when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
+            nullable(String.class))).thenReturn(hypervisor);
+
+        hypervisorJson =
+            "{\"hypervisors\":" +
+                "[{" +
+                "\"name\" : \"hypervisor_999\"," +
+                "\"hypervisorId\" : {\"hypervisorId\":\"uuid_999\"}," +
+                "\"facts\" : {\"fact\" : \"fact-value\"}" +
+                "}]}";
+
+        JobConfig config = createJobConfig(null);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
+
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
+            translator, hypervisorUpdateAction, i18n, objectMapper);
+        job.execute(ctx);
+
+        ArgumentCaptor<Consumer> updateCaptor = ArgumentCaptor.forClass(Consumer.class);
+        verify(consumerCurator, times(1)).update(updateCaptor.capture());
+        Consumer updated = updateCaptor.getValue();
+
+        assertEquals(currentDate, updated.getRHCloudProfileModified());
+    }
+
 }
