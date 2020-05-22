@@ -793,6 +793,17 @@ describe 'Owner Resource Pool Filter Tests' do
     expect(poolIds).to include(pools[1].id)
   end
 
+  it "lets owners filter pools by activation_key" do
+    activation_key = @cp.create_activation_key(@owner['key'], random_string('test_key'))
+
+    @cp.add_pool_to_key(activation_key['id'], @pools[0].id)
+    @cp.add_pool_to_key(activation_key['id'], @pools[1].id)
+
+    # ignores the pools already with the activation key
+    pools = @cp.list_owner_pools(@owner['key'],{ :activation_key => activation_key['name']})
+    pools.length.should == 1
+  end
+
 end
 
 describe 'Owner Resource Consumer Fact Filter Tests' do
