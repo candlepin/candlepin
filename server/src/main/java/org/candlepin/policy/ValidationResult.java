@@ -138,7 +138,7 @@ public class ValidationResult {
      * @return true if validation is successful, false otherwise.
      */
     public boolean isSuccessful() {
-        return !hasErrors();
+        return !hasErrors() && !hasErrorKeys();
     }
 
 }
