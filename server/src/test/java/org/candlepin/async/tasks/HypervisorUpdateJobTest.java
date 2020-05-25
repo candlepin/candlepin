@@ -376,7 +376,7 @@ public class HypervisorUpdateJobTest {
             translator, hypervisorUpdateAction, i18n, objectMapper);
         job.execute(ctx);
         verify(consumerResource, never()).createConsumerFromDTO(any(ConsumerDTO.class),
-            any(ConsumerType.class), any(Principal.class), anyString(), anyString(), anyString(),
+            any(ConsumerType.class), any(Principal.class), anyString(), any(Owner.class), anyString(),
             eq(false));
     }
 

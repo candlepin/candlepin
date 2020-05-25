@@ -740,19 +740,20 @@ public class ConsumerResource {
         @QueryParam("identity_cert_creation") @DefaultValue("true") boolean identityCertCreation)
         throws BadRequestException {
 
+        // Resolve or create owner if needed
+        Owner owner = setupOwner(principal, ownerKey);
+
         // fix for duplicate hypervisor/consumer problem
         Consumer consumer = null;
-        if (ownerKey != null && config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
+        if (config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
             dto.getFact(Consumer.Facts.SYSTEM_UUID) != null &&
             !"true".equalsIgnoreCase(dto.getFact("virt.is_guest"))) {
-            Owner owner = ownerCurator.getByKey(ownerKey);
-            if (owner != null) {
-                consumer = consumerCurator.getHypervisor(dto.getFact(Consumer.Facts.SYSTEM_UUID), owner);
-                if (consumer != null) {
-                    consumer.setIdCert(generateIdCert(consumer, false));
-                    this.updateConsumer(consumer.getUuid(), dto, principal);
-                    return translator.translate(consumer, ConsumerDTO.class);
-                }
+
+            consumer = consumerCurator.getHypervisor(dto.getFact(Consumer.Facts.SYSTEM_UUID), owner);
+            if (consumer != null) {
+                consumer.setIdCert(generateIdCert(consumer, false));
+                this.updateConsumer(consumer.getUuid(), dto, principal);
+                return translator.translate(consumer, ConsumerDTO.class);
             }
         }
 
@@ -769,14 +770,14 @@ public class ConsumerResource {
                 ctype,
                 principal,
                 userName,
-                ownerKey,
+                owner,
                 activationKeys,
                 identityCertCreation),
             ConsumerDTO.class);
     }
 
     public Consumer createConsumerFromDTO(ConsumerDTO consumer, ConsumerType type, Principal principal,
-        String userName, String ownerKey, String activationKeys, boolean identityCertCreation)
+        String userName, Owner owner, String activationKeys, boolean identityCertCreation)
         throws BadRequestException {
 
         // API:registerConsumer
@@ -787,9 +788,8 @@ public class ConsumerResource {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
 
-        validateOnKeyStrings(keyStrings, ownerKey, userName);
+        validateOnKeyStrings(keyStrings, owner.getKey(), userName);
 
-        Owner owner = setupOwner(principal, ownerKey);
         // Raise an exception if none of the keys specified exist for this owner.
         List<ActivationKey> keys = checkActivationKeys(principal, owner, keyStrings);
 
@@ -1135,6 +1135,13 @@ public class ConsumerResource {
         }
     }
 
+    /*
+     * Resolves the owner based on the key, creating one if needed.
+     * If no owner key was specified, try to resolve the owner based on the user/principal.
+     *
+     * Throws exception if the owner does not exist, or the user has more or less than 1 owner, or
+     * if the user does not have permission to register on this owner.
+     */
     private Owner setupOwner(Principal principal, String ownerKey) {
         // If no owner was specified, try to assume based on which owners the
         // principal

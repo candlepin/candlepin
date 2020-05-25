@@ -396,7 +396,7 @@ public class HypervisorResource {
             this.hypervisorType,
             principal,
             null,
-            owner.getKey(),
+            owner,
             null,
             false);
     }
