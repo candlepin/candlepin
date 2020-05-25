@@ -46,8 +46,8 @@ class VirtWhoReportGenerator(AbstractVirtWhoReportGenerator):
 class AsyncVirtWhoReportGenerator(AbstractVirtWhoReportGenerator):
 
     def gen_hypervisor(self, num_guests, min_guests=0, max_guests=None):
-        return {"hypervisorId": {"hypervisorId": str(uuid.uuid4())},
-                "guestIds": [self.gen_guest() for x in range(0, num_guests)]}
+        return {"uuid": str(uuid.uuid4()),
+                "guests": [self.gen_guest() for x in range(0, num_guests)]}
 
     def _generate(self):
         report = {'hypervisors': [self.gen_hypervisor(self.guests) for x in
