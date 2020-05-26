@@ -54,7 +54,7 @@ public class JaxRsExceptionResponseBuilder {
      * Regex to extract the errored values from the JAX-RS Exception.
      */
     private static final Pattern ILLEGAL_VAL_REGEX = Pattern
-        .compile(":?value\\sis\\s'([\\w\\s]+)(:?'\\sfor)");
+        .compile(":?value\\sis\\s'([\\w\\s-:+]+)(:?'\\sfor)");
 
     /**
      * Service for i18n.

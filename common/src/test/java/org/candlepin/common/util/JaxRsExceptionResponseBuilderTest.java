@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
 
@@ -89,5 +90,19 @@ public class JaxRsExceptionResponseBuilderTest {
     public void badMessageNotHandleable() {
         String foo = "javax.ws.rs.SomeThing(\"paramName\") value is strVal for";
         assertFalse(exceptionBuilder.canHandle(new RuntimeException(foo)));
+    }
+
+    @Test
+    public void canHandleIncorrectDateTimeFormats() {
+        NotFoundException ex = new NotFoundException("Unable to extract parameter from http request: " +
+            "javax.ws.rs.QueryParam(\"param\") value is '2019-01-16T01:02:03-0400' for public",
+            new RuntimeException("Invalid Date"));
+
+        assertTrue(exceptionBuilder.canHandle(ex));
+
+        Response resp = exceptionBuilder.getResponse(ex);
+        ExceptionMessage e =  (ExceptionMessage) resp.getEntity();
+
+        assertTrue(e.getDisplayMessage().contains("is not a valid value for"));
     }
 }
