@@ -1627,6 +1627,246 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /owners/{owner_key}/content:
+    get:
+      description: Retrieves list of owner contents
+      tags:
+        - Owner Content
+      operationId: listOwnerContent
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner whose content has to be retrieved
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Content successfully listed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentDTO'
+        404:
+          description: Owner key is null, empty or could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null, empty or could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: Creates a content for owner
+      tags:
+        - Owner Content
+      operationId: createContent
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Content to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentDTO'
+      responses:
+        200:
+          description: Created a content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentDTO'
+        400:
+          description: Invalid inputs, Content cannot be created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, Content cannot be created
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/content/{content_id}:
+    get:
+      description: Retrieves a single content
+      tags:
+        - Owner Content
+      operationId: getOwnerContent
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner whose content has to be retrieved
+          required: true
+          schema:
+            type: string
+        - name: content_id
+          in: path
+          description: The id of the content to be retrieved
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentDTO'
+        400:
+          description: Owner Key or ID of the Content is null, empty or could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                  displayMessage: Owner Key or ID of the Content is null, empty or could not be found
+                  requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Updates a Content
+      tags:
+        - Content
+      operationId: updateContent
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner to be updated
+          required: true
+          schema:
+            type: string
+        - name: content_id
+          in: path
+          description: The ID of the Content to be updated
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Content to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentDTO'
+      responses:
+        200:
+          description: Updated Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentDTO'
+        400:
+          description: Invalid inputs, could not update Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, could not update Content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Deletes a Content
+      tags:
+        - Owner Content
+      operationId: remove
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner whose content has to be deleted
+          required: true
+          schema:
+            type: string
+        - name: content_id
+          in: path
+          description: The ID of the content to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: A successful operation
+        400:
+          description: Invalid inputs, content could not be deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, content could not be deleted
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/content/batch:
+    post:
+      description: Creates Contents in bulk
+      tags:
+        - Owner Content
+      operationId: createBatchContent
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: key of the owner whose content has to be created
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: List of contents to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentDTO'
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: Contents created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentDTO'
+        400:
+          description: Invalid inputs, could not create content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, could not create content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /roles:
     get:
       description: Retrieves a list of Roles
