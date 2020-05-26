@@ -36,13 +36,6 @@ import org.candlepin.service.UniqueIdGenerator;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -51,26 +44,13 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
-
-
 /**
  * OwnerContentResource
  *
  * Manage the content that exists in an organization.
  */
-@Path("/owners/{owner_key}/content")
-@Api(value = "owners", authorizations = { @Authorization("basic") })
-public class OwnerContentResource {
+
+public class OwnerContentResource implements OwnersApi {
     private static Logger log = LoggerFactory.getLogger(OwnerContentResource.class);
 
     private ContentCurator contentCurator;
@@ -156,12 +136,9 @@ public class OwnerContentResource {
         return content;
     }
 
-    @ApiOperation(notes = "Retrieves list of Content", value = "list", response = ContentDTO.class,
-        responseContainer = "list")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<ContentDTO> listContent(
-        @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
+    @Override
+    public CandlepinQuery<ContentDTO> listOwnerContent(
+        @Verify(Owner.class) String ownerKey) {
 
         final Owner owner = this.getOwnerByKey(ownerKey);
 
@@ -169,14 +146,9 @@ public class OwnerContentResource {
         return this.translator.translateQuery(query, ContentDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves a single Content", value = "getContent")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public ContentDTO getContent(
-        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
-        @PathParam("content_id") String contentId) {
+    @Override
+    public ContentDTO getOwnerContent(
+        @Verify(Owner.class) String ownerKey, String contentId) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content content = this.fetchContent(owner, contentId);
@@ -196,6 +168,7 @@ public class OwnerContentResource {
      * @return
      *  the newly created and/or merged Content object.
      */
+
     private Content createContentImpl(Owner owner, ContentDTO content) {
         // TODO: check if arches have changed ??
 
@@ -225,12 +198,8 @@ public class OwnerContentResource {
         return entity;
     }
 
-    @ApiOperation(notes = "Creates a Content", value = "createContent")
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public ContentDTO createContent(@PathParam("owner_key") String ownerKey,
-        @ApiParam(name = "content", required = true) ContentDTO content) {
+    @Override
+    public ContentDTO createContent(String ownerKey, ContentDTO content) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content entity = this.createContentImpl(owner, content);
@@ -240,14 +209,9 @@ public class OwnerContentResource {
         return this.translator.translate(entity, ContentDTO.class);
     }
 
-    @ApiOperation(notes = "Creates Contents in bulk", value = "createBatchContent")
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/batch")
+    @Override
     @Transactional
-    public Collection<ContentDTO> createBatchContent(@PathParam("owner_key") String ownerKey,
-        @ApiParam(name = "contents", required = true) List<ContentDTO> contents) {
+    public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
 
         Collection<ContentDTO> result = new LinkedList<>();
         Owner owner = this.getOwnerByKey(ownerKey);
@@ -262,14 +226,8 @@ public class OwnerContentResource {
         return result;
     }
 
-    @ApiOperation(notes = "Updates a Content", value = "updateContent")
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public ContentDTO updateContent(@PathParam("owner_key") String ownerKey,
-        @PathParam("content_id") String contentId,
-        @ApiParam(name = "content", required = true) ContentDTO content) {
+    @Override
+    public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO content) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content existing  = this.fetchContent(owner, contentId);
@@ -284,13 +242,8 @@ public class OwnerContentResource {
         return this.translator.translate(existing, ContentDTO.class);
     }
 
-    @ApiOperation(notes = "Deletes a Content", value = "remove")
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{content_id}")
-    public void remove(@PathParam("owner_key") String ownerKey,
-        @PathParam("content_id") String contentId) {
-
+    @Override
+    public void remove(String ownerKey, String contentId) {
         Owner owner = this.getOwnerByKey(ownerKey);
         Content content = this.fetchContent(owner, contentId);
 
