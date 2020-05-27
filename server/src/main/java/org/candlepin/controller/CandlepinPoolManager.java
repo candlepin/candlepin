@@ -2255,7 +2255,6 @@ public class CandlepinPoolManager implements PoolManager {
             Set<Entitlement> entitlements = new HashSet<>();
 
             if (!entitlementIds.isEmpty()) {
-                log.debug("IN BLOCK SIZE: {}", this.entitlementCurator.getInBlockSize());
                 Iterable<List<String>> blocks =
                     Iterables.partition(entitlementIds, this.entitlementCurator.getInBlockSize());
 
@@ -2340,6 +2339,7 @@ public class CandlepinPoolManager implements PoolManager {
                 this.poolCurator.updateAll(poolsToSave, false, false);
                 this.consumerCurator.updateAll(consumerStackedEnts.keySet(), false, false);
                 this.consumerCurator.flush();
+
                 log.info("Entitlement counts successfully updated for {} pools and {} consumers",
                     poolsToSave.size(), consumerStackedEnts.size());
 
