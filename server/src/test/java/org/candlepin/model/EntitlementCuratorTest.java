@@ -1289,4 +1289,41 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertTrue(poolIds.contains(distributorDependentEnt.getId()));
     }
 
+    @Test
+    public void testBatchDeleteEntitlementsWithLargeDataSet() {
+        // We're only expecting 10 or so total deletions, but the parameters we provide should not
+        // exceed the limit in a single query. At the time of writing, a signed, two-byte value
+        // seems to be used for parameter definitions, so we'll use 32k as our in-test minimum, but
+        // use the larger of that and actual value of getParameterLimit as our base parameter limit
+
+        int defaultLimit = 32000;
+        int configLimit = this.entitlementCurator.getQueryParameterLimit();
+        int testLimit = Math.max(defaultLimit, configLimit) * 2;
+
+        int entitlementCount = 10;
+
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+        Product product = this.createProduct(owner);
+        Pool pool = this.createPool(owner, product);
+
+        List<String> entIds = new LinkedList<>();
+
+        // Pad the entIds collection with a ton of extra IDs so we can exceed the known parameter
+        // limits
+        for (int i = 0; i < testLimit; ++i) {
+            entIds.add("test_id-" + i);
+        }
+
+        // Add our actual IDs to the end so we verify the query isn't just being truncated
+        for (int i = 0; i < entitlementCount; ++i) {
+            Entitlement entitlement = this.createEntitlement(owner, consumer, pool);
+            entIds.add(entitlement.getId());
+        }
+
+        int deleted = this.entitlementCurator.batchDeleteByIds(entIds);
+
+        assertEquals(entitlementCount, deleted);
+    }
+
 }
