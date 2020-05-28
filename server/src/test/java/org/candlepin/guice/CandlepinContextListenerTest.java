@@ -17,6 +17,7 @@ package org.candlepin.guice;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.eq;
@@ -51,6 +52,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.io.File;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -90,6 +92,8 @@ public class CandlepinContextListenerTest {
             new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
         when(config.strippedSubset(eq(ConfigurationPrefixes.LOGGING_CONFIG_PREFIX)))
             .thenReturn(new MapConfiguration());
+        when(config.getString(ConfigProperties.CRL_FILE_PATH))
+            .thenReturn("/tmp/tmp.crl");
         hqlistener = mock(ActiveMQContextListener.class);
         buspublisher = mock(AMQPBusPublisher.class);
         executorService = mock(ScheduledExecutorService.class);
@@ -258,6 +262,20 @@ public class CandlepinContextListenerTest {
     @Test
     public void exitStageLeft() {
         assertEquals(Stage.PRODUCTION, listener.getStage(ctx));
+    }
+
+    @Test
+    void initializesCrlFile() {
+        prepareForInitialization();
+        when(config.getString(ConfigProperties.CRL_FILE_PATH))
+            .thenReturn("/tmp/crlfile.crl");
+        File crlFile = new File(config.getString(ConfigProperties.CRL_FILE_PATH));
+
+        assertFalse(crlFile.exists());
+
+        listener.contextInitialized(evt);
+
+        assertTrue(crlFile.exists());
     }
 
     private void prepareForInitialization() {
