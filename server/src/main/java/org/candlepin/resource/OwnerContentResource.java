@@ -19,18 +19,14 @@ import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.OwnerManager;
-import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
-import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.ProductCurator;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
@@ -53,38 +49,29 @@ import java.util.List;
 public class OwnerContentResource implements OwnersApi {
     private static Logger log = LoggerFactory.getLogger(OwnerContentResource.class);
 
-    private ContentCurator contentCurator;
     private ContentManager contentManager;
-    private EnvironmentContentCurator envContentCurator;
     private I18n i18n;
     private OwnerCurator ownerCurator;
     private OwnerContentCurator ownerContentCurator;
-    private PoolManager poolManager;
-    private ProductCurator productCurator;
     private UniqueIdGenerator idGenerator;
-    private ProductCachedSerializationModule productCachedModule;
     private OwnerManager ownerManager;
     private ModelTranslator translator;
+    private DTOValidator validator;
 
     @Inject
-    public OwnerContentResource(ContentCurator contentCurator, ContentManager contentManager,
-        EnvironmentContentCurator envContentCurator, I18n i18n, OwnerCurator ownerCurator,
-        OwnerContentCurator ownerContentCurator, PoolManager poolManager, ProductCurator productCurator,
-        UniqueIdGenerator idGenerator,  ProductCachedSerializationModule productCachedModule,
-        OwnerManager ownerManager, ModelTranslator translator) {
+    public OwnerContentResource(ContentManager contentManager, I18n i18n, OwnerCurator ownerCurator,
+        OwnerContentCurator ownerContentCurator, UniqueIdGenerator idGenerator,
+        OwnerManager ownerManager,
+        ModelTranslator translator, DTOValidator validator) {
 
-        this.contentCurator = contentCurator;
         this.contentManager = contentManager;
-        this.envContentCurator = envContentCurator;
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
         this.ownerContentCurator = ownerContentCurator;
-        this.poolManager = poolManager;
-        this.productCurator = productCurator;
         this.idGenerator = idGenerator;
-        this.productCachedModule = productCachedModule;
         this.ownerManager = ownerManager;
         this.translator = translator;
+        this.validator = validator;
     }
 
     /**
@@ -201,6 +188,9 @@ public class OwnerContentResource implements OwnersApi {
 
     @Override
     public ContentDTO createContent(String ownerKey, ContentDTO content) {
+
+        this.validator.validateConstraints(content);
+        this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content entity = this.createContentImpl(owner, content);
