@@ -1679,7 +1679,7 @@ paths:
           schema:
             type: string
       requestBody:
-        description: Content to be updated
+        description: Content to be created
         required: true
         content:
           application/json:
@@ -1771,13 +1771,13 @@ paths:
               $ref: '#/components/schemas/ContentDTO'
       responses:
         200:
-          description: Updated Content
+          description: Updated content
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContentDTO'
         400:
-          description: Invalid inputs, could not update Content
+          description: Invalid inputs, could not update content
           content:
             application/json:
               schema:
