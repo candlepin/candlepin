@@ -213,6 +213,11 @@ public class OwnerContentResource implements OwnersApi {
     @Transactional
     public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
 
+        for (ContentDTO content : contents) {
+            this.validator.validateConstraints(content);
+            this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
+        }
+
         Collection<ContentDTO> result = new LinkedList<>();
         Owner owner = this.getOwnerByKey(ownerKey);
 
@@ -228,6 +233,9 @@ public class OwnerContentResource implements OwnersApi {
 
     @Override
     public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO content) {
+
+        this.validator.validateConstraints(content);
+        this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
 
         Owner owner = this.getOwnerByKey(ownerKey);
         Content existing  = this.fetchContent(owner, contentId);
