@@ -20,7 +20,6 @@ import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
@@ -59,19 +58,18 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setup() {
-        this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
-        this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
-        this.poolManager, this.productCurator, new DefaultUniqueIdGenerator(),
-        new ProductCachedSerializationModule(productCurator), ownerManager, this.modelTranslator);
+        this.ownerContentResource = new OwnerContentResource(this.contentManager, this.i18n,
+        this.ownerCurator, this.ownerContentCurator, new DefaultUniqueIdGenerator(),
+        ownerManager, this.modelTranslator, this.validator);
     }
 
     @Test
-    public void listContent() throws Exception {
+    public void listOwnerContent() throws Exception {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
         ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
 
-        CandlepinQuery<ContentDTO> response = this.ownerContentResource.listContent(owner.getKey());
+        CandlepinQuery<ContentDTO> response = this.ownerContentResource.listOwnerContent(owner.getKey());
 
         assertNotNull(response);
 
@@ -82,10 +80,10 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void listContentNoContent() throws Exception {
+    public void listOwnerContentNoContent() throws Exception {
         Owner owner = this.createOwner("test_owner");
 
-        CandlepinQuery<ContentDTO> response = this.ownerContentResource.listContent(owner.getKey());
+        CandlepinQuery<ContentDTO> response = this.ownerContentResource.listOwnerContent(owner.getKey());
 
         assertNotNull(response);
 
@@ -95,22 +93,22 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void getContent() {
+    public void getOwnerContent() {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
 
-        ContentDTO output = this.ownerContentResource.getContent(owner.getKey(), content.getId());
+        ContentDTO output = this.ownerContentResource.getOwnerContent(owner.getKey(), content.getId());
 
         assertNotNull(output);
         assertEquals(content.getId(), output.getId());
     }
 
     @Test
-    public void getContentNotFound() {
+    public void getOwnerContentNotFound() {
         Owner owner = this.createOwner("test_owner");
 
         assertThrows(NotFoundException.class, () ->
-            this.ownerContentResource.getContent(owner.getKey(), "test_content")
+            this.ownerContentResource.getOwnerContent(owner.getKey(), "test_content")
         );
     }
 
