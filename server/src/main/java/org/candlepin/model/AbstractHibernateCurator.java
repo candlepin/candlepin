@@ -1282,7 +1282,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *
      * @return
      *  the number of rows deleted as a result of this query
+     *
+     * @deprecated
+     *  This method does not check the parameter limit when building queries, and will fail when
+     *  provided criteria that exceeds it. As such, this method should be avoided in favor of
+     *  a query written specifically for the desired task.
      */
+    @Deprecated
     protected int bulkSQLDelete(String table, Map<String, Object> criteria) {
         StringBuilder builder = new StringBuilder("DELETE FROM ").append(table);
 
