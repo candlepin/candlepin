@@ -796,11 +796,25 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * preferably by calling {@link #unlinkEntitlements} first.
      *
      * @param entitlementIds The collection of ids of the entitlements to be deleted.
+     *
+     * @return
+     *  the number of entitlements deleted as a result of this operation
      */
-    public void batchDeleteByIds(Collection<String> entitlementIds) {
-        Map<String, Object> criteria = new HashMap<>();
-        criteria.put("id", entitlementIds);
-        this.bulkSQLDelete(Entitlement.DB_TABLE, criteria);
+    public int batchDeleteByIds(Collection<String> entitlementIds) {
+        int deleted = 0;
+
+        if (entitlementIds != null) {
+            String jpql = "DELETE FROM Entitlement e WHERE e.id IN (:eids)";
+            Query query = this.getEntityManager().createQuery(jpql);
+
+            int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
+            for (List<String> block : Iterables.partition(entitlementIds, blockSize)) {
+                deleted += query.setParameter("eids", block)
+                    .executeUpdate();
+            }
+        }
+
+        return deleted;
     }
 
     /**
