@@ -61,7 +61,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
             this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
             this.poolManager, this.productCurator, new DefaultUniqueIdGenerator(), this.contentAccessManager,
-            this.modelTranslator);
+            this.modelTranslator, this.validator);
     }
 
     @Test

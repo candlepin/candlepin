@@ -31,6 +31,7 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.resource.util.InfoAdapter;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UniqueIdGenerator;
 
 import com.google.inject.Inject;
@@ -64,13 +65,14 @@ public class OwnerContentResource implements OwnersApi {
     private UniqueIdGenerator idGenerator;
     private ContentAccessManager contentAccessManager;
     private ModelTranslator translator;
+    private DTOValidator validator;
 
     @Inject
     public OwnerContentResource(ContentCurator contentCurator, ContentManager contentManager,
         EnvironmentContentCurator envContentCurator, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, PoolManager poolManager, ProductCurator productCurator,
         UniqueIdGenerator idGenerator, ContentAccessManager contentAccessManager,
-        ModelTranslator translator) {
+        ModelTranslator translator, DTOValidator validator) {
 
         this.contentCurator = contentCurator;
         this.contentManager = contentManager;
@@ -83,6 +85,7 @@ public class OwnerContentResource implements OwnersApi {
         this.idGenerator = idGenerator;
         this.contentAccessManager = contentAccessManager;
         this.translator = translator;
+        this.validator = validator;
     }
 
     /**

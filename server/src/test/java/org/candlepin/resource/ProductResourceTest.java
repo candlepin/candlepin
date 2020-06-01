@@ -16,12 +16,10 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -35,42 +33,31 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.v1.AttributeDTO;
-import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
-import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-
 
 
 /**
@@ -92,78 +79,16 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         this.jobManager = mock(JobManager.class);
 
-        doAnswer(new Answer<AsyncJobStatus>() {
-            @Override
-            public AsyncJobStatus answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                JobConfig jobConfig = (JobConfig) args[0];
+        doAnswer((Answer<AsyncJobStatus>) invocation -> {
+            Object[] args = invocation.getArguments();
+            JobConfig<?> jobConfig = (JobConfig<?>) args[0];
 
-                return new AsyncJobStatus()
-                    .setState(AsyncJobStatus.JobState.QUEUED)
-                    .setJobKey(jobConfig.getJobKey())
-                    .setName(jobConfig.getJobName())
-                    .setJobArguments(jobConfig.getJobArguments());
-            }
+            return new AsyncJobStatus()
+                .setState(AsyncJobStatus.JobState.QUEUED)
+                .setJobKey(jobConfig.getJobKey())
+                .setName(jobConfig.getJobName())
+                .setJobArguments(jobConfig.getJobArguments());
         }).when(this.jobManager).queueJob(any(JobConfig.class));
-    }
-
-    private ProductDTO buildTestProductDTO() {
-        ProductDTO dto = TestUtil.createProductDTO("test_product");
-
-        List<AttributeDTO> attributes = new ArrayList<>(dto.getAttributes());
-        attributes.add(createAttribute(Product.Attributes.VERSION, "1.0"));
-        attributes.add(createAttribute(Product.Attributes.VARIANT, "server"));
-        attributes.add(createAttribute(Product.Attributes.TYPE, "SVC"));
-        attributes.add(createAttribute(Product.Attributes.ARCHITECTURE, "ALL"));
-
-        dto.setAttributes(attributes);
-
-        return dto;
-    }
-
-    private AttributeDTO createAttribute(String name, String value) {
-        return new AttributeDTO()
-            .name(name)
-            .value(value);
-    }
-
-    @Test
-    public void testCreateProductResource() {
-        Owner owner = this.createOwner("Example-Corporation");
-        ProductDTO dto = this.buildTestProductDTO();
-
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), dto.getId()));
-
-        assertThrows(BadRequestException.class, () -> productResource.createProduct(dto));
-    }
-
-    @Test
-    public void testCreateProductWithContent() {
-        Owner owner = this.createOwner("Example-Corporation");
-        ProductDTO product = this.buildTestProductDTO();
-        ContentDTO content = TestUtil.createContentDTO();
-        addContent(product, content);
-
-        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), product.getId()));
-
-        assertThrows(BadRequestException.class, () -> productResource.createProduct(product));
-    }
-
-    @Test
-    public void testDeleteProductWithSubscriptions() {
-        ProductCurator pc = mock(ProductCurator.class);
-        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pc, null, null, config, i18n, this.modelTranslator,
-            this.jobManager);
-        Owner o = mock(Owner.class);
-        Product p = mock(Product.class);
-        // when(pc.getById(eq(o), eq("10"))).thenReturn(p);
-        Set<Subscription> subs = new HashSet<>();
-        Subscription s = mock(Subscription.class);
-        subs.add(s);
-        when(pc.productHasSubscriptions(eq(o), eq(p))).thenReturn(true);
-
-        assertThrows(BadRequestException.class, () -> pr.deleteProduct("10"));
     }
 
     @Test
@@ -226,11 +151,11 @@ public class ProductResourceTest extends DatabaseTestFixture {
         poolProd4.setProvidedProducts(Arrays.asList(prod4));
         poolProd5.setProvidedProducts(Arrays.asList(prod5));
 
-        Pool pool1 = this.poolCurator.create(TestUtil.createPool(owner1, poolProd1, 5));
-        Pool pool2 = this.poolCurator.create(TestUtil.createPool(owner2, poolProd2, 5));
-        Pool pool3 = this.poolCurator.create(TestUtil.createPool(owner2, poolProd3, 5));
-        Pool pool4 = this.poolCurator.create(TestUtil.createPool(owner3, poolProd4, 5));
-        Pool pool5 = this.poolCurator.create(TestUtil.createPool(owner3, poolProd5, 5));
+        this.poolCurator.create(TestUtil.createPool(owner1, poolProd1, 5));
+        this.poolCurator.create(TestUtil.createPool(owner2, poolProd2, 5));
+        this.poolCurator.create(TestUtil.createPool(owner2, poolProd3, 5));
+        this.poolCurator.create(TestUtil.createPool(owner3, poolProd4, 5));
+        this.poolCurator.create(TestUtil.createPool(owner3, poolProd5, 5));
 
         return Arrays.asList(owner1, owner2, owner3);
     }
@@ -245,18 +170,18 @@ public class ProductResourceTest extends DatabaseTestFixture {
         OwnerDTO ownerDTO2 = this.modelTranslator.translate(owner2, OwnerDTO.class);
         OwnerDTO ownerDTO3 = this.modelTranslator.translate(owner3, OwnerDTO.class);
 
-        List<OwnerDTO> ownersReturned = null;
+        List<OwnerDTO> ownersReturned;
 
-        ownersReturned = productResource.getProductOwners(Arrays.asList("p1")).list();
+        ownersReturned = productResource.getProductOwners(Collections.singletonList("p1")).list();
         assertEquals(Arrays.asList(ownerDTO1, ownerDTO2), ownersReturned);
 
         ownersReturned = productResource.getProductOwners(Arrays.asList("p1", "p2")).list();
         assertEquals(Arrays.asList(ownerDTO1, ownerDTO2, ownerDTO3), ownersReturned);
 
-        ownersReturned = productResource.getProductOwners(Arrays.asList("p3")).list();
-        assertEquals(Arrays.asList(ownerDTO3), ownersReturned);
+        ownersReturned = productResource.getProductOwners(Collections.singletonList("p3")).list();
+        assertEquals(Collections.singletonList(ownerDTO3), ownersReturned);
 
-        ownersReturned = productResource.getProductOwners(Arrays.asList("nope")).list();
+        ownersReturned = productResource.getProductOwners(Collections.singletonList("nope")).list();
         assertEquals(0, ownersReturned.size());
     }
 
@@ -276,7 +201,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testRefreshPoolsByProduct() throws JobException {
+    public void testRefreshPoolsByProduct() {
         Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
@@ -284,7 +209,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
             this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
         this.setupDBForOwnerProdTests();
 
-        List<AsyncJobStatusDTO> jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true)
+        List<AsyncJobStatusDTO> jobs = productResource
+            .refreshPoolsForProduct(Collections.singletonList("p1"), true)
             .collect(Collectors.toList());
 
         assertNotNull(jobs);
@@ -293,7 +219,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testRefreshPoolsByProductForMultipleProducts() throws JobException {
+    public void testRefreshPoolsByProductForMultipleProducts() {
         Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
@@ -311,7 +237,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testRefreshPoolsByProductWithoutLazyOffload() throws JobException {
+    public void testRefreshPoolsByProductWithoutLazyOffload() {
         Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
@@ -319,7 +245,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
             this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
         this.setupDBForOwnerProdTests();
 
-        List<AsyncJobStatusDTO> jobs = productResource.refreshPoolsForProduct(Arrays.asList("p3"), false)
+        List<AsyncJobStatusDTO> jobs = productResource
+            .refreshPoolsForProduct(Collections.singletonList("p3"), false)
             .collect(Collectors.toList());
 
         assertNotNull(jobs);
@@ -328,7 +255,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testRefreshPoolsByProductWithBadProductId() throws JobException {
+    public void testRefreshPoolsByProductWithBadProductId() {
         Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
@@ -336,7 +263,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
             this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
         this.setupDBForOwnerProdTests();
 
-        List<AsyncJobStatusDTO> jobs = productResource.refreshPoolsForProduct(Arrays.asList("nope"), false)
+        List<AsyncJobStatusDTO> jobs = productResource
+            .refreshPoolsForProduct(Collections.singletonList("nope"), false)
             .collect(Collectors.toList());
 
         assertNotNull(jobs);
@@ -371,7 +299,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         List<AsyncJobStatusDTO> jobs = null;
         try {
-            jobs = productResource.refreshPoolsForProduct(Arrays.asList("p1"), true)
+            jobs = productResource.refreshPoolsForProduct(Collections.singletonList("p1"), true)
                     .collect(Collectors.toList());
         }
         catch (Exception e) {
@@ -396,25 +324,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
         assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO2.getPreviousState());
         assertEquals(Integer.valueOf(0), statusDTO2.getAttempts());
         assertEquals(Integer.valueOf(1), statusDTO2.getMaxAttempts());
-    }
-
-    private void addContent(ProductDTO product, ContentDTO dto) {
-        if (dto == null || dto.getId() == null) {
-            throw new IllegalArgumentException("dto references incomplete content");
-        }
-
-        if (product.getProductContent() == null) {
-            product.setProductContent(new HashSet<>());
-        }
-
-        ProductContentDTO content = new ProductContentDTO();
-        content.setContent(dto);
-        content.setEnabled(true);
-
-        Set<ProductContentDTO> productContent = new HashSet<>(product.getProductContent());
-        productContent.add(content);
-
-        product.setProductContent(productContent);
     }
 
 }

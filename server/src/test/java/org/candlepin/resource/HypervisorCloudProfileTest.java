@@ -112,7 +112,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
             .singletonList("GUEST_B")));
 
         HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
-            hostGuestMap, principal, owner.getKey(), true);
+            owner.getKey(), hostGuestMap, true);
 
         List<HypervisorConsumerDTO> created = new ArrayList<>(result.getCreated());
 
@@ -123,7 +123,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
             .singletonList("GUEST_C")));
 
         result = hypervisorResource.hypervisorUpdate(
-            hostGuestMap, principal, owner.getKey(), true);
+            owner.getKey(), hostGuestMap, true);
 
         List<HypervisorConsumerDTO> updated = new ArrayList<>(result.getUpdated());
 
@@ -147,7 +147,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
         hostGuestMap.put(testConsumer.getName(), new ArrayList<>());
 
         HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
-            hostGuestMap, principal, owner.getKey(), true);
+            owner.getKey(), hostGuestMap, true);
 
         List<HypervisorConsumerDTO> updated = new ArrayList<>(result.getUpdated());
 
@@ -224,7 +224,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
             .singletonList("GUEST_B")));
 
         HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
-            hostGuestMap, principal, owner.getKey(), true);
+            owner.getKey(), hostGuestMap, true);
 
         List<HypervisorConsumerDTO> created = new ArrayList<>(result.getCreated());
         Date profileCreated = consumerCurator.findByUuid(created.get(0).getUuid())
@@ -234,7 +234,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
         assertNotNull(profileCreated);
 
         result = hypervisorResource.hypervisorUpdate(
-            hostGuestMap, principal, owner.getKey(), true);
+            owner.getKey(), hostGuestMap, true);
 
         List<HypervisorConsumerDTO> unChanged = new ArrayList<>(result.getUnchanged());
         Date profileModified = consumerCurator.findByUuid(unChanged.get(0).getUuid())

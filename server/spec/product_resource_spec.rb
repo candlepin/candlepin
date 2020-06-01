@@ -26,34 +26,6 @@ describe 'Product Resource' do
     end.should raise_exception(RestClient::ResourceNotFound)
   end
 
-  it 'throws exception on write operations' do
-    lambda do
-      @cp.post("/products", {})
-    end.should raise_exception(RestClient::BadRequest)
-
-    lambda do
-      @cp.put("/products/#{@product.id}", {}, {})
-    end.should raise_exception(RestClient::BadRequest)
-
-    lambda do
-      @cp.post("/products/#{@product.id}/batch_content", {}, {})
-    end.should raise_exception(RestClient::BadRequest)
-
-    lambda do
-      @cp.post("/products/#{@product.id}/content/contentid", {}, {})
-    end.should raise_exception(RestClient::BadRequest)
-
-    lambda do
-      @cp.delete("/products/#{@product.id}")
-    end.should raise_exception(RestClient::BadRequest)
-
-    # This may look like a read operation, but it generates the certificate if it doesn't exist;
-    # making this a write operation at times. Apparently it's okay if it's done by an admin
-    # lambda do
-    #   @cp.get("/products/#{@product.id}/certificate")
-    # end.should raise_exception(RestClient::BadRequest)
-  end
-
   def setupOrgProductsAndPools()
     owner1 = create_owner(random_string("owner-Px"))
     owner2 = create_owner(random_string("owner-Py"))
