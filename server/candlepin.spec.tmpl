@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.11
+Version: 3.1.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,31 @@ fi
 
 #raw
 %changelog
+* Mon Jun 01 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.12-1
+- 1840850: Fixed parameter overflow in bulk entitlement deletion
+  (crog@redhat.com)
+- 1834762: crl file candlepin-crl.crl is not found on the candlepin server -
+  Added a check to initialize the CRL file if it is missing during the
+  Candlepin startup (ojanus@redhat.com)
+- 1839246: Mariadb job_data cannot store more than 64K - Updated column type of
+  job_data to longtext (ojanus@redhat.com)
+- Update gen_fake_report for latest format (khowell@redhat.com)
+- 1836973 - Listing pools available for an activation_key lists pools already
+  in the key  - Fixed the isSuccesful() condition to add pool into filtered
+  pools  - Added a spec test to validate the activation key filter is working
+  (sonalidhome@gmail.com)
+- ENT-2316: Introduce Swatch Profile Timestamp  - Added
+  "rh_cloud_profile_modified" column in consumer  - Updated Consumer entity
+  mutators to set the current timestamp  - Added Enum for specific facts  -
+  Test suites added for the respective changes (sonalidhome@gmail.com)
+- 1834372: Adjust owner syspurpose user access (nmoumoul@redhat.com)
+- Corrected case in activation key resource (amandliy@redhat.com)
+- 1815172: Upon registration, first resolve owner (nmoumoul@redhat.com)
+- Added handling of HTTP errors to the cpc utility (crog@redhat.com)
+- Bumped Artemis version from 2.10.1 to 2.12.0 (crog@redhat.com)
+- 1751848: Stopped checking & consider pools irrespective of Consumer
+  Entitlement SLA for auto attach. (prakgupt@redhat.com)
+
 * Wed Apr 29 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.11-1
 - 1827426: Added an additional null check during entitlement revocation
   (crog@redhat.com)
