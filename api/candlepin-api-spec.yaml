@@ -1867,6 +1867,161 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /products/{product_uuid}:
+    get:
+      description: Retrieves a single Product
+      tags:
+        - Products
+      operationId: getProduct
+      parameters:
+        - in: path
+          name: product_uuid
+          description: The product UUID
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: A single product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        404:
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /products/{product_uuid}/certificate:
+    get:
+      description: Retrieves a Certificate for a Product
+      tags:
+        - Certificates
+        - Products
+      operationId: getProductCertificate
+      parameters:
+        - in: path
+          name: product_uuid
+          description: The product UUID
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: A product certificate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCertificateDTO'
+        404:
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /products/owners:
+    get:
+      description: Retrieves a list of Owners by Product
+      tags:
+        - Owners
+        - Products
+      operationId: getProductOwners
+      parameters:
+        - in: query
+          name: product
+          description: Multiple product UUIDs
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: A product certificate
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OwnerDTO'
+        400:
+          description: No product IDs specified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: No product IDs specified
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /products/subscriptions:
+    put:
+      description: Refreshes Pools by Product
+      tags:
+        - Pools
+        - Products
+        - Refresh
+      operationId: refreshPoolsForProduct
+      parameters:
+        - in: query
+          name: product
+          description: Multiple product UUIDs
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+        - in: query
+          name: lazy_regen
+          description: Regenerate certificates immediatelly or allow them to be regenerated on demand
+          required: false
+          schema:
+            type: boolean
+            default: true
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: A list of statuses of the created refresh pools jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: No product IDs specified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: No product IDs specified
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /roles:
     get:
       description: Retrieves a list of Roles
