@@ -15,7 +15,6 @@
 package org.candlepin.resource;
 
 import org.candlepin.async.JobConfig;
-import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.common.auth.SecurityHole;
@@ -40,62 +39,41 @@ import org.candlepin.model.ResultIterator;
 
 import com.google.inject.Inject;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 /**
  * API Gateway into /product
  */
-@Path("/products")
-@Api(value = "products", authorizations = { @Authorization("basic") })
-public class ProductResource {
+public class ProductResource implements ProductsApi {
 
-    private static Logger log = LoggerFactory.getLogger(ProductResource.class);
-    private ProductCurator productCurator;
-    private OwnerCurator ownerCurator;
-    private ProductCertificateCurator productCertCurator;
-    private Configuration config;
-    private I18n i18n;
-    private ModelTranslator translator;
-    private JobManager jobManager;
+    private static final Logger log = LoggerFactory.getLogger(ProductResource.class);
+    private final ProductCurator productCurator;
+    private final OwnerCurator ownerCurator;
+    private final ProductCertificateCurator productCertCurator;
+    private final Configuration config;
+    private final I18n i18n;
+    private final ModelTranslator translator;
+    private final JobManager jobManager;
 
     @Inject
     public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
         ProductCertificateCurator productCertCurator, Configuration config, I18n i18n,
         ModelTranslator translator, JobManager jobManager) {
 
-        this.productCurator = productCurator;
-        this.productCertCurator = productCertCurator;
-        this.ownerCurator = ownerCurator;
-        this.config = config;
-        this.i18n = i18n;
-        this.translator = translator;
-        this.jobManager = jobManager;
+        this.productCurator = Objects.requireNonNull(productCurator);
+        this.productCertCurator = Objects.requireNonNull(productCertCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.config = Objects.requireNonNull(config);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.translator = Objects.requireNonNull(translator);
+        this.jobManager = Objects.requireNonNull(jobManager);
     }
 
     /**
@@ -111,7 +89,7 @@ public class ProductResource {
      * @return
      *  the Product instance for the product with the specified id
      */
-    protected Product fetchProduct(String productUuid) {
+    private Product fetchProduct(String productUuid) {
         Product product = this.productCurator.get(productUuid);
 
         if (product == null) {
@@ -123,26 +101,16 @@ public class ProductResource {
         return product;
     }
 
-    @ApiOperation(notes = "Retrieves a single Product", value = "getProduct")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Path("/{product_uuid}")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @SecurityHole
-    public ProductDTO getProduct(@PathParam("product_uuid") String productUuid) {
+    public ProductDTO getProduct(String productUuid) {
         Product product = this.fetchProduct(productUuid);
         return this.translator.translate(product, ProductDTO.class);
     }
 
-    @ApiOperation(notes = "Retreives a Certificate for a Product", value = "getProductCertificate")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Path("/{product_uuid}/certificate")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @SecurityHole
-    public ProductCertificateDTO getProductCertificate(
-        @PathParam("product_uuid") String productUuid) {
-
+    public ProductCertificateDTO getProductCertificate(String productUuid) {
         // TODO:
         // Should this be enabled globally? This will create a cert if it hasn't yet been created.
 
@@ -151,124 +119,8 @@ public class ProductResource {
         return this.translator.translate(productCertificate, ProductCertificateDTO.class);
     }
 
-    /**
-     * @deprecated Use per-org version
-     * @return Product
-     */
-    @ApiOperation(notes = "Creates a Product. Returns either the new created " +
-        "Product or the Product that already existed. @deprecated Use per-org" +
-        " version", value = "createProduct")
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Deprecated
-    public ProductDTO createProduct(ProductDTO product) {
-        throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."));
-    }
-
-    /**
-     * @deprecated Use per-org version
-     * @return Product
-     */
-    @ApiOperation(notes = "Updates a Product @deprecated Use per-org version", value = "updateProduct")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @PUT
-    @Path("/{product_uuid}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    @Deprecated
-    public ProductDTO updateProduct(
-        @PathParam("product_uuid") String productUuid,
-        @ApiParam(name = "product", required = true) ProductDTO product) {
-        throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."));
-    }
-
-
-    /**
-     * @deprecated Use per-org version
-     * @return Product
-     */
-    @ApiOperation(notes = "Adds Content to a Product Batch mode @deprecated Use per-org version",
-        value = "addBatchContent")
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}/batch_content")
-    @Deprecated
-    public ProductDTO addBatchContent(
-        @PathParam("product_uuid") String productUuid,
-        Map<String, Boolean> contentMap) {
-
-        throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."));
-    }
-
-    /**
-     * @deprecated Use per-org version
-     * @return Product
-     */
-    @ApiOperation(notes = "Adds Content to a Product. Single mode @deprecated Use " +
-        "per-org version", value = "addContent")
-    @ApiResponses({  })
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    @Path("/{product_uuid}/content/{content_id}")
-    @Deprecated
-    public ProductDTO addContent(
-        @PathParam("product_uuid") String productUuid,
-        @PathParam("content_id") String contentId,
-        @QueryParam("enabled") Boolean enabled) {
-
-        throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."));
-    }
-
-    /**
-     * @deprecated Use per-org version
-     */
-    @ApiOperation(notes = "Removes Content from a Product @deprecated Use per-org version",
-        value = "removeContent")
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}/content/{content_id}")
-    @Deprecated
-    public void removeContent(
-        @PathParam("product_uuid") String productUuid,
-        @PathParam("content_id") String contentId) {
-
-        throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."));
-    }
-
-    /**
-     * @deprecated Use per-org version
-     */
-    @ApiOperation(notes = "Removes a Product @deprecated Use per-org version", value = "deleteProduct")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}")
-    @Deprecated
-    public void deleteProduct(
-        @PathParam("product_uuid") String productUuid) {
-
-        throw new BadRequestException(this.i18n.tr(
-            "Organization-agnostic product write operations are no longer supported."));
-    }
-
-    @ApiOperation(notes = "Retrieves a list of Owners by Product", value = "getProductOwners",
-        response = OwnerDTO.class, responseContainer = "list")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @GET
-    @Path("/owners")
-    @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<OwnerDTO> getProductOwners(
-        @ApiParam(value = "Multiple product UUIDs", required = true)
-        @QueryParam("product") List<String> productUuids) {
-
+    @Override
+    public CandlepinQuery<OwnerDTO> getProductOwners(List<String> productUuids) {
         if (productUuids.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
@@ -277,16 +129,9 @@ public class ProductResource {
             this.ownerCurator.getOwnersWithProducts(productUuids), OwnerDTO.class);
     }
 
-    @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct",
-        response = AsyncJobStatusDTO.class, responseContainer = "List")
-    @PUT
-    @Path("/subscriptions")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
+    @Override
     public Stream<AsyncJobStatusDTO> refreshPoolsForProduct(
-        @ApiParam(value = "Multiple product UUIDs", required = true)
-        @QueryParam("product") List<String> productUuids,
-        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) throws JobException {
+        List<String> productUuids, Boolean lazyRegen) {
 
         if (productUuids.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
@@ -298,9 +143,9 @@ public class ProductResource {
         }
 
         ResultIterator<Owner> iterator = this.ownerCurator.getOwnersWithProducts(productUuids).iterate();
-        List<JobConfig> jobConfigs = new LinkedList<>();
+        List<JobConfig<RefreshPoolsJob.RefreshPoolsJobConfig>> jobConfigs = new LinkedList<>();
         while (iterator.hasNext()) {
-            JobConfig config = RefreshPoolsJob.createJobConfig()
+            JobConfig<RefreshPoolsJob.RefreshPoolsJobConfig> config = RefreshPoolsJob.createJobConfig()
                 .setOwner(iterator.next())
                 .setLazyRegeneration(lazyRegen);
             jobConfigs.add(config);
@@ -308,7 +153,7 @@ public class ProductResource {
         iterator.close();
 
         List<AsyncJobStatus> statuses = new LinkedList<>();
-        for (JobConfig config : jobConfigs) {
+        for (JobConfig<RefreshPoolsJob.RefreshPoolsJobConfig> config : jobConfigs) {
             try {
                 statuses.add(this.jobManager.queueJob(config));
             }
