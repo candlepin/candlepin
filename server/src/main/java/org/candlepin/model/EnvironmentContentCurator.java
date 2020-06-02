@@ -55,4 +55,5 @@ public class EnvironmentContentCurator extends AbstractHibernateCurator<Environm
             .add(Restrictions.eq("content.id", contentId))
             .list();
     }
+
 }

@@ -62,7 +62,7 @@ public class ProductNodeBuilderTest {
     }
 
     private ProductNodeBuilder buildNodeBuilder() {
-        return new ProductNodeBuilder(this.productMapper);
+        return new ProductNodeBuilder();
     }
 
     private Set<Product> createCandidateEntitiesSet(String id) {
@@ -110,7 +110,7 @@ public class ProductNodeBuilderTest {
         assertEquals(Product.class, output);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
     @ValueSource(strings = { "true", "false" })
     public void testBuildNodeForCreation(boolean includeCandidates) {
         String id = "test_id";
@@ -133,7 +133,8 @@ public class ProductNodeBuilderTest {
         this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -160,8 +161,7 @@ public class ProductNodeBuilderTest {
         }
 
         // The node should not have any flags set
-        assertFalse(output.changed());
-        assertFalse(output.visited());
+        assertNull(output.getNodeState());
 
         // Product does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
@@ -171,13 +171,11 @@ public class ProductNodeBuilderTest {
         assertThat(output.getChildrenNodes(), empty());
 
         // Its pseudo-state getters should match our expectations
-        assertFalse(output.isEntityUpdate());
-        assertTrue(output.isEntityCreation());
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
     @ValueSource(strings = { "true", "false" })
     public void testBuildNodeForUpdate(boolean includeCandidates) {
         String id = "test_id";
@@ -201,7 +199,8 @@ public class ProductNodeBuilderTest {
         this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -228,8 +227,7 @@ public class ProductNodeBuilderTest {
         }
 
         // The node should not have any flags set
-        assertFalse(output.changed());
-        assertFalse(output.visited());
+        assertNull(output.getNodeState());
 
         // Product does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
@@ -239,13 +237,11 @@ public class ProductNodeBuilderTest {
         assertThat(output.getChildrenNodes(), empty());
 
         // Its pseudo-state getters should match our expectations
-        assertTrue(output.isEntityUpdate());
-        assertFalse(output.isEntityCreation());
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
     @ValueSource(strings = { "true", "false" })
     public void testBuildNodeWithNoImport(boolean includeCandidates) {
         String id = "test_id";
@@ -268,7 +264,8 @@ public class ProductNodeBuilderTest {
         this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -295,8 +292,7 @@ public class ProductNodeBuilderTest {
         }
 
         // The node should not have any flags set
-        assertFalse(output.changed());
-        assertFalse(output.visited());
+        assertNull(output.getNodeState());
 
         // Product does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
@@ -306,8 +302,6 @@ public class ProductNodeBuilderTest {
         assertThat(output.getChildrenNodes(), empty());
 
         // Its pseudo-state getters should match our expectations
-        assertFalse(output.isEntityUpdate());
-        assertFalse(output.isEntityCreation());
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
     }
@@ -334,7 +328,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -375,7 +370,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -425,7 +421,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -467,7 +464,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -508,7 +506,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -558,7 +557,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -602,7 +602,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -648,7 +649,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -703,7 +705,8 @@ public class ProductNodeBuilderTest {
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -744,7 +747,7 @@ public class ProductNodeBuilderTest {
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
         assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, owner, "invalid_id"));
+            builder.buildNode(this.mockNodeFactory, this.productMapper, owner, "invalid_id"));
     }
 
     @Test
@@ -765,7 +768,7 @@ public class ProductNodeBuilderTest {
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
         assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, owner, ""));
+            builder.buildNode(this.mockNodeFactory, this.productMapper, owner, ""));
     }
 
     @Test
@@ -786,7 +789,7 @@ public class ProductNodeBuilderTest {
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
         assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, owner, null));
+            builder.buildNode(this.mockNodeFactory, this.productMapper, owner, null));
     }
 
     @Test
@@ -807,7 +810,7 @@ public class ProductNodeBuilderTest {
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
         assertThrows(IllegalArgumentException.class, () ->
-            builder.buildNode(this.mockNodeFactory, null, id));
+            builder.buildNode(this.mockNodeFactory, this.productMapper, null, id));
     }
 
 }

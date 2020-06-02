@@ -40,10 +40,9 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
     private String id;
     private Owner owner;
 
-    private Set<EntityNode> parents;
-    private Set<EntityNode> children;
-    private boolean visited;
-    private boolean changed;
+    private Set<EntityNode<?, ?>> parents;
+    private Set<EntityNode<?, ?>> children;
+    private NodeState state;
 
     private E existingEntity;
     private I importedEntity;
@@ -98,7 +97,7 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
-    public EntityNode<E, I> addParentNode(EntityNode parent) {
+    public EntityNode<E, I> addParentNode(EntityNode<?, ?> parent) {
         if (parent == null) {
             throw new IllegalArgumentException("parent is null");
         }
@@ -115,7 +114,7 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
-    public Collection<EntityNode> getParentNodes() {
+    public Collection<EntityNode<?, ?>> getParentNodes() {
         return this.parents;
     }
 
@@ -123,7 +122,7 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
-    public EntityNode<E, I> addChildNode(EntityNode child) {
+    public EntityNode<E, I> addChildNode(EntityNode<?, ?> child) {
         if (child == null) {
             throw new IllegalArgumentException("child is null");
         }
@@ -140,7 +139,7 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
-    public Collection<EntityNode> getChildrenNodes() {
+    public Collection<EntityNode<?, ?>> getChildrenNodes() {
         return this.children;
     }
 
@@ -164,32 +163,26 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
-    public boolean visited() {
-        return this.visited;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void markVisited() {
-        this.visited = true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public boolean changed() {
-        return this.changed;
+        NodeState state = this.getNodeState();
+        return state == NodeState.CREATED || state == NodeState.UPDATED;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void markChanged() {
-        this.changed = true;
+    public NodeState getNodeState() {
+        return this.state;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EntityNode<E, I> setNodeState(NodeState state) {
+        this.state = state;
+        return this;
     }
 
     /**
@@ -264,16 +257,8 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
-    public boolean isEntityUpdate() {
-        return this.existingEntity != null && this.importedEntity != null;
+    public String toString() {
+        return String.format("EntityNode [class: %s, entity id: %s, state: %s]",
+            this.getEntityClass(), this.getEntityId(), this.getNodeState());
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isEntityCreation() {
-        return this.existingEntity == null && this.importedEntity != null;
-    }
-
 }

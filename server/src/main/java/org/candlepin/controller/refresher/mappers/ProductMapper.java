@@ -35,6 +35,22 @@ public class ProductMapper extends AbstractEntityMapper<Product, ProductInfo> {
      * {@inheritDoc}
      */
     @Override
+    public Class<Product> getExistingEntityClass() {
+        return Product.class;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<ProductInfo> getImportedEntityClass() {
+        return ProductInfo.class;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean addExistingEntity(Product entity) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");

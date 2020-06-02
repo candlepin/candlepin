@@ -35,9 +35,34 @@ public class PoolMapper extends AbstractEntityMapper<Pool, SubscriptionInfo> {
      * {@inheritDoc}
      */
     @Override
+    public Class<Pool> getExistingEntityClass() {
+        return Pool.class;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<SubscriptionInfo> getImportedEntityClass() {
+        return SubscriptionInfo.class;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean addExistingEntity(Pool entity) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
+        }
+
+        // Impl note:
+        // Local pools are mapped to upstream pools by the subscription ID (after reconciliation*).
+        // If a subscription ID is present, use that. Otherwise, default to its local ID.
+        String id = entity.getSubscriptionId();
+
+        if (id == null || id.isEmpty()) {
+            id = entity.getId();
         }
 
         return this.addExistingEntity(entity.getId(), entity);

@@ -22,6 +22,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.refresher.RefreshResult;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -398,13 +399,18 @@ public class Entitler {
             // Do a refresh so we're all up to date here
             log.debug("Importing products for dev pool resolution...");
 
-            RefreshWorker refresher = this.refreshWorkerProvider.get();
-            refresher.addProducts(this.productAdapter.getProductsByIds(owner.getKey(), devProductIds));
+            RefreshWorker refresher = this.refreshWorkerProvider.get()
+                .addProducts(this.productAdapter.getProductsByIds(owner.getKey(), devProductIds));
+
             RefreshResult refreshResult = refresher.execute(owner);
 
             // Step through the items we refreshed and add the resulting products to our map
-            for (String pid : refresher.getProducts().keySet()) {
-                Product product = refreshResult.getProduct(pid);
+            List<EntityState> states = Arrays.asList(
+                EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
+
+            for (String pid : devProductIds) {
+                Product product = refreshResult.getEntity(Product.class, pid, states);
+
                 if (product != null) {
                     devProductMap.put(product.getId(), product);
                 }

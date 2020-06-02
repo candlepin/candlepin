@@ -14,16 +14,14 @@
  */
 package org.candlepin.controller.refresher.visitors;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.controller.refresher.RefreshResult;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.ContentNode;
 import org.candlepin.controller.refresher.nodes.EntityNode;
+import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
@@ -218,7 +216,7 @@ public class ContentNodeVisitorTest {
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("contentDataProvider")
-    public void testProcessNodeForSkippedEntity(String key, Object base, Object update) {
+    public void testProcessNodeForAbsentUpstreamEntity(String key, Object base, Object update) {
         Owner owner = TestUtil.createOwner();
         String id = TestUtil.randomString("test_id");
 
@@ -230,8 +228,7 @@ public class ContentNodeVisitorTest {
         ContentNodeVisitor visitor = this.buildContentNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -239,7 +236,7 @@ public class ContentNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
-        assertFalse(node.changed());
+        assertEquals(NodeState.UNCHANGED, node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // This is a bit brittle, but we want to verify that we've attempted to store a new
@@ -263,8 +260,7 @@ public class ContentNodeVisitorTest {
         ContentNodeVisitor visitor = this.buildContentNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -272,7 +268,7 @@ public class ContentNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
-        assertFalse(node.changed());
+        assertEquals(NodeState.UNCHANGED, node.getNodeState());
         assertNull(node.getMergedEntity());
 
         verify(this.mockContentCurator, never()).saveOrUpdate(any(Content.class));
@@ -294,8 +290,7 @@ public class ContentNodeVisitorTest {
         ContentNodeVisitor visitor = this.buildContentNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -303,7 +298,7 @@ public class ContentNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
-        assertFalse(node.changed());
+        assertEquals(NodeState.UNCHANGED, node.getNodeState());
         assertNull(node.getMergedEntity());
 
         verify(this.mockContentCurator, never()).saveOrUpdate(any(Content.class));
@@ -323,8 +318,7 @@ public class ContentNodeVisitorTest {
         ContentNodeVisitor visitor = this.buildContentNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -332,7 +326,7 @@ public class ContentNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
-        assertTrue(node.changed());
+        assertEquals(NodeState.CREATED, node.getNodeState());
         assertNotNull(node.getMergedEntity());
         this.validateMergedEntity(null, imported, node.getMergedEntity());
 
@@ -355,8 +349,7 @@ public class ContentNodeVisitorTest {
         ContentNodeVisitor visitor = this.buildContentNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -364,154 +357,11 @@ public class ContentNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
-        assertTrue(node.changed());
+        assertEquals(NodeState.UPDATED, node.getNodeState());
         assertNotNull(node.getMergedEntity());
         this.validateMergedEntity(existing, imported, node.getMergedEntity());
 
         verify(this.mockContentCurator, times(1)).saveOrUpdate(any(Content.class));
     }
 
-    public void testCompileResultsForSkippedEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Content existing = this.createPopulatedExistingEntity(id, "name", "content-1");
-
-        EntityNode<Content, ContentInfo> node = new ContentNode(owner, id)
-            .setExistingEntity(existing);
-
-        ContentNodeVisitor visitor = this.buildContentNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Content> created = result.getCreatedContent();
-        Map<String, Content> updated = result.getUpdatedContent();
-        Map<String, Content> skipped = result.getSkippedContent();
-
-        assertNotNull(result.getContent(id));
-        assertEquals(0, created.size());
-        assertEquals(0, updated.size());
-        assertEquals(1, skipped.size());
-        assertThat(skipped, hasEntry(id, existing));
-    }
-
-    public void testCompileResultsForUnmodifiedEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Content existing = this.createPopulatedExistingEntity(id, "name", "content-1");
-        ContentInfo imported = this.createPopulatedImportedEntity(id, "name", null);
-
-        EntityNode<Content, ContentInfo> node = new ContentNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported);
-
-        ContentNodeVisitor visitor = this.buildContentNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Content> created = result.getCreatedContent();
-        Map<String, Content> updated = result.getUpdatedContent();
-        Map<String, Content> skipped = result.getSkippedContent();
-
-        assertNotNull(result.getContent(id));
-        assertEquals(0, created.size());
-        assertEquals(0, updated.size());
-        assertEquals(1, skipped.size());
-        assertThat(skipped, hasEntry(id, existing));
-    }
-
-    public void testCompileResultsForUnchangedEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Content existing = this.createPopulatedExistingEntity(id, "name", "content-1");
-        ContentInfo imported = this.createPopulatedImportedEntity(id, "name", "content-1");
-
-        EntityNode<Content, ContentInfo> node = new ContentNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported);
-
-        ContentNodeVisitor visitor = this.buildContentNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Content> created = result.getCreatedContent();
-        Map<String, Content> updated = result.getUpdatedContent();
-        Map<String, Content> skipped = result.getSkippedContent();
-
-        assertNotNull(result.getContent(id));
-        assertEquals(0, created.size());
-        assertEquals(0, updated.size());
-        assertEquals(1, skipped.size());
-        assertThat(skipped, hasEntry(id, existing));
-    }
-
-    public void testCompileResultsForNewEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        ContentInfo imported = this.createPopulatedImportedEntity(id, "name", "content-1");
-        Content merged = this.createPopulatedExistingEntity(id, "name", "content-1");
-
-        EntityNode<Content, ContentInfo> node = new ContentNode(owner, id)
-            .setImportedEntity(imported)
-            .setMergedEntity(merged);
-
-        node.markChanged();
-
-        ContentNodeVisitor visitor = this.buildContentNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Content> created = result.getCreatedContent();
-        Map<String, Content> updated = result.getUpdatedContent();
-        Map<String, Content> skipped = result.getSkippedContent();
-
-        assertNotNull(result.getContent(id));
-        assertEquals(1, created.size());
-        assertEquals(0, updated.size());
-        assertEquals(0, skipped.size());
-        assertThat(created, hasEntry(id, merged));
-    }
-
-    public void testCompileResultsForUpdatedEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Content existing = this.createPopulatedExistingEntity(id, "name", "content-1");
-        ContentInfo imported = this.createPopulatedImportedEntity(id, "name", "content-1b");
-        Content merged = this.createPopulatedExistingEntity(id, "name", "content-1b");
-
-        EntityNode<Content, ContentInfo> node = new ContentNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported)
-            .setMergedEntity(merged);
-
-        node.markChanged();
-
-        ContentNodeVisitor visitor = this.buildContentNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Content> created = result.getCreatedContent();
-        Map<String, Content> updated = result.getUpdatedContent();
-        Map<String, Content> skipped = result.getSkippedContent();
-
-        assertNotNull(result.getContent(id));
-        assertEquals(0, created.size());
-        assertEquals(1, updated.size());
-        assertEquals(0, skipped.size());
-        assertThat(created, hasEntry(id, existing));
-    }
 }
