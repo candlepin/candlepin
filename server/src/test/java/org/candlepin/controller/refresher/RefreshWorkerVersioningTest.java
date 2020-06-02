@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.controller.refresher.RefreshResult;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
@@ -49,7 +50,7 @@ public class RefreshWorkerVersioningTest extends DatabaseTestFixture {
     }
 
     private RefreshWorker buildRefreshWorker() {
-        return new RefreshWorker(this.productCurator, this.ownerProductCurator,
+        return new RefreshWorker(this.poolCurator, this.productCurator, this.ownerProductCurator,
             this.contentCurator, this.ownerContentCurator);
     }
 
@@ -87,11 +88,12 @@ public class RefreshWorkerVersioningTest extends DatabaseTestFixture {
         RefreshResult result = worker.execute(owner2);
 
         assertNotNull(result);
-        assertEquals(1, result.getCreatedProducts().size());
-        assertEquals(0, result.getUpdatedProducts().size());
-        assertEquals(0, result.getSkippedProducts().size());
+        assertEquals(1, result.getEntities(Product.class, EntityState.CREATED).size());
+        assertEquals(0, result.getEntities(Product.class, EntityState.UPDATED).size());
+        assertEquals(0, result.getEntities(Product.class, EntityState.UNCHANGED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Product created = result.getProduct(id);
+        Product created = result.getEntity(Product.class, id);
 
         assertNotNull(created);
         assertEquals(product, created);
@@ -118,11 +120,12 @@ public class RefreshWorkerVersioningTest extends DatabaseTestFixture {
         RefreshResult result = worker.execute(owner2);
 
         assertNotNull(result);
-        assertEquals(0, result.getCreatedProducts().size());
-        assertEquals(1, result.getUpdatedProducts().size());
-        assertEquals(0, result.getSkippedProducts().size());
+        assertEquals(0, result.getEntities(Product.class, EntityState.CREATED).size());
+        assertEquals(1, result.getEntities(Product.class, EntityState.UPDATED).size());
+        assertEquals(0, result.getEntities(Product.class, EntityState.UNCHANGED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Product updated = result.getProduct(id);
+        Product updated = result.getEntity(Product.class, id);
 
         assertNotNull(updated);
         assertEquals(product, updated);
@@ -147,11 +150,12 @@ public class RefreshWorkerVersioningTest extends DatabaseTestFixture {
         RefreshResult result = worker.execute(owner2);
 
         assertNotNull(result);
-        assertEquals(0, result.getCreatedProducts().size());
-        assertEquals(1, result.getUpdatedProducts().size());
-        assertEquals(0, result.getSkippedProducts().size());
+        assertEquals(0, result.getEntities(Product.class, EntityState.CREATED).size());
+        assertEquals(1, result.getEntities(Product.class, EntityState.UPDATED).size());
+        assertEquals(0, result.getEntities(Product.class, EntityState.UNCHANGED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Product updated = result.getProduct(id);
+        Product updated = result.getEntity(Product.class, id);
 
         assertNotNull(updated);
         assertNotEquals(product, updated);
@@ -179,11 +183,12 @@ public class RefreshWorkerVersioningTest extends DatabaseTestFixture {
         RefreshResult result = worker.execute(owner2);
 
         assertNotNull(result);
-        assertEquals(1, result.getCreatedContent().size());
-        assertEquals(0, result.getUpdatedContent().size());
-        assertEquals(0, result.getSkippedContent().size());
+        assertEquals(1, result.getEntities(Content.class, EntityState.CREATED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.UPDATED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.UNCHANGED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Content created = result.getContent(id);
+        Content created = result.getEntity(Content.class, id);
 
         assertNotNull(created);
         assertEquals(content, created);
@@ -210,11 +215,12 @@ public class RefreshWorkerVersioningTest extends DatabaseTestFixture {
         RefreshResult result = worker.execute(owner2);
 
         assertNotNull(result);
-        assertEquals(0, result.getCreatedContent().size());
-        assertEquals(1, result.getUpdatedContent().size());
-        assertEquals(0, result.getSkippedContent().size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.CREATED).size());
+        assertEquals(1, result.getEntities(Content.class, EntityState.UPDATED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.UNCHANGED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Content updated = result.getContent(id);
+        Content updated = result.getEntity(Content.class, id);
 
         assertNotNull(updated);
         assertEquals(content, updated);
@@ -239,11 +245,12 @@ public class RefreshWorkerVersioningTest extends DatabaseTestFixture {
         RefreshResult result = worker.execute(owner2);
 
         assertNotNull(result);
-        assertEquals(0, result.getCreatedContent().size());
-        assertEquals(1, result.getUpdatedContent().size());
-        assertEquals(0, result.getSkippedContent().size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.CREATED).size());
+        assertEquals(1, result.getEntities(Content.class, EntityState.UPDATED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.UNCHANGED).size());
+        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Content updated = result.getContent(id);
+        Content updated = result.getEntity(Content.class, id);
 
         assertNotNull(updated);
         assertNotEquals(content, updated);

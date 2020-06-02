@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller.refresher.builders;
 
+import org.candlepin.controller.refresher.mappers.EntityMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Owner;
@@ -50,6 +51,9 @@ public interface NodeBuilder<E extends AbstractHibernateObject, I extends Servic
      * @param factory
      *  the node factory to use for performing construction of children nodes
      *
+     * @param mapper
+     *  the entity mapper to use for performing entity lookups for populating the new entity node
+     *
      * @param owner
      *  the organization that will own the entity represented by the new entity node
      *
@@ -62,6 +66,6 @@ public interface NodeBuilder<E extends AbstractHibernateObject, I extends Servic
      * @return
      *  a new EntityNode instance representing the entity with the provided ID
      */
-    EntityNode<E, I> buildNode(NodeFactory factory, Owner owner, String id);
+    EntityNode<E, I> buildNode(NodeFactory factory, EntityMapper<E, I> mapper, Owner owner, String id);
 
 }

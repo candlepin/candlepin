@@ -275,7 +275,7 @@ public class NodeMapperTest {
         NodeMapper mapper = new NodeMapper();
         Collection<EntityNode>[] nodeSets = this.buildNodeTrees(mapper);
 
-        Iterator<EntityNode> iterator = mapper.getNodeIterator();
+        Iterator<EntityNode<?, ?>> iterator = mapper.getNodeIterator();
         assertNotNull(iterator);
 
         // Collect all the values in the iterator into an array so we can verify the
@@ -297,7 +297,7 @@ public class NodeMapperTest {
         NodeMapper mapper = new NodeMapper();
         Collection<EntityNode>[] nodeSets = this.buildNodeTrees(mapper);
 
-        Iterator<EntityNode> iterator = mapper.getNodeIterator();
+        Iterator<EntityNode<?, ?>> iterator = mapper.getNodeIterator();
         assertNotNull(iterator);
 
         assertTrue(iterator.hasNext());
@@ -310,7 +310,7 @@ public class NodeMapperTest {
         NodeMapper mapper = new NodeMapper();
         Collection<EntityNode>[] nodeSets = this.buildNodeTrees(mapper);
 
-        Iterator<EntityNode> iterator = mapper.getRootIterator();
+        Iterator<EntityNode<?, ?>> iterator = mapper.getRootIterator();
         assertNotNull(iterator);
 
         // Collect all the values in the iterator into an array so we can verify the
@@ -332,7 +332,7 @@ public class NodeMapperTest {
         NodeMapper mapper = new NodeMapper();
         Collection<EntityNode>[] nodeSets = this.buildNodeTrees(mapper);
 
-        Iterator<EntityNode> iterator = mapper.getRootIterator();
+        Iterator<EntityNode<?, ?>> iterator = mapper.getRootIterator();
         assertNotNull(iterator);
 
         assertTrue(iterator.hasNext());

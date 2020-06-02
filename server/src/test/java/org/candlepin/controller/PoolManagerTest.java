@@ -43,6 +43,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.refresher.RefreshResult;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CandlepinQuery;
@@ -196,8 +197,8 @@ public class PoolManagerTest {
 
         this.principal = TestUtil.createOwnerPrincipal(owner);
 
-        this.refreshWorker = spy(new RefreshWorker(this.mockProductCurator, this.mockOwnerProductCurator,
-            this.mockContentCurator, this.mockOwnerContentCurator));
+        this.refreshWorker = spy(new RefreshWorker(this.mockPoolCurator, this.mockProductCurator,
+            this.mockOwnerProductCurator, this.mockContentCurator, this.mockOwnerContentCurator));
 
         this.refreshWorkerProvider = () -> refreshWorker;
 
@@ -397,10 +398,7 @@ public class PoolManagerTest {
         this.mockProducts(owner, product);
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         List<Pool> expectedFloating = new LinkedList();
@@ -438,10 +436,7 @@ public class PoolManagerTest {
         this.mockProducts(owner, product);
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         List<Pool> expectedModified = new LinkedList();
@@ -527,13 +522,13 @@ public class PoolManagerTest {
 
                 if (products != null) {
                     for (Product product : products) {
-                        output.addCreatedProduct(product);
+                        output.addEntity(Product.class, product, EntityState.CREATED);
                     }
                 }
 
                 if (contents != null) {
                     for (Content content : contents) {
-                        output.addCreatedContent(content);
+                        output.addEntity(Content.class, content, EntityState.CREATED);
                     }
                 }
 
@@ -693,12 +688,9 @@ public class PoolManagerTest {
         this.mockSubscriptions(owner, subscriptions);
         mockPoolsList(pools);
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
-        cqmock = mock(CandlepinQuery.class);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(Collections.emptyList());
         when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
 
@@ -733,12 +725,9 @@ public class PoolManagerTest {
 
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
-        cqmock = mock(CandlepinQuery.class);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(Collections.emptyList());
         when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
 
@@ -769,10 +758,7 @@ public class PoolManagerTest {
 
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         verify(this.manager, never()).deletePool(same(p));
@@ -797,10 +783,7 @@ public class PoolManagerTest {
 
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
         Owner owner = getOwner();
         when(mockOwnerCurator.getByKey(owner.getKey())).thenReturn(owner);
@@ -823,10 +806,7 @@ public class PoolManagerTest {
         this.mockSubscriptions(owner, subscriptions);
         mockPoolsList(pools);
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
@@ -857,10 +837,7 @@ public class PoolManagerTest {
 
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
@@ -895,12 +872,9 @@ public class PoolManagerTest {
         this.mockProducts(owner, product);
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
-        cqmock = mock(CandlepinQuery.class);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(Collections.emptyList());
         when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
 
@@ -950,10 +924,7 @@ public class PoolManagerTest {
         this.mockProducts(owner, product);
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         verify(poolRulesMock).createAndEnrichPools(argPool.capture(), anyList());
@@ -1239,12 +1210,9 @@ public class PoolManagerTest {
         this.mockProducts(owner, product);
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
-        cqmock = mock(CandlepinQuery.class);
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.list()).thenReturn(Collections.emptyList());
         when(mockPoolCurator.getPoolsBySubscriptionIds(anyList())).thenReturn(cqmock);
 
@@ -1447,10 +1415,7 @@ public class PoolManagerTest {
         this.mockProducts(owner, product);
         this.mockRefresh(owner, Arrays.asList(product), Collections.emptyList());
 
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
+        when(mockPoolCurator.listByOwnerAndTypes(eq(owner.getId()), any(PoolType.class))).thenReturn(pools);
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
 

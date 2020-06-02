@@ -25,7 +25,6 @@ import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -207,13 +206,7 @@ public class SubscriptionReconcilerTest {
         }
 
         // Mock these pools as the return value for the owner:
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-
-        doReturn(pools).when(cqmock).list();
-        doReturn(pools.iterator()).when(cqmock).iterator();
-
-        doReturn(cqmock).when(this.poolCurator).listByOwnerAndType(eq(owner), eq(PoolType.NORMAL));
-
+        doReturn(pools).when(poolCurator).listByOwnerAndTypes(eq(owner.getId()), eq(PoolType.NORMAL));
         return pools;
     }
 

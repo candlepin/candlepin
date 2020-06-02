@@ -59,7 +59,7 @@ public class ContentNodeBuilderTest {
     }
 
     private ContentNodeBuilder buildNodeBuilder() {
-        return new ContentNodeBuilder(this.contentMapper);
+        return new ContentNodeBuilder();
     }
 
     private Set<Content> createCandidateEntitiesSet(String id) {
@@ -91,7 +91,7 @@ public class ContentNodeBuilderTest {
         assertEquals(Content.class, output);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
     @ValueSource(strings = { "true", "false" })
     public void testBuildNodeForCreation(boolean includeCandidates) {
         String id = "test_id";
@@ -114,7 +114,8 @@ public class ContentNodeBuilderTest {
         this.contentMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Content, ContentInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Content, ContentInfo> output = builder.buildNode(this.mockNodeFactory, this.contentMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -140,10 +141,6 @@ public class ContentNodeBuilderTest {
             assertNull(output.getCandidateEntities());
         }
 
-        // The node should not have any flags set
-        assertFalse(output.changed());
-        assertFalse(output.visited());
-
         // Content does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
         assertThat(output.getParentNodes(), empty());
@@ -152,13 +149,11 @@ public class ContentNodeBuilderTest {
         assertThat(output.getChildrenNodes(), empty());
 
         // Its pseudo-state getters should match our expectations
-        assertFalse(output.isEntityUpdate());
-        assertTrue(output.isEntityCreation());
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
     @ValueSource(strings = { "true", "false" })
     public void testBuildNodeForUpdate(boolean includeCandidates) {
         String id = "test_id";
@@ -182,7 +177,8 @@ public class ContentNodeBuilderTest {
         this.contentMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Content, ContentInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Content, ContentInfo> output = builder.buildNode(this.mockNodeFactory, this.contentMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -208,10 +204,6 @@ public class ContentNodeBuilderTest {
             assertNull(output.getCandidateEntities());
         }
 
-        // The node should not have any flags set
-        assertFalse(output.changed());
-        assertFalse(output.visited());
-
         // Content does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
         assertThat(output.getParentNodes(), empty());
@@ -220,13 +212,11 @@ public class ContentNodeBuilderTest {
         assertThat(output.getChildrenNodes(), empty());
 
         // Its pseudo-state getters should match our expectations
-        assertTrue(output.isEntityUpdate());
-        assertFalse(output.isEntityCreation());
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
     @ValueSource(strings = { "true", "false" })
     public void testBuildNodeWithNoImport(boolean includeCandidates) {
         String id = "test_id";
@@ -249,7 +239,8 @@ public class ContentNodeBuilderTest {
         this.contentMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ContentNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Content, ContentInfo> output = builder.buildNode(this.mockNodeFactory, owner, id);
+        EntityNode<Content, ContentInfo> output = builder.buildNode(this.mockNodeFactory, this.contentMapper,
+            owner, id);
 
         assertNotNull(output);
         assertEquals(id, output.getEntityId());
@@ -275,10 +266,6 @@ public class ContentNodeBuilderTest {
             assertNull(output.getCandidateEntities());
         }
 
-        // The node should not have any flags set
-        assertFalse(output.changed());
-        assertFalse(output.visited());
-
         // Content does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
         assertThat(output.getParentNodes(), empty());
@@ -287,8 +274,6 @@ public class ContentNodeBuilderTest {
         assertThat(output.getChildrenNodes(), empty());
 
         // Its pseudo-state getters should match our expectations
-        assertFalse(output.isEntityUpdate());
-        assertFalse(output.isEntityCreation());
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
     }
@@ -311,7 +296,7 @@ public class ContentNodeBuilderTest {
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
         assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, owner, "invalid_id"));
+            builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, "invalid_id"));
     }
 
     @Test
@@ -332,7 +317,7 @@ public class ContentNodeBuilderTest {
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
         assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, owner, ""));
+            builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, ""));
     }
 
     @Test
@@ -353,7 +338,7 @@ public class ContentNodeBuilderTest {
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
         assertThrows(IllegalStateException.class, () ->
-            builder.buildNode(this.mockNodeFactory, owner, null));
+            builder.buildNode(this.mockNodeFactory, this.contentMapper, owner, null));
     }
 
     @Test
@@ -374,7 +359,7 @@ public class ContentNodeBuilderTest {
         ContentNodeBuilder builder = this.buildNodeBuilder();
 
         assertThrows(IllegalArgumentException.class, () ->
-            builder.buildNode(this.mockNodeFactory, null, id));
+            builder.buildNode(this.mockNodeFactory, this.contentMapper, null, id));
     }
 
 }

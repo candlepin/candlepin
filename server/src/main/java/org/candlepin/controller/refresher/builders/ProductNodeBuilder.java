@@ -14,7 +14,7 @@
  */
 package org.candlepin.controller.refresher.builders;
 
-import org.candlepin.controller.refresher.mappers.ProductMapper;
+import org.candlepin.controller.refresher.mappers.EntityMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.controller.refresher.nodes.ProductNode;
 import org.candlepin.model.Content;
@@ -33,20 +33,11 @@ import java.util.Collection;
  */
 public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
 
-    private final ProductMapper productMapper;
-
     /**
      * Creates a new ProductNodeBuilder
-     *
-     * @param productMapper
-     *  the product mapper to use for performing entity lookups during node construction
      */
-    public ProductNodeBuilder(ProductMapper productMapper) {
-        if (productMapper == null) {
-            throw new IllegalArgumentException("product mapper is null");
-        }
-
-        this.productMapper = productMapper;
+    public ProductNodeBuilder() {
+        // Intentionally left empty
     }
 
     /**
@@ -61,20 +52,22 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
      * {@inheritDoc}
      */
     @Override
-    public EntityNode<Product, ProductInfo> buildNode(NodeFactory factory, Owner owner, String id) {
-        if (!this.productMapper.hasEntity(id)) {
+    public EntityNode<Product, ProductInfo> buildNode(NodeFactory factory,
+        EntityMapper<Product, ProductInfo> mapper, Owner owner, String id) {
+
+        if (!mapper.hasEntity(id)) {
             throw new IllegalStateException("Cannot find an entity with the specified ID: " + id);
         }
 
-        Product existingEntity = this.productMapper.getExistingEntity(id);
-        ProductInfo importedEntity = this.productMapper.getImportedEntity(id);
+        Product existingEntity = mapper.getExistingEntity(id);
+        ProductInfo importedEntity = mapper.getImportedEntity(id);
 
         EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
             .setExistingEntity(existingEntity)
             .setImportedEntity(importedEntity)
-            .setCandidateEntities(this.productMapper.getCandidateEntities(id));
+            .setCandidateEntities(mapper.getCandidateEntities(id));
 
-        // Figure out our source entity from which we'll pull derive children nodes
+        // Figure out our source entity from which we'll derive children nodes
         ProductInfo sourceEntity = importedEntity != null ? importedEntity : existingEntity;
 
         // Add provided products

@@ -14,7 +14,7 @@
  */
 package org.candlepin.controller.refresher.builders;
 
-import org.candlepin.controller.refresher.mappers.ContentMapper;
+import org.candlepin.controller.refresher.mappers.EntityMapper;
 import org.candlepin.controller.refresher.nodes.ContentNode;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.model.Content;
@@ -28,20 +28,11 @@ import org.candlepin.service.model.ContentInfo;
  */
 public class ContentNodeBuilder implements NodeBuilder<Content, ContentInfo> {
 
-    private final ContentMapper contentMapper;
-
     /**
      * Creates a new ContentNodeBuilder
-     *
-     * @param contentMapper
-     *  the content mapper to use for performing entity lookups during node construction
      */
-    public ContentNodeBuilder(ContentMapper contentMapper) {
-        if (contentMapper == null) {
-            throw new IllegalArgumentException("content mapper is null");
-        }
-
-        this.contentMapper = contentMapper;
+    public ContentNodeBuilder() {
+        // Intentionally left empty
     }
 
     /**
@@ -56,18 +47,20 @@ public class ContentNodeBuilder implements NodeBuilder<Content, ContentInfo> {
      * {@inheritDoc}
      */
     @Override
-    public EntityNode<Content, ContentInfo> buildNode(NodeFactory factory, Owner owner, String id) {
-        if (!this.contentMapper.hasEntity(id)) {
+    public EntityNode<Content, ContentInfo> buildNode(NodeFactory factory,
+        EntityMapper<Content, ContentInfo> mapper, Owner owner, String id) {
+
+        if (!mapper.hasEntity(id)) {
             throw new IllegalStateException("Cannot find an entity with the specified ID: " + id);
         }
 
-        Content existingEntity = this.contentMapper.getExistingEntity(id);
-        ContentInfo importedEntity = this.contentMapper.getImportedEntity(id);
+        Content existingEntity = mapper.getExistingEntity(id);
+        ContentInfo importedEntity = mapper.getImportedEntity(id);
 
         EntityNode<Content, ContentInfo> node = new ContentNode(owner, id)
             .setExistingEntity(existingEntity)
             .setImportedEntity(importedEntity)
-            .setCandidateEntities(this.contentMapper.getCandidateEntities(id));
+            .setCandidateEntities(mapper.getCandidateEntities(id));
 
         return node;
     }
