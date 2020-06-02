@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ConflictException;
@@ -35,12 +34,6 @@ import org.candlepin.service.model.UserInfo;
 import com.google.inject.Inject;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
 import org.xnap.commons.i18n.I18n;
@@ -48,19 +41,11 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 
 
 
@@ -69,22 +54,20 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/users")
 @Api(value = "users", authorizations = { @Authorization("basic") })
-public class UserResource {
+public class UserResource implements UsersApi {
 
-    private UserServiceAdapter userService;
-    private I18n i18n;
-    private OwnerCurator ownerCurator;
-    private ModelTranslator modelTranslator;
-
+    private final UserServiceAdapter userService;
+    private final I18n i18n;
+    private final OwnerCurator ownerCurator;
+    private final ModelTranslator modelTranslator;
 
     @Inject
     public UserResource(UserServiceAdapter userService, I18n i18n, OwnerCurator ownerCurator,
         ModelTranslator modelTranslator) {
-
-        this.userService = userService;
-        this.i18n = i18n;
-        this.ownerCurator = ownerCurator;
-        this.modelTranslator = modelTranslator;
+        this.userService = Objects.requireNonNull(userService);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.modelTranslator = Objects.requireNonNull(modelTranslator);
     }
 
     /**
@@ -103,7 +86,7 @@ public class UserResource {
      * @return
      *  The user for the given username
      */
-    protected UserInfo fetchUserByUsername(String username) {
+    private UserInfo fetchUserByUsername(String username) {
         if (username == null || username.isEmpty()) {
             throw new BadRequestException(this.i18n.tr("username is null or empty"));
         }
@@ -116,11 +99,8 @@ public class UserResource {
         return user;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Users", value = "list",
-        response = UserDTO.class, responseContainer = "List")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Stream<UserDTO> list() {
+    @Override
+    public Stream<UserDTO> listUsers() {
         Collection<? extends UserInfo> users = userService.listUsers();
 
         return users != null ?
@@ -128,12 +108,8 @@ public class UserResource {
             null;
     }
 
-    @ApiOperation(notes = "Retrieves a single User", value = "getUserInfo")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @GET
-    @Path("/{username}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public UserDTO getUserInfo(@PathParam("username") @Verify(User.class) String username) {
+    @Override
+    public UserDTO getUserInfo(@Verify(User.class) String username) {
         return this.modelTranslator.translate(this.fetchUserByUsername(username), UserDTO.class);
     }
 
@@ -141,13 +117,8 @@ public class UserResource {
      * getUserRoles will only return roles for one user. If you want a
      * full view of a role, use /roles/ instead.
      */
-    @ApiOperation(notes = "Retrieves a list of Roles by User", value = "getUserRoles",
-        response = RoleDTO.class, responseContainer = "List")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @GET
-    @Path("/{username}/roles")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Stream<RoleDTO> getUserRoles(@PathParam("username") @Verify(User.class) String username) {
+    @Override
+    public Stream<RoleDTO> getUserRoles(@Verify(User.class) String username) {
         UserInfo user = this.fetchUserByUsername(username);
 
         Collection<? extends RoleInfo> roles = user.getRoles();
@@ -162,21 +133,11 @@ public class UserResource {
                 .map(e -> e.users(new HashSet<>(users)));
         }
 
-        return Stream.<RoleDTO>empty();
+        return Stream.empty();
     }
 
-    @ApiOperation(notes = "Creates a User", value = "createUser")
-    // We declare an implict parameter to get the Swagger generated client to submit passwords but not to
-    // expect them back.
-    @ApiImplicitParams({
-        @ApiImplicitParam(name = "user", paramType = "body", required = true,
-        dataType = "org.candlepin.model.User$UserCreationRequest")
-    })
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 409, message = "") })
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public UserDTO createUser(@ApiParam(hidden = true) UserDTO dto) {
+    @Override
+    public UserDTO createUser(UserDTO dto) {
         if (dto == null) {
             throw new BadRequestException(this.i18n.tr("user data is null or empty"));
         }
@@ -195,15 +156,8 @@ public class UserResource {
                 UserDTO.class);
     }
 
-    @ApiOperation(notes = "Updates a User", value = "updateUser")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @PUT
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{username}")
-    public UserDTO updateUser(
-        @PathParam("username") @Verify(User.class) String username,
-        @ApiParam(name = "user", required = true) UserDTO dto) {
+    @Override
+    public UserDTO updateUser(@Verify(User.class) String username, UserDTO dto) {
 
         // We don't actually need the user, but we do this for quick verification and better error
         // generation
@@ -214,31 +168,24 @@ public class UserResource {
                 UserDTO.class);
     }
 
-    @ApiOperation(notes = "Removes a User", value = "deleteUser")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @DELETE
-    @Path("/{username}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public void deleteUser(@PathParam("username") String username) {
+    @Override
+    public void deleteUser(String username) {
         UserInfo user = this.fetchUserByUsername(username);
 
         userService.deleteUser(username);
     }
 
-    @ApiOperation(notes = "Retrieve a list of owners the user can register systems to. " +
-        "Previously this represented owners the user was an admin for. Because the " +
-        "client uses this API call to list the owners a user can register to, when " +
-        "we introduced 'my systems' administrator, we have to change its meaning to " +
-        "listing the owners that can be registered to by default to maintain " +
-        "compatability with released clients.", value = "listUsersOwners",
-        response = OwnerDTO.class, responseContainer = "List")
+    /**
+     * Retrieve a list of owners the user can register systems to.
+     * Previously this represented owners the user was an admin for. Because the
+     * client uses this API call to list the owners a user can register to, when
+     * we introduced 'my systems' administrator, we have to change its meaning to
+     * listing the owners that can be registered to by default to maintain
+     * compatibility with released clients.
+     */
     // TODO: should probably accept access level and sub-resource query params someday
-    @GET
-    @Path("/{username}/owners")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Stream<OwnerDTO> listUsersOwners(
-        @PathParam("username") @Verify(User.class) String username,
-        @Context Principal principal) {
+    @Override
+    public Stream<OwnerDTO> listUserOwners(@Verify(User.class) String username) {
 
         // Fetch the user for a simple existence check. We don't actually need it.
         UserInfo user = this.fetchUserByUsername(username);
@@ -256,7 +203,7 @@ public class UserResource {
         return null;
     }
 
-    protected Owner resolveOwner(OwnerInfo oinfo) {
+    private Owner resolveOwner(OwnerInfo oinfo) {
         if (oinfo != null) {
             // This is a bit of an odd situation. Should we just pass through what the adapter gave us
             // anyway?

@@ -22,12 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.Access;
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.UserPrincipal;
-import org.candlepin.auth.permissions.OwnerPermission;
-import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
-import org.candlepin.auth.permissions.UsernameConsumersPermission;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.api.v1.OwnerDTO;
@@ -42,14 +37,11 @@ import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-
 
 
 /**
@@ -154,7 +146,7 @@ public class UserResourceTest extends DatabaseTestFixture {
             this.userCurator.create(user);
         }
 
-        Stream<UserDTO> response = this.resource.list();
+        Stream<UserDTO> response = this.resource.listUsers();
 
         assertNotNull(response);
 
@@ -195,14 +187,9 @@ public class UserResourceTest extends DatabaseTestFixture {
         roleCurator.create(owner1Role);
         roleCurator.create(owner2Role);
 
-        Set<Permission> perms = new HashSet<>();
-        perms.add(new OwnerPermission(owner1, Access.ALL));
-        perms.add(new OwnerPermission(owner2, Access.READ_ONLY));
-        Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
-
         // Requesting the list of owners for this user should assume ALL, and not
         // return owner2:
-        Stream<OwnerDTO> response = this.resource.listUsersOwners(user.getUsername(), userPrincipal);
+        Stream<OwnerDTO> response = this.resource.listUserOwners(user.getUsername());
 
         assertNotNull(response);
 
@@ -228,11 +215,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         owner1Role.addUser(user);
         roleCurator.create(owner1Role);
 
-        Set<Permission> perms = new HashSet<>();
-        perms.add(new UsernameConsumersPermission(user, owner1));
-        Principal userPrincipal = new UserPrincipal(user.getUsername(), perms, false);
-
-        Stream<OwnerDTO> response = this.resource.listUsersOwners(user.getUsername(), userPrincipal);
+        Stream<OwnerDTO> response = this.resource.listUserOwners(user.getUsername());
         assertNotNull(response);
 
         List<OwnerDTO> owners = response.collect(Collectors.toList());
