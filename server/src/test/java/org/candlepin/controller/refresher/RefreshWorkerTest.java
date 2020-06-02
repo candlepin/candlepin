@@ -28,6 +28,8 @@ import org.candlepin.model.OwnerContent;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.model.ContentInfo;
@@ -59,6 +61,7 @@ import java.util.Map;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class RefreshWorkerTest {
 
+    private PoolCurator mockPoolCurator;
     private ProductCurator mockProductCurator;
     private OwnerProductCurator mockOwnerProductCurator;
     private ContentCurator mockContentCurator;
@@ -66,6 +69,7 @@ public class RefreshWorkerTest {
 
     @BeforeEach
     private void init() {
+        this.mockPoolCurator = mock(PoolCurator.class);
         this.mockProductCurator = mock(ProductCurator.class);
         this.mockOwnerProductCurator = mock(OwnerProductCurator.class);
         this.mockContentCurator = mock(ContentCurator.class);
@@ -97,7 +101,7 @@ public class RefreshWorkerTest {
     }
 
     private RefreshWorker buildRefreshWorker() {
-        return new RefreshWorker(this.mockProductCurator, this.mockOwnerProductCurator,
+        return new RefreshWorker(this.mockPoolCurator, this.mockProductCurator, this.mockOwnerProductCurator,
             this.mockContentCurator, this.mockOwnerContentCurator);
     }
 
@@ -1062,10 +1066,10 @@ public class RefreshWorkerTest {
 
         // At the time of writing, pools should always be empty since they're still processed
         // outside of the worker framework
-        assertNotNull(result.getProcessedPools());
-        assertEquals(0, result.getProcessedPools().size());
+        assertNotNull(result.getEntities(Pool.class));
+        assertEquals(0, result.getEntities(Pool.class).size());
 
-        Map<String, Product> productMap = result.getProcessedProducts();
+        Map<String, Product> productMap = result.getEntities(Product.class);
         assertNotNull(productMap);
         assertEquals(4, productMap.size());
         for (ProductInfo pinfo : Arrays.asList(pinfo1, pinfo2, pinfo3, pinfo4)) {
@@ -1074,7 +1078,7 @@ public class RefreshWorkerTest {
             assertEquals(pinfo.getId(), productMap.get(pinfo.getId()).getId());
         }
 
-        Map<String, Content> contentMap = result.getProcessedContent();
+        Map<String, Content> contentMap = result.getEntities(Content.class);
         assertNotNull(contentMap);
         assertEquals(6, contentMap.size());
         for (ContentInfo cinfo : Arrays.asList(cinfo1, cinfo2, cinfo3, cinfo4, cinfo5, cinfo6)) {
@@ -1111,17 +1115,17 @@ public class RefreshWorkerTest {
         assertNotNull(result);
 
         // See note above as to why this is empty in this test
-        assertNotNull(result.getProcessedPools());
-        assertEquals(0, result.getProcessedPools().size());
+        assertNotNull(result.getEntities(Pool.class));
+        assertEquals(0, result.getEntities(Pool.class).size());
 
-        Map<String, Product> productMap = result.getProcessedProducts();
+        Map<String, Product> productMap = result.getEntities(Product.class);
         assertNotNull(productMap);
         assertEquals(3, productMap.size());
         assertThat(productMap, hasEntry(product1.getId(), product1));
         assertThat(productMap, hasEntry(product2.getId(), product2));
         assertThat(productMap, hasEntry(product3.getId(), product3));
 
-        Map<String, Content> contentMap = result.getProcessedContent();
+        Map<String, Content> contentMap = result.getEntities(Content.class);
         assertNotNull(contentMap);
         assertEquals(3, contentMap.size());
         assertThat(contentMap, hasEntry(content1.getId(), content1));
@@ -1165,10 +1169,10 @@ public class RefreshWorkerTest {
         assertNotNull(result);
 
         // See note above as to why this is empty in this test
-        assertNotNull(result.getProcessedPools());
-        assertEquals(0, result.getProcessedPools().size());
+        assertNotNull(result.getEntities(Pool.class));
+        assertEquals(0, result.getEntities(Pool.class).size());
 
-        Map<String, Product> productMap = result.getProcessedProducts();
+        Map<String, Product> productMap = result.getEntities(Product.class);
         assertNotNull(productMap);
         assertEquals(4, productMap.size());
         for (ProductInfo pinfo : Arrays.asList(product1, product2, product3, pinfo1, pinfo2, pinfo3)) {
@@ -1177,7 +1181,7 @@ public class RefreshWorkerTest {
             assertEquals(pinfo.getName(), productMap.get(pinfo.getId()).getName());
         }
 
-        Map<String, Content> contentMap = result.getProcessedContent();
+        Map<String, Content> contentMap = result.getEntities(Content.class);
         assertNotNull(contentMap);
         assertEquals(4, contentMap.size());
         for (ContentInfo cinfo : Arrays.asList(content1, content2, content3, cinfo1, cinfo2, cinfo3)) {
@@ -1205,12 +1209,12 @@ public class RefreshWorkerTest {
         RefreshResult result = worker.execute(owner);
 
         assertNotNull(result);
-        assertNotNull(result.getProcessedPools());
-        assertEquals(0, result.getProcessedPools().size());
-        assertNotNull(result.getProcessedProducts());
-        assertEquals(0, result.getProcessedProducts().size());
-        assertNotNull(result.getProcessedContent());
-        assertEquals(0, result.getProcessedContent().size());
+        assertNotNull(result.getEntities(Pool.class));
+        assertEquals(0, result.getEntities(Pool.class).size());
+        assertNotNull(result.getEntities(Product.class));
+        assertEquals(0, result.getEntities(Product.class).size());
+        assertNotNull(result.getEntities(Content.class));
+        assertEquals(0, result.getEntities(Content.class).size());
     }
 
 

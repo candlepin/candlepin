@@ -14,16 +14,14 @@
  */
 package org.candlepin.controller.refresher.visitors;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.controller.refresher.RefreshResult;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.ContentNode;
 import org.candlepin.controller.refresher.nodes.EntityNode;
+import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
 import org.candlepin.controller.refresher.nodes.ProductNode;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
@@ -136,10 +134,6 @@ public class ProductNodeVisitorTest {
             for (EntityNode node : nodes) {
                 doReturn(node).when(this.mockNodeMapper)
                     .getNode(eq(node.getEntityClass()), eq(node.getEntityId()));
-
-                // Our processor won't actually do recursive processing, so we'll pretend they've been
-                // processed.
-                node.markVisited();
             }
         }
     }
@@ -150,7 +144,7 @@ public class ProductNodeVisitorTest {
             .setImportedEntity(imported);
 
         if (imported != null) {
-            node.markChanged();
+            node.setNodeState(NodeState.CREATED);
             node.setMergedEntity(imported);
         }
 
@@ -168,7 +162,7 @@ public class ProductNodeVisitorTest {
             .setImportedEntity(imported);
 
         if (imported != null) {
-            node.markChanged();
+            node.setNodeState(NodeState.CREATED);
             node.setMergedEntity(imported);
         }
 
@@ -222,18 +216,13 @@ public class ProductNodeVisitorTest {
             buildProvidedProduct("pid-4", "provided-4"),
             buildProvidedProduct("pid-5", "provided-5"));
 
-        EntityNode cnode1 = buildContentNode(owner, "cid-1", baseProductContent.get(0).getContent(),
-            null);
-        EntityNode cnode2 = buildContentNode(owner, "cid-2", baseProductContent.get(1).getContent(),
-            null);
-        EntityNode cnode3 = buildContentNode(owner, "cid-3", baseProductContent.get(2).getContent(),
-            null);
+        EntityNode cnode1 = buildContentNode(owner, "cid-1", baseProductContent.get(0).getContent(), null);
+        EntityNode cnode2 = buildContentNode(owner, "cid-2", baseProductContent.get(1).getContent(), null);
+        EntityNode cnode3 = buildContentNode(owner, "cid-3", baseProductContent.get(2).getContent(), null);
         EntityNode cnode4 = buildContentNode(owner, "cid-3", baseProductContent.get(2).getContent(),
             updatedProductContent.get(0).getContent());
-        EntityNode cnode5 = buildContentNode(owner, "cid-4", null,
-            updatedProductContent.get(1).getContent());
-        EntityNode cnode6 = buildContentNode(owner, "cid-5", null,
-            updatedProductContent.get(2).getContent());
+        EntityNode cnode5 = buildContentNode(owner, "cid-4", null, updatedProductContent.get(1).getContent());
+        EntityNode cnode6 = buildContentNode(owner, "cid-5", null, updatedProductContent.get(2).getContent());
 
         EntityNode pnode1 = buildProductNode(owner, "pid-1", baseProvidedProducts.get(0), null);
         EntityNode pnode2 = buildProductNode(owner, "pid-2", baseProvidedProducts.get(1), null);
@@ -335,8 +324,8 @@ public class ProductNodeVisitorTest {
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("productDataProvider")
-    public void testProcessNodeForSkippedEntity(String key, Object base, Collection<EntityNode> baseChildren,
-        Object update, Collection<EntityNode> updatedChildren) {
+    public void testProcessNodeForAbsentUpstreamEntity(String key, Object base,
+        Collection<EntityNode> baseChildren, Object update, Collection<EntityNode> updatedChildren) {
 
         Owner owner = TestUtil.createOwner();
         String id = TestUtil.randomString("test_id");
@@ -358,8 +347,7 @@ public class ProductNodeVisitorTest {
         ProductNodeVisitor visitor = this.buildProductNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -367,6 +355,7 @@ public class ProductNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
+        assertEquals(NodeState.UNCHANGED, node.getNodeState());
         assertFalse(node.changed());
         assertNull(node.getMergedEntity());
 
@@ -400,8 +389,7 @@ public class ProductNodeVisitorTest {
         ProductNodeVisitor visitor = this.buildProductNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -409,7 +397,7 @@ public class ProductNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
-        assertFalse(node.changed());
+        assertEquals(NodeState.UNCHANGED, node.getNodeState());
         assertNull(node.getMergedEntity());
 
         verify(this.mockProductCurator, never()).saveOrUpdate(any(Product.class));
@@ -442,8 +430,7 @@ public class ProductNodeVisitorTest {
         ProductNodeVisitor visitor = this.buildProductNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -451,7 +438,7 @@ public class ProductNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
-        assertFalse(node.changed());
+        assertEquals(NodeState.UNCHANGED, node.getNodeState());
         assertNull(node.getMergedEntity());
 
         verify(this.mockProductCurator, never()).saveOrUpdate(any(Product.class));
@@ -482,8 +469,7 @@ public class ProductNodeVisitorTest {
         ProductNodeVisitor visitor = this.buildProductNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -491,7 +477,7 @@ public class ProductNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
-        assertTrue(node.changed());
+        assertEquals(NodeState.CREATED, node.getNodeState());
         assertNotNull(node.getMergedEntity());
         this.validateMergedEntity(null, imported, node.getMergedEntity());
 
@@ -525,8 +511,7 @@ public class ProductNodeVisitorTest {
         ProductNodeVisitor visitor = this.buildProductNodeVisitor();
 
         // Ensure initial node state
-        assertFalse(node.visited());
-        assertFalse(node.changed());
+        assertNull(node.getNodeState());
         assertNull(node.getMergedEntity());
 
         // Visit/process the node
@@ -534,155 +519,11 @@ public class ProductNodeVisitorTest {
         visitor.complete();
 
         // Validate node state
-        assertTrue(node.changed());
+        assertEquals(NodeState.UPDATED, node.getNodeState());
         assertNotNull(node.getMergedEntity());
         this.validateMergedEntity(existing, imported, node.getMergedEntity());
 
         verify(this.mockProductCurator, times(1)).saveOrUpdate(any(Product.class));
-    }
-
-    public void testCompileResultsForSkippedEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Product existing = this.createPopulatedExistingEntity(id, "name", "product-1");
-
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setExistingEntity(existing);
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Product> created = result.getCreatedProducts();
-        Map<String, Product> updated = result.getUpdatedProducts();
-        Map<String, Product> skipped = result.getSkippedProducts();
-
-        assertNotNull(result.getProduct(id));
-        assertEquals(0, created.size());
-        assertEquals(0, updated.size());
-        assertEquals(1, skipped.size());
-        assertThat(skipped, hasEntry(id, existing));
-    }
-
-    public void testCompileResultsForUnmodifiedEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Product existing = this.createPopulatedExistingEntity(id, "name", "product-1");
-        ProductInfo imported = this.createPopulatedImportedEntity(id, "name", null);
-
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported);
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Product> created = result.getCreatedProducts();
-        Map<String, Product> updated = result.getUpdatedProducts();
-        Map<String, Product> skipped = result.getSkippedProducts();
-
-        assertNotNull(result.getProduct(id));
-        assertEquals(0, created.size());
-        assertEquals(0, updated.size());
-        assertEquals(1, skipped.size());
-        assertThat(skipped, hasEntry(id, existing));
-    }
-
-    public void testCompileResultsForUnchangedEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Product existing = this.createPopulatedExistingEntity(id, "name", "product-1");
-        ProductInfo imported = this.createPopulatedImportedEntity(id, "name", "product-1");
-
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported);
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Product> created = result.getCreatedProducts();
-        Map<String, Product> updated = result.getUpdatedProducts();
-        Map<String, Product> skipped = result.getSkippedProducts();
-
-        assertNotNull(result.getProduct(id));
-        assertEquals(0, created.size());
-        assertEquals(0, updated.size());
-        assertEquals(1, skipped.size());
-        assertThat(skipped, hasEntry(id, existing));
-    }
-
-    public void testCompileResultsForNewEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        ProductInfo imported = this.createPopulatedImportedEntity(id, "name", "product-1");
-        Product merged = this.createPopulatedExistingEntity(id, "name", "product-1");
-
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setImportedEntity(imported)
-            .setMergedEntity(merged);
-
-        node.markChanged();
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Product> created = result.getCreatedProducts();
-        Map<String, Product> updated = result.getUpdatedProducts();
-        Map<String, Product> skipped = result.getSkippedProducts();
-
-        assertNotNull(result.getProduct(id));
-        assertEquals(1, created.size());
-        assertEquals(0, updated.size());
-        assertEquals(0, skipped.size());
-        assertThat(created, hasEntry(id, merged));
-    }
-
-    public void testCompileResultsForUpdatedEntity() {
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Product existing = this.createPopulatedExistingEntity(id, "name", "product-1");
-        ProductInfo imported = this.createPopulatedImportedEntity(id, "name", "product-1b");
-        Product merged = this.createPopulatedExistingEntity(id, "name", "product-1b");
-
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported)
-            .setMergedEntity(merged);
-
-        node.markChanged();
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        RefreshResult result = new RefreshResult();
-
-        visitor.compileResults(result, node);
-
-        Map<String, Product> created = result.getCreatedProducts();
-        Map<String, Product> updated = result.getUpdatedProducts();
-        Map<String, Product> skipped = result.getSkippedProducts();
-
-        assertNotNull(result.getProduct(id));
-        assertEquals(0, created.size());
-        assertEquals(1, updated.size());
-        assertEquals(0, skipped.size());
-        assertThat(created, hasEntry(id, existing));
     }
 
 }

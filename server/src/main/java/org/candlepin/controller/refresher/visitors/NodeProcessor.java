@@ -15,13 +15,20 @@
 package org.candlepin.controller.refresher.visitors;
 
 import org.candlepin.controller.refresher.RefreshResult;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
+import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 
 
@@ -37,9 +44,10 @@ import java.util.Map;
  * will be thrown.
  */
 public class NodeProcessor {
+    private static Logger log = LoggerFactory.getLogger(NodeProcessor.class);
 
     private NodeMapper mapper;
-    private Map<Class, NodeVisitor> visitors;
+    private Map<Class, NodeVisitor<?, ?>> visitors;
 
     /**
      * Creates a new NodeProcessor, without any mappers or visitors.
@@ -82,7 +90,7 @@ public class NodeProcessor {
      * @return
      *  a reference to this node processor
      */
-    public NodeProcessor addVisitor(NodeVisitor visitor) {
+    public NodeProcessor addVisitor(NodeVisitor<?, ?> visitor) {
         if (visitor == null) {
             throw new IllegalArgumentException("visitor is null");
         }
@@ -100,26 +108,53 @@ public class NodeProcessor {
      * @throws IllegalStateException
      *  if the node mapper has not yet been set, or a visitor has not been provided for one of more
      *  of the nodes mapped by the backing node mapper.
+     *
+     * @return
+     *  a RefreshResult instance containing the entities affected by the refresh operation
      */
-    public void processNodes() {
+    public RefreshResult processNodes() {
         if (this.mapper == null) {
             throw new IllegalStateException("node mapper has not been set");
         }
 
-        for (Iterator<EntityNode> rootIterator = this.mapper.getRootIterator(); rootIterator.hasNext();) {
-            this.processNodeImpl(rootIterator.next());
+        Set<EntityNode<?, ?>> visited;
+        Iterator<EntityNode<?, ?>> iterator;
+
+        // Process our remaining nodes
+        visited = new HashSet<>();
+        iterator = this.mapper.getRootIterator();
+        while (iterator.hasNext()) {
+            this.processNodeImpl(visited, iterator.next());
         }
+
+        // Prune our unused nodes
+        // Impl note: it's probably not strictly necessary to reverse the ordering of processing here,
+        // but it does give us a nice, warm and fuzzy guarantee that all the parents will be checked
+        // before checking if a specific node can be pruned
+        visited = new HashSet<>();
+        iterator = this.mapper.getLeafIterator();
+        while (iterator.hasNext()) {
+            this.pruneNodeImpl(visited, iterator.next());
+        }
+
+        // Have our visitors complete any pending operations
+        for (NodeVisitor<?, ?> visitor : this.visitors.values()) {
+            visitor.complete();
+        }
+
+        // Compile and return the results
+        return this.compileResults();
     }
 
     /**
      * Internal implementation that avoids repeating unnecessary input and state validation
      */
-    private void processNodeImpl(EntityNode node) {
-        if (node != null && !node.visited()) {
-            // Process children nodes first (depth-first), so we can update references and avoid
-            // rework
-            for (EntityNode childNode : (Collection<EntityNode>) node.getChildrenNodes()) {
-                this.processNodeImpl(childNode);
+    private void processNodeImpl(Set<EntityNode<?, ?>> visited, EntityNode<?, ?> node) {
+        if (node != null && !visited.contains(node)) {
+            // Process children nodes first (depth-first), so we can perform children resolution
+            // and avoid rework
+            for (EntityNode<?, ?> childNode : (Collection<EntityNode<?, ?>>) node.getChildrenNodes()) {
+                this.processNodeImpl(visited, childNode);
             }
 
             NodeVisitor visitor = this.visitors.get(node.getEntityClass());
@@ -128,18 +163,47 @@ public class NodeProcessor {
                     node.getEntityClass());
             }
 
+            log.trace("Processing node: {}", node);
+
             // TODO: Stop passing the processor and mapper in. If the visitors are implemented
             // properly, they shouldn't need to do node lookups, as the nodes should already be
             // present as children nodes on the node we're providing
             visitor.processNode(this, this.mapper, node);
 
-            // If we got here successfully, mark the node as visited
-            node.markVisited();
+            // Add the node to our list of visited nodes so we don't process it again
+            visited.add(node);
         }
     }
 
     /**
-     * Compiles and fetches the result of the nodes mapped by the backing node mapper. If the
+     * Internal implementation that avoids repeating unnecessary input and state validation
+     */
+    private void pruneNodeImpl(Set<EntityNode<?, ?>> visited, EntityNode<?, ?> node) {
+        if (node != null && !visited.contains(node)) {
+            // Process parents nodes first (reverse depth-first), so we can ensure proper subtree
+            // reference evaluation
+            for (EntityNode<?, ?> parentNode : (Collection<EntityNode<?, ?>>) node.getParentNodes()) {
+                this.pruneNodeImpl(visited, parentNode);
+            }
+
+            NodeVisitor visitor = this.visitors.get(node.getEntityClass());
+            if (visitor == null) {
+                throw new IllegalStateException("No visitor configured for nodes of type: " +
+                    node.getEntityClass());
+            }
+
+            log.trace("Pruning node: {}", node);
+
+            visitor.pruneNode(node);
+
+            // Add the node to our list of visited nodes so we don't process it again
+            visited.add(node);
+        }
+    }
+
+
+    /**
+     * Fetches and compiles the result of the nodes mapped by the backing node mapper. If the
      * mapper contains any nodes which have not yet been processed, this method throws an
      * exception.
      * <p></p>
@@ -153,36 +217,49 @@ public class NodeProcessor {
      *  a RefreshResult instance containing the result of the overall refresh operation performed
      *  by the processing of the nodes contained in the backing node mapper
      */
-    public RefreshResult compileResults() {
-        if (this.mapper == null) {
-            throw new IllegalStateException("node mapper has not been set");
-        }
-
+    private RefreshResult compileResults() {
         RefreshResult result = new RefreshResult();
 
-        // Have our visitors complete any pending operations
-        for (NodeVisitor visitor : this.visitors.values()) {
-            visitor.complete();
-        }
-
-        // Compile the results
-        for (Iterator<EntityNode> nodeIterator = this.mapper.getNodeIterator(); nodeIterator.hasNext();) {
+        Iterator<EntityNode<?, ?>> nodeIterator = this.mapper.getNodeIterator();
+        while (nodeIterator.hasNext()) {
             EntityNode node = nodeIterator.next();
 
             if (node != null) {
-                if (!node.visited()) {
-                    String errmsg = "Cannot compile results before all nodes have been processed";
+                NodeState state = node.getNodeState();
+
+                if (state == null) {
+                    String errmsg = String.format("node mapper contains an unprocessed node: %s [id: %s]",
+                        node.getEntityClass(), node.getEntityId());
+
                     throw new IllegalStateException(errmsg);
                 }
 
-                NodeVisitor visitor = this.visitors.get(node.getEntityClass());
+                switch (state) {
+                    case CREATED:
+                        result.addEntity(node.getEntityClass(), node.getMergedEntity(), EntityState.CREATED);
+                        break;
 
-                if (visitor == null) {
-                    throw new IllegalStateException("No visitor configured for nodes of type: " +
-                        node.getEntityClass());
+                    case UPDATED:
+                        result.addEntity(node.getEntityClass(), node.getMergedEntity(), EntityState.UPDATED);
+                        break;
+
+                    case UNCHANGED:
+                        result.addEntity(node.getEntityClass(), node.getExistingEntity(),
+                            EntityState.UNCHANGED);
+                        break;
+
+                    case DELETED:
+                        result.addEntity(node.getEntityClass(), node.getExistingEntity(),
+                            EntityState.DELETED);
+                        break;
+
+                    case SKIPPED:
+                        // Do nothing with this entity
+                        break;
+
+                    default:
+                        throw new IllegalStateException("Unexpected node state: " + state);
                 }
-
-                visitor.compileResults(result, node);
             }
         }
 

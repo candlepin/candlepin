@@ -15,9 +15,9 @@
 package org.candlepin.controller.refresher.visitors;
 
 import org.candlepin.controller.ContentManager;
-import org.candlepin.controller.refresher.RefreshResult;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
+import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
@@ -41,6 +41,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
 
     private Set<OwnerContent> ownerContentEntities;
     private Map<Owner, Map<String, String>> ownerContentUuidMap;
+    private Map<Owner, Set<String>> deletedContentUuids;
 
 
     /**
@@ -70,6 +71,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
 
         this.ownerContentEntities = new HashSet<>();
         this.ownerContentUuidMap = new HashMap<>();
+        this.deletedContentUuids = new HashMap<>();
     }
 
     /**
@@ -87,32 +89,34 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
     public void processNode(NodeProcessor processor, NodeMapper mapper,
         EntityNode<Content, ContentInfo> node) {
 
-        if (node.visited()) {
-            return;
-        }
-
         // Content nodes should not have any children
         if (!node.isLeafNode()) {
             throw new IllegalStateException("Content node has one or more children nodes");
         }
 
+        // If this node already has a state, we don't need to reprocess it (probably)
+        if (node.getNodeState() != null) {
+            return;
+        }
+
         Content existingEntity = node.getExistingEntity();
         ContentInfo importedEntity = node.getImportedEntity();
 
+        // Default the node state to UNCHANGED and let our cases below overwrite this
+        node.setNodeState(NodeState.UNCHANGED);
+
         if (existingEntity != null) {
-            if (importedEntity != null && ContentManager.isChangedBy(existingEntity, importedEntity)) {
-                Content mergedEntity = this.createEntity(mapper, node);
-                node.setMergedEntity(mergedEntity);
+            if (importedEntity != null) {
+                if (ContentManager.isChangedBy(existingEntity, importedEntity)) {
+                    Content mergedEntity = this.createEntity(mapper, node);
+                    node.setMergedEntity(mergedEntity);
 
-                // Store the mapping to be updated later
-                Map<String, String> contentUuidMap = this.ownerContentUuidMap.get(node.getOwner());
-                if (contentUuidMap == null) {
-                    contentUuidMap = new HashMap<>();
-                    this.ownerContentUuidMap.put(node.getOwner(), contentUuidMap);
+                    // Store the mapping to be updated later
+                    this.ownerContentUuidMap.computeIfAbsent(node.getOwner(), key -> new HashMap<>())
+                        .put(existingEntity.getUuid(), mergedEntity.getUuid());
+
+                    node.setNodeState(NodeState.UPDATED);
                 }
-                contentUuidMap.put(existingEntity.getUuid(), mergedEntity.getUuid());
-
-                node.markChanged();
             }
         }
         else if (importedEntity != null) {
@@ -124,8 +128,52 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
             // later during completion
             this.ownerContentEntities.add(new OwnerContent(node.getOwner(), mergedEntity));
 
-            node.markChanged();
+            node.setNodeState(NodeState.CREATED);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void pruneNode(EntityNode<Content, ContentInfo> node) {
+        Content existingEntity = node.getExistingEntity();
+
+        // We're only going to prune existing entities that are locked
+        if (existingEntity != null && this.clearedForDeletion(node)) {
+            this.deletedContentUuids.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
+                .add(existingEntity.getUuid());
+
+            node.setNodeState(NodeState.DELETED);
+        }
+    }
+
+    /**
+     * Checks if a node is an unused root, or is part of a subtree (or subtrees) that are marked for
+     * deletion.
+     *
+     * @param node
+     *  the entity node to check
+     *
+     * @return
+     *  true if the node is cleared for deletion; false otherwise
+     */
+    private boolean clearedForDeletion(EntityNode<Content, ContentInfo> node) {
+        if (node.getExistingEntity().isLocked()) {
+            if (node.getImportedEntity() == null && node.isRootNode()) {
+                return true;
+            }
+
+            for (EntityNode parent : node.getParentNodes()) {
+                if (parent.getNodeState() != NodeState.DELETED) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -133,48 +181,24 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
      */
     @Override
     public void complete() {
+        // Remove owner-specific content references for deleted content
+        for (Map.Entry<Owner, Set<String>> entry : this.deletedContentUuids.entrySet()) {
+            this.ownerContentCurator.removeOwnerContentReferences(entry.getKey(), entry.getValue());
+        }
+
+        // Save new owner-content entities
         this.ownerContentCurator.saveAll(this.ownerContentEntities, false, false);
         this.ownerContentCurator.flush();
 
+        // Update owner content references
         for (Map.Entry<Owner, Map<String, String>> entry : this.ownerContentUuidMap.entrySet()) {
             this.ownerContentCurator.updateOwnerContentReferences(entry.getKey(), entry.getValue());
         }
 
+        // Clear our cache
         this.ownerContentUuidMap.clear();
         this.ownerContentEntities.clear();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void compileResults(RefreshResult result, EntityNode<Content, ContentInfo> node) {
-        if (result == null) {
-            throw new IllegalArgumentException("result is null");
-        }
-
-        if (node == null) {
-            throw new IllegalArgumentException("node is null");
-        }
-
-        if (!node.visited()) {
-            String errmsg = String.format("Node has not yet been visited: %s [id: %s]",
-                node.getEntityClass(), node.getEntityId());
-
-            throw new IllegalStateException(errmsg);
-        }
-
-        if (node.getMergedEntity() != null) {
-            if (node.isEntityCreation()) {
-                result.addCreatedContent(node.getMergedEntity());
-            }
-            else {
-                result.addUpdatedContent(node.getMergedEntity());
-            }
-        }
-        else if (node.getExistingEntity() != null) {
-            result.addSkippedContent(node.getExistingEntity());
-        }
+        this.deletedContentUuids.clear();
     }
 
     /**

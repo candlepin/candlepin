@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller.refresher.builders;
 
+import org.candlepin.controller.refresher.mappers.EntityMapper;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.model.AbstractHibernateObject;
@@ -22,6 +23,7 @@ import org.candlepin.service.model.ServiceAdapterModel;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 
@@ -34,13 +36,15 @@ import java.util.Map;
  */
 public class NodeFactory {
 
-    private NodeMapper mapper;
-    private Map<Class, NodeBuilder> builders;
+    private NodeMapper nodeMapper;
+    private Map<Class, EntityMapper<?, ?>> mappers;
+    private Map<Class, NodeBuilder<?, ?>> builders;
 
     /**
      * Creates a new NodeFactory without any mappers or builders
      */
     public NodeFactory() {
+        this.mappers = new HashMap<>();
         this.builders = new HashMap<>();
     }
 
@@ -57,7 +61,7 @@ public class NodeFactory {
      * @return
      *  a reference to this node factory
      */
-    public NodeFactory addBuilder(NodeBuilder builder) {
+    public NodeFactory addBuilder(NodeBuilder<?, ?> builder) {
         if (builder == null) {
             throw new IllegalArgumentException("builder is null");
         }
@@ -67,10 +71,11 @@ public class NodeFactory {
     }
 
     /**
-     * Sets the mapper to use for mapping nodes created by this factory.
+     * Adds a mapper to this factory. The mapper will be used to provide entities during node
+     * construction for the class returned by the mapper's <tt>getEntityClass</tt> method.
      *
      * @param mapper
-     *  the mapper to use for mapping nodes
+     *  the mapper to add to this factory
      *
      * @throws IllegalArgumentException
      *  if the provided mapper is null
@@ -78,12 +83,33 @@ public class NodeFactory {
      * @return
      *  a reference to this node factory
      */
-    public NodeFactory setNodeMapper(NodeMapper mapper) {
+    public NodeFactory addMapper(EntityMapper<?, ?> mapper) {
         if (mapper == null) {
             throw new IllegalArgumentException("mapper is null");
         }
 
-        this.mapper = mapper;
+        this.mappers.put(mapper.getExistingEntityClass(), mapper);
+        return this;
+    }
+
+    /**
+     * Sets the mapper to use for mapping nodes created by this factory.
+     *
+     * @param nodeMapper
+     *  the node mapper to use for mapping nodes
+     *
+     * @throws IllegalArgumentException
+     *  if the provided mapper is null
+     *
+     * @return
+     *  a reference to this node factory
+     */
+    public NodeFactory setNodeMapper(NodeMapper nodeMapper) {
+        if (nodeMapper == null) {
+            throw new IllegalArgumentException("nodeMapper is null");
+        }
+
+        this.nodeMapper = nodeMapper;
         return this;
     }
 
@@ -92,7 +118,7 @@ public class NodeFactory {
      * necessary.
      *
      * @param owner
-     *  the organization that will own the created entity
+     *  the organization that will own the created node
      *
      * @param cls
      *  the entity class of the node to create
@@ -101,38 +127,66 @@ public class NodeFactory {
      *  the entity ID of the node to create
      *
      * @throws IllegalStateException
-     *  if the mapper has not been set, or a builder has not been provided for the given entity
-     *  class, or the builder failed to create a node for the entity
+     *  if the node mapper has not been set, or a mapper or builder has not been provided for the
+     *  given entity class, or the builder failed to create a node for the entity
      *
      * @return
      *  the entity node for the given entity class and ID
      */
-    public <E extends AbstractHibernateObject, I extends ServiceAdapterModel> EntityNode<E, I>
+    protected <E extends AbstractHibernateObject, I extends ServiceAdapterModel> EntityNode<E, I>
         buildNode(Owner owner, Class<E> cls, String id) {
 
-        if (this.mapper == null) {
+        if (this.nodeMapper == null) {
             throw new IllegalStateException("mapper is null");
         }
 
-        EntityNode<E, I> node = this.mapper.getNode(cls, id);
+        EntityNode<E, I> node = this.nodeMapper.getNode(cls, id);
 
         if (node == null) {
+            EntityMapper<E, I> mapper = (EntityMapper<E, I>) this.mappers.get(cls);
             NodeBuilder<E, I> builder = (NodeBuilder<E, I>) this.builders.get(cls);
 
-            if (builder == null) {
-                throw new IllegalStateException("no build provided for the entity class: " + cls);
+            if (mapper == null) {
+                throw new IllegalStateException("no entity mapper provided for the entity class: " + cls);
             }
 
-            node = builder.buildNode(this, owner, id);
+            if (builder == null) {
+                throw new IllegalStateException("no node builder provided for the entity class: " + cls);
+            }
+
+            node = builder.buildNode(this, mapper, owner, id);
             if (node == null) {
                 String errmsg = String.format("Unable to build node for entity: %s [id: %s]", cls, id);
                 throw new IllegalStateException(errmsg);
             }
 
-            this.mapper.addNode(node);
+            this.nodeMapper.addNode(node);
         }
 
         return node;
+    }
+
+    /**
+     * Builds nodes for all known entities present in every entity mapper registered with this node
+     * factory. If matching nodes are already present in the registered node mapper, new nodes will
+     * not be created for them.
+     *
+     * @param owner
+     *  the organization that will own the created nodes
+     *
+     * @throws IllegalStateException
+     *  if the node mapper has not been set, or a mapper or builder has not been provided for the
+     *  given entity class, or the builder failed to create a node for the entity
+     */
+    public void buildNodes(Owner owner) {
+        for (Map.Entry<Class, EntityMapper<?, ?>> entry : this.mappers.entrySet()) {
+            Class cls = entry.getKey();
+            EntityMapper<?, ?> mapper = entry.getValue();
+
+            for (String id : (Set<String>) mapper.getEntityIds()) {
+                this.buildNode(owner, cls, id);
+            }
+        }
     }
 
 }

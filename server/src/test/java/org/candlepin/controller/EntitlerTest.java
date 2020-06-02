@@ -28,6 +28,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.refresher.RefreshResult;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -132,8 +133,8 @@ public class EntitlerTest {
         );
         translator = new EntitlementRulesTranslator(i18n);
 
-        this.refreshWorker = spy(new RefreshWorker(this.mockProductCurator, this.mockOwnerProductCurator,
-            this.mockContentCurator, this.mockOwnerContentCurator));
+        this.refreshWorker = spy(new RefreshWorker(this.poolCurator, this.mockProductCurator,
+            this.mockOwnerProductCurator, this.mockContentCurator, this.mockOwnerContentCurator));
 
         this.refreshWorkerProvider = () -> refreshWorker;
 
@@ -148,13 +149,13 @@ public class EntitlerTest {
 
             if (products != null) {
                 for (Product product : products) {
-                    output.addCreatedProduct(product);
+                    output.addEntity(Product.class, product, EntityState.CREATED);
                 }
             }
 
             if (contents != null) {
                 for (Content content : contents) {
-                    output.addCreatedContent(content);
+                    output.addEntity(Content.class, content, EntityState.CREATED);
                 }
             }
 
@@ -580,20 +581,44 @@ public class EntitlerTest {
     @Test
     public void testCreatedDevPoolAttributes() {
         Owner owner = TestUtil.createOwner("o");
-        List<ProductData> devProdDTOs = new ArrayList<>();
+
         Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
-        p1.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
-        p1.setAttribute("expires_after", "47");
         Product p2 = TestUtil.createProduct("provided-product1", "Provided Product 1");
         Product p3 = TestUtil.createProduct("provided-product2", "Provided Product 2");
-        devProdDTOs.add(p1.toDTO());
-        devProdDTOs.add(p2.toDTO());
-        devProdDTOs.add(p3.toDTO());
+
+        p1.setAttribute(Product.Attributes.SUPPORT_LEVEL, "Premium");
+        p1.setAttribute("expires_after", "47");
+        p1.addProvidedProduct(p2);
+        p1.addProvidedProduct(p3);
+
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
         devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
-        doReturn(devProdDTOs).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
+
+        doAnswer(iom -> {
+            List<ProductData> output = new ArrayList<>();
+
+            List<String> pids = (List<String>) iom.getArguments()[1];
+
+            if (pids != null) {
+                for (String pid : pids) {
+                    if (pid.equals(p1.getId())) {
+                        output.add(p1.toDTO());
+                    }
+
+                    if (pid.equals(p2.getId())) {
+                        output.add(p2.toDTO());
+                    }
+
+                    if (pid.equals(p3.getId())) {
+                        output.add(p3.toDTO());
+                    }
+                }
+            }
+
+            return output;
+        }).when(productAdapter).getProductsByIds(eq(owner.getKey()), anyList());
 
         this.mockRefresh(owner, Arrays.asList(p1, p2, p3), null);
 

@@ -120,13 +120,31 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
     }
 
-    @Transactional
-    public CandlepinQuery<Pool> listByOwnerAndType(Owner owner, PoolType type) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("type", type));
+    /**
+     * Fetches all pools for the given owner of the specified pool types. If no pools match the
+     * given inputs, this method returns an empty list.
+     *
+     * @param ownerId
+     *  the ID of the owner to use to match pools
+     *
+     * @param types
+     *  a collection of pool types to use to match pools
+     *
+     * @return
+     *  a list of pools matching the given owner and pool types
+     */
+    public List<Pool> listByOwnerAndTypes(String ownerId, PoolType... types) {
+        if (types != null && types.length > 0) {
+            String jpql = "SELECT p FROM Pool p WHERE p.owner.id = :owner_id AND p.type IN (:pool_types)";
 
-        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+            return this.getEntityManager()
+                .createQuery(jpql, Pool.class)
+                .setParameter("owner_id", ownerId)
+                .setParameter("pool_types", Arrays.asList(types))
+                .getResultList();
+        }
+
+        return new ArrayList<>();
     }
 
     /**
@@ -2008,4 +2026,36 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         return output;
     }
+
+    /**
+     * Fetches a list of pool IDs for pools that are referencing products which are no longer linked
+     * to the pool's owning organization. If no such pools exist, this method returns an empty list.
+     *
+     * @param ownerId
+     *  the ID of the organization owning the pools to check.
+     *
+     * @return
+     *  a list of pools using products which are not owned by the owning organization.
+     */
+    public List<String> getPoolsUsingOrphanedProducts(String ownerId) {
+        if (ownerId == null || ownerId.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // We use native SQL here since we do a multi-field join
+        String sql = "SELECT p.id FROM cp_pool p " +
+            "LEFT JOIN cp2_owner_products op1 ON op1.owner_id = p.owner_id " +
+            "  AND p.product_uuid = op1.product_uuid " +
+            "LEFT JOIN cp2_owner_products op2 ON op2.owner_id = p.owner_id " +
+            "  AND p.derived_product_uuid = op2.product_uuid " +
+            "WHERE p.owner_id = :owner_id AND " +
+            "  ((p.product_uuid IS NOT NULL AND op1.product_uuid IS NULL) OR " +
+            "  (p.derived_product_uuid IS NOT NULL AND op2.product_uuid IS NULL))";
+
+        return this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("owner_id", ownerId)
+            .getResultList();
+    }
+
 }

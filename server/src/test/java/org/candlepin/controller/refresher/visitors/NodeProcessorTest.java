@@ -20,8 +20,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.controller.refresher.RefreshResult;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
+import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
@@ -31,7 +33,6 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InOrder;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -41,6 +42,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 
 
@@ -52,29 +54,33 @@ import java.util.List;
 public class NodeProcessorTest {
 
     private NodeVisitor mockNodeVisitor(Class cls) {
-        NodeVisitor mockNodeVisitor = mock(NodeVisitor.class);
+        NodeVisitor visitor = mock(NodeVisitor.class);
 
-        doReturn(cls).when(mockNodeVisitor).getEntityClass();
+        doReturn(cls).when(visitor).getEntityClass();
 
-        return mockNodeVisitor;
+        return visitor;
     }
 
-    private EntityNode mockEntityNode(Owner owner, Class cls, String id) {
+    private EntityNode mockEntityNode(Owner owner, Class<? extends AbstractHibernateObject> cls, String id) {
         EntityNode node = mock(EntityNode.class);
 
-        AbstractHibernateObject existing = mock(AbstractHibernateObject.class);
+        AbstractHibernateObject existing = mock(cls);
         ServiceAdapterModel imported = mock(ServiceAdapterModel.class);
+        AbstractHibernateObject merged = mock(cls);
 
         doReturn(owner).when(node).getOwner();
         doReturn(cls).when(node).getEntityClass();
         doReturn(id).when(node).getEntityId();
 
+        doReturn(id).when(existing).getId();
+        doReturn(id).when(merged).getId();
+
         doReturn(existing).when(node).getExistingEntity();
         doReturn(imported).when(node).getImportedEntity();
+        doReturn(merged).when(node).getMergedEntity();
 
         return node;
     }
-
     private EntityNode mockNodeHierarchy(EntityNode node, Collection<EntityNode> parentNodes,
         Collection<EntityNode> childrenNodes) {
 
@@ -87,12 +93,12 @@ public class NodeProcessorTest {
             doReturn(true).when(node).isRootNode();
         }
 
-        if (parentNodes != null && !parentNodes.isEmpty()) {
-            doReturn(parentNodes).when(node).getParentNodes();
+        if (childrenNodes != null && !childrenNodes.isEmpty()) {
+            doReturn(childrenNodes).when(node).getChildrenNodes();
             doReturn(false).when(node).isLeafNode();
         }
         else {
-            doReturn(Collections.emptyList()).when(node).getParentNodes();
+            doReturn(Collections.emptyList()).when(node).getChildrenNodes();
             doReturn(true).when(node).isLeafNode();
         }
 
@@ -212,8 +218,6 @@ public class NodeProcessorTest {
         processor.setNodeMapper(mapper);
 
         assertThrows(IllegalStateException.class, () -> processor.processNodes());
-
-        verify(node, never()).markVisited();
     }
 
     @Test
@@ -230,6 +234,16 @@ public class NodeProcessorTest {
         doReturn(true).when(node).isRootNode();
         doReturn(Collections.emptyList()).when(node).getChildrenNodes();
 
+        doAnswer(iom -> {
+            EntityNode receivedNode = (EntityNode) iom.getArguments()[2];
+
+            if (receivedNode != null) {
+                doReturn(NodeState.UNCHANGED).when(receivedNode).getNodeState();
+            }
+
+            return null;
+        }).when(visitor1).processNode(any(NodeProcessor.class), any(NodeMapper.class), any(EntityNode.class));
+
         mapper.addNode(node);
 
         processor.setNodeMapper(mapper)
@@ -241,8 +255,6 @@ public class NodeProcessorTest {
         verify(visitor1, times(1)).processNode(eq(processor), eq(mapper), eq(node));
         verify(visitor2, never())
             .processNode(any(NodeProcessor.class), any(NodeMapper.class), any(EntityNode.class));
-
-        verify(node, times(1)).markVisited();
     }
 
     private int validateNodeProcessingOrder(List<EntityNode> processOrder, EntityNode node) {
@@ -252,8 +264,6 @@ public class NodeProcessorTest {
         // Ensure the node was actually processed, and only handed to our visitor once.
         assertNotEquals(-1, nodeIndex);
         assertEquals(nodeIndex, lastIndex);
-
-        verify(node, times(1)).markVisited();
 
         for (EntityNode child : (Collection<EntityNode>) node.getChildrenNodes()) {
             // Ensure the child was processed properly
@@ -295,7 +305,11 @@ public class NodeProcessorTest {
         // Have our mock visitor store the order in which the nodes are processed.
         doAnswer(iom -> {
             EntityNode node = (EntityNode) iom.getArguments()[2];
-            processOrder.add(node);
+
+            if (node != null) {
+                doReturn(NodeState.UNCHANGED).when(node).getNodeState();
+                processOrder.add(node);
+            }
 
             return null;
         }).when(visitor).processNode(any(NodeProcessor.class), any(NodeMapper.class), any(EntityNode.class));
@@ -315,74 +329,146 @@ public class NodeProcessorTest {
         }
     }
 
-    @Test
-    public void testCompileResultsRequiresMapper() {
-        NodeProcessor processor = new NodeProcessor();
-        assertThrows(IllegalStateException.class, () -> processor.compileResults());
+    private int validateNodePruningOrder(List<EntityNode> pruneOrder, EntityNode node) {
+        int nodeIndex = pruneOrder.indexOf(node);
+        int lastIndex = pruneOrder.lastIndexOf(node);
+
+        // Ensure the node was actually processed, and only handed to our visitor once.
+        assertNotEquals(-1, nodeIndex);
+        assertEquals(nodeIndex, lastIndex);
+
+        for (EntityNode parent : (Collection<EntityNode>) node.getParentNodes()) {
+            // Ensure the parent was processed properly
+            int parentIndex = this.validateNodeProcessingOrder(pruneOrder, parent);
+
+            // Ensure the parent was processed before the node
+            assertThat(parentIndex, lessThan(nodeIndex));
+        }
+
+        return nodeIndex;
     }
 
     @Test
-    public void testCompileResultsRequiresVisitors() {
-        Owner owner = TestUtil.createOwner();
+    public void testPruneNodesProcessesNodesAsTrees() {
+        // This test verifies the order of the node processing. We're expecting that it starts
+        // at a root node, and then processes all of the children of that root before continuing
+        // to the next root node
 
-        NodeProcessor processor = new NodeProcessor();
-        NodeMapper mapper = new NodeMapper();
+        // Challenges here:
+        // - We don't care about the order in which trees themselves are processed, so long
+        //   as for a given tree it is processed in its entirety before moving to the next
+        //   tree
+        // - This restriction applies also to subtrees within a given tree. That is, we don't
+        //   care about the order in which children are processed, so long as a given child is
+        //   fully processed before moving on to other children.
+        // - Subtrees can be shared!
+        // - Because of this style of expected processing order, we have to be careful as to
+        //   how the test validation is setup to ensure we don't have periodic failures if the
+        //   order of the nodes on a given tier happens to change
 
-        EntityNode node = this.mockEntityNode(owner, Product.class, "node-1");
-        doReturn(true).when(node).visited();
-
-        mapper.addNode(node);
-
-        processor.setNodeMapper(mapper);
-
-        assertThrows(IllegalStateException.class, () -> processor.compileResults());
-    }
-
-    @Test
-    public void testCompileResultsRequiresProcessingAllNodes() {
-        Owner owner = TestUtil.createOwner();
-
-        NodeMapper mapper = new NodeMapper();
-        NodeProcessor processor = new NodeProcessor()
-            .setNodeMapper(mapper);
-
-        EntityNode node1 = this.mockEntityNode(owner, Product.class, "node-1");
-        doReturn(true).when(node1).visited();
-
-        EntityNode node2 = this.mockEntityNode(owner, Product.class, "node-2");
-        doReturn(false).when(node2).visited();
-
-        mapper.addNode(node1);
-        mapper.addNode(node2);
-
-        assertThrows(IllegalStateException.class, () -> processor.compileResults());
-    }
-
-    @Test
-    public void testCompileResultsInvokesVisitorCompleteBeforeCompileResults() {
-        Owner owner = TestUtil.createOwner();
         Class cls = Product.class;
 
+        NodeProcessor processor = new NodeProcessor();
         NodeMapper mapper = new NodeMapper();
         NodeVisitor visitor = this.mockNodeVisitor(cls);
-        NodeProcessor processor = new NodeProcessor()
-            .setNodeMapper(mapper)
+
+        List<EntityNode> pruneOrder = new LinkedList<>();
+
+        // Have our mock visitor store the order in which the nodes are processed.
+        doAnswer(iom -> {
+            EntityNode node = (EntityNode) iom.getArguments()[0];
+
+            if (node != null) {
+                doReturn(NodeState.DELETED).when(node).getNodeState();
+                pruneOrder.add(node);
+            }
+
+            return null;
+        }).when(visitor).pruneNode(any(EntityNode.class));
+
+        Collection<EntityNode> trees = this.buildNodeTrees(mapper, cls);
+
+        processor.setNodeMapper(mapper)
             .addVisitor(visitor);
 
-        EntityNode node = this.mockEntityNode(owner, cls, "node-1");
-        doReturn(true).when(node).visited();
+        processor.processNodes();
 
-        mapper.addNode(node);
+        // Step through our trees and verify that the parents are processed before the children, and
+        // that the processing doesn't happen out of order
 
-        InOrder order = inOrder(visitor);
+        for (EntityNode root : trees) {
+            this.validateNodePruningOrder(pruneOrder, root);
+        }
+    }
 
-        RefreshResult result = processor.compileResults();
+    @Test
+    public void testProcessNodesReturnsAccurateRefreshResult() {
+        Owner owner = TestUtil.createOwner();
+
+        NodeProcessor processor = new NodeProcessor();
+        NodeMapper mapper = new NodeMapper();
+        NodeVisitor productVisitor = this.mockNodeVisitor(Product.class);
+        NodeVisitor contentVisitor = this.mockNodeVisitor(Content.class);
+
+        List<Class> nodeClasses = Arrays.asList(Product.class, Content.class);
+        int nodesPerCombo = 3;
+        int nodeCount = 0;
+
+        for (Class cls : nodeClasses) {
+            for (NodeState state : NodeState.values()) {
+                for (int i = 0; i < nodesPerCombo; ++i) {
+                    EntityNode node = this.mockEntityNode(owner, cls, "node-" + ++nodeCount);
+                    doReturn(state).when(node).getNodeState();
+
+                    assertTrue(mapper.addNode(node));
+                }
+            }
+        }
+
+        processor.setNodeMapper(mapper)
+            .addVisitor(productVisitor)
+            .addVisitor(contentVisitor);
+
+        RefreshResult result = processor.processNodes();
+
         assertNotNull(result);
 
-        // Verify that both complete and compileResults were called, and called in the correct
-        // order
-        order.verify(visitor, times(1)).complete();
-        order.verify(visitor, times(1)).compileResults(eq(result), eq(node));
+        for (Class cls : nodeClasses) {
+            for (NodeState state : NodeState.values()) {
+                Map entities;
+
+                switch (state) {
+                    case CREATED:
+                        entities = result.getEntities(cls, EntityState.CREATED);
+                        assertNotNull(entities);
+                        assertEquals(nodesPerCombo, entities.size());
+                        break;
+
+                    case UPDATED:
+                        entities = result.getEntities(cls, EntityState.UPDATED);
+                        assertNotNull(entities);
+                        assertEquals(nodesPerCombo, entities.size());
+                        break;
+
+                    case UNCHANGED:
+                        entities = result.getEntities(cls, EntityState.UNCHANGED);
+                        assertNotNull(entities);
+                        assertEquals(nodesPerCombo, entities.size());
+                        break;
+
+                    case DELETED:
+                        entities = result.getEntities(cls, EntityState.DELETED);
+                        assertNotNull(entities);
+                        assertEquals(nodesPerCombo, entities.size());
+                        break;
+
+                    case SKIPPED:
+
+                    default:
+                        // Intentionally left empty
+                }
+            }
+        }
     }
 
 }

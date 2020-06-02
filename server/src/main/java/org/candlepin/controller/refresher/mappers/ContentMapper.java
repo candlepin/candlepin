@@ -35,6 +35,22 @@ public class ContentMapper extends AbstractEntityMapper<Content, ContentInfo> {
      * {@inheritDoc}
      */
     @Override
+    public Class<Content> getExistingEntityClass() {
+        return Content.class;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<ContentInfo> getImportedEntityClass() {
+        return ContentInfo.class;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean addExistingEntity(Content entity) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");

@@ -21,6 +21,7 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
@@ -395,6 +396,31 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
+     * Performs a bulk deletion of products specified by the given collection of product UUIDs.
+     *
+     * @param productUuids
+     *  the UUIDs of the products to delete
+     *
+     * @return
+     *  the number of products deleted as a result of this operation
+     */
+    public int bulkDeleteByUuids(Collection<String> productUuids) {
+        int count = 0;
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            Query query = this.getEntityManager()
+                .createQuery("DELETE Product p WHERE p.uuid IN (:product_uuids)");
+
+            for (List<String> block : this.partition(productUuids)) {
+                count += query.setParameter("product_uuids", block)
+                    .executeUpdate();
+            }
+        }
+
+        return count;
+    }
+
+    /**
      * Checks if any of the provided product is linked to one or more pools for the given owner.
      *
      * @param owner
@@ -421,6 +447,98 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             .setProjection(Projections.count("id"))
             .uniqueResult()) > 0;
     }
+
+    /**
+     * Returns a set of pairs consisting of products which are in use by one or more pools. The
+     * pairs returned by this method provide the product ID mapped to the ID of the pool
+     * referencing it.
+     *
+     * @param productUuids
+     *  a collection of product UUIDs to check for use
+     *
+     * @return
+     *  a set of product UUIDs representing products which are used by one or more pool
+     */
+    public Set<Pair<String, String>> getProductsWithPools(Collection<String> productUuids) {
+        Set<Pair<String, String>> output = new HashSet<>();
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            // Impl note:
+            // We're using native SQL here as we're needing to use a union to target both fields on
+            // the product in a single query. When derived products move from pool to product, this
+            // query can be rewritten to use JPQL or a JPA criteria query only looking at the base
+            // product field on pool.
+
+            String sql = "SELECT p.product_uuid, p.id FROM cp_pool p " +
+                "WHERE p.product_uuid IN (:product_uuids) " +
+                "UNION " +
+                "SELECT p.derived_product_uuid, p.id FROM cp_pool p " +
+                "WHERE p.derived_product_uuid IN (:product_uuids)";
+
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql);
+
+            int blockSize = this.getInBlockSize() / 2;
+            for (List<String> block : Iterables.partition(productUuids, blockSize)) {
+                List<Object[]> rows = query.setParameter("product_uuids", block)
+                    .getResultList();
+
+                for (Object[] row : rows) {
+                    output.add(Pair.of((String) row[0], (String) row[1]));
+                }
+            }
+        }
+
+        return output;
+    }
+
+    /**
+     * Returns a set of pairs consisting of products which are in use by one or more pools. The
+     * pairs returned by this method provide the product ID mapped to the ID of the pool
+     * referencing it.
+     *
+     * @param productUuids
+     *  a collection of product UUIDs to check for use
+     *
+     * @return
+     *  a set of product UUIDs representing products which are used by one or more pool
+     */
+    public Set<Pair<String, String>> getProductsWithPools(String ownerId, Collection<String> productUuids) {
+        Set<Pair<String, String>> output = new HashSet<>();
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            // Impl note:
+            // We're using native SQL here as we're needing to use a union to target both fields on
+            // the product in a single query. When derived products move from pool to product, this
+            // query can be rewritten to use JPQL or a JPA criteria query only looking at the base
+            // product field on pool.
+
+            String sql = "SELECT p.product_uuid, p.id FROM cp_pool p " +
+                "  WHERE p.product_uuid IN (:product_uuids) " +
+                "  AND p.owner_id = :owner_id " +
+                "UNION " +
+                "SELECT p.derived_product_uuid, p.id FROM cp_pool p " +
+                "  WHERE p.derived_product_uuid IN (:product_uuids) " +
+                "  AND p.owner_id = :owner_id";
+
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql)
+                .setParameter("owner_id", ownerId);
+
+            int blockSize = this.getInBlockSize() / 2;
+            for (List<String> block : Iterables.partition(productUuids, blockSize)) {
+                List<Object[]> rows = query.setParameter("product_uuids", block)
+                    .getResultList();
+
+                for (Object[] row : rows) {
+                    output.add(Pair.of((String) row[0], (String) row[1]));
+                }
+            }
+        }
+
+        return output;
+    }
+
 
     public CandlepinQuery<Product> getProductsByContent(Owner owner, Collection<String> contentIds) {
         return this.getProductsByContent(owner, contentIds, null);

@@ -27,6 +27,7 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.refresher.RefreshResult;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
@@ -234,8 +235,11 @@ public class CandlepinPoolManager implements PoolManager {
 
         RefreshResult refreshResult = refresher.execute(owner);
 
-        Map<String, Product> processedProducts = refreshResult.getProcessedProducts();
-        Map<String, Product> updatedProducts = refreshResult.getUpdatedProducts();
+        List<EntityState> existingStates = Arrays.asList(
+            EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
+
+        Map<String, Product> existingProducts = refreshResult.getEntities(Product.class, existingStates);
+        Map<String, Product> updatedProducts = refreshResult.getEntities(Product.class, EntityState.UPDATED);
         Map<String, ? extends SubscriptionInfo> subscriptionMap = refresher.getSubscriptions();
 
         // If trace output is enabled, dump some JSON representing the subscriptions we received so
@@ -266,7 +270,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             log.debug("Processing subscription: {}", sub);
-            Pool pool = this.convertToMasterPoolImpl(sub, owner, processedProducts);
+            Pool pool = this.convertToMasterPoolImpl(sub, owner, existingProducts);
             pool.setLocked(true);
             this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts);
         }
@@ -287,6 +291,15 @@ public class CandlepinPoolManager implements PoolManager {
         log.debug("Updating floating pools...");
         List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
         updateFloatingPools(floatingPools, lazy, updatedProducts);
+
+        // Check if we've put any pools into a state in which they're referencing a product which no
+        // longer belongs to the organization
+        List<String> pids = this.poolCurator.getPoolsUsingOrphanedProducts(owner.getId());
+        if (pids != null && pids.size() > 0) {
+            log.error("One or more pools references a product which no longer belongs to its " +
+                "organization: {}", pids);
+            throw new IllegalStateException("One or more pools was left in an undefined state: " + pids);
+        }
 
         log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),
             System.currentTimeMillis() - now.getTime());

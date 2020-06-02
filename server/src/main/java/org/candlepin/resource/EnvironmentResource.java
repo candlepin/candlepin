@@ -57,7 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -313,7 +312,7 @@ public class EnvironmentResource {
         }
 
         try {
-            envContentCurator.bulkDeleteTransactional(new ArrayList<>(demotedContent.values()));
+            envContentCurator.bulkDelete(demotedContent.values());
             clearContentAccessCerts(e);
         }
         catch (RollbackException hibernateException) {
