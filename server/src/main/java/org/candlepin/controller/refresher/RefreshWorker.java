@@ -16,6 +16,7 @@ package org.candlepin.controller.refresher;
 
 import org.candlepin.controller.refresher.builders.ContentNodeBuilder;
 import org.candlepin.controller.refresher.builders.NodeFactory;
+import org.candlepin.controller.refresher.builders.PoolNodeBuilder;
 import org.candlepin.controller.refresher.builders.ProductNodeBuilder;
 import org.candlepin.controller.refresher.mappers.ContentMapper;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
@@ -23,12 +24,15 @@ import org.candlepin.controller.refresher.mappers.PoolMapper;
 import org.candlepin.controller.refresher.mappers.ProductMapper;
 import org.candlepin.controller.refresher.visitors.ContentNodeVisitor;
 import org.candlepin.controller.refresher.visitors.NodeProcessor;
+import org.candlepin.controller.refresher.visitors.PoolNodeVisitor;
 import org.candlepin.controller.refresher.visitors.ProductNodeVisitor;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Pool.PoolType;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.model.ContentInfo;
@@ -57,6 +61,7 @@ import java.util.Set;
 public class RefreshWorker {
     private static Logger log = LoggerFactory.getLogger(RefreshWorker.class);
 
+    private PoolCurator poolCurator;
     private ContentCurator contentCurator;
     private OwnerContentCurator ownerContentCurator;
     private OwnerProductCurator ownerProductCurator;
@@ -71,9 +76,11 @@ public class RefreshWorker {
      * Creates a new RefreshWorker
      */
     @Inject
-    public RefreshWorker(ProductCurator productCurator, OwnerProductCurator ownerProductCurator,
-        ContentCurator contentCurator, OwnerContentCurator ownerContentCurator) {
+    public RefreshWorker(PoolCurator poolCurator, ProductCurator productCurator,
+        OwnerProductCurator ownerProductCurator, ContentCurator contentCurator,
+        OwnerContentCurator ownerContentCurator) {
 
+        this.poolCurator = Objects.requireNonNull(poolCurator);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
         this.contentCurator = Objects.requireNonNull(contentCurator);
@@ -104,11 +111,16 @@ public class RefreshWorker {
      *
      * @throws IllegalArgumentException
      *  if any provided subscription does not contain a valid subscription ID
+     *
+     * @return
+     *  a reference to this refresh worker
      */
-    public void addSubscriptions(SubscriptionInfo... subscriptions) {
+    public RefreshWorker addSubscriptions(SubscriptionInfo... subscriptions) {
         if (subscriptions != null) {
             this.addSubscriptions(Arrays.asList(subscriptions));
         }
+
+        return this;
     }
 
     /**
@@ -122,8 +134,11 @@ public class RefreshWorker {
      *
      * @throws IllegalArgumentException
      *  if any provided subscription does not contain a valid subscription ID
+     *
+     * @return
+     *  a reference to this refresh worker
      */
-    public void addSubscriptions(Collection<? extends SubscriptionInfo> subscriptions) {
+    public RefreshWorker addSubscriptions(Collection<? extends SubscriptionInfo> subscriptions) {
         if (subscriptions != null) {
             for (SubscriptionInfo subscription : subscriptions) {
                 if (subscription == null) {
@@ -150,6 +165,8 @@ public class RefreshWorker {
                 this.addProducts(subscription.getProduct(), subscription.getDerivedProduct());
             }
         }
+
+        return this;
     }
 
     /**
@@ -163,11 +180,16 @@ public class RefreshWorker {
      *
      * @throws IllegalArgumentException
      *  if any provided product does not contain a valid product ID
+     *
+     * @return
+     *  a reference to this refresh worker
      */
-    public void addProducts(ProductInfo... products) {
+    public RefreshWorker addProducts(ProductInfo... products) {
         if (products != null) {
             this.addProducts(Arrays.asList(products));
         }
+
+        return this;
     }
 
     /**
@@ -183,8 +205,11 @@ public class RefreshWorker {
      *
      * @throws IllegalArgumentException
      *  if any provided product does not contain a valid product ID
+     *
+     * @return
+     *  a reference to this refresh worker
      */
-    public void addProducts(Collection<? extends ProductInfo> products) {
+    public RefreshWorker addProducts(Collection<? extends ProductInfo> products) {
         if (products != null) {
             for (ProductInfo product : products) {
                 if (product == null) {
@@ -214,6 +239,8 @@ public class RefreshWorker {
 
             }
         }
+
+        return this;
     }
 
     /**
@@ -226,11 +253,16 @@ public class RefreshWorker {
      *
      * @throws IllegalArgumentException
      *  if any provided content does not contain a valid content ID
+     *
+     * @return
+     *  a reference to this refresh worker
      */
-    public void addProductContent(ProductContentInfo... contents) {
+    public RefreshWorker addProductContent(ProductContentInfo... contents) {
         if (contents != null) {
             this.addProductContent(Arrays.asList(contents));
         }
+
+        return this;
     }
 
     /**
@@ -243,8 +275,11 @@ public class RefreshWorker {
      *
      * @throws IllegalArgumentException
      *  if any provided content does not contain a valid content ID
+     *
+     * @return
+     *  a reference to this refresh worker
      */
-    public void addProductContent(Collection<? extends ProductContentInfo> contents) {
+    public RefreshWorker addProductContent(Collection<? extends ProductContentInfo> contents) {
         if (contents != null) {
             for (ProductContentInfo container : contents) {
                 if (container == null) {
@@ -277,6 +312,8 @@ public class RefreshWorker {
                 this.contentMapper.addImportedEntity(content);
             }
         }
+
+        return this;
     }
 
     /**
@@ -289,11 +326,16 @@ public class RefreshWorker {
      *
      * @throws IllegalArgumentException
      *  if any provided content does not contain a valid content ID
+     *
+     * @return
+     *  a reference to this refresh worker
      */
-    public void addContent(ContentInfo... contents) {
+    public RefreshWorker addContent(ContentInfo... contents) {
         if (contents != null) {
             this.addContent(Arrays.asList(contents));
         }
+
+        return this;
     }
 
     /**
@@ -306,8 +348,11 @@ public class RefreshWorker {
      *
      * @throws IllegalArgumentException
      *  if any provided content does not contain a valid content ID
+     *
+     * @return
+     *  a reference to this refresh worker
      */
-    public void addContent(Collection<? extends ContentInfo> contents) {
+    public RefreshWorker addContent(Collection<? extends ContentInfo> contents) {
         if (contents != null) {
             for (ContentInfo content : contents) {
                 if (content == null) {
@@ -330,6 +375,8 @@ public class RefreshWorker {
                 this.contentMapper.addImportedEntity(content);
             }
         }
+
+        return this;
     }
 
     /**
@@ -377,15 +424,23 @@ public class RefreshWorker {
 
         NodeFactory nodeFactory = new NodeFactory()
             .setNodeMapper(nodeMapper)
-            .addBuilder(new ProductNodeBuilder(this.productMapper))
-            .addBuilder(new ContentNodeBuilder(this.contentMapper));
+            .addMapper(this.poolMapper)
+            .addMapper(this.productMapper)
+            .addMapper(this.contentMapper)
+            .addBuilder(new PoolNodeBuilder())
+            .addBuilder(new ProductNodeBuilder())
+            .addBuilder(new ContentNodeBuilder());
 
-        NodeProcessor processor = new NodeProcessor()
+        NodeProcessor nodeProcessor = new NodeProcessor()
             .setNodeMapper(nodeMapper)
+            .addVisitor(new PoolNodeVisitor(this.poolCurator))
             .addVisitor(new ProductNodeVisitor(this.productCurator, this.ownerProductCurator))
             .addVisitor(new ContentNodeVisitor(this.contentCurator, this.ownerContentCurator));
 
         // Add in our existing entities
+        this.poolMapper.addExistingEntities(
+            this.poolCurator.listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT));
+
         this.productMapper.addExistingEntities(this.ownerProductCurator.getProductsByOwner(owner).list());
         this.contentMapper.addExistingEntities(this.ownerContentCurator.getContentByOwner(owner).list());
 
@@ -402,29 +457,12 @@ public class RefreshWorker {
             this.contentMapper.setCandidateEntitiesMap(vmap);
         }
 
-        // Step through our IDs and have our node factory build some nodes
-        // TODO: Add pool/subscription processing here.
-
-        // FIXME: Update the NodeFactory to handle this for us. We should provide the entity mappers
-        // directly to it and let it just build the node trees. This is just some boilerplate that
-        // could be improved.
-
-        for (String id : pids) {
-            nodeFactory.buildNode(owner, Product.class, id);
-        }
-
-        for (String id : cids) {
-            nodeFactory.buildNode(owner, Content.class, id);
-        }
+        // Have our node factory build the node trees
+        nodeFactory.buildNodes(owner);
 
         // Process our nodes, starting at the roots, letting the processors build up any persistence
         // state necessary to finalize everything
-        processor.processNodes();
-
-        // Finalize our node state and build our result
-        RefreshResult result = processor.compileResults();
-
-        return result;
+        return nodeProcessor.processNodes();
     }
 
 }

@@ -19,18 +19,29 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
+import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Content;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 
 
 
@@ -41,586 +52,340 @@ import java.util.Map;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class RefreshResultTest {
 
-    @Test
-    public void testAddCreatedPool() {
-        Pool pool = new Pool();
-        String poolId = "test_id";
-        pool.setId(poolId);
+    private interface EntityGenerator<T extends AbstractHibernateObject> {
+        Class<T> getEntityClass();
 
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Pool> pools = refreshResult.getCreatedPools();
-        assertNotNull(pools);
-        assertEquals(0, pools.size());
-
-        boolean output = refreshResult.addCreatedPool(pool);
-        assertTrue(output);
-
-        pools = refreshResult.getCreatedPools();
-        assertNotNull(pools);
-        assertEquals(1, pools.size());
-        assertThat(pools, hasEntry(poolId, pool));
-
-        // Verify that re-adds do not change the state
-        output = refreshResult.addCreatedPool(pool);
-        assertFalse(output);
-
-        pools = refreshResult.getCreatedPools();
-        assertNotNull(pools);
-        assertEquals(1, pools.size());
-        assertThat(pools, hasEntry(poolId, pool));
+        T generate(String suffix);
     }
 
-    @Test
-    public void testAddCreatedPoolsDoesNotAllowNull() {
-        RefreshResult refreshResult = new RefreshResult();
-        assertThrows(IllegalArgumentException.class, () -> refreshResult.addCreatedPool(null));
-    }
-
-    @Test
-    public void testAddUpdatedPool() {
-        Pool pool = new Pool();
-        String poolId = "test_id";
-        pool.setId(poolId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Pool> pools = refreshResult.getUpdatedPools();
-        assertNotNull(pools);
-        assertEquals(0, pools.size());
-
-        boolean output = refreshResult.addUpdatedPool(pool);
-        assertTrue(output);
-
-        pools = refreshResult.getUpdatedPools();
-        assertNotNull(pools);
-        assertEquals(1, pools.size());
-        assertThat(pools, hasEntry(poolId, pool));
-
-        // Verify that re-adds do not change the state
-        output = refreshResult.addUpdatedPool(pool);
-        assertFalse(output);
-
-        pools = refreshResult.getUpdatedPools();
-        assertNotNull(pools);
-        assertEquals(1, pools.size());
-        assertThat(pools, hasEntry(poolId, pool));
-    }
-
-    @Test
-    public void testAddUpdatedPoolsDoesNotAllowNull() {
-        RefreshResult refreshResult = new RefreshResult();
-        assertThrows(IllegalArgumentException.class, () -> refreshResult.addUpdatedPool(null));
-    }
-
-    @Test
-    public void testAddSkippedPool() {
-        Pool pool = new Pool();
-        String poolId = "test_id";
-        pool.setId(poolId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Pool> pools = refreshResult.getSkippedPools();
-        assertNotNull(pools);
-        assertEquals(0, pools.size());
-
-        boolean output = refreshResult.addSkippedPool(pool);
-        assertTrue(output);
-
-        pools = refreshResult.getSkippedPools();
-        assertNotNull(pools);
-        assertEquals(1, pools.size());
-        assertThat(pools, hasEntry(poolId, pool));
-
-        // Verify that re-adds do not change the state
-        output = refreshResult.addSkippedPool(pool);
-        assertFalse(output);
-
-        pools = refreshResult.getSkippedPools();
-        assertNotNull(pools);
-        assertEquals(1, pools.size());
-        assertThat(pools, hasEntry(poolId, pool));
-    }
-
-    @Test
-    public void testAddSkippedPoolsDoesNotAllowNull() {
-        RefreshResult refreshResult = new RefreshResult();
-        assertThrows(IllegalArgumentException.class, () -> refreshResult.addSkippedPool(null));
-    }
-
-    @Test
-    public void testGetPoolFindsCreatedPools() {
-        Pool pool = new Pool();
-        String poolId = "test_id";
-        pool.setId(poolId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Pool output = refreshResult.getPool(poolId);
-        assertNull(output);
-
-        boolean result = refreshResult.addCreatedPool(pool);
-        assertTrue(result);
-
-        output = refreshResult.getPool(poolId);
-        assertNotNull(output);
-        assertSame(pool, output);
-    }
-
-    @Test
-    public void testGetPoolFindsUpdatedPools() {
-        Pool pool = new Pool();
-        String poolId = "test_id";
-        pool.setId(poolId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Pool output = refreshResult.getPool(poolId);
-        assertNull(output);
-
-        boolean result = refreshResult.addUpdatedPool(pool);
-        assertTrue(result);
-
-        output = refreshResult.getPool(poolId);
-        assertNotNull(output);
-        assertSame(pool, output);
-    }
-
-    @Test
-    public void testGetPoolFindsSkippedPools() {
-        Pool pool = new Pool();
-        String poolId = "test_id";
-        pool.setId(poolId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Pool output = refreshResult.getPool(poolId);
-        assertNull(output);
-
-        boolean result = refreshResult.addSkippedPool(pool);
-        assertTrue(result);
-
-        output = refreshResult.getPool(poolId);
-        assertNotNull(output);
-        assertSame(pool, output);
-    }
-
-    @Test
-    public void testGetProcessedPools() {
-        Pool pool1 = new Pool();
-        pool1.setId(TestUtil.randomString("pool"));
-
-        Pool pool2 = new Pool();
-        pool2.setId(TestUtil.randomString("pool"));
-
-        Pool pool3 = new Pool();
-        pool3.setId(TestUtil.randomString("pool"));
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Pool> processed = refreshResult.getProcessedPools();
-        assertNotNull(processed);
-        assertEquals(0, processed.size());
-
-        assertTrue(refreshResult.addCreatedPool(pool1));
-        assertTrue(refreshResult.addUpdatedPool(pool2));
-        assertTrue(refreshResult.addSkippedPool(pool3));
-
-        processed = refreshResult.getProcessedPools();
-        assertNotNull(processed);
-        assertEquals(3, processed.size());
-        assertThat(processed, hasEntry(pool1.getId(), pool1));
-        assertThat(processed, hasEntry(pool2.getId(), pool2));
-        assertThat(processed, hasEntry(pool3.getId(), pool3));
-    }
-
-    @Test
-    public void testAddCreatedProduct() {
+    public static Stream<Arguments> getEntityArgumentProvider() {
         Product product = new Product();
+        product.setId("test_product");
+
+        Content content = new Content();
+        content.setId("test_content");
+
+        Pool pool = new Pool();
+        pool.setId("test_pool");
+
+        return Stream.of(
+            Arguments.of(product, Product.class, product.getId(), EntityState.CREATED),
+            Arguments.of(product, Product.class, product.getId(), EntityState.UPDATED),
+            Arguments.of(product, Product.class, product.getId(), EntityState.UNCHANGED),
+            Arguments.of(product, Product.class, product.getId(), EntityState.DELETED),
+
+            Arguments.of(content, Content.class, content.getId(), EntityState.CREATED),
+            Arguments.of(content, Content.class, content.getId(), EntityState.UPDATED),
+            Arguments.of(content, Content.class, content.getId(), EntityState.UNCHANGED),
+            Arguments.of(content, Content.class, content.getId(), EntityState.DELETED),
+
+            Arguments.of(pool, Pool.class, pool.getId(), EntityState.CREATED),
+            Arguments.of(pool, Pool.class, pool.getId(), EntityState.UPDATED),
+            Arguments.of(pool, Pool.class, pool.getId(), EntityState.UNCHANGED),
+            Arguments.of(pool, Pool.class, pool.getId(), EntityState.DELETED));
+    }
+
+
+    @ParameterizedTest(name = "{displayName} [{index}]: {1}, {4}")
+    @MethodSource("getEntityArgumentProvider")
+    public <T extends AbstractHibernateObject> void testAddAndGetEntity(T entity, Class<T> cls,
+        String entityId, EntityState state) {
+
+        RefreshResult refreshResult = new RefreshResult();
+
+        RefreshResult output = refreshResult.addEntity(cls, entity, state);
+        assertSame(refreshResult, output);
+
+        List<Class> classes = Arrays.asList(Product.class, Content.class, Pool.class);
+
+        for (Class testClass : classes) {
+            AbstractHibernateObject result = refreshResult.getEntity(testClass, entityId);
+
+            if (testClass.equals(cls)) {
+                assertSame(entity, result);
+            }
+            else {
+                assertNull(result);
+            }
+        }
+    }
+
+    @ParameterizedTest(name = "{displayName} [{index}]: {1}, {4}")
+    @MethodSource("getEntityArgumentProvider")
+    public <T extends AbstractHibernateObject> void testGetEntityFiltersByState(T entity, Class<T> cls,
+        String entityId, EntityState state) {
+
+        RefreshResult refreshResult = new RefreshResult();
+
+        RefreshResult output = refreshResult.addEntity(cls, entity, state);
+        assertSame(refreshResult, output);
+
+        List<Class> classes = Arrays.asList(Product.class, Content.class, Pool.class);
+
+        for (Class testClass : classes) {
+            for (EntityState testState : EntityState.values()) {
+                AbstractHibernateObject result = refreshResult.getEntity(testClass, entityId, testState);
+
+                if (testClass.equals(cls) && testState == state) {
+                    assertSame(entity, result);
+                }
+                else {
+                    assertNull(result);
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testGetEntityRequiresCorrectClass() {
         String productId = "test_id";
+
+        Product product = new Product();
         product.setId(productId);
 
-        RefreshResult refreshResult = new RefreshResult();
+        RefreshResult refreshResult = new RefreshResult()
+            .addEntity(Product.class, product, EntityState.CREATED);
 
-        Map<String, Product> products = refreshResult.getCreatedProducts();
-        assertNotNull(products);
-        assertEquals(0, products.size());
 
-        boolean output = refreshResult.addCreatedProduct(product);
-        assertTrue(output);
-
-        products = refreshResult.getCreatedProducts();
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertThat(products, hasEntry(productId, product));
-
-        // Verify that re-adds do not change the state
-        output = refreshResult.addCreatedProduct(product);
-        assertFalse(output);
-
-        products = refreshResult.getCreatedProducts();
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertThat(products, hasEntry(productId, product));
-    }
-
-    @Test
-    public void testAddCreatedProductsDoesNotAllowNull() {
-        RefreshResult refreshResult = new RefreshResult();
-        assertThrows(IllegalArgumentException.class, () -> refreshResult.addCreatedProduct(null));
-    }
-
-    @Test
-    public void testAddUpdatedProduct() {
-        Product product = new Product();
-        String productId = "test_id";
-        product.setId(productId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Product> products = refreshResult.getUpdatedProducts();
-        assertNotNull(products);
-        assertEquals(0, products.size());
-
-        boolean output = refreshResult.addUpdatedProduct(product);
-        assertTrue(output);
-
-        products = refreshResult.getUpdatedProducts();
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertThat(products, hasEntry(productId, product));
-
-        // Verify that re-adds do not change the state
-        output = refreshResult.addUpdatedProduct(product);
-        assertFalse(output);
-
-        products = refreshResult.getUpdatedProducts();
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertThat(products, hasEntry(productId, product));
-    }
-
-    @Test
-    public void testAddUpdatedProductsDoesNotAllowNull() {
-        RefreshResult refreshResult = new RefreshResult();
-        assertThrows(IllegalArgumentException.class, () -> refreshResult.addUpdatedProduct(null));
-    }
-
-    @Test
-    public void testAddSkippedProduct() {
-        Product product = new Product();
-        String productId = "test_id";
-        product.setId(productId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Product> products = refreshResult.getSkippedProducts();
-        assertNotNull(products);
-        assertEquals(0, products.size());
-
-        boolean output = refreshResult.addSkippedProduct(product);
-        assertTrue(output);
-
-        products = refreshResult.getSkippedProducts();
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertThat(products, hasEntry(productId, product));
-
-        // Verify that re-adds do not change the state
-        output = refreshResult.addSkippedProduct(product);
-        assertFalse(output);
-
-        products = refreshResult.getSkippedProducts();
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertThat(products, hasEntry(productId, product));
-    }
-
-    @Test
-    public void testAddSkippedProductsDoesNotAllowNull() {
-        RefreshResult refreshResult = new RefreshResult();
-        assertThrows(IllegalArgumentException.class, () -> refreshResult.addSkippedProduct(null));
-    }
-
-    @Test
-    public void testGetProductFindsCreatedProducts() {
-        Product product = new Product();
-        String productId = "test_id";
-        product.setId(productId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Product output = refreshResult.getProduct(productId);
-        assertNull(output);
-
-        boolean result = refreshResult.addCreatedProduct(product);
-        assertTrue(result);
-
-        output = refreshResult.getProduct(productId);
-        assertNotNull(output);
+        AbstractHibernateObject output = refreshResult.getEntity(Product.class, productId);
         assertSame(product, output);
+
+        output = refreshResult.getEntity(Content.class, productId);
+        assertNull(output);
     }
 
     @Test
-    public void testGetProductFindsUpdatedProducts() {
-        Product product = new Product();
+    public void testGetEntityRequiresCorrectId() {
         String productId = "test_id";
+        String badProductId = "bad_product_id";
+
+        Product product = new Product();
         product.setId(productId);
 
-        RefreshResult refreshResult = new RefreshResult();
+        RefreshResult refreshResult = new RefreshResult()
+            .addEntity(Product.class, product, EntityState.CREATED);
 
-        Product output = refreshResult.getProduct(productId);
-        assertNull(output);
 
-        boolean result = refreshResult.addUpdatedProduct(product);
-        assertTrue(result);
-
-        output = refreshResult.getProduct(productId);
-        assertNotNull(output);
+        Product output = refreshResult.getEntity(Product.class, productId);
         assertSame(product, output);
+
+        output = refreshResult.getEntity(Product.class, badProductId);
+        assertNull(output);
     }
 
     @Test
-    public void testGetProductFindsSkippedProducts() {
+    public void testGetEntityDoesNotFetchWrongClass() {
+        String entityId = "test_id";
+
         Product product = new Product();
-        String productId = "test_id";
-        product.setId(productId);
+        product.setId(entityId);
 
-        RefreshResult refreshResult = new RefreshResult();
+        Content content = new Content();
+        content.setId(entityId);
 
-        Product output = refreshResult.getProduct(productId);
-        assertNull(output);
+        RefreshResult refreshResult = new RefreshResult()
+            .addEntity(Product.class, product, EntityState.CREATED)
+            .addEntity(Content.class, content, EntityState.CREATED);
 
-        boolean result = refreshResult.addSkippedProduct(product);
-        assertTrue(result);
-
-        output = refreshResult.getProduct(productId);
-        assertNotNull(output);
+        AbstractHibernateObject output = refreshResult.getEntity(Product.class, entityId);
         assertSame(product, output);
+
+        output = refreshResult.getEntity(Content.class, entityId);
+        assertSame(content, output);
+
+        output = refreshResult.getEntity(Pool.class, entityId);
+        assertNull(output);
     }
 
     @Test
-    public void testGetProcessedProducts() {
+    public void testGetEntityDoesNotFetchWrongId() {
         Product product1 = new Product();
-        product1.setId(TestUtil.randomString("product"));
+        product1.setId("test_id-1");
 
         Product product2 = new Product();
-        product2.setId(TestUtil.randomString("product"));
+        product2.setId("test_id-2");
+
+        RefreshResult refreshResult = new RefreshResult()
+            .addEntity(Product.class, product1, EntityState.CREATED)
+            .addEntity(Product.class, product2, EntityState.CREATED);
+
+        AbstractHibernateObject output = refreshResult.getEntity(Product.class, product1.getId());
+        assertSame(product1, output);
+
+        output = refreshResult.getEntity(Product.class, product2.getId());
+        assertSame(product2, output);
+
+        output = refreshResult.getEntity(Product.class, "bad_id");
+        assertNull(output);
+    }
+
+    private RefreshResult buildRefreshResult(int perState) {
+        RefreshResult refreshResult = new RefreshResult();
+
+        List<EntityGenerator> generators = new LinkedList<>();
+
+        generators.add(new EntityGenerator<Product>() {
+            public Class<Product> getEntityClass() {
+                return Product.class;
+            }
+
+            public Product generate(String suffix) {
+                Product entity = new Product();
+                entity.setId("test_product-" + suffix);
+
+                return entity;
+            }
+        });
+
+        generators.add(new EntityGenerator<Content>() {
+            public Class<Content> getEntityClass() {
+                return Content.class;
+            }
+
+            public Content generate(String suffix) {
+                Content entity = new Content();
+                entity.setId("test_content-" + suffix);
+
+                return entity;
+            }
+        });
+
+        generators.add(new EntityGenerator<Pool>() {
+            public Class<Pool> getEntityClass() {
+                return Pool.class;
+            }
+
+            public Pool generate(String suffix) {
+                Pool entity = new Pool();
+                entity.setId("test_pool-" + suffix);
+
+                return entity;
+            }
+        });
+
+        for (EntityGenerator generator : generators) {
+            int idSuffix = 1;
+
+            for (EntityState state : EntityState.values()) {
+                for (int i = 0; i < perState; ++i) {
+                    AbstractHibernateObject entity = generator.generate(String.valueOf(idSuffix++));
+                    refreshResult.addEntity(generator.getEntityClass(), entity, state);
+                }
+            }
+        }
+
+        return refreshResult;
+    }
+
+    private <T extends AbstractHibernateObject> void validateEntityMap(RefreshResult refreshResult,
+        Class<T> cls, int expectedSize, Collection<EntityState> stateFilter) {
+
+        Map<String, T> entities = refreshResult.getEntities(cls, stateFilter);
+
+        assertNotNull(entities);
+        assertEquals(expectedSize, entities.size());
+
+        Set<T> retrieved = new HashSet<>();
+
+        for (T entity : entities.values()) {
+            assertNotNull(entity);
+            assertThat(retrieved, not(hasItem(entity)));
+
+            if (stateFilter != null) {
+                assertThat(stateFilter,
+                    hasItem(refreshResult.getEntityState(entity.getClass(), (String) entity.getId())));
+            }
+
+            retrieved.add(entity);
+        }
+    }
+
+    @Test
+    public void testGetEntities() {
+        int perState = 3;
+
+        RefreshResult refreshResult = this.buildRefreshResult(perState);
+
+        int expectedSize = perState * EntityState.values().length;
+
+        this.validateEntityMap(refreshResult, Product.class, expectedSize, null);
+        this.validateEntityMap(refreshResult, Content.class, expectedSize, null);
+        this.validateEntityMap(refreshResult, Pool.class, expectedSize, null);
+    }
+
+    public static Stream<Arguments> stateFilterProvider() {
+        return Stream.of(
+            Arguments.of(3, Arrays.asList(EntityState.CREATED), 3),
+            Arguments.of(3, Arrays.asList(EntityState.UPDATED), 3),
+            Arguments.of(3, Arrays.asList(EntityState.UNCHANGED), 3),
+            Arguments.of(3, Arrays.asList(EntityState.DELETED), 3),
+
+            Arguments.of(3, Arrays.asList(EntityState.CREATED, EntityState.UPDATED), 6),
+            Arguments.of(3, Arrays.asList(EntityState.UPDATED, EntityState.UNCHANGED), 6),
+            Arguments.of(3, Arrays.asList(EntityState.UNCHANGED, EntityState.DELETED), 6),
+
+            Arguments.of(3, Arrays.asList(EntityState.values()), 3 * EntityState.values().length));
+    }
+
+    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
+    @MethodSource("stateFilterProvider")
+    public void testGetEntitiesFiltersByState(int perState, Collection<EntityState> stateFilter,
+        int expectedSize) {
+
+        RefreshResult refreshResult = this.buildRefreshResult(perState);
+
+        this.validateEntityMap(refreshResult, Product.class, expectedSize, stateFilter);
+        this.validateEntityMap(refreshResult, Content.class, expectedSize, stateFilter);
+        this.validateEntityMap(refreshResult, Pool.class, expectedSize, stateFilter);
+    }
+
+    @Test
+    public void testGetEntitiesRequiresCorrectClass() {
+        Product product1 = new Product();
+        product1.setId("test_product-1");
+
+        Product product2 = new Product();
+        product2.setId("test_product-2");
 
         Product product3 = new Product();
-        product3.setId(TestUtil.randomString("product"));
+        product3.setId("test_product-3");
 
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Product> processed = refreshResult.getProcessedProducts();
-        assertNotNull(processed);
-        assertEquals(0, processed.size());
-
-        assertTrue(refreshResult.addCreatedProduct(product1));
-        assertTrue(refreshResult.addUpdatedProduct(product2));
-        assertTrue(refreshResult.addSkippedProduct(product3));
-
-        processed = refreshResult.getProcessedProducts();
-        assertNotNull(processed);
-        assertEquals(3, processed.size());
-        assertThat(processed, hasEntry(product1.getId(), product1));
-        assertThat(processed, hasEntry(product2.getId(), product2));
-        assertThat(processed, hasEntry(product3.getId(), product3));
-    }
-
-    @Test
-    public void testAddCreatedContent() {
-        Content content = new Content();
-        String contentId = "test_id";
-        content.setId(contentId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Content> contentMap = refreshResult.getCreatedContent();
-        assertNotNull(contentMap);
-        assertEquals(0, contentMap.size());
-
-        boolean output = refreshResult.addCreatedContent(content);
-        assertTrue(output);
-
-        contentMap = refreshResult.getCreatedContent();
-        assertNotNull(contentMap);
-        assertEquals(1, contentMap.size());
-        assertThat(contentMap, hasEntry(contentId, content));
-
-        // Verify that re-adds do not change the state
-        output = refreshResult.addCreatedContent(content);
-        assertFalse(output);
-
-        contentMap = refreshResult.getCreatedContent();
-        assertNotNull(contentMap);
-        assertEquals(1, contentMap.size());
-        assertThat(contentMap, hasEntry(contentId, content));
-    }
-
-    @Test
-    public void testAddCreatedContentDoesNotAllowNull() {
-        RefreshResult refreshResult = new RefreshResult();
-        assertThrows(IllegalArgumentException.class, () -> refreshResult.addCreatedContent(null));
-    }
-
-    @Test
-    public void testAddUpdatedContent() {
-        Content content = new Content();
-        String contentId = "test_id";
-        content.setId(contentId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Content> contentMap = refreshResult.getUpdatedContent();
-        assertNotNull(contentMap);
-        assertEquals(0, contentMap.size());
-
-        boolean output = refreshResult.addUpdatedContent(content);
-        assertTrue(output);
-
-        contentMap = refreshResult.getUpdatedContent();
-        assertNotNull(contentMap);
-        assertEquals(1, contentMap.size());
-        assertThat(contentMap, hasEntry(contentId, content));
-
-        // Verify that re-adds do not change the state
-        output = refreshResult.addUpdatedContent(content);
-        assertFalse(output);
-
-        contentMap = refreshResult.getUpdatedContent();
-        assertNotNull(contentMap);
-        assertEquals(1, contentMap.size());
-        assertThat(contentMap, hasEntry(contentId, content));
-    }
-
-    @Test
-    public void testAddUpdatedContentDoesNotAllowNull() {
-        RefreshResult refreshResult = new RefreshResult();
-        assertThrows(IllegalArgumentException.class, () -> refreshResult.addUpdatedContent(null));
-    }
-
-    @Test
-    public void testAddSkippedContent() {
-        Content content = new Content();
-        String contentId = "test_id";
-        content.setId(contentId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Map<String, Content> contentMap = refreshResult.getSkippedContent();
-        assertNotNull(contentMap);
-        assertEquals(0, contentMap.size());
-
-        boolean output = refreshResult.addSkippedContent(content);
-        assertTrue(output);
-
-        contentMap = refreshResult.getSkippedContent();
-        assertNotNull(contentMap);
-        assertEquals(1, contentMap.size());
-        assertThat(contentMap, hasEntry(contentId, content));
-
-        // Verify that re-adds do not change the state
-        output = refreshResult.addSkippedContent(content);
-        assertFalse(output);
-
-        contentMap = refreshResult.getSkippedContent();
-        assertNotNull(contentMap);
-        assertEquals(1, contentMap.size());
-        assertThat(contentMap, hasEntry(contentId, content));
-    }
-
-    @Test
-    public void testAddSkippedContentDoesNotAllowNull() {
-        RefreshResult refreshResult = new RefreshResult();
-        assertThrows(IllegalArgumentException.class, () -> refreshResult.addSkippedContent(null));
-    }
-
-    @Test
-    public void testGetContentFindsCreatedContent() {
-        Content content = new Content();
-        String contentId = "test_id";
-        content.setId(contentId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Content output = refreshResult.getContent(contentId);
-        assertNull(output);
-
-        boolean result = refreshResult.addCreatedContent(content);
-        assertTrue(result);
-
-        output = refreshResult.getContent(contentId);
-        assertNotNull(output);
-        assertSame(content, output);
-    }
-
-    @Test
-    public void testGetContentFindsUpdatedContent() {
-        Content content = new Content();
-        String contentId = "test_id";
-        content.setId(contentId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Content output = refreshResult.getContent(contentId);
-        assertNull(output);
-
-        boolean result = refreshResult.addUpdatedContent(content);
-        assertTrue(result);
-
-        output = refreshResult.getContent(contentId);
-        assertNotNull(output);
-        assertSame(content, output);
-    }
-
-    @Test
-    public void testGetContentFindsSkippedContent() {
-        Content content = new Content();
-        String contentId = "test_id";
-        content.setId(contentId);
-
-        RefreshResult refreshResult = new RefreshResult();
-
-        Content output = refreshResult.getContent(contentId);
-        assertNull(output);
-
-        boolean result = refreshResult.addSkippedContent(content);
-        assertTrue(result);
-
-        output = refreshResult.getContent(contentId);
-        assertNotNull(output);
-        assertSame(content, output);
-    }
-
-    @Test
-    public void testGetProcessedContent() {
         Content content1 = new Content();
-        content1.setId(TestUtil.randomString("content"));
+        content1.setId("test_content-1");
 
         Content content2 = new Content();
-        content2.setId(TestUtil.randomString("content"));
+        content2.setId("test_content-2");
 
         Content content3 = new Content();
-        content3.setId(TestUtil.randomString("content"));
+        content3.setId("test_content-3");
 
-        RefreshResult refreshResult = new RefreshResult();
+        RefreshResult refreshResult = new RefreshResult()
+            .addEntity(Product.class, product1, EntityState.CREATED)
+            .addEntity(Product.class, product2, EntityState.UPDATED)
+            .addEntity(Product.class, product3, EntityState.UNCHANGED)
+            .addEntity(Content.class, content1, EntityState.CREATED)
+            .addEntity(Content.class, content2, EntityState.UPDATED)
+            .addEntity(Content.class, content3, EntityState.UNCHANGED);
 
-        Map<String, Content> processed = refreshResult.getProcessedContent();
-        assertNotNull(processed);
-        assertEquals(0, processed.size());
+        Map<String, ? extends AbstractHibernateObject> output = refreshResult.getEntities(Product.class);
+        assertNotNull(output);
+        assertEquals(3, output.size());
+        assertThat(output, hasEntry(product1.getId(), product1));
+        assertThat(output, hasEntry(product2.getId(), product2));
+        assertThat(output, hasEntry(product3.getId(), product3));
 
-        assertTrue(refreshResult.addCreatedContent(content1));
-        assertTrue(refreshResult.addUpdatedContent(content2));
-        assertTrue(refreshResult.addSkippedContent(content3));
+        output = refreshResult.getEntities(Content.class);
+        assertNotNull(output);
+        assertEquals(3, output.size());
+        assertThat(output, hasEntry(content1.getId(), content1));
+        assertThat(output, hasEntry(content2.getId(), content2));
+        assertThat(output, hasEntry(content3.getId(), content3));
 
-        processed = refreshResult.getProcessedContent();
-        assertNotNull(processed);
-        assertEquals(3, processed.size());
-        assertThat(processed, hasEntry(content1.getId(), content1));
-        assertThat(processed, hasEntry(content2.getId(), content2));
-        assertThat(processed, hasEntry(content3.getId(), content3));
+        output = refreshResult.getEntities(Pool.class);
+        assertNotNull(output);
+        assertEquals(0, output.size());
     }
+
+
 
 }

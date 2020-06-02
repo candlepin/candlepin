@@ -17,7 +17,9 @@ package org.candlepin.controller.refresher.builders;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.controller.refresher.mappers.EntityMapper;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
+import org.candlepin.controller.refresher.mappers.ProductMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Content;
@@ -42,18 +44,23 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class NodeFactoryTest {
 
-    private EntityNode mockEntityNode(Owner owner, Class cls, String id) {
+    private EntityNode mockEntityNode(Owner owner, Class<? extends AbstractHibernateObject> cls, String id) {
         EntityNode node = mock(EntityNode.class);
 
-        AbstractHibernateObject existing = mock(AbstractHibernateObject.class);
+        AbstractHibernateObject existing = mock(cls);
+        AbstractHibernateObject merged = mock(cls);
         ServiceAdapterModel imported = mock(ServiceAdapterModel.class);
 
         doReturn(owner).when(node).getOwner();
         doReturn(cls).when(node).getEntityClass();
         doReturn(id).when(node).getEntityId();
 
+        doReturn(id).when(existing).getId();
+        doReturn(id).when(merged).getId();
+
         doReturn(existing).when(node).getExistingEntity();
         doReturn(imported).when(node).getImportedEntity();
+        doReturn(merged).when(node).getMergedEntity();
 
         return node;
     }
@@ -64,11 +71,12 @@ public class NodeFactoryTest {
         doReturn(cls).when(builder).getEntityClass();
 
         doAnswer(iom -> {
-            Owner owner = (Owner) iom.getArguments()[1];
-            String id = (String) iom.getArguments()[2];
+            Owner owner = (Owner) iom.getArguments()[2];
+            String id = (String) iom.getArguments()[3];
 
             return mockEntityNode(owner, cls, id);
-        }).when(builder).buildNode(Mockito.any(NodeFactory.class), Mockito.any(Owner.class), anyString());
+        }).when(builder).buildNode(Mockito.any(NodeFactory.class), Mockito.any(EntityMapper.class),
+            Mockito.any(Owner.class), anyString());
 
         return builder;
     }
@@ -114,20 +122,22 @@ public class NodeFactoryTest {
         String id = "test_id";
 
         NodeBuilder builder = this.mockNodeBuilder(cls);
-        NodeMapper mapper = new NodeMapper();
+        NodeMapper nodeMapper = new NodeMapper();
+        EntityMapper entityMapper = new ProductMapper();
 
         NodeFactory factory = new NodeFactory()
-            .setNodeMapper(mapper)
+            .setNodeMapper(nodeMapper)
+            .addMapper(entityMapper)
             .addBuilder(builder);
 
         EntityNode output = factory.buildNode(owner, cls, id);
 
         // Verify the node isn't null and came from our builder
         assertNotNull(output);
-        verify(builder, times(1)).buildNode(eq(factory), eq(owner), eq(id));
+        verify(builder, times(1)).buildNode(eq(factory), eq(entityMapper), eq(owner), eq(id));
 
         // Verify that it was persisted in the node mapper
-        EntityNode mapped = mapper.getNode(cls, id);
+        EntityNode mapped = nodeMapper.getNode(cls, id);
 
         assertNotNull(mapped);
         assertEquals(output, mapped);
@@ -155,7 +165,7 @@ public class NodeFactoryTest {
         assertNotNull(output);
         assertSame(node, output);
 
-        verify(builder, never()).buildNode(eq(factory), eq(owner), eq(id));
+        verify(builder, never()).buildNode(eq(factory), Mockito.any(EntityMapper.class), eq(owner), eq(id));
     }
 
     @Test
@@ -198,8 +208,8 @@ public class NodeFactoryTest {
             .addBuilder(builder);
 
         assertThrows(IllegalStateException.class, () -> factory.buildNode(owner, cls, id));
-        verify(builder, never())
-            .buildNode(Mockito.any(NodeFactory.class), Mockito.any(Owner.class), anyString());
+        verify(builder, never()).buildNode(Mockito.any(NodeFactory.class), Mockito.any(EntityMapper.class),
+            Mockito.any(Owner.class), anyString());
     }
 
     @Test
@@ -208,17 +218,19 @@ public class NodeFactoryTest {
         Class cls = Product.class;
         String id = "test_id";
 
-        NodeMapper mapper = mock(NodeMapper.class);
+        NodeMapper nodeMapper = mock(NodeMapper.class);
+        EntityMapper entityMapper = new ProductMapper();
         NodeBuilder builder = mock(NodeBuilder.class);
 
         doReturn(Product.class).when(builder).getEntityClass();
 
         NodeFactory factory = new NodeFactory()
-            .setNodeMapper(mapper)
+            .setNodeMapper(nodeMapper)
+            .addMapper(entityMapper)
             .addBuilder(builder);
 
         assertThrows(IllegalStateException.class, () -> factory.buildNode(owner, cls, id));
-        verify(builder, times(1)).buildNode(eq(factory), eq(owner), eq(id));
+        verify(builder, times(1)).buildNode(eq(factory), eq(entityMapper), eq(owner), eq(id));
     }
 
 }

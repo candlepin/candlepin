@@ -38,6 +38,7 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -563,6 +564,8 @@ public class ProductManager {
             throw new IllegalStateException("Product has not yet been created");
         }
 
+
+
         this.removeProductsByUuids(owner, Arrays.asList(existing.getUuid()));
     }
 
@@ -636,6 +639,15 @@ public class ProductManager {
         }
 
         if (productUuids != null && !productUuids.isEmpty()) {
+            // Verify that we don't remove any products if they are in use within the org
+            Set<Pair<String, String>> poolRefs = this.productCurator
+                .getProductsWithPools(owner.getId(), productUuids);
+
+            if (poolRefs != null && !poolRefs.isEmpty()) {
+                throw new IllegalStateException(
+                    "One or more products are currently used by one or more pools");
+            }
+
             // Remove owner references to all the products. This will leave the products orphaned,
             // to be eventually deleted by the orphan removal job
             this.ownerProductCurator.removeOwnerProductReferences(owner, productUuids);

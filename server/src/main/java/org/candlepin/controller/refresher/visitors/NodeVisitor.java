@@ -14,7 +14,6 @@
  */
 package org.candlepin.controller.refresher.visitors;
 
-import org.candlepin.controller.refresher.RefreshResult;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.model.AbstractHibernateObject;
@@ -57,11 +56,16 @@ public interface NodeVisitor<E extends AbstractHibernateObject, I extends Servic
      *
      * @param node
      *  the EntityNode instance to process
-     *
-     * @throws IllegalStateException
-     *  if the node cannot be processed for any reason
      */
     void processNode(NodeProcessor processor, NodeMapper mapper, EntityNode<E, I> node);
+
+    /**
+     * Checks if this node should be pruned and deletes the backing entity as necessary.
+     *
+     * @param node
+     *  the EntityNode instance to process
+     */
+    void pruneNode(EntityNode<E, I> node);
 
     /**
      * Completes any processing operations that may be pending from one or more previous calls to
@@ -69,18 +73,5 @@ public interface NodeVisitor<E extends AbstractHibernateObject, I extends Servic
      * further effect on the visitor or the previously processed nodes or data.
      */
     void complete();
-
-    /**
-     * Compiles the results of processing the given entity node and stores them in the provided
-     * RefreshResult instance. If the provided node has not yet been processed or visited, this
-     * method throws an exception.
-     *
-     * @param result
-     *  the RefreshResult instance in which to store the results
-     *
-     * @param node
-     *  the EntityNode instance for which to compile processing results
-     */
-    void compileResults(RefreshResult result, EntityNode<E, I> node);
 
 }

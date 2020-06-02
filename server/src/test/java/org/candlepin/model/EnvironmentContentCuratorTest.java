@@ -14,9 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -81,7 +79,5 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
         environmentContentCurator.delete(envContent);
         assertEquals(0, environmentContentCurator.listAll().list().size());
     }
-
-
 
 }
