@@ -2414,6 +2414,292 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+
+  /users:
+    get:
+      description: Retrieves a list of Users
+      tags:
+        - Users
+      operationId: listUsers
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: A list of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDTO'
+        default:
+          $ref: '#/components/responses/default'
+    post:
+      description: Creates a User
+      tags:
+        - Users
+      operationId: createUser
+      requestBody:
+        description: A user to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDTO'
+      security: []
+      responses:
+        200:
+          description: User successfuly created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        400:
+          description: User data is null or empty, username is not specified and similar errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Username is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        409:
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "User already exists: test_user"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /users/{username}:
+    get:
+      description: Retrieves a single User
+      tags:
+        - Users
+      operationId: getUserInfo
+      parameters:
+        - name: username
+          in: path
+          description: The username of the existing user
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: A single user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        400:
+          description: Username is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Username is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "User not found: test_user"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Updates a User
+      tags:
+        - Users
+      operationId: updateUser
+      parameters:
+        - name: username
+          in: path
+          description: The username of the existing user
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The updated user
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDTO'
+      security: []
+      responses:
+        200:
+          description: the updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        400:
+          description: Username is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Username is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "User not found: test_user"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes a User
+      tags:
+        - Users
+      operationId: deleteUser
+      parameters:
+        - name: username
+          in: path
+          description: The username of the existing user
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: User was deleted successfuly
+        400:
+          description: Username is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Username is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "User not found: test_user"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /users/{username}/roles:
+    get:
+      description: Retrieves a list of Roles by User
+      tags:
+        - Roles
+        - Users
+      operationId: getUserRoles
+      parameters:
+        - name: username
+          in: path
+          description: The username of the existing user
+          required: true
+          schema:
+            type: string
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: A list of user roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleDTO'
+        400:
+          description: Username is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Username is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "User not found: test_user"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /users/{username}/owners:
+    get:
+      description: Retrieve a list of owners the user can register systems to
+      tags:
+        - Owners
+        - Users
+      operationId: listUserOwners
+      parameters:
+        - name: username
+          in: path
+          description: The username of the existing user
+          required: true
+          schema:
+            type: string
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      security: []
+      responses:
+        200:
+          description: A list of user owners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OwnerDTO'
+        400:
+          description: Username is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Username is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "User not found: test_user"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
 components:
   responses:
     default:
