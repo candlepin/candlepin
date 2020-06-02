@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.model.activationkeys.ActivationKey;
-
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
@@ -25,7 +23,6 @@ import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 
@@ -424,13 +423,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // we need to start from product and do a left join back to owner products, we have to use
         // a native query instead of any of the ORM query languages
 
-        String sql = "SELECT p.uuid " +
-            "FROM cp2_products p LEFT JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
-            "WHERE op.owner_id IS NULL";
-
-        List<String> uuids = this.getEntityManager()
-            .createNativeQuery(sql)
-            .getResultList();
+        List<String> uuids = this.getOrphanedProductUuids();
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = DetachedCriteria.forClass(Product.class)
@@ -441,6 +434,23 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         }
 
         return this.cpQueryFactory.<Product>buildQuery();
+    }
+
+    /**
+     * Fetches a list of product UUIDs representing products which are no longer used by any owner.
+     * If no such products exist, this method returns an empty list.
+     *
+     * @return
+     *  a list of UUIDs of products no longer used by any organization
+     */
+    public List<String> getOrphanedProductUuids() {
+        String sql = "SELECT p.uuid " +
+            "FROM cp2_products p LEFT JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
+            "WHERE op.owner_id IS NULL";
+
+        return this.getEntityManager()
+            .createNativeQuery(sql)
+            .getResultList();
     }
 
     /**
@@ -697,60 +707,44 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // the pool tables here.
 
         if (productUuids != null && !productUuids.isEmpty()) {
+            EntityManager entityManager = this.getEntityManager();
             log.info("Removing owner-product references for owner: {}, {}", owner, productUuids);
 
-            Session session = this.currentSession();
+            for (List<String> block : this.partition(productUuids)) {
+                // Owner-product relations
+                String jpql = "DELETE FROM OwnerProduct op " +
+                    "WHERE op.owner.id = :owner_id AND op.product.uuid IN (:product_uuids)";
 
-            // Ensure we aren't trying to remove product references for products still used by
-            // pools for this owner
-            Long poolCount = (Long) session.createCriteria(Pool.class, "Pool")
-                .createAlias("Pool.product", "Product")
-                .createAlias("Product.providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
-                .createAlias("Pool.derivedProduct", "DProduct", JoinType.LEFT_OUTER_JOIN)
-                .createAlias("DProduct.providedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
-                .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.or(
-                    CPRestrictions.in("Product.uuid", productUuids),
-                    CPRestrictions.in("DProduct.uuid", productUuids),
-                    CPRestrictions.in("providedProd.uuid", productUuids),
-                    CPRestrictions.in("derivedProvidedProd.uuid", productUuids)))
-                .setProjection(Projections.count("id"))
-                .uniqueResult();
+                int count = entityManager.createQuery(jpql)
+                    .setParameter("owner_id", owner.getId())
+                    .setParameter("product_uuids", block)
+                    .executeUpdate();
 
-            if (poolCount != null && poolCount.longValue() > 0) {
-                throw new IllegalStateException(
-                    "One or more products are currently used by one or more pools");
-            }
+                log.info("{} owner-product relations removed", count);
 
-            // Owner products ////////////////////////////////
-            Map<String, Object> criteria = new HashMap<>();
-            criteria.put("product_uuid", productUuids);
-            criteria.put("owner_id", owner.getId());
+                // Activation Key Products
+                jpql = "SELECT ak.id FROM ActivationKey ak WHERE ak.owner.id = :owner_id";
 
-            int count = this.bulkSQLDelete(OwnerProduct.DB_TABLE, criteria);
-            log.info("{} owner-product relations removed", count);
+                List<String> akIds = entityManager.createQuery(jpql, String.class)
+                    .setParameter("owner_id", owner.getId())
+                    .getResultList();
 
-            // Impl note:
-            // Even though there's a valid argument to be made here to do so, we do not unlink
-            // content from a product. This may cause headaches in the future when a product object
-            // is unlinked from an owner, but one or more of its contents are not.
+                count = 0;
+                if (akIds != null && !akIds.isEmpty()) {
+                    String sql = "DELETE FROM cp2_activation_key_products akp " +
+                        "WHERE akp.key_id IN (:ak_ids) " +
+                        "AND akp.product_uuid IN (:product_uuids)";
 
-            // Activation key products ///////////////////////
-            String sql = "SELECT id FROM " + ActivationKey.DB_TABLE + " WHERE owner_id = :ownerId";
-            List<String> ids = session.createSQLQuery(sql)
-                .setParameter("ownerId", owner.getId())
-                .list();
+                    Query query = entityManager.createNativeQuery(sql)
+                        .setParameter("product_uuids", block);
 
-            if (ids != null && !ids.isEmpty()) {
-                criteria.clear();
-                criteria.put("key_id", ids);
-                criteria.put("product_uuid", productUuids);
+                    for (List<String> akBlock : this.partition(akIds)) {
+                        count += query.setParameter("ak_ids", akBlock)
+                            .executeUpdate();
+                    }
+                }
 
-                count = this.bulkSQLDelete("cp2_activation_key_products", criteria);
-                log.info("{} activation key products removed", count);
-            }
-            else {
-                log.info("0 activation key products removed");
+                log.info("{} activation key product(s) removed", count);
             }
         }
     }

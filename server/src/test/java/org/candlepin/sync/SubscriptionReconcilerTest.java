@@ -22,7 +22,6 @@ import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -58,7 +57,6 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
@@ -205,11 +203,7 @@ public class SubscriptionReconcilerTest {
         }
 
         // Mock these pools as the return value for the owner:
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-
-        when(poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)).thenReturn(cqmock);
+        when(poolCurator.listByOwnerAndTypes(owner.getId(), PoolType.NORMAL)).thenReturn(pools);
         return pools;
     }
 

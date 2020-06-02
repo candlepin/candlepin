@@ -1178,7 +1178,6 @@ public class JobManager implements ModeChangeListener {
      *  a JobStatus instance representing the job's status
      */
     public synchronized AsyncJobStatus executeJob(JobMessage message) throws JobException {
-
         ManagerState state = this.getManagerState();
         if (this.getManagerState() != ManagerState.RUNNING) {
             String msg = String.format("Jobs cannot be executed while the manager is in the %s state", state);
@@ -1413,8 +1412,7 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the AsyncJobStatus instance associated with the given message
      */
-    private AsyncJobStatus fetchJobStatus(JobMessage message)
-        throws JobInitializationException {
+    private AsyncJobStatus fetchJobStatus(JobMessage message) throws JobInitializationException {
 
         AsyncJobStatus status;
 
@@ -1650,6 +1648,7 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the number of jobs deleted as a result of this operation
      */
+    @Transactional
     public synchronized int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
         // Prepare for the defaults...
         if (queryBuilder == null) {

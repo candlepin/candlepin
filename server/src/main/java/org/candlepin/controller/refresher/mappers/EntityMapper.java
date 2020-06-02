@@ -37,6 +37,26 @@ import java.util.Set;
 public interface EntityMapper<E extends AbstractHibernateObject, I extends ServiceAdapterModel> {
 
     /**
+     * Fetches the class of the existing model entities mapped by this mapper. The value returned by
+     * this method should match the class of existing entities to ensure proper mapping and node
+     * creation.
+     *
+     * @return
+     *  the class of existing entities mapped by this entity mapper
+     */
+    Class<E> getExistingEntityClass();
+
+    /**
+     * Fetches the class of the imported model entities mapped by this mapper. The value returned by
+     * this method should match the class of imported entities to ensure proper mapping and node
+     * creation.
+     *
+     * @return
+     *  the class of imported entities mapped by this entity mapper
+     */
+    Class<I> getImportedEntityClass();
+
+    /**
      * Fetches the existing database entity with the given ID. If the ID has not been mapped to an
      * existing database entity, this method returns null.
      *

@@ -14,12 +14,14 @@
  */
 package org.candlepin.controller.refresher;
 
-import org.candlepin.model.Content;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
+import org.candlepin.model.AbstractHibernateObject;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 
@@ -32,501 +34,284 @@ import java.util.Map;
  */
 public class RefreshResult {
 
-    // TODO: Flesh out the collection types here a bit more, in accordance with the table below
-    //
-    // Existing     Imported    Merged entity       Result
-    // not-null     not-null    not-null            updated entity
-    // not-null     not-null    null                unchanged entity (imported but unchanged)
-    // not-null     null        not-null            children updated
-    // not-null     null        null                unchanged entity (not imported, no changes to children)
-    // null         not-null    not-null            created entity
-    // null         not-null    null                ERROR STATE - creation failed
-    // null         null        null                ERROR STATE - uninitialized node
-    //
-    // Following this, we have 3 states to report, and 2 pseudo-states:
-    // - resultant states: created (5), updated (1, 3), unchanged (2, 4)
-    // - pseudo-states: imported (1, 2, 5) and skipped (3, 4)
-    //
-    // At the time of writing, we can kind of discern the pseudo-states by getting the collections
-    // back out of the refresh worker, so maybe this is a non-issue.
+    /**
+     * The known states an entity can be in post-refresh
+     */
+    public static enum EntityState {
+        CREATED,
+        UPDATED,
+        UNCHANGED,
+        DELETED
+    }
 
-    private Map<String, Pool> createdPools;
-    private Map<String, Pool> updatedPools;
-    private Map<String, Pool> skippedPools;
+    /**
+     * Stores refreshed entities of a given type
+     *
+     * @param <T>
+     *  the class of entity managed by this entity store
+     */
+    public static class EntityStore<T extends AbstractHibernateObject> {
 
-    private Map<String, Product> createdProducts;
-    private Map<String, Product> updatedProducts;
-    private Map<String, Product> skippedProducts;
+        /**
+         * Container class for storing entity and entity state
+         */
+        private static class EntityData<T extends AbstractHibernateObject> {
+            private final String entityId;
+            private final T entity;
+            private final EntityState state;
 
-    private Map<String, Content> createdContent;
-    private Map<String, Content> updatedContent;
-    private Map<String, Content> skippedContent;
+            public EntityData(String entityId, T entity, EntityState state) {
+                this.entityId = entityId;
+                this.entity = entity;
+                this.state = state;
+            }
 
+            public String getEntityId() {
+                return this.entityId;
+            }
+
+            public T getEntity() {
+                return this.entity;
+            }
+
+            public EntityState getEntityState() {
+                return this.state;
+            }
+        }
+
+        private Map<String, EntityData<T>> entities;
+
+        public EntityStore() {
+            this.entities = new HashMap<>();
+        }
+
+        public void addEntity(T entity, EntityState state) {
+            if (entity == null) {
+                throw new IllegalArgumentException("entity is null");
+            }
+
+            if (state == null) {
+                throw new IllegalArgumentException("state is null");
+            }
+
+            EntityData<T> data = new EntityData<>((String) entity.getId(), entity, state);
+            this.entities.put(data.getEntityId(), data);
+        }
+
+        public T getEntity(String id, Collection<EntityState> states) {
+            EntityData<T> data = this.entities.get(id);
+
+            if (data != null) {
+                return states == null || states.isEmpty() || states.contains(data.getEntityState()) ?
+                    data.getEntity() :
+                    null;
+            }
+
+            return null;
+        }
+
+        public EntityState getEntityState(String id) {
+            EntityData<T> data = this.entities.get(id);
+            return data != null ? data.getEntityState() : null;
+        }
+
+        public Map<String, T> getEntities(Collection<EntityState> states) {
+            Stream<EntityData<T>> stream = this.entities.values()
+                .stream();
+
+            if (states != null && !states.isEmpty()) {
+                stream = stream.filter(edata -> states.contains(edata.getEntityState()));
+            }
+
+            return stream.collect(Collectors.toMap(EntityData::getEntityId, EntityData::getEntity));
+        }
+    }
+
+    private Map<Class, EntityStore> entityStoreMap;
 
     /**
      * Creates a new RefreshResult instance with no data
      */
     public RefreshResult() {
-        this.createdPools = new HashMap<>();
-        this.updatedPools = new HashMap<>();
-        this.skippedPools = new HashMap<>();
-
-        this.createdProducts = new HashMap<>();
-        this.updatedProducts = new HashMap<>();
-        this.skippedProducts = new HashMap<>();
-
-        this.createdContent = new HashMap<>();
-        this.updatedContent = new HashMap<>();
-        this.skippedContent = new HashMap<>();
+        this.entityStoreMap = new HashMap<>();
     }
 
     /**
-     * Adds the specified pool as a "created" pool, where a created pool is defined as a pool which
-     * did not have a local definition and was created during the refresh operation.
+     * Fetches the entity store for the given class, optionally creating it as necessary.
      *
-     * @param pool
-     *  the pool to add as a created pool
+     * @param cls
+     *  the class of the entity store to fetch
      *
-     * @throws IllegalArgumentException
-     *  if pool is null
+     * @param create
+     *  whether or not to create the entity store if it doesn't already exist
      *
      * @return
-     *  true if this result instance is modified by this operation; false otherwise
+     *  the entity store for the given class, or null if an appropriate entity store does not exist
+     *  and the create flag is false.
      */
-    public boolean addCreatedPool(Pool pool) {
-        if (pool == null) {
-            throw new IllegalArgumentException("pool is null");
+    private <T extends AbstractHibernateObject> EntityStore<T> getEntityStore(Class<T> cls, boolean create) {
+        if (cls == null) {
+            throw new IllegalArgumentException("cls is null");
         }
 
-        return (this.createdPools.put(pool.getId(), pool) != pool);
-    }
-
-    /**
-     * Adds the specified pool as an "updated" pool, where an updated pool is defined as a pool
-     * which was already defined locally, and was changed or updated during the refresh operation.
-     *
-     * @param pool
-     *  the pool to add as an updated pool
-     *
-     * @throws IllegalArgumentException
-     *  if pool is null
-     *
-     * @return
-     *  true if this result instance is modified by this operation; false otherwise
-     */
-    public boolean addUpdatedPool(Pool pool) {
-        if (pool == null) {
-            throw new IllegalArgumentException("pool is null");
+        EntityStore<T> entityStore = (EntityStore<T>) this.entityStoreMap.get(cls);
+        if (entityStore == null && create) {
+            entityStore = new EntityStore<T>();
+            this.entityStoreMap.put(cls, entityStore);
         }
 
-        return (this.updatedPools.put(pool.getId(), pool) != pool);
+        return entityStore;
     }
 
     /**
-     * Adds the specified pool as a "skipped" pool, where a skipped pool is defined as a pool which
-     * was already defined locally, but remained unchanged during the refresh operation.
+     * Adds the specified entity to this result with the given entity state. If the entity has
+     * already been added, the state will be updated to the new state provided.
      *
-     * @param pool
-     *  the pool to add as a skipped pool
+     * @param cls
+     *  the entity class
+     *
+     * @param entity
+     *  the entity to add as a created entity
+     *
+     * @param state
+     *  the state of the entity as a result of the refresh operation
      *
      * @throws IllegalArgumentException
-     *  if pool is null
+     *  if cls, entity, or state are null
      *
      * @return
-     *  true if this result instance is modified by this operation; false otherwise
+     *  a reference to this refresh result
      */
-    public boolean addSkippedPool(Pool pool) {
-        if (pool == null) {
-            throw new IllegalArgumentException("pool is null");
+    public <T extends AbstractHibernateObject> RefreshResult addEntity(Class<T> cls, T entity,
+        EntityState state) {
+
+        if (cls == null) {
+            throw new IllegalArgumentException("cls is null");
         }
 
-        return (this.skippedPools.put(pool.getId(), pool) != pool);
-    }
-
-    /**
-     * Adds the specified product as a "created" product, where a created product is defined as a
-     * product which did not have a local definition and was created during the refresh operation.
-     *
-     * @param product
-     *  the product to add as a created product
-     *
-     * @throws IllegalArgumentException
-     *  if product is null
-     *
-     * @return
-     *  true if this result instance is modified by this operation; false otherwise
-     */
-    public boolean addCreatedProduct(Product product) {
-        if (product == null) {
-            throw new IllegalArgumentException("product is null");
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
         }
 
-        return (this.createdProducts.put(product.getId(), product) != product);
-    }
-
-    /**
-     * Adds the specified product as an "updated" product, where an updated product is defined as a
-     * product which was already defined locally, and was changed or updated during the refresh
-     * operation.
-     *
-     * @param product
-     *  the product to add as an updated product
-     *
-     * @throws IllegalArgumentException
-     *  if product is null
-     *
-     * @return
-     *  true if this result instance is modified by this operation; false otherwise
-     */
-    public boolean addUpdatedProduct(Product product) {
-        if (product == null) {
-            throw new IllegalArgumentException("product is null");
+        if (state == null) {
+            throw new IllegalArgumentException("state is null");
         }
 
-        return (this.updatedProducts.put(product.getId(), product) != product);
+        this.getEntityStore(cls, true)
+            .addEntity(entity, state);
+
+        return this;
     }
 
     /**
-     * Adds the specified product as a "skipped" product, where a skipped product is defined as a
-     * product which was already defined locally, but remained unchanged during the refresh
-     * operation.
+     * Fetches the entity with the specified entity class and ID, optionally filtering the result
+     * using the provided entity states. If no such entity was part of this refresh, or the entity
+     * did not match the given filter, this method returns null.
      *
-     * @param product
-     *  the product to add as a skipped product
-     *
-     * @throws IllegalArgumentException
-     *  if product is null
-     *
-     * @return
-     *  true if this result instance is modified by this operation; false otherwise
-     */
-    public boolean addSkippedProduct(Product product) {
-        if (product == null) {
-            throw new IllegalArgumentException("product is null");
-        }
-
-        return (this.skippedProducts.put(product.getId(), product) != product);
-    }
-
-    /**
-     * Adds the specified content as a "created" content, where a created content is defined as
-     * content which did not have a local definition and was created during the refresh operation.
-     *
-     * @param content
-     *  the content to add as a created content
-     *
-     * @throws IllegalArgumentException
-     *  if content is null
-     *
-     * @return
-     *  true if this result instance is modified by this operation; false otherwise
-     */
-    public boolean addCreatedContent(Content content) {
-        if (content == null) {
-            throw new IllegalArgumentException("content is null");
-        }
-
-        return (this.createdContent.put(content.getId(), content) != content);
-    }
-
-    /**
-     * Adds the specified content as an "updated" content, where an updated content is defined as
-     * content which was already defined locally, and was changed or updated during the refresh
-     * operation.
-     *
-     * @param content
-     *  the content to add as an updated content
-     *
-     * @throws IllegalArgumentException
-     *  if content is null
-     *
-     * @return
-     *  true if this result instance is modified by this operation; false otherwise
-     */
-    public boolean addUpdatedContent(Content content) {
-        if (content == null) {
-            throw new IllegalArgumentException("content is null");
-        }
-
-        return (this.updatedContent.put(content.getId(), content) != content);
-    }
-
-    /**
-     * Adds the specified content as a "skipped" content, where a skipped content is defined as
-     * content which was already defined locally, but remained unchanged during the refresh
-     * operation.
-     *
-     * @param content
-     *  the content to add as a skipped content
-     *
-     * @throws IllegalArgumentException
-     *  if content is null
-     *
-     * @return
-     *  true if this result instance is modified by this operation; false otherwise
-     */
-    public boolean addSkippedContent(Content content) {
-        if (content == null) {
-            throw new IllegalArgumentException("content is null");
-        }
-
-        return (this.skippedContent.put(content.getId(), content) != content);
-    }
-
-    // TODO: Return copy-on-write versions of the maps from the getters, rather than returning
-    // our internal maps directly.
-
-    /**
-     * Fetches the pools created during refresh as a mapping of pool IDs to pool instances. If no
-     * pools were created during the refresh operation, this method returns an empty map.
-     *
-     * @return
-     *  a map containing the pools created during refresh, mapped by the pool IDs
-     */
-    public Map<String, Pool> getCreatedPools() {
-        return this.createdPools;
-    }
-
-    /**
-     * Fetches the pools updated during refresh as a mapping of pool IDs to pool instances. If no
-     * pools were updated during the refresh operation, this method returns an empty map.
-     *
-     * @return
-     *  a map containing the pools updated during refresh, mapped by the pool IDs
-     */
-    public Map<String, Pool> getUpdatedPools() {
-        return this.updatedPools;
-    }
-
-    /**
-     * Fetches the pools skipped during refresh as a mapping of pool IDs to pool instances. If no
-     * pools were skipped during the refresh operation, this method returns an empty map.
-     *
-     * @return
-     *  a map containing the pools skipped during refresh, mapped by the pool IDs
-     */
-    public Map<String, Pool> getSkippedPools() {
-        return this.skippedPools;
-    }
-
-    /**
-     * Fetches the pool with the provided pool ID if it was processed during the refresh operation.
-     * If the pool ID does not match any pool processed during refresh, this method returns null.
-     * <p></p>
-     * <strong>Note:</strong>
-     * This method may pull from any of the known sets of pools, and provides no guarantee or
-     * indication of the individual pool's refresh result.
+     * @param cls
+     *  the entity class
      *
      * @param id
-     *  the ID of the pool to fetch
+     *  the ID of the entity to fetch
+     *
+     * @param states
+     *  an optional list of states to use to filter the output
      *
      * @return
-     *  the pool with the provided pool ID, or null if the pool ID does not map to a pool processed
-     *  during refresh
+     *  the entity matching the given entity class, ID and filter, or null if a matching entity was
+     *  not found
      */
-    public Pool getPool(String id) {
-        Pool pool;
-
-        pool = this.createdPools.get(id);
-        if (pool != null) {
-            return pool;
-        }
-
-        pool = this.updatedPools.get(id);
-        if (pool != null) {
-            return pool;
-        }
-
-        return this.skippedPools.get(id);
+    public <T extends AbstractHibernateObject> T getEntity(Class<T> cls, String id, EntityState... states) {
+        return this.getEntity(cls, id, states != null && states.length > 0 ? Arrays.asList(states) : null);
     }
 
     /**
-     * Fetches the products created during refresh as a mapping of product IDs to product instances.
-     * If no products were created during the refresh operation, this method returns an empty map.
+     * Fetches the entity with the specified entity class and ID, optionally filtering the result
+     * using the provided entity states. If no such entity was part of this refresh, or the entity
+     * did not match the given filter, this method returns null.
      *
-     * @return
-     *  a map containing the products created during refresh, mapped by the product IDs
-     */
-    public Map<String, Product> getCreatedProducts() {
-        return this.createdProducts;
-    }
-
-    /**
-     * Fetches the products updated during refresh as a mapping of product IDs to product instances.
-     * If no products were updated during the refresh operation, this method returns an empty map.
-     *
-     * @return
-     *  a map containing the products updated during refresh, mapped by the product IDs
-     */
-    public Map<String, Product> getUpdatedProducts() {
-        return this.updatedProducts;
-    }
-
-    /**
-     * Fetches the products skipped during refresh as a mapping of product IDs to product instances.
-     * If no products were skipped during the refresh operation, this method returns an empty map.
-     *
-     * @return
-     *  a map containing the products skipped during refresh, mapped by the product IDs
-     */
-    public Map<String, Product> getSkippedProducts() {
-        return this.skippedProducts;
-    }
-
-    /**
-     * Fetches the product with the provided product ID if it was processed during the refresh
-     * operation. If the product ID does not match any product processed during refresh, this method
-     * returns null.
-     * <p></p>
-     * <strong>Note:</strong>
-     * This method may pull from any of the known sets of products, and provides no guarantee or
-     * indication of the individual product's refresh result.
+     * @param cls
+     *  the entity class
      *
      * @param id
-     *  the ID of the product to fetch
+     *  the ID of the entity to fetch
+     *
+     * @param states
+     *  an optional collection of states to use to filter the output
      *
      * @return
-     *  the product with the provided product ID, or null if the product ID does not map to a
-     *  product processed during refresh
+     *  the entity matching the given entity class, ID and filter, or null if a matching entity was
+     *  not found
      */
-    public Product getProduct(String id) {
-        Product product;
+    public <T extends AbstractHibernateObject> T getEntity(Class<T> cls, String id,
+        Collection<EntityState> states) {
 
-        product = this.createdProducts.get(id);
-        if (product != null) {
-            return product;
-        }
-
-        product = this.updatedProducts.get(id);
-        if (product != null) {
-            return product;
-        }
-
-        return this.skippedProducts.get(id);
+        EntityStore<T> entityStore = this.getEntityStore(cls, false);
+        return entityStore != null ? entityStore.getEntity(id, states) : null;
     }
 
     /**
-     * Fetches the content created during refresh as a mapping of content IDs to content instances.
-     * If no content were created during the refresh operation, this method returns an empty map.
+     * Fetches the entity state of the given entity matching the entity class and ID. If no matching
+     * entity was part of this refresh, this method returns null.
      *
-     * @return
-     *  a map containing the content created during refresh, mapped by the content IDs
-     */
-    public Map<String, Content> getCreatedContent() {
-        return this.createdContent;
-    }
-
-    /**
-     * Fetches the content updated during refresh as a mapping of content IDs to content instances.
-     * If no content were updated during the refresh operation, this method returns an empty map.
-     *
-     * @return
-     *  a map containing the content updated during refresh, mapped by the content IDs
-     */
-    public Map<String, Content> getUpdatedContent() {
-        return this.updatedContent;
-    }
-
-    /**
-     * Fetches the content skipped during refresh as a mapping of content IDs to content instances.
-     * If no content were skipped during the refresh operation, this method returns an empty map.
-     *
-     * @return
-     *  a map containing the content skipped during refresh, mapped by the content IDs
-     */
-    public Map<String, Content> getSkippedContent() {
-        return this.skippedContent;
-    }
-
-    /**
-     * Fetches the content with the provided content ID if it was processed during the refresh
-     * operation. If the content ID does not match any content processed during refresh, this method
-     * returns null.
-     * <p></p>
-     * <strong>Note:</strong>
-     * This method may pull from any of the known sets of content, and provides no guarantee or
-     * indication of the individual content's refresh result.
+     * @param cls
+     *  the entity class
      *
      * @param id
-     *  the ID of the content to fetch
+     *  the ID of the entity for which to fetch the entity state
      *
      * @return
-     *  the content with the provided content ID, or null if the content ID does not map to a content
-     *  processed during refresh
+     *  the EntityState for the matching entity, or null if no matching entity was part of this
+     *  refresh
      */
-    public Content getContent(String id) {
-        Content content;
-
-        content = this.createdContent.get(id);
-        if (content != null) {
-            return content;
-        }
-
-        content = this.updatedContent.get(id);
-        if (content != null) {
-            return content;
-        }
-
-        return this.skippedContent.get(id);
-    }
-
-
-    // These methods shouldn't exist. They are purely to work around some legacy code requiring use
-    // of everything existing in a cache map
-
-    /**
-     * Fetches a map containing all of the pools processed during the refresh operation, mapped by
-     * their pool IDs. If the refresh operation did not process any pools, this method returns an
-     * empty map.
-     *
-     * @return
-     *  a map containing all pools processed during refresh
-     */
-    public Map<String, Pool> getProcessedPools() {
-        Map<String, Pool> imported = new HashMap<>();
-
-        imported.putAll(this.createdPools);
-        imported.putAll(this.updatedPools);
-        imported.putAll(this.skippedPools);
-
-        return imported;
+    public <T extends AbstractHibernateObject> EntityState getEntityState(Class<T> cls, String id) {
+        EntityStore<T> entityStore = this.getEntityStore(cls, false);
+        return entityStore != null ? entityStore.getEntityState(id) : null;
     }
 
     /**
-     * Fetches a map containing all of the products processed during the refresh operation, mapped
-     * by their product IDs. If the refresh operation did not process any products, this method
-     * returns an empty map.
+     * Fetches a mapping of entities matching the given class and optional list of entity states.
+     * The entities returned will be mapped by the entity's ID. If no matching entities were part of
+     * this refresh, this method returns an empty map.
+     *
+     * @param cls
+     *  the class of entities to fetch
+     *
+     * @param states
+     *  an optional list of entity states to use to filter the output. If provided, only entities
+     *  in the states provided will be fetched
      *
      * @return
-     *  a map containing all products processed during refresh
+     *  a mapping of entities matching the given class and entity states, or an empty map if no
+     *  matching entities were part of this refresh
      */
-    public Map<String, Product> getProcessedProducts() {
-        Map<String, Product> imported = new HashMap<>();
+    public <T extends AbstractHibernateObject> Map<String, T> getEntities(Class<T> cls,
+        EntityState... states) {
 
-        imported.putAll(this.createdProducts);
-        imported.putAll(this.updatedProducts);
-        imported.putAll(this.skippedProducts);
-
-        return imported;
+        return this.getEntities(cls, states != null && states.length > 0 ? Arrays.asList(states) : null);
     }
 
     /**
-     * Fetches a map containing all of the content processed during the refresh operation, mapped by
-     * their content IDs. If the refresh operation did not process any content, this method returns
-     * an empty map.
+     * Fetches a mapping of entities matching the given class and optional list of entity states.
+     * The entities returned will be mapped by the entity's ID. If no matching entities were part of
+     * this refresh, this method returns an empty map.
+     *
+     * @param cls
+     *  the class of entities to fetch
+     *
+     * @param states
+     *  an optional collection of entity states to use to filter the output. If provided, only
+     *  entities in the states provided will be fetched.
      *
      * @return
-     *  a map containing all content processed during refresh
+     *  a mapping of entities matching the given class and entity states, or an empty map if no
+     *  matching entities were part of this refresh
      */
-    public Map<String, Content> getProcessedContent() {
-        // Make this more efficient/safe/more gooder
-        Map<String, Content> imported = new HashMap<>();
+    public <T extends AbstractHibernateObject> Map<String, T> getEntities(Class<T> cls,
+        Collection<EntityState> states) {
 
-        imported.putAll(this.createdContent);
-        imported.putAll(this.updatedContent);
-        imported.putAll(this.skippedContent);
-
-        return imported;
+        EntityStore<T> entityStore = this.getEntityStore(cls, false);
+        return entityStore != null ? entityStore.getEntities(states) : new HashMap<>();
     }
 
 }

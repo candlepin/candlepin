@@ -53,6 +53,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -589,11 +591,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         for (E entity : entities) {
             detach(entity);
         }
-    }
-
-    @Transactional
-    public void bulkDeleteTransactional(Collection<E> entities) {
-        this.bulkDelete(entities);
     }
 
     /**
@@ -1368,5 +1365,46 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      */
     protected <T> Iterable<List<T>> partition(Iterable<T> collection) {
         return Iterables.partition(collection, this.getInBlockSize());
+    }
+
+    /**
+     * Partitions the given map using the value returned by getInBlockSize() method as the partition
+     * size.
+     *
+     * @param map
+     *  the map to partition
+     *
+     * @throws IllegalArgumentException
+     *  if the provided map is null
+     *
+     * @return
+     *  An iterable collection of maps containing the partitioned data from the provided map
+     */
+    protected <K, V> Iterable<Map<K, V>> partitionMap(Map<K, V> map) {
+        if (map == null) {
+            throw new IllegalArgumentException("map is null");
+        }
+
+        int blockSize = this.getInBlockSize();
+        List<Map<K, V>> blockList = new LinkedList<>();
+
+        if (map.size() > blockSize) {
+            Map<K, V> block = new HashMap<>();
+            blockList.add(block);
+
+            for (Map.Entry<K, V> entry : map.entrySet()) {
+                block.put(entry.getKey(), entry.getValue());
+
+                if (block.size() >= blockSize) {
+                    block = new HashMap<>();
+                    blockList.add(block);
+                }
+            }
+        }
+        else {
+            blockList.add(map);
+        }
+
+        return blockList;
     }
 }
