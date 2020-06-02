@@ -143,6 +143,7 @@
 
         <address-settings>
             <address-setting match="event.default">
+                <config-delete-queues>FORCE</config-delete-queues>
                 <auto-create-queues>true</auto-create-queues>
                 <max-size-bytes>10485760</max-size-bytes>
 
