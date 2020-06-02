@@ -29,7 +29,7 @@ import java.util.Map;
  */
 public class NodeMapper {
 
-    Map<Class, Map<String, EntityNode>> nodeMap;
+    Map<Class, Map<String, EntityNode<?, ?>>> nodeMap;
 
     /**
      * Creates a new NodeMapper
@@ -55,7 +55,7 @@ public class NodeMapper {
     public <E extends AbstractHibernateObject, I extends ServiceAdapterModel>
         EntityNode<E, I> getNode(Class<E> cls, String id) {
 
-        Map<String, EntityNode> idMap = this.nodeMap.get(cls);
+        Map<String, EntityNode<?, ?>> idMap = this.nodeMap.get(cls);
         return (EntityNode<E, I>) (idMap != null ? idMap.get(id) : null);
     }
 
@@ -71,21 +71,16 @@ public class NodeMapper {
      * @return
      *  true if the node is mapped successfully; false if the mapping already existed
      */
-    public boolean addNode(EntityNode node) {
+    public boolean addNode(EntityNode<?, ?> node) {
         if (node == null) {
             throw new IllegalArgumentException("node is null");
         }
 
         // Should we bother verifying that the entity class and entity ID are not null? Probably a
         // bit heavy-handed.
-        Map<String, EntityNode> idMap = this.nodeMap.get(node.getEntityClass());
 
-        if (idMap == null) {
-            idMap = new HashMap<>();
-            this.nodeMap.put(node.getEntityClass(), idMap);
-        }
-
-        return idMap.put(node.getEntityId(), node) != node;
+        return this.nodeMap.computeIfAbsent(node.getEntityClass(), key -> new HashMap<>())
+            .put(node.getEntityId(), node) != node;
     }
 
     /**
@@ -95,7 +90,7 @@ public class NodeMapper {
      * @return
      *  an iterator to step through all known entity nodes
      */
-    public Iterator<EntityNode> getNodeIterator() {
+    public Iterator<EntityNode<?, ?>> getNodeIterator() {
         return this.nodeMap.values()
             .stream()
             .flatMap(map -> map.values().stream())
@@ -109,7 +104,7 @@ public class NodeMapper {
      * @return
      *  an iterator to step through all known root entity nodes
      */
-    public Iterator<EntityNode> getRootIterator() {
+    public Iterator<EntityNode<?, ?>> getRootIterator() {
         return this.nodeMap.values()
             .stream()
             .flatMap(map -> map.values().stream())
@@ -117,4 +112,18 @@ public class NodeMapper {
             .iterator();
     }
 
+    /**
+     * Retreives an iterator that steps through all known leaf entity nodes, where a leaf node is
+     * defined as any entity node that has no children nodes. This method never returns null.
+     *
+     * @return
+     *  an iterator to step through all known leaf entity nodes
+     */
+    public Iterator<EntityNode<?, ?>> getLeafIterator() {
+        return this.nodeMap.values()
+            .stream()
+            .flatMap(map -> map.values().stream())
+            .filter(node -> node.isLeafNode())
+            .iterator();
+    }
 }

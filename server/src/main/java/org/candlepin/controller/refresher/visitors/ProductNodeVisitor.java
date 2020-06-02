@@ -15,9 +15,9 @@
 package org.candlepin.controller.refresher.visitors;
 
 import org.candlepin.controller.ProductManager;
-import org.candlepin.controller.refresher.RefreshResult;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
+import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
@@ -48,6 +48,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
 
     private Set<OwnerProduct> ownerProductEntities;
     private Map<Owner, Map<String, String>> ownerProductUuidMap;
+    private Map<Owner, Set<String>> deletedProductUuids;
 
     /**
      * Creates a new ProductNodeVisitor that uses the provided curators for performing database
@@ -76,6 +77,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
 
         this.ownerProductEntities = new HashSet<>();
         this.ownerProductUuidMap = new HashMap<>();
+        this.deletedProductUuids = new HashMap<>();
     }
 
     /**
@@ -93,15 +95,16 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     public void processNode(NodeProcessor processor, NodeMapper mapper,
         EntityNode<Product, ProductInfo> node) {
 
-        boolean childrenUpdated = false;
-        boolean nodeChanged = false;
-
-        if (node.visited()) {
+        // If this node already has a state, we don't need to reprocess it (probably)
+        if (node.getNodeState() != null) {
             return;
         }
 
+        boolean childrenUpdated = false;
+        boolean nodeChanged = false;
+
         // Check if we need to make reference updates on this entity.
-        for (EntityNode child : (Collection<EntityNode>) node.getChildrenNodes()) {
+        for (EntityNode<?, ?> child : node.getChildrenNodes()) {
             if (child.changed()) {
                 childrenUpdated = true;
                 break;
@@ -110,6 +113,9 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
 
         Product existingEntity = node.getExistingEntity();
         ProductInfo importedEntity = node.getImportedEntity();
+
+        // Default the node state to UNCHANGED and let our cases below overwrite this
+        node.setNodeState(NodeState.UNCHANGED);
 
         if (existingEntity != null) {
             if (importedEntity != null) {
@@ -121,14 +127,10 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
                 node.setMergedEntity(mergedEntity);
 
                 // Store the mapping to be updated later
-                Map<String, String> productUuidMap = this.ownerProductUuidMap.get(node.getOwner());
-                if (productUuidMap == null) {
-                    productUuidMap = new HashMap<>();
-                    this.ownerProductUuidMap.put(node.getOwner(), productUuidMap);
-                }
-                productUuidMap.put(existingEntity.getUuid(), mergedEntity.getUuid());
+                this.ownerProductUuidMap.computeIfAbsent(node.getOwner(), key -> new HashMap<>())
+                    .put(existingEntity.getUuid(), mergedEntity.getUuid());
 
-                node.markChanged();
+                node.setNodeState(NodeState.UPDATED);
             }
         }
         else if (importedEntity != null) {
@@ -140,8 +142,52 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             // later during completion
             this.ownerProductEntities.add(new OwnerProduct(node.getOwner(), mergedEntity));
 
-            node.markChanged();
+            node.setNodeState(NodeState.CREATED);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void pruneNode(EntityNode<Product, ProductInfo> node) {
+        Product existingEntity = node.getExistingEntity();
+
+        // We're only going to prune existing entities that are locked
+        if (existingEntity != null && this.clearedForDeletion(node)) {
+            this.deletedProductUuids.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
+                .add(existingEntity.getUuid());
+
+            node.setNodeState(NodeState.DELETED);
+        }
+    }
+
+    /**
+     * Checks if a node is an unused root, or is part of a subtree (or subtrees) that are marked for
+     * deletion.
+     *
+     * @param node
+     *  the entity node to check
+     *
+     * @return
+     *  true if the node is cleared for deletion; false otherwise
+     */
+    private boolean clearedForDeletion(EntityNode<Product, ProductInfo> node) {
+        if (node.getExistingEntity().isLocked()) {
+            if (node.getImportedEntity() == null && node.isRootNode()) {
+                return true;
+            }
+
+            for (EntityNode parent : node.getParentNodes()) {
+                if (parent.getNodeState() != NodeState.DELETED) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -149,48 +195,24 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
      */
     @Override
     public void complete() {
+        // Remove owner-specific product references for deleted product
+        for (Map.Entry<Owner, Set<String>> entry : this.deletedProductUuids.entrySet()) {
+            this.ownerProductCurator.removeOwnerProductReferences(entry.getKey(), entry.getValue());
+        }
+
+        // Save new owner-product entities
         this.ownerProductCurator.saveAll(this.ownerProductEntities, false, false);
         this.ownerProductCurator.flush();
 
+        // Update owner product references
         for (Map.Entry<Owner, Map<String, String>> entry : this.ownerProductUuidMap.entrySet()) {
             this.ownerProductCurator.updateOwnerProductReferences(entry.getKey(), entry.getValue());
         }
 
+        // Clear our cache
         this.ownerProductUuidMap.clear();
         this.ownerProductEntities.clear();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void compileResults(RefreshResult result, EntityNode<Product, ProductInfo> node) {
-        if (result == null) {
-            throw new IllegalArgumentException("result is null");
-        }
-
-        if (node == null) {
-            throw new IllegalArgumentException("node is null");
-        }
-
-        if (!node.visited()) {
-            String errmsg = String.format("Node has not yet been visited: %s [id: %s]",
-                node.getEntityClass(), node.getEntityId());
-
-            throw new IllegalStateException(errmsg);
-        }
-
-        if (node.getMergedEntity() != null) {
-            if (node.isEntityCreation()) {
-                result.addCreatedProduct(node.getMergedEntity());
-            }
-            else {
-                result.addUpdatedProduct(node.getMergedEntity());
-            }
-        }
-        else if (node.getExistingEntity() != null) {
-            result.addSkippedProduct(node.getExistingEntity());
-        }
+        this.deletedProductUuids.clear();
     }
 
     /**
@@ -256,8 +278,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             }
         }
 
-        // TODO:
-        // Stop using the collections on the source entity and use the children on the node
+        // FIXME: Stop using the collections on the source entity and use the children on the node
         // directly.
 
         // Perform child resolution
@@ -278,7 +299,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
                     throw new IllegalStateException(errmsg);
                 }
 
-                if (!childNode.visited()) {
+                if (childNode.getNodeState() == null) {
                     String errmsg = String.format("Child node accessed before it has been processed: " +
                         "%s => %s", sourceEntity, product);
 
@@ -309,7 +330,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
                     throw new IllegalStateException(errmsg);
                 }
 
-                if (!childNode.visited()) {
+                if (childNode.getNodeState() == null) {
                     String errmsg = String.format("Child node accessed before it has been processed: " +
                         "%s => %s", sourceEntity, content);
 

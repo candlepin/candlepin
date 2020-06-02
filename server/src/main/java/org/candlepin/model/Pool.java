@@ -1303,7 +1303,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * @return pool type
      */
     public PoolType getType() {
-
         if (hasAttribute(Attributes.DERIVED_POOL)) {
             if (hasAttribute(Attributes.UNMAPPED_GUESTS_ONLY)) {
                 return PoolType.UNMAPPED_GUEST;

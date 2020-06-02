@@ -1472,8 +1472,7 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the AsyncJobStatus instance associated with the given message
      */
-    private AsyncJobStatus fetchJobStatus(JobMessage message)
-        throws JobInitializationException {
+    private AsyncJobStatus fetchJobStatus(JobMessage message) throws JobInitializationException {
 
         AsyncJobStatus status;
 
@@ -1728,7 +1727,7 @@ public class JobManager implements ModeChangeListener {
      *  the number of jobs deleted as a result of this operation
      */
     @Transactional
-    public int cleanupJobs(AsyncJobStatusQueryBuilder queryBuilder) {
+    public int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
         // Prepare for the defaults...
         if (queryBuilder == null) {
             queryBuilder = new AsyncJobStatusQueryBuilder();

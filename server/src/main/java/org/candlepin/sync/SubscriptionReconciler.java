@@ -198,7 +198,7 @@ public class SubscriptionReconciler {
 
         int idx = 0;
 
-        for (Pool p : this.poolCurator.listByOwnerAndType(owner, PoolType.NORMAL)) {
+        for (Pool p : this.poolCurator.listByOwnerAndTypes(owner.getId(), PoolType.NORMAL)) {
             // if the upstream pool id is null,
             // this must be a locally controlled sub.
             if (p.getUpstreamPoolId() == null) {
