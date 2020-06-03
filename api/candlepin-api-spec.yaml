@@ -2787,6 +2787,38 @@ components:
           type: string
           minLength: 1
 
+    EntitlementDTO:
+      description:  A DTO representation of the Entitlement entity
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            owner:
+              $ref: '#/components/schemas/NestedOwnerDTO'
+            consumer:
+              $ref: '#/components/schemas/NestedConsumerDTO'
+            pool:
+              $ref: '#/components/schemas/PoolDTO'
+            quantity:
+              type: integer
+            deletedFromPool:
+              type: boolean
+            certificates:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/CertificateDTO'
+            startDate:
+              type: string
+              format: date-time
+            endDate:
+              type: string
+              format: date-time
+            href:
+              type: string
+
     EnvironmentContentDTO:
       description: EnvironmentContent represents the promotion of content into a particular environment.
       properties:
@@ -2878,6 +2910,18 @@ components:
           uniqueItems: true
           items:
             type: string
+
+    NestedConsumerDTO:
+      description: DTO representing an upstream consumer
+      properties:
+        id:
+          type: string
+        uuid:
+          type: string
+        name:
+          type: string
+        href:
+          type: string
 
     NestedEntitlementDTO:
       properties:
