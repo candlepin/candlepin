@@ -15,13 +15,14 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.util.Util;
 
 import java.util.Collections;
 import java.util.Set;
@@ -29,7 +30,7 @@ import java.util.Set;
 /**
  * The EntitlementTranslator provides translation from Entitlement model objects to EntitlementDTOs.
  */
-public class EntitlementTranslator extends TimestampedEntityTranslator<Entitlement, EntitlementDTO> {
+public class EntitlementTranslator implements ObjectTranslator<Entitlement, EntitlementDTO> {
 
     /**
      * {@inheritDoc}
@@ -60,38 +61,60 @@ public class EntitlementTranslator extends TimestampedEntityTranslator<Entitleme
      */
     @Override
     public EntitlementDTO populate(ModelTranslator modelTranslator, Entitlement source, EntitlementDTO dest) {
-        dest = super.populate(modelTranslator, source, dest);
 
-        dest.setId(source.getId());
-        dest.setQuantity(source.getQuantity());
-        dest.setDeletedFromPool(source.deletedFromPool());
-        dest.setStartDate(source.getStartDate());
-        dest.setEndDate(source.getEndDate());
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
+
+        dest.created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .id(source.getId())
+            .quantity(source.getQuantity())
+            .deletedFromPool(source.deletedFromPool())
+            .startDate(Util.toDateTime(source.getStartDate()))
+            .endDate(Util.toDateTime(source.getEndDate()));
 
         if (modelTranslator != null) {
             Owner owner = source.getOwner();
-            dest.setOwner(owner != null ? modelTranslator.translate(owner, NestedOwnerDTO.class) : null);
+            dest.setOwner(owner != null ?
+                modelTranslator.translate(owner, NestedOwnerDTO.class) : null);
 
             Pool pool = source.getPool();
-            dest.setPool(pool != null ? modelTranslator.translate(pool, PoolDTO.class) : null);
+            dest.setPool(pool != null ?
+                modelTranslator.translate(pool, PoolDTO.class) : null);
 
             Consumer consumer = source.getConsumer();
-            dest.setConsumer(consumer != null ?
-                modelTranslator.translate(consumer, ConsumerDTO.class) : null);
+            dest.setConsumer(createNestedConsumer(consumer));
 
             Set<EntitlementCertificate> certs = source.getCertificates();
+
             if (certs != null && !certs.isEmpty()) {
                 for (Certificate cert : certs) {
                     if (cert != null) {
-                        dest.addCertificate(modelTranslator.translate(cert, CertificateDTO.class));
+                        dest.addCertificates(modelTranslator.translate(cert, CertificateDTO.class));
                     }
                 }
             }
             else {
-                dest.setCertificates(Collections.<CertificateDTO>emptySet());
+                dest.setCertificates(Collections.emptySet());
             }
         }
 
         return dest;
+    }
+
+    private NestedConsumerDTO createNestedConsumer(Consumer source) {
+        if (source == null) {
+            return null;
+        }
+        return new NestedConsumerDTO()
+            .id(source.getId())
+            .uuid(source.getUuid())
+            .name(source.getName())
+            .href(source.getHref());
     }
 }
