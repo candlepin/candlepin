@@ -25,6 +25,7 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.util.Util;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -39,7 +40,6 @@ public class EntitlementTranslatorTest extends
     private NestedOwnerTranslatorTest nestedOwnerTranslatorTest = new NestedOwnerTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     private PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
-    private ConsumerTranslatorTest consumerTranslatorTest = new ConsumerTranslatorTest();
 
 
     @Override
@@ -47,7 +47,6 @@ public class EntitlementTranslatorTest extends
         this.ownerTranslatorTest.initObjectTranslator();
         this.certificateTranslatorTest.initObjectTranslator();
         this.poolTranslatorTest.initObjectTranslator();
-        this.consumerTranslatorTest.initObjectTranslator();
 
         this.translator = new EntitlementTranslator();
         return this.translator;
@@ -58,7 +57,6 @@ public class EntitlementTranslatorTest extends
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
         this.certificateTranslatorTest.initModelTranslator(modelTranslator);
         this.poolTranslatorTest.initModelTranslator(modelTranslator);
-        this.consumerTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(this.translator, Entitlement.class, EntitlementDTO.class);
     }
@@ -104,15 +102,27 @@ public class EntitlementTranslatorTest extends
 
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getQuantity(), dest.getQuantity());
-            assertEquals(source.deletedFromPool(), dest.isDeletedFromPool());
-            assertEquals(source.getStartDate(), dest.getStartDate());
-            assertEquals(source.getEndDate(), dest.getEndDate());
+            assertEquals(source.deletedFromPool(), dest.getDeletedFromPool());
+            assertEquals(source.getStartDate(), Util.toDate(dest.getStartDate()));
+            assertEquals(source.getEndDate(), Util.toDate(dest.getEndDate()));
 
             if (childrenGenerated) {
                 this.nestedOwnerTranslatorTest.verifyOutput(source.getOwner(),
                     dest.getOwner(), true);
                 this.poolTranslatorTest.verifyOutput(source.getPool(), dest.getPool(), true);
-                this.consumerTranslatorTest.verifyOutput(source.getConsumer(), dest.getConsumer(), true);
+
+                Consumer sourceConsumer = source.getConsumer();
+                NestedConsumerDTO destConsumer = dest.getConsumer();
+                if (sourceConsumer != null) {
+                    assertEquals(sourceConsumer.getId(), destConsumer.getId());
+                    assertEquals(sourceConsumer.getUuid(), destConsumer.getUuid());
+                    assertEquals(sourceConsumer.getName(), destConsumer.getName());
+                    assertEquals(sourceConsumer.getHref(), destConsumer.getHref());
+                }
+                else {
+                    assertNull(destConsumer);
+                }
+
 
                 for (Certificate sourceCertificate : source.getCertificates()) {
                     for (CertificateDTO certDTO : dest.getCertificates()) {
