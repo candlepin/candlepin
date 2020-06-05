@@ -22,7 +22,7 @@ describe 'Refresh Pools' do
     status = @cp.refresh_pools(owner['key'], true)
 
     expect(status).to_not be_nil
-    expect(status['state']).to eq('QUEUED')
+    expect(status['state']).to eq('CREATED')
 
     # Wait for the job to finish (should be quick)
     wait_for_job(status['id'])
