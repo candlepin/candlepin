@@ -37,17 +37,22 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
+import org.candlepin.dto.api.v1.ProductCertificateDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
@@ -59,15 +64,20 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Environment;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.SystemPurposeAttributeType;
@@ -99,6 +109,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,11 +118,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -122,6 +135,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -154,7 +168,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Inject private DTOValidator dtoValidator;
 
     private JobManager jobManager;
-
     private Owner owner;
     private List<Owner> owners;
     private Product product;
@@ -166,7 +179,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @BeforeEach
     public void setUp() {
         this.jobManager = mock(JobManager.class);
-
         owner = ownerCurator.create(new Owner(OWNER_NAME));
         owners = new ArrayList<>();
         owners.add(owner);
@@ -175,6 +187,36 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         skus = null;
         subscriptionIds = null;
         contracts = null;
+    }
+
+    private org.candlepin.dto.api.v1.ProductDTO buildTestProductDTO() {
+        org.candlepin.dto.api.v1.ProductDTO dto = TestUtil.createProductDTO("test_product");
+        dto.getAttributes().add(createAttribute(Product.Attributes.VERSION, "1.0"));
+        dto.getAttributes().add(createAttribute(Product.Attributes.VARIANT, "server"));
+        dto.getAttributes().add(createAttribute(Product.Attributes.TYPE, "SVC"));
+        dto.getAttributes().add(createAttribute(Product.Attributes.ARCHITECTURE, "ALL"));
+
+        return dto;
+    }
+
+    private AttributeDTO createAttribute(String name, String value) {
+        return new AttributeDTO().name(name).value(value);
+    }
+
+    private void addContent(org.candlepin.dto.api.v1.ProductDTO product, ContentDTO dto) {
+        if (dto == null || dto.getId() == null) {
+            throw new IllegalArgumentException("dto references incomplete content");
+        }
+
+        if (product.getProductContent() == null) {
+            product.setProductContent(new HashSet<>());
+        }
+
+        ProductContentDTO content = new ProductContentDTO();
+        content.setContent(dto);
+        content.setEnabled(true);
+
+        product.getProductContent().add(content);
     }
 
     @Test
@@ -236,8 +278,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
         OwnerServiceAdapter ownerAdapter = new DefaultOwnerServiceAdapter(this.ownerCurator, this.i18n);
 
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
+            org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setId(Util.generateDbUUID());
@@ -918,9 +960,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner o = new Owner();
         o.setKey("owner-key");
         OwnerResource ownerres = new OwnerResource(
-            oc, null, null, i18n, null, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null,
-            null, null, this.modelTranslator, this.jobManager, this.dtoValidator);
+            oc, null, null, i18n, null, null, null,
+            null, null, null, null, null,
+            null, null, null, null, null,
+            null, null, null, null, null,
+            null, null, null, this.modelTranslator, this.jobManager,
+            this.dtoValidator, null, null, null, null,
+            null, null);
         when(oc.getByKey(anyString())).thenReturn(o);
         ActivationKeyDTO key = new ActivationKeyDTO();
         assertThrows(BadRequestException.class, () ->
@@ -934,9 +980,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner o = new Owner();
         o.setKey("owner-key");
         OwnerResource ownerres = new OwnerResource(
-            oc, null, null, i18n, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null,
-            null, null, this.modelTranslator, this.jobManager, this.dtoValidator);
+            oc, null, null, i18n, null, null, null,
+            null, null, null, null, null,
+            null, null, null, null,
+            null, null, null, null,
+            null, null, null, null, null,
+            this.modelTranslator, this.jobManager, this.dtoValidator, null,
+            null, null, null, null, null);
         when(oc.getByKey(anyString())).thenReturn(o);
         ActivationKeyDTO key = new ActivationKeyDTO();
         key.releaseVer(new ReleaseVerDTO().releaseVer(TestUtil.getStringOfSize(256)));
@@ -1314,7 +1364,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             oc, null, null, i18n, null, eventFactory, null, null, poolManager, ownerManager,  null,
             null, null, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null, null,
-            this.modelTranslator, this.jobManager, null);
+            this.modelTranslator, this.jobManager, null, null, null, null, null, null, null);
 
         when(oc.getByKey(eq("testOwner"))).thenReturn(o);
         ConstraintViolationException ce = new ConstraintViolationException(null, null, null);
@@ -1336,10 +1386,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(oc.getByKey(eq("testOwner"))).thenReturn(o);
 
         OwnerResource ownerres = new OwnerResource(
-            oc, akc, null, i18n, null, null, null, null, null, null, null, null, null,
-            null, null, null, null,
-            null, contentOverrideValidator, null, null, null, null, null,
-            null, this.modelTranslator, this.jobManager, this.dtoValidator);
+            oc, akc, null, i18n, null, null, null, null,
+            null, null, null, null, null,
+            null, null, null, null, null,
+            contentOverrideValidator, null, null, null,
+            null, null, null, this.modelTranslator, this.jobManager,
+            this.dtoValidator, null, null, null, null,
+            null, null);
 
         assertThrows(BadRequestException.class, () -> ownerres.createActivationKey("testOwner", ak));
     }
@@ -1478,7 +1531,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null,
-            null, this.modelTranslator, this.jobManager, null);
+            null, this.modelTranslator, this.jobManager, null, null, null, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1516,7 +1569,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null,
-            null, this.modelTranslator, jm, null);
+            null, this.modelTranslator, jm, null, null, null, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1563,7 +1616,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             manifestManager, null, null, null,
             null, importRecordCurator, null, null, null, null, null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null,
-            null, this.modelTranslator, this.jobManager, null);
+            null, this.modelTranslator, this.jobManager, null, null, null, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1601,9 +1654,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UpstreamConsumer upstream = mock(UpstreamConsumer.class);
         Owner owner = mock(Owner.class);
         OwnerResource ownerres = new OwnerResource(
-            oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
+            oc, null, null, i18n, null, null, null,
+            null, null, null, null, null,
+            null, null, null, null,
             null, null, contentOverrideValidator, serviceLevelValidator, null,
-            null, null, null, null, this.modelTranslator, this.jobManager, null);
+            null, null, null, null, this.modelTranslator,
+            this.jobManager, null, null, null, null,
+            null, null, null);
 
         when(oc.getByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
@@ -1812,7 +1869,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.ownerCurator, null, null, i18n, null, null, null,
             null, null, null, null, null, null, this.entitlementCurator,
             null, null, null, null, null, null, null, null, null, null,
-            null, this.modelTranslator, this.jobManager, null);
+            null, this.modelTranslator, this.jobManager, null, null, null, null, null, null, null);
 
         List<EntitlementDTO> result = ownerres.ownerEntitlements(owner.getKey(), null, null, null, req);
 
@@ -1830,7 +1887,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource ownerres = new OwnerResource(
             oc, null, null, i18n, null, null, null, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null,
-            null, this.modelTranslator, this.jobManager, null);
+            null, this.modelTranslator, this.jobManager, null, null, null, null, null, null, null);
 
         assertThrows(NotFoundException.class, () ->
             ownerres.ownerEntitlements("Taylor Swift", null, null, null, req)
@@ -1853,7 +1910,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, cpm, null, null, null, null, ec,
             uc, ucg, null, null, null, null, null, null, null, null,
-            null, this.modelTranslator, this.jobManager, null);
+            null, this.modelTranslator, this.jobManager, null, null, null, null, null, null, null);
 
         when(oc.getByKey(eq("admin"))).thenReturn(owner);
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);
@@ -1880,7 +1937,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = new OwnerResource(
             oc, null, cc, i18n, null, null, null, null, cpm, null, null, null, null, ec,
             uc, ucg, null, null, null, null, null, null, null, null,
-            null, this.modelTranslator, this.jobManager, null);
+            null, this.modelTranslator, this.jobManager, null, null, null, null, null, null, null);
 
         when(ucg.generate(eq(owner.getKey()), eq(principal))).thenReturn(entCert);
 
@@ -1898,7 +1955,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(oc, null, null, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            opc, this.modelTranslator, this.jobManager, null
+            opc, this.modelTranslator, this.jobManager, null, null, null, null, null, null, null
         );
 
         when(oc.getByKey(eq(owner.getKey()))).thenReturn(owner);
@@ -1943,7 +2000,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = new OwnerResource(oc, null, cc, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-            this.modelTranslator, this.jobManager, null
+            this.modelTranslator, this.jobManager, null, null, null, null, null, null, null
         );
 
         when(oc.getByKey(eq(owner.getKey()))).thenReturn(owner);
@@ -1995,5 +2052,434 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             result.getSystemPurposeAttributes().get(SystemPurposeAttributeType.SERVICE_LEVEL.toString());
         Set<String> expectedSLAs = new HashSet<>(Arrays.asList("sla1", "sla2", "sla3"));
         assertEquals(expectedSLAs, serviceLevelAgreements);
+    }
+
+    //
+    // Tests related to Owner Content
+    //
+
+    @Test
+    public void listOwnerContent() throws Exception {
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
+
+        CandlepinQuery<ContentDTO> response = this.ownerResource.listOwnerContent(owner.getKey());
+
+        assertNotNull(response);
+
+        Collection<ContentDTO> received = response.list();
+
+        assertEquals(1, received.size());
+        assertTrue(received.contains(cdto));
+    }
+
+    @Test
+    public void listOwnerContentNoContent() throws Exception {
+        Owner owner = this.createOwner("test_owner");
+        CandlepinQuery<ContentDTO> response = this.ownerResource.listOwnerContent(owner.getKey());
+
+        assertNotNull(response);
+
+        Collection<ContentDTO> received = response.list();
+
+        assertEquals(0, received.size());
+    }
+
+    @Test
+    public void getOwnerContent() {
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentDTO output = this.ownerResource.getOwnerContent(owner.getKey(), content.getId());
+
+        assertNotNull(output);
+        assertEquals(content.getId(), output.getId());
+    }
+
+    @Test
+    public void getOwnerContentNotFound() {
+        Owner owner = this.createOwner("test_owner");
+
+        assertThrows(NotFoundException.class, () ->
+            this.ownerResource.getOwnerContent(owner.getKey(), "test_content")
+        );
+    }
+
+    @Test
+    public void createContent() {
+        Owner owner = this.createOwner("test_owner");
+        ContentDTO cdto = TestUtil.createContentDTO("test_content");
+        cdto.setLabel("test-label");
+        cdto.setType("test-test");
+        cdto.setVendor("test-vendor");
+
+        assertNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
+
+        ContentDTO output = this.ownerResource.createContent(owner.getKey(), cdto);
+
+        assertNotNull(output);
+        assertEquals(cdto.getId(), output.getId());
+
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
+        assertNotNull(entity);
+        assertEquals(cdto.getName(), entity.getName());
+        assertEquals(cdto.getLabel(), entity.getLabel());
+        assertEquals(cdto.getType(), entity.getType());
+        assertEquals(cdto.getVendor(), entity.getVendor());
+    }
+
+    @Test
+    public void createContentWhenContentAlreadyExists()  {
+        // Note:
+        // The current behavior of createContent is to update content if content already exists
+        // with the given RHID. So, our expected behavior in this test is to trigger an update.
+
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
+        cdto.setLabel("test-label");
+        cdto.setType("test-test");
+        cdto.setVendor("test-vendor");
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
+
+        ContentDTO output = this.ownerResource.createContent(owner.getKey(), cdto);
+
+        assertNotNull(output);
+        assertEquals(cdto.getId(), output.getId());
+        assertEquals(cdto.getName(), output.getName());
+
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
+        assertNotNull(entity);
+        assertEquals(cdto.getName(), entity.getName());
+    }
+
+    @Test
+    public void createContentWhenContentAlreadyExistsAndLocked()  {
+        // Note:
+        // The current behavior of createContent is to update content if content already exists
+        // with the given RHID. So, our expected behavior in this test is to trigger an update.
+
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
+        cdto.setLabel("test-label");
+        cdto.setType("test-test");
+        cdto.setVendor("test-vendor");
+
+        content.setLocked(true);
+        this.contentCurator.merge(content);
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
+
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerResource.createContent(owner.getKey(), cdto)
+        );
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
+        assertNotNull(entity);
+        assertEquals(content, entity);
+        assertNotEquals(cdto.getName(), entity.getName());
+
+    }
+
+    @Test
+    public void updateContent()  {
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
+
+        ContentDTO output = this.ownerResource.updateContent(owner.getKey(), cdto.getId(), cdto);
+
+        assertNotNull(output);
+        assertEquals(cdto.getId(), output.getId());
+        assertEquals(cdto.getName(), output.getName());
+
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
+
+        assertNotNull(entity);
+        assertEquals(cdto.getName(), entity.getName());
+    }
+
+    @Test
+    public void updateContentThatDoesntExist()  {
+        Owner owner = this.createOwner("test_owner");
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
+
+        assertNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
+
+        assertThrows(NotFoundException.class, () ->
+            this.ownerResource.updateContent(owner.getKey(), cdto.getId(), cdto)
+        );
+        assertNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
+    }
+
+    @Test
+    public void updateLockedContent()  {
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        ContentDTO cdto = TestUtil.createContentDTO("test_content", "updated_name");
+        content.setLocked(true);
+        this.contentCurator.merge(content);
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, cdto.getId()));
+
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerResource.updateContent(owner.getKey(), cdto.getId(), cdto)
+        );
+        Content entity = this.ownerContentCurator.getContentById(owner, cdto.getId());
+        assertNotNull(entity);
+        assertEquals(content, entity);
+        assertNotEquals(cdto.getName(), entity.getName());
+    }
+
+    @Test
+    public void deleteContent() {
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        Environment environment = this.createEnvironment(owner, "test_env", "test_env", null, null,
+            Arrays.asList(content));
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+
+        this.ownerResource.remove(owner.getKey(), content.getId());
+
+        assertNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+
+        this.environmentCurator.evict(environment);
+        environment = this.environmentCurator.get(environment.getId());
+
+        assertEquals(0, environment.getEnvironmentContent().size());
+    }
+
+    @Test
+    public void deleteLockedContent() {
+        Owner owner = this.createOwner("test_owner");
+        Content content = this.createContent("test_content", "test_content", owner);
+        content.setLocked(true);
+        this.contentCurator.merge(content);
+
+        Environment environment = this.createEnvironment(owner, "test_env", "test_env", null,
+            null, Arrays.asList(content));
+
+        assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerResource.remove(owner.getKey(), content.getId())
+        );
+        assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
+
+        this.environmentCurator.evict(environment);
+        environment = this.environmentCurator.get(environment.getId());
+
+        assertEquals(1, environment.getEnvironmentContent().size());
+    }
+
+    @Test
+    public void deleteContentWithNonExistentContent() {
+        Owner owner = this.createOwner("test_owner");
+
+        assertThrows(NotFoundException.class, () ->
+            this.ownerResource.remove(owner.getKey(), "test_content")
+        );
+    }
+
+    @Test
+    public void testUpdateContentThrowsExceptionWhenOwnerDoesNotExist() {
+        ContentDTO cdto = TestUtil.createContentDTO("test_content");
+
+        assertThrows(NotFoundException.class, () ->
+            this.ownerResource.updateContent("fake_owner_key", cdto.getId(), cdto)
+        );
+    }
+
+    //
+    // Tests related to Owner Product
+    //
+
+    @Test
+    public void testCreateProductResource() {
+        Owner owner = this.createOwner("Example-Corporation");
+        org.candlepin.dto.api.v1.ProductDTO pdto = this.buildTestProductDTO();
+
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId()));
+
+        org.candlepin.dto.api.v1.ProductDTO result = this.ownerResource
+            .createProductByOwner(owner.getKey(), pdto);
+        Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
+        org.candlepin.dto.api.v1.ProductDTO expected = this.modelTranslator.translate(entity,
+            org.candlepin.dto.api.v1.ProductDTO.class);
+
+        assertNotNull(result);
+        assertNotNull(entity);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testCreateProductWithContent() {
+        Owner owner = this.createOwner("Example-Corporation");
+        Content content = this.createContent("content-1", "content-1", owner);
+        org.candlepin.dto.api.v1.ProductDTO product = this.buildTestProductDTO();
+        ContentDTO contentDTO = this.modelTranslator.translate(content, ContentDTO.class);
+        addContent(product, contentDTO);
+
+        assertNull(this.ownerProductCurator.getProductById(owner.getKey(), product.getId()));
+
+        org.candlepin.dto.api.v1.ProductDTO result = this.ownerResource
+            .createProductByOwner(owner.getKey(), product);
+        Product entity = this.ownerProductCurator.getProductById(owner, product.getId());
+        org.candlepin.dto.api.v1.ProductDTO expected = this.modelTranslator.translate(entity,
+            org.candlepin.dto.api.v1.ProductDTO.class);
+
+        assertNotNull(result);
+        assertNotNull(entity);
+        assertEquals(expected, result);
+
+        assertNotNull(result.getProductContent());
+        assertEquals(1, result.getProductContent().size());
+        assertEquals(contentDTO, result.getProductContent().iterator().next().getContent());
+    }
+
+    @Test
+    public void testUpdateProductWithoutId() {
+        Owner owner = this.createOwner("Update-Product-Owner");
+        org.candlepin.dto.api.v1.ProductDTO pdto = this.buildTestProductDTO();
+
+        org.candlepin.dto.api.v1.ProductDTO product = this.ownerResource
+            .createProductByOwner(owner.getKey(), pdto);
+        org.candlepin.dto.api.v1.ProductDTO update = TestUtil.createProductDTO(product.getId());
+        update.setName(product.getName());
+        update.getAttributes().add(createAttribute("attri", "bute"));
+        org.candlepin.dto.api.v1.ProductDTO result = this.ownerResource
+            .updateProductByOwner(owner.getKey(), product.getId(), update);
+        assertEquals("bute", result.getAttributes().get(0).getValue());
+    }
+
+    @Test
+    public void testUpdateProductIdMismatch() {
+        Owner owner = this.createOwner("Update-Product-Owner");
+        org.candlepin.dto.api.v1.ProductDTO pdto = this.buildTestProductDTO();
+        org.candlepin.dto.api.v1.ProductDTO product = this.ownerResource
+            .createProductByOwner(owner.getKey(), pdto);
+        org.candlepin.dto.api.v1.ProductDTO update = this.buildTestProductDTO();
+        update.setId("TaylorSwift");
+
+        assertThrows(BadRequestException.class, () ->
+            this.ownerResource.updateProductByOwner(owner.getKey(), product.getId(), update)
+        );
+    }
+
+    @Test
+    public void testDeleteProductWithSubscriptions() {
+        OwnerCurator oc = mock(OwnerCurator.class);
+        OwnerProductCurator opc = mock(OwnerProductCurator.class);
+        ProductCurator pc = mock(ProductCurator.class);
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
+        OwnerResource ownerres = new OwnerResource(
+            oc, null, null, i18n, null, null, null,
+            null, null, null, null, null,
+            null, null, null, null, null,
+            null, null, null, null, null,
+            null, null, opc, this.modelTranslator, this.jobManager,
+            this.dtoValidator, mock(OwnerContentCurator.class), null, null, mock(ProductManager.class),
+            mock(ProductCertificateCurator.class), pc);
+
+        Owner o = mock(Owner.class);
+        Product p = mock(Product.class);
+
+        when(oc.getByKey(eq("owner"))).thenReturn(o);
+        when(opc.getProductById(eq(o), eq("10"))).thenReturn(p);
+
+        Set<Subscription> subs = new HashSet<>();
+        Subscription s = mock(Subscription.class);
+        subs.add(s);
+        when(pc.productHasSubscriptions(eq(o), eq(p))).thenReturn(true);
+
+        assertThrows(BadRequestException.class, () -> ownerres.deleteProductByOwner("owner", "10"));
+    }
+
+    @Test
+    public void testUpdateLockedProductFails() {
+        Owner owner = this.createOwner("test_owner");
+        Product product = this.createProduct("test_product", "test_product", owner);
+        org.candlepin.dto.api.v1.ProductDTO pdto = TestUtil.createProductDTO("test_product", "updated_name");
+        product.setLocked(true);
+        this.productCurator.merge(product);
+
+        assertNotNull(this.ownerProductCurator.getProductById(owner, pdto.getId()));
+
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerResource.updateProductByOwner(owner.getKey(), pdto.getId(), pdto)
+        );
+        Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
+        org.candlepin.dto.api.v1.ProductDTO expected = this.modelTranslator.translate(entity,
+            org.candlepin.dto.api.v1.ProductDTO.class);
+
+        assertNotNull(entity);
+        assertNotEquals(expected, pdto);
+    }
+
+    @Test
+    public void testDeleteLockedProductFails() {
+        Owner owner = this.createOwner("test_owner");
+        Product product = this.createProduct("test_product", "test_product", owner);
+        product.setLocked(true);
+        this.productCurator.merge(product);
+
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+
+        assertThrows(ForbiddenException.class, () ->
+            this.ownerResource.deleteProductByOwner(owner.getKey(), product.getId())
+        );
+        assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+    }
+
+    @Test
+    public void getProduct() {
+        Owner owner = this.createOwner("Example-Corporation");
+        Product entity = this.createProduct("test_product", "test_product", owner);
+
+        securityInterceptor.enable();
+        org.candlepin.dto.api.v1.ProductDTO result = this.ownerResource.getProductByOwner(owner.getKey(),
+            entity.getId());
+        org.candlepin.dto.api.v1.ProductDTO expected = this.modelTranslator.translate(entity,
+            org.candlepin.dto.api.v1.ProductDTO.class);
+
+        assertNotNull(result);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void getProductCertificate() {
+        Owner owner = this.createOwner("Example-Corporation");
+
+        Product entity = this.createProduct("123", "AwesomeOS Core", owner);
+        // ensure we check SecurityHole
+        securityInterceptor.enable();
+
+        ProductCertificate cert = new ProductCertificate();
+        cert.setCert("some text");
+        cert.setKey("some key");
+        cert.setProduct(entity);
+        productCertificateCurator.create(cert);
+
+        ProductCertificateDTO cert1 = ownerResource.getProductCertificateByOwner(owner.getKey(),
+            entity.getId());
+        ProductCertificateDTO expected = this.modelTranslator.translate(cert, ProductCertificateDTO.class);
+        assertEquals(cert1, expected);
+    }
+
+    @Test
+    public void requiresNumericIdForProductCertificates() {
+        Owner owner = this.createOwner("Example-Corporation");
+
+        Product entity = this.createProduct("MCT123", "AwesomeOS", owner);
+        securityInterceptor.enable();
+
+        assertThrows(BadRequestException.class, () ->
+            ownerResource.getProductCertificateByOwner(owner.getKey(), entity.getId())
+        );
     }
 }

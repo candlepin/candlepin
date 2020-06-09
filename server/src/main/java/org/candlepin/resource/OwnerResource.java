@@ -19,6 +19,7 @@ import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.HealEntireOrgJob;
 import org.candlepin.async.tasks.ImportJob;
+import org.candlepin.async.tasks.RefreshPoolsForProductJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.audit.Event;
@@ -42,15 +43,18 @@ import org.candlepin.common.exceptions.ResourceMovedException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
@@ -58,6 +62,9 @@ import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
+import org.candlepin.dto.api.v1.ProductCertificateDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProvidedProductDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
@@ -67,6 +74,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
@@ -77,14 +85,20 @@ import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
+import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProductCertificateCurator;
+import org.candlepin.model.ProductContent;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SystemPurposeAttributeType;
@@ -105,6 +119,7 @@ import org.candlepin.resteasy.DateFormat;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
+import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.SyncDataFormatException;
@@ -141,6 +156,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -171,14 +187,12 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-
-
 /**
  * Owner Resource
  */
 @Path("/owners")
 @Api(value = "owners", authorizations = { @Authorization("basic") })
-public class OwnerResource {
+public class OwnerResource implements OwnersApi {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
 
@@ -212,8 +226,15 @@ public class OwnerResource {
     private ModelTranslator translator;
     private JobManager jobManager;
     private DTOValidator validator;
+    private OwnerContentCurator ownerContentCurator;
+    private UniqueIdGenerator idGenerator;
+    private ContentManager contentManager;
+    private ProductManager productManager;
+    private ProductCertificateCurator productCertCurator;
+    private ProductCurator productCurator;
 
     @Inject
+    @SuppressWarnings("checkstyle:parameternumber")
     public OwnerResource(OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
@@ -241,7 +262,13 @@ public class OwnerResource {
         OwnerProductCurator ownerProductCurator,
         ModelTranslator translator,
         JobManager jobManager,
-        DTOValidator validator) {
+        DTOValidator validator,
+        OwnerContentCurator ownerContentCurator,
+        UniqueIdGenerator idGenerator,
+        ContentManager contentManager,
+        ProductManager productManager,
+        ProductCertificateCurator productCertCurator,
+        ProductCurator productCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -271,6 +298,12 @@ public class OwnerResource {
         this.translator = translator;
         this.jobManager = jobManager;
         this.validator = validator;
+        this.ownerContentCurator = ownerContentCurator;
+        this.idGenerator = idGenerator;
+        this.contentManager = contentManager;
+        this.productManager = productManager;
+        this.productCertCurator = productCertCurator;
+        this.productCurator = productCurator;
     }
 
     /**
@@ -2281,4 +2314,480 @@ public class OwnerResource {
         }
 
     }
+
+    /**
+     * Retrieves an Owner instance for the owner with the specified key/account. If a matching owner
+     * could not be found, this method throws an exception.
+     *
+     * @param key
+     *  The key for the owner to retrieve
+     *
+     * @throws NotFoundException
+     *  if an owner could not be found for the specified key.
+     *
+     * @return
+     *  the Owner instance for the owner with the specified key.
+     *
+     * @httpcode 200
+     * @httpcode 404
+     */
+    protected Owner getOwnerByKey(String key) {
+        Owner owner = this.ownerCurator.getByKey(key);
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
+        }
+
+        return owner;
+    }
+
+    /**
+     * Retrieves a Product instance for the product with the specified id. If no matching product
+     * could be found, this method throws an exception.
+     *
+     * @param owner
+     *  The organization
+     *
+     * @param productId
+     *  The ID of the product to retrieve
+     *
+     * @throws NotFoundException
+     *  if no matching product could be found with the specified id
+     *
+     * @return
+     *  the Product instance for the product with the specified id
+     */
+    protected Product fetchProduct(Owner owner, String productId) {
+        Product product = this.ownerProductCurator.getProductById(owner, productId);
+        if (product == null) {
+            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+        }
+
+        return product;
+    }
+
+    @Override
+    public CandlepinQuery<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
+        List<String> productIds) {
+        Owner owner = this.getOwnerByKey(ownerKey);
+        CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
+            this.ownerProductCurator.getProductsByIds(owner, productIds) :
+            this.ownerProductCurator.getProductsByOwner(owner);
+
+        return this.translator.translateQuery(query, ProductDTO.class);
+    }
+
+    @Override
+    public ProductDTO getProductByOwner(@Verify(Owner.class) String ownerKey, String productId) {
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+
+        return this.translator.translate(product, ProductDTO.class);
+    }
+
+    @Override
+    @Transactional
+    public ProductCertificateDTO getProductCertificateByOwner(String ownerKey, String productId) {
+        if (!productId.matches("\\d+")) {
+            throw new BadRequestException(i18n.tr("Only numeric product IDs are allowed."));
+        }
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+
+        ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
+        return this.translator.translate(productCertificate, ProductCertificateDTO.class);
+    }
+
+    @Override
+    @Transactional
+    public ProductDTO createProductByOwner(String ownerKey, ProductDTO dto) {
+        this.validator.validateConstraints(dto);
+        this.validator.validateCollectionElementsNotNull(
+            dto::getBranding, dto::getDependentProductIds, dto::getProductContent);
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product entity = productManager.createProduct(dto, owner);
+
+        return this.translator.translate(entity, ProductDTO.class);
+    }
+
+    @Override
+    @Transactional
+    public ProductDTO updateProductByOwner(String ownerKey, String productId, ProductDTO update) {
+        if (StringUtils.isEmpty(update.getId())) {
+            update.setId(productId);
+        }
+        else if (!StringUtils.equals(update.getId(), productId)) {
+            throw new BadRequestException(
+                i18n.tr("Contradictory ids in update request: {0}, {1}", productId, update.getId())
+            );
+        }
+
+        this.validator.validateConstraints(update);
+        this.validator.validateCollectionElementsNotNull(
+            update::getBranding, update::getDependentProductIds, update::getProductContent);
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+
+        // Get the matching owner_product & lock it while we are doing the update for this org
+        // This is done in order to prevent collisions in updates on different parts of the product
+        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
+        ownerProductCurator.lock(ownerProduct);
+        ownerProductCurator.refresh(ownerProduct);
+
+        Product existing = ownerProduct.getProduct();
+
+        if (existing.isLocked()) {
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
+        }
+
+        Product updated = this.productManager.updateProduct(update, owner, true);
+
+        return this.translator.translate(updated, ProductDTO.class);
+    }
+
+    @Override
+    @Transactional
+    public ProductDTO addBatchContent(String ownerKey, String productId, Map<String, Boolean> contentMap) {
+        Owner owner = this.getOwnerByKey(ownerKey);
+
+        // Get the matching owner_product & lock it while we are doing the update for this org
+        // This is done in order to prevent collisions in updates on different parts of the product
+        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
+        ownerProductCurator.lock(ownerProduct);
+        ownerProductCurator.refresh(ownerProduct);
+
+        Product product = ownerProduct.getProduct();
+        Collection<ProductContent> productContent = new LinkedList<>();
+
+        if (product.isLocked()) {
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
+        }
+
+        ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
+
+        // Impl note:
+        // This is a wholely inefficient way of doing this. When we return to using ID-based linking
+        // and we're not linking the universe with our model, we can just attach the IDs directly
+        // without needing all this DTO conversion back and forth.
+        // Alternatively, we can shut off Hibernate's auto-commit junk and get in the habit of
+        // calling commit methods as necessary so we don't have to work with DTOs internally.
+
+        boolean changed = false;
+        for (Map.Entry<String, Boolean> entry : contentMap.entrySet()) {
+            Content content = this.fetchContent(owner, entry.getKey());
+            boolean enabled = entry.getValue() != null ?
+                entry.getValue() :
+                ProductContent.DEFAULT_ENABLED_STATE;
+
+            ContentDTO cdto = this.translator.translate(content, ContentDTO.class);
+
+            changed |= addContent(pdto, cdto, enabled);
+        }
+
+        if (changed) {
+            product = this.productManager.updateProduct(pdto, owner, true);
+        }
+
+        return this.translator.translate(product, ProductDTO.class);
+    }
+
+    private boolean addContent(ProductDTO product, ContentDTO dto, boolean enabled) {
+        if (product == null) {
+            throw new IllegalArgumentException("Cannot add content to null product");
+        }
+        if (dto == null || dto.getId() == null) {
+            throw new IllegalArgumentException("dto references incomplete content");
+        }
+
+        ProductContentDTO content = new ProductContentDTO();
+        content.setContent(dto);
+        content.setEnabled(enabled);
+
+        Set<ProductContentDTO> productContent;
+        if (product.getProductContent() == null) {
+            productContent = new HashSet<>();
+        }
+        else {
+            productContent = new HashSet<>(product.getProductContent());
+        }
+
+        boolean changed = productContent.stream()
+            .filter(contentDTO -> contentDTO.getContent().getId().equals(content.getContent().getId()))
+            .noneMatch(contentDTO -> contentDTO.equals(content));
+
+        if (changed) {
+            productContent.add(content);
+            product.setProductContent(productContent);
+        }
+
+        return changed;
+    }
+
+    @Override
+    @Transactional
+    public ProductDTO addContent(String ownerKey, String productId, String contentId, Boolean enabled) {
+        // Package the params up and pass it off to our batch method
+        Map<String, Boolean> contentMap = Collections.singletonMap(contentId, enabled);
+        return this.addBatchContent(ownerKey, productId, contentMap);
+    }
+
+    @Override
+    @Transactional
+    public ProductDTO removeBatchContent(String ownerKey, String productId, List<String> contentIds) {
+        Owner owner = this.getOwnerByKey(ownerKey);
+
+        // Get the matching owner_product & lock it while we are doing the update for this org
+        // This is done in order to prevent collisions in updates on different parts of the product
+        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
+        ownerProductCurator.lock(ownerProduct);
+        ownerProductCurator.refresh(ownerProduct);
+        Product product = ownerProduct.getProduct();
+
+        if (product.isLocked()) {
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
+        }
+
+        ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
+
+        // Impl note:
+        // This is a wholely inefficient way of doing this. When we return to using ID-based linking
+        // and we're not linking the universe with our model, we can just attach the IDs directly
+        // without needing all this DTO conversion back and forth.
+        // Alternatively, we can shut off Hibernate's auto-commit junk and get in the habit of
+        // calling commit methods as necessary so we don't have to work with DTOs internally.
+
+        boolean changed = removeContent(pdto, new HashSet<>(contentIds));
+
+        if (changed) {
+            product = this.productManager.updateProduct(pdto, owner, true);
+        }
+
+        return this.translator.translate(product, ProductDTO.class);
+    }
+
+    public boolean removeContent(ProductDTO product, Set<String> contentIds) {
+        if (contentIds == null) {
+            throw new IllegalArgumentException("contentId is null");
+        }
+        if (contentIds.isEmpty()) {
+            return false;
+        }
+        int originalSize = product.getProductContent().size();
+        Set<ProductContentDTO> updatedContents = product.getProductContent().stream()
+            .filter(content -> !contentIds.contains(content.getContent().getId()))
+            .collect(Collectors.toSet());
+
+        product.setProductContent(updatedContents);
+
+        return originalSize != updatedContents.size();
+    }
+
+    @Override
+    @Transactional
+    public ProductDTO removeContent(String ownerKey, String productId, String contentId) {
+        // Package up the params and pass it to our bulk operation
+        return this.removeBatchContent(ownerKey, productId, Collections.singletonList(contentId));
+    }
+
+    @Override
+    @Transactional
+    public void deleteProductByOwner(String ownerKey, String productId) {
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+
+        if (product.isLocked()) {
+            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
+        }
+
+        if (this.productCurator.productHasSubscriptions(owner, product)) {
+            throw new BadRequestException(
+                i18n.tr("Product with ID \"{0}\" cannot be deleted while subscriptions exist.", productId));
+        }
+
+        this.productManager.removeProduct(owner, product);
+    }
+
+    @Override
+    @Transactional
+    public AsyncJobStatusDTO refreshPoolsForProduct(String ownerKey, String productId, Boolean lazyRegen) {
+
+        if (config.getBoolean(ConfigProperties.STANDALONE)) {
+            log.warn("Ignoring refresh pools request due to standalone config.");
+            return null;
+        }
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Product product = this.fetchProduct(owner, productId);
+        JobConfig config = RefreshPoolsForProductJob.createJobConfig()
+            .setProduct(product)
+            .setLazy(lazyRegen);
+
+        try {
+            AsyncJobStatus status = jobManager.queueJob(config);
+            return this.translator.translate(status, AsyncJobStatusDTO.class);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                config.getJobKey());
+            log.error(errmsg, e);
+            throw new IseException(errmsg, e);
+        }
+    }
+
+    /**
+     * Retrieves the content entity with the given content ID for the specified owner. If a
+     * matching entity could not be found, this method throws a NotFoundException.
+     *
+     * @param owner
+     *  The owner in which to search for the content
+     *
+     * @param contentId
+     *  The Red Hat ID of the content to retrieve
+     *
+     * @throws NotFoundException
+     *  If a content with the specified Red Hat ID could not be found
+     *
+     * @return
+     *  the content entity with the given owner and content ID
+     */
+    protected Content fetchContent(Owner owner, String contentId) {
+        Content content = this.ownerContentCurator.getContentById(owner, contentId);
+
+        if (content == null) {
+            throw new NotFoundException(
+                    i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+            );
+        }
+
+        return content;
+    }
+
+    @Override
+    public CandlepinQuery<ContentDTO> listOwnerContent(
+        @Verify(Owner.class) String ownerKey) {
+
+        final Owner owner = this.getOwnerByKey(ownerKey);
+
+        CandlepinQuery<Content> query = this.ownerContentCurator.getContentByOwner(owner);
+        return this.translator.translateQuery(query, ContentDTO.class);
+    }
+
+    @Override
+    public ContentDTO getOwnerContent(
+        @Verify(Owner.class) String ownerKey, String contentId) {
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Content content = this.fetchContent(owner, contentId);
+
+        return this.translator.translate(content, ContentDTO.class);
+    }
+
+    /**
+     * Creates or merges the given Content object.
+     *
+     * @param owner
+     *  The owner for which to create the new content
+     *
+     * @param content
+     *  The content to create or merge
+     *
+     * @return
+     *  the newly created and/or merged Content object.
+     */
+
+    private Content createContentImpl(Owner owner, ContentDTO content) {
+        // TODO: check if arches have changed ??
+
+        Content entity = null;
+
+        if (content.getId() == null || content.getId().trim().length() == 0) {
+            content.setId(this.idGenerator.generateId());
+
+            entity = this.contentManager.createContent(content, owner);
+        }
+        else {
+            Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
+
+            if (existing != null) {
+                if (existing.isLocked()) {
+                    throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
+                }
+
+                entity = this.contentManager.updateContent(content, owner, true);
+            }
+            else {
+                entity = this.contentManager.createContent(content, owner);
+            }
+        }
+
+        return entity;
+    }
+
+    @Override
+    public ContentDTO createContent(String ownerKey, ContentDTO content) {
+        this.validator.validateConstraints(content);
+        this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Content entity = this.createContentImpl(owner, content);
+
+        ownerManager.refreshOwnerForContentAccess(owner);
+
+        return this.translator.translate(entity, ContentDTO.class);
+    }
+
+    @Override
+    @Transactional
+    public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
+
+        for (ContentDTO content : contents) {
+            this.validator.validateConstraints(content);
+            this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
+        }
+
+        Collection<ContentDTO> result = new LinkedList<>();
+        Owner owner = this.getOwnerByKey(ownerKey);
+
+        for (ContentDTO content : contents) {
+            Content entity = this.createContentImpl(owner, content);
+            result.add(this.translator.translate(entity, ContentDTO.class));
+        }
+
+        ownerManager.refreshOwnerForContentAccess(owner);
+        return result;
+    }
+
+    @Override
+    public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO content) {
+
+        this.validator.validateConstraints(content);
+        this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
+
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Content existing  = this.fetchContent(owner, contentId);
+
+        if (existing.isLocked()) {
+            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
+        }
+
+        existing = this.contentManager.updateContent(content, owner, true);
+        ownerManager.refreshOwnerForContentAccess(owner);
+
+        return this.translator.translate(existing, ContentDTO.class);
+    }
+
+    @Override
+    public void remove(String ownerKey, String contentId) {
+        Owner owner = this.getOwnerByKey(ownerKey);
+        Content content = this.fetchContent(owner, contentId);
+
+        if (content.isLocked()) {
+            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
+        }
+
+        this.contentManager.removeContent(owner, content, true);
+        ownerManager.refreshOwnerForContentAccess(owner);
+    }
+
 }

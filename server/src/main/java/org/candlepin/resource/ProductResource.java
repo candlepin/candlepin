@@ -130,7 +130,7 @@ public class ProductResource implements ProductsApi {
     }
 
     @Override
-    public Stream<AsyncJobStatusDTO> refreshPoolsForProduct(
+    public Stream<AsyncJobStatusDTO> refreshPoolsForProducts(
         List<String> productUuids, Boolean lazyRegen) {
 
         if (productUuids.isEmpty()) {
