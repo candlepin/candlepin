@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.27
+Version: 2.9.28
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,14 @@ fi
 
 #raw
 %changelog
+* Tue Jun 09 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.28-1
+- 1842933: Delete removed Artemis queues on broker.xml reload
+  (nmoumoul@redhat.com)
+- 1840823: Fixed parameter overflow in bulk entitlement deletion
+  (crog@redhat.com)
+- 1834221: Stopped checking & consider pools irrespective of Consumer
+  Entitlement SLA for auto attach. (prakgupt@redhat.com)
+
 * Wed Apr 29 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.27-1
 - 1826545: Added an additional null check during entitlement revocation
   (crog@redhat.com)
