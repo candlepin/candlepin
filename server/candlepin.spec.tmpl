@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.12
+Version: 3.1.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,13 @@ fi
 
 #raw
 %changelog
+* Tue Jun 09 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.13-1
+- ENT-2440: Map internal async job states to a subset of client-supported
+  states - Introduce an enum with client facing Job States - Map internal
+  JobState to PublicJobState (ojanus@redhat.com)
+- 1667952: Delete removed Artemis queues on broker.xml reload
+  (nmoumoul@redhat.com)
+
 * Mon Jun 01 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.12-1
 - 1840850: Fixed parameter overflow in bulk entitlement deletion
   (crog@redhat.com)
