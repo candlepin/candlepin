@@ -46,7 +46,7 @@ public class AsyncJobStatusDTOTest extends AbstractDTOTest<AsyncJobStatusDTO> {
         this.values.put("EndTime", new Date());
         this.values.put("Attempts", 3);
         this.values.put("MaxAttempts", 10);
-        this.values.put("Result", new Object());
+        this.values.put("Result", "job_result");
 
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());

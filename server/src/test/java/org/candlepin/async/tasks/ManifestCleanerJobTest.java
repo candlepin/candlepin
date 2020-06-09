@@ -14,14 +14,8 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
@@ -107,9 +101,7 @@ public class ManifestCleanerJobTest {
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         ManifestCleanerJob job = this.createJobInstance();
-        Object result = job.execute(context);
-
-        assertNull(result); // This job doesn't return anything
+        job.execute(context);
 
         assertFalse(manifest1.exists());
         assertTrue(manifest2.exists());

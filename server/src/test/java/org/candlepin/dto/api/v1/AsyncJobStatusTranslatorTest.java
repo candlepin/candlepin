@@ -66,7 +66,7 @@ public class AsyncJobStatusTranslatorTest extends
         source.setStartTime(new Date());
         source.setEndTime(new Date());
         source.setMaxAttempts(7);
-        source.setJobResult(new Object());
+        source.setJobResult("job_result");
 
         return source;
     }

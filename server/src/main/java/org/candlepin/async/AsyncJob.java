@@ -29,10 +29,7 @@ public interface AsyncJob {
      *
      * @throws JobExecutionException
      *  if an exception occurs during job execution
-     *
-     * @return
-     *  The result of the job
      */
-    Object execute(JobExecutionContext context) throws JobExecutionException;
+    void execute(JobExecutionContext context) throws JobExecutionException;
 
 }

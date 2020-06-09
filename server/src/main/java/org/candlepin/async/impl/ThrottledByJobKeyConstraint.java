@@ -16,11 +16,12 @@ package org.candlepin.async.impl;
 
 import org.candlepin.async.JobConstraint;
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatusCurator;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 
 /**
@@ -43,31 +44,21 @@ public class ThrottledByJobKeyConstraint implements JobConstraint {
         this.limit = limit;
     }
 
+    /**
+     * @{inheritDoc}
+     */
     @Override
-    public Collection<AsyncJobStatus> test(AsyncJobStatus inbound, Collection<AsyncJobStatus> existing) {
+    public Collection<String> test(AsyncJobStatusCurator jobCurator, AsyncJobStatus inbound) {
+        if (jobCurator == null) {
+            throw new IllegalArgumentException("jobCurator is null");
+        }
+
         if (inbound == null) {
-            throw new IllegalArgumentException("Inbound job is null!");
+            throw new IllegalArgumentException("inbound is null");
         }
-        if (existing == null) {
-            throw new IllegalArgumentException("Existing  jobs are null!");
-        }
-        List<AsyncJobStatus> conflicting = conflictingJobs(existing);
-        if (conflicting.size() > this.limit) {
-            return conflicting;
-        }
-        else {
-            return Collections.emptyList();
-        }
-    }
 
-    private List<AsyncJobStatus> conflictingJobs(Collection<AsyncJobStatus> existing) {
-        return existing.stream()
-            .filter(this::isConflicting)
-            .collect(Collectors.toList());
-    }
-
-    private boolean isConflicting(AsyncJobStatus status) {
-        return this.jobKey.equalsIgnoreCase(status.getJobKey());
+        List<String> matching = jobCurator.fetchJobIdsByArguments(inbound.getJobKey(), null);
+        return (matching != null && matching.size() > this.limit) ? matching : Collections.emptyList();
     }
 
 }

@@ -68,7 +68,6 @@ public class JobConfig<T extends JobConfig> {
     private String name;
     private String group;
     private Owner owner;
-    private Map<String, String> metadata;
     private Map<String, String> arguments;
     private Set<JobConstraint> constraints;
     private int retries;
@@ -79,7 +78,6 @@ public class JobConfig<T extends JobConfig> {
      * Creates an empty JobConfig
      */
     public JobConfig() {
-        this.metadata = new HashMap<>();
         this.arguments = new HashMap<>();
         this.constraints = new HashSet<>();
 
@@ -383,38 +381,6 @@ public class JobConfig<T extends JobConfig> {
     public T logExecutionDetails(boolean enabled) {
         this.logExecutionDetails = enabled;
         return (T) this;
-    }
-
-    /**
-     * Adds or updates a metadata entry for this job.
-     *
-     * @param key
-     *  The key for the metadata entry
-     *
-     * @param value
-     *  The value of the metadata entry
-     *
-     * @return
-     *  this JobConfig instance
-     */
-    public T setJobMetadata(String key, String value) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        this.metadata.put(key, value);
-        return (T) this;
-    }
-
-    /**
-     * Fetches the metadata for this job. If the job does not have any metadata defined, this method
-     * returns an empty map.
-     *
-     * @return
-     *  the metadata for this job
-     */
-    public Map<String, String> getJobMetadata() {
-        return Collections.unmodifiableMap(this.metadata);
     }
 
     /**

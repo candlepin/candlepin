@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.candlepin.async.JobConstraint;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class ThrottledByJobKeyConstraintTest {
+class ThrottledByJobKeyConstraintTest extends DatabaseTestFixture {
 
     private static final String TEST_KEY = EntitlerJob.JOB_KEY;
     private static final int LIMIT = 2;
@@ -39,7 +40,10 @@ class ThrottledByJobKeyConstraintTest {
         List<AsyncJobStatus> allJobs = conflictingJobs(3);
         JobConstraint constraint = new ThrottledByJobKeyConstraint(TEST_KEY, LIMIT);
 
-        Collection<AsyncJobStatus> conflicting = constraint.test(conflictingJob(), allJobs);
+        AsyncJobStatus inboundJob = new AsyncJobStatus()
+            .setJobKey(TEST_KEY);
+
+        Collection<String> conflicting = constraint.test(this.asyncJobCurator, inboundJob);
 
         assertEquals(3, conflicting.size());
     }
@@ -49,7 +53,10 @@ class ThrottledByJobKeyConstraintTest {
         List<AsyncJobStatus> allJobs = conflictingJobs(1);
         JobConstraint constraint = new ThrottledByJobKeyConstraint(TEST_KEY, LIMIT);
 
-        Collection<AsyncJobStatus> conflicting = constraint.test(conflictingJob(), allJobs);
+        AsyncJobStatus inboundJob = new AsyncJobStatus()
+            .setJobKey(TEST_KEY);
+
+        Collection<String> conflicting = constraint.test(this.asyncJobCurator, inboundJob);
 
         assertTrue(conflicting.isEmpty());
     }
@@ -61,8 +68,10 @@ class ThrottledByJobKeyConstraintTest {
     }
 
     private AsyncJobStatus conflictingJob() {
-        return new AsyncJobStatus()
+        AsyncJobStatus status = new AsyncJobStatus()
             .setJobKey(TEST_KEY);
+
+        return this.asyncJobCurator.merge(status);
     }
 
 }

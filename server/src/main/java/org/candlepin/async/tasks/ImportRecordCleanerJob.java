@@ -39,7 +39,7 @@ public class ImportRecordCleanerJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(ImportRecordCleanerJob.class);
 
     public static final String JOB_KEY = "ImportRecordCleanerJob";
-    public static final String JOB_NAME = "Import record cleaner";
+    public static final String JOB_NAME = "Import Record Cleaner";
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
@@ -59,7 +59,7 @@ public class ImportRecordCleanerJob implements AsyncJob {
     }
 
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         int toKeep = this.config.getInt(ConfigProperties.jobConfig(JOB_KEY, CFG_KEEP), DEFAULT_KEEP);
 
         if (toKeep < 0) {
@@ -83,13 +83,16 @@ public class ImportRecordCleanerJob implements AsyncJob {
         }
 
         String outcome;
+
         if (deleted > 0) {
             outcome = String.format("Deleted %d import records.", deleted);
             log.info(outcome);
-            return outcome;
         }
-        outcome = "No import records were deleted.";
-        log.debug(outcome);
-        return outcome;
+        else {
+            outcome = "No import records were deleted.";
+            log.debug(outcome);
+        }
+
+        context.setJobResult(outcome);
     }
 }

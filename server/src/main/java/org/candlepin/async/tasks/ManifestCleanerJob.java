@@ -52,7 +52,7 @@ public class ManifestCleanerJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(ManifestCleanerJob.class);
 
     public static final String JOB_KEY = "ManifestCleanerJob";
-    public static final String JOB_NAME = "manifest cleaner";
+    public static final String JOB_NAME = "Manifest Cleaner";
 
     public static final String CFG_MAX_AGE_IN_MINUTES = "max_age_in_minutes";
     public static final int DEFAULT_MAX_AGE_IN_MINUTES = 1440;
@@ -73,7 +73,7 @@ public class ManifestCleanerJob implements AsyncJob {
      * {@inheritDoc}
      */
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
         int maxAgeInMinutes = config.getInt(ConfigProperties.jobConfig(JOB_KEY, CFG_MAX_AGE_IN_MINUTES),
             DEFAULT_MAX_AGE_IN_MINUTES);
@@ -91,18 +91,17 @@ public class ManifestCleanerJob implements AsyncJob {
         cleanupExportWorkDirs(baseDir, maxAgeInMinutes);
         manifestServiceCleanup(maxAgeInMinutes);
 
-        return null;
+        context.setJobResult("Manifest cleanup completed successfully");
     }
 
     private void cleanupExportWorkDirs(File baseDir, int maxAgeInMinutes) {
         long dirCount = 0;
         long delCount = 0;
-        long leftCount = 0;
 
         Date cutOff = Util.addMinutesToDt(maxAgeInMinutes * -1);
 
         if (baseDir.listFiles() != null) {
-            dirCount =  baseDir.listFiles().length;
+            dirCount = baseDir.listFiles().length;
             for (File f : baseDir.listFiles()) {
                 if (f.lastModified() < cutOff.getTime()) {
                     try {
@@ -117,15 +116,12 @@ public class ManifestCleanerJob implements AsyncJob {
                         log.error(errorMsg, io);
                     }
                 }
-                else {
-                    leftCount++;
-                }
             }
         }
 
         log.info("Begining directory count: {}", dirCount);
         log.info("Directories deleted: {}", delCount);
-        log.info("Directories remaining: {}", leftCount);
+        log.info("Directories remaining: {}", (dirCount - delCount));
     }
 
     private void manifestServiceCleanup(int maxAgeInMinutes) {

@@ -15,6 +15,7 @@
 package org.candlepin.async;
 
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatusCurator;
 
 import java.util.Collection;
 
@@ -27,23 +28,22 @@ import java.util.Collection;
 public interface JobConstraint {
 
     /**
-     * Tests this constraint using the given inbound job against the provided existing, non-terminal
-     * jobs. If the inbound job is constrained by any of the existing jobs, this method should
-     * return a collection of those constraining jobs. Otherwise, this method should return null or
-     * and empty collection.
+     * Tests this constraint using the given inbound job. If the inbound job is constrained this
+     * method should return a collection containing the IDs of the constraining jobs. Otherwise,
+     * this method should return null or an empty collection.
+     *
+     * @param jobCurator
+     *  an instance of the current jobCurator to use for performing database operations
      *
      * @param inbound
      *  the inbound job status to test
      *
-     * @param existing
-     *  the collection of existing, non-terminal job statuses to test against
-     *
      * @throws IllegalArgumentException
-     *  if either the inbound job is null, or the existing jobs is null or contains null elements
+     *  if the inbound job is null
      *
      * @return
-     *  a collection of colliding jobs, or null to indicate no job collisions
+     *  a collection of constraining job IDs, or null to indicate no job collisions
      */
-    Collection<AsyncJobStatus> test(AsyncJobStatus inbound, Collection<AsyncJobStatus> existing);
+    Collection<String> test(AsyncJobStatusCurator jobCurator, AsyncJobStatus inbound);
 
 }

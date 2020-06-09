@@ -26,8 +26,11 @@ import org.candlepin.model.Environment;
 import com.google.inject.Inject;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+
 
 /**
  * RegenEnvEntitlementCertsJob
@@ -38,11 +41,11 @@ import java.util.Set;
 public class RegenEnvEntitlementCertsJob implements AsyncJob {
 
     public static final String JOB_KEY = "RegenEnvEntitlementCertsJob";
-    public static final String JOB_NAME = "regenerate environment entitlement certificates";
+    public static final String JOB_NAME = "Regenerate Environment Entitlement Certificates";
 
-    private static final String ENV_ID = "env_id";
-    private static final String CONTENT = "content_ids";
-    private static final String LAZY_REGEN = "lazy_regen";
+    private static final String ENV_ID_KEY = "env_id";
+    private static final String CONTENT_KEY = "content_ids";
+    private static final String LAZY_REGEN_KEY = "lazy_regen";
 
     private PoolManager poolManager;
 
@@ -52,16 +55,16 @@ public class RegenEnvEntitlementCertsJob implements AsyncJob {
     }
 
     @Override
-    public Object execute(JobExecutionContext context) {
+    public void execute(JobExecutionContext context) {
         JobArguments args = context.getJobArguments();
 
-        String environmentId = args.getAsString(ENV_ID);
-        Set<String> contentIds = new HashSet<>(Arrays.asList(args.getAs(CONTENT, String[].class)));
-        Boolean lazy = args.getAsBoolean(LAZY_REGEN, true);
+        String environmentId = args.getAsString(ENV_ID_KEY);
+        Set<String> contentIds = new HashSet<>(Arrays.asList(args.getAs(CONTENT_KEY, String[].class)));
+        Boolean lazy = args.getAsBoolean(LAZY_REGEN_KEY, true);
 
         this.poolManager.regenerateCertificatesOf(environmentId, contentIds, lazy);
 
-        return "Successfully regenerated entitlements for environment " + environmentId;
+        context.setJobResult("Successfully regenerated entitlements for environment: %s", environmentId);
     }
 
     /**
@@ -90,7 +93,7 @@ public class RegenEnvEntitlementCertsJob implements AsyncJob {
                 throw new IllegalArgumentException("environment is null or has null id");
             }
 
-            this.setJobArgument(ENV_ID, environment.getId());
+            this.setJobArgument(ENV_ID_KEY, environment.getId());
             return this;
         }
 
@@ -104,8 +107,8 @@ public class RegenEnvEntitlementCertsJob implements AsyncJob {
          * @return
          *  a reference to this job config
          */
-        public RegenEnvEntitlementCertsJobConfig setContent(Set<String> contentIds) {
-            this.setJobArgument(CONTENT, contentIds.toArray());
+        public RegenEnvEntitlementCertsJobConfig setContent(Collection<String> contentIds) {
+            this.setJobArgument(CONTENT_KEY, contentIds.toArray());
             return this;
         }
 
@@ -120,7 +123,7 @@ public class RegenEnvEntitlementCertsJob implements AsyncJob {
          *  a reference to this job config
          */
         public RegenEnvEntitlementCertsJobConfig setLazyRegeneration(boolean lazy) {
-            this.setJobArgument(LAZY_REGEN, lazy);
+            this.setJobArgument(LAZY_REGEN_KEY, lazy);
             return this;
         }
 
@@ -131,8 +134,8 @@ public class RegenEnvEntitlementCertsJob implements AsyncJob {
             try {
                 JobArguments arguments = this.getJobArguments();
 
-                String environmentId = arguments.getAsString(ENV_ID);
-                String[] contentIds = arguments.getAs(CONTENT, String[].class);
+                String environmentId = arguments.getAsString(ENV_ID_KEY);
+                String[] contentIds = arguments.getAs(CONTENT_KEY, String[].class);
 
                 if (environmentId == null || environmentId.isEmpty()) {
                     String errmsg = "environment has not been set, or the provided environment lacks an id";

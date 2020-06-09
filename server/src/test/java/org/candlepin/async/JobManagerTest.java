@@ -150,8 +150,8 @@ public class JobManagerTest {
         public static final String JOB_KEY = "TestJob";
 
         @Override
-        public Object execute(JobExecutionContext context) throws JobExecutionException {
-            return null;
+        public void execute(JobExecutionContext context) throws JobExecutionException {
+            // intentionally left empty
         }
     }
 
@@ -437,15 +437,8 @@ public class JobManagerTest {
             .setJobKey(TestJob.JOB_KEY)
             .setLogLevel(jobLogLevel);
 
-        for (int i = 0; i < metadataEntries; ++i) {
-            status.addMetadata("md_key-" + i, "md_val-" + i);
-        }
-
         Map<String, String> mdcCapture = new HashMap<>();
-        AsyncJob captureJob = jdata -> {
-            mdcCapture.putAll(MDC.getCopyOfContextMap());
-            return null;
-        };
+        AsyncJob captureJob = jdata -> { mdcCapture.putAll(MDC.getCopyOfContextMap()); };
 
         doReturn(captureJob).when(injector).getInstance(TestJob.class);
         this.injectMockedJobStatus(status);
@@ -463,10 +456,6 @@ public class JobManagerTest {
         assertEquals("job", mdcCapture.get("requestType"));
         assertEquals(status.getId(), mdcCapture.get("requestUuid"));
         assertEquals(expectedLogLevel, mdcCapture.get("logLevel"));
-
-        for (int i = 0; i < metadataEntries; ++i) {
-            assertEquals("md_val-" + i, mdcCapture.get("md_key-" + i));
-        }
 
         if (owner != null) {
             assertEquals(owner.getKey(), mdcCapture.get(LoggingFilter.OWNER_KEY));
@@ -500,9 +489,7 @@ public class JobManagerTest {
     @Test
     public void testMDCStateIsMaintained() throws JobException {
         AsyncJobStatus status = spy(new AsyncJobStatus()
-            .setJobKey(TestJob.JOB_KEY)
-            .addMetadata("job_metadata", "job_metadata_val")
-            .addMetadata("some_shared_key", "job_value"));
+            .setJobKey(TestJob.JOB_KEY));
 
         doReturn(JOB_ID).when(status).getId();
         doReturn(mock(AsyncJob.class)).when(injector).getInstance(TestJob.class);
@@ -638,7 +625,7 @@ public class JobManagerTest {
 
     @Test
     public void testStartTimeIsSetOnExecution() throws JobException {
-        AsyncJob job = jdata -> { return null; };
+        AsyncJob job = jdata -> { /* do nothing */ };
         AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED);
@@ -664,7 +651,7 @@ public class JobManagerTest {
 
     @Test
     public void testEndTimeIsSetOnExecution() throws JobException {
-        AsyncJob job = jdata -> { return null; };
+        AsyncJob job = jdata -> { /* do nothing */ };
         AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED);
@@ -724,7 +711,7 @@ public class JobManagerTest {
 
     @Test
     public void testAttemptCountIsIncrementedOnExecution() throws JobException {
-        AsyncJob job = jdata -> { return null; };
+        AsyncJob job = jdata -> { /* do nothing */ };
         AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.QUEUED);
@@ -938,7 +925,7 @@ public class JobManagerTest {
             .setState(JobState.QUEUED)
             .setMaxAttempts(3));
 
-        AsyncJob job = jdata -> { return null; };
+        AsyncJob job = jdata -> { /* do nothing */ };
 
         doReturn(JOB_ID).when(status).getId();
         doReturn(job).when(this.injector).getInstance(TestJob.class);
@@ -1258,27 +1245,8 @@ public class JobManagerTest {
 
     @Test
     public void testJobDoesNotQueueIfConstraintFails() throws Exception {
-        Map<String, Object> ejobData1 = new HashMap<>();
-        ejobData1.put("arg1", "val1");
-
-        Map<String, Object> ejobData2 = new HashMap<>();
-        ejobData2.put("arg1", "val2");
-
-        AsyncJobStatus ejob1 = spy(new AsyncJobStatus()
-            .setJobKey(TestJob.JOB_KEY)
-            .setState(JobState.QUEUED)
-            .setJobArguments(this.buildJobArguments(ejobData1)));
-
-        AsyncJobStatus ejob2 = spy(new AsyncJobStatus()
-            .setJobKey(TestJob.JOB_KEY)
-            .setState(JobState.QUEUED)
-            .setJobArguments(this.buildJobArguments(ejobData2)));
-
         JobConfig builder = JobConfig.forJob(TestJob.JOB_KEY)
-            .addConstraint(JobConstraints.uniqueByArguments("arg1"))
-            .setJobArgument("arg1", "val2");
-
-        doReturn(Arrays.asList(ejob1, ejob2)).when(this.jobCurator).getNonTerminalJobs();
+            .addConstraint((curator, job) -> Arrays.asList("job-1", "job-2", "job-3"));
 
         JobManager manager = this.createJobManager();
         manager.initialize();

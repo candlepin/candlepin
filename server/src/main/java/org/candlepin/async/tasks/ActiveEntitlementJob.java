@@ -32,9 +32,8 @@ import java.util.List;
 public class ActiveEntitlementJob implements AsyncJob {
 
     public static final String JOB_KEY = "ActiveEntitlementJob";
-    private static final String JOB_NAME = "active entitlement job";
-    // Every hour:
-    public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?";
+    public static final String JOB_NAME = "Active Entitlement";
+    public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?"; // Every hour
 
     private ConsumerCurator consumerCurator;
     private ComplianceRules complianceRules;
@@ -43,19 +42,28 @@ public class ActiveEntitlementJob implements AsyncJob {
     @Inject
     public ActiveEntitlementJob(ConsumerCurator consumerCurator, ComplianceRules complianceRules,
         SystemPurposeComplianceRules systemPurposeComplianceRules) {
+
         this.consumerCurator = consumerCurator;
         this.complianceRules = complianceRules;
         this.systemPurposeComplianceRules = systemPurposeComplianceRules;
     }
 
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         List<String> ids = consumerCurator.getConsumerIdsWithStartedEnts();
-        for (String id : ids) {
-            Consumer c = consumerCurator.get(id);
-            complianceRules.getStatus(c);
-            systemPurposeComplianceRules.getStatus(c, c.getEntitlements(), null, true);
+
+        if (ids != null && !ids.isEmpty()) {
+            for (String id : ids) {
+                Consumer c = consumerCurator.get(id);
+                complianceRules.getStatus(c);
+                systemPurposeComplianceRules.getStatus(c, c.getEntitlements(), null, true);
+            }
+
+            context.setJobResult("Entitlement status updated for consumers: %s", ids);
         }
-        return "Completed active entitlement job for " + ids;
+        else {
+            context.setJobResult("No consumers with entitlements pending activation found");
+        }
+
     }
 }

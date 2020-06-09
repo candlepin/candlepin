@@ -36,7 +36,7 @@ import com.google.inject.Inject;
 public class RefreshPoolsJob implements AsyncJob {
 
     public static final String JOB_KEY = "RefreshPoolsJob";
-    public static final String JOB_NAME = "refresh_pools";
+    public static final String JOB_NAME = "Refresh Pools";
 
     protected static final String OWNER_KEY = "org";
     protected static final String LAZY_REGEN = "lazy_regen";
@@ -129,21 +129,21 @@ public class RefreshPoolsJob implements AsyncJob {
         this.subAdapter = subAdapter;
     }
 
-   /**
+    /**
      * {@inheritDoc}
      *
      * Executes {@link Refresher#run()} for all products of a specific Owner as a job.
      *
      * @param context the job's execution context
      */
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         JobArguments args = context.getJobArguments();
         String ownerKey = args.getAsString(OWNER_KEY);
         boolean lazy = args.getAsBoolean(LAZY_REGEN);
         Owner owner = ownerCurator.getByKey(ownerKey);
 
         if (owner == null) {
-            throw new JobExecutionException("Nothing to do. Owner no longer exists", true);
+            throw new JobExecutionException("Nothing to do; owner no longer exists: " + ownerKey, true);
         }
 
         try {
@@ -156,7 +156,7 @@ public class RefreshPoolsJob implements AsyncJob {
             throw new JobExecutionException(e.getMessage(), e, false);
         }
 
-        return "Pools refreshed for owner " + owner.getDisplayName();
+        context.setJobResult("Pools refreshed for owner: %s", owner.getDisplayName());
     }
 
     /**

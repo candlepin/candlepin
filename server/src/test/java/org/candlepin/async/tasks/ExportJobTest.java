@@ -14,12 +14,8 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
@@ -34,6 +30,7 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -82,8 +79,6 @@ public class ExportJobTest {
 
         JobConfig config = ExportJob.createJobConfig()
             .setOwner(owner);
-
-        Map<String, String> metadata = config.getJobMetadata();
 
         assertEquals(owner, config.getContextOwner());
     }
@@ -208,7 +203,12 @@ public class ExportJobTest {
         JobExecutionContext context = mock(JobExecutionContext.class);
         doReturn(config.getJobArguments()).when(context).getJobArguments();
 
-        Object actualResult = this.job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object actualResult = captor.getValue();
 
         assertEquals(result, actualResult);
     }

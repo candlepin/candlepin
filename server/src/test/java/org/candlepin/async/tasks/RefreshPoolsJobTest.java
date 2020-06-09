@@ -14,12 +14,8 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
@@ -28,14 +24,15 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -44,16 +41,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 public class RefreshPoolsJobTest {
 
-    private RefreshPoolsJob job;
     @Mock protected OwnerCurator ownerCurator;
     @Mock protected PoolManager poolManager;
     @Mock protected SubscriptionServiceAdapter subAdapter;
     @Mock protected Refresher refresher;
-    @Mock private JobExecutionContext ctx;
 
-    @BeforeEach
-    public void setupTest() {
-        job = new RefreshPoolsJob(ownerCurator, poolManager, subAdapter);
+    private RefreshPoolsJob buildRefreshPoolsJob() {
+        return new RefreshPoolsJob(this.ownerCurator, this.poolManager, this.subAdapter);
     }
 
     private Owner createTestOwner(String key, String logLevel) {
@@ -124,14 +118,24 @@ public class RefreshPoolsJobTest {
             .setOwner(owner)
             .setLazyRegeneration(true);
 
-        doReturn(jobConfig.getJobArguments()).when(ctx).getJobArguments();
+        RefreshPoolsJob job = this.buildRefreshPoolsJob();
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
+
         doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
         doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(true));
         doReturn(refresher).when(refresher).add(eq(owner));
 
-        Object actualResult = this.job.execute(ctx);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
 
-        assertEquals("Pools refreshed for owner my-test-owner-displayname", actualResult);
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
+        assertEquals("Pools refreshed for owner: my-test-owner-displayname", result);
     }
 
     @Test
@@ -142,13 +146,18 @@ public class RefreshPoolsJobTest {
             .setOwner(owner)
             .setLazyRegeneration(false);
 
-        doReturn(jobConfig.getJobArguments()).when(ctx).getJobArguments();
+        RefreshPoolsJob job = this.buildRefreshPoolsJob();
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
+
         doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
         doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(false));
         doReturn(refresher).when(refresher).add(eq(owner));
         doThrow(new RuntimeException("something went wrong with refresh")).when(refresher).run();
 
-        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(ctx));
+        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(context));
         assertEquals("something went wrong with refresh", e.getMessage());
     }
 
@@ -160,10 +169,15 @@ public class RefreshPoolsJobTest {
             .setOwner(owner)
             .setLazyRegeneration(false);
 
-        doReturn(jobConfig.getJobArguments()).when(ctx).getJobArguments();
+        RefreshPoolsJob job = this.buildRefreshPoolsJob();
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
+
         doReturn(null).when(ownerCurator).getByKey(eq("my-test-owner"));
 
-        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(ctx));
-        assertEquals("Nothing to do. Owner no longer exists", e.getMessage());
+        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(context));
+        assertEquals("Nothing to do; owner no longer exists: " + owner.getKey(), e.getMessage());
     }
 }

@@ -17,25 +17,27 @@ package org.candlepin.async.tasks;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashSet;
 import java.util.Set;
+
+
 
 @ExtendWith(MockitoExtension.class)
 public class RegenEnvEntitlementCertsJobTest {
@@ -101,13 +103,18 @@ public class RegenEnvEntitlementCertsJobTest {
             .setEnvironment(environment)
             .setContent(content);
 
-        JobExecutionContext context = mock(JobExecutionContext.class);
-        doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
 
-        Object actualResult = this.job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        this.job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
 
         verify(poolManager).regenerateCertificatesOf(environment.getId(), content, true);
-        assertEquals(
-            "Successfully regenerated entitlements for environment " + environment.getId(), actualResult);
+        assertEquals("Successfully regenerated entitlements for environment: " + environment.getId(), result);
     }
 }

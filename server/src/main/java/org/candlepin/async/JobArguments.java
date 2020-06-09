@@ -16,11 +16,10 @@ package org.candlepin.async;
 
 import org.candlepin.util.ObjectMapperFactory;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,11 +29,9 @@ import java.util.Set;
  * The JobArguments is a map-like view of the arguments provided to the job during construction.
  * Unlike a typical map, the types of the values must be known to properly fetch them.
  */
-@SuppressWarnings("checkstyle:JavadocMethodMain")
 public class JobArguments {
     private static ObjectMapper mapper = ObjectMapperFactory.getObjectMapper();
 
-    @JsonProperty("data")
     private Map<String, String> data;
 
     /**
@@ -43,8 +40,7 @@ public class JobArguments {
      * @param map
      *  the map to use as the data store for this map
      */
-    @JsonCreator
-    public JobArguments(@JsonProperty("data") Map<String, String> map) {
+    public JobArguments(Map<String, String> map) {
         if (map == null) {
             throw new IllegalArgumentException("map is null");
         }
@@ -70,7 +66,7 @@ public class JobArguments {
         }
         catch (Exception e) {
             Class type = value != null ? value.getClass() : null;
-            String errmsg = String.format("Unable to serialize value: %s (%s)", value, type);
+            String errmsg = String.format("Unable to serialize value: (%s): %s", type, value);
 
             throw new ArgumentConversionException(errmsg, e);
         }
@@ -159,6 +155,16 @@ public class JobArguments {
      */
     public String getSerializedValue(String key) {
         return this.data.get(key);
+    }
+
+    /**
+     * Fetches a map containing the serialized key-value pairs representing the job arguments.
+     *
+     * @return
+     *  A map containing the serialized key-value pairs representing the job arguments
+     */
+    public Map<String, String> toSerializedMap() {
+        return Collections.unmodifiableMap(this.data);
     }
 
     /**

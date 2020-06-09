@@ -17,16 +17,15 @@ package org.candlepin.async;
 
 
 /**
- * The ArgumentConversionException is thrown when a job argument cannot be serialized, or is fetched
- * as an incompatible type.
+ * The ResultSerializationException is thrown when a job result cannot be serialized for storage.
  */
-public class ArgumentConversionException extends RuntimeException {
+public class ResultSerializationException extends RuntimeException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized,
      * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public ArgumentConversionException() {
+    public ResultSerializationException() {
         super();
     }
 
@@ -38,7 +37,7 @@ public class ArgumentConversionException extends RuntimeException {
      *  the detail message. The detail message is saved for later retrieval by the getMessage()
      *  method.
      */
-    public ArgumentConversionException(String message) {
+    public ResultSerializationException(String message) {
         super(message);
     }
 
@@ -52,7 +51,7 @@ public class ArgumentConversionException extends RuntimeException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public ArgumentConversionException(Throwable cause) {
+    public ResultSerializationException(Throwable cause) {
         super(cause);
     }
 
@@ -70,7 +69,7 @@ public class ArgumentConversionException extends RuntimeException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public ArgumentConversionException(String message, Throwable cause) {
+    public ResultSerializationException(String message, Throwable cause) {
         super(message, cause);
     }
 }

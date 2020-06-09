@@ -36,15 +36,16 @@ import java.util.Objects;
  */
 public class RefreshPoolsForProductJob implements AsyncJob {
 
-    private final PoolManager poolManager;
-    private final ProductCurator productCurator;
-    private final SubscriptionServiceAdapter subAdapter;
-
     public static final String JOB_KEY = "RefreshPoolsForProductJob";
-    private static final String JOB_NAME = "refresh pools for product";
+    public static final String JOB_NAME = "Refresh Pools For Product";
+
     private static final String LAZY_KEY = "lazy_regen";
     private static final String PRODUCT_KEY = "product_key";
     private static final String OWNER_KEY = "org";
+
+    private final PoolManager poolManager;
+    private final ProductCurator productCurator;
+    private final SubscriptionServiceAdapter subAdapter;
 
     @Inject
     public RefreshPoolsForProductJob(
@@ -58,7 +59,7 @@ public class RefreshPoolsForProductJob implements AsyncJob {
     }
 
     @Override
-    public String execute(final JobExecutionContext context) {
+    public void execute(final JobExecutionContext context) {
         final JobArguments args = context.getJobArguments();
 
         final String productUuid = args.getAsString(PRODUCT_KEY);
@@ -68,7 +69,7 @@ public class RefreshPoolsForProductJob implements AsyncJob {
         final Product product = this.productCurator.get(productUuid);
 
         if (product != null) {
-            final Refresher refresher = poolManager.getRefresher(this.subAdapter, lazy);
+            Refresher refresher = poolManager.getRefresher(this.subAdapter, lazy);
 
             refresher.add(product);
             refresher.run();
@@ -83,7 +84,7 @@ public class RefreshPoolsForProductJob implements AsyncJob {
                 .append("\": Could not find a product with the specified UUID");
         }
 
-        return result.toString();
+        context.setJobResult(result.toString());
     }
 
     /**

@@ -73,7 +73,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
     }
 
     private AsyncJobStatus createJob(String name, String key, JobState state, Owner owner, String principal,
-        String origin, String executor, Object result, Date startTime, Date endTime, Date lastUpdated) {
+        String origin, String executor, String result, Date startTime, Date endTime, Date lastUpdated) {
 
         AsyncJobStatus job = new AsyncJobStatus()
             .setName(name)

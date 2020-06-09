@@ -39,13 +39,11 @@ public class CRLUpdateJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(CRLUpdateJob.class);
 
     public static final String JOB_KEY = "CRLUpdateJob";
-    public static final String JOB_NAME = "CRL update";
-
+    public static final String JOB_NAME = "CRL Update";
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
     private Configuration config;
     private CrlFileUtil crlFileUtil;
-
 
     /**
      * Instantiates a new instance of the CRLUpdateJob
@@ -74,7 +72,7 @@ public class CRLUpdateJob implements AsyncJob {
      * {@inheritDoc}
      */
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         String filePath = config.getString(ConfigProperties.CRL_FILE_PATH, null);
 
         if (filePath == null || filePath.isEmpty()) {
@@ -88,7 +86,7 @@ public class CRLUpdateJob implements AsyncJob {
             File crlFile = new File(filePath);
             this.crlFileUtil.syncCRLWithDB(crlFile);
 
-            return "CRL Update completed successfully";
+            context.setJobResult("CRL Update completed successfully");
         }
         catch (IOException e) {
             throw new JobExecutionException(e, true);

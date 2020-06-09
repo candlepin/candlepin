@@ -32,7 +32,7 @@ public class UnmappedGuestEntitlementCleanerJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(UnmappedGuestEntitlementCleanerJob.class);
 
     public static final String JOB_KEY = "UnmappedGuestEntitlementCleanerJob";
-    public static final String JOB_NAME = "Unmapped guest entitlement cleaner";
+    public static final String JOB_NAME = "Unmapped Guest Entitlement Cleaner";
 
     // Run at 3 AM and every 12 hours afterwards
     public static final String DEFAULT_SCHEDULE = "0 0 3/12 * * ?";
@@ -48,7 +48,7 @@ public class UnmappedGuestEntitlementCleanerJob implements AsyncJob {
      * {@inheritDoc}
      */
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         int total = entitler.revokeUnmappedGuestEntitlements();
 
         String outcome;
@@ -60,6 +60,7 @@ public class UnmappedGuestEntitlementCleanerJob implements AsyncJob {
             outcome = "No unmapped guest entitlements need reaping.";
             log.debug(outcome);
         }
-        return outcome;
+
+        context.setJobResult(outcome);
     }
 }

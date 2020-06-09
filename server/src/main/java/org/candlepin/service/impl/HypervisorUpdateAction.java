@@ -130,6 +130,7 @@ public class HypervisorUpdateAction {
                     hypervisorId, e);
             }
         }
+
         return new Result(result, hypervisorConsumersMap);
     }
 

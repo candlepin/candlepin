@@ -50,10 +50,11 @@ import java.util.Objects;
  * HealEntireOrgJob
  */
 public class HealEntireOrgJob implements AsyncJob {
-
     private static Logger log = LoggerFactory.getLogger(HealEntireOrgJob.class);
+
     public static final String JOB_KEY = "HealEntireOrgJob";
-    private static final String JOB_NAME = "heal entire org job";
+    public static final String JOB_NAME = "Heal Organization";
+
     public static final String OWNER_KEY = "org";
     public static final String ENTITLE_DATE_KEY = "entitle_date";
 
@@ -75,7 +76,7 @@ public class HealEntireOrgJob implements AsyncJob {
     }
 
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         try {
             JobArguments arguments = context.getJobArguments();
             String ownerKey = arguments.getAsString(OWNER_KEY);
@@ -120,7 +121,7 @@ public class HealEntireOrgJob implements AsyncJob {
                 }
             }
 
-            return result;
+            context.setJobResult(result.toString());
         }
         catch (Exception e) {
             log.error("HealEntireOrgJob encountered a problem.", e);
@@ -160,7 +161,8 @@ public class HealEntireOrgJob implements AsyncJob {
     public static class HealEntireOrgJobConfig extends JobConfig<HealEntireOrgJobConfig> {
 
         public HealEntireOrgJobConfig() {
-            this.setJobKey(JOB_KEY).setJobName(JOB_NAME)
+            this.setJobKey(JOB_KEY)
+                .setJobName(JOB_NAME)
                 .addConstraint(JobConstraints.uniqueByArguments(OWNER_KEY));
         }
 
@@ -186,6 +188,7 @@ public class HealEntireOrgJob implements AsyncJob {
 
             try {
                 JobArguments arguments = this.getJobArguments();
+
                 String ownerKey = arguments.getAsString(OWNER_KEY);
                 if (ownerKey == null || ownerKey.isEmpty()) {
                     String errmsg = "owner has not been set, or the provided owner lacks a key";

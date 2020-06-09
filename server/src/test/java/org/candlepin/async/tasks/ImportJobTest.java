@@ -14,17 +14,8 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
@@ -32,6 +23,7 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.ManifestManager;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -40,27 +32,24 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.TestUtil;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 
 
+/**
+ * Test suite for the ImportJob class
+ */
 @ExtendWith(MockitoExtension.class)
 public class ImportJobTest {
     @Mock private ManifestManager manifestManager;
-    @Mock private JobExecutionContext ctx;
     @Mock private OwnerCurator ownerCurator;
-    private ImportJob job;
 
-    private Owner owner;
-
-    @BeforeEach
-    public void setup() {
-        owner = new Owner("my-test-owner");
-        job = new ImportJob(ownerCurator, manifestManager);
+    private ImportJob buildImportJob() {
+        return new ImportJob(this.ownerCurator, this.manifestManager);
     }
 
     private Owner createTestOwner(String key, String logLevel) {
@@ -81,9 +70,14 @@ public class ImportJobTest {
             .setOwner(owner);
 
         JobArguments args = config.getJobArguments();
+        String argKey = args.keySet().iterator().next();
 
+        assertNotNull(argKey);
+        assertFalse(argKey.isEmpty());
+        assertEquals(owner.getKey(), args.getAsString(argKey));
+
+        // The context owner should also be set by this method
         assertEquals(owner, config.getContextOwner());
-        assertEquals(owner.getKey(), args.getAsString(ImportJob.OWNER_KEY));
     }
 
     @Test
@@ -94,9 +88,11 @@ public class ImportJobTest {
             .setUploadedFileName(fileName);
 
         JobArguments args = config.getJobArguments();
+        String argKey = args.keySet().iterator().next();
 
-        assertTrue(args.containsKey(ImportJob.UPLOADED_FILE_NAME));
-        assertEquals(fileName, args.getAsString(ImportJob.UPLOADED_FILE_NAME));
+        assertNotNull(argKey);
+        assertFalse(argKey.isEmpty());
+        assertEquals(fileName, args.getAsString(argKey));
     }
 
     @Test
@@ -107,9 +103,11 @@ public class ImportJobTest {
             .setStoredFileId(storedFileId);
 
         JobArguments args = config.getJobArguments();
+        String argKey = args.keySet().iterator().next();
 
-        assertTrue(args.containsKey(ImportJob.STORED_FILE_ID));
-        assertEquals(storedFileId, args.getAsString(ImportJob.STORED_FILE_ID));
+        assertNotNull(argKey);
+        assertFalse(argKey.isEmpty());
+        assertEquals(storedFileId, args.getAsString(argKey));
     }
 
     @Test
@@ -122,9 +120,16 @@ public class ImportJobTest {
 
         JobArguments args = config.getJobArguments();
 
-        assertTrue(args.containsKey(ImportJob.CONFLICT_OVERRIDES));
-        assertArrayEquals(conflictOverrides.asStringArray(),
-            args.getAs(ImportJob.CONFLICT_OVERRIDES, String[].class));
+        assertNotNull(args);
+        assertEquals(1, args.size());
+
+        // We aren't concerned with the key it's stored under, just that it's stored. As such, we
+        // need to get the key from the key set so we can reference it for use with getAsString.
+        String argKey = args.keySet().iterator().next();
+
+        assertNotNull(argKey);
+        assertFalse(argKey.isEmpty());
+        assertArrayEquals(conflictOverrides.asStringArray(), args.getAs(argKey, String[].class));
     }
 
     @Test
@@ -180,6 +185,9 @@ public class ImportJobTest {
 
     @Test
     public void ensureJobSuccess() throws Exception {
+        Owner owner = this.createTestOwner("my-test-owner", "info");
+        doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
+
         String uploadFileName = "upload_file_name_1";
         String storedFieldId = "stored_field_id_1";
         ConflictOverrides conflictOverrides = new ConflictOverrides(
@@ -194,19 +202,30 @@ public class ImportJobTest {
             .setUploadedFileName(uploadFileName)
             .setConflictOverrides(conflictOverrides);
 
-        JobExecutionContext context = mock(JobExecutionContext.class);
-        doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
-        doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
+        ImportJob job = this.buildImportJob();
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
+
         when(manifestManager.importStoredManifest(eq(owner), eq(storedFieldId), any(ConflictOverrides.class),
             eq(uploadFileName))).thenReturn(importRecord);
 
-        Object actualResult = this.job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object actualResult = captor.getValue();
 
         assertEquals(importRecord, actualResult);
     }
 
     @Test
     public void ensureJobFailure() throws Exception {
+        Owner owner = this.createTestOwner("my-test-owner", "info");
+        doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
+
         String archiveFilePath = "/path/to/some/file.zip";
         ConflictOverrides co = new ConflictOverrides(Importer.Conflict.SIGNATURE_CONFLICT);
         String uploadedFileName = "test.zip";
@@ -218,13 +237,17 @@ public class ImportJobTest {
             .setStoredFileId(archiveFilePath)
             .setConflictOverrides(co);
 
-        doReturn(jobConfig.getJobArguments()).when(ctx).getJobArguments();
-        doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
+        ImportJob job = this.buildImportJob();
+
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
+
         when(manifestManager.importStoredManifest(eq(owner), eq(archiveFilePath),
             any(ConflictOverrides.class), eq(uploadedFileName)))
             .thenThrow(new ImporterException(expectedMessage));
 
-        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(ctx));
+        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(context));
         assertEquals(expectedMessage, e.getMessage());
         verify(manifestManager).recordImportFailure(eq(owner), eq(e.getCause()), eq(uploadedFileName));
     }
@@ -232,6 +255,9 @@ public class ImportJobTest {
 
     @Test
     public void ensureJobExceptionThrownIfOwnerNotFound() {
+        Owner owner = this.createTestOwner("my-test-owner", "info");
+        doReturn(null).when(ownerCurator).getByKey(eq("my-test-owner"));
+
         String archiveFilePath = "/path/to/some/file.zip";
         ConflictOverrides co = new ConflictOverrides(Importer.Conflict.SIGNATURE_CONFLICT);
         String uploadedFileName = "test.zip";
@@ -243,10 +269,13 @@ public class ImportJobTest {
             .setStoredFileId(archiveFilePath)
             .setConflictOverrides(co);
 
-        doReturn(jobConfig.getJobArguments()).when(ctx).getJobArguments();
-        doReturn(null).when(ownerCurator).getByKey(eq("my-test-owner"));
+        ImportJob job = this.buildImportJob();
 
-        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(ctx));
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
+        doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
+
+        Exception e = assertThrows(JobExecutionException.class, () -> job.execute(context));
         assertEquals(expectedMessage, e.getMessage());
         verify(manifestManager).recordImportFailure(eq(null), eq(e.getCause()), eq(uploadedFileName));
     }

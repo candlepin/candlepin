@@ -29,6 +29,7 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
@@ -61,7 +62,6 @@ import org.slf4j.MDC;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -889,14 +889,10 @@ public class JobManager implements ModeChangeListener {
         Principal principal = this.principalProvider.get();
         job.setPrincipalName(principal != null ? principal.getName() : null);
 
-        // Metadata and logging configuration...
-        job.setMetadata(builder.getJobMetadata());
-
         String csid = MDC.get(LoggingFilter.CSID_KEY);
-        if (csid != null && !csid.isEmpty()) {
-            job.addMetadata(LoggingFilter.CSID_KEY, csid);
-        }
+        job.setCorrelationId(csid != null && !csid.isEmpty() ? csid : null);
 
+        // Set logging configuration...
         job.setLogLevel(builder.getLogLevel());
         job.logExecutionDetails(builder.logExecutionDetails());
 
@@ -961,7 +957,7 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  a list of jobs matching the provided query arguments/filters
      */
-    public List<AsyncJobStatus> findJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
+    public List<AsyncJobStatus> findJobs(AsyncJobStatusQueryBuilder queryBuilder) {
         return this.jobCurator.findJobs(queryBuilder);
     }
 
@@ -1012,28 +1008,22 @@ public class JobManager implements ModeChangeListener {
         try {
             // Check if the queueing is blocked by constraints
             Collection<JobConstraint> constraints = config.getConstraints();
-            Set<AsyncJobStatus> blockingJobs = new HashSet<>();
+            Set<String> blockingJobIds = new HashSet<>();
 
             if (constraints != null && !constraints.isEmpty()) {
-                Collection<AsyncJobStatus> existingJobs = Collections.unmodifiableList(
-                    this.jobCurator.getNonTerminalJobs());
-
-                // Check inbound job's constraints
                 for (JobConstraint constraint : constraints) {
-                    Collection<AsyncJobStatus> blocking = constraint.test(status, existingJobs);
+                    Collection<String> blocking = constraint.test(this.jobCurator, status);
 
                     if (blocking != null) {
-                        blockingJobs.addAll(blocking);
+                        blockingJobIds.addAll(blocking);
                     }
                 }
-
-                // TODO: Add support for two-way checking of job constraints
             }
 
-            if (blockingJobs.isEmpty()) {
-                // Persist the job status so that the ID will be generated.
-                status = this.jobCurator.create(status);
+            // Persist the job status so that the ID will be generated.
+            status = this.jobCurator.create(status);
 
+            if (blockingJobIds.isEmpty()) {
                 // Build and send the job message and update the job state accordingly
                 status = this.postJobStatusMessage(status);
                 log.info("Job queued: {}", status);
@@ -1041,12 +1031,10 @@ public class JobManager implements ModeChangeListener {
             else {
                 // TODO: Add support for the WAITING option. For now, always default to ABORTED
 
-                String jobIds = blockingJobs.stream()
-                    .map(AsyncJobStatus::getId)
+                String jobIds = blockingJobIds.stream()
                     .collect(Collectors.joining(", "));
 
-                this.setJobState(status, JobState.ABORTED);
-                status.setJobResult(String.format("Job queuing blocked by the following jobs: %s", jobIds));
+                this.updateJobStatus(status, JobState.ABORTED);
 
                 log.info("Unable to queue job: {}; blocked by the following existing jobs: {}",
                     status.getName(), jobIds);
@@ -1081,9 +1069,7 @@ public class JobManager implements ModeChangeListener {
             // kill the job
 
             this.jobCurator.delete(status);
-
-            this.setJobState(status, JobState.FAILED);
-            status.setJobResult(e.toString());
+            throw e;
         }
         catch (Exception e) {
             log.error("Unexpected exception occurred while queueing job: {}", status.getName(), e);
@@ -1096,8 +1082,7 @@ public class JobManager implements ModeChangeListener {
             // If this occurs do to some other unexpected failure, we'll have some state cleanup
             // to deal with, probably.
 
-            this.setJobState(status, JobState.FAILED);
-            status.setJobResult(e.toString());
+            throw new JobException(e, true);
         }
 
         // Done!
@@ -1157,7 +1142,7 @@ public class JobManager implements ModeChangeListener {
         catch (JobMessageDispatchException e) {
             log.error("Job \"{}\" could not be queued; failed to dispatch job message", status.getName(), e);
 
-            this.updateJobStatus(status, JobState.FAILED, e.toString());
+            this.updateJobStatus(status, JobState.ABORTED, e.toString());
 
             throw e;
         }
@@ -1170,8 +1155,8 @@ public class JobManager implements ModeChangeListener {
      * <strong>Note</strong>: Generally, this method should not be called directly, and jobs should
      * be queued using the <tt>queueJob</tt> method instead.
      *
-     * @param message the JobMessage containing the information about the job that should
-     *                be executed.
+     * @param message
+     *  the JobMessage containing the information about the job that should be executed.
      *
      * @return
      *  a JobStatus instance representing the job's status
@@ -1235,10 +1220,8 @@ public class JobManager implements ModeChangeListener {
                 log.info("Starting job \"{}\" using class: {}", status.getName(), jobClass.getName());
             }
 
-            Object result = null;
-
             try {
-                result = job.execute(status);
+                job.execute(new JobExecutionContext(status));
 
                 // If a transaction was left open, we should scream about it. Note that this will
                 // cause the job to fail if the session cannot be terminated cleanly.
@@ -1259,7 +1242,7 @@ public class JobManager implements ModeChangeListener {
 
             eventSink.sendEvents();
             status.setEndTime(new Date());
-            status = this.updateJobStatus(status, JobState.FINISHED, result);
+            status = this.updateJobStatus(status, JobState.FINISHED);
 
             if (status.logExecutionDetails()) {
                 log.info("Job \"{}\" completed in {}ms", status.getName(), this.getJobRuntime(status));
@@ -1293,11 +1276,6 @@ public class JobManager implements ModeChangeListener {
         MDC.put(MDC_REQUEST_TYPE_KEY, "job");
         MDC.put(MDC_REQUEST_UUID_KEY, status.getId());
 
-        // Inject all of our metadata...
-        for (Map.Entry<String, String> entry : status.getMetadata().entrySet()) {
-            MDC.put(entry.getKey(), entry.getValue());
-        }
-
         // Attempt to lookup the owner
         String ownerId = status.getContextOwnerId();
         String ownerKey = null;
@@ -1320,6 +1298,9 @@ public class JobManager implements ModeChangeListener {
         if (ownerKey != null) {
             MDC.put(LoggingFilter.OWNER_KEY, ownerKey);
         }
+
+        // Inject the correlation ID
+        MDC.put(LoggingFilter.CSID_KEY, status.getCorrelationId());
 
         // Set our logging level according to the following:
         // - If the job has an explicit log level set, use that
@@ -1489,8 +1470,30 @@ public class JobManager implements ModeChangeListener {
      * @return
      *  the updated AsyncJobStatus entity
      */
+    private AsyncJobStatus updateJobStatus(AsyncJobStatus status, JobState state, String result)
+        throws JobStateManagementException {
+
+        status.setJobResult(result);
+        return this.updateJobStatus(status, state);
+    }
+
+    /**
+     * Updates the state of the provided job status
+     *
+     * @param status
+     *  The AsyncJobStatus to update
+     *
+     * @param state
+     *  The state to set
+     *
+     * @throws JobStateManagementException
+     *  if the job state is unable to be updated due to a database failure
+     *
+     * @return
+     *  the updated AsyncJobStatus entity
+     */
     @Transactional
-    protected AsyncJobStatus updateJobStatus(AsyncJobStatus status, JobState state, Object result)
+    protected AsyncJobStatus updateJobStatus(AsyncJobStatus status, JobState state)
         throws JobStateManagementException {
 
         // Impl note:
@@ -1501,11 +1504,7 @@ public class JobManager implements ModeChangeListener {
 
         try {
             this.setJobState(status, state);
-            status.setJobResult(result);
-
-            status = this.jobCurator.merge(status);
-
-            return status;
+            return this.jobCurator.merge(status);
         }
         catch (Exception e) {
             String errmsg = String.format("Unable to update job state for job \"%s\": %s -> %s",
@@ -1649,10 +1648,10 @@ public class JobManager implements ModeChangeListener {
      *  the number of jobs deleted as a result of this operation
      */
     @Transactional
-    public int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
+    public int cleanupJobs(AsyncJobStatusQueryBuilder queryBuilder) {
         // Prepare for the defaults...
         if (queryBuilder == null) {
-            queryBuilder = new AsyncJobStatusCurator.AsyncJobStatusQueryBuilder();
+            queryBuilder = new AsyncJobStatusQueryBuilder();
         }
 
         Collection<JobState> states = queryBuilder.getJobStates();

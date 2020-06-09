@@ -14,12 +14,13 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.mock;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobExecutionContext;
+import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
@@ -27,6 +28,7 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -87,11 +89,18 @@ public class OrphanCleanupJobTest extends DatabaseTestFixture {
 
         this.ownerCurator.flush();
 
-        JobExecutionContext context = mock(JobExecutionContext.class);
         OrphanCleanupJob job = this.createJobInstance();
-        Object result = job.execute(context);
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = spy(new JobExecutionContext(status));
 
-        assertNotNull(result); // Should be a string with some log-like info
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
+        assertThat(result, instanceOf(String.class)); // Should be a string with some log-like info
 
         // Verify all of the content and products for the various owners still exist
         this.ownerCurator.flush();

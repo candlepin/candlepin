@@ -47,7 +47,7 @@ public class JobCleaner implements AsyncJob {
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
     public static final String JOB_KEY = "JobCleaner";
-    public static final String JOB_NAME = "job cleaner";
+    public static final String JOB_NAME = "Job Cleaner";
 
     public static final String CFG_MAX_JOB_AGE = "max_job_age_in_minutes";
     public static final int CFG_DEFAULT_MAX_JOB_AGE = 10080; // 7 days
@@ -62,7 +62,7 @@ public class JobCleaner implements AsyncJob {
     }
 
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         String cfgName = ConfigProperties.jobConfig(JOB_KEY, CFG_MAX_JOB_AGE);
         int maxAgeInMinutes = this.config.getInt(cfgName, CFG_DEFAULT_MAX_JOB_AGE);
 
@@ -93,6 +93,6 @@ public class JobCleaner implements AsyncJob {
             deleted, cutoff);
 
         log.info(result);
-        return result;
+        context.setJobResult(result);
     }
 }

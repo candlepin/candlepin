@@ -37,9 +37,9 @@ describe 'Refresh Pools' do
     result = @cp.refresh_pools(owner['key'])
 
     if !is_hosted?
-      result.should be_nil
+      expect(result).to be_nil
     else
-      result.should eq("Pools refreshed for owner #{test_owner}")
+      expect(result).to eq("Pools refreshed for owner: #{test_owner}")
     end
   end
 
