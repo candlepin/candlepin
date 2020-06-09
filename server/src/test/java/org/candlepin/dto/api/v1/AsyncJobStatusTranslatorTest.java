@@ -24,6 +24,8 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 
+import org.junit.jupiter.api.Test;
+
 import java.util.Date;
 
 /**
@@ -51,7 +53,7 @@ public class AsyncJobStatusTranslatorTest extends
         // We don't have a setId method, so we'll fake it for now. This may need to change in the
         // future when the ID generation changes.
         doReturn("job_id-1234567890").when(source).getId();
-        doReturn(Integer.valueOf(3)).when(source).getAttempts();
+        doReturn(3).when(source).getAttempts();
 
         source.setJobKey("job_key");
         source.setName("job_name-8675309");
@@ -102,7 +104,7 @@ public class AsyncJobStatusTranslatorTest extends
 
             JobState pstate = source.getPreviousState();
             if (pstate != null) {
-                assertEquals(pstate.name(), dto.getPreviousState());
+                assertEquals(AsyncJobStatusTranslator.mapState(pstate).name(), dto.getPreviousState());
             }
             else {
                 assertNull(dto.getPreviousState());
@@ -127,5 +129,45 @@ public class AsyncJobStatusTranslatorTest extends
         else {
             assertNull(dto);
         }
+    }
+
+    @Test
+    public void mapsToFinished() {
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.FINISHED,
+            AsyncJobStatusTranslator.mapState(JobState.FINISHED));
+    }
+
+    @Test
+    public void mapsToCancelled() {
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.CANCELED,
+            AsyncJobStatusTranslator.mapState(JobState.CANCELED));
+    }
+
+    @Test
+    public void mapsToCreated() {
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.CREATED,
+            AsyncJobStatusTranslator.mapState(JobState.CREATED));
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.CREATED,
+            AsyncJobStatusTranslator.mapState(JobState.QUEUED));
+    }
+
+    @Test
+    public void mapsToRunning() {
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.RUNNING,
+            AsyncJobStatusTranslator.mapState(JobState.FAILED_WITH_RETRY));
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.RUNNING,
+            AsyncJobStatusTranslator.mapState(JobState.RUNNING));
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.RUNNING,
+            AsyncJobStatusTranslator.mapState(JobState.SCHEDULED));
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.RUNNING,
+            AsyncJobStatusTranslator.mapState(JobState.WAITING));
+    }
+
+    @Test
+    public void mapsToFailed() {
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.FAILED,
+            AsyncJobStatusTranslator.mapState(JobState.ABORTED));
+        assertEquals(AsyncJobStatusTranslator.PublicJobState.FAILED,
+            AsyncJobStatusTranslator.mapState(JobState.FAILED));
     }
 }

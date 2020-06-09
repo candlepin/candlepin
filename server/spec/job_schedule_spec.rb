@@ -19,7 +19,7 @@ describe 'Scheduled Jobs' do
 
   it 'should schedule cron tasks irrespective of the case' do
     job = @cp.trigger_job('ExpiredPoolsCleanupJob')
-    expect(job['state']).to eq('QUEUED')
+    expect(job['state']).to eq('CREATED')
 
     wait_for_job(job['id'], 15)
   end

@@ -266,7 +266,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     private void verifyRefreshPoolsJobsWereQueued(List<AsyncJobStatusDTO> jobs) {
         for (AsyncJobStatusDTO job : jobs) {
             assertEquals(RefreshPoolsJob.JOB_NAME, job.getName());
-            assertEquals(AsyncJobStatus.JobState.QUEUED.toString(), job.getState());
+            assertEquals(AsyncJobStatus.JobState.CREATED.toString(), job.getState());
             assertEquals(AsyncJobStatus.JobState.CREATED.toString(), job.getPreviousState());
             assertEquals(Integer.valueOf(0), job.getAttempts());
             assertEquals(Integer.valueOf(1), job.getMaxAttempts());
@@ -382,7 +382,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         // assert first job succeeded in queueing
         AsyncJobStatusDTO statusDTO1 = jobs.get(0);
         assertEquals(RefreshPoolsJob.JOB_NAME, statusDTO1.getName());
-        assertEquals(AsyncJobStatus.JobState.QUEUED.toString(), statusDTO1.getState());
+        assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO1.getState());
         assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO1.getPreviousState());
         assertEquals(Integer.valueOf(0), statusDTO1.getAttempts());
         assertEquals(Integer.valueOf(1), statusDTO1.getMaxAttempts());

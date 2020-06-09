@@ -24,7 +24,7 @@ describe 'Job Status' do
       job = @cp.autoheal_org(@owner['key'])
       #make sure we see a job waiting to go
       joblist = @cp.list_jobs(@owner['key'])
-      joblist.find { |j| j['id'] == job['id'] }['state'].should == 'QUEUED'
+      joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CREATED'
 
       @cp.cancel_job(job['id'])
       #make sure we see a job canceled
@@ -123,7 +123,7 @@ describe 'Job Status' do
       job = @user.autoheal_org(@owner['key'])
       #make sure we see a job waiting to go
       joblist = @cp.list_jobs(@owner['key'])
-      expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('QUEUED')
+      expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CREATED')
 
       @user.cancel_job(job['id'])
       #make sure we see a job canceled
