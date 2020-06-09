@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.6.16
+Version: 2.6.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -227,6 +227,12 @@ fi
 
 #raw
 %changelog
+* Tue Jun 09 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.17-1
+- 1842936: Delete removed Artemis queues on broker.xml reload
+  (nmoumoul@redhat.com)
+- 1740346: Stopped checking & consider pools irrespective of Consumer
+  Entitlement SLA for auto attach. (prakgupt@redhat.com)
+
 * Fri Mar 27 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.6.16-1
 - Update spec test for vagrant (wpoteat@redhat.com)
 - 1767981: Unable to enable the tools repository for Satellite 6.6
