@@ -20,7 +20,6 @@ import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.util.Util;
 
@@ -74,15 +73,10 @@ public class EntitlementTranslator implements ObjectTranslator<Entitlement, Enti
             .updated(Util.toDateTime(source.getUpdated()))
             .id(source.getId())
             .quantity(source.getQuantity())
-            .deletedFromPool(source.deletedFromPool())
             .startDate(Util.toDateTime(source.getStartDate()))
             .endDate(Util.toDateTime(source.getEndDate()));
 
         if (modelTranslator != null) {
-            Owner owner = source.getOwner();
-            dest.setOwner(owner != null ?
-                modelTranslator.translate(owner, NestedOwnerDTO.class) : null);
-
             Pool pool = source.getPool();
             dest.setPool(pool != null ?
                 modelTranslator.translate(pool, PoolDTO.class) : null);
