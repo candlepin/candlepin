@@ -37,7 +37,6 @@ public class EntitlementTranslatorTest extends
     AbstractTranslatorTest<Entitlement, EntitlementDTO, EntitlementTranslator> {
 
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
-    private NestedOwnerTranslatorTest nestedOwnerTranslatorTest = new NestedOwnerTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     private PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
 
@@ -102,13 +101,10 @@ public class EntitlementTranslatorTest extends
 
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getQuantity(), dest.getQuantity());
-            assertEquals(source.deletedFromPool(), dest.getDeletedFromPool());
             assertEquals(source.getStartDate(), Util.toDate(dest.getStartDate()));
             assertEquals(source.getEndDate(), Util.toDate(dest.getEndDate()));
 
             if (childrenGenerated) {
-                this.nestedOwnerTranslatorTest.verifyOutput(source.getOwner(),
-                    dest.getOwner(), true);
                 this.poolTranslatorTest.verifyOutput(source.getPool(), dest.getPool(), true);
 
                 Consumer sourceConsumer = source.getConsumer();
@@ -137,7 +133,6 @@ public class EntitlementTranslatorTest extends
                 }
             }
             else {
-                assertNull(dest.getOwner());
                 assertNull(dest.getPool());
                 assertNull(dest.getCertificates());
                 assertNull(dest.getConsumer());

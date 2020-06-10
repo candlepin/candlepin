@@ -3840,16 +3840,12 @@ components:
           properties:
             id:
               type: string
-            owner:
-              $ref: '#/components/schemas/NestedOwnerDTO'
             consumer:
               $ref: '#/components/schemas/NestedConsumerDTO'
             pool:
               $ref: '#/components/schemas/PoolDTO'
             quantity:
               type: integer
-            deletedFromPool:
-              type: boolean
             certificates:
               type: array
               uniqueItems: true
@@ -3957,7 +3953,7 @@ components:
             type: string
 
     NestedConsumerDTO:
-      description: DTO representing an upstream consumer
+      description: A minimal view of a Consumer
       properties:
         id:
           type: string
