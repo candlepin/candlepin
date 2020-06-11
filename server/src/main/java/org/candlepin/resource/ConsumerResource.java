@@ -60,6 +60,7 @@ import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
+import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
@@ -114,7 +115,6 @@ import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.DateFormat;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -413,7 +413,7 @@ public class ConsumerResource {
         @QueryParam("owner") String ownerKey,
         @QueryParam("uuid") List<String> uuids,
         @QueryParam("hypervisor_id") List<String> hypervisorIds,
-        @QueryParam("fact") List<KeyValueParameter> attrFilters,
+        @QueryParam("fact") List<KeyValueParamDTO> attrFilters,
         @Context PageRequest pageRequest) {
 
         if (userName == null && (typeLabels == null || typeLabels.isEmpty()) && ownerKey == null &&
@@ -435,8 +435,8 @@ public class ConsumerResource {
 
         CandlepinQuery<Consumer> query = this.consumerCurator.searchOwnerConsumers(
             owner, userName, types, uuids, hypervisorIds, attrFilters,
-            Collections.<String>emptyList(), Collections.<String>emptyList(),
-            Collections.<String>emptyList());
+            Collections.emptyList(), Collections.emptyList(),
+            Collections.emptyList());
 
         return this.translator.translateQuery(query, ConsumerDTO.class);
     }
@@ -2219,7 +2219,10 @@ public class ConsumerResource {
         return entitlement;
     }
 
-    @ApiOperation(notes = "Retrives a list of Entitlements", value = "listEntitlements")
+    @ApiOperation(notes = "Retrives a list of Entitlements. This endpoint supports paging with query" +
+        " parameters. For more details please visit " +
+        "https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin"
+        , value = "listEntitlements")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -2229,7 +2232,7 @@ public class ConsumerResource {
         @QueryParam("product") String productId,
         @QueryParam("regen") @DefaultValue("true") Boolean regen,
         @QueryParam("matches") String matches,
-        @QueryParam("attribute") List<KeyValueParameter> attrFilters,
+        @QueryParam("attribute") List<KeyValueParamDTO> attrFilters,
         @Context PageRequest pageRequest) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -2428,7 +2431,7 @@ public class ConsumerResource {
         @QueryParam("ext")
         @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
         required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
-        List<KeyValueParameter> extensionArgs) {
+        List<KeyValueParamDTO> extensionArgs) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
@@ -2483,7 +2486,7 @@ public class ConsumerResource {
         @QueryParam("ext")
         @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
         required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
-        List<KeyValueParameter> extensionArgs) throws JobException {
+        List<KeyValueParamDTO> extensionArgs) throws JobException {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
@@ -2498,15 +2501,15 @@ public class ConsumerResource {
     }
 
     /**
-     * Builds a map of String -> String from a list of {@link KeyValueParameter} query parameters
+     * Builds a map of String -> String from a list of {@link KeyValueParamDTO} query parameters
      * where param.key is the map key and param.value is the map value.
      *
      * @param params the query parameters to build the map from.
      * @return {@code Map<String, String>} of the key/value pairs in the specified parameters.
      */
-    private Map<String, String> getExtensionParamMap(List<KeyValueParameter> params) {
+    private Map<String, String> getExtensionParamMap(List<KeyValueParamDTO> params) {
         Map<String, String> paramMap = new HashMap<>();
-        for (KeyValueParameter param : params) {
+        for (KeyValueParamDTO param : params) {
             paramMap.put(param.getKey(), param.getValue());
         }
         return paramMap;
