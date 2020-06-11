@@ -42,20 +42,18 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -79,14 +77,11 @@ public class EntitlementResourceTest {
     private I18n i18n;
     private Consumer consumer;
     private Owner owner;
-    @Mock private ProductServiceAdapter prodAdapter;
-    @Mock private ProductCurator prodCurator;
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private CandlepinPoolManager poolManager;
     @Mock private Entitler entitler;
-    @Mock private SubscriptionResource subResource;
     @Mock private EntitlementRules entRules;
     @Mock private EntitlementRulesTranslator messageTranslator;
     @Mock private JobManager jobManager;
@@ -107,6 +102,11 @@ public class EntitlementResourceTest {
         this.mockConsumerType(ctype);
 
         consumer = new Consumer("myconsumer", "bill", owner, ctype).setUuid(Util.generateUUID());
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+        ResteasyProviderFactory.pushContext(PageRequest.class, req);
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
@@ -120,25 +120,22 @@ public class EntitlementResourceTest {
             when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
             when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
 
-            doAnswer(new Answer<ConsumerType>() {
-                @Override
-                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
-                    Object[] args = invocation.getArguments();
-                    Consumer consumer = (Consumer) args[0];
-                    ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
-                    ConsumerType ctype = null;
+            doAnswer((Answer<ConsumerType>) invocation -> {
+                Object[] args = invocation.getArguments();
+                Consumer consumer = (Consumer) args[0];
+                ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+                ConsumerType ctype1;
 
-                    if (consumer == null || consumer.getTypeId() == null) {
-                        throw new IllegalArgumentException("consumer is null or lacks a type ID");
-                    }
-
-                    ctype = curator.get(consumer.getTypeId());
-                    if (ctype == null) {
-                        throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
-                    }
-
-                    return ctype;
+                if (consumer == null || consumer.getTypeId() == null) {
+                    throw new IllegalArgumentException("consumer is null or lacks a type ID");
                 }
+
+                ctype1 = curator.get(consumer.getTypeId());
+                if (ctype1 == null) {
+                    throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                }
+
+                return ctype1;
             }).when(consumerTypeCurator).getConsumerType(any(Consumer.class));
         }
 
@@ -306,10 +303,6 @@ public class EntitlementResourceTest {
 
     @Test
     public void getAllEntitlements() {
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-
         Entitlement e = TestUtil.createEntitlement();
         e.setId("getEntitlementList");
         List<Entitlement> entitlements = new ArrayList<>();
@@ -325,7 +318,7 @@ public class EntitlementResourceTest {
         when(modelTranslator.translate(isA(Entitlement.class),
                 eq(EntitlementDTO.class))).thenReturn(entitlementDTO);
 
-        List<EntitlementDTO> result = entResource.listAllForConsumer(null, null, null, req);
+        List<EntitlementDTO> result = entResource.listAllForConsumer(null, null, null);
 
         assertEquals(1, result.size());
         assertEquals("getEntitlementList", result.get(0).getId());
@@ -333,10 +326,6 @@ public class EntitlementResourceTest {
 
     @Test
     public void getAllEntitlementsForConsumer() {
-        PageRequest req = new PageRequest();
-        req.setPage(1);
-        req.setPerPage(10);
-
         Owner owner = TestUtil.createOwner();
         Consumer consumer = TestUtil.createConsumer(owner);
         Pool pool = TestUtil.createPool(owner, TestUtil.createProduct());
@@ -357,7 +346,8 @@ public class EntitlementResourceTest {
         when(modelTranslator.translate(any(Entitlement.class),
             eq(EntitlementDTO.class))).thenReturn(entitlementDTO);
 
-        List<EntitlementDTO> result = entResource.listAllForConsumer(consumer.getUuid(), null, null, req);
+        List<EntitlementDTO> result = entResource
+            .listAllForConsumer(consumer.getUuid(), null, null);
 
         assertEquals(1, result.size());
         assertEquals("getAllEntitlementsForConsumer", result.get(0).getId());
