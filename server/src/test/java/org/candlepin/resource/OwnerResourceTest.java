@@ -67,6 +67,7 @@ import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.ImportRecordDTO;
+import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
@@ -118,7 +119,6 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
@@ -724,7 +724,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
-        List<KeyValueParameter> params = new ArrayList<>();
+        List<KeyValueParamDTO> params = new ArrayList<>();
         params.add(createKeyValueParam("cores", "12"));
 
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), null,
@@ -755,7 +755,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
-        List<KeyValueParameter> params = new ArrayList<>();
+        List<KeyValueParamDTO> params = new ArrayList<>();
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), null,
             null, null, null, true, null, null, params, false, false, null, null, principal, null);
         assertEquals(2, pools.size());
@@ -1758,8 +1758,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         );
     }
 
-    private KeyValueParameter createKeyValueParam(String key, String val) {
-        return new KeyValueParameter(key + ":" + val);
+    private KeyValueParamDTO createKeyValueParam(String key, String val) {
+        return new KeyValueParamDTO()
+            .key(key)
+            .value(val);
     }
 
     @Test
