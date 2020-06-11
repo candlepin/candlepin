@@ -23,6 +23,8 @@ import com.google.inject.Inject;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Objects;
+
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -38,11 +40,11 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Priority(Priorities.USER)
 public class PageRequestFilter implements ContainerRequestFilter {
-    private javax.inject.Provider<I18n> i18nProvider;
+    private final javax.inject.Provider<I18n> i18nProvider;
 
     @Inject
     public PageRequestFilter(javax.inject.Provider<I18n> i18nProvider) {
-        this.i18nProvider = i18nProvider;
+        this.i18nProvider = Objects.requireNonNull(i18nProvider);
     }
 
     @Override

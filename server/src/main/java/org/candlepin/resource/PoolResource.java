@@ -108,7 +108,9 @@ public class PoolResource {
      * @return List of pools
      */
     @ApiOperation(
-        notes = "Retrieves a list of Pools @deprecated Use the method on /owners",
+        notes = "Retrieves a list of Pools @deprecated Use the method on /owners. " +
+        "This endpoint supports paging with query parameters. For more details please visit " +
+        "https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin",
         value = "")
     @ApiResponses({
         @ApiResponse(code = 400,

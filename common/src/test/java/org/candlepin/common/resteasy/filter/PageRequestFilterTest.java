@@ -53,7 +53,7 @@ public class PageRequestFilterTest {
     @Mock private ContainerRequestContext mockRequestContext;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    public void setUp() {
         this.i18nProvider = new CommonI18nProvider(this.mockServletReq);
         interceptor = new PageRequestFilter(this.i18nProvider);
     }
@@ -174,4 +174,5 @@ public class PageRequestFilterTest {
         assertEquals(PageRequest.Order.DESCENDING, p.getOrder());
         assertEquals("id", p.getSortBy());
     }
+
 }
