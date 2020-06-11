@@ -61,6 +61,7 @@ import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.ImportRecordDTO;
+import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
@@ -118,7 +119,6 @@ import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.resteasy.DateFormat;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.sync.ConflictOverrides;
@@ -1184,14 +1184,16 @@ public class OwnerResource implements OwnersApi {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
-    @ApiOperation(notes = "Retrieves the list of Entitlements for an Owner",
+    @ApiOperation(notes = "Retrieves the list of Entitlements for an Owner. This" +
+        " endpoint supports paging with query parameters. For more details please visit " +
+        "https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin",
         value = "List Owner Entitlements")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public List<EntitlementDTO> ownerEntitlements(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("product") String productId,
         @QueryParam("matches") String matches,
-        @QueryParam("attribute") List<KeyValueParameter> attrFilters,
+        @QueryParam("attribute") List<KeyValueParamDTO> attrFilters,
         @Context PageRequest pageRequest) {
 
         Owner owner = findOwnerByKey(ownerKey);
@@ -1481,7 +1483,7 @@ public class OwnerResource implements OwnersApi {
         @QueryParam("type") Set<String> typeLabels,
         @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true) List<String> uuids,
         @QueryParam("hypervisor_id") List<String> hypervisorIds,
-        @QueryParam("fact") List<KeyValueParameter> attrFilters,
+        @QueryParam("fact") List<KeyValueParamDTO> attrFilters,
         @QueryParam("sku") List<String> skus,
         @QueryParam("subscription_id") List<String> subscriptionIds,
         @QueryParam("contract") List<String> contracts,
@@ -1535,7 +1537,10 @@ public class OwnerResource implements OwnersApi {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
     @SuppressWarnings("checkstyle:indentation")
-    @ApiOperation(notes = "Retrieves a list of Pools for an Owner", value = "List Pools")
+    @ApiOperation(notes = "Retrieves a list of Pools for an Owner. This endpoint " +
+        "supports paging with query parameters. For more details please visit " +
+        "https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin",
+        value = "List Pools")
     @ApiResponses({
         @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 400, message = "Invalid request")
@@ -1555,7 +1560,7 @@ public class OwnerResource implements OwnersApi {
                 " * and ? wildcards are supported; may be specified multiple times")
         @QueryParam("matches") List<String> matches,
         @ApiParam("The attributes to return based on the specified types.")
-        @QueryParam("attribute") List<KeyValueParameter> attrFilters,
+        @QueryParam("attribute") List<KeyValueParamDTO> attrFilters,
         @ApiParam("When set to true, it will add future dated pools to the result, " +
                 "based on the activeon date.")
         @QueryParam("add_future") @DefaultValue("false") boolean addFuture,
@@ -1617,7 +1622,7 @@ public class OwnerResource implements OwnersApi {
 
         // Process the filters passed for the attributes
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
-        for (KeyValueParameter filterParam : attrFilters) {
+        for (KeyValueParamDTO filterParam : attrFilters) {
             poolFilters.addAttributeFilter(filterParam.getKey(), filterParam.getValue());
         }
 
