@@ -58,6 +58,7 @@ import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentAccessDTO;
+import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
@@ -93,7 +94,6 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -805,7 +805,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void testAsyncExport() throws Exception {
-        List<KeyValueParameter> extParams = new ArrayList<>();
+        List<KeyValueParamDTO> extParams = new ArrayList<>();
         Owner owner = this.createOwner();
         owner.setId(TestUtil.randomString());
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);

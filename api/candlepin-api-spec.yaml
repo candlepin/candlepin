@@ -1061,6 +1061,317 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /entitlements:
+    get:
+      description: Retrieves list of Entitlements. This endpoint supports paging with query parameters. For more details please visit https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin
+      operationId: listAllForConsumer
+      tags:
+        - Entitlements
+      parameters:
+        - name: consumer
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: matches
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: attribute
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/KeyValueParamDTO'
+      security: []
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntitlementDTO'
+        400:
+          description: Unit with ID "test_id" could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unit with ID "test_uuid" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /entitlements/consumer/{consumer_uuid}/product/{product_id}:
+    get:
+      description: Checks Consumer for Product Entitlement
+      operationId: hasEntitlement
+      tags:
+        - Entitlements
+      parameters:
+        - name: consumer_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Entitlement successfully found for customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntitlementDTO'
+        404:
+          description: Entitlement could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Entitlement with ID "test_uuid" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /entitlements/{entitlement_id}:
+    get:
+      description: Retrieves a single Entitlement
+      operationId: getEntitlement
+      tags:
+        - Entitlements
+      parameters:
+        - name: entitlement_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntitlementDTO'
+        404:
+          description: Entitlement could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Entitlement with ID "test_uuid" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Updates an Entitlement. This only works for the quantity.
+      operationId: updateEntitlement
+      tags:
+        - Entitlements
+      parameters:
+        - name: entitlement_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      requestBody:
+        description: Updated entitlement
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntitlementDTO'
+      responses:
+        204:
+          description: A successful operation
+        400:
+          description: Quantity value must be greater than 0.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Quantity value must be greater than 0.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Entitlement could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Entitlement with ID "test_uuid" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /entitlements/{dbid}/upstream_cert:
+    get:
+      description: Retrieves a Subscription Certificate
+      operationId: getUpstreamCert
+      tags:
+        - Certificates
+        - Entitlements
+      parameters:
+        - name: dbid
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: A successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+        404:
+          description: |
+            Entitlement could not be found.
+            Unable to find upstream certificate for entitlement.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Entitlement with ID "test_uuid" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /entitlements/{dbid}:
+    delete:
+      description: Deletes an Entitlement
+      operationId: unbind
+      tags:
+        - Entitlements
+      parameters:
+        - name: dbid
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        204:
+          description: Entitlement successfuly deleted
+        404:
+          description: Entitlement could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Entitlement with ID "test_uuid" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /entitlements/product/{product_id}:
+    put:
+      description: Regenerates the Entitlement Certificates for a Product
+      operationId: regenerateEntitlementCertificatesForProduct
+      tags:
+        - Certificates
+        - Entitlements
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lazy_regen
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+      security: []
+      responses:
+        202:
+          description: An entitlement certificate is being regenerated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+  /entitlements/{entitlement_id}/migrate:
+    put:
+      description: Migrate entitlements from one distributor consumer to another. Can specify full or partial quantity. No specified quantity will lead to full migration of the entitlement.
+      operationId: migrateEntitlement
+      tags:
+        - Entitlements
+      parameters:
+        - name: entitlement_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: to_consumer
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: quantity
+          in: query
+          required: false
+          schema:
+            type: integer
+      security: []
+      x-java-response:
+        type: javax.ws.rs.core.Response
+        isContainer: false
+      responses:
+        200:
+          description: Entitlements successfuly migrated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntitlementDTO'
+        400:
+          description: |
+            Entitlement migration is not permissible for units this type.
+            Source and destination units must belong to the same organization.
+            The entitlement cannot be utilized by the destination unit.
+            The quantity specified must be greater than zero and less than or equal to the total for this entitlement.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Source and destination units must belong to the same organization
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Entitlement could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Entitlement with ID "test_uuid" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /hypervisors:
     post:
       tags:
@@ -3951,6 +4262,15 @@ components:
           uniqueItems: true
           items:
             type: string
+
+    KeyValueParamDTO:
+      required:
+        - key
+      properties:
+        key:
+          type: string
+        value:
+          type: string
 
     NestedConsumerDTO:
       description: A minimal view of a Consumer
