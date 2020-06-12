@@ -91,6 +91,7 @@ import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
+import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
@@ -160,6 +161,7 @@ public class JobManagerTest {
 
     private Configuration config;
     private SchedulerFactory schedulerFactory;
+    private ListenerManager listenerManager;
     private CandlepinModeManager modeManager;
     private AsyncJobStatusCurator jobCurator;
     private OwnerCurator ownerCurator;
@@ -182,6 +184,7 @@ public class JobManagerTest {
 
         this.config = new CandlepinCommonTestConfig();
         this.schedulerFactory = mock(SchedulerFactory.class);
+        this.listenerManager = mock(ListenerManager.class);
         this.modeManager = mock(CandlepinModeManager.class);
         this.ownerCurator = mock(OwnerCurator.class);
         this.dispatcher = mock(JobMessageDispatcher.class);
@@ -203,6 +206,8 @@ public class JobManagerTest {
         doAnswer(returnsFirstArg()).when(this.jobCurator).merge(Mockito.any(AsyncJobStatus.class));
         doAnswer(returnsFirstArg()).when(this.jobCurator).create(Mockito.any(AsyncJobStatus.class));
         doReturn(this.scheduler).when(this.schedulerFactory).getScheduler();
+        doReturn(this.listenerManager).when(this.scheduler).getListenerManager();
+
         doAnswer(new Answer<Date>() {
             @Override
             public Date answer(InvocationOnMock invocation) {

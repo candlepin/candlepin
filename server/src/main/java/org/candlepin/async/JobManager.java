@@ -53,6 +53,7 @@ import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
+import org.quartz.TriggerListener;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
@@ -143,7 +144,7 @@ public class JobManager implements ModeChangeListener {
     /**
      * Bridge between the Quartz job and Candlepin job execution interfaces
      */
-    private static class QuartzJobExecutor implements Job, JobFactory {
+    private static class QuartzJobExecutor implements Job, JobFactory, TriggerListener {
         private final JobManager manager;
 
         public QuartzJobExecutor(JobManager manager) {
@@ -167,6 +168,37 @@ public class JobManager implements ModeChangeListener {
                 String errmsg = String.format("Unable to queue scheduled job: %s", jobKey);
                 throw new org.quartz.JobExecutionException(errmsg, e);
             }
+        }
+
+        @Override
+        public String getName() {
+            return this.getClass().getSimpleName();
+        }
+
+        @Override
+        public void triggerComplete(Trigger trigger, org.quartz.JobExecutionContext context,
+            Trigger.CompletedExecutionInstruction triggerInstructionCode) {
+            // Intentionally left empty
+        }
+
+        @Override
+        public void triggerFired(Trigger trigger, org.quartz.JobExecutionContext context) {
+            // Intentionally left empty
+        }
+
+        @Override
+        public void triggerMisfired(Trigger trigger) {
+            String jobKey = trigger.getKey().getName();
+
+            log.warn("Trigger misfired for job: {} [start: {}, end: {}, next fire time: {}, " +
+                "final fire time: {}, priority: {}, misfire instruction: {}]",
+                jobKey, trigger.getStartTime(), trigger.getEndTime(), trigger.getNextFireTime(),
+                trigger.getFinalFireTime(), trigger.getPriority(), trigger.getMisfireInstruction());
+        }
+
+        @Override
+        public boolean vetoJobExecution(Trigger trigger, org.quartz.JobExecutionContext context) {
+            return false;
         }
     }
 
@@ -417,6 +449,11 @@ public class JobManager implements ModeChangeListener {
 
                     this.synchronizeJobSchedule();
                     this.scheduler.setJobFactory(this.qrtzExecutor);
+
+                    // Register our executor as a trigger listener, so we can log certain Quartz
+                    // events
+                    this.scheduler.getListenerManager()
+                        .addTriggerListener(this.qrtzExecutor);
                 }
 
                 if (!this.receiver.isInitialized()) {
