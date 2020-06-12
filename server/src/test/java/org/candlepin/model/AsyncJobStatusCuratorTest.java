@@ -14,11 +14,9 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
@@ -908,6 +906,163 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         for (AsyncJobStatus job : fetched) {
             assertTrue(expected.contains(job.getExecutor()));
         }
+    }
+
+    @Test
+    public void testFindJobsWithOffset() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2");
+        List<JobState> states = Arrays.asList(JobState.values());
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+
+        int offset = created.size() / 2;
+        long expected = created.size() - offset;
+
+        assertTrue(offset > 0);
+        assertTrue(expected > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOffset(offset);
+
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> allJobs = this.asyncJobCurator.findJobs(null);
+
+        assertNotNull(fetched);
+        assertNotNull(allJobs);
+        assertEquals(expected, fetched.size());
+        assertEquals(created.size(), allJobs.size());
+
+        // Impl note: we can't reasonably verify the returned jobs here, since we don't have a
+        // defined order. However, since we can check that both queries return the expected number,
+        // we can make a reasonable assumption that it properly offset the query.
+    }
+
+    @Test
+    public void testFindJobsWithLimit() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2");
+        List<JobState> states = Arrays.asList(JobState.values());
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+
+        int limit = created.size() / 2;
+        long expected = limit;
+
+        assertTrue(limit > 0);
+        assertTrue(expected > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setLimit(limit);
+
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> allJobs = this.asyncJobCurator.findJobs(null);
+
+        assertNotNull(fetched);
+        assertNotNull(allJobs);
+        assertEquals(expected, fetched.size());
+        assertEquals(created.size(), allJobs.size());
+
+        // Impl note: we can't reasonably verify the returned jobs here, since we don't have a
+        // defined order. However, since we can check that both queries return the expected number,
+        // we can make a reasonable assumption that it properly limited the query.
+    }
+
+    @Test
+    public void testFindJobsWithSingleAscendingOrder() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2");
+        List<JobState> states = Arrays.asList(JobState.values());
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOrder(Arrays.asList(new AsyncJobStatusQueryBuilder.Order("id", false)));
+
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+
+        assertNotNull(fetched);
+
+        // Verify that each entry's ID is greater than or equal to the previous'
+        String lastId = null;
+        for (AsyncJobStatus status : fetched) {
+            if (lastId != null) {
+                assertThat(status.getId(), greaterThanOrEqualTo(lastId));
+            }
+
+            lastId = status.getId();
+        }
+    }
+
+    @Test
+    public void testFindJobsWithSingleDescendingOrder() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2");
+        List<JobState> states = Arrays.asList(JobState.values());
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOrder(Arrays.asList(new AsyncJobStatusQueryBuilder.Order("id", true)));
+
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+
+        assertNotNull(fetched);
+
+        // Verify that each entry's ID is less than or equal to the previous'
+        String lastId = null;
+        for (AsyncJobStatus status : fetched) {
+            if (lastId != null) {
+                assertThat(status.getId(), lessThanOrEqualTo(lastId));
+            }
+
+            lastId = status.getId();
+        }
+    }
+
+    @Test
+    public void testFindJobsWithMultipleMixedOrders() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2");
+        List<JobState> states = Arrays.asList(JobState.values());
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+
+        List<AsyncJobStatusQueryBuilder.Order> order = Arrays.asList(
+            new AsyncJobStatusQueryBuilder.Order("jobKey", false),
+            new AsyncJobStatusQueryBuilder.Order("id", true));
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOrder(order);
+
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+
+        assertNotNull(fetched);
+
+        // Verify that each entry's values are appropriately ordered
+        String lastKey = null;
+        String lastId = null;
+
+        for (AsyncJobStatus status : fetched) {
+            if (lastKey != null) {
+                assertThat(status.getJobKey(), greaterThanOrEqualTo(lastKey));
+
+                if (lastKey.equals(status.getJobKey())) {
+                    assertThat(status.getId(), lessThanOrEqualTo(lastId));
+                }
+            }
+
+            lastId = status.getId();
+            lastKey = status.getJobKey();
+        }
+    }
+
+    @Test
+    public void testFindJobsWithInvalidOrderKey() {
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOrder(Arrays.asList(new AsyncJobStatusQueryBuilder.Order("bad_key", true)));
+
+        assertThrows(InvalidOrderKeyException.class, () -> this.asyncJobCurator.findJobs(queryBuilder));
     }
 
     @Test

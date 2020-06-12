@@ -1358,8 +1358,8 @@ class Candlepin
     get "/owners/#{owner_key}/imports"
   end
 
-  def list_jobs(owner_key)
-    get "/jobs?owner=#{owner_key}"
+  def list_jobs(params={})
+    return get("/jobs", params)
   end
 
   def get_job(job_id, result_data=false)
