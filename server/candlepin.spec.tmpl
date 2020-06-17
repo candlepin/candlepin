@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.5.21
+Version: 2.5.22
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -221,6 +221,12 @@ fi
 
 #raw
 %changelog
+* Wed Jun 17 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.5.22-1
+- 1787601 - Provide configuration option to disable UUID uniqueness constraint
+  in Satellite 6 Changes are done from reference of: 1774640: Provide
+  configuration option to disable UUID uniqueness constraint in Satellite 6.
+  (sonalidhome@gmail.com)
+
 * Wed Jan 22 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.5.21-1
 - 1794041: Fixed NPE during ExpiredPoolsJob execution (ojanus@redhat.com)
 
