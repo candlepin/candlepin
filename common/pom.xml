@@ -616,7 +616,7 @@
       <dependency>
         <groupId>org.hibernate.validator</groupId>
         <artifactId>hibernate-validator-annotation-processor</artifactId>
-        <version>6.1.0.Final</version>
+        <version>6.1.5.Final</version>
       </dependency>
       <dependency>
         <groupId>javax.inject</groupId>
@@ -731,7 +731,7 @@
       <dependency>
         <groupId>org.hibernate.validator</groupId>
         <artifactId>hibernate-validator</artifactId>
-        <version>6.1.0.Final</version>
+        <version>6.1.5.Final</version>
       </dependency>
       <dependency>
         <groupId>io.swagger</groupId>

@@ -166,7 +166,7 @@ allprojects {
             // Javascript engine
             dependency group: 'org.mozilla', name: 'rhino', version: '1.7R3'
             dependency group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.1-api', version: '1.0.2.Final'
-            dependency group: 'org.hibernate.validator', name: 'hibernate-validator-annotation-processor', version: '6.1.0.Final'
+            dependency group: 'org.hibernate.validator', name: 'hibernate-validator-annotation-processor', version: '6.1.5.Final'
             dependency group: 'org.hibernate', name: 'hibernate-jcache', version: '5.4.6.Final'
             dependency group: 'commons-codec', name: 'commons-codec', version: '1.11'
             dependency group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
@@ -203,7 +203,7 @@ allprojects {
             dependencySet(group: "org.hibernate", version: "5.4.9.Final") {
                 entry "hibernate-c3p0"
             }
-            dependencySet(group: "org.hibernate.validator", version: "6.1.0.Final") {
+            dependencySet(group: "org.hibernate.validator", version: "6.1.5.Final") {
                 entry "hibernate-validator"
                 entry "hibernate-validator-annotation-processor"
             }
