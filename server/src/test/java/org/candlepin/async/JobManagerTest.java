@@ -462,6 +462,7 @@ public class JobManagerTest {
 
         assertEquals("job", mdcCapture.get("requestType"));
         assertEquals(status.getId(), mdcCapture.get("requestUuid"));
+        assertEquals(status.getJobKey(), mdcCapture.get("jobKey"));
         assertEquals(expectedLogLevel, mdcCapture.get("logLevel"));
 
         for (int i = 0; i < metadataEntries; ++i) {
