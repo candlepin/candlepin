@@ -8,6 +8,7 @@ describe 'Hypervisor Resource - Heartbeat Endpoint', :type => :virt do
 
   before(:each) do
     skip("candlepin running in standalone mode") if is_hosted?
+
     @expected_host_hyp_id = random_string("host")
     @expected_reporter_id = random_string("reporter")
     @expected_host_name = random_string("name")
@@ -19,8 +20,8 @@ describe 'Hypervisor Resource - Heartbeat Endpoint', :type => :virt do
     # we must register the consumer to use it as a client
     # hypervisor check in creation does not result in a client cert
     @consumer = @user.register(@expected_host_name, :hypervisor, nil, {"test_fact" => "fact_value"},
-                              nil, @owner['key'], [], [], nil, [], @expected_host_hyp_id,
-                               [], nil, '1518341313', nil, nil, nil, 0, nil, nil, nil, nil, [], @expected_reporter_id)
+      nil, @owner['key'], [], [], nil, [], @expected_host_hyp_id, [], nil, '1518341313', nil, nil, nil,
+      0, nil, nil, nil, nil, [], @expected_reporter_id)
 
     @client = consumer_client(@user, random_string("consumer"))
   end
@@ -29,7 +30,7 @@ describe 'Hypervisor Resource - Heartbeat Endpoint', :type => :virt do
     job = @client.hypervisor_heartbeat_update(@owner['key'], @expected_reporter_id)
 
     expect(job).to_not be_nil
-    expect(job['name']).to include("hypervisor_heartbeat_update")
+    expect(job['name']).to include("Hypervisor Heartbeat Update")
 
     wait_for_job(job['id'], 10)
 

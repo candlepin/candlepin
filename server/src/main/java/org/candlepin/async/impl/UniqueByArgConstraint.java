@@ -17,15 +17,15 @@ package org.candlepin.async.impl;
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConstraint;
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.AsyncJobStatusCurator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-
+import java.util.Map;
 
 
 /**
@@ -81,74 +81,24 @@ public class UniqueByArgConstraint implements JobConstraint {
      * @{inheritDoc}
      */
     @Override
-    public Collection<AsyncJobStatus> test(AsyncJobStatus inbound, Collection<AsyncJobStatus> existing) {
+    public Collection<String> test(AsyncJobStatusCurator jobCurator, AsyncJobStatus inbound) {
+        if (jobCurator == null) {
+            throw new IllegalArgumentException("jobCurator is null");
+        }
+
         if (inbound == null) {
             throw new IllegalArgumentException("inbound is null");
         }
 
-        if (existing == null) {
-            throw new IllegalArgumentException("existing is null");
+        String jobKey = inbound.getJobKey();
+        JobArguments jobArgs = inbound.getJobArguments();
+
+        Map<String, String> argMap = new HashMap<>();
+
+        for (String param : this.params) {
+            argMap.put(param, jobArgs.getSerializedValue(param));
         }
 
-        Set<AsyncJobStatus> constraining = new HashSet<>();
-
-        String iJobKey = inbound.getJobKey();
-        JobArguments iArgs = inbound.getJobArguments();
-
-        for (AsyncJobStatus eJob : existing) {
-            if (eJob == null) {
-                throw new IllegalArgumentException("existing jobs contains a null element");
-            }
-
-            if (this.test(iJobKey, iArgs, eJob)) {
-                constraining.add(eJob);
-            }
-        }
-
-        return constraining;
-    }
-
-    /**
-     * Tests this constraint on a per-job basis
-     *
-     * @param iJobKey
-     *  the job key for the inbound job
-     *
-     * @param iArgs
-     *  the job arguments for the inbound job
-     *
-     * @param existing
-     *  the existing job to test
-     *
-     * @return
-     *  true if the inbound job is constraints by the provided existing job; false otherwise
-     */
-    private boolean test(String iJobKey, JobArguments iArgs, AsyncJobStatus existing) {
-        String eJobKey = existing.getJobKey();
-        JobArguments eArgs = existing.getJobArguments();
-
-        if (iJobKey != null ? iJobKey.equals(eJobKey) : eJobKey == null) {
-            boolean matched = true;
-
-            for (String param : this.params) {
-                if (iArgs.containsKey(param) && eArgs.containsKey(param)) {
-                    String iValue = iArgs.getSerializedValue(param);
-                    String eValue = eArgs.getSerializedValue(param);
-
-                    if (!(iValue != null ? iValue.equals(eValue) : eValue == null)) {
-                        matched = false;
-                        break;
-                    }
-                }
-                else {
-                    matched = false;
-                    break;
-                }
-            }
-
-            return matched;
-        }
-
-        return false;
+        return jobCurator.fetchJobIdsByArguments(jobKey, argMap);
     }
 }

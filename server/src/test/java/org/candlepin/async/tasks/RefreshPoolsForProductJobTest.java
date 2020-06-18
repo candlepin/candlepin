@@ -14,14 +14,8 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobConfig;
@@ -35,7 +29,13 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
+
+
+/**
+ * Test suite for the RefreshPoolsForProductJob class
+ */
 public class RefreshPoolsForProductJobTest {
 
     private static final String VALID_ID = "valid_id";
@@ -66,9 +66,14 @@ public class RefreshPoolsForProductJobTest {
         doReturn(product).when(productCurator).get(eq(VALID_ID));
         doReturn(mock(Refresher.class)).when(poolManager).getRefresher(any(), anyBoolean());
 
-        final Object actualResult = job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
 
-        assertEquals(expected, actualResult);
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
+        assertEquals(expected, result);
     }
 
     @Test
@@ -98,11 +103,16 @@ public class RefreshPoolsForProductJobTest {
         final JobExecutionContext context = mock(JobExecutionContext.class);
         doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
 
-        final Object actualResult = job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
 
         assertEquals(
             "Unable to refresh pools for product \"null\": Could not find a product with the specified UUID",
-            actualResult);
+            result);
     }
 
     @Test

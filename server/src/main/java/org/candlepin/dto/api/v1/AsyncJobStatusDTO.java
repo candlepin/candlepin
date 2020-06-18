@@ -16,7 +16,9 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonRawValue;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -75,7 +77,7 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
     private Integer maxAttempts;
 
     @ApiModelProperty(example = "Refresh completed successfully!")
-    private Object result;
+    private String result;
 
 
     /**
@@ -441,7 +443,8 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
      *  defined
      */
     @JsonProperty("resultData")
-    public Object getResult() {
+    @JsonRawValue
+    public String getResult() {
         return this.result;
     }
 
@@ -454,7 +457,8 @@ public class AsyncJobStatusDTO extends TimestampedCandlepinDTO<AsyncJobStatusDTO
      * @return
      *  a reference to this DTO
      */
-    public AsyncJobStatusDTO setResult(Object result) {
+    @JsonIgnore
+    public AsyncJobStatusDTO setResult(String result) {
         this.result = result;
         return this;
     }

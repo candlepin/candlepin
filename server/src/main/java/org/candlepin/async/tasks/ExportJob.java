@@ -46,7 +46,7 @@ public class ExportJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(ExportJob.class);
 
     public static final String JOB_KEY = "ExportJob";
-    public static final String JOB_NAME = "export_manifest";
+    public static final String JOB_NAME = "Export Manifest";
 
     protected static final String CONSUMER_KEY = "consumer_uuid";
     protected static final String CDN_LABEL = "cdn_label";
@@ -169,7 +169,7 @@ public class ExportJob implements AsyncJob {
     }
 
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         JobArguments args = context.getJobArguments();
 
         String consumerUuid = args.getAsString(CONSUMER_KEY);
@@ -183,8 +183,9 @@ public class ExportJob implements AsyncJob {
             ExportResult result = manifestManager.generateAndStoreManifest(consumerUuid, cdnLabel,
                 webAppPrefix, apiUrl, extensionData);
 
-            log.info("Async export complete.");
-            return result;
+            log.info("Async export complete");
+
+            context.setJobResult(result);
         }
         catch (Exception e) {
             throw new JobExecutionException(e.getMessage(), e, false);

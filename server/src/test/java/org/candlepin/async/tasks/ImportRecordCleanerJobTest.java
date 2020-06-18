@@ -16,7 +16,7 @@ package org.candlepin.async.tasks;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
@@ -31,6 +31,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -61,7 +62,13 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
         JobExecutionContext context = mock(JobExecutionContext.class);
 
         ImportRecordCleanerJob job = createJobInstance();
-        String result = (String) job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
         assertEquals("No import records were deleted.", result);
     }
 
@@ -79,7 +86,12 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         ImportRecordCleanerJob job = createJobInstance();
-        String result = (String) job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
 
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
 
@@ -101,7 +113,12 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         ImportRecordCleanerJob job = createJobInstance();
-        String result = (String) job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
 
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner).list();
 
@@ -132,7 +149,12 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         ImportRecordCleanerJob job = createJobInstance();
-        String result = (String) job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
 
         assertEquals(10, importRecordCurator.findRecords(owner1).list().size());
         assertEquals(4, importRecordCurator.findRecords(owner2).list().size());
@@ -189,7 +211,12 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         ImportRecordCleanerJob job = createJobInstance();
-        String result = (String) job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
 
         int expectedDeletedRecords = existingRecords - keep;
         int expectedKeptRecords = existingRecords > keep ? keep : existingRecords;

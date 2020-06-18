@@ -43,7 +43,7 @@ public class OrphanCleanupJob implements AsyncJob  {
     private static Logger log = LoggerFactory.getLogger(OrphanCleanupJob.class);
 
     public static final String JOB_KEY = "OrphanCleanupJob";
-    public static final String JOB_NAME = "orphan cleanup";
+    public static final String JOB_NAME = "Orphan Cleanup";
 
     // Every Sunday at 3:00am
     public static final String DEFAULT_SCHEDULE = "0 0 3 ? * 1";
@@ -65,7 +65,7 @@ public class OrphanCleanupJob implements AsyncJob  {
 
     @Override
     @Transactional
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         log.debug("Deleting orphaned entities");
 
         int orphanedContent = this.deleteOrphanedContent();
@@ -75,7 +75,7 @@ public class OrphanCleanupJob implements AsyncJob  {
             "\n  %d orphaned content deleted" +
             "\n  %d orphaned products deleted";
 
-        return String.format(format, orphanedContent, orphanedProducts);
+        context.setJobResult(format, orphanedContent, orphanedProducts);
     }
 
     private int deleteOrphanedContent() {

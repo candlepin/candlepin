@@ -168,7 +168,7 @@ public class EntitleByProductsJobTest {
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
         when(entitler.bindByProducts(eq(pids), eq(consumerUuid), eq(entitleDate), eq(fromPools)))
             .thenReturn(ents);
-        final EntitleByProductsJob job = new EntitleByProductsJob(entitler, null);
+        final EntitleByProductsJob job = new EntitleByProductsJob(entitler);
 
         job.execute(ctx);
 

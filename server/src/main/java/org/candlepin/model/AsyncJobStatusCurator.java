@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
@@ -31,6 +32,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -41,6 +43,9 @@ import javax.persistence.criteria.Root;
  */
 @Singleton
 public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStatus> {
+
+    /** Defines the maximum number of job arguments that can be provided for a single query */
+    public static final int MAX_JOB_ARGUMENTS_PER_QUERY = 10;
 
     /**
      * Container object for providing various arguments to the job status lookup method(s).
@@ -209,8 +214,9 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
         }
     }
 
-
-
+    /**
+     * Creates a new AsyncJobStatusCurator instance
+     */
     public AsyncJobStatusCurator() {
         super(AsyncJobStatus.class);
     }
@@ -278,21 +284,20 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
      *  a list of jobs matching the provided query arguments/filters
      */
     public List<AsyncJobStatus> findJobs(AsyncJobStatusQueryBuilder queryBuilder) {
-        EntityManager entityManager = this.getEntityManager();
-        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
         CriteriaQuery<AsyncJobStatus> query = criteriaBuilder.createQuery(AsyncJobStatus.class);
 
         Root<AsyncJobStatus> job = query.from(AsyncJobStatus.class);
-        List<Predicate> predicates = this.buildJobQueryPredicates(criteriaBuilder, job, queryBuilder);
-
         query.select(job);
 
+        List<Predicate> predicates = this.buildJobQueryPredicates(criteriaBuilder, job, queryBuilder);
         if (predicates.size() > 0) {
             Predicate[] predicateArray = new Predicate[predicates.size()];
             query.where(predicates.toArray(predicateArray));
         }
 
-        return entityManager.createQuery(query)
+        return this.getEntityManager()
+            .createQuery(query)
             .getResultList();
     }
 
@@ -313,10 +318,10 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
         CriteriaDelete<AsyncJobStatus> query = criteriaBuilder.createCriteriaDelete(AsyncJobStatus.class);
 
         Root<AsyncJobStatus> job = query.from(AsyncJobStatus.class);
-        List<Predicate> predicates = this.buildJobQueryPredicates(criteriaBuilder, job, queryBuilder);
 
         // Sanity check: Don't execute a deletion if we haven't provided at least *some*
         // restrictions.
+        List<Predicate> predicates = this.buildJobQueryPredicates(criteriaBuilder, job, queryBuilder);
         if (predicates.size() > 0) {
             Predicate[] predicateArray = new Predicate[predicates.size()];
             query.where(predicates.toArray(predicateArray));
@@ -403,6 +408,77 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
         }
 
         return predicates;
+    }
+
+    /**
+     * Fetches a collection of job IDs for jobs in non-terminal states matching the given job key
+     * and having all of the provided job arguments with the specified values.
+     * <p></p>
+     * This method is designed specifically for the unique-by-argument constraint family.
+     *
+     * @param jobKey
+     *  the job key to restrict
+     *
+     * @param arguments
+     *  a map containing the arguments to use for filtering jobs; cannot contain more than
+     *  10 entries
+     *
+     * @throws IllegalArgumentException
+     *  if jobKey is null or empty, or the arguments map is too large
+     *
+     * @return
+     *  A collection of IDs of non-terminal jobs matching the given job key and using the specified
+     *  arguments
+     */
+    public List<String> fetchJobIdsByArguments(String jobKey, Map<String, String> arguments) {
+        if (jobKey == null || jobKey.isEmpty()) {
+            throw new IllegalArgumentException("jobKey is null or empty");
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> query = criteriaBuilder.createQuery(String.class);
+        Root<AsyncJobStatus> job = query.from(AsyncJobStatus.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        // Add the job key restriction
+        predicates.add(criteriaBuilder.equal(job.get("jobKey"), jobKey));
+
+        // Add the non-terminal state restriction
+        Collection<JobState> states = Arrays.stream(JobState.values())
+            .filter(s -> !s.isTerminal())
+            .collect(Collectors.toSet());
+
+        predicates.add(job.get("state").in(states));
+
+        // Add the argument restrictions if necessary
+        if (arguments != null) {
+            // Sanity check: make sure we don't have too many arguments for the backend to handle
+            // in a single query. 10 is well below the technical limits, but if we're hitting that
+            // we're probably doing something wrong.
+            if (arguments.size() > MAX_JOB_ARGUMENTS_PER_QUERY) {
+                throw new IllegalArgumentException("arguments map contains too many arguments");
+            }
+
+            for (Map.Entry<String, String> entry : arguments.entrySet()) {
+                MapJoin<AsyncJobStatus, String, String> jobArguments = job.joinMap("arguments");
+
+                predicates.add(criteriaBuilder.and(
+                    criteriaBuilder.equal(jobArguments.key(), entry.getKey()),
+                    criteriaBuilder.equal(jobArguments.value(), entry.getValue())
+                ));
+            }
+        }
+
+        query.select(job.get("id"));
+
+        Predicate[] predicateArray = new Predicate[predicates.size()];
+        query.where(predicates.toArray(predicateArray));
+
+        return this.getEntityManager()
+            .createQuery(query)
+            .getResultList();
     }
 
 }

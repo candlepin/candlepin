@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2020 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -15,11 +15,11 @@
 package org.candlepin.model;
 
 import org.candlepin.async.JobArguments;
-import org.candlepin.async.JobExecutionContext;
-import org.candlepin.hibernate.AbstractJsonConverter;
+import org.candlepin.async.ResultSerializationException;
+import org.candlepin.util.ObjectMapperFactory;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.slf4j.event.Level;
 
@@ -28,32 +28,33 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Converter;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 
 /**
- * Represents the current status for a long-running job.
+ * Represents the job status for an async job. This class does not include extended information,
+ * such as the job result. The AsyncJobStatusEx class can be used in cases where the extended
+ * information is needed.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = AsyncJobStatus.DB_TABLE)
-public class AsyncJobStatus extends AbstractHibernateObject implements JobExecutionContext {
+public class AsyncJobStatus extends AbstractHibernateObject {
+
+    /** Basic ObjectMapper to use for serializing job results as we receive them */
+    private static final ObjectMapper MAPPER = ObjectMapperFactory.getObjectMapper();
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_async_jobs";
@@ -71,7 +72,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         /** The job has been picked up and is currently being executed */
         RUNNING("FINISHED", "FAILED_WITH_RETRY", "FAILED", "CANCELED"),
         /** The job failed during execution, and has been rescheduled to be retried */
-        FAILED_WITH_RETRY("SCHEDULED", "QUEUED", "RUNNING", "FAILED", "CANCELED"),
+        FAILED_WITH_RETRY("SCHEDULED", "QUEUED", "RUNNING", "FAILED", "CANCELED", "ABORTED"),
         /** The job has completed successfully */
         FINISHED(),
         /** The job failed during execution in a way that does not allow retries */
@@ -104,57 +105,6 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
         }
     }
 
-    /**
-     * A simple container object to collect all of the data to be stored in as a serialized field
-     */
-    @SuppressWarnings("checkstyle:VisibilityModifier")
-    private static class SerializedJobData {
-        public Map<String, String> metadata;
-        public JobArguments arguments;
-        public Object result;
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
-            }
-
-            if (!(obj instanceof SerializedJobData)) {
-                return false;
-            }
-
-            SerializedJobData that = (SerializedJobData) obj;
-
-            EqualsBuilder builder = new EqualsBuilder()
-                .append(this.metadata, that.metadata)
-                .append(this.arguments, that.arguments)
-                .append(this.result, that.result);
-
-            return builder.isEquals();
-        }
-
-        @Override
-        public int hashCode() {
-            HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-                .append(this.metadata)
-                .append(this.arguments)
-                .append(this.result);
-
-            return builder.toHashCode();
-        }
-    }
-
-    /**
-     * JSON converter class for the SerializedJobData type.
-     */
-    @Converter
-    public static class JobDataJsonConverter extends AbstractJsonConverter<SerializedJobData> {
-        public JobDataJsonConverter() {
-            super(SerializedJobData.class);
-        }
-    }
-
-
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -176,6 +126,9 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     private String executor;
     private String principal;
 
+    @Column(name = "correlation_id")
+    private String correlationId;
+
     @Column(name = "owner_id")
     private String ownerId;
 
@@ -188,23 +141,11 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @Column(name = "log_execution_details")
     private boolean logExecutionDetails;
 
-    // @ElementCollection(fetch = FetchType.EAGER)
-    // @CollectionTable(name = "cp_async_job_metadata", joinColumns = @JoinColumn(name = "job_id"))
-    // @MapKeyColumn(name = "\"key\"")
-    // @Column(name = "\"value\"")
-    // private Map<String, String> metadata;
-
     @NotNull
     private JobState state;
 
     @Column(name = "previous_state")
     private JobState previousState;
-
-    // @ElementCollection(fetch = FetchType.LAZY)
-    // @CollectionTable(name = "cp_async_job_constraints", joinColumns = @JoinColumn(name = "job_id"))
-    // @MapKeyColumn(name = "key")
-    // @Column(name = "value")
-    // private Map<String, String> constraints;
 
     private int attempts;
     @Column(name = "max_attempts")
@@ -215,9 +156,14 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     @Column(name = "end_time")
     private Date endTime;
 
-    @Column(name = "job_data")
-    @Convert(converter = JobDataJsonConverter.class)
-    private SerializedJobData jobData;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "cp_async_job_arguments", joinColumns = @JoinColumn(name = "job_id"))
+    @MapKeyColumn(name = "name", nullable = false)
+    @Column(name = "value")
+    private Map<String, String> arguments;
+
+    @Column(name = "job_result")
+    private String result;
 
 
 
@@ -225,7 +171,6 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      * Creates a new AsyncJobStatus instance with no configuration
      */
     public AsyncJobStatus() {
-        // this.constraints = new HashMap<>();
         this.state = JobState.CREATED;
 
         this.attempts = 0;
@@ -233,7 +178,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
 
         this.logExecutionDetails = true;
 
-        this.jobData = new SerializedJobData();
+        this.arguments = new HashMap<>();
     }
 
     /**
@@ -516,6 +461,31 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
     }
 
     /**
+     * Sets the correlation ID for the correlated service that triggered this job.
+     *
+     * @param correlationId
+     *  the correlation ID to set for this job, or null to clear any existing correlation ID
+     *
+     * @return
+     *  this job status instance
+     */
+    public AsyncJobStatus setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+        return this;
+    }
+
+    /**
+     * Gets the correlation ID for this job.  If this job is not correlated to a specific service or
+     * request, this method returns null.
+     *
+     * @return
+     *  the correlation ID for this job, or null if this job has no correlated service
+     */
+    public String getCorrelationId() {
+        return this.correlationId;
+    }
+
+    /**
      * Fetches the log level with which this job will be executed. If the log level has not been
      * set, this method returns null.
      *
@@ -578,59 +548,6 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      */
     public AsyncJobStatus logExecutionDetails(boolean enabled) {
         this.logExecutionDetails = enabled;
-        return this;
-    }
-
-    /**
-     * Fetches the metadata for this job. If this job does not have any metadata, this method
-     * returns an empty map.
-     *
-     * @return
-     *  the job's metadata as a map
-     */
-    public Map<String, String> getMetadata() {
-        return this.jobData.metadata != null ?
-            Collections.unmodifiableMap(this.jobData.metadata) :
-            Collections.emptyMap();
-    }
-
-    /**
-     * Sets the metadata for this job. If the metadata is null or empty, any existing metadata will
-     * be cleared.
-     *
-     * @param metadata
-     *  The metadata to assign to this job
-     *
-     * @return
-     *  this job status instance
-     */
-    public AsyncJobStatus setMetadata(Map<String, String> metadata) {
-        this.jobData.metadata = metadata != null ? new HashMap<>(metadata) : null;
-        return this;
-    }
-
-    /**
-     * Adds or updates a metadata entry for this job.
-     *
-     * @param key
-     *  The key for the metadata entry
-     *
-     * @param value
-     *  The value of the metadata entry
-     *
-     * @return
-     *  this job status instance
-     */
-    public AsyncJobStatus addMetadata(String key, String value) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        if (this.jobData.metadata == null) {
-            this.jobData.metadata = new HashMap<>();
-        }
-
-        this.jobData.metadata.put(key, value);
         return this;
     }
 
@@ -794,7 +711,7 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      *  the runtime arguments for this job
      */
     public JobArguments getJobArguments() {
-        return this.jobData.arguments;
+        return new JobArguments(this.arguments != null ? this.arguments : Collections.emptyMap());
     }
 
     /**
@@ -807,7 +724,17 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      *  this job status instance
      */
     public AsyncJobStatus setJobArguments(JobArguments arguments) {
-        this.jobData.arguments = arguments;
+        if (this.arguments != null) {
+            this.arguments.clear();
+        }
+        else {
+            this.arguments = new HashMap<>();
+        }
+
+        if (arguments != null) {
+            this.arguments.putAll(arguments.toSerializedMap());
+        }
+
         return this;
     }
 
@@ -818,8 +745,8 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      * @return
      *  the output/result of the job's most recent execution, or null if no result is available
      */
-    public Object getJobResult() {
-        return this.jobData.result;
+    public String getJobResult() {
+        return this.result;
     }
 
     /**
@@ -832,7 +759,16 @@ public class AsyncJobStatus extends AbstractHibernateObject implements JobExecut
      *  this job status instance
      */
     public AsyncJobStatus setJobResult(Object result) {
-        this.jobData.result = result;
+        try {
+            this.result = result != null ? MAPPER.writeValueAsString(result) : null;
+        }
+        catch (Exception e) {
+            Class type = result != null ? result.getClass() : null;
+            String errmsg = String.format("Unable to serialize result: (%s): %s", type, result);
+
+            throw new ResultSerializationException(errmsg, e);
+        }
+
         return this;
     }
 

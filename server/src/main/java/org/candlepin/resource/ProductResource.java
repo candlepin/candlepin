@@ -312,11 +312,10 @@ public class ProductResource {
                 statuses.add(this.jobManager.queueJob(config));
             }
             catch (Exception e) {
-                AsyncJobStatus failedStatus = new AsyncJobStatus();
-                failedStatus.setName(RefreshPoolsJob.JOB_NAME);
-                failedStatus.setState(AsyncJobStatus.JobState.FAILED);
-                failedStatus.setJobResult(e.toString());
-                statuses.add(failedStatus);
+                statuses.add(new AsyncJobStatus()
+                    .setName(RefreshPoolsJob.JOB_NAME)
+                    .setState(AsyncJobStatus.JobState.FAILED)
+                    .setJobResult(e.toString()));
             }
         }
 

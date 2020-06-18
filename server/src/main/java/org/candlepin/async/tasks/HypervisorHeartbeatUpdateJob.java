@@ -42,7 +42,7 @@ public class HypervisorHeartbeatUpdateJob implements AsyncJob {
     private static final Logger log = LoggerFactory.getLogger(HypervisorHeartbeatUpdateJob.class);
 
     public static final String JOB_KEY = "HypervisorHeartbeatUpdateJob";
-    public static final String JOB_NAME = "hypervisor_heartbeat_update";
+    public static final String JOB_NAME = "Hypervisor Heartbeat Update";
 
     private static final String REPORTER_ID = "reporter_id";
     private static final String OWNER_KEY = "owner_key";
@@ -135,7 +135,7 @@ public class HypervisorHeartbeatUpdateJob implements AsyncJob {
     }
 
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         JobArguments args = context.getJobArguments();
 
         String ownerKey = args.getAsString(OWNER_KEY);
@@ -145,7 +145,7 @@ public class HypervisorHeartbeatUpdateJob implements AsyncJob {
 
         this.consumerCurator.heartbeatUpdate(reporterId, new Date(), ownerKey);
 
-        return String.format("Last hypervisor check-in updated for owner \"%s\" by reporter: %s",
+        context.setJobResult("Last hypervisor check-in updated for owner \"%s\" by reporter: %s",
             ownerKey, reporterId);
     }
 

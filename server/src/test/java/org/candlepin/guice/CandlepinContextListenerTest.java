@@ -269,7 +269,16 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         when(config.getString(ConfigProperties.CRL_FILE_PATH))
             .thenReturn("/tmp/crlfile.crl");
+
         File crlFile = new File(config.getString(ConfigProperties.CRL_FILE_PATH));
+
+        // Delete the file if it exists
+        if (crlFile.exists()) {
+            crlFile.delete();
+        }
+
+        // Flag the file for deletion so it gets cleaned up for us if we successfully create it
+        crlFile.deleteOnExit();
 
         assertFalse(crlFile.exists());
 

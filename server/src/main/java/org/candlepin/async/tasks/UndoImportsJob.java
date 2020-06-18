@@ -56,7 +56,7 @@ public class UndoImportsJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(UndoImportsJob.class);
 
     public static final String JOB_KEY = "UndoImportsJob";
-    public static final String JOB_NAME = "undo imports";
+    public static final String JOB_NAME = "Undo Imports";
 
     private static final String OWNER_KEY = "owner_key";
 
@@ -137,7 +137,7 @@ public class UndoImportsJob implements AsyncJob {
 
     @Override
     @Transactional
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         JobArguments args = context.getJobArguments();
         String principalName = context.getPrincipalName();
 
@@ -147,7 +147,7 @@ public class UndoImportsJob implements AsyncJob {
         if (owner == null) {
             // Apparently this isn't a failure...?
             log.debug("Owner no longer exists: {}", ownerKey);
-            return String.format("Nothing to do; owner no longer exists: %s", ownerKey);
+            context.setJobResult("Nothing to do; owner no longer exists: %s", ownerKey);
         }
 
         String displayName = owner.getDisplayName();
@@ -158,7 +158,7 @@ public class UndoImportsJob implements AsyncJob {
 
         if (metadata == null) {
             log.debug("No imports exist for owner {}", displayName);
-            return String.format("Nothing to do; imports no longer exist for owner: %s", displayName);
+            context.setJobResult("Nothing to do; imports no longer exist for owner: %s", displayName);
         }
 
         log.info("Deleting all pools originating from manifests for owner/org: {}", displayName);
@@ -179,7 +179,7 @@ public class UndoImportsJob implements AsyncJob {
         this.exportCurator.delete(metadata);
         this.recordManifestDeletion(owner, principalName, uc);
 
-        return String.format("Imported pools removed for owner: %s", displayName);
+        context.setJobResult("Imported pools removed for owner: %s", displayName);
     }
 
     private void recordManifestDeletion(Owner owner, String principalName, UpstreamConsumer uc) {

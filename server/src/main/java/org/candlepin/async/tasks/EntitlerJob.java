@@ -48,13 +48,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+
+
 /**
  * EntitlerJob
  */
 public class EntitlerJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(EntitlerJob.class);
+
     public static final String JOB_KEY = "EntitlerJob";
-    private static final String JOB_NAME = "bind_by_pool";
+    public static final String JOB_NAME = "Entitle by Pool";
+
     private static final String OWNER_KEY = "org";
     private static final String CONSUMER_UUID_KEY = "consumer_uuid";
     private static final String POOL_ID_KEY = "pool_id";
@@ -75,7 +79,7 @@ public class EntitlerJob implements AsyncJob {
     }
 
     @Override
-    public Object execute(final JobExecutionContext context) throws JobExecutionException {
+    public void execute(final JobExecutionContext context) throws JobExecutionException {
         try {
             final JobArguments arguments = context.getJobArguments();
             final String uuid = arguments.getAsString(CONSUMER_UUID_KEY);
@@ -90,13 +94,13 @@ public class EntitlerJob implements AsyncJob {
             final List<PoolIdAndQuantity> consumed = ents.stream()
                 .map(ent -> new PoolIdAndQuantity(ent.getPool().getId(), ent.getQuantity()))
                 .collect(Collectors.toList());
+
             poolCurator.clear();
-            return consumed;
+            context.setJobResult(consumed);
         }
         catch (EntitlementRefusedException e) {
             log.error("EntitlerJob encountered a problem, translating errors", e);
-            final Map<String, ValidationResult> validationResults = e.getResults();
-            return collectErrors(validationResults);
+            context.setJobResult(this.collectErrors(e.getResults()));
         }
         // Catch any exception that is fired and re-throw as a JobExecutionException
         // so that the job will be properly cleaned up on failure.
@@ -117,6 +121,7 @@ public class EntitlerJob implements AsyncJob {
             }
             poolErrors.add(new PoolIdAndErrors(pool.getId(), errorMessages));
         }
+
         return poolErrors;
     }
 

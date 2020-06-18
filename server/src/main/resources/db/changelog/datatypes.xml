@@ -20,5 +20,8 @@
 
     <property name="blob.type" value="BLOB" dbms="oracle,mysql,mariadb,hsqldb"/>
     <property name="blob.type" value="bytea" dbms="postgresql"/>
+
+    <property name="text.type" value="TEXT" dbms="postgresql,hsqldb"/>
+    <property name="text.type" value="LONGTEXT" dbms="mysql,mariadb"/>
 </databaseChangeLog>
 

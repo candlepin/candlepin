@@ -103,7 +103,12 @@ public class JobCleanerTest {
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         JobCleaner job = this.createJobInstance();
-        Object result = job.execute(context);
+        ArgumentCaptor<Object> resultCaptor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(resultCaptor.capture());
+        Object result = resultCaptor.getValue();
 
         long maxTime = this.subtractMinutes(System.currentTimeMillis(), maxAge);
         assertNotNull(result);

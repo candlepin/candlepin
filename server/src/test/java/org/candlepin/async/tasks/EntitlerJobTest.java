@@ -15,16 +15,12 @@
 
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.Mockito.anySet;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
@@ -47,6 +43,7 @@ import org.candlepin.policy.ValidationResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -149,13 +146,21 @@ public class EntitlerJobTest {
         final List<Entitlement> entitlements = createEntitlements();
         final EntitlerJob job = createEntitlerJob(poolCurator, i18n);
 
-        final List<PoolIdAndQuantity> result = (List<PoolIdAndQuantity>) job.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
+        assertThat(result, instanceOf(List.class));
+        List<PoolIdAndQuantity> resultQuantities = (List<PoolIdAndQuantity>) result;
 
         verify(entitler).bindByPoolQuantities(eq(CONSUMER_UUID), anyMap());
         verify(entitler).sendEvents(eq(entitlements));
-        assertEquals(1, result.size());
-        assertEquals(POOL_ID, result.get(0).getPoolId());
-        assertEquals(100, result.get(0).getQuantity().intValue());
+        assertEquals(1, resultQuantities.size());
+        assertEquals(POOL_ID, resultQuantities.get(0).getPoolId());
+        assertEquals(100, resultQuantities.get(0).getQuantity().intValue());
     }
 
     @Test
@@ -177,9 +182,17 @@ public class EntitlerJobTest {
         final String poolId = "hello";
         stubEntitlerErrorResult(poolId);
         stubPoolCuratorPoolsById();
-        final EntitlerJob job = createEntitlerJob(poolCurator, i18n);
 
-        final List<PoolIdAndErrors> resultErrors = (List<PoolIdAndErrors>) job.execute(ctx);
+        EntitlerJob job = createEntitlerJob(poolCurator, i18n);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(ctx);
+
+        verify(ctx, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
+        assertThat(result, instanceOf(List.class));
+        List<PoolIdAndErrors> resultErrors = (List<PoolIdAndErrors>) result;
 
         assertEquals(1, resultErrors.size());
         assertEquals(poolId, resultErrors.get(0).getPoolId());

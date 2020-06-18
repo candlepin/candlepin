@@ -2028,7 +2028,7 @@
     </changeSet>
     <changeSet author="awood" id="1413225753032-290">
         <comment>
-             Add the default quartz lock columns. 
+             Add the default quartz lock columns.
         </comment>
         <insert tableName="QRTZ_LOCKS">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
@@ -2332,4 +2332,5 @@
     <include file="db/changelog/20191009160315-remove-duplicate-indexes.xml"/>
     <include file="db/changelog/20200430172317-add-column-rh-cloud-profile-modified.xml"/>
     <include file="db/changelog/20200525150632-switch-job-data-to-longtext.xml"/>
+    <include file="db/changelog/20200604045445-async-job-data-restructure.xml"/>
 </databaseChangeLog>

@@ -14,15 +14,8 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
@@ -39,6 +32,7 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
@@ -118,7 +112,12 @@ public class HealEntireOrgJobTest {
         when(context.getJobArguments()).thenReturn(config.getJobArguments());
 
         HealEntireOrgJob healEntireOrgJob = this.createJob();
-        Object result = healEntireOrgJob.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        healEntireOrgJob.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
 
         StringBuilder expectedResult = new StringBuilder();
         expectedResult.append("Successfully healed consumer with UUID: ").append(consumer1.getUuid())
@@ -168,7 +167,13 @@ public class HealEntireOrgJobTest {
 
         HealEntireOrgJob healEntireOrgJob = this.createJob();
 
-        Object result = healEntireOrgJob.execute(context);
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        healEntireOrgJob.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
+
         final StringBuilder expectedResult = new StringBuilder();
         expectedResult.append("Healing failed for consumer with UUID: ").append(consumer1.getUuid())
             .append("\n");
@@ -217,8 +222,6 @@ public class HealEntireOrgJobTest {
         JobConfig config = HealEntireOrgJob.createJobConfig().setOwner(owner).setEntitleDate(entitleDate);
 
         assertDoesNotThrow(config::validate);
-
-        Map<String, String> metadata = config.getJobMetadata();
 
         assertEquals(owner, config.getContextOwner());
         JobArguments jobArguments = config.getJobArguments();

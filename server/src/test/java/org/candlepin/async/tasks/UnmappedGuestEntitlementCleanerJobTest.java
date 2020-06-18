@@ -14,15 +14,17 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.Entitler;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+
 
 /**
  * Test suite for the UnmappedGuestEntitlementCleanerJob class
@@ -45,7 +47,13 @@ public class UnmappedGuestEntitlementCleanerJobTest {
         when(entitler.revokeUnmappedGuestEntitlements()).thenReturn(10);
         JobExecutionContext context = mock(JobExecutionContext.class);
         UnmappedGuestEntitlementCleanerJob job = this.createJobInstance();
-        String result = (String) job.execute(context);
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
 
         assertEquals("Reaped 10 unmapped guest entitlements due to expiration.", result);
     }
@@ -55,7 +63,13 @@ public class UnmappedGuestEntitlementCleanerJobTest {
         when(entitler.revokeUnmappedGuestEntitlements()).thenReturn(0);
         JobExecutionContext context = mock(JobExecutionContext.class);
         UnmappedGuestEntitlementCleanerJob job = this.createJobInstance();
-        String result = (String) job.execute(context);
+
+        ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(captor.capture());
+        Object result = captor.getValue();
 
         assertEquals("No unmapped guest entitlements need reaping.", result);
     }

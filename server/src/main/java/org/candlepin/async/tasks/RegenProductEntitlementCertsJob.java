@@ -44,7 +44,7 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
     private static Logger log = LoggerFactory.getLogger(RegenProductEntitlementCertsJob.class);
 
     public static final String JOB_KEY = "RegenProductEntitlementCertsJob";
-    public static final String JOB_NAME = "RegenProductEntitlementCertsJob";
+    public static final String JOB_NAME = "Regen Product Entitlement Certificates";
 
     private static final String ARG_PRODUCT_ID = "product_id";
     private static final String ARG_LAZY_REGEN = "lazy_regen";
@@ -146,7 +146,7 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
      * {@inheritDoc}
      */
     @Override
-    public Object execute(JobExecutionContext context) throws JobExecutionException {
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         JobArguments args = context.getJobArguments();
 
         String productId = args.getAsString(ARG_PRODUCT_ID);
@@ -169,7 +169,7 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
             log.debug("Nothing to regenerate; no owners currently using product: {}", productId);
         }
 
-        return String.format("Entitlements regenerated for %d owners using product: %s",
+        context.setJobResult("Entitlements regenerated for %d owners using product: %s",
             owners.size(), productId);
     }
 

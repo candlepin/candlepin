@@ -56,8 +56,17 @@ import java.util.zip.InflaterInputStream;
  * finish before beginning execution
  */
 public class HypervisorUpdateJob implements AsyncJob {
-
     private static Logger log = LoggerFactory.getLogger(HypervisorUpdateJob.class);
+
+    public static final String JOB_KEY = "HypervisorUpdateJob";
+    public static final String JOB_NAME = "Hypervisor Update";
+
+    private static final String OWNER_KEY = "org";
+    private static final String CREATE_KEY = "create";
+    private static final String REPORTER_ID_KEY = "reporter_id";
+    private static final String DATA_KEY = "data";
+    private static final String PRINCIPAL_KEY = "principal";
+    private static final int BULK_SIZE = 10;
 
     private ObjectMapper mapper;
     private OwnerCurator ownerCurator;
@@ -65,15 +74,6 @@ public class HypervisorUpdateJob implements AsyncJob {
     private HypervisorUpdateAction hypervisorUpdateAction;
     private I18n i18n;
     private ModelTranslator translator;
-
-    public static final String JOB_KEY = "HypervisorUpdateJob";
-    private static final String JOB_NAME = "hypervisor_update";
-    private static final String OWNER_KEY = "org";
-    public static final String CREATE = "create";
-    private static final String REPORTER_ID = "reporter_id";
-    private static final String DATA = "data";
-    private static final String PRINCIPAL = "principal";
-    private static final int BULK_SIZE = 10;
 
     @Inject
     public HypervisorUpdateJob(
@@ -83,6 +83,7 @@ public class HypervisorUpdateJob implements AsyncJob {
         final HypervisorUpdateAction hypervisorUpdateAction,
         final I18n i18n,
         @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper objectMapper) {
+
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.translator = Objects.requireNonNull(translator);
@@ -105,18 +106,22 @@ public class HypervisorUpdateJob implements AsyncJob {
      * @return
      */
     @Override
-    public Object execute(final JobExecutionContext context) throws JobExecutionException {
+    public void execute(final JobExecutionContext context) throws JobExecutionException {
         try {
             JobArguments arguments = context.getJobArguments();
+
             String ownerKey = arguments.getAsString(OWNER_KEY);
-            Boolean create = arguments.getAsBoolean(CREATE);
-            String principal = arguments.getAsString(PRINCIPAL);
-            String jobReporterId = arguments.getAsString(REPORTER_ID);
+            Boolean create = arguments.getAsBoolean(CREATE_KEY);
+            String principal = arguments.getAsString(PRINCIPAL_KEY);
+            String jobReporterId = arguments.getAsString(REPORTER_ID_KEY);
 
             final Owner owner = ownerCurator.getByKey(ownerKey);
             if (owner == null) {
-                log.warn("Hypervisor update attempted against non-existent org id \"{}\"", ownerKey);
-                return "Nothing to do. Owner does not exist";
+                String result = String.format("Hypervisor update attempted against non-existent org: \"%s\"",
+                    ownerKey);
+
+                log.warn(result);
+                context.setJobResult(result);
             }
 
             final HypervisorList hypervisors = parsedHypervisors(arguments);
@@ -125,7 +130,7 @@ public class HypervisorUpdateJob implements AsyncJob {
             final HypervisorUpdateResultDTO result = updateResult.getResult();
 
             log.info("Summary for report from {} by principal {}\n {}", jobReporterId, principal, result);
-            return result;
+            context.setJobResult(result);
         }
         catch (Exception e) {
             log.error("HypervisorUpdateJob encountered a problem.", e);
@@ -134,7 +139,7 @@ public class HypervisorUpdateJob implements AsyncJob {
     }
 
     private HypervisorList parsedHypervisors(final JobArguments arguments) throws IOException {
-        final byte[] data = arguments.getAs(DATA, byte[].class);
+        final byte[] data = arguments.getAs(DATA_KEY, byte[].class);
         final String json = decompress(data);
         return mapper.readValue(json, HypervisorList.class);
     }
@@ -200,13 +205,13 @@ public class HypervisorUpdateJob implements AsyncJob {
         }
 
         public HypervisorUpdateJobConfig setReporter(final String reporterId) {
-            this.setJobArgument(REPORTER_ID, reporterId);
+            this.setJobArgument(REPORTER_ID_KEY, reporterId);
 
             return this;
         }
 
         public HypervisorUpdateJobConfig setCreateMissing(final boolean create) {
-            this.setJobArgument(CREATE, create);
+            this.setJobArgument(CREATE_KEY, create);
 
             return this;
         }
@@ -216,7 +221,7 @@ public class HypervisorUpdateJob implements AsyncJob {
                 throw new IllegalArgumentException("hypervisor data is null");
             }
 
-            this.setJobArgument(DATA, compress(data));
+            this.setJobArgument(DATA_KEY, compress(data));
 
             return this;
         }
@@ -226,7 +231,7 @@ public class HypervisorUpdateJob implements AsyncJob {
                 throw new IllegalArgumentException("principal is null");
             }
 
-            this.setJobArgument(PRINCIPAL, principal.getUsername());
+            this.setJobArgument(PRINCIPAL_KEY, principal.getUsername());
 
             return this;
         }
@@ -239,8 +244,8 @@ public class HypervisorUpdateJob implements AsyncJob {
                 final JobArguments arguments = this.getJobArguments();
 
                 final String ownerKey = arguments.getAsString(OWNER_KEY);
-                final Boolean create = arguments.getAsBoolean(CREATE);
-                final String data = arguments.getAsString(DATA);
+                final Boolean create = arguments.getAsBoolean(CREATE_KEY);
+                final String data = arguments.getAsString(DATA_KEY);
 
                 if (ownerKey == null || ownerKey.isEmpty()) {
                     final String errmsg = "owner has not been set!";

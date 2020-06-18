@@ -6,10 +6,17 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <!-- Include definitions for cert.type, timestamp.type, etc. -->
-    <include file="db/changelog/datatypes.xml"/>
+    <changeSet id="20200604045445-1" author="crog">
+        <!--
+            We need to truncate this table anyway, and since the positional column addition
+            stuff is broken in the version of Liquibase we're using, we'll just drop the
+            table and recreate it exactly how we want it
+        -->
 
-    <changeSet id="20181121151738-1" author="crog">
+        <dropTable tableName="cp_async_jobs"/>
+    </changeSet>
+
+    <changeSet id="20200604045445-2" author="crog">
         <createTable tableName="cp_async_jobs">
             <column name="id" type="varchar(36)">
                 <constraints primaryKey="true" primaryKeyName="cp_async_jobs_pk"/>
@@ -26,6 +33,11 @@
             <column name="executor" type="varchar(255)"/>
             <column name="principal" type="varchar(255)"/>
             <column name="owner_id" type="varchar(36)"/>
+            <!--
+                The max length on the ref ID comes from the CSID_MAX_LENGTH value in LoggingFilter.java
+                If that value ever increases, this column should be updated as well
+            -->
+            <column name="correlation_id" type="varchar(40)"/>
 
             <column name="previous_state" type="int"/>
             <column name="state" type="int"/>
@@ -37,9 +49,31 @@
             <column name="log_level" type="varchar(32)"/>
             <column name="log_execution_details" type="boolean"/>
 
-            <column name="job_data" type="text"/>
+            <column name="job_result" type="${text.type}"/>
         </createTable>
     </changeSet>
+
+    <changeSet id="20200604045445-3" author="crog">
+        <createTable tableName="cp_async_job_arguments">
+            <column name="job_id" type="varchar(36)"/>
+            <column name="name" type="varchar(255)"/>
+            <column name="value" type="${text.type}"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20200604045445-4" author="crog">
+        <addPrimaryKey tableName="cp_async_job_arguments"
+            columnNames="job_id,name"
+            constraintName="cp_async_job_arguments_pk"
+        />
+    </changeSet>
+
+    <changeSet id="20200604045445-5" author="crog">
+        <createIndex tableName="cp_async_job_arguments" indexName="cp_async_job_arguments_idx1">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
 
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->
