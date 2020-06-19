@@ -93,6 +93,7 @@ public class JobManager implements ModeChangeListener {
 
     private static final String MDC_REQUEST_TYPE_KEY = "requestType";
     private static final String MDC_REQUEST_UUID_KEY = "requestUuid";
+    private static final String MDC_JOB_KEY_KEY = "jobKey";
     private static final String MDC_LOG_LEVEL_KEY = "logLevel";
 
     private static final String QRTZ_GROUP_CONFIG = "cp_async_config";
@@ -1176,28 +1177,28 @@ public class JobManager implements ModeChangeListener {
             return status;
         }
 
-        final Class<? extends AsyncJob> jobClass = getJobClass(status.getJobKey());
-
-        // Maybe in this case it'd be better to attempt to use the job key as the job class
-        // rather than failing directly. This would allow use of aliases and explicit job
-        // classes.
-        if (jobClass == null) {
-            String errmsg = String.format("No registered job class for job: %s", status.getJobKey());
-
-            this.updateJobStatus(status, JobState.FAILED, errmsg);
-
-            log.error(errmsg);
-            throw new JobInitializationException(errmsg, true);
-        }
-
         try {
             this.setupJobRuntimeEnvironment(status);
+
+            // Maybe in this case it'd be better to attempt to use the job key as the job class
+            // rather than failing directly. This would allow use of aliases and explicit job
+            // classes.
+            Class<? extends AsyncJob> jobClass = getJobClass(status.getJobKey());
+
+            if (jobClass == null) {
+                String errmsg = String.format("No registered job class for job: %s", status.getJobKey());
+
+                this.updateJobStatus(status, JobState.FAILED, errmsg);
+
+                log.error(errmsg);
+                throw new JobInitializationException(errmsg, true);
+            }
 
             EventSink eventSink = injector.getInstance(EventSink.class);
             AsyncJob job = injector.getInstance(jobClass);
 
             if (job == null) {
-                String errmsg = String.format("Unable to instantiate job class \"{}\" for job: {}",
+                String errmsg = String.format("Unable to instantiate job class \"%s\" for job: %s",
                     jobClass.getName(), status.getJobKey());
 
                 log.error(errmsg);
@@ -1275,6 +1276,7 @@ public class JobManager implements ModeChangeListener {
 
         MDC.put(MDC_REQUEST_TYPE_KEY, "job");
         MDC.put(MDC_REQUEST_UUID_KEY, status.getId());
+        MDC.put(MDC_JOB_KEY_KEY, status.getJobKey());
 
         // Attempt to lookup the owner
         String ownerId = status.getContextOwnerId();
