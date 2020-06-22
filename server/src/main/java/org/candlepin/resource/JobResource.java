@@ -24,6 +24,8 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.Page;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
@@ -32,6 +34,7 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.resteasy.DateFormat;
@@ -45,11 +48,13 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,6 +72,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
+
 
 /**
  * JobResource
@@ -162,7 +169,6 @@ public class JobResource {
         return this.getSchedulerStatus();
     }
 
-
     // Job status
     @ApiOperation(
         value = "fetches a set of job statuses matching the given filter options",
@@ -206,8 +212,35 @@ public class JobResource {
             .setStartDate(after)
             .setEndDate(before);
 
-        return this.jobManager.findJobs(queryBuilder).stream()
-            .map(this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
+        // Do paging bits, if necessary
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        if (pageRequest != null) {
+            Page<Stream<AsyncJobStatusDTO>> page = new Page<>();
+            page.setPageRequest(pageRequest);
+
+            if (pageRequest.isPaging()) {
+                queryBuilder.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
+                    .setLimit(pageRequest.getPerPage());
+            }
+
+            if (pageRequest.getSortBy() != null) {
+                queryBuilder.setOrder(Collections.singleton(new AsyncJobStatusQueryBuilder.Order(
+                    pageRequest.getSortBy(), pageRequest.getOrder() == PageRequest.Order.DESCENDING)));
+            }
+
+            page.setMaxRecords((int) this.jobCurator.getJobCount(queryBuilder));
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, page);
+        }
+
+        try {
+            return this.jobManager.findJobs(queryBuilder).stream()
+                .map(this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
+        }
+        catch (InvalidOrderKeyException e) {
+            throw new BadRequestException(e.getMessage(), e);
+        }
     }
 
     @ApiOperation(

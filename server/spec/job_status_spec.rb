@@ -8,13 +8,18 @@ describe 'Job Status' do
     @owner = create_owner(random_string("test_owner"))
     @owner2 = create_owner(random_string("test_owner_2"))
     @user = user_client(@owner, random_string("test_user"))
-    @monitoring = create_product
 
-    create_pool_and_subscription(@owner['key'], @monitoring.id, 4)
+    @monitoring = create_product
+    @monitoring_pool = @cp.create_pool(@owner['key'], @monitoring.id, {
+      :quantity => 4,
+      :subscription_id => random_str('source_sub'),
+      :upstream_pool_id => random_str('upstream')
+    })
   end
 
   it 'should find an empty list if the owner key is wrong' do
-    @cp.list_jobs('totaly_made_up').should be_empty
+    jobs = @cp.list_jobs({:owner => 'totaly_made_up'})
+    expect(jobs).to be_empty
   end
 
   it 'should cancel a job' do
@@ -23,18 +28,18 @@ describe 'Job Status' do
 
       job = @cp.autoheal_org(@owner['key'])
       #make sure we see a job waiting to go
-      joblist = @cp.list_jobs(@owner['key'])
+      joblist = @cp.list_jobs({:owner => @owner['key']})
       joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CREATED'
 
       @cp.cancel_job(job['id'])
       #make sure we see a job canceled
-      joblist = @cp.list_jobs(@owner['key'])
+      joblist = @cp.list_jobs({:owner => @owner['key']})
       joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
 
       @cp.set_scheduler_status(true)
       sleep 1 #let the job queue drain..
       #make sure job didn't flip to FINISHED
-      joblist = @cp.list_jobs(@owner['key'])
+      joblist = @cp.list_jobs({:owner => @owner['key']})
       joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
     ensure
       @cp.set_scheduler_status(true)
@@ -46,8 +51,7 @@ describe 'Job Status' do
     system = consumer_client(@user, 'system6')
 
     status = system.consume_product(@monitoring.id, { :async => true })
-
-    status['principal'].should == system.uuid
+    expect(status['principal']).to eq(system.uuid)
 
     wait_for_job(status['id'], 15)
   end
@@ -86,9 +90,9 @@ describe 'Job Status' do
 
     # Check that all jobs finished successfully
     jobs.each { |job|
-        wait_for_job(job['id'], 30)
-        status = @cp.get_job(job['id'])
-        status['state'].should == 'FINISHED'
+      wait_for_job(job['id'], 30)
+      status = @cp.get_job(job['id'])
+      status['state'].should == 'FINISHED'
     }
   end
 
@@ -96,7 +100,65 @@ describe 'Job Status' do
     job = @user.autoheal_org(@owner['key'])
     wait_for_job(job['id'], 15)
     status = @user.get_job(job['id'])
-    status['id'].should == job['id']
+    expect(status['id']).to eq(job['id'])
+  end
+
+  it 'should allow paging of jobs' do
+    job1 = @user.autoheal_org(@owner['key'])
+    job2 = @user.autoheal_org(@owner['key'])
+    job3 = @user.autoheal_org(@owner['key'])
+
+    jobs = @cp.list_jobs({
+      :owner => @owner['key'],
+      :page => 2,
+      :per_page => 1
+    })
+
+    # Since we're not setting the order, we can't guarantee which job we'll get, just that we'll
+    # get exactly one of them.
+    expect(jobs.length).to eq(1)
+    expect([job1.id, job2.id, job3.id]).to include(jobs[0].id)
+  end
+
+  it 'should allow sorting of jobs' do
+    job1 = @user.autoheal_org(@owner['key'])
+    job2 = @user.autoheal_org(@owner['key'])
+    job3 = @user.autoheal_org(@owner['key'])
+
+    jobs = @cp.list_jobs({
+      :owner => @owner['key'],
+      :sort_by => 'id',
+      :order => 'asc'
+    })
+
+    expect(jobs.length).to eq(3)
+
+    # Verify that the IDs are all in ascending order
+    last_id = nil
+    jobs.each do |job|
+      if last_id != nil
+        expect(last_id <=> job.id).to be < 0
+      end
+
+      last_id = job.id
+    end
+  end
+
+  it 'should allow paging and sorting of jobs' do
+    job1 = @user.autoheal_org(@owner['key'])
+    job2 = @user.autoheal_org(@owner['key'])
+    job3 = @user.autoheal_org(@owner['key'])
+
+    jobs = @cp.list_jobs({
+      :owner => @owner['key'],
+      :page => 3,
+      :per_page => 1,
+      :sort_by => 'id',
+      :order => 'asc'
+    })
+
+    expect(jobs.length).to eq(1)
+    expect(jobs[0].id).to eq(job3.id)
   end
 
   it 'should allow user to view job status of consumer in managed org' do
@@ -122,18 +184,18 @@ describe 'Job Status' do
 
       job = @user.autoheal_org(@owner['key'])
       #make sure we see a job waiting to go
-      joblist = @cp.list_jobs(@owner['key'])
+      joblist = @cp.list_jobs({:owner => @owner['key']})
       expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CREATED')
 
       @user.cancel_job(job['id'])
       #make sure we see a job canceled
-      joblist = @cp.list_jobs(@owner['key'])
+      joblist = @cp.list_jobs({:owner => @owner['key']})
       expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
 
       @cp.set_scheduler_status(true)
       sleep 1 #let the job queue drain..
       #make sure job didn't flip to FINISHED
-      joblist = @cp.list_jobs(@owner['key'])
+      joblist = @cp.list_jobs({:owner => @owner['key']})
       expect(joblist.find { |j| j['id'] == job['id'] }['state']).to eq('CANCELED')
     ensure
       @cp.set_scheduler_status(true)
@@ -220,6 +282,4 @@ describe 'Job Status' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
-
 end
-

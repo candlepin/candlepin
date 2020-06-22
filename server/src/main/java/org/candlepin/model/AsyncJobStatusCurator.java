@@ -29,10 +29,12 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -51,6 +53,29 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
      * Container object for providing various arguments to the job status lookup method(s).
      */
     public static class AsyncJobStatusQueryBuilder {
+
+        public static final class Order {
+            private final String column;
+            private final boolean reverse;
+
+            public Order(String column, boolean reverse) {
+                if (column == null || column.isEmpty()) {
+                    throw new IllegalArgumentException("column is null or empty");
+                }
+
+                this.column = column;
+                this.reverse = reverse;
+            }
+
+            public String column() {
+                return this.column;
+            }
+
+            public boolean reverse() {
+                return this.reverse;
+            }
+        }
+
         private Collection<String> jobIds;
         private Collection<String> jobKeys;
         private Collection<JobState> jobStates;
@@ -61,6 +86,10 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
 
         private Date startDate;
         private Date endDate;
+
+        private Integer offset;
+        private Integer limit;
+        private Collection<Order> order;
 
         public AsyncJobStatusQueryBuilder setJobIds(Collection<String> jobIds) {
             this.jobIds = jobIds;
@@ -171,6 +200,33 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
             return this.endDate;
         }
 
+        public AsyncJobStatusQueryBuilder setOffset(Integer offset) {
+            this.offset = offset;
+            return this;
+        }
+
+        public Integer getOffset() {
+            return this.offset;
+        }
+
+        public AsyncJobStatusQueryBuilder setLimit(Integer limit) {
+            this.limit = limit;
+            return this;
+        }
+
+        public Integer getLimit() {
+            return this.limit;
+        }
+
+        public AsyncJobStatusQueryBuilder setOrder(Collection<Order> order) {
+            this.order = order;
+            return this;
+        }
+
+        public Collection<Order> getOrder() {
+            return this.order;
+        }
+
         @Override
         public boolean equals(Object obj) {
             if (obj == this) {
@@ -189,7 +245,10 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
                     .append(this.getOrigins(), that.getOrigins())
                     .append(this.getExecutors(), that.getExecutors())
                     .append(this.getStartDate(), that.getStartDate())
-                    .append(this.getEndDate(), that.getEndDate());
+                    .append(this.getEndDate(), that.getEndDate())
+                    .append(this.getOffset(), that.getOffset())
+                    .append(this.getLimit(), that.getLimit())
+                    .append(this.getOrder(), that.getOrder());
 
                 return builder.isEquals();
             }
@@ -208,7 +267,10 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
                 .append(this.getOrigins())
                 .append(this.getExecutors())
                 .append(this.getStartDate())
-                .append(this.getEndDate());
+                .append(this.getEndDate())
+                .append(this.getOffset())
+                .append(this.getLimit())
+                .append(this.getOrder());
 
             return builder.toHashCode();
         }
@@ -285,10 +347,58 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
      */
     public List<AsyncJobStatus> findJobs(AsyncJobStatusQueryBuilder queryBuilder) {
         CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
-        CriteriaQuery<AsyncJobStatus> query = criteriaBuilder.createQuery(AsyncJobStatus.class);
+        CriteriaQuery<AsyncJobStatus> criteriaQuery = criteriaBuilder.createQuery(AsyncJobStatus.class);
+
+        Root<AsyncJobStatus> job = criteriaQuery.from(AsyncJobStatus.class);
+        criteriaQuery.select(job);
+
+        List<Predicate> predicates = this.buildJobQueryPredicates(criteriaBuilder, job, queryBuilder);
+        if (predicates.size() > 0) {
+            Predicate[] predicateArray = new Predicate[predicates.size()];
+            criteriaQuery.where(predicates.toArray(predicateArray));
+        }
+
+        List<Order> order = this.buildJobQueryOrder(criteriaBuilder, job, queryBuilder);
+        if (order.size() > 0) {
+            criteriaQuery.orderBy(order);
+        }
+
+        TypedQuery<AsyncJobStatus> query = this.getEntityManager()
+            .createQuery(criteriaQuery);
+
+        if (queryBuilder != null) {
+            Integer offset = queryBuilder.getOffset();
+            if (offset != null && offset > 0) {
+                query.setFirstResult(offset);
+            }
+
+            Integer limit = queryBuilder.getLimit();
+            if (limit != null && limit > 0) {
+                query.setMaxResults(limit);
+            }
+        }
+
+        return query.getResultList();
+    }
+
+    /**
+     * Fetches the count of jobs matching the provided filter data in the query builder. If the
+     * query builder is null or contains no arguments, this method will return the count of all
+     * known jobs.
+     *
+     * @param queryBuilder
+     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
+     *  to count jobs
+     *
+     * @return
+     *  a list of jobs matching the provided query arguments/filters
+     */
+    public long getJobCount(AsyncJobStatusQueryBuilder queryBuilder) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Long> query = criteriaBuilder.createQuery(Long.class);
 
         Root<AsyncJobStatus> job = query.from(AsyncJobStatus.class);
-        query.select(job);
+        query.select(criteriaBuilder.count(job));
 
         List<Predicate> predicates = this.buildJobQueryPredicates(criteriaBuilder, job, queryBuilder);
         if (predicates.size() > 0) {
@@ -298,7 +408,7 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
 
         return this.getEntityManager()
             .createQuery(query)
-            .getResultList();
+            .getSingleResult();
     }
 
     /**
@@ -331,6 +441,50 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
         }
 
         return 0;
+    }
+
+    /**
+     * Builds a collection of order instances to be used for querying jobs using the JPA criteria
+     * query API.
+     *
+     * @param critBuilder
+     *  the CriteriaBuilder instance to use to create order
+
+     * @param root
+     *  the root of the query, should be a reference to the AsyncJobStatus root
+     *
+     * @param queryBuilder
+     *  an AsyncJobStatusQueryBuilder instance containing the order specification
+     *  to select jobs
+     *
+     * @throws InvalidOrderKeyException
+     *  if an order is provided referencing an attribute name (key) that does not exist
+     *
+     * @return
+     *  a list of order instances to sort jobs based on the query ordering provided
+     */
+    private List<Order> buildJobQueryOrder(CriteriaBuilder criteriaBuilder, Root<AsyncJobStatus> root,
+        AsyncJobStatusQueryBuilder queryBuilder) {
+
+        List<Order> orderList = new ArrayList<>();
+
+        if (queryBuilder != null) {
+            if (queryBuilder.getOrder() != null) {
+                for (AsyncJobStatusQueryBuilder.Order order : queryBuilder.getOrder()) {
+                    try {
+                        orderList.add(order.reverse() ?
+                            criteriaBuilder.desc(root.get(order.column())) :
+                            criteriaBuilder.asc(root.get(order.column())));
+                    }
+                    catch (IllegalArgumentException e) {
+                        String errmsg = String.format("Invalid attribute key: %s", order.column());
+                        throw new InvalidOrderKeyException(errmsg, e);
+                    }
+                }
+            }
+        }
+
+        return orderList;
     }
 
     /**

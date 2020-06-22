@@ -40,6 +40,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
@@ -48,10 +49,12 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,6 +107,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         this.jobManager = mock(JobManager.class);
         this.jobCurator = mock(AsyncJobStatusCurator.class);
+
+        // Make sure we don't leave any page request on the context to muck with other tests
+        ResteasyContext.popContextData(PageRequest.class);
     }
 
     private JobResource buildJobResource() {
@@ -305,6 +311,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertNull(builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -345,6 +354,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertNull(builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -377,6 +389,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertNull(builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         Collection<JobState> states = builder.getJobStates();
         assertNotNull(states);
@@ -420,6 +435,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertNull(builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         Collection<String> ownerIds = builder.getOwnerIds();
         assertNotNull(ownerIds);
@@ -456,6 +474,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertNull(builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         Collection<String> ownerIds = builder.getOwnerIds();
         assertNotNull(ownerIds);
@@ -493,6 +514,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertNull(builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         Collection<String> ownerIds = builder.getOwnerIds();
         assertNotNull(ownerIds);
@@ -534,6 +558,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertNull(builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -574,6 +601,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertNull(builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -614,6 +644,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertEquals(values, builder.getExecutors());
         assertNull(builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -654,6 +687,9 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertEquals(value, builder.getStartDate());
         assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -694,6 +730,117 @@ public class JobResourceTest extends DatabaseTestFixture {
         assertNull(builder.getExecutors());
         assertNull(builder.getStartDate());
         assertEquals(value, builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+        assertNull(builder.getOrder());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    public void testListJobStatusesCanPageResults() {
+        AsyncJobStatus status1 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status2 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status3 = mock(AsyncJobStatus.class);
+        List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
+
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setPage(2);
+        pageRequest.setPerPage(5);
+
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+
+        int expectedOffset = (pageRequest.getPage() - 1) * pageRequest.getPerPage();
+
+        doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
+            null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+        assertEquals(expectedOffset, builder.getOffset());
+        assertEquals(pageRequest.getPerPage(), builder.getLimit());
+        assertNull(builder.getOrder());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "null", "true", "false" })
+    public void testListJobStatusesCanOrderResults(Boolean reverseOrder) {
+        AsyncJobStatus status1 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status2 = mock(AsyncJobStatus.class);
+        AsyncJobStatus status3 = mock(AsyncJobStatus.class);
+        List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
+
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setSortBy("id");
+
+        if (reverseOrder != null) {
+            pageRequest.setOrder(reverseOrder ? PageRequest.Order.DESCENDING : PageRequest.Order.ASCENDING);
+        }
+
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+
+        doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobResource resource = this.buildJobResource();
+        Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
+            null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.jobManager, times(1)).findJobs(captor.capture());
+        AsyncJobStatusQueryBuilder builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getJobIds());
+        assertNull(builder.getJobKeys());
+        assertNull(builder.getJobStates());
+        assertNull(builder.getOwnerIds());
+        assertNull(builder.getPrincipalNames());
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getStartDate());
+        assertNull(builder.getEndDate());
+        assertNull(builder.getOffset());
+        assertNull(builder.getLimit());
+
+        assertNotNull(builder.getOrder());
+        assertEquals(1, builder.getOrder().size());
+
+        AsyncJobStatusQueryBuilder.Order queryOrder = builder.getOrder().iterator().next();
+        assertNotNull(queryOrder);
+        assertEquals(pageRequest.getSortBy(), queryOrder.column());
+        assertEquals(pageRequest.getOrder() == PageRequest.Order.DESCENDING, queryOrder.reverse());
 
         // Verify the output passthrough is working properly
         assertNotNull(result);
@@ -711,6 +858,22 @@ public class JobResourceTest extends DatabaseTestFixture {
         JobResource resource = this.buildJobResource();
         assertThrows(BadRequestException.class, () ->
             resource.listJobStatuses(null, null, null, null, null, null, null, end, start));
+    }
+
+    @Test
+    public void testListJobStatusesFailsOnInvalidOrderKey() {
+        // This doesn't actually matter since we're mocking the exception, but we'll do it anyway
+        // for completeness
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setSortBy("bad_key");
+
+        ResteasyContext.pushContext(PageRequest.class, pageRequest);
+
+        doThrow(new InvalidOrderKeyException()).when(this.jobManager).findJobs(any());
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(BadRequestException.class, () ->
+            resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
     }
 
     @Test
