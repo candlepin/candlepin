@@ -82,6 +82,10 @@ import javax.transaction.Status;
 import javax.transaction.Synchronization;
 
 
+// FIXME: The transaction management here is getting out of hand. The annotations should probably
+// be removed entirely and replaced with explicit transaction management, and the protected methods
+// using them should be reverted to their propery visibility (private).
+
 
 /**
  * The JobManager manages the queueing, execution and general bookkeeping on jobs
@@ -1016,6 +1020,7 @@ public class JobManager implements ModeChangeListener {
      *  an AsyncJobStatus instance representing the queued job's status, or the status of the
      *  existing job if it already exists
      */
+    @Transactional
     public AsyncJobStatus queueJob(JobConfig config) throws JobException {
         ManagerState state = this.getManagerState();
         if (state != ManagerState.RUNNING) {
@@ -1611,7 +1616,7 @@ public class JobManager implements ModeChangeListener {
             log.warn("Job \"{}\" failed in {}ms; retrying...",
                 status.getName(), this.getJobRuntime(status), throwable);
 
-            this.postJobStatusMessage(status);
+            status = this.postJobStatusMessage(status);
         }
         else {
             status = this.updateJobStatus(status, JobState.FAILED, result);
