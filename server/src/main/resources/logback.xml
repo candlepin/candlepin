@@ -75,11 +75,13 @@
         <!--</prefix>-->
     <!--</appender>-->
 
-    <appender name="SyslogAppender" class="ch.qos.logback.classic.net.SyslogAppender">
+    <!--Note: This Appender is currently commented on because it is opening a random
+              UDP port to send messages to the Syslog server. -->
+    <!--<appender name="SyslogAppender" class="ch.qos.logback.classic.net.SyslogAppender">
         <syslogHost>localhost</syslogHost>
         <facility>DAEMON</facility>
         <suffixPattern>[%thread] %logger %msg</suffixPattern>
-    </appender>
+    </appender>-->
 
     <logger name="org.candlepin" level="INFO"/>
 
@@ -99,7 +101,7 @@
 
     <root level="WARN">
         <appender-ref ref="CandlepinAppender" />
-        <appender-ref ref="SyslogAppender" />
+       <!-- <appender-ref ref="SyslogAppender" />-->
         <appender-ref ref="ErrorAppender" />
     </root>
 </configuration>
