@@ -43,8 +43,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-
-
 /**
  * EventSink - Queues events to be sent after request/job completes, and handles actual
  * sending of events on successful job or API request, as well as rollback if either fails.
@@ -249,6 +247,7 @@ public class EventSinkImpl implements EventSink {
                  * messages safely and the session is then ready to start over the next time
                  * the thread is used.
                  */
+                this.sessionFactory = sessionFactory;
                 session = sessionFactory.getEgressSession(true);
                 producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
             }
@@ -260,6 +259,16 @@ public class EventSinkImpl implements EventSink {
 
         public void queueMessage(String eventString, Event.Type type, Event.Target target)
             throws ActiveMQException {
+            if (session.isClosed()) {
+                try {
+                    session = sessionFactory.getEgressSession(true);
+                    producer = session.createProducer(MessageAddress.DEFAULT_EVENT_MESSAGE_ADDRESS);
+                }
+                catch (Exception e) {
+                    log.error("Unable to open session while queuing messages", e);
+                    throw new RuntimeException(e);
+                }
+            }
 
             ClientMessage message = session.createMessage(ClientMessage.TEXT_TYPE, true);
             message.getBodyBuffer().writeNullableSimpleString(SimpleString.toSimpleString(eventString));
@@ -279,23 +288,27 @@ public class EventSinkImpl implements EventSink {
 
         public void sendMessages() {
             log.debug("Committing ActiveMQ transaction.");
-            try (ClientSession toClose = session) {
-                toClose.commit();
-            }
-            catch (Exception e) {
-                // This would be pretty bad, but we always try not to let event errors
-                // interfere with the operation of the overall application.
-                log.error("Error committing ActiveMQ transaction", e);
+            if (!session.isClosed()) {
+                try (ClientSession toClose = session) {
+                    toClose.commit();
+                }
+                catch (Exception e) {
+                    // This would be pretty bad, but we always try not to let event errors
+                    // interfere with the operation of the overall application.
+                    log.error("Error committing ActiveMQ transaction", e);
+                }
             }
         }
 
         public void cancelMessages() {
             log.warn("Rolling back ActiveMQ transaction.");
-            try (ClientSession toClose = session) {
-                toClose.rollback();
-            }
-            catch (ActiveMQException e) {
-                log.error("Error rolling back ActiveMQ transaction", e);
+            if (!session.isClosed()) {
+                try (ClientSession toClose = session) {
+                    toClose.rollback();
+                }
+                catch (ActiveMQException e) {
+                    log.error("Error rolling back ActiveMQ transaction", e);
+                }
             }
         }
 
