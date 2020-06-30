@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.14
+Version: 3.1.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,21 @@ fi
 
 #raw
 %changelog
+* Tue Jun 30 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.15-1
+- Restored omitted return statement in the hypervisor update job
+  (crog@redhat.com)
+- 1847879: Artemis errors while trying to send events during hypervisor update
+  job (prakgupt@redhat.com)
+- [M] ENT-2376: Find out why Tomcat binds to a udp6 port  - The SyslogAppender
+  configuration is commented on    because it is opening a random UDP port to
+  send messages    to the Syslog server.    Candlepin is sending messages to
+  the Syslog server.    But the Syslog server is not configured to listen to
+  the messages.    Hence this part of the code is commented.
+  (sonalidhome@gmail.com)
+- JobManager.queueJob is now always executed in a transactional context
+  (crog@redhat.com)
+- 1844243: Added Quartz trigger misfire logging (crog@redhat.com)
+
 * Mon Jun 22 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.14-1
 - 1844258: Job Manager Logging Format Changes for Splunk (prakgupt@redhat.com)
 - Update hibernate validator to 6.1.5-Final (bcourt@redhat.com)
