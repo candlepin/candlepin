@@ -122,6 +122,8 @@ public class HypervisorUpdateJob implements AsyncJob {
 
                 log.warn(result);
                 context.setJobResult(result);
+
+                return;
             }
 
             final HypervisorList hypervisors = parsedHypervisors(arguments);
