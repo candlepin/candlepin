@@ -59,6 +59,8 @@ public class HypervisorIdTranslatorTest extends
     @Override
     protected void verifyOutput(HypervisorId source, HypervisorIdDTO dto, boolean childrenGenerated) {
         if (source != null) {
+            assertEquals(source.getCreated(), dto.getCreated());
+            assertEquals(source.getUpdated(), dto.getUpdated());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getHypervisorId(), dto.getHypervisorId());
             assertEquals(source.getReporterId(), dto.getReporterId());

@@ -53,7 +53,7 @@ import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -1403,7 +1403,7 @@ public class OwnerResource implements OwnersApi {
         @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 400, message = "Invalid request")
     })
-    public CandlepinQuery<ConsumerDTO> listConsumers(
+    public CandlepinQuery<ConsumerDTOArrayElement> listConsumers(
         @PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
         @QueryParam("username") String userName,
@@ -1422,7 +1422,7 @@ public class OwnerResource implements OwnersApi {
         CandlepinQuery<Consumer> query = this.consumerCurator.searchOwnerConsumers(
             owner, userName, types, uuids, hypervisorIds, attrFilters, skus,
             subscriptionIds, contracts);
-        return translator.translateQuery(query, ConsumerDTO.class);
+        return translator.translateQuery(query, ConsumerDTOArrayElement.class);
     }
 
     @GET
@@ -2238,7 +2238,7 @@ public class OwnerResource implements OwnersApi {
     @ApiOperation(notes = "Retrieves a list of Hypervisors for an Owner", value = "Get Hypervisors",
         response = Consumer.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public CandlepinQuery<ConsumerDTO> getHypervisors(
+    public CandlepinQuery<ConsumerDTOArrayElement> getHypervisors(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("hypervisor_id") List<String> hypervisorIds) {
 
@@ -2246,7 +2246,7 @@ public class OwnerResource implements OwnersApi {
         CandlepinQuery<Consumer> query = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
             this.consumerCurator.getHypervisorsForOwner(owner.getId()) :
             this.consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
-        return translator.translateQuery(query, ConsumerDTO.class);
+        return translator.translateQuery(query, ConsumerDTOArrayElement.class);
     }
 
     private ConflictOverrides processConflictOverrideParams(String[] overrideConflicts) {
@@ -2734,7 +2734,7 @@ public class OwnerResource implements OwnersApi {
 
     @Override
     public ContentDTO createContent(String ownerKey, ContentDTO content) {
-        this.validator.validateConstraints(content);
+
         this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
 
         Owner owner = this.getOwnerByKey(ownerKey);
@@ -2750,7 +2750,6 @@ public class OwnerResource implements OwnersApi {
     public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
 
         for (ContentDTO content : contents) {
-            this.validator.validateConstraints(content);
             this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
         }
 
@@ -2769,7 +2768,6 @@ public class OwnerResource implements OwnersApi {
     @Override
     public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO content) {
 
-        this.validator.validateConstraints(content);
         this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
 
         Owner owner = this.getOwnerByKey(ownerKey);

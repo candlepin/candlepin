@@ -54,6 +54,7 @@ public class CapabilityTranslator implements ObjectTranslator<ConsumerCapability
     @Override
     public CapabilityDTO populate(ModelTranslator translator, ConsumerCapability source,
         CapabilityDTO dest) {
+
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }

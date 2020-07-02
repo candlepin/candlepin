@@ -120,15 +120,15 @@ public class TestUtil {
 
     public static ConsumerDTO createConsumerDTO(String name, String userName, OwnerDTO owner,
         ConsumerTypeDTO type) {
-        ConsumerDTO consumer = new ConsumerDTO().setName(name)
-            .setUsername(userName)
-            .setType(type)
-            .setAutoheal(true)
-            .setServiceLevel("")
-            .setEntitlementCount(0L)
-            .setFacts(new HashMap<>())
-            .setInstalledProducts(new HashSet<>())
-            .setGuestIds(new ArrayList<>());
+        ConsumerDTO consumer = new ConsumerDTO().name(name)
+            .username(userName)
+            .type(type)
+            .autoheal(true)
+            .serviceLevel("")
+            .entitlementCount(0L)
+            .facts(new HashMap<>())
+            .installedProducts(new HashSet<>())
+            .guestIds(new ArrayList<>());
 
         if (owner != null) {
             consumer.setOwner(new NestedOwnerDTO()

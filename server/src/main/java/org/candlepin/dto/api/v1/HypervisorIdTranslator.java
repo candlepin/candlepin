@@ -15,14 +15,15 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.HypervisorId;
+import org.candlepin.util.Util;
 
 /**
  * The HypervisorIdTranslator provides translation from HypervisorId model objects to
  * HypervisorIdDTOs
  */
-public class HypervisorIdTranslator extends TimestampedEntityTranslator<HypervisorId, HypervisorIdDTO> {
+public class HypervisorIdTranslator implements ObjectTranslator<HypervisorId, HypervisorIdDTO> {
 
     /**
      * {@inheritDoc}
@@ -55,13 +56,19 @@ public class HypervisorIdTranslator extends TimestampedEntityTranslator<Hypervis
     public HypervisorIdDTO populate(ModelTranslator translator, HypervisorId source,
         HypervisorIdDTO dest) {
 
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId() != null ? source.getId().toString() : null);
-        dest.setHypervisorId(source.getHypervisorId());
-        dest.setReporterId(source.getReporterId());
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
 
-        return dest;
+        return dest.created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .id(source.getId() != null ? source.getId().toString() : null)
+            .hypervisorId(source.getHypervisorId())
+            .reporterId(source.getReporterId());
     }
 
 }

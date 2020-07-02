@@ -34,6 +34,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -57,6 +58,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -135,6 +137,7 @@ public class ConsumerResourceCreationTest {
     @Mock protected ConsumerEnricher consumerEnricher;
     @Mock protected EnvironmentCurator environmentCurator;
     @Mock protected JobManager jobManager;
+    @Mock protected DTOValidator dtoValidator;
 
     protected ModelTranslator modelTranslator;
 
@@ -168,7 +171,7 @@ public class ConsumerResourceCreationTest {
             null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
             this.systemPurposeComplianceRules, this.deletedConsumerCurator, null, null, this.config, null,
             null, null, this.consumerBindUtil, null, null, new FactValidator(this.config, this.i18nProvider),
-            null, consumerEnricher, migrationProvider, modelTranslator, jobManager);
+            null, consumerEnricher, migrationProvider, modelTranslator, jobManager, this.dtoValidator);
 
         this.system = this.initConsumerType();
         this.mockConsumerType(this.system);
@@ -470,7 +473,7 @@ public class ConsumerResourceCreationTest {
     public void registerWithNullReleaseVer() {
         Principal p = new TrustedUserPrincipal("anyuser");
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
-        consumer.setReleaseVersion(null);
+        consumer.setReleaseVer(null);
         resource.create(consumer, p, USER, owner.getKey(), null, true);
 
     }
@@ -479,7 +482,7 @@ public class ConsumerResourceCreationTest {
     public void registerWithEmptyReleaseVer() {
         Principal p = new TrustedUserPrincipal("anyuser");
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
-        consumer.setReleaseVersion("");
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
         resource.create(consumer, p, USER, owner.getKey(), null, true);
     }
 
