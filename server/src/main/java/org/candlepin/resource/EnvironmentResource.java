@@ -40,6 +40,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerContentCurator;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
 
 import com.google.inject.Inject;
@@ -98,13 +99,14 @@ public class EnvironmentResource {
     private ModelTranslator translator;
     private JobManager jobManager;
     private ContentAccessManager contentAccessManager;
+    private DTOValidator validator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
         PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
         RdbmsExceptionTranslator rdbmsExceptionTranslator, ModelTranslator translator, JobManager jobManager,
-        ContentAccessManager contentAccessManager) {
+        ContentAccessManager contentAccessManager, DTOValidator validator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -117,6 +119,7 @@ public class EnvironmentResource {
         this.translator = translator;
         this.jobManager = jobManager;
         this.contentAccessManager = contentAccessManager;
+        this.validator = validator;
     }
 
     /**
@@ -392,6 +395,10 @@ public class EnvironmentResource {
         @QueryParam("owner") String ownerKey,
         @QueryParam("activation_keys") String activationKeys)
         throws BadRequestException {
+
+        this.validator.validateConstraints(consumer);
+        this.validator.validateCollectionElementsNotNull(consumer::getInstalledProducts,
+            consumer::getGuestIds, consumer::getCapabilities);
 
         Environment environment = this.lookupEnvironment(envId);
         consumer.setEnvironment(translator.translate(environment, EnvironmentDTO.class));

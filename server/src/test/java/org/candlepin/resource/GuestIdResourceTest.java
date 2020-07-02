@@ -42,6 +42,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.ServiceLevelValidator;
@@ -88,6 +89,7 @@ public class GuestIdResourceTest {
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private JobManager jobManager;
+    @Mock private DTOValidator dtoValidator;
 
     private GuestIdResource guestIdResource;
 
@@ -306,7 +308,8 @@ public class GuestIdResourceTest {
         public ConsumerResourceForTesting() {
             super(null, null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, consumerEnricher, null, modelTranslator, jobManager);
+                null, null, null, null, consumerEnricher, null, modelTranslator, jobManager,
+                dtoValidator);
         }
 
         public void checkForMigration(Consumer host, Consumer guest) {

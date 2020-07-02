@@ -54,6 +54,7 @@ import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
@@ -79,12 +80,14 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.FactValidator;
+import org.candlepin.util.Util;
 
 import com.google.inject.util.Providers;
 
@@ -144,6 +147,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private Principal principal;
     @Mock private JobManager jobManager;
+    @Mock private DTOValidator dtoValidator;
     private ModelTranslator translator;
 
     private I18n i18n;
@@ -172,7 +176,7 @@ public class ConsumerResourceUpdateTest {
             this.deletedConsumerCurator, this.environmentCurator, null,
             config, null, null, this.consumerBindUtil,
             null, null, new FactValidator(config, this.i18nProvider),
-            null, consumerEnricher, migrationProvider, this.translator, this.jobManager);
+            null, consumerEnricher, migrationProvider, this.translator, this.jobManager, this.dtoValidator);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
             any(Boolean.class))).thenReturn(new ComplianceStatus(new Date()));
@@ -275,25 +279,25 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void nullReleaseVer() {
         ConsumerDTO consumer = getFakeConsumerDTO();
-        consumer.setReleaseVersion(null);
+        consumer.setReleaseVer(null);
 
         ConsumerDTO incoming = new ConsumerDTO();
-        incoming.setReleaseVersion("not null");
+        incoming.setReleaseVer(new ReleaseVerDTO().releaseVer("not null"));
         this.resource.updateConsumer(consumer.getUuid(), incoming, principal);
 
         ConsumerDTO consumer2 = getFakeConsumerDTO();
-        consumer2.setReleaseVersion("foo");
+        consumer2.setReleaseVer(new ReleaseVerDTO().releaseVer("foo"));
         ConsumerDTO incoming2 = new ConsumerDTO();
-        incoming2.setReleaseVersion(null);
+        incoming2.setReleaseVer(null);
         this.resource.updateConsumer(consumer2.getUuid(), incoming2, principal);
     }
 
     private void compareConsumerRelease(String release1, String release2, Boolean verify) {
         ConsumerDTO consumer = getFakeConsumerDTO();
-        consumer.setReleaseVersion(release1);
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(release1));
 
         ConsumerDTO incoming = new ConsumerDTO();
-        incoming.setReleaseVersion(release2);
+        incoming.setReleaseVer(new ReleaseVerDTO().releaseVer(release2));
 
         ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
         this.resource.updateConsumer(consumer.getUuid(), incoming, principal);
@@ -302,7 +306,8 @@ public class ConsumerResourceUpdateTest {
         if (verify) {
             verify(sink).queueEvent((Event) any());
         }
-        assertEquals(incoming.getReleaseVersion(), mergedConsumer.getReleaseVer().getReleaseVer());
+        assertEquals(incoming.getReleaseVer().getReleaseVer(),
+            mergedConsumer.getReleaseVer().getReleaseVer());
     }
 
     @Test
@@ -336,8 +341,10 @@ public class ConsumerResourceUpdateTest {
         consumer.addInstalledProduct(new ConsumerInstalledProduct(productB));
 
         ConsumerDTO incoming = new ConsumerDTO();
-        incoming.addInstalledProduct(new ConsumerInstalledProductDTO(productB.getId(), productB.getName()));
-        incoming.addInstalledProduct(new ConsumerInstalledProductDTO(productC.getId(), productC.getName()));
+        incoming.addInstalledProducts(new ConsumerInstalledProductDTO()
+            .id(productB.getId()).productName(productB.getName()));
+        incoming.addInstalledProducts(new ConsumerInstalledProductDTO()
+            .id(productC.getId()).productName(productC.getName()));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming, principal);
         verify(sink).queueEvent((Event) any());
@@ -354,8 +361,10 @@ public class ConsumerResourceUpdateTest {
         consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productB));
 
         ConsumerDTO incoming = new ConsumerDTO();
-        incoming.addInstalledProduct(new ConsumerInstalledProductDTO(productB.getId(), productB.getName()));
-        incoming.addInstalledProduct(new ConsumerInstalledProductDTO(productC.getId(), productC.getName()));
+        incoming.addInstalledProducts(new ConsumerInstalledProductDTO()
+            .id(productB.getId()).productName(productB.getName()));
+        incoming.addInstalledProducts(new ConsumerInstalledProductDTO()
+            .id(productC.getId()).productName(productC.getName()));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming, principal);
         verify(sink).queueEvent((Event) any());
@@ -434,7 +443,7 @@ public class ConsumerResourceUpdateTest {
         updated.setUuid(uuid);
 
         GuestIdDTO expectedGuestId = TestUtil.createGuestIdDTO("Guest 2");
-        updated.addGuestId(expectedGuestId);
+        updated.addGuestIds(expectedGuestId);
 
         when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
@@ -741,13 +750,13 @@ public class ConsumerResourceUpdateTest {
 
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
-        updated.setFact(expectedFactName, expectedFactValue);
+        updated.putFacts(expectedFactName, expectedFactValue);
         Product prod = TestUtil.createProduct("Product One");
         ConsumerInstalledProductDTO expectedInstalledProduct =
-            new ConsumerInstalledProductDTO(prod.getId(), prod.getName());
+            new ConsumerInstalledProductDTO().id(prod.getId()).productName(prod.getName());
 
-        updated.addInstalledProduct(expectedInstalledProduct);
-        updated.addGuestId(expectedGuestId);
+        updated.addInstalledProducts(expectedInstalledProduct);
+        updated.addGuestIds(expectedGuestId);
 
         when(this.consumerCurator.getGuestConsumersMap(any(String.class), any(Set.class))).
             thenReturn(new VirtConsumerMap());
@@ -857,7 +866,7 @@ public class ConsumerResourceUpdateTest {
         resource.updateConsumer(consumer.getUuid(), updated, principal);
 
         assertEquals(updated.getName(), consumer.getName());
-        assertNull(consumer.getIdCertificate());
+        assertNull(consumer.getIdCert());
     }
 
     @Test
@@ -957,7 +966,7 @@ public class ConsumerResourceUpdateTest {
 
         ConsumerDTO updated = new ConsumerDTO();
         Date then = new Date(now.getTime() + 10000L);
-        updated.setLastCheckin(then);
+        updated.setLastCheckin(Util.toDateTime(then));
         resource.updateConsumer(c.getUuid(), updated, principal);
     }
 
@@ -986,6 +995,6 @@ public class ConsumerResourceUpdateTest {
         for (GuestId guestId : consumer.getGuestIds()) {
             guestIdDTOS.add(translator.translate(guestId, GuestIdDTO.class));
         }
-        return translator.translate(consumer, ConsumerDTO.class).setGuestIds(guestIdDTOS);
+        return translator.translate(consumer, ConsumerDTO.class).guestIds(guestIdDTOS);
     }
 }

@@ -14,11 +14,12 @@
  */
 package org.candlepin.dto;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public abstract class AbstractTranslatorTest<S, D, T extends ObjectTranslator<S,
     protected S source;
     protected D dest;
 
-    @Before
+    @BeforeEach
     public void init() {
         this.modelTranslator = new SimpleModelTranslator();
 
@@ -98,14 +99,16 @@ public abstract class AbstractTranslatorTest<S, D, T extends ObjectTranslator<S,
         this.verifyOutput(this.source, this.dest, false);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testPopulateWithNullSource() {
-        D dto = (D) this.translator.populate(null, this.dest);
+        assertThrows(IllegalArgumentException.class, ()->
+            this.translator.populate(null, this.dest));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testPopulateWithNullDestination() {
-        D dto = (D) this.translator.populate(this.source, null);
+        assertThrows(IllegalArgumentException.class, ()->
+            this.translator.populate(this.source, null));
     }
 
     @Test
@@ -115,13 +118,15 @@ public abstract class AbstractTranslatorTest<S, D, T extends ObjectTranslator<S,
         this.verifyOutput(this.source, this.dest, true);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testPopulateWithModelTranslatorAndNullSource() {
-        D dto = (D) this.translator.populate(this.modelTranslator, null, this.dest);
+        assertThrows(IllegalArgumentException.class, ()->
+            this.translator.populate(this.modelTranslator, null, this.dest));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testPopulateWithModelTranslatorAndNullDestination() {
-        D dto = (D) this.translator.populate(this.modelTranslator, this.source, null);
+        assertThrows(IllegalArgumentException.class, ()->
+            this.translator.populate(this.modelTranslator, this.source, null));
     }
 }

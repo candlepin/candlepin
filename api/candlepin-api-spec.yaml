@@ -3992,6 +3992,201 @@ components:
             serial:
               $ref: '#/components/schemas/CertificateSerialDTO'
 
+    CapabilityDTO:
+      description: Represents a consumer capability
+      required:
+        - name
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          minLength: 1
+
+    ConsumerDTO:
+      description: Represents a consumer
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+              id:
+                type: string
+              uuid:
+                type: string
+              name:
+                type: string
+              username:
+                type: string
+              entitlementStatus:
+                type: string
+              serviceLevel:
+                type: string
+              role:
+                type: string
+              usage:
+                type: string
+              addOns:
+                type: array
+                uniqueItems: true
+                items:
+                  type: string
+              systemPurposeStatus:
+                type: string
+              releaseVer:
+                $ref: '#/components/schemas/ReleaseVerDTO'
+              owner:
+                $ref: '#/components/schemas/NestedOwnerDTO'
+              environment:
+                $ref: '#/components/schemas/EnvironmentDTO'
+              entitlementCount:
+                type: integer
+                format: int64
+              facts:
+                type: object
+                additionalProperties:
+                  type: string
+              lastCheckin:
+                type: string
+                format: date-time
+              installedProducts:
+                type: array
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/ConsumerInstalledProductDTO'
+              canActivate:
+                type: boolean
+              capabilities:
+                type: array
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/CapabilityDTO'
+              hypervisorId:
+                $ref: '#/components/schemas/HypervisorIdDTO'
+              contentTags:
+                type: array
+                uniqueItems: true
+                items:
+                  type: string
+              autoheal:
+                type: boolean
+              annotations:
+                type: string
+              contentAccessMode:
+                type: string
+              type:
+                $ref: '#/components/schemas/ConsumerTypeDTO'
+              idCert:
+                $ref: '#/components/schemas/CertificateDTO'
+              guestIds:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GuestIdDTO'
+              href:
+                type: string
+
+    ConsumerDTOArrayElement:
+      description: Represents a reduced view of a consumer (excluding data like facts and identify certificate)
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            uuid:
+              type: string
+            name:
+              type: string
+            username:
+              type: string
+            entitlementStatus:
+              type: string
+            serviceLevel:
+              type: string
+            role:
+              type: string
+            usage:
+              type: string
+            addOns:
+              type: array
+              uniqueItems: true
+              items:
+                type: string
+            systemPurposeStatus:
+              type: string
+            releaseVer:
+              $ref: '#/components/schemas/ReleaseVerDTO'
+            owner:
+              $ref: '#/components/schemas/NestedOwnerDTO'
+            environment:
+              $ref: '#/components/schemas/EnvironmentDTO'
+            entitlementCount:
+              type: integer
+              format: int64
+            lastCheckin:
+              type: string
+              format: date-time
+            installedProducts:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/ConsumerInstalledProductDTO'
+            canActivate:
+              type: boolean
+            capabilities:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/CapabilityDTO'
+            hypervisorId:
+              $ref: '#/components/schemas/HypervisorIdDTO'
+            contentTags:
+              type: array
+              uniqueItems: true
+              items:
+                type: string
+            autoheal:
+              type: boolean
+            annotations:
+              type: string
+            contentAccessMode:
+              type: string
+            type:
+              $ref: '#/components/schemas/ConsumerTypeDTO'
+            guestIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/GuestIdDTOArrayElement'
+            href:
+              type: string
+
+    ConsumerInstalledProductDTO:
+      description: Represents consumer installed product details
+      allOf:
+          - $ref: '#/components/schemas/TimestampedEntity'
+          - type: object
+            required:
+              - productId
+            properties:
+              id:
+                type: string
+              productId:
+                type: string
+                minLength: 1
+              productName:
+                type: string
+              version:
+                type: string
+              arch:
+                type: string
+              status:
+                type: string
+              startDate:
+                type: string
+                format: date-time
+              endDate:
+                type: string
+                format: date-time
+
     ConsumerTypeDTO:
       description: Represents a consumer type used to differentiate various types of consumers
       allOf:
@@ -4007,12 +4202,12 @@ components:
 
     ContentDTO:
       description: Represents the content data exposed to the API.
-      required:
-        - id
-        - uuid
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
+          required:
+            - id
+            - uuid
           properties:
             uuid:
               type: string
@@ -4205,6 +4400,8 @@ components:
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
+          required:
+            - guestId
           properties:
             id:
               type: string
@@ -4220,6 +4417,8 @@ components:
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
+          required:
+            - guestId
           properties:
             id:
               type: string
@@ -4234,6 +4433,19 @@ components:
           type: string
         owner:
           $ref: "#/components/schemas/NestedOwnerDTO"
+
+    HypervisorIdDTO:
+      description: Represents a HypervisorId details
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            hypervisorId:
+              type: string
+            reporterId:
+              type: string
 
     HypervisorUpdateResultDTO:
       required:

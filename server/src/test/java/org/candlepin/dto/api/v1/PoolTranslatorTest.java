@@ -199,7 +199,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
             if (srcProduct != null) {
                 assertEquals(srcProduct.getId(), dest.getProductId());
                 assertEquals(srcProduct.getName(), dest.getProductName());
-                assertEquals(srcProduct.getAttributes(), dest.getProductAttributes());
+                assertEquals(srcProduct.getAttributes(), Util.toMap(dest.getProductAttributes()));
 
                 verifyProductCollection(srcProduct.getProvidedProducts(), dest.getProvidedProducts());
 
@@ -216,7 +216,7 @@ public class PoolTranslatorTest extends AbstractTranslatorTest<Pool, PoolDTO, Po
             if (srcDerived != null) {
                 assertEquals(srcDerived.getId(), dest.getDerivedProductId());
                 assertEquals(srcDerived.getName(), dest.getDerivedProductName());
-                assertEquals(srcDerived.getAttributes(), dest.getDerivedProductAttributes());
+                assertEquals(srcDerived.getAttributes(), Util.toMap(dest.getDerivedProductAttributes()));
 
                 verifyProductCollection(srcDerived.getProvidedProducts(), dest.getDerivedProvidedProducts());
             }

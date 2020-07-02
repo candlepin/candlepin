@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNull;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.util.Util;
 
 import java.util.Date;
 
@@ -68,14 +69,16 @@ public class ConsumerInstalledProductTranslatorTest extends
     protected void verifyOutput(ConsumerInstalledProduct source, ConsumerInstalledProductDTO dto,
         boolean childrenGenerated) {
         if (source != null) {
+            assertEquals(source.getCreated(), dto.getCreated());
+            assertEquals(source.getUpdated(), dto.getUpdated());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getProductId(), dto.getProductId());
             assertEquals(source.getProductName(), dto.getProductName());
             assertEquals(source.getVersion(), dto.getVersion());
             assertEquals(source.getArch(), dto.getArch());
             assertEquals(source.getStatus(), dto.getStatus());
-            assertEquals(source.getStartDate(), dto.getStartDate());
-            assertEquals(source.getEndDate(), dto.getEndDate());
+            assertEquals(source.getStartDate(), Util.toDate(dto.getStartDate()));
+            assertEquals(source.getEndDate(), Util.toDate(dto.getEndDate()));
         }
         else {
             assertNull(dto);

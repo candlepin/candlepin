@@ -25,9 +25,13 @@ import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.BrandingDTO;
+import org.candlepin.dto.api.v1.CapabilityDTO;
 import org.candlepin.dto.api.v1.CdnDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
+import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.DeletedConsumerDTO;
@@ -37,6 +41,7 @@ import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
+import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.dto.api.v1.NestedConsumerDTO;
 import org.candlepin.dto.api.v1.NestedEntitlementDTO;
@@ -55,6 +60,7 @@ import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.dto.api.v1.TimestampedEntity;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UserDTO;
+import org.candlepin.jackson.ConsumerTypeDeserializer;
 import org.candlepin.jackson.DateSerializer;
 import org.candlepin.jackson.OffsetDateTimeDeserializer;
 import org.candlepin.jackson.OffsetDateTimeSerializer;
@@ -127,6 +133,7 @@ public class JsonProvider extends JacksonJsonProvider {
         customModule.addSerializer(Date.class, new DateSerializer());
         // Ensure we handle releaseVer fields properly
         customModule.addDeserializer(ReleaseVerDTO.class, new ReleaseVersionWrapDeserializer());
+        customModule.addDeserializer(ConsumerTypeDTO.class, new ConsumerTypeDeserializer());
         mapper.registerModule(customModule);
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -180,6 +187,10 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.addMixIn(CdnDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(CertificateDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(CertificateSerialDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(CapabilityDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(ConsumerDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(ConsumerDTOArrayElement.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(ConsumerInstalledProductDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ConsumerTypeDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ContentOverrideDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(DeletedConsumerDTO.class, DynamicPropertyFilterMixIn.class);
@@ -188,6 +199,7 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.addMixIn(EntitlementDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(GuestIdDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(GuestIdDTOArrayElement.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(HypervisorIdDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(HypervisorConsumerDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(HypervisorUpdateResultDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(NestedConsumerDTO.class, DynamicPropertyFilterMixIn.class);

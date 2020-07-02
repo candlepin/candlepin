@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2020 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,7 +17,6 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -36,16 +35,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * The ConsumerTranslator provides translation from Consumer model objects to
- * ConsumerDTOs
+ * The ConsumerArrayElementTranslator provides translation from Consumer model objects to
+ * ConsumerDTOArrayElement (a special version of ConsumerDTOs that do not include the facts and cert fields).
  */
-public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDTO> {
+public class ConsumerArrayElementTranslator implements ObjectTranslator<Consumer, ConsumerDTOArrayElement> {
 
     protected ConsumerTypeCurator consumerTypeCurator;
     protected EnvironmentCurator environmentCurator;
     private OwnerCurator ownerCurator;
 
-    public ConsumerTranslator(ConsumerTypeCurator consumerTypeCurator,
+    public ConsumerArrayElementTranslator(ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator, OwnerCurator ownerCurator) {
 
         if (consumerTypeCurator == null) {
@@ -69,7 +68,7 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
      * {@inheritDoc}
      */
     @Override
-    public ConsumerDTO translate(Consumer source) {
+    public ConsumerDTOArrayElement translate(Consumer source) {
         return this.translate(null, source);
     }
 
@@ -77,24 +76,25 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
      * {@inheritDoc}
      */
     @Override
-    public ConsumerDTO translate(ModelTranslator translator, Consumer source) {
-        return source != null ? this.populate(translator, source, new ConsumerDTO()) : null;
+    public ConsumerDTOArrayElement translate(ModelTranslator translator, Consumer source) {
+        return source != null ? this.populate(translator, source, new ConsumerDTOArrayElement()) : null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConsumerDTO populate(Consumer source, ConsumerDTO destination) {
+    public ConsumerDTOArrayElement populate(Consumer source, ConsumerDTOArrayElement destination) {
         return this.populate(null, source, destination);
     }
 
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("checkstyle:methodlength")
     @Override
-    public ConsumerDTO populate(ModelTranslator translator, Consumer source, ConsumerDTO dest) {
+    public ConsumerDTOArrayElement populate(ModelTranslator translator,
+        Consumer source, ConsumerDTOArrayElement dest) {
+
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
@@ -113,7 +113,6 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
             .systemPurposeStatus(source.getSystemPurposeStatus())
             .addOns(source.getAddOns())
             .entitlementCount(source.getEntitlementCount())
-            .facts(source.getFacts())
             .lastCheckin(Util.toDateTime(source.getLastCheckin()))
             .canActivate(source.isCanActivate())
             .contentTags(source.getContentTags())
@@ -126,7 +125,8 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
 
         Release release = source.getReleaseVer();
         if (release != null) {
-            dest.releaseVer(new ReleaseVerDTO().releaseVer(release.getReleaseVer()));
+            ReleaseVerDTO releaseDTO = new ReleaseVerDTO().releaseVer(release.getReleaseVer());
+            dest.releaseVer(releaseDTO);
         }
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
@@ -173,19 +173,6 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
                 dest.setCapabilities(capabilitiesDTO);
             }
 
-            Set<ConsumerActivationKey> keys = source.getActivationKeys();
-
-            if (keys != null) {
-                Set<ConsumerActivationKeyDTO> keysDTOSet = new HashSet<>();
-
-                for (ConsumerActivationKey key : keys) {
-                    keysDTOSet.add(new ConsumerActivationKeyDTO(key.getActivationKeyId(),
-                        key.getActivationKeyName()));
-                }
-
-                dest.setActivationKeys(keysDTOSet);
-            }
-
             // Temporary measure to maintain API compatibility
             if (source.getTypeId() != null) {
                 ConsumerType ctype = this.consumerTypeCurator.getConsumerType(source);
@@ -199,7 +186,6 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
             dest.setGuestIds(new ArrayList<>());
 
             dest.setHypervisorId(translator.translate(source.getHypervisorId(), HypervisorIdDTO.class));
-            dest.setIdCert(translator.translate(source.getIdCert(), CertificateDTO.class));
         }
         else {
             dest.setReleaseVer(null);
@@ -209,7 +195,6 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
             dest.setCapabilities(null);
             dest.setHypervisorId(null);
             dest.setType(null);
-            dest.setIdCert(null);
         }
 
         return dest;

@@ -20,8 +20,8 @@ describe 'Hypervisor Resource - Heartbeat Endpoint', :type => :virt do
     # we must register the consumer to use it as a client
     # hypervisor check in creation does not result in a client cert
     @consumer = @user.register(@expected_host_name, :hypervisor, nil, {"test_fact" => "fact_value"},
-      nil, @owner['key'], [], [], nil, [], @expected_host_hyp_id, [], nil, '1518341313', nil, nil, nil,
-      0, nil, nil, nil, nil, [], @expected_reporter_id)
+      nil, @owner['key'], [], [], nil, [], @expected_host_hyp_id,
+      [], nil, '2010-01-18T19:25:41+0000', nil, nil, nil, 0, nil, nil, nil, nil, [], @expected_reporter_id)
 
     @client = consumer_client(@user, random_string("consumer"))
   end

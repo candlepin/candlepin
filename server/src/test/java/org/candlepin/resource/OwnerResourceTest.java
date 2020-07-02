@@ -65,7 +65,7 @@ import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.AttributeDTO;
-import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
@@ -855,11 +855,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         types.add("type");
         consumerTypeCurator.create(new ConsumerType("type"));
 
-        CandlepinQuery<ConsumerDTO> result = ownerResource.listConsumers(
+        CandlepinQuery<ConsumerDTOArrayElement> result = ownerResource.listConsumers(
             owner.getKey(), "username", types, uuids, null, null, null, null, null, new PageRequest());
 
         assertNotNull(result);
-        List<ConsumerDTO> consumers = result.list();
+        List<ConsumerDTOArrayElement> consumers = result.list();
 
         assertEquals(0, consumers.size());
     }
@@ -878,11 +878,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        CandlepinQuery<ConsumerDTO> result = ownerResource.listConsumers(
+        CandlepinQuery<ConsumerDTOArrayElement> result = ownerResource.listConsumers(
             owner.getKey(), null, null, uuids, null, null, null, null, null, null);
 
         assertNotNull(result);
-        List<ConsumerDTO> consumers = result.list();
+        List<ConsumerDTOArrayElement> consumers = result.list();
 
         assertEquals(1, consumers.size());
     }
@@ -916,11 +916,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        CandlepinQuery<ConsumerDTO> result = ownerResource.listConsumers(
+        CandlepinQuery<ConsumerDTOArrayElement> result = ownerResource.listConsumers(
             owner.getKey(), null, null, uuids, null, null, null, null, null, null);
 
         assertNotNull(result);
-        List<ConsumerDTO> consumers = result.list();
+        List<ConsumerDTOArrayElement> consumers = result.list();
 
         assertEquals(2, consumers.size());
     }

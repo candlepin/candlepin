@@ -54,6 +54,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -116,6 +117,7 @@ public class HypervisorResourceTest {
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private JobManager jobManager;
     @Mock private PrincipalProvider principalProvider;
+    @Mock private DTOValidator dtoValidator;
 
     private GuestIdResource guestIdResource;
 
@@ -154,7 +156,7 @@ public class HypervisorResourceTest {
             this.deletedConsumerCurator, null, null, config,
             null, null, this.consumerBindUtil, null, null,
             new FactValidator(config, this.i18nProvider), null, consumerEnricher, migrationProvider,
-            modelTranslator, this.jobManager);
+            modelTranslator, this.jobManager, this.dtoValidator);
 
         this.guestIdResource = new GuestIdResource(this.guestIdCurator, this.consumerCurator,
             this.consumerTypeCurator, this.consumerResource, this.i18n, this.eventFactory, this.sink,
@@ -372,7 +374,8 @@ public class HypervisorResourceTest {
     @SuppressWarnings("deprecation")
     @Test
     public void ensureBadRequestWhenNoMappingIsIncludedInRequest() {
-        hypervisorResource.hypervisorUpdate("an-owner", null, false);
+        assertThrows(BadRequestException.class,
+            () -> hypervisorResource.hypervisorUpdate("an-owner", null, false));
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
