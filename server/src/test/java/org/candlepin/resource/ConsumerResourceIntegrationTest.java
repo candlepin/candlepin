@@ -67,6 +67,7 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
@@ -117,6 +118,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Inject private ConsumerEnricher consumerEnricher;
     @Inject protected ModelTranslator modelTranslator;
     @Inject protected JobManager jobManager;
+    @Inject private DTOValidator dtoValidator;
 
     private ConsumerType standardSystemType;
     private ConsumerTypeDTO standardSystemTypeDTO;
@@ -219,7 +221,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testCreateConsumer() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
             standardSystemTypeDTO);
-        toSubmit.setFact(METADATA_NAME, METADATA_VALUE);
+        toSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
         ConsumerDTO submitted = consumerResource.create(
             toSubmit,
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
@@ -230,7 +232,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertNotNull(submitted);
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
-        assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
+        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
     }
 
     @Test
@@ -254,7 +256,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
         assertNull(toSubmit.getId());
         toSubmit.setUuid(uuid);
-        toSubmit.setFact(METADATA_NAME, METADATA_VALUE);
+        toSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
 
         ConsumerDTO submitted = consumerResource.create(toSubmit, principal, null, owner.getKey(), null,
             true);
@@ -264,14 +266,14 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertNotNull(consumerCurator.findByUuid(uuid));
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
-        assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
+        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
         assertEquals(uuid, submitted.getUuid());
 
         // The second post should fail because of constraint failures
         ConsumerDTO anotherToSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
             standardSystemTypeDTO);
         anotherToSubmit.setUuid(uuid);
-        anotherToSubmit.setFact(METADATA_NAME, METADATA_VALUE);
+        anotherToSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
         assertThrows(BadRequestException.class, () ->
             consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null, true)
@@ -343,7 +345,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testRegisterWithConsumerId() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
         toSubmit.setUuid("1023131");
-        toSubmit.setFact(METADATA_NAME, METADATA_VALUE);
+        toSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
 
         ConsumerDTO submitted = consumerResource.create(
             toSubmit, TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
@@ -353,7 +355,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
-        assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
+        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
 
         // now pass in consumer type with null id just like the client would
         ConsumerTypeDTO type = new ConsumerTypeDTO()
@@ -618,7 +620,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, null, null, null, null,
             new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
             null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator,
-            this.jobManager);
+            this.jobManager, this.dtoValidator);
 
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null,
             null, false, null, null);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2020 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -14,14 +14,6 @@
  */
 package org.candlepin.dto.api.v1;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Consumer;
@@ -32,31 +24,35 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
-import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Release;
 import org.candlepin.util.Util;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 /**
- * Test suite for the ConsumerTranslator class
+ * Test suite for the ConsumerArrayElementTranslator class
  */
-public class ConsumerTranslatorTest extends
-    AbstractTranslatorTest<Consumer, ConsumerDTO, ConsumerTranslator> {
+public class ConsumerArrayElementTranslatorTest extends
+    AbstractTranslatorTest<Consumer, ConsumerDTOArrayElement, ConsumerArrayElementTranslator> {
 
     protected ConsumerTypeCurator mockConsumerTypeCurator;
     protected EnvironmentCurator mockEnvironmentCurator;
     private OwnerCurator mockOwnerCurator;
 
-    protected CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     protected EnvironmentTranslatorTest environmentTranslatorTest = new EnvironmentTranslatorTest();
@@ -67,8 +63,7 @@ public class ConsumerTranslatorTest extends
     protected GuestIdTranslatorTest guestIdTranslatorTest = new GuestIdTranslatorTest();
 
     @Override
-    protected ConsumerTranslator initObjectTranslator() {
-        this.certificateTranslatorTest.initObjectTranslator();
+    protected ConsumerArrayElementTranslator initObjectTranslator() {
         this.consumerTypeTranslatorTest.initObjectTranslator();
         this.ownerTranslatorTest.initObjectTranslator();
         this.environmentTranslatorTest.initObjectTranslator();
@@ -81,15 +76,14 @@ public class ConsumerTranslatorTest extends
         this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);
 
-        this.translator = new ConsumerTranslator(this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
-            this.mockOwnerCurator);
+        this.translator = new ConsumerArrayElementTranslator(this.mockConsumerTypeCurator,
+            this.mockEnvironmentCurator, this.mockOwnerCurator);
 
         return this.translator;
     }
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        this.certificateTranslatorTest.initModelTranslator(modelTranslator);
         this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
         this.environmentTranslatorTest.initModelTranslator(modelTranslator);
@@ -98,7 +92,7 @@ public class ConsumerTranslatorTest extends
         this.hypervisorIdTranslatorTest.initModelTranslator(modelTranslator);
         this.guestIdTranslatorTest.initModelTranslator(modelTranslator);
 
-        modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTO.class);
+        modelTranslator.registerTranslator(this.translator, Consumer.class, ConsumerDTOArrayElement.class);
     }
 
     @Override
@@ -129,14 +123,7 @@ public class ConsumerTranslatorTest extends
         consumer.setAutoheal(Boolean.TRUE);
         consumer.setAnnotations("test_annotations");
         consumer.setContentAccessMode("test_content_access_mode");
-        consumer.setIdCert((IdentityCertificate) this.certificateTranslatorTest.initSourceObject());
         consumer.setType(ctype);
-
-        Map<String, String> facts = new HashMap<>();
-        for (int i = 0; i < 5; ++i) {
-            facts.put("fact-" + i, "value-" + i);
-        }
-        consumer.setFacts(facts);
 
         Set<String> addOns = new HashSet<>();
         for (int i = 0; i < 5; i++) {
@@ -184,13 +171,13 @@ public class ConsumerTranslatorTest extends
     }
 
     @Override
-    protected ConsumerDTO initDestinationObject() {
+    protected ConsumerDTOArrayElement initDestinationObject() {
         // Nothing fancy to do here.
-        return new ConsumerDTO();
+        return new ConsumerDTOArrayElement();
     }
 
     @Override
-    protected void verifyOutput(Consumer source, ConsumerDTO dest, boolean childrenGenerated) {
+    protected void verifyOutput(Consumer source, ConsumerDTOArrayElement dest, boolean childrenGenerated) {
 
         if (source != null) {
             assertEquals(source.getId(), dest.getId());
@@ -204,7 +191,6 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getAddOns(), dest.getAddOns());
             assertEquals(source.getSystemPurposeStatus(), dest.getSystemPurposeStatus());
             assertEquals(source.getEntitlementCount(), (long) dest.getEntitlementCount());
-            assertEquals(source.getFacts(), dest.getFacts());
             assertEquals(source.getLastCheckin(), Util.toDate(dest.getLastCheckin()));
             assertEquals(source.isCanActivate(), dest.getCanActivate());
             assertEquals(source.getContentTags(), dest.getContentTags());
@@ -227,9 +213,6 @@ public class ConsumerTranslatorTest extends
                 assertEquals(source.getOwnerId(), destOwnerId);
                 this.hypervisorIdTranslatorTest.verifyOutput(source.getHypervisorId(), dest.getHypervisorId(),
                     childrenGenerated);
-
-                this.certificateTranslatorTest.verifyOutput(source.getIdCert(),
-                    dest.getIdCert(), true);
 
                 if (source.getInstalledProducts() != null) {
                     for (ConsumerInstalledProduct cip : source.getInstalledProducts()) {
@@ -270,7 +253,6 @@ public class ConsumerTranslatorTest extends
                 assertNull(dest.getEnvironment());
                 assertNull(dest.getHypervisorId());
                 assertNull(dest.getType());
-                assertNull(dest.getIdCert());
                 assertNull(dest.getInstalledProducts());
                 assertNull(dest.getCapabilities());
                 assertNull(dest.getGuestIds());
