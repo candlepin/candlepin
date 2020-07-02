@@ -16,77 +16,65 @@ package org.candlepin.jackson;
 
 import org.candlepin.common.exceptions.CandlepinJsonProcessingException;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-
-
 /**
- * The ConsumerTypeDeserializer handles deserialization of consumer types defined as strings or
- * objects on existing objects.
+ * Handles the deserialization of the "label" field by wrapping it in a {@link ConsumerTypeDTO} object,
+ * by handling both of the following formats: <pre> {@code "type":"value" } </pre> and
+ * <pre> {@code "type":{"label ":"value", "manifest":"value"} } </pre>.
  */
-public class ConsumerTypeDeserializer extends StdDeserializer<ConsumerTypeDTO> {
+public class ConsumerTypeDeserializer extends JsonDeserializer<ConsumerTypeDTO> {
+
     private static Logger log = LoggerFactory.getLogger(ConsumerTypeDeserializer.class);
 
-    public ConsumerTypeDeserializer() {
-        this(null);
-    }
-
-    public ConsumerTypeDeserializer(Class<?> valueClass) {
-        super(valueClass);
-    }
+    private static String fieldName = "label";
 
     @Override
     public ConsumerTypeDTO deserialize(JsonParser parser, DeserializationContext context)
-        throws IOException, JsonProcessingException {
+        throws IOException {
 
-        // We're expecting an object or a string
-        switch (parser.currentToken()) {
-            case START_OBJECT:
-                return this.parseTypeFromObject(parser);
+        TreeNode node = parser.readValueAsTree();
 
-            case VALUE_STRING:
-                return this.parseTypeFromString(parser);
+        if (node.isValueNode()) {
+            log.debug("Processing {} as a value node.", fieldName);
 
-            default:
+            return parseValueNode(node);
+        }
+        else if (node.isObject()) {
+            log.debug("Processing {} as a containing object node.", fieldName);
+
+            TreeNode valueNode = node.path(fieldName);
+            if (valueNode.isMissingNode()) {
                 throw new CandlepinJsonProcessingException("Unexpected consumer type format: " +
-                    parser.readValueAsTree(), parser.getCurrentLocation());
+                    node.asToken(), parser.getCurrentLocation());
+            }
+
+            return parseValueNode(valueNode);
+        }
+        else {
+            // Uh oh.
+            throw new CandlepinJsonProcessingException("Unexpected consumer type format: " +
+                node.asToken(), parser.getCurrentLocation());
         }
     }
 
-    private ConsumerTypeDTO parseTypeFromObject(JsonParser parser) throws IOException {
-        ObjectMapper mapper = (ObjectMapper) parser.getCodec();
-        return mapper.readValue(parser, ConsumerTypeDTO.class);
-    }
+    private ConsumerTypeDTO parseValueNode(TreeNode valueNode) throws IOException {
+        JsonParser subParser = valueNode.traverse();
+        subParser.nextValue();
+        String value = subParser.getValueAsString();
+        subParser.close();
 
-    private ConsumerTypeDTO parseTypeFromString(JsonParser parser) throws IOException {
-        String label = parser.getText();
-
-        // Try to determine the manifest flag from ConsumerTypeEnum, if it's present there.
-        // If not, assume false.
-
-        try {
-            ConsumerTypeEnum cte = ConsumerTypeEnum.valueOf(label.toUpperCase());
-
-            return new ConsumerTypeDTO()
-                .label(label)
-                .manifest(cte.isManifest());
-        }
-        catch (Exception e) {
-            // Label was null or did not represent a known consumer type
-
-            return new ConsumerTypeDTO()
-                .label(label);
-        }
+        log.debug("Found {} field's value", fieldName);
+        return new ConsumerTypeDTO()
+            .label(value);
     }
 }
