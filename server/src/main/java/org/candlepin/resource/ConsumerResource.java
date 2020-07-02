@@ -56,6 +56,7 @@ import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
@@ -114,6 +115,7 @@ import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.resteasy.DateFormat;
 import org.candlepin.service.ContentAccessCertServiceAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -228,6 +230,7 @@ public class ConsumerResource {
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
     private JobManager jobManager;
+    private DTOValidator validator;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
@@ -256,7 +259,8 @@ public class ConsumerResource {
         ConsumerEnricher consumerEnricher,
         Provider<GuestMigration> migrationProvider,
         ModelTranslator translator,
-        JobManager jobManager) {
+        JobManager jobManager,
+        DTOValidator validator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -297,6 +301,7 @@ public class ConsumerResource {
         this.migrationProvider = migrationProvider;
         this.translator = translator;
         this.jobManager = jobManager;
+        this.validator = validator;
     }
 
     /**
@@ -408,7 +413,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "consumers")
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<ConsumerDTO> list(@QueryParam("username") String userName,
+    public CandlepinQuery<ConsumerDTOArrayElement> list(@QueryParam("username") String userName,
         @QueryParam("type") Set<String> typeLabels,
         @QueryParam("owner") String ownerKey,
         @QueryParam("uuid") List<String> uuids,
@@ -438,7 +443,7 @@ public class ConsumerResource {
             Collections.emptyList(), Collections.emptyList(),
             Collections.emptyList());
 
-        return this.translator.translateQuery(query, ConsumerDTO.class);
+        return this.translator.translateQuery(query, ConsumerDTOArrayElement.class);
     }
 
     @ApiOperation(
@@ -551,7 +556,7 @@ public class ConsumerResource {
         }
 
         if (dto.getCreated() != null) {
-            entity.setCreated(dto.getCreated());
+            entity.setCreated(Util.toDate(dto.getCreated()));
         }
 
         if (dto.getName() != null) {
@@ -586,8 +591,8 @@ public class ConsumerResource {
             entity.setAddOns(dto.getAddOns());
         }
 
-        if (dto.getReleaseVersion() != null) {
-            entity.setReleaseVer(new Release(dto.getReleaseVersion()));
+        if (dto.getReleaseVer() != null) {
+            entity.setReleaseVer(new Release(dto.getReleaseVer().getReleaseVer()));
         }
 
         if (dto.getEnvironment() != null) {
@@ -600,7 +605,7 @@ public class ConsumerResource {
         }
 
         if (dto.getLastCheckin() != null) {
-            entity.setLastCheckin(dto.getLastCheckin());
+            entity.setLastCheckin(Util.toDate(dto.getLastCheckin()));
         }
 
         if (dto.getCapabilities() != null) {
@@ -630,13 +635,13 @@ public class ConsumerResource {
         }
 
         if (dto.getHypervisorId() == null &&
-            dto.getFact(Consumer.Facts.SYSTEM_UUID) != null &&
-            !"true".equals(dto.getFact("virt.is_guest")) &&
+            getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID) != null &&
+            !"true".equals(getFactValue(dto.getFacts(), "virt.is_guest")) &&
             entity.getOwnerId() != null) {
             HypervisorId hypervisorId = new HypervisorId(
                 entity,
                 ownerCurator.findOwnerById(entity.getOwnerId()),
-                dto.getFact(Consumer.Facts.SYSTEM_UUID));
+                getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID));
             entity.setHypervisorId(hypervisorId);
         }
 
@@ -702,8 +707,8 @@ public class ConsumerResource {
                     installedProductDTO.getVersion(),
                     installedProductDTO.getArch(),
                     installedProductDTO.getStatus(),
-                    installedProductDTO.getStartDate(),
-                    installedProductDTO.getEndDate());
+                    Util.toDate(installedProductDTO.getStartDate()),
+                    Util.toDate(installedProductDTO.getEndDate()));
 
                 installedProducts.add(installedProduct);
             }
@@ -734,14 +739,19 @@ public class ConsumerResource {
         @QueryParam("identity_cert_creation") @DefaultValue("true") boolean identityCertCreation)
         throws BadRequestException {
 
+        this.validator.validateConstraints(dto);
+        this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
+            dto::getGuestIds, dto::getCapabilities);
+
         // fix for duplicate hypervisor/consumer problem
         Consumer consumer = null;
         if (ownerKey != null && config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
-            dto.getFact(Consumer.Facts.SYSTEM_UUID) != null &&
-            !"true".equalsIgnoreCase(dto.getFact("virt.is_guest"))) {
+            getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID) != null &&
+            !"true".equalsIgnoreCase(getFactValue(dto.getFacts(), "virt.is_guest"))) {
             Owner owner = ownerCurator.getByKey(ownerKey);
             if (owner != null) {
-                consumer = consumerCurator.getHypervisor(dto.getFact(Consumer.Facts.SYSTEM_UUID), owner);
+                consumer = consumerCurator.getHypervisor(
+                    getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID), owner);
                 if (consumer != null) {
                     consumer.setIdCert(generateIdCert(consumer, false));
                     this.updateConsumer(consumer.getUuid(), dto, principal);
@@ -1016,9 +1026,9 @@ public class ConsumerResource {
                     change = true;
                 }
             }
-            else if (update.getFact("distributor_version") !=  null) {
+            else if (getFactValue(update.getFacts(), "distributor_version") !=  null) {
                 DistributorVersion dv = distributorVersionCurator.findByName(
-                    update.getFact("distributor_version"));
+                    getFactValue(update.getFacts(), "distributor_version"));
 
                 if (dv != null) {
                     Set<ConsumerCapability> ccaps = new HashSet<>();
@@ -1242,6 +1252,10 @@ public class ConsumerResource {
         @ApiParam(name = "consumer", required = true) ConsumerDTO dto,
         @Context Principal principal) {
 
+        this.validator.validateConstraints(dto);
+        this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
+            dto::getGuestIds, dto::getCapabilities);
+
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
         dto.setUuid(uuid);
 
@@ -1314,12 +1328,12 @@ public class ConsumerResource {
             changesMade = true;
         }
 
-        if (updated.getReleaseVersion() != null &&
-            !updated.getReleaseVersion().equals(toUpdate.getReleaseVer() == null ? null :
+        if (updated.getReleaseVer() != null && updated.getReleaseVer().getReleaseVer() != null &&
+            !updated.getReleaseVer().getReleaseVer().equals(toUpdate.getReleaseVer() == null ? null :
             toUpdate.getReleaseVer().getReleaseVer())) {
 
             log.info("   Updating consumer releaseVer setting.");
-            toUpdate.setReleaseVer(new Release(updated.getReleaseVersion()));
+            toUpdate.setReleaseVer(new Release(updated.getReleaseVer().getReleaseVer()));
             changesMade = true;
         }
 
@@ -1364,7 +1378,7 @@ public class ConsumerResource {
 
         if (updated.getLastCheckin() != null) {
             log.info("Updating to specific last checkin time: {}", updated.getLastCheckin());
-            toUpdate.setLastCheckin(updated.getLastCheckin());
+            toUpdate.setLastCheckin(Util.toDate(updated.getLastCheckin()));
             changesMade = true;
         }
 
@@ -2670,18 +2684,18 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/guests")
-    public List<ConsumerDTO> getGuests(
+    public List<ConsumerDTOArrayElement> getGuests(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         List<Consumer> consumers = consumerCurator.getGuests(consumer);
         return translate(consumers);
     }
 
-    private List<ConsumerDTO> translate(List<Consumer> consumers) {
+    private List<ConsumerDTOArrayElement> translate(List<Consumer> consumers) {
         if (consumers != null) {
-            List<ConsumerDTO> results = new LinkedList<>();
+            List<ConsumerDTOArrayElement> results = new LinkedList<>();
             for (Consumer consumer : consumers) {
-                results.add(translator.translate(consumer, ConsumerDTO.class));
+                results.add(translator.translate(consumer, ConsumerDTOArrayElement.class));
             }
             return results;
         }
@@ -2815,4 +2829,10 @@ public class ConsumerResource {
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
 
+    public String getFactValue(Map<String, String> facts, String factsKey) {
+        if (facts != null) {
+            return facts.get(factsKey);
+        }
+        return null;
+    }
 }

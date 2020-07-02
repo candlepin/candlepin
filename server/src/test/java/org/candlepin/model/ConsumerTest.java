@@ -150,7 +150,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         // Create a new consumer, can't re-use reference to the old:
         ConsumerDTO newConsumer = new ConsumerDTO();
         newConsumer.setUuid(consumer.getUuid());
-        newConsumer.setFact("FACT", "FACT_VALUE");
+        newConsumer.putFacts("FACT", "FACT_VALUE");
 
         consumerResource.updateConsumer(consumer.getUuid(), newConsumer, mock(Principal.class));
 
