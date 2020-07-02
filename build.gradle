@@ -179,7 +179,7 @@ allprojects {
             dependency group: 'com.google.inject', name: 'guice', version: "$versions.guice"
             // DB Drivers
             dependency group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
-            dependency group: 'mysql', name: 'mysql-connector-java', version: '5.1.26'
+            dependency group: 'mysql', name: 'mysql-connector-java', version: '8.0.20'
             dependency group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.3.0'
             dependency group: 'org.junit.vintage', name: 'junit-vintage-engine', version: "$versions.junit5"
             dependency group: 'junit', name: 'junit', version: '4.12'
