@@ -17,6 +17,11 @@ buildscript {
 plugins {
     id "io.spring.dependency-management" version "1.0.8.RELEASE"
     id "nebula.lint" version "16.2.3"
+    /*
+    The Versions plugin is used to provide the dependencyUpdates task which is used
+    to look for libraries that have newer versions available.
+     */
+    id "com.github.ben-manes.versions" version "0.28.0"
 }
 
 version = "2.0"
@@ -144,6 +149,8 @@ allprojects {
     apply plugin: "maven"
     apply plugin: "nebula.lint"
     apply plugin: "io.spring.dependency-management"
+    apply plugin: com.github.benmanes.gradle.versions.VersionsPlugin
+
     dependencyManagement {
         dependencies {
             dependency group: 'aopalliance', name: 'aopalliance', version: '1.0'
