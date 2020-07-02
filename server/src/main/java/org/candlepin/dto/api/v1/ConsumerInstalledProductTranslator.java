@@ -15,15 +15,16 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.util.Util;
 
 /**
  * The ConsumerInstalledProductTranslator provides translation from ConsumerInstalledProduct model objects to
  * ConsumerInstalledProductDTOs
  */
-public class ConsumerInstalledProductTranslator extends
-    TimestampedEntityTranslator<ConsumerInstalledProduct, ConsumerInstalledProductDTO> {
+public class ConsumerInstalledProductTranslator implements
+    ObjectTranslator<ConsumerInstalledProduct, ConsumerInstalledProductDTO> {
 
     /**
      * {@inheritDoc}
@@ -58,16 +59,24 @@ public class ConsumerInstalledProductTranslator extends
     public ConsumerInstalledProductDTO populate(ModelTranslator translator, ConsumerInstalledProduct source,
         ConsumerInstalledProductDTO dest) {
 
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId());
-        dest.setProductId(source.getProductId());
-        dest.setProductName(source.getProductName());
-        dest.setVersion(source.getVersion());
-        dest.setArch(source.getArch());
-        dest.setStatus(source.getStatus());
-        dest.setStartDate(source.getStartDate());
-        dest.setEndDate(source.getEndDate());
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
+
+        dest.created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .id(source.getId())
+            .productId(source.getProductId())
+            .productName(source.getProductName())
+            .version(source.getVersion())
+            .arch(source.getArch())
+            .status(source.getStatus())
+            .startDate(Util.toDateTime(source.getStartDate()))
+            .endDate(Util.toDateTime(source.getEndDate()));
 
         return dest;
     }
