@@ -40,6 +40,7 @@ import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerEnvContentAccessCurator;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
 
 import com.google.inject.Inject;
@@ -97,6 +98,7 @@ public class EnvironmentResource {
     private RdbmsExceptionTranslator rdbmsExceptionTranslator;
     private ModelTranslator translator;
     private JobManager jobManager;
+    private DTOValidator validator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
@@ -104,7 +106,7 @@ public class EnvironmentResource {
         PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
         RdbmsExceptionTranslator rdbmsExceptionTranslator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator, ModelTranslator translator,
-        JobManager jobManager) {
+        JobManager jobManager, DTOValidator validator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -117,6 +119,7 @@ public class EnvironmentResource {
         this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.translator = translator;
         this.jobManager = jobManager;
+        this.validator = validator;
     }
 
     @ApiOperation(notes = "Retrieves a single Environment", value = "getEnv")
@@ -394,6 +397,10 @@ public class EnvironmentResource {
         @QueryParam("owner") String ownerKey,
         @QueryParam("activation_keys") String activationKeys)
         throws BadRequestException {
+
+        this.validator.validateConstraints(consumer);
+        this.validator.validateCollectionElementsNotNull(consumer::getInstalledProducts,
+            consumer::getGuestIds, consumer::getCapabilities);
 
         Environment e = lookupEnvironment(envId);
         consumer.setEnvironment(translator.translate(e, EnvironmentDTO.class));
