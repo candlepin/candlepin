@@ -30,6 +30,7 @@ import org.candlepin.dto.api.v1.CdnDTO;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -44,16 +45,9 @@ import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
-import org.jboss.resteasy.annotations.providers.jaxb.DoNotUseJAXBProvider;
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.core.ResteasyContext;
+import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -63,24 +57,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 /**
  * API gateway for the EntitlementPool
  */
 
-@Path("/pools")
-@Api(value = "pools", authorizations = { @Authorization("basic") })
-public class PoolResource {
+public class PoolResource implements PoolsApi {
     private static Logger log = LoggerFactory.getLogger(PoolResource.class);
 
     private ConsumerCurator consumerCurator;
@@ -89,11 +72,12 @@ public class PoolResource {
     private PoolManager poolManager;
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ModelTranslator translator;
+    private PrincipalProvider principalProvider;
 
     @Inject
     public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         I18n i18n, PoolManager poolManager, CalculatedAttributesUtil calculatedAttributesUtil,
-        ModelTranslator translator) {
+        ModelTranslator translator, PrincipalProvider principalProvider) {
 
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
@@ -101,39 +85,17 @@ public class PoolResource {
         this.poolManager = poolManager;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
         this.translator = translator;
+        this.principalProvider = principalProvider;
     }
 
-    /**
-     * @deprecated Use the method on /owners
-     * @return List of pools
-     */
-    @ApiOperation(
-        notes = "Retrieves a list of Pools @deprecated Use the method on /owners. " +
-        "This endpoint supports paging with query parameters. For more details please visit " +
-        "https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin",
-        value = "")
-    @ApiResponses({
-        @ApiResponse(code = 400,
-        message = "if both consumer(unit) and owner are given, or if a" +
-        " product id is specified without a consumer(unit) or owner"),
-        @ApiResponse(code = 404, message = "if a specified consumer(unit) or owner is not found"),
-        @ApiResponse(code = 403, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Wrapped(element = "pools")
+    @Override
     @Deprecated
     @SecurityHole
-    public List<PoolDTO> list(@QueryParam("owner") String ownerId,
-        @QueryParam("consumer") String consumerUuid,
-        @QueryParam("product") String productId,
-        @ApiParam("Use with consumerUuid to list all pools available to the consumer. " +
-        "This will include pools which would otherwise be omitted due to a rules" +
-        " warning. (i.e. not recommended) Pools that trigger an error however will" +
-        " still be omitted. (no entitlements available, consumer type mismatch, etc)")
-        @QueryParam("listall") @DefaultValue("false") boolean listAll,
-        @ApiParam("Uses ISO 8601 format") @QueryParam("activeon") String activeOn,
-        @Context Principal principal,
-        @Context PageRequest pageRequest) {
+    public List<PoolDTO> list(String ownerId, String consumerUuid, String productId,
+        Boolean listAll, String activeOn) {
+
+        Principal principal = this.principalProvider.get();
+        PageRequest pageRequest = ResteasyProviderFactory.getContextData(PageRequest.class);
 
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
@@ -161,7 +123,7 @@ public class PoolResource {
                     principal.getPrincipalName(), consumerUuid));
             }
 
-            if (listAll) {
+            if (listAll.booleanValue()) {
                 oId = c.getOwnerId();
             }
         }
@@ -188,7 +150,7 @@ public class PoolResource {
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, null, oId,
-            productId, null, activeOnDate, listAll, new PoolFilterBuilder(), pageRequest,
+            productId, null, activeOnDate, listAll.booleanValue(), new PoolFilterBuilder(), pageRequest,
             false, false, null);
         List<Pool> poolList = page.getPageData();
 
@@ -205,17 +167,10 @@ public class PoolResource {
         return poolDTOs;
     }
 
-    @ApiOperation(notes = "Retrieves a single Pool", value = "getPool")
-    @ApiResponses({ @ApiResponse(code = 404, message = "if the pool with the specified id is not found"),
-        @ApiResponse(code = 404, message = "") })
-    @GET
-    @Path("/{pool_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public PoolDTO getPool(@PathParam("pool_id") @Verify(Pool.class) String id,
-        @QueryParam("consumer") String consumerUuid,
-        @ApiParam("Uses ISO 8601 format") @QueryParam("activeon") String activeOn,
-        @Context Principal principal) {
+    @Override
+    public PoolDTO getPool(@Verify(Pool.class) String id, String consumerUuid, String activeOn) {
 
+        Principal principal = this.principalProvider.get();
         Pool toReturn = poolManager.get(id);
 
         Consumer c = null;
@@ -248,12 +203,8 @@ public class PoolResource {
         throw new NotFoundException(i18n.tr("Subscription Pool with ID \"{0}\" could not be found.", id));
     }
 
-    @ApiOperation(notes = "Remove a Pool", value = "deletePool")
-    @ApiResponses({ @ApiResponse(code = 404, message = "if the pool with the specified id is not found") })
-    @DELETE
-    @Path("/{pool_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public void deletePool(@PathParam("pool_id") String id) {
+    @Override
+    public void deletePool(String id) {
         Pool pool = poolManager.get(id);
         if (pool == null) {
             throw new NotFoundException(i18n.tr("Entitlement Pool with ID \"{0}\" could not be found.", id));
@@ -271,13 +222,8 @@ public class PoolResource {
         this.ownerCurator.merge(owner);
     }
 
-    @ApiOperation(notes = "Retrieve a CDN for a Pool", value = "getPoolCdn")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @GET
-    @Path("{pool_id}/cdn")
-    @Produces(MediaType.APPLICATION_JSON)
-    public CdnDTO getPoolCdn(
-        @PathParam("pool_id") @Verify(Pool.class) String id) {
+    @Override
+    public CdnDTO getPoolCdn(@Verify(Pool.class) String id) {
 
         Pool pool = poolManager.get(id);
 
@@ -288,25 +234,14 @@ public class PoolResource {
         return this.translator.translate(pool.getCdn(), CdnDTO.class);
     }
 
-    @ApiOperation(
-        notes = "Retrieve a list of Consumer UUIDs attached to a pool.  Available only to superadmins",
-        value = "listEntitledConsumerUuids")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @GET
-    @Path("{pool_id}/entitlements/consumer_uuids")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> listEntitledConsumerUuids(@PathParam("pool_id") String id) {
+    @Override
+    public List<String> listEntitledConsumerUuids(String id) {
         return poolManager.listEntitledConsumerUuids(id);
     }
 
-    @ApiOperation(notes = "Retrieve a list of Entitlements for a Pool", value = "getPoolEntitlements")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @GET
-    @Path("{pool_id}/entitlements")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<EntitlementDTO> getPoolEntitlements(@PathParam("pool_id")
-        @Verify(value = Pool.class, subResource = SubResource.ENTITLEMENTS) String id,
-        @Context Principal principal) {
+    @Override
+    public List<EntitlementDTO> getPoolEntitlements(
+        @Verify(value = Pool.class, subResource = SubResource.ENTITLEMENTS) String id) {
 
         Pool pool = poolManager.get(id);
 
@@ -352,27 +287,18 @@ public class PoolResource {
         return pool.getCertificate();
     }
 
-    @ApiOperation(notes = "Retrieves a Subscription Certificate As a PEM", value = "getSubCertAsPem")
-    @DoNotUseJAXBProvider
-    @GET
-    @Path("{pool_id}/cert")
-    // cpc passes up content-type on all calls, make sure we don't 415 it
-    @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    @Produces({ MediaType.TEXT_PLAIN })
-    public String getSubCertAsPem(
-        @PathParam("pool_id") String poolId) {
+    @Override
+    public Object getSubCert(String poolId) {
 
-        SubscriptionsCertificate cert = this.getPoolCertificate(poolId);
-        return cert.getCert() + cert.getKey();
-    }
+        HttpRequest httpRequest = ResteasyProviderFactory.getContextData(HttpRequest.class);
 
-    @ApiOperation(notes = "Retrieves a Subscription Certificate", value = "getSubCert")
-    @GET
-    @Path("{pool_id}/cert")
-    @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
-    @Produces({ MediaType.APPLICATION_JSON})
-    public CertificateDTO getSubCert(
-        @PathParam("pool_id") String poolId) {
+        MediaType mediaType = httpRequest == null ? null :
+            httpRequest.getHttpHeaders().getMediaType();
+
+        if (mediaType != null && mediaType.equals(MediaType.TEXT_PLAIN_TYPE)) {
+            SubscriptionsCertificate cert = this.getPoolCertificate(poolId);
+            return cert.getCert() + cert.getKey();
+        }
 
         return this.translator.translate(this.getPoolCertificate(poolId), CertificateDTO.class);
     }

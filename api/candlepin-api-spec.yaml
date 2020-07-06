@@ -2849,6 +2849,324 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /pools:
+    get:
+      description: |
+        Retrieves a list of pools @deprecated Use the method on /owners.
+        This endpoint supports paging with query parameters.
+        For more details please visit https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin.
+      tags:
+        - Pools
+      operationId: list
+      parameters:
+        - in: query
+          name: owner
+          description: Owner ID
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: consumer
+          description: Consumer UUID
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: product
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: listall
+          description: |
+            Use with consumerUuid to list all pools available to the consumer.
+            This will include pools which would otherwise be omitted due to a rules warning. (i.e. not recommended)
+            Pools that trigger an error however will still be omitted. (no entitlements available, consumer type mismatch, etc)
+          required: true
+          schema:
+            type: boolean
+            default: false
+        - in: query
+          name: activeon
+          description: Uses ISO 8601 format
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: A list of pools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PoolDTO'
+        400:
+          description: |
+            Both consumer(unit) and owner are given,
+            or a product id is specified without a consumer(unit) or owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Both consumer(unit) and owner are given,
+                  or a product id is specified without a consumer(unit) or owner
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Users cannot access either of the consumer, owner, or pools
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Users cannot access either of the consumer, owner, or pools
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Specified consumer(unit) or owner is not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Specified consumer(unit) or owner is not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /pools/{pool_id}:
+    get:
+      description: Retrieves a single pool
+      tags:
+        - Pools
+      operationId: getPool
+      parameters:
+        - in: path
+          name: pool_id
+          description: Pool ID
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: consumer
+          description: Consumer UUID
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: activeon
+          description: Uses ISO 8601 format
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Retrives a single pool by its ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolDTO'
+        403:
+          description: Users cannot access consumer(unit)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Users cannot access consumer(unit)
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Subscription pool or consumer(unit) not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Subscription pool or consumer(unit) not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes a pool
+      tags:
+        - Pools
+      operationId: deletePool
+      parameters:
+        - in: path
+          name: pool_id
+          description: Pool ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Pool removed successfully
+        400:
+          description: Cannot delete bonus pools, as they are auto generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Cannot delete bonus pools, as they are auto generated
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Subscription pool not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Subscription pool not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /pools/{pool_id}/cdn:
+    get:
+      description: Retrieve a CDN for a Pool
+      tags:
+        - Pools
+        - CDN
+      operationId: getPoolCdn
+      parameters:
+        - in: path
+          name: pool_id
+          description: Pool ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: CDN details for a Pool
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CdnDTO'
+        404:
+          description: Subscription pool with given ID could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Subscription pool with given ID could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /pools/{pool_id}/entitlements:
+    get:
+      description: Retrieve a list of entitlements for a pool
+      tags:
+        - Pools
+      operationId: getPoolEntitlements
+      parameters:
+        - in: path
+          name: pool_id
+          description: Pool ID
+          required: true
+          schema:
+            type: string
+      x-java-response:
+        type: Iterable
+        isContainer: true
+        security: []
+      responses:
+        200:
+          description: A list of entitlements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntitlementDTO'
+        404:
+          description: Subscription pool with given ID could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Subscription pool with given ID could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /pools/{pool_id}/entitlements/consumer_uuids:
+    get:
+      description: Retrieve a list of Consumer UUIDs attached to a pool. Available only to superadmins
+      tags:
+        - Pools
+      operationId: listEntitledConsumerUuids
+      parameters:
+        - in: path
+          name: pool_id
+          description: Pool ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: A list of consumer UUIDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        404:
+          description: Subscription pool with given ID could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Subscription pool with given ID could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /pools/{pool_id}/cert:
+    get:
+      description: Retrieves a Subscription Certificate
+      tags:
+        - Pools
+        - Certificates
+      operationId: getSubCert
+      parameters:
+        - in: path
+          name: pool_id
+          description: Pool ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Certificate details for a Pool
+          content:
+            text/plain:
+              schema:
+                type: object
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateDTO'
+        404:
+          description: Pool or certificate for given ID could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Pool or certificate for given ID could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /products/owners:
     get:
       description: Retrieves a list of Owners by Product
