@@ -50,11 +50,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-
 
 
 /**
@@ -437,27 +437,60 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             List<String> entitlementIds = criteria.list();
 
             if (entitlementIds != null && !entitlementIds.isEmpty()) {
-                criteria = this.currentSession()
-                    .createCriteria(Entitlement.class)
-                    .add(CPRestrictions.in("id", entitlementIds));
+                int page = pageRequest == null ? 1 : pageRequest.getPage();
+                int perPage = pageRequest == null ? entitlementIds.size() : pageRequest.getPerPage();
+                int start = (page - 1) * perPage;
+                List<String> pagedEntIds = entitlementIds.stream()
+                    .sorted()
+                    .skip(start)
+                    .limit(perPage)
+                    .collect(Collectors.toList());
+                entitlementsPage = createPage(this.findEntitlements(pagedEntIds), pageRequest);
 
-                entitlementsPage = listByCriteria(criteria, pageRequest);
             }
             else {
                 entitlementsPage = new Page<>();
-                entitlementsPage.setPageData(Collections.<Entitlement>emptyList());
+                entitlementsPage.setPageData(Collections.emptyList());
                 entitlementsPage.setMaxRecords(0);
             }
         }
-
         return entitlementsPage;
     }
+
+    private List<Entitlement> findEntitlements(List<String> entitlementIds) {
+        String queryStr = "SELECT e " +
+            "FROM Entitlement e " +
+            "WHERE e.id IN (:entitlement_ids) " +
+            "ORDER BY e.id";
+
+        Query query = getEntityManager().createQuery(queryStr, Entitlement.class);
+        List<Entitlement> result = new LinkedList<>();
+        if (entitlementIds == null || !entitlementIds.iterator().hasNext()) {
+            return result;
+        }
+        return query.setParameter("entitlement_ids", entitlementIds).getResultList();
+    }
+
+    private Page<List<Entitlement>> createPage(List<Entitlement> entitlements, PageRequest pageRequest) {
+        Page<List<Entitlement>> page = new Page<>();
+        if (pageRequest != null) {
+            page.setPageData(entitlements);
+            page.setMaxRecords(pageRequest.getPerPage());
+            page.setPageRequest(pageRequest);
+        }
+        else {
+            page.setMaxRecords(entitlements.size());
+            page.setPageData(new ArrayList<>(entitlements));
+        }
+        return page;
+    }
+
 
     public CandlepinQuery<Entitlement> listByOwner(Owner owner) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("owner", owner));
 
-        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     /**
