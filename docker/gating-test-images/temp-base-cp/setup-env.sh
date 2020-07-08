@@ -41,7 +41,7 @@ PACKAGES=(
 yum install -y ${PACKAGES[@]}
 
 # Install postgres 9.5.X and the corresponding client tools (we need pg_dump)
-yum install -y https://download.postgresql.org/pub/repos/yum/9.5/redhat/rhel-7-x86_64/pgdg-centos95-9.5-3.noarch.rpm
+yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 yum install -y yum install postgresql95 postgresql95-server
 
 # pg_isready is used to check if the postgres server is up
