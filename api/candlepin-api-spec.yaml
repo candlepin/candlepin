@@ -2862,19 +2862,19 @@ paths:
         - in: query
           name: owner
           description: Owner ID
-          required: true
+          required: false
           schema:
             type: string
         - in: query
           name: consumer
           description: Consumer UUID
-          required: true
+          required: false
           schema:
             type: string
         - in: query
           name: product
           description: Product ID
-          required: true
+          required: false
           schema:
             type: string
         - in: query
@@ -2883,14 +2883,14 @@ paths:
             Use with consumerUuid to list all pools available to the consumer.
             This will include pools which would otherwise be omitted due to a rules warning. (i.e. not recommended)
             Pools that trigger an error however will still be omitted. (no entitlements available, consumer type mismatch, etc)
-          required: true
+          required: false
           schema:
             type: boolean
             default: false
         - in: query
           name: activeon
           description: Uses ISO 8601 format
-          required: true
+          required: false
           schema:
             type: string
       security: []
@@ -2953,18 +2953,18 @@ paths:
         - in: query
           name: consumer
           description: Consumer UUID
-          required: true
+          required: false
           schema:
             type: string
         - in: query
           name: activeon
           description: Uses ISO 8601 format
-          required: true
+          required: false
           schema:
             type: string
       responses:
         200:
-          description: Retrives a single pool by its ID
+          description: Retrieves a single pool by its ID
           content:
             application/json:
               schema:
@@ -3003,7 +3003,7 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        204:
           description: Pool removed successfully
         400:
           description: Cannot delete bonus pools, as they are auto generated
@@ -3133,7 +3133,9 @@ paths:
 
   /pools/{pool_id}/cert:
     get:
-      description: Retrieves a Subscription Certificate
+      description: |
+        Retrieves a Subscription Certificate as JSON (when Content-Type is application/json)
+        or as PEM (when Content-Type is text/plain)
       tags:
         - Pools
         - Certificates
