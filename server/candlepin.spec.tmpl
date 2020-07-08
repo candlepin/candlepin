@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.15
+Version: 3.1.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,9 @@ fi
 
 #raw
 %changelog
+* Wed Jul 08 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.16-1
+- Update mysql-connector-java (bcourt@redhat.com)
+
 * Tue Jun 30 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.15-1
 - Restored omitted return statement in the hypervisor update job
   (crog@redhat.com)
