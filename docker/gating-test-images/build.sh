@@ -33,8 +33,9 @@ evalrc() {
     fi
 }
 
+mkdir -p /tmp/cp-docker/
 # clean up leftover files from potential previous runs
-rm -f sql/dump.sql
+rm -f /tmp/cp-docker/dump.sql
 rm -f postgres/dump.sql
 
 echo "============ Building temporary base candlepin image ============ "
@@ -57,7 +58,7 @@ docker stack deploy -c temp-cp/docker-compose.yml load_and_dump_stack
 evalrc $? "load_and_dump_stack stack deploy was not successful."
 
 echo "============ Waiting for data to be dumped... ============ "
-retry 30 "dump.sql" test -f sql/dump.sql
+retry 30 "dump.sql" test -f /tmp/cp-docker/dump.sql
 evalrc $? "dump.sql did not get dumped in time. Exiting..."
 
 echo "============ Removing temporary stack ============ "
@@ -66,10 +67,11 @@ docker stack rm load_and_dump_stack
 docker swarm leave --force
 
 echo "============ Building postgres image which will automatically load the dump.sql we generated before ============ "
-mv sql/dump.sql postgres/
+mv /tmp/cp-docker/dump.sql postgres/
 docker build --tag=cp_postgres postgres/
 evalrc $? "postgres image build was not successful."
 rm postgres/dump.sql
+rm -rf /tmp/cp-docker/
 
 echo "============ Building candlepin image with the version currently used in stage ============ "
 docker build --no-cache --tag=cp_latest_stage cp-latest-stage/
@@ -80,7 +82,7 @@ REGISTRY=docker-registry.upshift.redhat.com/chainsaw
 
 # Find out the candlepin version used in stage
 curl -k -u admin:admin https://subscription.rhsm.stage.redhat.com/subscription/status > stage_status.json
-CP_VERSION=$(python -c 'import json; fp = open("stage_status.json", "r"); obj = json.load(fp); fp.close(); print obj["version"]');
+CP_VERSION=$(python -c 'import json; fp = open("stage_status.json", "r"); obj = json.load(fp); fp.close(); print(obj["version"])');
 rm stage_status.json
 
 echo "Pushing candlepin image with stage version: ${CP_VERSION}."

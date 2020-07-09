@@ -23,4 +23,4 @@ services:
         condition: none
     # mount the location of the data dump
     volumes:
-      - ../sql:/db-data
+      - /tmp/cp-docker:/db-data
