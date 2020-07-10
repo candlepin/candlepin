@@ -281,7 +281,6 @@ public class CandlepinContextListener {
             }
             return;
         }
-
         //this.injector = injector;
 
     }

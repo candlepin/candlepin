@@ -149,6 +149,7 @@ dependencies {
     implementation libraries.collections
     implementation libraries.gettext
     implementation libraries.guice
+    implementation libraries.spring
     implementation libraries.jackson
     implementation libraries.javax
     implementation libraries.liquibase

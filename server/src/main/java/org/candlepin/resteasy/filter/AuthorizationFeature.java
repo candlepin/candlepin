@@ -22,6 +22,7 @@ import io.swagger.jaxrs.listing.ApiListingResource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
@@ -41,6 +42,7 @@ import javax.ws.rs.ext.Provider;
  * Guice will throw a ProvisionException if nothing is bound to the
  * AuthorizationFilter annotation.
  */
+@Component
 @Provider
 public class AuthorizationFeature implements DynamicFeature {
     private static final Logger log = LoggerFactory.getLogger(AuthorizationFeature.class);

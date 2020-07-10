@@ -17,12 +17,15 @@ package org.candlepin.servlet.filter;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.filter.TeeHttpServletResponse;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+//import com.google.inject.Inject;
+//import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
@@ -42,17 +45,21 @@ import javax.ws.rs.core.Response.Status;
  *
  */
 
-@Singleton
+@Component
+@Order(4)
 public class EventFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(EventFilter.class);
 
-    private Injector injector;
+    //private Injector injector;
 
-    @Inject
-    public EventFilter(Injector injector) {
-        this.injector = injector;
-    }
+    //@Inject
+//    public EventFilter(Injector injector) {
+//        this.injector = injector;
+//    }
+
+    @Autowired
+    EventSink eventSink;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
@@ -60,7 +67,7 @@ public class EventFilter implements Filter {
         // EventSink must get injected here instead of in the constructor
         // because on creation of the filter we will be out of the
         // CandlepinRequestScope as the filter must be a singleton.
-        EventSink eventSink = injector.getInstance(EventSink.class);
+        //EventSink eventSink = injector.getInstance(EventSink.class);
         TeeHttpServletResponse resp = new TeeHttpServletResponse((HttpServletResponse) response);
         chain.doFilter(request, resp);
         Status status = Status.fromStatusCode(resp.getStatus());

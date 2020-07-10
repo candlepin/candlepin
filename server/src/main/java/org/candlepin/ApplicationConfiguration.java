@@ -16,13 +16,22 @@
 package org.candlepin;
 
 //import org.candlepin.guice.CandlepinContextListener;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Injector;
+import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.commons.lang.StringUtils;
+import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventFilter;
+import org.candlepin.audit.EventSink;
+import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.EncryptedConfiguration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DatabaseConfigFactory;
-import org.candlepin.guice.CandlepinFilterModule;
+//import org.candlepin.guice.CandlepinFilterModule;
+import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.guice.CandlepinModule;
 import org.candlepin.guice.DefaultConfig;
 import org.candlepin.guice.I18nProvider;
@@ -44,12 +53,16 @@ import org.springframework.context.event.EventListener;
 import org.springframework.guice.annotation.EnableGuiceModules;
 //import org.springframework.jms.annotation.JmsListener;
 import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.xnap.commons.i18n.I18n;
 
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
 import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
@@ -59,8 +72,9 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 @Import(ResteasyAutoConfiguration.class)
 //@EnableRetry
 @EnableAspectJAutoProxy
+//@EnableWebMvc
 @PropertySource("classpath:application.properties")
-public class ApplicationConfiguration {
+public class ApplicationConfiguration  implements WebMvcConfigurer  {
     @Autowired
     private ServletContext servletContext;
 
@@ -196,4 +210,20 @@ public class ApplicationConfiguration {
         return config.getString(ConfigProperties.CPM_PROVIDER);
     }
 
+//    @Bean
+//    @Qualifier("loggingFilterConfig")
+//    public FilterConfig getLoggingFilterConfig() {
+//        Map<String, String> loggingFilterConfig = new HashMap<>();
+//        loggingFilterConfig.put("header.name", "x-candlepin-request-uuid");
+//        return (FilterConfig) loggingFilterConfig;
+//    }
+
+    @Bean
+    public EventSink eventSink(EventFilter eventFilter, EventFactory eventFactory,
+                               ObjectMapper mapper, org.candlepin.common.config.Configuration config, ActiveMQSessionFactory sessionFactory,
+                               CandlepinModeManager modeManager) throws ActiveMQException {
+        return new EventSinkImpl(eventFilter, eventFactory,
+                mapper, config, sessionFactory,
+                modeManager);
+    }
 }

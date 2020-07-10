@@ -33,6 +33,7 @@ dependencies {
     implementation libraries.logging_deps
     implementation libraries.oauth
     implementation libraries.resteasy
+    implementation libraries.spring
     implementation libraries.hibernate_validator_ap
     implementation libraries.gettext
     implementation libraries.javax_servlet

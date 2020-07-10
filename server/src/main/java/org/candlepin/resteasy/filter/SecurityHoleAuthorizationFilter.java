@@ -16,6 +16,7 @@ package org.candlepin.resteasy.filter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Priority;
 import javax.ws.rs.Priorities;
@@ -27,6 +28,7 @@ import javax.ws.rs.container.ContainerRequestContext;
  * AuthorizationFeature class is what determines whether to register this filter to
  * a method.
  */
+@Component
 @Priority(Priorities.AUTHORIZATION)
 public class SecurityHoleAuthorizationFilter
     extends AbstractAuthorizationFilter {

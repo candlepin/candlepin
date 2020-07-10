@@ -41,6 +41,7 @@ import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -61,6 +62,7 @@ import javax.ws.rs.ext.Provider;
 /**
  * The AuthenticationFilter is responsible for populating the JAXRS SecurityContext
  */
+@Component
 @Priority(Priorities.AUTHENTICATION)
 @Provider
 public class AuthenticationFilter implements ContainerRequestFilter {

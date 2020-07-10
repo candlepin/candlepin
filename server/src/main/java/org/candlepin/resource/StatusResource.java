@@ -39,6 +39,8 @@ import io.swagger.annotations.ApiOperation;
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Date;
@@ -55,6 +57,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Status Resource
  */
+@Component
 @Path("/status")
 @Api("status")
 public class StatusResource {
@@ -77,7 +80,8 @@ public class StatusResource {
     private CandlepinModeManager modeManager;
     private KeycloakConfiguration keycloakConfig;
 
-    @Inject
+    //@Inject
+    @Autowired
     public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
         CandlepinCache candlepinCache, CandlepinModeManager modeManager,
         KeycloakConfiguration keycloakConfig) {

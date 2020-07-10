@@ -27,7 +27,7 @@ import org.springframework.context.ApplicationContext;
 //import org.springframework.jms.annotation.EnableJms;
 
 /** Bootstrapper for Spring Boot. */
-@SpringBootApplication(exclude = { QuartzAutoConfiguration.class, ArtemisAutoConfiguration.class, ActiveMQAutoConfiguration.class }) // we manually import in scheduler profile
+@SpringBootApplication(exclude = { ArtemisAutoConfiguration.class, ActiveMQAutoConfiguration.class })
 //@EnableJms
 public class BootApplication {
     public static void main(String[] args) {

@@ -10,12 +10,14 @@ buildscript {
     }
     dependencies {
         classpath group: 'org.yaml', name: 'snakeyaml', version: '1.19'
-        classpath "org.openapitools:openapi-generator-gradle-plugin:${openapi_version}"
+        classpath "org.openapitools:op" +
+                "enapi-generator-gradle-plugin:${openapi_version}"
     }
 }
 
 plugins {
     id "io.spring.dependency-management" version "1.0.8.RELEASE"
+    id "org.springframework.boot" version "2.0.8.RELEASE"
     id "nebula.lint" version "16.2.3"
 }
 
@@ -25,7 +27,13 @@ ext.versions = [
     jackson   : "2.10.1",
     guice     : "4.1.0",
     checkstyle: "8.29",
-    junit5    : "5.4.2"
+    junit5    : "5.4.2",
+    spring_boot_version : "2.3.1.RELEASE",
+    spring_data_releasetrain : "Lovelace-SR9",
+    resteasy_spring_boot_starter_version : "4.0.0.Final",
+    spring_guice_version : "1.1.4.RELEASE",
+//    tomcat_version : '8.5.34'
+
 ]
 
 ext.libraries = [
@@ -36,6 +44,7 @@ ext.libraries = [
         "org.jboss.resteasy:resteasy-multipart-provider",
         "javax.ws.rs:javax.ws.rs-api",
         "org.eclipse.microprofile.config:microprofile-config-api",
+        "org.jboss.resteasy:resteasy-spring-boot-starter",
     ],
     jackson: [
         "com.fasterxml.jackson.core:jackson-annotations",
@@ -98,6 +107,16 @@ ext.libraries = [
         "aopalliance:aopalliance",
         "javax.inject:javax.inject",
     ],
+    spring: [
+//        "org.springframework.boot:spring-boot-starter-actuator",
+        "org.springframework.boot:spring-boot-starter-aop",
+        "org.springframework.boot:spring-boot-starter-web",
+        //"org.springframework.boot:spring-boot-starter-activemq",
+        "org.springframework.retry:spring-retry",
+        "org.springframework:spring-context-support",
+        "org.springframework.guice:spring-guice",
+        //"org.springframework.boot:spring-boot-starter-artemis",
+    ],
     liquibase: "org.liquibase:liquibase-core",
     liquibase_slf4j: "com.mattbertolini:liquibase-slf4j",
     oauth: [
@@ -111,7 +130,7 @@ ext.libraries = [
         "com.github.sevntu-checkstyle:sevntu-checks"
     ],
     gettext: "com.googlecode.gettext-commons:gettext-commons",
-    javax_servlet: "javax.servlet:servlet-api",
+    javax_servlet: "javax.servlet:javax.servlet-api",
     javax_validation: "javax.validation:validation-api",
     jmock                 : [
         "org.jmock:jmock",
@@ -131,6 +150,7 @@ ext.libraries = [
     artemis: [
         "org.apache.activemq:artemis-server",
         "org.apache.activemq:artemis-stomp-protocol",
+        //"org.apache.activemq:artemis-jms-server",
     ],
     amqp: [
         "org.apache.qpid:qpid-common",
@@ -145,6 +165,13 @@ allprojects {
     apply plugin: "nebula.lint"
     apply plugin: "io.spring.dependency-management"
     dependencyManagement {
+        imports {
+            // See https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies to
+            // get listings of the contents of this BOM
+            mavenBom "org.springframework.boot:spring-boot-dependencies:$versions.spring_boot_version"
+            mavenBom "org.springframework.data:spring-data-releasetrain:$versions.spring_data_releasetrain"
+            //mavenBom "org.springframework.guice:spring-guice:$versions.spring_guice_version"
+        }
         dependencies {
             dependency group: 'aopalliance', name: 'aopalliance', version: '1.0'
             dependency group: 'javax.inject', name: 'javax.inject', version: '1'
@@ -153,7 +180,7 @@ allprojects {
             dependency group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
             dependency group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
             dependency group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'
-            dependency group: 'javax.servlet', name: 'servlet-api', version: '2.5'
+            dependency group: 'javax.servlet', name: 'javax.servlet-api', version: '4.0.1'
             dependency group: 'org.ehcache', name: 'ehcache', version: '3.8.0'
             dependency group: 'javax.cache', name: 'cache-api', version: '1.0.0'
             dependency group: 'org.mozilla', name: 'jss', version: '4.4.6'
@@ -177,6 +204,8 @@ allprojects {
             dependency group: 'com.puppycrawl.tools', name: 'checkstyle', version: "$versions.checkstyle"
             dependency group: 'com.github.sevntu-checkstyle', name: 'sevntu-checks', version: '1.36.0'
             dependency group: 'com.google.inject', name: 'guice', version: "$versions.guice"
+            dependency group: 'org.jboss.resteasy', name: 'resteasy-spring-boot-starter', version: "$versions.resteasy_spring_boot_starter_version"
+            dependency group: 'org.springframework.guice', name: 'spring-guice', version: "$versions.spring_guice_version"
             // DB Drivers
             dependency group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
             dependency group: 'mysql', name: 'mysql-connector-java', version: '5.1.26'
@@ -209,6 +238,7 @@ allprojects {
             }
             dependencySet(group: "org.apache.activemq", version: "2.12.0") {
                 entry "artemis-server"
+                entry "artemis-jms-server"
                 entry "artemis-stomp-protocol"
             }
             dependencySet(group: "io.swagger", version: "1.5.7") {
@@ -282,6 +312,12 @@ allprojects {
                 entry "hamcrest-library"
                 entry "hamcrest-core"
             }
+//            dependencySet(group: "org.apache.tomcat.embed", version: "8.5.34") {
+//                entry "tomcat-embed-core"
+//                entry "tomcat-embed-el"
+//                entry "tomcat-embed-websocket"
+//                entry "tomcat-annotations-api"
+//            }
         }
     }
 

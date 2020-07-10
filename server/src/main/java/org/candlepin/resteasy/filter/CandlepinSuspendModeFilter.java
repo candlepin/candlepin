@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.container.ContainerRequestContext;
@@ -34,6 +35,7 @@ import javax.ws.rs.ext.Provider;
  * Filter which check if Candlepin is currently in SUSPEND mode,
  * and if so, returns appropriate error.
  */
+@Component
 @PreMatching
 @Provider
 public class CandlepinSuspendModeFilter implements ContainerRequestFilter {

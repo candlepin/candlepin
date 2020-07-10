@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
@@ -43,6 +44,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
  * AbstractAuthorizationFilter offers a simple wrapper around the ContainerRequestFilter
  * interface that will log the HTTP request details after the filter has finished.
  */
+@Component
 @Priority(Priorities.AUTHORIZATION)
 public abstract class AbstractAuthorizationFilter implements ContainerRequestFilter {
     private static Logger log = LoggerFactory.getLogger(AbstractAuthorizationFilter.class);

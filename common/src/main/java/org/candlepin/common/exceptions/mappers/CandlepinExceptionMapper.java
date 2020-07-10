@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
@@ -56,7 +57,8 @@ public class CandlepinExceptionMapper {
     );
 
     // Use a provider so we get a scoped HttpServletRequest
-    @Inject
+    //@Inject
+    @Autowired
     private javax.inject.Provider<HttpServletRequest> requestProvider;
 
     @Inject

@@ -25,18 +25,18 @@ import com.google.inject.Injector;
  */
 public interface CPMContextListener {
 
-    /**
-     * Called when the Candlepin context is initialized, allowing for the backing messaging
-     * implementation to create any required services or functionality.
-     *
-     * @param injector
-     *  an injector to use for fetching object instances
-     *
-     * @throws CPMException
-     *  if
-     */
-    void initialize(Injector injector) throws CPMException;
-
+//    /**
+//     * Called when the Candlepin context is initialized, allowing for the backing messaging
+//     * implementation to create any required services or functionality.
+//     *
+//     * @param injector
+//     *  an injector to use for fetching object instances
+//     *
+//     * @throws CPMException
+//     *  if
+//     */
+    //void initialize(Injector injector) throws CPMException;
+    void initialize() throws CPMException;
     /**
      * Called when the Candlepin context is destroyed, indicating the messaging implementation
      * should shut down any backing services or functionality associated with it.

@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
 import org.jboss.resteasy.core.ResteasyContext;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
@@ -46,6 +47,7 @@ import javax.ws.rs.core.StreamingOutput;
  * The CandlepinQueryInterceptor handles the streaming of a query and applies any paging
  * configuration.
  */
+@Component
 @javax.ws.rs.ext.Provider
 public class CandlepinQueryInterceptor implements ContainerResponseFilter {
 

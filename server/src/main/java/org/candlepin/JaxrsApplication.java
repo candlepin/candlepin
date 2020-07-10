@@ -26,6 +26,9 @@ import java.util.Set;
 @ApplicationPath("/*")
 public class JaxrsApplication extends Application {
 
+    public JaxrsApplication() {
+        System.out.println("************ Constructor **********");
+    }
     @Override
     public Set<Class<?>> getClasses() { return super.getClasses(); }
 }

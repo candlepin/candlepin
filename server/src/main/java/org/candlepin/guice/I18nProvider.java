@@ -14,6 +14,8 @@
  */
 package org.candlepin.guice;
 
+import com.google.inject.name.Named;
+import com.google.inject.servlet.RequestScoped;
 import org.candlepin.common.guice.CommonI18nProvider;
 
 import com.google.inject.Inject;
@@ -22,6 +24,8 @@ import com.google.inject.ProvisionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -31,19 +35,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
-
+import javax.ws.rs.core.Context;
 /**
  * I18nProvider
  */
 @Singleton
+//@Component
 public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
     private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
     private static Map<Locale, I18n> cache = new ConcurrentHashMap<>();
-    private final Provider<HttpServletRequest> request;
+    //private final Provider<HttpServletRequest> request;
+    //private final HttpServletRequest request;
 
     @Inject
-    public I18nProvider(Provider<HttpServletRequest> request) {
-        this.request = request;
+//    //@Autowired
+//    public I18nProvider(Provider<HttpServletRequest> request) {
+//        this.request = request;
+//    }
+    public I18nProvider() {
+
     }
 
     @Override
@@ -51,7 +61,8 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
         Locale locale = null;
 
         try {
-            locale = request.get().getLocale();
+            //locale = request.get().getLocale();
+            //locale = new Locale.Builder().setLanguage("fr").setRegion("CA").build();
         }
         catch (ProvisionException e) {
             // This can happen in pinsetter, or anything else not in an http

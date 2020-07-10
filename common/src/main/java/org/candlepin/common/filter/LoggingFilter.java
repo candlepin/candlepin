@@ -17,6 +17,10 @@ package org.candlepin.common.filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Enumeration;
@@ -40,7 +44,8 @@ import javax.servlet.http.HttpServletResponse;
  * <a href="http://code.google.com/p/google-guice/wiki/ServletModule#Filter_Mapping">
  * the Guice documentation</a>.
  */
-@Singleton
+@Component
+@Order(3)
 public class LoggingFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(LoggingFilter.class);
@@ -52,11 +57,16 @@ public class LoggingFilter implements Filter {
     /** The metadata key used to display the owner's key or display name */
     public static final String OWNER_KEY = "org"; // This value must match that set in logback.xml
 
+//    @Qualifier("loggingFilterConfig")
+//    @Autowired
+//    private FilterConfig loggingFilterConfig;
+
     private String customHeaderName;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        customHeaderName = filterConfig.getInitParameter("header.name");
+        //customHeaderName = filterConfig.getInitParameter("header.name");
+        customHeaderName = "x-candlepin-request-uuid";
     }
 
     @Override

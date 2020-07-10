@@ -26,6 +26,8 @@ import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 
@@ -36,19 +38,23 @@ import javax.inject.Singleton;
 /**
  * CPMContextListener implementation backed by Artemis
  */
-@Singleton
+//@Singleton
+@Component
 public class ArtemisContextListener implements CPMContextListener {
     private static  Logger log = LoggerFactory.getLogger(ArtemisContextListener.class);
-
+    @Autowired
     private Configuration config;
     private EmbeddedActiveMQ activeMQServer;
 
+    @Autowired
+    private ArtemisSessionFactory factory;
     /**
      * {@inheritDoc}
      */
     @Override
-    public void initialize(Injector injector) throws CPMException {
-        this.config = injector.getInstance(Configuration.class);
+    //public void initialize(Injector injector) throws CPMException {
+    public void initialize() throws CPMException {
+        //this.config = injector.getInstance(Configuration.class);
 
         // Create the server if we're configured to do so.
         // TODO: Change this to use ACTIVEMQ_EMBEDDED_BROKER once configuration upgrades are in
@@ -87,6 +93,7 @@ public class ArtemisContextListener implements CPMContextListener {
             try {
                 this.activeMQServer.start();
                 log.info("Embedded Artemis server started successfully");
+                //System.out.println(this.activeMQServer.getActiveMQServer().getConfiguration());
             }
             catch (Exception e) {
                 log.error("Failed to start embedded Artemis message server", e);
@@ -95,7 +102,7 @@ public class ArtemisContextListener implements CPMContextListener {
         }
 
         // Initialize our session factory
-        ArtemisSessionFactory factory = injector.getInstance(ArtemisSessionFactory.class);
+        //ArtemisSessionFactory factory = injector.getInstance(ArtemisSessionFactory.class);
         factory.initialize();
     }
 

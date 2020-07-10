@@ -19,6 +19,7 @@ import java.io.IOException;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletResponse;
+import javax.servlet.WriteListener;
 
 /**
  * Heavily borrowed from the logback-access package.
@@ -78,5 +79,15 @@ public class TeeServletOutputStream extends ServletOutputStream {
         }
         underlyingStream.flush();
         baosCopy.flush();
+    }
+
+    @Override
+    public boolean isReady() {
+        return false;
+    }
+
+    @Override
+    public void setWriteListener(WriteListener writeListener) {
+
     }
 }

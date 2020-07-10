@@ -34,7 +34,7 @@
     </dependency>
     <dependency>
       <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
+      <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -118,6 +118,31 @@
     <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.retry</groupId>
+      <artifactId>spring-retry</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context-support</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.guice</groupId>
+      <artifactId>spring-guice</artifactId>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -248,6 +273,11 @@
     <dependency>
       <groupId>org.eclipse.microprofile.config</groupId>
       <artifactId>microprofile-config-api</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-spring-boot-starter</artifactId>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -454,6 +484,20 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.springframework.data</groupId>
+        <artifactId>spring-data-releasetrain</artifactId>
+        <version>Lovelace-SR9</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>2.3.1.RELEASE</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+      <dependency>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-c3p0</artifactId>
         <version>5.4.9.Final</version>
@@ -552,6 +596,11 @@
         <groupId>org.hamcrest</groupId>
         <artifactId>hamcrest-library</artifactId>
         <version>1.3</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-annotations-api</artifactId>
+        <version>8.5.34</version>
       </dependency>
       <dependency>
         <groupId>javax.cache</groupId>
@@ -654,6 +703,11 @@
         <version>2.10.1</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-websocket</artifactId>
+        <version>8.5.34</version>
+      </dependency>
+      <dependency>
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-core</artifactId>
         <version>4.4.2.Final</version>
@@ -672,6 +726,11 @@
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <version>42.2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-el</artifactId>
+        <version>8.5.34</version>
       </dependency>
       <dependency>
         <groupId>javax.ws.rs</groupId>
@@ -724,6 +783,11 @@
         <version>3.1.0</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>artemis-jms-server</artifactId>
+        <version>2.12.0</version>
+      </dependency>
+      <dependency>
         <groupId>org.mozilla</groupId>
         <artifactId>rhino</artifactId>
         <version>1.7R3</version>
@@ -762,6 +826,11 @@
         <groupId>javax.validation</groupId>
         <artifactId>validation-api</artifactId>
         <version>2.0.1.Final</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-core</artifactId>
+        <version>8.5.34</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -824,6 +893,11 @@
         <version>20100527</version>
       </dependency>
       <dependency>
+        <groupId>org.jboss.resteasy</groupId>
+        <artifactId>resteasy-spring-boot-starter</artifactId>
+        <version>4.0.0.Final</version>
+      </dependency>
+      <dependency>
         <groupId>com.fasterxml.jackson.datatype</groupId>
         <artifactId>jackson-datatype-hibernate5</artifactId>
         <version>2.10.1</version>
@@ -844,6 +918,11 @@
         <version>2.23.4</version>
       </dependency>
       <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>4.0.1</version>
+      </dependency>
+      <dependency>
         <groupId>org.hibernate.javax.persistence</groupId>
         <artifactId>hibernate-jpa-2.1-api</artifactId>
         <version>1.0.2.Final</version>
@@ -854,11 +933,6 @@
         <version>1.2.3</version>
       </dependency>
       <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>servlet-api</artifactId>
-        <version>2.5</version>
-      </dependency>
-      <dependency>
         <groupId>com.sun.xml.bind</groupId>
         <artifactId>jaxb-impl</artifactId>
         <version>2.3.0</version>
@@ -867,6 +941,11 @@
         <groupId>org.hibernate.validator</groupId>
         <artifactId>hibernate-validator</artifactId>
         <version>6.1.0.Final</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.guice</groupId>
+        <artifactId>spring-guice</artifactId>
+        <version>1.1.4.RELEASE</version>
       </dependency>
       <dependency>
         <groupId>io.swagger</groupId>

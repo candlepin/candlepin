@@ -18,6 +18,7 @@ import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionConfig;
 import org.candlepin.messaging.CPMSessionFactory;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Singleton;
 
@@ -27,7 +28,8 @@ import javax.inject.Singleton;
  * CPMSessionFactory which does nothing, and will not create sessions. Used for environments in
  * which no provider is configured or available.
  */
-@Singleton
+//@Singleton
+@Component
 public class NoopSessionFactory implements CPMSessionFactory {
 
     /**

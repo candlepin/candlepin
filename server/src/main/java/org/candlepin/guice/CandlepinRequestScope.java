@@ -20,6 +20,7 @@ import com.google.inject.Provider;
 import com.google.inject.Scope;
 
 import org.jboss.resteasy.core.ResteasyContext;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,7 @@ import java.util.Map;
  * more appropriate for Candlepin, because it works even in
  * our Quartz jobs (standard Guice annotation RequestScoped doesn't).
  */
+//@Component
 public class CandlepinRequestScope implements Scope {
 
     public void enter() {

@@ -58,6 +58,7 @@ import org.quartz.spi.TriggerFiredBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -311,11 +312,11 @@ public class JobManager implements ModeChangeListener {
     private Set<String> blacklist;
     private Map<String, Configuration> jobConfig;
 
-
     /**
      * Creates a new JobManager instance
      */
     @Inject
+    //@Autowired
     public JobManager(
         Configuration configuration,
         SchedulerFactory schedulerFactory,

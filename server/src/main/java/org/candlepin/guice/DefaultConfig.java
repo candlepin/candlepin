@@ -40,7 +40,7 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 /**
  * DefaultConfig
  */
-class DefaultConfig extends AbstractModule {
+public class DefaultConfig extends AbstractModule {
 
     @Override
     public void configure() {

@@ -207,16 +207,16 @@ import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.cache.CacheManager;
 import javax.inject.Provider;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
-
-
 
 /**
  * CandlepinModule
@@ -230,6 +230,7 @@ public class CandlepinModule extends AbstractModule {
 
     @Override
     public void configure() {
+
         // Bindings for our custom scope
         CandlepinRequestScope requestScope = new CandlepinRequestScope();
         bindScope(CandlepinRequestScoped.class, requestScope);
@@ -245,7 +246,13 @@ public class CandlepinModule extends AbstractModule {
         bind(GuestMigration.class);
 
         // Endpoint resource
+        /* TODO (spring-guice): this is a temporary binding, should be removed later */
+        bind(Configuration.class).toInstance(config);
+
         resources();
+
+        /* TODO (spring-guice): this binding was complaning about Binding points to itself so commented out for now*/
+        //bind(Map.class).to(Map.class);
 
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
         bind(Enforcer.class).to(EntitlementRules.class);
@@ -348,6 +355,8 @@ public class CandlepinModule extends AbstractModule {
         bind(SubscriptionResource.class);
         bind(StatusResource.class);
         bind(UserResource.class);
+
+
     }
 
     private void miscConfigurations() {
@@ -378,15 +387,15 @@ public class CandlepinModule extends AbstractModule {
         String provider = this.config.getString(ConfigProperties.CPM_PROVIDER);
 
         // TODO: Change this to a map lookup as we get more providers
-
-        if (ArtemisUtil.PROVIDER.equalsIgnoreCase(provider)) {
-            bind(CPMContextListener.class).to(ArtemisContextListener.class).asEagerSingleton();
-            bind(CPMSessionFactory.class).to(ArtemisSessionFactory.class).asEagerSingleton();
-        }
-        else {
-            bind(CPMContextListener.class).to(NoopContextListener.class).asEagerSingleton();
-            bind(CPMSessionFactory.class).to(NoopSessionFactory.class).asEagerSingleton();
-        }
+//
+//        if (ArtemisUtil.PROVIDER.equalsIgnoreCase(provider)) {
+//            bind(CPMContextListener.class).to(ArtemisContextListener.class).asEagerSingleton();
+//            bind(CPMSessionFactory.class).to(ArtemisSessionFactory.class).asEagerSingleton();
+//        }
+//        else {
+//            bind(CPMContextListener.class).to(NoopContextListener.class).asEagerSingleton();
+//            bind(CPMSessionFactory.class).to(NoopSessionFactory.class).asEagerSingleton();
+//        }
     }
 
     protected void configureJPA() {

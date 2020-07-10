@@ -37,6 +37,8 @@ import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -52,6 +54,8 @@ import javax.inject.Inject;
  * An single instance of this object will be created per request/job.
  */
 @CandlepinRequestScoped
+//@Component
+//@Scope("request")
 public class EventSinkImpl implements EventSink {
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
 

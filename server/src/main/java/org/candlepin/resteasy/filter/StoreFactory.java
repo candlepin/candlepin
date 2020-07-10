@@ -37,6 +37,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 
 import com.google.inject.Injector;
 
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ import javax.inject.Provider;
 /**
  * This class should be bound to an instance
  */
+@Component
 public class StoreFactory {
     private final Map<Class<? extends Persisted>, EntityStore<? extends Persisted>> storeMap =
         new HashMap<>();
