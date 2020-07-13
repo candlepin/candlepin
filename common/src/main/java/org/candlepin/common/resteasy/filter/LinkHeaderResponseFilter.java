@@ -169,18 +169,19 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
             ServletContext servletContext = ResteasyContext.getContextData(ServletContext.class);
             contextPath = servletContext.getContextPath();
 
-            StringBuffer url = new StringBuffer(config.getString(this.apiUrlPrefixKey));
+            StringBuilder url = new StringBuilder(config.getString(this.apiUrlPrefixKey));
             // The default value of PREFIX_APIURL doesn't specify a scheme.
             if (url.indexOf("://") == -1) {
-                url = new StringBuffer("https://").append(url);
+                url = new StringBuilder("https://").append(url);
             }
 
             String requestUri = reqContext.getUriInfo().getRequestUri().toString();
 
-            int offset = requestUri.lastIndexOf(contextPath);
-            if (offset >= 0) {
-                // Strip off the context
-                url.append(requestUri.substring(offset + contextPath.length()));
+            int resourceStartOffset = requestUri.lastIndexOf(contextPath);
+            int queryParamsStartOffset = requestUri.lastIndexOf("?");
+            if (resourceStartOffset >= 0) {
+                // Strip off the context and the query parameters
+                url.append(requestUri, resourceStartOffset + contextPath.length(), queryParamsStartOffset);
             }
             else {
                 log.warn("Could not find servlet context in {}", requestUri);
@@ -188,8 +189,7 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
             }
 
             try {
-                UriBuilder builder = UriBuilder.fromUri(url.toString());
-                return builder;
+                return UriBuilder.fromUri(url.toString());
             }
             catch (IllegalArgumentException e) {
                 log.warn("Couldn't build URI for link header using {}", url, e);
@@ -197,7 +197,7 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
             }
         }
         else {
-            return reqContext.getUriInfo().getRequestUriBuilder();
+            return reqContext.getUriInfo().getAbsolutePathBuilder();
         }
     }
 
