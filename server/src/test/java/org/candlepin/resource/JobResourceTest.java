@@ -51,6 +51,8 @@ import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
 import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
+import org.candlepin.resource.util.JobStateMapper;
+import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 
@@ -207,11 +209,11 @@ public class JobResourceTest extends DatabaseTestFixture {
     public static Stream<Arguments> targetJobStatusesWithJobStatesProvider() {
         List<Arguments> args = new LinkedList<>();
 
-        List<Set<JobState>> stateBlocks = new LinkedList<>();
+        List<Set<ExternalJobState>> stateBlocks = new LinkedList<>();
 
         for (int i = 1; i <= 3; ++i) {
-            JobState[] states = JobState.values();
-            Set<JobState> block = new HashSet<>();
+            ExternalJobState[] states = ExternalJobState.values();
+            Set<ExternalJobState> block = new HashSet<>();
 
             for (int j = 0; j < i; ++j) {
                 block.add(states[j]);
@@ -221,7 +223,7 @@ public class JobResourceTest extends DatabaseTestFixture {
         }
 
         // Mixed case converter
-        Function<JobState, String> mixedCaseMapper = (JobState state) -> {
+        Function<ExternalJobState, String> mixedCaseMapper = (ExternalJobState state) -> {
             String name = state.name();
 
             StringBuilder builder = new StringBuilder(name.length());
@@ -237,7 +239,7 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         // Process the blocks, adding lower case, upper case and mixed case
         // variants to the arg list
-        for (Set<JobState> block : stateBlocks) {
+        for (Set<ExternalJobState> block : stateBlocks) {
             Set<String> names;
 
             // Lower case
@@ -245,21 +247,21 @@ public class JobResourceTest extends DatabaseTestFixture {
                 .map(state -> state.name().toLowerCase())
                 .collect(Collectors.toSet());
 
-            args.add(Arguments.of(names, block));
+            args.add(Arguments.of(names, JobStateMapper.translateStates(block)));
 
             // Upper case
             names = block.stream()
                 .map(state -> state.name().toUpperCase())
                 .collect(Collectors.toSet());
 
-            args.add(Arguments.of(names, block));
+            args.add(Arguments.of(names, JobStateMapper.translateStates(block)));
 
             // Mixed case
             names = block.stream()
                 .map(mixedCaseMapper)
                 .collect(Collectors.toSet());
 
-            args.add(Arguments.of(names, block));
+            args.add(Arguments.of(names, JobStateMapper.translateStates(block)));
         }
 
         return args.stream();
@@ -269,7 +271,14 @@ public class JobResourceTest extends DatabaseTestFixture {
         return Stream.of(
             Arguments.of((String) null),
             Arguments.of(""),
-            Arguments.of("bad job state"));
+            Arguments.of("bad job state"),
+
+            // Internal job states should be considered "invalid"
+            Arguments.of("WAITING"),
+            Arguments.of("SCHEDULED"),
+            Arguments.of("QUEUED"),
+            Arguments.of("FAILED_WITH_RETRY"),
+            Arguments.of("ABORTED"));
     }
 
     public static Stream<Arguments> targetJobStatusesByDatesProvider() {

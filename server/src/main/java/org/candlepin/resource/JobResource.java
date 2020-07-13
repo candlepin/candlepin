@@ -37,6 +37,8 @@ import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
 import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.resource.util.JobStateMapper;
+import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
 import org.candlepin.resteasy.DateFormat;
 
 import com.google.inject.Inject;
@@ -467,12 +469,12 @@ public class JobResource {
         Set<JobState> jobStates = null;
 
         if (stateNames != null) {
-            jobStates = new HashSet<>();
+            Set<ExternalJobState> externalStates = new HashSet<>();
             Set<String> failedNames = new HashSet<>();
 
             for (String name : stateNames) {
                 try {
-                    jobStates.add(JobState.valueOf(name.toUpperCase()));
+                    externalStates.add(ExternalJobState.valueOf(name.toUpperCase()));
                 }
                 catch (IllegalArgumentException | NullPointerException e) {
                     failedNames.add(name);
@@ -483,6 +485,8 @@ public class JobResource {
                 String errmsg = this.i18n.tr("Unknown job states: {0}", failedNames);
                 throw new NotFoundException(errmsg);
             }
+
+            jobStates = JobStateMapper.translateStates(externalStates);
         }
 
         return jobStates;
