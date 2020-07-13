@@ -15,14 +15,7 @@
 package org.candlepin.async;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -1262,6 +1255,10 @@ public class JobManagerTest {
 
         assertNotNull(result);
         assertEquals(JobState.ABORTED, result.getState());
+
+        // The job result should contain details about the jobs that blocked it
+        assertNotNull(result.getJobResult());
+        assertThat(result.getJobResult(), containsString("Job blocked by the following existing jobs:"));
     }
 
     @Test
