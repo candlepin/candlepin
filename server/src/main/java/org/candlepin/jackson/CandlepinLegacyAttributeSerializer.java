@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.Map;
  * The CandlepinLegacyAttributeSerializer handles the serialization of attribute maps, writing them
  * in the legacy attribute format of [{"key1":"value1"}, ... ,{"keyN":"valueN"}].
  */
+//@Component
 public class CandlepinLegacyAttributeSerializer extends JsonSerializer<Map<String, String>> {
 
     @Override

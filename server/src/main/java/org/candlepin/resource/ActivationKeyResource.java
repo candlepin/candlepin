@@ -44,6 +44,8 @@ import io.swagger.annotations.Authorization;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
@@ -66,6 +68,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * ActivationKeyResource
  */
+//@Component
 @Path("/activation_keys")
 @Api(value = "activation_keys", authorizations = { @Authorization("basic") })
 public class ActivationKeyResource {
@@ -81,6 +84,7 @@ public class ActivationKeyResource {
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
     @Inject
+    //@Autowired
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
         ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,

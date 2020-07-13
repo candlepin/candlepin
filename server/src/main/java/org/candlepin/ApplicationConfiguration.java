@@ -16,8 +16,22 @@
 package org.candlepin;
 
 //import org.candlepin.guice.CandlepinContextListener;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.ser.FilterProvider;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
@@ -28,13 +42,16 @@ import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.EncryptedConfiguration;
 import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DatabaseConfigFactory;
 //import org.candlepin.guice.CandlepinFilterModule;
 import org.candlepin.controller.mode.CandlepinModeManager;
+import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.guice.CandlepinModule;
 import org.candlepin.guice.DefaultConfig;
 import org.candlepin.guice.I18nProvider;
+import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.messaging.impl.artemis.ArtemisContextListener;
@@ -52,6 +69,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.guice.annotation.EnableGuiceModules;
 //import org.springframework.jms.annotation.JmsListener;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -61,6 +79,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,10 +88,10 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 @EnableGuiceModules
 @Configuration
-@Import(ResteasyAutoConfiguration.class)
+@Import({ResteasyAutoConfiguration.class})
 //@EnableRetry
 @EnableAspectJAutoProxy
-//@EnableWebMvc
+@EnableWebMvc
 @PropertySource("classpath:application.properties")
 public class ApplicationConfiguration  implements WebMvcConfigurer  {
     @Autowired
@@ -156,11 +175,6 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
         return new DefaultConfig();
     }
 
-//    @Bean
-//    public CandlepinFilterModule candlepinFilterModule(org.candlepin.common.config.Configuration config) {
-//        return new CandlepinFilterModule(config);
-//    }
-
     @Bean
     @Qualifier("regex")
     public String getRegex(org.candlepin.common.config.Configuration config) {
@@ -226,4 +240,5 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
                 mapper, config, sessionFactory,
                 modeManager);
     }
+
 }

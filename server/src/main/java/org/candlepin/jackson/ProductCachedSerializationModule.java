@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import com.fasterxml.jackson.databind.ser.std.BeanSerializerBase;
 import com.google.inject.Inject;
+import org.springframework.stereotype.Component;
 
 /**
  * Serialization module that allows us to run code before
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
  * @author fnguyen
  *
  */
+//@Component
 public class ProductCachedSerializationModule extends SimpleModule {
 
     @Inject

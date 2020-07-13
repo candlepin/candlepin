@@ -26,6 +26,7 @@ import io.swagger.annotations.ApiModel;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
@@ -38,6 +39,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * A DTO representation of the Owner entity
  */
+//@Component
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing an owner/organization")

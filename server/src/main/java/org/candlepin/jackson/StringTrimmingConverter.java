@@ -18,12 +18,14 @@ import com.fasterxml.jackson.databind.util.StdConverter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * This class trims strings that are being deserialized by Jackson.  It is primarily
  * necessitated by BZ 1405125 (ppc64 clients are reporting a virt uuid in the facts that
  * ends in a null byte).
  */
+//@Component
 public class StringTrimmingConverter extends StdConverter<String, String> {
     private static final Logger log = LoggerFactory.getLogger(StringTrimmingConverter.class);
 

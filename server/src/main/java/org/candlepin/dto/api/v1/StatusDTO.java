@@ -14,6 +14,7 @@
  */
 package org.candlepin.dto.api.v1;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.util.SetView;
 
@@ -22,6 +23,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.Date;
@@ -37,6 +39,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * Status
  */
+@Component
 @ApiModel(description = "Version and Status information about running Candlepin server")
 @XmlRootElement(name = "status")
 @XmlAccessorType(XmlAccessType.PROPERTY)

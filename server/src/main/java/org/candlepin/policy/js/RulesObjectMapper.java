@@ -34,6 +34,8 @@ import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Map.Entry;
@@ -53,6 +55,7 @@ import java.util.Map.Entry;
  * to have it instantiated once.
  *
  */
+//@Component
 public class RulesObjectMapper {
 
     private static Logger log = LoggerFactory.getLogger(RulesObjectMapper.class);
@@ -60,6 +63,7 @@ public class RulesObjectMapper {
     private ObjectMapper mapper;
 
     @Inject
+    //@Autowired
     @SuppressWarnings("checkstyle:indentation")
     public RulesObjectMapper(ProductCachedSerializationModule poolCachedSerializationModule) {
         this.mapper = new ObjectMapper();

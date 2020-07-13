@@ -37,6 +37,8 @@ import com.fasterxml.jackson.jaxrs.cfg.Annotations;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
@@ -50,12 +52,14 @@ import javax.ws.rs.ext.Provider;
  * Our own json provider for jax-rs, allowing us to configure jackson as we see fit
  * and deal with input validation.
  */
+//@Component
 @Provider
 @Produces({"application/*+json", "text/json"})
 @Consumes({"application/*+json", "text/json"})
 public class JsonProvider extends JacksonJsonProvider {
 
     @Inject
+    //@Autowired
     public JsonProvider(Configuration config, ProductCachedSerializationModule productCachedModules) {
         this(config.getBoolean(ConfigProperties.PRETTY_PRINT), productCachedModules);
     }

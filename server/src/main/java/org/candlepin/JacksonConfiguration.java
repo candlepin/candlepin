@@ -15,20 +15,16 @@
 
 package org.candlepin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-import java.util.Set;
-
-/** Bootstrapper for RESTEasy. */
 @Component
-@ApplicationPath("/candlepin")
-public class JaxrsApplication extends Application {
-
-    public JaxrsApplication() {
-        System.out.println("************ Constructor **********");
+public class JacksonConfiguration {
+    @Autowired
+    public JacksonConfiguration(ObjectMapper objectMapper) {
+        objectMapper.setFilterProvider(new SimpleFilterProvider().setFailOnUnknownId(false));
     }
-//    @Override
-//    public Set<Class<?>> getClasses() { return super.getClasses(); }
 }

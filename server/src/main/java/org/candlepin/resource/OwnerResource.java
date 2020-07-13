@@ -130,6 +130,8 @@ import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
@@ -170,6 +172,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * Owner Resource
  */
+//@Component
 @Path("/owners")
 @Api(value = "owners", authorizations = { @Authorization("basic") })
 public class OwnerResource {
@@ -208,6 +211,7 @@ public class OwnerResource {
     private JobManager jobManager;
 
     @Inject
+    //@Autowired
     public OwnerResource(OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,

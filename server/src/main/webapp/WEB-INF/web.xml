@@ -3,25 +3,25 @@
 
 <!--    <display-name>Candlepin</display-name>-->
 
-<!--    <filter>-->
-<!--        <filter-name>Guice Filter</filter-name>-->
-<!--        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>-->
-<!--    </filter>-->
-<!--    <filter-mapping>-->
-<!--        <filter-name>Guice Filter</filter-name>-->
-<!--        <url-pattern>/*</url-pattern>-->
-<!--    </filter-mapping>-->
+<!--&lt;!&ndash;    <filter>&ndash;&gt;-->
+<!--&lt;!&ndash;        <filter-name>Guice Filter</filter-name>&ndash;&gt;-->
+<!--&lt;!&ndash;        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>&ndash;&gt;-->
+<!--&lt;!&ndash;    </filter>&ndash;&gt;-->
+<!--&lt;!&ndash;    <filter-mapping>&ndash;&gt;-->
+<!--&lt;!&ndash;        <filter-name>Guice Filter</filter-name>&ndash;&gt;-->
+<!--&lt;!&ndash;        <url-pattern>/*</url-pattern>&ndash;&gt;-->
+<!--&lt;!&ndash;    </filter-mapping>&ndash;&gt;-->
 
-<!--    <listener>-->
-<!--        <listener-class>-->
-<!--            org.candlepin.guice.CandlepinContextListener-->
-<!--        </listener-class>-->
-<!--    </listener>-->
-<!--     -->
+<!--&lt;!&ndash;    <listener>&ndash;&gt;-->
+<!--&lt;!&ndash;        <listener-class>&ndash;&gt;-->
+<!--&lt;!&ndash;            org.candlepin.guice.CandlepinContextListener&ndash;&gt;-->
+<!--&lt;!&ndash;        </listener-class>&ndash;&gt;-->
+<!--&lt;!&ndash;    </listener>&ndash;&gt;-->
+<!--&lt;!&ndash;     &ndash;&gt;-->
 <!--     <listener>-->
 <!--         <listener-class>org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap</listener-class>-->
 <!--     </listener>-->
-     
+<!--     -->
 <!--     <listener>-->
 <!--         <listener-class>org.jboss.resteasy.plugins.spring.SpringContextLoaderListener</listener-class>-->
 <!--     </listener>-->

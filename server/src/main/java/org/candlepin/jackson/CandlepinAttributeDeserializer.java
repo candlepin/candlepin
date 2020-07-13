@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import java.util.Map;
  * The CandlepinAttributeDeserializer handles the deserialization of attributes, processing both
  * the current attribute mapping style and obsoleted formats.
  */
+//@Component
 public class CandlepinAttributeDeserializer extends StdDeserializer<Map<String, String>> {
     private static Logger log = LoggerFactory.getLogger(CandlepinAttributeDeserializer.class);
 
