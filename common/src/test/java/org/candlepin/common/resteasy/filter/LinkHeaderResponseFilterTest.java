@@ -27,6 +27,7 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.mock.MockHttpRequest;
@@ -357,5 +358,46 @@ public class LinkHeaderResponseFilterTest {
         assertTrue(header.contains("rel=\"last\""));
         assertTrue(header.contains("rel=\"next\""));
         assertTrue(header.contains("rel=\"prev\""));
+
+        // Make sure that the page variable is only contained 4 times (once for each URI)
+        assertEquals(4, StringUtils.countMatches(header, "&page="));
+    }
+
+    @Test
+    public void testPostProcessWithPagingAndCustomURIBuilding() throws Exception {
+        when(page.getPageRequest()).thenReturn(pageRequest);
+        when(page.getMaxRecords()).thenReturn(15);
+        when(pageRequest.isPaging()).thenReturn(true);
+        when(pageRequest.getPage()).thenReturn(2);
+        when(pageRequest.getPerPage()).thenReturn(5);
+
+        // We're going to take the path of building the URI ourselves.
+        when(config.containsKey(eq(this.apiUrlPrefixKey))).thenReturn(true);
+        when(config.getString(eq(this.apiUrlPrefixKey))).thenReturn("localhost:8443/candlepin");
+        when(mockServletContext.getContextPath()).thenReturn("/candlepin");
+
+        MultivaluedMap<String, Object> map = new MultivaluedMapImpl<>();
+
+        ResteasyContext.pushContext(Page.class, page);
+
+        mockReq = MockHttpRequest.create("GET",
+                new URI("/candlepin/resource?order=asc&page=2&per_page=10"),
+                new URI("https://localhost:8443"));
+        when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
+
+        when(mockResponseContext.getHeaders()).thenReturn(map);
+
+        interceptor.filter(mockRequestContext, mockResponseContext);
+        String header = (String) map.getFirst(LinkHeaderResponseFilter.LINK_HEADER);
+
+        // It would be a bit much to parse the entire header, so let's just make
+        // sure that we have first, last, next, and prev links.
+        assertTrue(header.contains("rel=\"first\""));
+        assertTrue(header.contains("rel=\"last\""));
+        assertTrue(header.contains("rel=\"next\""));
+        assertTrue(header.contains("rel=\"prev\""));
+
+        // Make sure that the page variable is only contained 4 times (once for each URI)
+        assertEquals(4, StringUtils.countMatches(header, "&page="));
     }
 }
