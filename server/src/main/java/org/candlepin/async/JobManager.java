@@ -1077,7 +1077,10 @@ public class JobManager implements ModeChangeListener {
                 String jobIds = blockingJobIds.stream()
                     .collect(Collectors.joining(", "));
 
-                this.updateJobStatus(status, JobState.ABORTED);
+                StringBuilder errmsg = new StringBuilder("Job blocked by the following existing jobs: ")
+                    .append(jobIds);
+
+                this.updateJobStatus(status, JobState.ABORTED, errmsg.toString());
 
                 log.info("Unable to queue job: {}; blocked by the following existing jobs: {}",
                     status.getName(), jobIds);
