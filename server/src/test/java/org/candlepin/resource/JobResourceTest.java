@@ -14,12 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doReturn;
@@ -873,6 +868,24 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         JobResource resource = this.buildJobResource();
         assertThrows(BadRequestException.class, () ->
+            resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
+    }
+
+    @Test
+    public void testListJobStatusesFailsWhenResultMaxLimitExceeded() {
+        doReturn(10001L).when(this.jobCurator).getJobCount(any(AsyncJobStatusQueryBuilder.class));
+
+        JobResource resource = this.buildJobResource();
+        assertThrows(BadRequestException.class, () ->
+            resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
+    }
+
+    @Test
+    public void testListJobStatusesDoesNotFailWhenResultMaxLimitNotExceeded() {
+        doReturn(10000L).when(this.jobCurator).getJobCount(any(AsyncJobStatusQueryBuilder.class));
+
+        JobResource resource = this.buildJobResource();
+        assertDoesNotThrow(() ->
             resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
     }
 
