@@ -193,7 +193,7 @@ public class OwnerProductResource {
     }
 
     @ApiOperation(notes = "Retrieves a list of Products", value = "List Products for an Owner",
-        response = Product.class, responseContainer = "list")
+        response = ProductDTO.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<ProductDTO> listProducts(

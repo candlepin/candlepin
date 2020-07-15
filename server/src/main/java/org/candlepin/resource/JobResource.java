@@ -116,7 +116,7 @@ public class JobResource {
     // Scheduler status
     @ApiOperation(
         value = "fetches the status of the job scheduler for this Candlepin node",
-        response = AsyncJobStatusDTO.class, responseContainer = "set")
+        response = SchedulerStatusDTO.class)
     @ApiResponses({
         @ApiResponse(code = 400, message = ""),
         @ApiResponse(code = 404, message = "")
@@ -138,7 +138,7 @@ public class JobResource {
 
     @ApiOperation(
         value = "enables or disables the job scheduler for this Candlepin node",
-        response = AsyncJobStatusDTO.class, responseContainer = "set")
+        response = SchedulerStatusDTO.class)
     @ApiResponses({
         @ApiResponse(code = 400, message = ""),
         @ApiResponse(code = 404, message = "")

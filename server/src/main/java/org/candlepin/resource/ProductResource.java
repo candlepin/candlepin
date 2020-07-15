@@ -260,7 +260,7 @@ public class ProductResource {
     }
 
     @ApiOperation(notes = "Retrieves a list of Owners by Product", value = "getProductOwners",
-        response = Owner.class, responseContainer = "list")
+        response = OwnerDTO.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 400, message = "") })
     @GET
     @Path("/owners")
@@ -277,7 +277,8 @@ public class ProductResource {
             this.ownerCurator.getOwnersWithProducts(productUuids), OwnerDTO.class);
     }
 
-    @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct")
+    @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct",
+        response = AsyncJobStatusDTO.class, responseContainer = "List")
     @PUT
     @Path("/subscriptions")
     @Produces(MediaType.APPLICATION_JSON)
