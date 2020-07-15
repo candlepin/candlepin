@@ -57,6 +57,8 @@ import io.swagger.annotations.Authorization;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
@@ -83,6 +85,7 @@ import javax.ws.rs.core.MediaType;
  *
  * @version $Rev$
  */
+@Component
 @Path("/owners/{owner_key}/products")
 @Api(value = "owners", authorizations = { @Authorization("basic") })
 public class OwnerProductResource {
@@ -99,7 +102,8 @@ public class OwnerProductResource {
     private ModelTranslator translator;
     private JobManager jobManager;
 
-    @Inject
+    //@Inject
+    @Autowired
     public OwnerProductResource(Configuration config, I18n i18n, OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator productCertCurator, ProductCurator productCurator,

@@ -37,6 +37,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.Consumes;
@@ -53,6 +55,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * CdnResource
  */
+@Component
 @Path("/cdn")
 @Api(value = "cdn", authorizations = { @Authorization("basic") })
 public class CdnResource {
@@ -62,7 +65,8 @@ public class CdnResource {
     private CdnManager cdnManager;
     private ModelTranslator translator;
 
-    @Inject
+    //@Inject
+    @Autowired
     public CdnResource(I18n i18n, CdnCurator curator, CdnManager manager, ModelTranslator translator) {
         this.i18n = i18n;
         this.curator = curator;

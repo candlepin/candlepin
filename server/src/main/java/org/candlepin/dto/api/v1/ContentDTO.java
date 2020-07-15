@@ -25,6 +25,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -57,6 +58,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * }
  * </pre>
  */
+//@Component
 @ApiModel(parent = TimestampedCandlepinDTO.class, description = "DTO representing a certificate")
 @XmlRootElement
 public class ContentDTO extends TimestampedCandlepinDTO<ContentDTO> implements ContentInfo {

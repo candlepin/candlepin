@@ -29,7 +29,8 @@ import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerFactory;
+//import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
 
@@ -75,14 +76,15 @@ public class StatusResource {
     private boolean standalone = true;
     private boolean keycloakEnabled = true;
     private RulesCurator rulesCurator;
-    private JsRunnerProvider jsProvider;
+    /* TODO change the instance name to jsRunnerFactory */
+    private JsRunnerFactory jsProvider;
     private CandlepinCache candlepinCache;
     private CandlepinModeManager modeManager;
     private KeycloakConfiguration keycloakConfig;
 
     //@Inject
     @Autowired
-    public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerProvider jsProvider,
+    public StatusResource(RulesCurator rulesCurator, Configuration config, JsRunnerFactory jsProvider,
         CandlepinCache candlepinCache, CandlepinModeManager modeManager,
         KeycloakConfiguration keycloakConfig) {
 

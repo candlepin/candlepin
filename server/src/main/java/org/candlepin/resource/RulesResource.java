@@ -20,7 +20,7 @@ import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.CuratorException;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunnerProvider;
+//import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
 
@@ -31,8 +31,11 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
 import org.apache.commons.codec.binary.Base64;
+import org.candlepin.policy.js.JsRunnerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.Consumes;
@@ -48,6 +51,7 @@ import javax.ws.rs.core.Response;
 /**
  * Rules API entry path
  */
+@Component
 @Path("/rules")
 @Api(value = "rules", authorizations = { @Authorization("basic") })
 public class RulesResource {
@@ -55,15 +59,18 @@ public class RulesResource {
     private RulesCurator rulesCurator;
     private I18n i18n;
     private EventSink sink;
-    private JsRunnerProvider jsProvider;
+    //private JsRunnerProvider jsProvider;
+    /* TODO chnage the instance name to jsFactory */
+    private JsRunnerFactory jsProvider;
 
     /**
      * Default ctor
      * @param rulesCurator Curator used to interact with Rules.
      */
-    @Inject
+    //@Inject
+    @Autowired
     public RulesResource(RulesCurator rulesCurator,
-        I18n i18n, EventSink sink, JsRunnerProvider jsProvider) {
+        I18n i18n, EventSink sink, JsRunnerFactory jsProvider) {
         this.rulesCurator = rulesCurator;
         this.i18n = i18n;
         this.sink = sink;

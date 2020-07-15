@@ -22,6 +22,7 @@ import io.swagger.jaxrs.listing.ApiListingResource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
@@ -52,7 +53,8 @@ public class AuthorizationFeature implements DynamicFeature {
     private AbstractAuthorizationFilter securityHoleFilter;
     private AnnotationLocator annotationLocator;
 
-    @Inject
+    //@Inject
+    @Autowired
     public AuthorizationFeature(VerifyAuthorizationFilter authorizationFilter,
         SuperAdminAuthorizationFilter superAdminFilter,
         SecurityHoleAuthorizationFilter securityHoleFilter,

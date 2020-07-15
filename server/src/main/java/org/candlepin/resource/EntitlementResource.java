@@ -61,6 +61,8 @@ import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
@@ -84,6 +86,7 @@ import javax.ws.rs.core.Response;
 /**
  * REST api gateway for the User object.
  */
+@Component
 @Path("/entitlements")
 @Api(value = "entitlements", authorizations = { @Authorization("basic") })
 public class EntitlementResource {
@@ -100,7 +103,8 @@ public class EntitlementResource {
     private JobManager jobManager;
     private ModelTranslator translator;
 
-    @Inject
+    //@Inject
+    @Autowired
     public EntitlementResource(EntitlementCurator entitlementCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,

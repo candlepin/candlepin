@@ -39,13 +39,15 @@ import java.util.Date;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class JsRunnerProviderTest {
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    //@Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCacheFactory cacheProvider;
     @Mock private RulesCurator rulesCurator;
     @Mock
     private JsRunnerRequestCache mockedCache;
     @Mock private Rules rules;
     private Date time1;
-    private JsRunnerProvider provider;
+    //private JsRunnerProvider provider;
+    private JsRunnerFactory provider;
 
     @Before
     public void setUp() {
@@ -55,17 +57,18 @@ public class JsRunnerProviderTest {
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rules.getRules()).thenReturn("");
         when(rules.getRulesSource()).thenReturn(RulesSourceEnum.DATABASE);
-        provider = new JsRunnerProvider(rulesCurator, cacheProvider);
+        //provider = new JsRunnerProvider(rulesCurator, cacheProvider);
+        provider = new JsRunnerFactory(rulesCurator, cacheProvider);
     }
 
     @Test
     public void valueGetsCachedMockedTest() {
-        when(cacheProvider.get()).thenReturn(mockedCache);
+        when(cacheProvider.getObject()).thenReturn(mockedCache);
         when(mockedCache.getUpdated()).thenReturn(null).thenReturn(time1);
-        provider.get();
+        provider.getObject();
         verify(mockedCache).getUpdated();
         verify(mockedCache).setUpdated(time1);
-        provider.get();
+        provider.getObject();
         verify(mockedCache, times(2)).getUpdated();
         verifyNoMoreInteractions(mockedCache);
     }
@@ -76,27 +79,27 @@ public class JsRunnerProviderTest {
      */
     @Test
     public void rulesCuratorIsNotHitMultipleTimes() {
-        when(cacheProvider.get()).thenReturn(new JsRunnerRequestCache());
-        provider.get();
-        provider.get();
-        provider.get();
-        provider.get();
-        provider.get();
+        when(cacheProvider.getObject()).thenReturn(new JsRunnerRequestCache());
+        provider.getObject();
+        provider.getObject();
+        provider.getObject();
+        provider.getObject();
+        provider.getObject();
         verify(rulesCurator, times(2)).getUpdated();
     }
 
     @Test
     public void cacheInvalidationOnNewRequest() {
-        when(cacheProvider.get()).thenReturn(new JsRunnerRequestCache());
-        provider.get();
-        provider.get();
-        provider.get();
+        when(cacheProvider.getObject()).thenReturn(new JsRunnerRequestCache());
+        provider.getObject();
+        provider.getObject();
+        provider.getObject();
         JsRunnerRequestCache newCache = new JsRunnerRequestCache();
-        when(cacheProvider.get()).thenReturn(newCache);
+        when(cacheProvider.getObject()).thenReturn(newCache);
         Assert.assertEquals(null, newCache.getUpdated());
-        provider.get();
+        provider.getObject();
         Assert.assertEquals(time1, newCache.getUpdated());
-        provider.get();
+        provider.getObject();
         verify(rulesCurator, times(3)).getUpdated();
     }
 

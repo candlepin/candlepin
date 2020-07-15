@@ -47,11 +47,8 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsContext;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RulesObjectMapper;
+import org.candlepin.policy.js.*;
+//import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -99,14 +96,16 @@ public class ComplianceRulesTest {
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    //@Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCacheFactory cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator productCurator;
     @Mock private EnvironmentCurator environmentCurator;
 
     private ModelTranslator translator;
     private I18n i18n;
-    private JsRunnerProvider provider;
+    //private JsRunnerProvider provider;
+    private JsRunnerFactory provider;
     private Consumer consumer;
 
     private Map<String, String> activeGuestAttrs;
@@ -123,9 +122,9 @@ public class ComplianceRulesTest {
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-        when(cacheProvider.get()).thenReturn(cache);
-        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
-        compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
+        when(cacheProvider.getObject()).thenReturn(cache);
+        provider = new JsRunnerFactory(rulesCuratorMock, cacheProvider);
+        compliance = new ComplianceRules(provider.getObject(), entCurator, new StatusReasonMessageGenerator(i18n),
             eventSink, consumerCurator, consumerTypeCurator,
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
 

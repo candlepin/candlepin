@@ -31,6 +31,7 @@ import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
@@ -70,7 +71,8 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
     private StoreFactory storeFactory;
     private AnnotationLocator annotationLocator;
 
-    @Inject
+    //@Inject
+    @Autowired
     public VerifyAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider, StoreFactory storeFactory,
         AnnotationLocator annotationLocator) {
 

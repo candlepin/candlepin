@@ -41,6 +41,7 @@ import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -77,7 +78,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private AnnotationLocator annotationLocator;
     private List<AuthProvider> providers = new ArrayList<>();
 
-    @Inject
+    //@Inject
+    @Autowired
     public AuthenticationFilter(Configuration config,
         ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator,

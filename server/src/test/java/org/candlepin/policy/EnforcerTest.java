@@ -40,11 +40,8 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.RulesObjectMapper;
+import org.candlepin.policy.js.*;
+//import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRules.Rule;
@@ -81,7 +78,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;
     @Mock private Configuration config;
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    //@Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCacheFactory cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator mockProductCurator;
     @Mock private OwnerCurator mockOwnerCurator;
@@ -122,9 +120,10 @@ public class EnforcerTest extends DatabaseTestFixture {
         when(rules.getRules()).thenReturn(builder.toString());
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
-        when(cacheProvider.get()).thenReturn(cache);
+        when(cacheProvider.getObject()).thenReturn(cache);
 
-        JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        //JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        JsRunner jsRules = new JsRunnerFactory(rulesCurator, cacheProvider).getObject();
 
         translator = new StandardTranslator(consumerTypeCurator, mockEnvironmentCurator, mockOwnerCurator);
 

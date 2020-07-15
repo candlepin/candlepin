@@ -45,11 +45,8 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.JsonJsContext;
-import org.candlepin.policy.js.RulesObjectMapper;
+import org.candlepin.policy.js.*;
+//import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestDateUtil;
@@ -82,7 +79,7 @@ import java.util.Set;
  * AutobindRulesTest
  */
 public class AutobindRulesTest {
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCacheFactory cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private Configuration config;
     @Mock private RulesCurator rulesCurator;
@@ -115,8 +112,9 @@ public class AutobindRulesTest {
 
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
-        when(cacheProvider.get()).thenReturn(cache);
-        jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        when(cacheProvider.getObject()).thenReturn(cache);
+        //jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        jsRules = new JsRunnerFactory(rulesCurator, cacheProvider).getObject();
         mapper =  new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator));
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);

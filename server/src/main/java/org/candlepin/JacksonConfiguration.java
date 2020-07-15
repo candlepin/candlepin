@@ -15,16 +15,23 @@
 
 package org.candlepin;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-@Component
+@Configuration
 public class JacksonConfiguration {
-    @Autowired
-    public JacksonConfiguration(ObjectMapper objectMapper) {
-        objectMapper.setFilterProvider(new SimpleFilterProvider().setFailOnUnknownId(false));
-    }
+//    @Bean
+//    public ObjectMapper objectMapper() {
+//        ObjectMapper mapper = new ObjectMapper();
+//        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//        mapper.configure(MapperFeature.DEFAULT_VIEW_INCLUSION, true);
+//
+//        return mapper;
+//    }
 }

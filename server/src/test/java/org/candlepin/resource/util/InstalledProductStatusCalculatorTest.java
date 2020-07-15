@@ -40,8 +40,10 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunnerProvider;
+//import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerFactory;
 import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.JsRunnerRequestCacheFactory;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -95,7 +97,8 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private EventSink eventSink;
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    //@Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCacheFactory cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private PoolCurator poolCurator;
     @Mock private ProductCurator productCurator;
@@ -103,7 +106,8 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private OwnerCurator ownerCurator;
 
     private ModelTranslator translator;
-    private JsRunnerProvider provider;
+//    private JsRunnerProvider provider;
+    private JsRunnerFactory provider;
     private I18n i18n;
     private ConsumerEnricher consumerEnricher;
 
@@ -120,15 +124,16 @@ public class InstalledProductStatusCalculatorTest {
 
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-        when(cacheProvider.get()).thenReturn(cache);
+        when(cacheProvider.getObject()).thenReturn(cache);
 
-        this.provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
+        //this.provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
+        this.provider = new JsRunnerFactory(rulesCuratorMock, cacheProvider);
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
 
         RulesObjectMapper objectMapper =
             new RulesObjectMapper(new ProductCachedSerializationModule(productCurator));
 
-        this.complianceRules = new ComplianceRules(provider.get(), this.entCurator,
+        this.complianceRules = new ComplianceRules(provider.getObject(), this.entCurator,
             new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator, this.consumerTypeCurator,
             objectMapper, translator);
 

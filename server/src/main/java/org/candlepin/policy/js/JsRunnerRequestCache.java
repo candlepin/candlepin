@@ -15,6 +15,8 @@
 package org.candlepin.policy.js;
 
 import org.candlepin.guice.CandlepinRequestScoped;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 

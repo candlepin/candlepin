@@ -37,8 +37,10 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunnerProvider;
+//import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerFactory;
 import org.candlepin.policy.js.JsRunnerRequestCache;
+import org.candlepin.policy.js.JsRunnerRequestCacheFactory;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -80,12 +82,14 @@ public class QuantityRulesTest {
     private Product product;
     private Owner owner;
     private QuantityRules quantityRules;
-    private JsRunnerProvider provider;
+    //private JsRunnerProvider provider;
+    private JsRunnerFactory provider;
     private ModelTranslator translator;
 
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private OwnerCurator ownerCuratorMock;
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    //@Mock private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock private JsRunnerRequestCacheFactory cacheProvider;
     @Mock private JsRunnerRequestCache cache;
     @Mock private ProductCurator productCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
@@ -100,11 +104,11 @@ public class QuantityRulesTest {
         Rules rules = new Rules(Util.readFile(is));
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-        when(cacheProvider.get()).thenReturn(cache);
-        provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
+        when(cacheProvider.getObject()).thenReturn(cache);
+        provider = new JsRunnerFactory(rulesCuratorMock, cacheProvider);
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCuratorMock);
-        quantityRules = new QuantityRules(provider.get(), new RulesObjectMapper(
+        quantityRules = new QuantityRules(provider.getObject(), new RulesObjectMapper(
             new ProductCachedSerializationModule(productCurator)), translator);
 
         owner = TestUtil.createOwner();

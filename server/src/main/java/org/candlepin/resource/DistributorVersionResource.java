@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collections;
@@ -55,6 +57,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * DistributorVersionResource
  */
+@Component
 @Path("/distributor_versions")
 @Api(value = "distributor_versions", authorizations = { @Authorization("basic") })
 public class DistributorVersionResource {
@@ -63,7 +66,8 @@ public class DistributorVersionResource {
     private DistributorVersionCurator curator;
     private ModelTranslator translator;
 
-    @Inject
+    //@Inject
+    @Autowired
     public DistributorVersionResource(I18n i18n, DistributorVersionCurator curator,
         ModelTranslator translator) {
 

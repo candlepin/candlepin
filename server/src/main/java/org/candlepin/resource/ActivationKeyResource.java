@@ -68,7 +68,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * ActivationKeyResource
  */
-//@Component
+@Component
 @Path("/activation_keys")
 @Api(value = "activation_keys", authorizations = { @Authorization("basic") })
 public class ActivationKeyResource {
@@ -83,8 +83,8 @@ public class ActivationKeyResource {
     private ModelTranslator translator;
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
-    @Inject
-    //@Autowired
+    //@Inject
+    @Autowired
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
         ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,

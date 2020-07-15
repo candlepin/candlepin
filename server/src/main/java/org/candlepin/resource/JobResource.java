@@ -47,6 +47,8 @@ import io.swagger.annotations.Authorization;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
@@ -71,6 +73,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * JobResource
  */
+@Component
 @Path("/jobs")
 @Api(value = "jobs", authorizations = { @Authorization("basic") })
 public class JobResource {
@@ -88,7 +91,8 @@ public class JobResource {
     private Set<String> triggerableJobKeys;
 
 
-    @Inject
+    //@Inject
+    @Autowired
     public JobResource(Configuration config, I18n i18n, ModelTranslator translator, JobManager jobManager,
         AsyncJobStatusCurator jobCurator, OwnerCurator ownerCurator) {
 

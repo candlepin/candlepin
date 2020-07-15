@@ -172,7 +172,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * Owner Resource
  */
-//@Component
+@Component
 @Path("/owners")
 @Api(value = "owners", authorizations = { @Authorization("basic") })
 public class OwnerResource {
@@ -210,8 +210,8 @@ public class OwnerResource {
     private ModelTranslator translator;
     private JobManager jobManager;
 
-    @Inject
-    //@Autowired
+    //@Inject
+    @Autowired
     public OwnerResource(OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,

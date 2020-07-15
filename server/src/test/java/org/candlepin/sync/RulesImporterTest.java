@@ -22,7 +22,8 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunnerProvider;
+//import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.JsRunnerFactory;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +48,8 @@ public class RulesImporterTest extends DatabaseTestFixture {
     @Inject private EventSink sink;
 
     @Mock private RulesCurator curator;
-    @Mock private JsRunnerProvider jsProvider;
+    //@Mock private JsRunnerProvider jsProvider;
+    @Mock private JsRunnerFactory jsProvider;
     private RulesImporter importer;
 
     @BeforeEach

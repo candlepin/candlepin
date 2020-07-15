@@ -56,6 +56,8 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -77,7 +79,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * API gateway for the EntitlementPool
  */
-
+@Component
 @Path("/pools")
 @Api(value = "pools", authorizations = { @Authorization("basic") })
 public class PoolResource {
@@ -90,7 +92,8 @@ public class PoolResource {
     private CalculatedAttributesUtil calculatedAttributesUtil;
     private ModelTranslator translator;
 
-    @Inject
+    //@Inject
+    @Autowired
     public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         I18n i18n, PoolManager poolManager, CalculatedAttributesUtil calculatedAttributesUtil,
         ModelTranslator translator) {

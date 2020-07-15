@@ -36,7 +36,7 @@ import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunnerProvider;
+//import org.candlepin.policy.js.JsRunnerProvider;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -44,6 +44,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 
+import org.candlepin.policy.js.JsRunnerFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,7 +72,8 @@ public class StatusResourceTest {
 
     @Mock private RulesCurator rulesCurator;
     @Mock private Configuration config;
-    @Mock private JsRunnerProvider jsProvider;
+//    @Mock private JsRunnerProvider jsProvider;
+    @Mock private JsRunnerFactory jsProvider;
     @Mock private CandlepinCache candlepinCache;
     @Mock private StatusCache mockedStatusCache;
     @Mock private CandlepinModeManager modeManager;

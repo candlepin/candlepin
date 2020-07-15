@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Singleton;
 
@@ -24,7 +25,8 @@ import javax.inject.Singleton;
  * The CandlepinQueryFactory is responsible for building CandlepinQuery instances based on the
  * given input.
  */
-@Singleton
+//@Singleton
+@Component
 public class CandlepinQueryFactory {
 
     /**

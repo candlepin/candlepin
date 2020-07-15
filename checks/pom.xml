@@ -154,11 +154,6 @@
         <version>1.3</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.tomcat.embed</groupId>
-        <artifactId>tomcat-annotations-api</artifactId>
-        <version>8.5.34</version>
-      </dependency>
-      <dependency>
         <groupId>javax.cache</groupId>
         <artifactId>cache-api</artifactId>
         <version>1.0.0</version>
@@ -259,11 +254,6 @@
         <version>2.10.1</version>
       </dependency>
       <dependency>
-        <groupId>org.apache.tomcat.embed</groupId>
-        <artifactId>tomcat-embed-websocket</artifactId>
-        <version>8.5.34</version>
-      </dependency>
-      <dependency>
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-core</artifactId>
         <version>4.4.2.Final</version>
@@ -282,11 +272,6 @@
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <version>42.2.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.tomcat.embed</groupId>
-        <artifactId>tomcat-embed-el</artifactId>
-        <version>8.5.34</version>
       </dependency>
       <dependency>
         <groupId>javax.ws.rs</groupId>
@@ -382,11 +367,6 @@
         <groupId>javax.validation</groupId>
         <artifactId>validation-api</artifactId>
         <version>2.0.1.Final</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.tomcat.embed</groupId>
-        <artifactId>tomcat-embed-core</artifactId>
-        <version>8.5.34</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>

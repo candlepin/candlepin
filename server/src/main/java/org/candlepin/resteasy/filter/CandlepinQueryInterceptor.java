@@ -30,6 +30,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Order;
 import org.jboss.resteasy.core.ResteasyContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -48,13 +49,13 @@ import javax.ws.rs.core.StreamingOutput;
  * configuration.
  */
 @Component
-@javax.ws.rs.ext.Provider
 public class CandlepinQueryInterceptor implements ContainerResponseFilter {
 
     protected final JsonProvider jsonProvider;
     protected final Provider<EntityManager> emProvider;
 
-    @Inject
+    //@Inject
+    @Autowired
     public CandlepinQueryInterceptor(
         final JsonProvider jsonProvider, final Provider<EntityManager> emProvider) {
         this.jsonProvider = Objects.requireNonNull(jsonProvider);

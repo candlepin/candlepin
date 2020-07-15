@@ -37,6 +37,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 
 import com.google.inject.Injector;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
@@ -58,7 +59,8 @@ public class StoreFactory {
     private final Map<Class<? extends Persisted>, EntityStore<? extends Persisted>> storeMap =
         new HashMap<>();
 
-    @Inject
+    //@Inject
+    @Autowired
     public StoreFactory(Injector injector) {
         storeMap.put(Owner.class, new OwnerStore());
         storeMap.put(Environment.class, new EnvironmentStore());

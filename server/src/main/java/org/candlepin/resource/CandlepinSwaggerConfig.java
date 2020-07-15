@@ -22,6 +22,7 @@ import io.swagger.models.ExternalDocs;
 import io.swagger.models.SecurityRequirement;
 import io.swagger.models.Swagger;
 import io.swagger.models.auth.BasicAuthDefinition;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 
@@ -31,6 +32,7 @@ import java.util.ArrayList;
  *
  * @author fnguyen
  */
+@Component
 @SwaggerDefinition(info = @Info(description = "Candlepin is subscription management" +
     " server written in Java. It helps with management " +
     "of software subscriptions.", title = "Candlepin", version = ""))

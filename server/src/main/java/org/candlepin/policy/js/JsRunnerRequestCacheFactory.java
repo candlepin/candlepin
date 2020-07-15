@@ -13,22 +13,20 @@
  *  in this software or its documentation.
  */
 
-package org.candlepin;
+package org.candlepin.policy.js;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.candlepin.resteasy.JsonProvider;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-import java.util.Set;
-
-/** Bootstrapper for RESTEasy. */
 @Component
-@ApplicationPath("/candlepin")
-public class JaxrsApplication extends Application {
+public class JsRunnerRequestCacheFactory implements FactoryBean<JsRunnerRequestCache> {
+    @Override
+    public JsRunnerRequestCache getObject() {
+        return new JsRunnerRequestCache();
+    }
 
     @Override
-    public Set<Class<?>> getClasses() { return super.getClasses(); }
+    public Class<?> getObjectType() {
+        return JsRunnerRequestCache.class;
+    }
 }

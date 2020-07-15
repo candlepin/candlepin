@@ -157,6 +157,8 @@ public abstract class ContentOverrideResource<T extends ContentOverride<T, Paren
      * @httpcode 404
      * @httpcode 200
      */
+    /* TODO: Transactional is from guice, migration is needed for spring */
+
     @DELETE
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

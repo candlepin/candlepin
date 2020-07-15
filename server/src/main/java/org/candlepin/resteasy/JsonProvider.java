@@ -52,14 +52,14 @@ import javax.ws.rs.ext.Provider;
  * Our own json provider for jax-rs, allowing us to configure jackson as we see fit
  * and deal with input validation.
  */
-//@Component
+@Component
 @Provider
-@Produces({"application/*+json", "text/json"})
-@Consumes({"application/*+json", "text/json"})
+@Produces({"application/json", "application/*+json", "text/json"})
+@Consumes({"application/json", "application/*+json", "text/json"})
 public class JsonProvider extends JacksonJsonProvider {
 
-    @Inject
-    //@Autowired
+    //@Inject
+    @Autowired
     public JsonProvider(Configuration config, ProductCachedSerializationModule productCachedModules) {
         this(config.getBoolean(ConfigProperties.PRETTY_PRINT), productCachedModules);
     }

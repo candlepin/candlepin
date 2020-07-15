@@ -23,6 +23,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
@@ -35,6 +36,7 @@ import javax.inject.Singleton;
  * ContentCurator
  */
 @Singleton
+//@Component
 public class ContentCurator extends AbstractHibernateCurator<Content> {
 
     private static Logger log = LoggerFactory.getLogger(ContentCurator.class);

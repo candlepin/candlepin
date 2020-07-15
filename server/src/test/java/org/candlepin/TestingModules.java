@@ -62,7 +62,7 @@ import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerProvider;
+//import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.resource.ActivationKeyResource;
@@ -282,15 +282,15 @@ public class TestingModules {
 
             bind(X509ExtensionUtil.class);
 
-            bind(ConsumerResource.class);
-            bind(PoolResource.class);
-            bind(EntitlementResource.class);
-            bind(OwnerResource.class);
-            bind(EnvironmentResource.class);
-            bind(SubscriptionResource.class);
-            bind(ActivationKeyResource.class);
+//            bind(ConsumerResource.class);
+//            bind(PoolResource.class);
+//            bind(EntitlementResource.class);
+//            bind(OwnerResource.class);
+//            bind(EnvironmentResource.class);
+//            bind(SubscriptionResource.class);
+//            bind(ActivationKeyResource.class);
             bind(ProductServiceAdapter.class).to(DefaultProductServiceAdapter.class);
-            bind(ProductResource.class);
+//            bind(ProductResource.class);
             bind(DateSource.class).to(DateSourceForTesting.class).asEagerSingleton();
             bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
             bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
@@ -305,8 +305,8 @@ public class TestingModules {
 
             bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
 
-            bind(JsRunnerProvider.class).asEagerSingleton();
-            bind(JsRunner.class).toProvider(JsRunnerProvider.class);
+            //bind(JsRunnerProvider.class).asEagerSingleton();
+            //bind(JsRunner.class).toProvider(JsRunnerProvider.class);
 
             bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
             bind(Principal.class).toProvider(TestPrincipalProvider.class);

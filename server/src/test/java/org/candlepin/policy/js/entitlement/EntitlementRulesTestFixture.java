@@ -45,10 +45,8 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RulesObjectMapper;
+import org.candlepin.policy.js.*;
+//import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.service.ProductServiceAdapter;
@@ -91,7 +89,7 @@ public class EntitlementRulesTestFixture {
     @Mock
     protected OwnerProductCurator ownerProductCuratorMock;
     @Mock
-    private Provider<JsRunnerRequestCache> cacheProvider;
+    private JsRunnerRequestCacheFactory cacheProvider;
     @Mock
     private JsRunnerRequestCache cache;
     @Mock
@@ -127,9 +125,10 @@ public class EntitlementRulesTestFixture {
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(
             TestDateUtil.date(2010, 1, 1));
-        when(cacheProvider.get()).thenReturn(cache);
+        when(cacheProvider.getObject()).thenReturn(cache);
 
-        JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        //JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
+        JsRunner jsRules = new JsRunnerFactory(rulesCurator, cacheProvider).getObject();
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
         enforcer = new EntitlementRules(

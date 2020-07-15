@@ -55,6 +55,8 @@ import io.swagger.annotations.Authorization;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -81,6 +83,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * REST API for managing Environments.
  */
+@Component
 @Path("/environments")
 @Api(value = "environments", authorizations = { @Authorization("basic") })
 public class EnvironmentResource {
@@ -98,7 +101,8 @@ public class EnvironmentResource {
     private ModelTranslator translator;
     private JobManager jobManager;
 
-    @Inject
+    //@Inject
+    @Autowired
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
         PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,

@@ -82,13 +82,6 @@ import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.jackson.PoolEventFilter;
-import org.candlepin.messaging.CPMContextListener;
-import org.candlepin.messaging.CPMSessionFactory;
-import org.candlepin.messaging.impl.artemis.ArtemisContextListener;
-import org.candlepin.messaging.impl.artemis.ArtemisSessionFactory;
-import org.candlepin.messaging.impl.artemis.ArtemisUtil;
-import org.candlepin.messaging.impl.noop.NoopContextListener;
-import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.model.CPRestrictions;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pki.CertificateReader;
@@ -99,7 +92,7 @@ import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerProvider;
+//import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -198,13 +191,11 @@ import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.cache.CacheManager;
 import javax.inject.Provider;
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
@@ -279,8 +270,8 @@ public class CandlepinModule extends AbstractModule {
         bind(AnnotationLocator.class).asEagerSingleton();
 
         bind(Principal.class).toProvider(PrincipalProvider.class);
-        bind(JsRunnerProvider.class).asEagerSingleton();
-        bind(JsRunner.class).toProvider(JsRunnerProvider.class);
+        //bind(JsRunnerProvider.class).asEagerSingleton();
+        //bind(JsRunner.class).toProvider(JsRunnerProvider.class);
         bind(RulesObjectMapper.class).asEagerSingleton();
         bind(SyncUtils.class).asEagerSingleton();
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
@@ -327,7 +318,7 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerContentOverrideResource.class);
         bind(ConsumerResource.class);
         bind(ConsumerTypeResource.class);
-        bind(ContentResource.class);
+        //bind(ContentResource.class);
         bind(DeletedConsumerResource.class);
         bind(DistributorVersionResource.class);
         bind(EntitlementResource.class);
@@ -344,7 +335,7 @@ public class CandlepinModule extends AbstractModule {
         bind(RootResource.class);
         bind(RulesResource.class);
         bind(SubscriptionResource.class);
-        bind(StatusResource.class);
+        //bind(StatusResource.class);
         bind(UserResource.class);
 
 
