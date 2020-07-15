@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20200715155048-1" author="nmoumoul" dbms="mysql,mariadb">
+        <comment>Adding constraint to mysql that already existed in postgres to avoid activation keys with duplicate
+            names for the same owner.
+        </comment>
+        <addUniqueConstraint columnNames="name, owner_id" constraintName="cp_ak_name_owner_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activation_key"/>
+    </changeSet>
+
+</databaseChangeLog>
+<!-- vim: set expandtab sts=4 sw=4 ai: -->
