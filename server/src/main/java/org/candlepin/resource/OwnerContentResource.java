@@ -158,7 +158,7 @@ public class OwnerContentResource {
         return content;
     }
 
-    @ApiOperation(notes = "Retrieves list of Content", value = "list", response = Content.class,
+    @ApiOperation(notes = "Retrieves list of Content", value = "list", response = ContentDTO.class,
         responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)

@@ -307,7 +307,7 @@ public class ActivationKeyResource {
     }
 
     @ApiOperation(notes = "Retrieves a list of Activation Keys", value = "findActivationKey",
-        response = ActivationKey.class, responseContainer = "list")
+        response = ActivationKeyDTO.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<ActivationKeyDTO> findActivationKey() {

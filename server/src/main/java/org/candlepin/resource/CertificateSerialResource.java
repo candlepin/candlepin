@@ -52,7 +52,7 @@ public class CertificateSerialResource {
     }
 
     @ApiOperation(notes = "Retrieves a list of Certificate Serials", value = "getCertificateSerials",
-        response = CertificateSerial.class, responseContainer = "list")
+        response = CertificateSerialDTO.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public CandlepinQuery<CertificateSerialDTO> getCertificateSerials() {

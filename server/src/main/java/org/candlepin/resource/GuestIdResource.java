@@ -102,7 +102,8 @@ public class GuestIdResource {
         this.translator = translator;
     }
 
-    @ApiOperation(notes = "Retrieves the List of a Consumer's Guests", value = "getGuestIds")
+    @ApiOperation(notes = "Retrieves the List of a Consumer's Guests", value = "getGuestIds",
+        response = GuestIdDTO.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)

@@ -116,7 +116,8 @@ public class DistributorVersionResource {
 
     }
 
-    @ApiOperation(notes = "Retrieves list of Distributor Versions", value = "getVersions")
+    @ApiOperation(notes = "Retrieves list of Distributor Versions", value = "getVersions",
+        response = DistributorVersionDTO.class, responseContainer = "List")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Stream<DistributorVersionDTO> getVersions(
@@ -152,7 +153,8 @@ public class DistributorVersionResource {
         }
     }
 
-    @ApiOperation(notes = "Creates a Distributor Version", value = "create")
+    @ApiOperation(notes = "Creates a Distributor Version", value = "create",
+        response = DistributorVersionDTO.class)
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -170,7 +172,8 @@ public class DistributorVersionResource {
         return this.translator.translate(curator.create(toCreate), DistributorVersionDTO.class);
     }
 
-    @ApiOperation(notes = "Updates a Distributor Version", value = "update")
+    @ApiOperation(notes = "Updates a Distributor Version", value = "update",
+        response = DistributorVersionDTO.class)
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

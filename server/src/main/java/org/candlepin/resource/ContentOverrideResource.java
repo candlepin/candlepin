@@ -29,6 +29,8 @@ import org.candlepin.util.ContentOverrideValidator;
 
 import com.google.inject.persist.Transactional;
 
+import io.swagger.annotations.ApiOperation;
+
 import org.apache.commons.lang.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
@@ -96,6 +98,8 @@ public abstract class ContentOverrideResource<T extends ContentOverride<T, Paren
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(notes = "Adds or Updates a list of Content Overrides", value = "addContentOverrides",
+        response = ContentOverrideDTO.class, responseContainer = "List")
     @Transactional
     @SecurityHole
     public CandlepinQuery<ContentOverrideDTO> addContentOverrides(
@@ -160,6 +164,8 @@ public abstract class ContentOverrideResource<T extends ContentOverride<T, Paren
     @DELETE
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(notes = "Deletes a list of Content Overrides", value = "deleteContentOverrides",
+        response = ContentOverrideDTO.class, responseContainer = "List")
     @Transactional
     @SecurityHole
     public CandlepinQuery<ContentOverrideDTO> deleteContentOverrides(
@@ -208,6 +214,8 @@ public abstract class ContentOverrideResource<T extends ContentOverride<T, Paren
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(notes = "Retrieves list of Content Overrides", value = "getContentOverrideList",
+        response = ContentOverrideDTO.class, responseContainer = "List")
     @SecurityHole
     public CandlepinQuery<ContentOverrideDTO> getContentOverrideList(
         @Context UriInfo info,

@@ -842,7 +842,7 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(notes = "Retrieves a single Owner", value = "Get Owner")
+    @ApiOperation(notes = "Retrieves a single Owner", value = "Get Owner", response = OwnerDTO.class)
     @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
     public OwnerDTO getOwner(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
@@ -878,7 +878,7 @@ public class OwnerResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(notes = "Creates an Owner", value = "Create Owner")
+    @ApiOperation(notes = "Creates an Owner", value = "Create Owner", response = OwnerDTO.class)
     @ApiResponses({ @ApiResponse(code = 400, message = "Invalid owner specified in body") })
     public OwnerDTO createOwner(@ApiParam(name = "owner", required = true) OwnerDTO dto) {
         // Verify that we have an owner key (as required)
@@ -978,7 +978,7 @@ public class OwnerResource {
     @Path("{owner_key}")
     @Transactional
     @ApiOperation(notes = "To un-set the defaultServiceLevel for an owner, submit an empty string.",
-        value = "Update Owner")
+        value = "Update Owner", response = OwnerDTO.class)
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public OwnerDTO updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
         @ApiParam(name = "owner", required = true) OwnerDTO dto) {
@@ -1231,7 +1231,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/activation_keys")
-    @ApiOperation(notes = "Retrieves a list of Activation Keys for an Owner", value = "Owner Activation Keys")
+    @ApiOperation(notes = "Retrieves a list of Activation Keys for an Owner", value = "Owner Activation Keys",
+        response = ActivationKeyDTO.class, responseContainer = "List")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public CandlepinQuery<ActivationKeyDTO> ownerActivationKeys(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
@@ -1334,7 +1335,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/environments")
     @Wrapped(element = "environments")
-    @ApiOperation(notes = "Retrieves a list of Environments for an Owner", value = "List environments")
+    @ApiOperation(notes = "Retrieves a list of Environments for an Owner", value = "List environments",
+        response = EnvironmentDTO.class, responseContainer = "List")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
     public CandlepinQuery<EnvironmentDTO> listEnvironments(@PathParam("owner_key")
         @Verify(Owner.class) String ownerKey,
@@ -1407,7 +1409,7 @@ public class OwnerResource {
     @Path("{owner_key}/consumers")
     @SuppressWarnings("checkstyle:indentation")
     @ApiOperation(notes = "Retrieve a list of Consumers for the Owner", value = "List Consumers",
-        response = Consumer.class, responseContainer = "list")
+        response = ConsumerDTO.class, responseContainer = "list")
     @ApiResponses({
         @ApiResponse(code = 404, message = "Owner not found"),
         @ApiResponse(code = 400, message = "Invalid request")
@@ -2237,7 +2239,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{owner_key}/hypervisors")
     @ApiOperation(notes = "Retrieves a list of Hypervisors for an Owner", value = "Get Hypervisors",
-        response = Consumer.class, responseContainer = "list")
+        response = ConsumerDTO.class, responseContainer = "list")
     @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
     public CandlepinQuery<ConsumerDTO> getHypervisors(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,

@@ -165,7 +165,7 @@ public class EnvironmentResource {
     }
 
     @ApiOperation(notes = "Lists the Environments.  Only available to super admins.",
-        value = "getEnvironments", response = Environment.class, responseContainer = "list")
+        value = "getEnvironments", response = EnvironmentDTO.class, responseContainer = "list")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "environments")
