@@ -27,7 +27,7 @@ import javax.ws.rs.core.SecurityContext;
 /**
  * Custom JAXRS 2.0 security context that let's us set the Principal.
  */
-@Component
+//@Component
 public class CandlepinSecurityContext implements SecurityContext {
     private Principal principal;
 

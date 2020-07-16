@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -63,13 +64,14 @@ import javax.ws.rs.ext.Provider;
 /**
  * The AuthenticationFilter is responsible for populating the JAXRS SecurityContext
  */
-@Component
+//@Component
 @Priority(Priorities.AUTHENTICATION)
 @Provider
 public class AuthenticationFilter implements ContainerRequestFilter {
     private static Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     @Context
+    //@Autowired
     private HttpServletRequest request;
 
     private ConsumerCurator consumerCurator;
@@ -78,8 +80,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private AnnotationLocator annotationLocator;
     private List<AuthProvider> providers = new ArrayList<>();
 
-    //@Inject
-    @Autowired
+    @Inject
+    //@Autowired
     public AuthenticationFilter(Configuration config,
         ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator,

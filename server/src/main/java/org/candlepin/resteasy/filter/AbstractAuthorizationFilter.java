@@ -44,7 +44,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
  * AbstractAuthorizationFilter offers a simple wrapper around the ContainerRequestFilter
  * interface that will log the HTTP request details after the filter has finished.
  */
-@Component
+//@Component
 @Priority(Priorities.AUTHORIZATION)
 public abstract class AbstractAuthorizationFilter implements ContainerRequestFilter {
     private static Logger log = LoggerFactory.getLogger(AbstractAuthorizationFilter.class);

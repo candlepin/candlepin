@@ -19,6 +19,7 @@ import org.candlepin.util.ElementTransformer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,6 +34,7 @@ import java.util.function.Function;
  * model entities. The factory works by delegating the translation work to one or more
  * ObjectTranslator instances, which are registered to a given ModelTranslator instance.
  */
+@Component
 public class SimpleModelTranslator implements ModelTranslator {
     private static Logger log = LoggerFactory.getLogger(ModelTranslator.class);
 
@@ -341,7 +343,6 @@ public class SimpleModelTranslator implements ModelTranslator {
     public <I, O> CandlepinQuery<O> translateQuery(CandlepinQuery<I> query, Class<O> outputClass) {
         // TODO: It would be great if we could make this method, and the CandlepinQuery more
         // generic, but type erasure makes this pretty cumbersome to do properly.
-
         if (query == null) {
             throw new IllegalArgumentException("query is null");
         }

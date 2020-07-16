@@ -23,6 +23,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
@@ -43,7 +44,8 @@ public class CandlepinSuspendModeFilter implements ContainerRequestFilter {
     private Configuration config;
     private I18n i18n;
 
-    @Inject
+    //@Inject
+    @Autowired
     public CandlepinSuspendModeFilter(CandlepinModeManager modeManager, ObjectMapper mapper,
         Configuration config, I18n i18n) {
 

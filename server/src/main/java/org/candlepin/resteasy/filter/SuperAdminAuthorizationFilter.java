@@ -38,13 +38,13 @@ import javax.ws.rs.container.ResourceInfo;
  * That is because the AuthorizationFeature takes care of registering
  * this filter to the appropriate methods at servlet initialization time.
  */
-@Component
+//@Component
 @Priority(Priorities.AUTHORIZATION)
 public class SuperAdminAuthorizationFilter extends AbstractAuthorizationFilter {
     private static final Logger log = LoggerFactory.getLogger(SuperAdminAuthorizationFilter.class);
 
-    //@Inject
-    @Autowired
+    @Inject
+    //@Autowired
     public SuperAdminAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider) {
         this.i18nProvider = i18nProvider;
     }
