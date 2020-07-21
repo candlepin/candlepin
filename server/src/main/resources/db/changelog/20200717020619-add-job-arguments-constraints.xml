@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20200717020619-1" author="crog">
+        <comment>
+            Adds the missing foreign key constraint and removes any existing job arguments that are no
+            longer associated with a valid job
+        </comment>
+
+        <sql>
+            DELETE FROM cp_async_job_arguments WHERE NOT EXISTS (SELECT id FROM cp_async_jobs j WHERE j.id = job_id);
+        </sql>
+
+        <addForeignKeyConstraint
+            baseTableName="cp_async_job_arguments"
+            baseColumnNames="job_id"
+            constraintName="cp_async_job_arguments_fk1"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_async_jobs"/>
+    </changeSet>
+
+    <changeSet id="20200717020619-2" author="crog">
+        <createIndex tableName="cp_async_jobs" indexName="cp_async_jobs_idx1">
+            <column name="job_key"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20200717020619-3" author="crog" dbms="mysql">
+        <comment>
+            Adds a partial index on the value column of the job arguments table for MySQL/MariaDB.
+            Something about InnoDB just doesn't like this lookup and really hampers performance without
+            this index. PostgreSQL handles the query just fine without the index, and since there isn't
+            a way to do the index identically in both, it's easiest to only add it where necessary.
+
+            Note that because this particular field is a TEXT type, we need to give it an index prefix
+            length.
+        </comment>
+
+        <createIndex tableName="cp_async_job_arguments" indexName="cp_async_job_arguments_idx2">
+            <column name="value(64)"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
+
