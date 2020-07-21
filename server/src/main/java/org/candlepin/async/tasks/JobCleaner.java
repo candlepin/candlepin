@@ -19,8 +19,7 @@ import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.async.JobManager;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
+import org.candlepin.async.MaxJobAgeProvider;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
 import org.candlepin.util.Util;
@@ -42,44 +41,32 @@ import java.util.stream.Collectors;
  * The JobCleaner job deletes terminal jobs older than the max job age (default: 7 days)
  */
 public class JobCleaner implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(JobCleaner.class);
+    private static final Logger log = LoggerFactory.getLogger(JobCleaner.class);
 
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
     public static final String JOB_KEY = "JobCleaner";
     public static final String JOB_NAME = "Job Cleaner";
 
-    public static final String CFG_MAX_JOB_AGE = "max_job_age_in_minutes";
-    public static final int CFG_DEFAULT_MAX_JOB_AGE = 10080; // 7 days
-
-    private Configuration config;
-    private JobManager jobManager;
+    private final JobManager jobManager;
+    private final MaxJobAgeProvider maxJobAgeProvider;
 
     @Inject
-    public JobCleaner(Configuration config, JobManager jobManager) {
-        this.config = Objects.requireNonNull(config);
+    public JobCleaner(MaxJobAgeProvider maxJobAgeProvider, JobManager jobManager) {
+        this.maxJobAgeProvider = Objects.requireNonNull(maxJobAgeProvider);
         this.jobManager = Objects.requireNonNull(jobManager);
     }
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        String cfgName = ConfigProperties.jobConfig(JOB_KEY, CFG_MAX_JOB_AGE);
-        int maxAgeInMinutes = this.config.getInt(cfgName, CFG_DEFAULT_MAX_JOB_AGE);
-
-        if (maxAgeInMinutes < 1) {
-            String errmsg = String.format("Invalid value for max age, must be a positive integer: %s",
-                maxAgeInMinutes);
-
-            log.error(errmsg);
-            throw new JobExecutionException(errmsg, true);
-        }
+        int maxAgeInMinutes = this.maxJobAgeProvider.inMinutes();
 
         // Set cutoff (end) date to now - max age in minutes
         Date cutoff = Util.addMinutesToDt(maxAgeInMinutes * -1);
 
         // We're targeting every terminal job
         Set<JobState> jobStates = Arrays.stream(JobState.values())
-            .filter(state -> state.isTerminal())
+            .filter(JobState::isTerminal)
             .collect(Collectors.toSet());
 
         // Build the query builder with our config

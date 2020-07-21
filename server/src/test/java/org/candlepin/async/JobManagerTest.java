@@ -261,7 +261,7 @@ public class JobManagerTest {
     private JobManager createJobManager(JobMessageDispatcher dispatcher) {
         return new JobManager(this.config, this.schedulerFactory, this.modeManager, this.jobCurator,
             this.ownerCurator, dispatcher, this.receiver, this.principalProvider, this.requestScope,
-            this.injector);
+            this.injector, new MaxJobAgeProvider(this.config));
     }
 
     private JobArguments buildJobArguments(Map<String, Object> args) {
@@ -401,6 +401,29 @@ public class JobManagerTest {
 
         manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY));
 
+        verify(spy, never()).execute(any());
+    }
+
+    @Test
+    public void testJobManagerAbortsOldJobs() throws JobException {
+        long dayInMs = 1000 * 60 * 60 * 24;
+        Date weekAgo = new Date(System.currentTimeMillis() - (7 * dayInMs));
+        AsyncJobStatus status = this.createJobStatus(JOB_ID)
+            .setJobKey(TestJob.JOB_KEY)
+            .setState(JobState.QUEUED);
+        status.setCreated(weekAgo);
+        status.setUpdated(weekAgo);
+
+        final AsyncJob spy = mock(AsyncJob.class);
+        doReturn(spy).when(injector).getInstance(TestJob.class);
+        this.injectMockedJobStatus(status);
+
+        JobManager manager = createJobManager();
+        manager.initialize();
+        manager.start();
+
+        AsyncJobStatus jobStatus = manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY));
+        assertEquals(JobState.ABORTED, jobStatus.getState());
         verify(spy, never()).execute(any());
     }
 

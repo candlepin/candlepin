@@ -40,6 +40,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
@@ -129,6 +131,13 @@ public class Util {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, minuteField);
         return calendar.getTime();
+    }
+
+    public static LocalDateTime addMinutesToDt(Date date, int minutes) {
+        return date.toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+            .plusMinutes(minutes);
     }
 
     public static Date toDate(String dt) {

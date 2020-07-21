@@ -61,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -335,6 +336,7 @@ public class JobManager implements ModeChangeListener {
     private final CandlepinRequestScope candlepinRequestScope;
     private final PrincipalProvider principalProvider;
     private final Injector injector;
+    private final MaxJobAgeProvider maxJobAgeProvider;
 
     private ManagerState state;
     private JobMessageSynchronizer synchronizer;
@@ -363,7 +365,8 @@ public class JobManager implements ModeChangeListener {
         JobMessageReceiver receiver,
         PrincipalProvider principalProvider,
         CandlepinRequestScope scope,
-        Injector injector) {
+        Injector injector,
+        MaxJobAgeProvider maxJobAgeProvider) {
 
         this.configuration = Objects.requireNonNull(configuration);
         this.schedulerFactory = Objects.requireNonNull(schedulerFactory);
@@ -375,6 +378,7 @@ public class JobManager implements ModeChangeListener {
         this.candlepinRequestScope = Objects.requireNonNull(scope);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.injector = Objects.requireNonNull(injector);
+        this.maxJobAgeProvider = Objects.requireNonNull(maxJobAgeProvider);
 
         this.state = ManagerState.CREATED;
         this.qrtzExecutor = new QuartzJobExecutor(this);
@@ -1219,6 +1223,17 @@ public class JobManager implements ModeChangeListener {
         // If the job was canceled, just return. No need to do anything special here.
         if (status.getState() == JobState.CANCELED) {
             log.debug("Skipping canceled job: {} ({})", status.getJobKey(), status.getId());
+            return status;
+        }
+
+        int maxAgeInMinutes = this.maxJobAgeProvider.inMinutes();
+
+        Date updated = status.getUpdated() != null ? status.getUpdated() : new Date();
+        LocalDateTime maxAge = Util.addMinutesToDt(updated, maxAgeInMinutes);
+        if (maxAge.isBefore(LocalDateTime.now())) {
+            String errmsg = String.format("Aborting old job: %s (%s)", status.getJobKey(), status.getId());
+            log.debug(errmsg);
+            this.updateJobStatus(status, JobState.ABORTED, errmsg);
             return status;
         }
 
