@@ -47,6 +47,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
@@ -76,6 +77,7 @@ import javax.persistence.criteria.Root;
  * curators.
  * @param <E> Entity specific curator.
  */
+@Component
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 

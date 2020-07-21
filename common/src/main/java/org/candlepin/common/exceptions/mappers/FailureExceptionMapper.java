@@ -15,6 +15,7 @@
 package org.candlepin.common.exceptions.mappers;
 
 import org.jboss.resteasy.spi.Failure;
+import org.springframework.stereotype.Component;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -26,6 +27,7 @@ import javax.ws.rs.ext.Provider;
  * proper header to be set. This allows Candlepin to control the flow of the
  * exceptions.
  */
+@Component
 @Provider
 public class FailureExceptionMapper extends CandlepinExceptionMapper
     implements ExceptionMapper<Failure> {

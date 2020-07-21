@@ -637,7 +637,7 @@ public class JobManager implements ModeChangeListener {
      */
     public synchronized void shutdown() throws StateManagementException {
         // TODO: actually do something with this
-
+        System.out.println("shutting down");
         this.validateStateTransition(ManagerState.SHUTDOWN);
 
         try {

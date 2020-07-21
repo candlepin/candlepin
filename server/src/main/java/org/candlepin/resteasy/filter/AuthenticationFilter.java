@@ -64,7 +64,7 @@ import javax.ws.rs.ext.Provider;
 /**
  * The AuthenticationFilter is responsible for populating the JAXRS SecurityContext
  */
-//@Component
+@Component
 @Priority(Priorities.AUTHENTICATION)
 @Provider
 public class AuthenticationFilter implements ContainerRequestFilter {
@@ -129,6 +129,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext)
         throws IOException {
+        /* TODO: spring- Remove this print statement */
+        System.out.println("Authentication Filter");
+
         log.debug("Authentication check for {}", requestContext.getUriInfo().getPath());
 
         HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);

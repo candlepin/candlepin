@@ -15,16 +15,10 @@
 
 package org.candlepin;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration;
 import org.springframework.boot.autoconfigure.jms.artemis.ArtemisAutoConfiguration;
-import org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration;
-import org.springframework.boot.web.servlet.ServletComponentScan;
-import org.springframework.context.ApplicationContext;
-//import org.springframework.jms.annotation.EnableJms;
 
 /** Bootstrapper for Spring Boot. */
 @SpringBootApplication(exclude = { ArtemisAutoConfiguration.class, ActiveMQAutoConfiguration.class })
@@ -36,7 +30,5 @@ public class BootApplication {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 }

@@ -14,6 +14,9 @@
  */
 package org.candlepin.common.exceptions.mappers;
 
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
+
 import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -24,6 +27,7 @@ import javax.ws.rs.ext.Provider;
  * UnsupportedMediaTypeException into JSON and allows the proper header to be
  * set. This allows Candlepin to control the flow of the exceptions.
  */
+@Component
 @Provider
 public class NotSupportedExceptionMapper extends
     CandlepinExceptionMapper implements

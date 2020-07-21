@@ -34,7 +34,6 @@ import java.util.function.Function;
  * model entities. The factory works by delegating the translation work to one or more
  * ObjectTranslator instances, which are registered to a given ModelTranslator instance.
  */
-@Component
 public class SimpleModelTranslator implements ModelTranslator {
     private static Logger log = LoggerFactory.getLogger(ModelTranslator.class);
 

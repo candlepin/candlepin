@@ -155,9 +155,6 @@ public class CandlepinContextListener {
     @Autowired
     private LoggerContextListener loggerListener;
 
-//    @Autowired
-//    private Injector injector;
-
     @EventListener(classes = { ContextRefreshedEvent.class})
     public void contextInitialized() {
         log.info("Candlepin initializing context.");
@@ -165,7 +162,6 @@ public class CandlepinContextListener {
         JSSProviderLoader.addProvider();
 
         I18nManager.getInstance().setDefaultLocale(Locale.US);
-        //servletContext = sce.getServletContext();
 
         try {
             log.info("Candlepin reading configuration.");
@@ -289,7 +285,6 @@ public class CandlepinContextListener {
     @EventListener(classes = { ContextClosedEvent.class})
     public void contextDestroyed() {
         //super.contextDestroyed(event);
-
         try {
             this.destroySubsystems();
         }

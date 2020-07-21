@@ -37,6 +37,9 @@ public class SecurityHoleAuthorizationFilter
 
     @Override
     void runFilter(ContainerRequestContext requestContext) {
+        /* TODO: spring- Remove this print statement */
+        System.out.println("SecurityHoleAuthorizationFilter");
+
         log.debug("NO authorization check for {}", requestContext.getUriInfo().getPath());
         // Do nothing
     }

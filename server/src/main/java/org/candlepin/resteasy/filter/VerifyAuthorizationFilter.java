@@ -83,6 +83,9 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
 
     @Override
     public void runFilter(ContainerRequestContext requestContext) {
+        /* TODO: spring- Remove this print statement */
+        System.out.println("VerifyAuthorizationFilter");
+
         Principal principal = (Principal) requestContext.getSecurityContext().getUserPrincipal();
         ResourceInfo resourceInfo = ResteasyContext.getContextData(ResourceInfo.class);
         Method method = resourceInfo.getResourceMethod();

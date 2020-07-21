@@ -49,13 +49,14 @@ import javax.ws.rs.core.StreamingOutput;
  * configuration.
  */
 @Component
+@javax.ws.rs.ext.Provider
 public class CandlepinQueryInterceptor implements ContainerResponseFilter {
 
     protected final JsonProvider jsonProvider;
     protected final Provider<EntityManager> emProvider;
 
-    //@Inject
-    @Autowired
+    @Inject
+    //@Autowired
     public CandlepinQueryInterceptor(
         final JsonProvider jsonProvider, final Provider<EntityManager> emProvider) {
         this.jsonProvider = Objects.requireNonNull(jsonProvider);
@@ -76,6 +77,9 @@ public class CandlepinQueryInterceptor implements ContainerResponseFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
+        /* TODO: spring- Remove this print statement */
+        System.out.println("CandlepinQueryInterceptor");
+
         Object entity = responseContext.getEntity();
 
         if (entity instanceof CandlepinQuery) {

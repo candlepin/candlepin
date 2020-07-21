@@ -61,6 +61,8 @@ public class CandlepinSuspendModeFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext)
         throws JsonProcessingException {
+        /* TODO: spring- Remove this print statement */
+        System.out.println("CandlepinSuspendModeFilter");
 
         // Allow status every time
         if (requestContext.getUriInfo().getPath().startsWith("/status")) {

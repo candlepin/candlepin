@@ -35,6 +35,9 @@ import javax.ws.rs.ext.Provider;
 public class VersionResponseFilter implements ContainerResponseFilter {
     @Override
     public void filter(ContainerRequestContext reqContext, ContainerResponseContext respContext) {
+        /* TODO: spring- Remove this print statement */
+        System.out.println("VersionResponseFilter");
+
         Map<String, String> map = VersionUtil.getVersionMap();
         respContext.getHeaders().add(VersionUtil.VERSION_HEADER,
             map.get("version") + "-" + map.get("release"));

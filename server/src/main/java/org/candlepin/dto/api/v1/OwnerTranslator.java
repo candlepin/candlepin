@@ -18,12 +18,13 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.UpstreamConsumer;
-
+import org.springframework.stereotype.Component;
 
 
 /**
  * The OwnerTranslator provides translation from Owner model objects to OwnerDTOs
  */
+@Component
 public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO> {
 
     /**

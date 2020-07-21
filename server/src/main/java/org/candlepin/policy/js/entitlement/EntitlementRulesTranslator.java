@@ -21,6 +21,7 @@ import org.candlepin.policy.ValidationError;
 
 import com.google.inject.Inject;
 
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import java.util.Map;
 /**
  * Translates error keys returned from entitlement rules into translated error messages.
  */
+@Component
 public class EntitlementRulesTranslator {
 
     // TODO:

@@ -15,7 +15,6 @@
 
 package org.candlepin;
 
-//import org.candlepin.guice.CandlepinContextListener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.commons.lang.StringUtils;
@@ -29,7 +28,6 @@ import org.candlepin.common.config.EncryptedConfiguration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DatabaseConfigFactory;
-//import org.candlepin.guice.CandlepinFilterModule;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.guice.CandlepinModule;
 import org.candlepin.guice.DefaultConfig;
@@ -40,15 +38,11 @@ import org.candlepin.messaging.impl.artemis.ArtemisSessionFactory;
 import org.candlepin.messaging.impl.artemis.ArtemisUtil;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.hibernate.dialect.PostgreSQL92Dialect;
-import org.jboss.resteasy.springboot.ResteasyAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.*;
 import org.springframework.guice.annotation.EnableGuiceModules;
-//import org.springframework.jms.annotation.JmsListener;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -61,7 +55,7 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 @EnableGuiceModules
 @Configuration
-@Import({ResteasyAutoConfiguration.class})
+//@Import({ResteasyAutoConfiguration.class})
 //@EnableRetry
 @EnableAspectJAutoProxy
 @EnableWebMvc
@@ -73,15 +67,8 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
     @Autowired
     private ObjectMapper objectMapper;
 
-//    @Autowired
-//    I18nProvider i18nProvider;
-
     private org.candlepin.common.config.Configuration config;
-//
-//    @Bean
-//    public I18n i18n() {
-//        return i18nProvider.get();
-//    }
+
     @Bean
     public org.candlepin.common.config.Configuration configuration() {
         try {
@@ -94,6 +81,7 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
         }
         return config;
     }
+
     protected org.candlepin.common.config.Configuration readConfiguration(ServletContext context)
             throws ConfigurationException {
 
@@ -175,7 +163,6 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
         return regex;
     }
 
-
     @Bean
     public CPMContextListener cpmContextListener(@Qualifier("provider") String provider) {
         if (ArtemisUtil.PROVIDER.equalsIgnoreCase(provider)) {
@@ -200,14 +187,6 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
         return config.getString(ConfigProperties.CPM_PROVIDER);
     }
 
-//    @Bean
-//    @Qualifier("loggingFilterConfig")
-//    public FilterConfig getLoggingFilterConfig() {
-//        Map<String, String> loggingFilterConfig = new HashMap<>();
-//        loggingFilterConfig.put("header.name", "x-candlepin-request-uuid");
-//        return (FilterConfig) loggingFilterConfig;
-//    }
-
     @Bean
     public EventSink eventSink(EventFilter eventFilter, EventFactory eventFactory,
                                ObjectMapper mapper, org.candlepin.common.config.Configuration config, ActiveMQSessionFactory sessionFactory,
@@ -216,11 +195,4 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
                 mapper, config, sessionFactory,
                 modeManager);
     }
-
-//    @Bean
-//    @Scope("request")
-//    public JsRunnerRequestCache jsRunnerRequestCache() {
-//        return new JsRunnerRequestCache();
-//    }
-
 }

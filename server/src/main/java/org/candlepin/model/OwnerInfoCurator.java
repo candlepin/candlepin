@@ -31,6 +31,8 @@ import org.hibernate.criterion.Subqueries;
 import org.hibernate.type.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,7 +49,8 @@ import javax.persistence.EntityManager;
 /**
  * OwnerInfoCurator
  */
-@Singleton
+//@Singleton
+@Component
 public class OwnerInfoCurator {
     private static Logger log = LoggerFactory.getLogger(OwnerInfoCurator.class);
 
@@ -56,7 +59,8 @@ public class OwnerInfoCurator {
     private ConsumerCurator consumerCurator;
     private PoolCurator poolCurator;
 
-    @Inject
+    //@Inject
+    @Autowired
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
         ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator,
         PoolCurator poolCurator) {

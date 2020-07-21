@@ -62,6 +62,7 @@ import io.swagger.util.PrimitiveType;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -119,6 +120,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author fnguyen
  *
  */
+//@Component
 public class CandlepinSwaggerModelConverter extends AbstractModelConverter implements ModelConverter {
     private static final Logger log = LoggerFactory.getLogger(CandlepinSwaggerModelConverter.class);
     private Map<JavaType, NestedComplexType> nestedJavaTypes = new HashMap<>();

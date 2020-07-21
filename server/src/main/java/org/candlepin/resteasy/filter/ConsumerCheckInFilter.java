@@ -55,6 +55,9 @@ public class ConsumerCheckInFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
+        /* TODO: spring- Remove this print statement */
+        System.out.println("ConsumerCheckInFilter");
+
         ResourceInfo resourceInfo = ResteasyContext.getContextData(ResourceInfo.class);
         Method method = resourceInfo.getResourceMethod();
 

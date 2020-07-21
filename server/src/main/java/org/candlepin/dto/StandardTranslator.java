@@ -122,11 +122,13 @@ import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
 import com.google.inject.Inject;
+import org.springframework.stereotype.Component;
 
 /**
  * The StandardTranslator is a SimpleModelTranslator that comes pre-configured to handle most, if
  * not all, existing translations.
  */
+@Component
 public class StandardTranslator extends SimpleModelTranslator {
 
     @Inject

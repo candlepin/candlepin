@@ -15,6 +15,7 @@
 package org.candlepin.resteasy.parameter;
 
 import org.candlepin.common.exceptions.CandlepinParameterParseException;
+import org.springframework.stereotype.Component;
 
 /**
  * KeyValueParameter

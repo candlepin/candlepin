@@ -17,11 +17,13 @@ package org.candlepin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.candlepin.resteasy.JsonProvider;
+import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
+import java.util.HashSet;
 import java.util.Set;
 
 /** Bootstrapper for RESTEasy. */
@@ -31,4 +33,5 @@ public class JaxrsApplication extends Application {
 
     @Override
     public Set<Class<?>> getClasses() { return super.getClasses(); }
+
 }

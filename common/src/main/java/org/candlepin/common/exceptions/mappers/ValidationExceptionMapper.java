@@ -16,6 +16,7 @@ package org.candlepin.common.exceptions.mappers;
 
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.util.VersionUtil;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
@@ -33,6 +34,7 @@ import javax.ws.rs.ext.Provider;
  * into JSON and allows the proper header to be set. This allows
  * Candlepin to control the flow of the exceptions.
  */
+@Component
 @Provider
 public class ValidationExceptionMapper extends CandlepinExceptionMapper
     implements ExceptionMapper<ValidationException> {

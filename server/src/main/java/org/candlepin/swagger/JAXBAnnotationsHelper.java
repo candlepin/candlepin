@@ -24,6 +24,7 @@ import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -33,6 +34,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
  * The <code>JAXBAnnotationsHelper</code> class defines helper methods for
  * applying JAXB annotations to property definitions.
  */
+//@Component
 class JAXBAnnotationsHelper {
     private static final String JAXB_DEFAULT = "##default";
 

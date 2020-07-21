@@ -17,6 +17,7 @@ package org.candlepin.common.exceptions.mappers;
 import org.candlepin.common.util.VersionUtil;
 
 import com.google.inject.Inject;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
@@ -33,6 +34,7 @@ import javax.ws.rs.ext.Provider;
  * those exceptions, opens them up, and if the cause is a ValidationException, it
  * delegates to the ValidationExceptionMapper.
  */
+@Component
 @Provider
 public class RollbackExceptionMapper extends CandlepinExceptionMapper
     implements ExceptionMapper<RollbackException> {

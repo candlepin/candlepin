@@ -16,6 +16,7 @@ package org.candlepin.common.exceptions.mappers;
 
 import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.util.VersionUtil;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
@@ -32,6 +33,7 @@ import javax.ws.rs.ext.Provider;
  * Unfortunately, because of the way RESTEasy handles exceptions having
  * just this ExceptionMapper is not enough which is why we have the other.
  */
+@Component
 @Provider
 public class RuntimeExceptionMapper extends CandlepinExceptionMapper
     implements ExceptionMapper<RuntimeException> {

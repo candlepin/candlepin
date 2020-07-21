@@ -15,6 +15,7 @@
 package org.candlepin.common.exceptions.mappers;
 
 import org.jboss.resteasy.spi.DefaultOptionsMethodException;
+import org.springframework.stereotype.Component;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -25,6 +26,7 @@ import javax.ws.rs.ext.Provider;
  * DefaultOptionsMethodException into JSON and allows the proper header to be
  * set. This allows Candlepin to control the flow of the exceptions.
  */
+@Component
 @Provider
 public class DefaultOptionsMethodExceptionMapper extends
     CandlepinExceptionMapper implements

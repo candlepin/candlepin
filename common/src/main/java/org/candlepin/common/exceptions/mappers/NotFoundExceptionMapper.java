@@ -17,6 +17,7 @@ package org.candlepin.common.exceptions.mappers;
 import org.candlepin.common.util.JaxRsExceptionResponseBuilder;
 
 import com.google.inject.Inject;
+import org.springframework.stereotype.Component;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
@@ -28,6 +29,7 @@ import javax.ws.rs.ext.Provider;
  * allows the proper header to be set. This allows Candlepin to control the flow
  * of the exceptions.
  */
+@Component
 @Provider
 public class NotFoundExceptionMapper extends CandlepinExceptionMapper
     implements ExceptionMapper<NotFoundException> {
