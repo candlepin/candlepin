@@ -330,7 +330,7 @@ public class JobManagerTest {
             .map(state -> Arguments.of(state));
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("terminalJobStatesProviderSansCanceled")
     public void jobShouldFailWhenJobStateIsTerminal(JobState state) {
         AsyncJobStatus status = this.createJobStatus(JOB_ID)
@@ -423,7 +423,7 @@ public class JobManagerTest {
             Arguments.of(owner2, jobLogLevel, jobLogLevel));
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("loggingContextArgProvider")
     public void testLoggingContextConfiguration(Owner owner, String jobLogLevel, String expectedLogLevel)
         throws JobException {
@@ -1209,6 +1209,32 @@ public class JobManagerTest {
     }
 
     @Test
+    public void testInitializationAttemptsToRecoverAbandonedJobs() {
+        AsyncJobStatus ejob1 = spy(new AsyncJobStatus()
+            .setJobKey(TestJob.JOB_KEY)
+            .setState(JobState.RUNNING));
+
+        AsyncJobStatus ejob2 = spy(new AsyncJobStatus()
+            .setJobKey(TestJob.JOB_KEY)
+            .setState(JobState.RUNNING));
+
+        AsyncJobStatusQueryBuilder input = new AsyncJobStatusQueryBuilder()
+            .setJobStates(Collections.singleton(JobState.RUNNING))
+            .setExecutors(Collections.singleton(Util.getHostname()));
+
+        doReturn(Arrays.asList(ejob1, ejob2)).when(this.jobCurator)
+            .findJobs(eq(input));
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+
+        verify(this.jobCurator, times(1)).findJobs(eq(input));
+
+        assertEquals(JobState.QUEUED, ejob1.getState());
+        assertEquals(JobState.QUEUED, ejob2.getState());
+    }
+
+    @Test
     public void testJobIsQueuedIfConstraintsPass() throws Exception {
         Map<String, Object> ejobData1 = new HashMap<>();
         ejobData1.put("arg1", "val1");
@@ -1373,20 +1399,27 @@ public class JobManagerTest {
         assertNull(captured);
     }
 
+    private AsyncJobStatusQueryBuilder generateQueryBuilder() {
+        return new AsyncJobStatusQueryBuilder()
+            .setJobIds(Util.asSet("job_id-1", "job_id-2", "job_id-3"))
+            .setJobKeys(Util.asSet("job_key-1", "job_key-2", "job_key-3"))
+            .setJobStates(Util.asSet(JobState.CREATED, JobState.QUEUED, JobState.RUNNING, JobState.FINISHED))
+            .setOwnerIds(Util.asSet("owner-1", "owner-2", "owner-3"))
+            .setPrincipalNames(Util.asSet("principal-1", "principal-2", "principal-3"))
+            .setOrigins(Util.asSet("origin-1", "origin-2", "origin-3"))
+            .setExecutors(Util.asSet("executor-1", "executor-2", "executor-3"))
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow());
+    }
+
     @Test
     public void testCleanupJobs() {
-        Set<String> jobKeys = Util.asSet("job_key-1", "job_key-2", "job_key-3");
-        Set<JobState> jobStates = Util.asSet(JobState.FINISHED, JobState.FAILED, JobState.CANCELED);
-        Set<String> ownerIds = Util.asSet("owner-1", "owner-2", "owner-3");
-        Date start = Util.yesterday();
-        Date end = Util.tomorrow();
+        Set<JobState> jobStates = Arrays.stream(JobState.values())
+            .filter(JobState::isTerminal)
+            .collect(Collectors.toSet());
 
-        AsyncJobStatusQueryBuilder input = new AsyncJobStatusQueryBuilder()
-            .setJobKeys(jobKeys)
-            .setJobStates(jobStates)
-            .setOwnerIds(ownerIds)
-            .setStartDate(start)
-            .setEndDate(end);
+        AsyncJobStatusQueryBuilder input = this.generateQueryBuilder()
+            .setJobStates(jobStates);
 
         int expected = new Random().nextInt();
 
@@ -1414,7 +1447,7 @@ public class JobManagerTest {
     public void testCleanupJobsLimitsJobStatesToTerminalStates() {
         Set<JobState> jobStates = Util.asSet(JobState.values());
 
-        AsyncJobStatusQueryBuilder input = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryBuilder input = this.generateQueryBuilder()
             .setJobStates(jobStates);
 
         int expected = new Random().nextInt();
@@ -1473,6 +1506,101 @@ public class JobManagerTest {
     }
 
     @Test
+    public void testAbortNonTerminalJobs() {
+        Set<JobState> states = Arrays.stream(JobState.values())
+            .filter(state -> !state.isTerminal())
+            .collect(Collectors.toSet());
+
+        AsyncJobStatusQueryBuilder input = this.generateQueryBuilder()
+            .setJobStates(states);
+
+        int expected = new Random().nextInt();
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        doReturn(expected).when(this.jobCurator).updateJobState(eq(input), eq(JobState.ABORTED));
+
+        JobManager manager = this.createJobManager();
+        int output = manager.abortNonTerminalJobs(input);
+
+        // Verify output is passed through properly
+        assertEquals(expected, output);
+
+        // Verify input is passed through, unmodified
+        verify(this.jobCurator, times(1)).updateJobState(captor.capture(), eq(JobState.ABORTED));
+
+        AsyncJobStatusQueryBuilder captured = captor.getValue();
+
+        assertNotNull(captured);
+        assertEquals(input, captured);
+    }
+
+    @Test
+    public void testAbortNonTerminalJobsLimitsJobStatesToNonTerminalStates() {
+        Set<JobState> jobStates = Util.asSet(JobState.values());
+
+        AsyncJobStatusQueryBuilder input = this.generateQueryBuilder()
+            .setJobStates(jobStates);
+
+        int expected = new Random().nextInt();
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        doReturn(expected).when(this.jobCurator).updateJobState(eq(input), eq(JobState.ABORTED));
+
+        JobManager manager = this.createJobManager();
+        int output = manager.abortNonTerminalJobs(input);
+
+        assertEquals(expected, output);
+
+        verify(this.jobCurator, times(1)).updateJobState(captor.capture(), eq(JobState.ABORTED));
+
+        AsyncJobStatusQueryBuilder captured = captor.getValue();
+
+        assertNotNull(captured);
+        Collection<JobState> actual = captured.getJobStates();
+
+        assertNotNull(actual);
+        assertThat(actual, not(empty()));
+        assertThat(actual.size(), lessThan(jobStates.size()));
+
+        for (JobState state : actual) {
+            assertNotNull(state);
+            assertFalse(state.isTerminal());
+        }
+    }
+
+    @Test
+    public void testAbortNonTerminalJobsDefaultsToNoneTerminalStates() {
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        JobManager manager = this.createJobManager();
+        int output = manager.abortNonTerminalJobs(null);
+
+        verify(this.jobCurator, times(1)).updateJobState(captor.capture(), eq(JobState.ABORTED));
+
+        AsyncJobStatusQueryBuilder captured = captor.getValue();
+
+        assertNotNull(captured);
+        Collection<JobState> actual = captured.getJobStates();
+        Set<JobState> expected = Arrays.stream(JobState.values())
+            .filter(state -> !state.isTerminal())
+            .collect(Collectors.toSet());
+
+        assertThat(expected, not(empty()));
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+
+        for (JobState state : expected) {
+            assertThat(actual, hasItem(state));
+        }
+    }
+
+    @Test
     public void testCancelJob() {
         String jobId = "job_id";
         AsyncJobStatus expected = this.createJobStatus(jobId, null, JobState.QUEUED);
@@ -1509,7 +1637,7 @@ public class JobManagerTest {
             .map(state -> Arguments.of(state));
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("terminalJobStatesProvider")
     public void testCancelJobWontCancelTerminalJobs(JobState state) {
         assertNotNull(state);

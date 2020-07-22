@@ -68,9 +68,9 @@ public class AsyncJobStatus extends AbstractHibernateObject {
         /** The job has been scheduled to run at some time in the future */
         SCHEDULED("QUEUED", "RUNNING", "CANCELED", "ABORTED"),
         /** The job has been sent to the backing job messaging/queueing system to be picked up */
-        QUEUED("RUNNING", "CANCELED", "FAILED"),
+        QUEUED("RUNNING", "CANCELED", "FAILED", "ABORTED"),
         /** The job has been picked up and is currently being executed */
-        RUNNING("FINISHED", "FAILED_WITH_RETRY", "FAILED", "CANCELED"),
+        RUNNING("FINISHED", "FAILED_WITH_RETRY", "FAILED", "CANCELED", "ABORTED"),
         /** The job failed during execution, and has been rescheduled to be retried */
         FAILED_WITH_RETRY("SCHEDULED", "QUEUED", "RUNNING", "FAILED", "CANCELED", "ABORTED"),
         /** The job has completed successfully */

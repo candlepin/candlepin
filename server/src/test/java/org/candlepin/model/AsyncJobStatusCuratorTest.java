@@ -32,8 +32,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -302,7 +304,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             Arguments.of(create, Arrays.asList("")));
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = { "1", "3" })
     public void testFindJobsByJobIds(int inputSize) {
         List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
@@ -412,8 +414,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobKeys(jobKeys);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobKeys(jobKeys);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -446,8 +448,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobKeys.addAll(expectedKeys);
         jobKeys.addAll(extraneousKeys);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobKeys(jobKeys);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobKeys(jobKeys);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -476,8 +478,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobStates(jobStates);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(jobStates);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -505,8 +507,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobStates(jobStates);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(jobStates);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -539,8 +541,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobStates.addAll(expectedStates);
         jobStates.addAll(extraneousStates);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobStates(jobStates);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(jobStates);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -573,8 +575,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -607,8 +609,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -646,8 +648,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         ownerIds.addAll(expectedKeys);
         ownerIds.addAll(extraneousKeys);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -683,8 +685,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -718,8 +720,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
 
@@ -821,7 +823,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("jobQueryGenericStringInputProvider")
     public void testFindJobsByPrincipal(Collection<String> create, Collection<String> query) {
         List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
@@ -850,7 +852,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("jobQueryGenericStringInputProvider")
     public void testFindJobsByOrigin(Collection<String> create, Collection<String> query) {
         List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
@@ -879,7 +881,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("jobQueryGenericStringInputProvider")
     public void testFindJobsByExecutor(Collection<String> create, Collection<String> query) {
         List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
@@ -1165,7 +1167,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = { "1", "3" })
     public void testDeleteJobsByJobIds(int count) {
         List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
@@ -1250,8 +1252,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobKeys(jobKeys);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobKeys(jobKeys);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1281,8 +1283,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobKeys(jobKeys);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobKeys(jobKeys);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1317,8 +1319,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobKeys.addAll(expectedKeys);
         jobKeys.addAll(extraneousKeys);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobKeys(jobKeys);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobKeys(jobKeys);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1348,8 +1350,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobStates(jobStates);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(jobStates);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1379,8 +1381,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobStates(jobStates);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(jobStates);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1415,8 +1417,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobStates.addAll(expectedStates);
         jobStates.addAll(extraneousStates);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setJobStates(jobStates);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(jobStates);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1450,8 +1452,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1485,8 +1487,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1525,8 +1527,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         ownerIds.addAll(expectedKeys);
         ownerIds.addAll(extraneousKeys);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1561,8 +1563,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1598,8 +1600,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        queryBuilder.setOwnerIds(ownerIds);
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(ownerIds);
 
         int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
         assertEquals(deleted, expected.size());
@@ -1708,7 +1710,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("jobQueryGenericStringInputProvider")
     public void testDeleteJobsByPrincipal(Collection<String> create, Collection<String> query) {
         List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
@@ -1739,7 +1741,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("jobQueryGenericStringInputProvider")
     public void testDeleteJobsByOrigin(Collection<String> create, Collection<String> query) {
         List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
@@ -1770,7 +1772,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("jobQueryGenericStringInputProvider")
     public void testDeleteJobsByExecutor(Collection<String> create, Collection<String> query) {
         List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
@@ -1829,7 +1831,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         List<AsyncJobStatus> expected = created.stream()
             .filter(job -> jobKeys.contains(job.getJobKey()))
             .filter(job -> jobStates.contains(job.getState()))
-            .filter(j   -> j.getContextOwner() != null && ownerIds.contains(j.getContextOwner().getId()))
+            .filter(job -> job.getContextOwner() != null && ownerIds.contains(job.getContextOwner().getId()))
             .filter(job -> start.compareTo(job.getUpdated()) <= 0 && end.compareTo(job.getUpdated()) >= 0)
             .filter(job -> jobPrincipals.contains(job.getPrincipalName()))
             .filter(job -> jobOrigins.contains(job.getOrigin()))
@@ -1901,6 +1903,757 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         for (AsyncJobStatus job : remaining) {
             assertTrue(created.contains(job));
         }
+    }
+
+
+
+
+
+
+    /**
+     * Validates the job states by checking that the jobs in the provided map have been updated to the
+     * specified job state if the job's ID is in the provided collection of expected job IDs. If the
+     * job ID is not in the expected job IDs collection, it is expected to be unchanged.
+     *
+     * @param jobMap
+     *  a mapping of jobs to validate
+     *
+     * @param expectedJobIds
+     *  a collection of IDs representing jobs which should have been updated to the specified job state
+     *
+     * @param updatedState
+     *  the job state updated jobs are expected to be using
+     */
+    private void validateJobStates(Map<String, AsyncJobStatus> jobMap, Collection<String> expectedJobIds,
+        JobState updatedState) {
+
+        this.asyncJobCurator.flush();
+        this.asyncJobCurator.clear();
+
+        for (AsyncJobStatus existing : jobMap.values()) {
+            AsyncJobStatus refreshed = this.asyncJobCurator.get(existing.getId());
+            assertNotNull(refreshed);
+
+            if (expectedJobIds.contains(existing.getId())) {
+                assertEquals(existing.getState(), refreshed.getPreviousState());
+                assertEquals(updatedState, refreshed.getState());
+            }
+            else {
+                assertEquals(existing.getPreviousState(), refreshed.getPreviousState());
+                assertEquals(existing.getState(), refreshed.getState());
+            }
+        }
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = { "1", "3" })
+    public void testUpdateJobStateByJobIds(int count) {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expectedJobIds = new Random().ints(Math.min(count, created.size()), 0, created.size())
+            .mapToObj(i -> created.get(i))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobIds(expectedJobIds);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByIdsWithExtraneous() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expectedJobIds = new Random().ints(Math.min(3, created.size()), 0, created.size())
+            .mapToObj(i -> created.get(i))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        List<String> extraneousJobIds = Arrays.asList("extra_id-1", "extra_id-2", "extra_id-3");
+
+        List<String> jobIds = new LinkedList<>();
+        jobIds.addAll(expectedJobIds);
+        jobIds.addAll(extraneousJobIds);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobIds(jobIds);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(extraneousJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateBySingleJobKey() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = Arrays.asList("job_key-1");
+        List<String> extraneous = Arrays.asList();
+        List<String> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getJobKey()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobKeys(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByMultipleJobKeys() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = Arrays.asList("job_key-1", "job_key-2");
+        List<String> extraneous = Arrays.asList();
+        List<String> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getJobKey()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobKeys(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByMultipleJobKeysWithExtraneousKeys() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = Arrays.asList("job_key-1", "job_key-3");
+        List<String> extraneous = Arrays.asList("job_key-4", "job_key-6");
+        List<String> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getJobKey()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobKeys(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateBySingleJobState() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<JobState> expected = Arrays.asList(JobState.CREATED);
+        List<JobState> extraneous = Arrays.asList();
+        List<JobState> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getState()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByMultipleJobStates() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<JobState> expected = Arrays.asList(JobState.CREATED, JobState.RUNNING);
+        List<JobState> extraneous = Arrays.asList();
+        List<JobState> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getState()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByMultipleJobStatesWithExtraneousStates() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<JobState> expected = Arrays.asList(JobState.CREATED, JobState.QUEUED);
+        List<JobState> extraneous = Arrays.asList(JobState.SCHEDULED);
+        List<JobState> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getState()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByOwnerIds() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = Arrays.asList(owners.get(1).getId());
+        List<String> extraneous = Arrays.asList();
+        List<String> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getContextOwnerId()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByMultipleOwnerIds() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = Arrays.asList(owners.get(1).getId(), owners.get(3).getId());
+        List<String> extraneous = Arrays.asList();
+        List<String> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getContextOwnerId()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByMultipleOwnerIdsWithExtraneousOwners() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = Arrays.asList(owners.get(1).getId(), owners.get(3).getId());
+        List<String> extraneous = Arrays.asList("ex_owner_id-1", "ex_owner_id-2");
+        List<String> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getContextOwnerId()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByNullOwnerId() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = Arrays.asList((String) null);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getContextOwnerId()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(expected);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByMixedOwnerIds() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = Arrays.asList(null, owners.get(2).getId());
+        List<String> extraneous = Arrays.asList();
+        List<String> combined = new LinkedList<>();
+        combined.addAll(expected);
+        combined.addAll(extraneous);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getContextOwnerId()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOwnerIds(combined);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByLastUpdateTimeBeforeDate() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        Date now = new Date();
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> now.compareTo(job.getUpdated()) >= 0)
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setEndDate(now);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByLastUpdateTimeAfterDate() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        Date now = new Date();
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> now.compareTo(job.getUpdated()) <= 0)
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setStartDate(now);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByLastUpdateTimeInRange() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        Date start = Util.addDaysToDt(-1);
+        Date end = Util.addDaysToDt(1);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> start.compareTo(job.getUpdated()) <= 0 && end.compareTo(job.getUpdated()) >= 0)
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setStartDate(start)
+            .setEndDate(end);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("jobQueryGenericStringInputProvider")
+    public void testUpdateJobStateByPrincipal(Collection<String> create, Collection<String> query) {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, create, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = new LinkedList<>(query);
+        expected.retainAll(create);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getPrincipalName()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setPrincipalNames(query);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("jobQueryGenericStringInputProvider")
+    public void testUpdateJobStateByOrigin(Collection<String> create, Collection<String> query) {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, create, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = new LinkedList<>(query);
+        expected.retainAll(create);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getOrigin()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setOrigins(query);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("jobQueryGenericStringInputProvider")
+    public void testUpdateJobStateByExecutor(Collection<String> create, Collection<String> query) {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<JobState> states = Arrays.asList(JobState.CREATED, JobState.QUEUED, JobState.RUNNING);
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, create);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> expected = new LinkedList<>(query);
+        expected.retainAll(create);
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> expected.contains(job.getExecutor()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setExecutors(query);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateByMultipleParameters() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2", "job_key-3");
+        List<Owner> owners = Arrays.asList(null, owner1, owner2);
+        List<JobState> states = Arrays.asList(JobState.QUEUED, JobState.RUNNING,
+            JobState.FAILED, JobState.FINISHED);
+        List<String> principals = Arrays.asList("principal-1", "principal-2", "principal-3");
+        List<String> origins = Arrays.asList("origin-1", "origin-2", "origin-3");
+        List<String> executors = Arrays.asList("executor-1", "executor-2", "executor-3");
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners,
+            principals, origins, executors);
+
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<String> jobKeys = Arrays.asList("job_key-1");
+        List<JobState> jobStates = Arrays.asList(JobState.QUEUED, JobState.RUNNING);
+        List<String> ownerIds = Arrays.asList(owner2.getId());
+        List<String> jobPrincipals = Arrays.asList("principal-2");
+        List<String> jobOrigins = Arrays.asList("origin-3");
+        List<String> jobExecutors = Arrays.asList("executor-1");
+        Date start = Util.addDaysToDt(-1);
+        Date end = Util.addDaysToDt(1);
+
+
+        List<String> expectedJobIds = created.stream()
+            .filter(job -> jobKeys.contains(job.getJobKey()))
+            .filter(job -> jobStates.contains(job.getState()))
+            .filter(job -> job.getContextOwner() != null && ownerIds.contains(job.getContextOwner().getId()))
+            .filter(job -> start.compareTo(job.getUpdated()) <= 0 && end.compareTo(job.getUpdated()) >= 0)
+            .filter(job -> jobPrincipals.contains(job.getPrincipalName()))
+            .filter(job -> jobOrigins.contains(job.getOrigin()))
+            .filter(job -> jobExecutors.contains(job.getExecutor()))
+            .map(job -> job.getId())
+            .collect(Collectors.toList());
+
+        assertTrue(expectedJobIds.size() > 0);
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobKeys(jobKeys)
+            .setJobStates(jobStates)
+            .setOwnerIds(ownerIds)
+            .setPrincipalNames(jobPrincipals)
+            .setOrigins(jobOrigins)
+            .setExecutors(jobExecutors)
+            .setStartDate(start)
+            .setEndDate(end);
+
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(expectedJobIds.size(), updated);
+
+        this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateWithoutParameters() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2");
+        List<JobState> states = Arrays.asList(JobState.values());
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
+
+        // The sanity check should cause this to update nothing.
+        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        assertEquals(0, updated);
+
+        this.validateJobStates(jobMap, Arrays.asList(), JobState.ABORTED);
+    }
+
+    @Test
+    public void testUpdateJobStateWithNullBuilder() {
+        List<String> keys = Arrays.asList("job_key-1", "job_key-2");
+        List<JobState> states = Arrays.asList(JobState.values());
+        List<Owner> owners = Arrays.asList(null, this.createOwner(), this.createOwner());
+
+        List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
+        Map<String, AsyncJobStatus> jobMap = new HashMap<>();
+        for (AsyncJobStatus job : created) {
+            jobMap.put(job.getId(), job);
+        }
+
+        // The sanity check should cause this to update nothing.
+        int updated = this.asyncJobCurator.updateJobState(null, JobState.ABORTED);
+        assertEquals(0, updated);
+
+        this.validateJobStates(jobMap, Arrays.asList(), JobState.ABORTED);
     }
 
 
