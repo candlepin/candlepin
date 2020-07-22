@@ -7,17 +7,10 @@ import org.gradle.api.Project;
 import org.gradle.api.plugins.ExtraPropertiesExtension;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,45 +27,14 @@ public class SpecVersion implements Plugin<Project> {
 
         String versionFromSpec = null;
         String releaseFromSpec = null;
-        final Path[] specFile = new Path[1];
 
-        PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:*.spec.tmpl");
+        // Read the spec file from (projectRoot)/server/candlepin.spec.tmpl
+        String absPath = project.getRootProject().getProjectDir().getAbsolutePath();
+        Path specFilePath = Paths.get(absPath, "server", "candlepin.spec.tmpl");
 
         try {
-            Files.walkFileTree(project.getProjectDir().toPath(), Collections.emptySet(), 1,
-                new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                        if (pathMatcher.matches(file.getFileName())) {
-                            specFile[0] = file;
-                            return FileVisitResult.TERMINATE;
-                        }
-                        return FileVisitResult.CONTINUE;
-                    }
-                }
-            );
 
-            if (specFile[0] == null) {
-                Files.walkFileTree(project.getProjectDir().toPath().resolveSibling("server"),
-                    Collections.emptySet(), 1,
-                    new SimpleFileVisitor<Path>() {
-                        @Override
-                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                            if (pathMatcher.matches(file.getFileName())) {
-                                specFile[0] = file;
-                                return FileVisitResult.TERMINATE;
-                            }
-                            return FileVisitResult.CONTINUE;
-                        }
-                    }
-                );
-            }
-            if (specFile[0] == null) {
-                throw new IOException("Could not file spec file in " + project.getProjectDir());
-            }
-
-            File file = specFile[0].toFile();
-            FileReader fileReader = new FileReader(file);
+            FileReader fileReader = new FileReader(specFilePath.toFile());
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             String line;
             while ((line = bufferedReader.readLine()) != null) {
@@ -101,7 +63,7 @@ public class SpecVersion implements Plugin<Project> {
             }
         }
         else {
-            throw new GradleException("Unable to find a version in the spec file: " + specFile[0].toString());
+            throw new GradleException("Unable to find a version in the spec file: " + specFilePath);
         }
         if (releaseFromSpec != null) {
             project.getLogger().debug("Setting the project release to: " + releaseFromSpec);
@@ -111,7 +73,7 @@ public class SpecVersion implements Plugin<Project> {
             }
         }
         else {
-            throw new GradleException("Unable to find a version in the spec file: " + specFile[0].toString());
+            throw new GradleException("Unable to find a version in the spec file: " + specFilePath);
         }
     }
 }

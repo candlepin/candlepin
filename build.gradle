@@ -22,9 +22,9 @@ plugins {
     to look for libraries that have newer versions available.
      */
     id "com.github.ben-manes.versions" version "0.28.0"
+    id "org.candlepin.gradle.SpecVersion"
+    id "java"
 }
-
-version = "2.0"
 
 ext.versions = [
     jackson   : "2.10.1",
@@ -445,7 +445,6 @@ project(":api") {
 
 configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "candlepin" }) {
     apply plugin: "checkstyle"
-    apply plugin: "org.candlepin.gradle.SpecVersion"
 
     checkstyle {
         toolVersion = "$versions.checkstyle"
