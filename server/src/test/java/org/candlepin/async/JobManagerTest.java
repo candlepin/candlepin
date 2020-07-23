@@ -88,6 +88,7 @@ import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
+import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.MDC;
 import org.slf4j.event.Level;
 
@@ -100,6 +101,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -1552,5 +1554,26 @@ public class JobManagerTest {
         // If mockito ever gets a way to verify the inverse of "zero interactions", do that here
         // instead of specifically looking for the start op.
         verify(this.scheduler, atLeastOnce()).start();
+    }
+
+    @Test
+    public void testSchedulerReceivesConfig() throws Exception {
+        StdSchedulerFactory schedulerFactory = mock(StdSchedulerFactory.class);
+        this.schedulerFactory = schedulerFactory;
+
+        doReturn(this.scheduler).when(this.schedulerFactory).getScheduler();
+
+        this.config.setProperty("org.quartz.testcfg1", "val1");
+        this.config.setProperty("org.quartz.testcfg2", "val2");
+
+        Properties expected = this.config.subset("org.quartz").toProperties();
+
+        JobManager manager = this.createJobManager();
+
+        assertTrue(manager.isSchedulerEnabled());
+
+        manager.initialize();
+
+        verify(schedulerFactory, times(1)).initialize(eq(expected));
     }
 }

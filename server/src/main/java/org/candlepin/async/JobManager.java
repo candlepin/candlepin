@@ -54,6 +54,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.quartz.TriggerListener;
+import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
@@ -69,6 +70,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -447,6 +449,12 @@ public class JobManager implements ModeChangeListener {
 
             if (this.state == ManagerState.CREATED) {
                 if (this.isSchedulerEnabled()) {
+                    // Initialize the scheduler factory with the Quartz-specific configuration, if possible
+                    if (this.schedulerFactory instanceof StdSchedulerFactory) {
+                        Properties quartzConfig = this.configuration.subset("org.quartz").toProperties();
+                        ((StdSchedulerFactory) this.schedulerFactory).initialize(quartzConfig);
+                    }
+
                     if (this.scheduler == null || this.scheduler.isShutdown()) {
                         this.scheduler = this.schedulerFactory.getScheduler();
                     }
