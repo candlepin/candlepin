@@ -73,8 +73,6 @@ import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 
-
-
 /**
  * HypervisorUpdateJobTest
  */

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNull;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.CertificateSerial;
+import org.candlepin.util.Util;
 
 import java.util.Date;
 
@@ -72,10 +73,11 @@ public class CertificateSerialTranslatorTest extends
             // childrenGenerated flag
 
             assertEquals(source.getId(), dest.getId());
-            assertEquals(source.getSerial(), dest.getSerial());
-            assertEquals(source.getExpiration(), dest.getExpiration());
-            assertEquals(source.isCollected(), dest.isCollected());
-            assertEquals(source.isRevoked(), dest.isRevoked());
+            assertEquals(source.getSerial() != null ?
+                source.getSerial().longValue() : null, dest.getSerial());
+            assertEquals(source.getExpiration(), Util.toDate(dest.getExpiration()));
+            assertEquals(source.isCollected(), dest.getCollected());
+            assertEquals(source.isRevoked(), dest.getRevoked());
         }
         else {
             assertNull(dest);

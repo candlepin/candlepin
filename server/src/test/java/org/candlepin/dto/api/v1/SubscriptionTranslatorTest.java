@@ -14,6 +14,12 @@
  */
 package org.candlepin.dto.api.v1;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.shim.ContentDataTranslator;
@@ -33,12 +39,6 @@ import org.candlepin.util.Util;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test suite for the ProductTranslator class
