@@ -47,7 +47,6 @@ import com.google.inject.Inject;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -95,7 +94,7 @@ public class PoolResource implements PoolsApi {
         Boolean listAll, String activeOn) {
 
         Principal principal = this.principalProvider.get();
-        PageRequest pageRequest = ResteasyProviderFactory.getContextData(PageRequest.class);
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
@@ -290,7 +289,7 @@ public class PoolResource implements PoolsApi {
     @Override
     public Object getSubCert(String poolId) {
 
-        HttpRequest httpRequest = ResteasyProviderFactory.getContextData(HttpRequest.class);
+        HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
 
         MediaType mediaType = httpRequest == null ? null :
             httpRequest.getHttpHeaders().getMediaType();

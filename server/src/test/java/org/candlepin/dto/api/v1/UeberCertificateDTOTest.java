@@ -34,8 +34,8 @@ public class UeberCertificateDTOTest extends AbstractDTOTest<UeberCertificateDTO
         super(UeberCertificateDTO.class);
 
         CertificateSerialDTO serial = new CertificateSerialDTO();
-        serial.id("123");
-        serial.setSerial("10");
+        serial.setId(123L);
+        serial.setSerial(10L);
         serial.setExpiration(OffsetDateTime.now());
         serial.setCollected(true);
         serial.setRevoked(true);

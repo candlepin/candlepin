@@ -53,13 +53,17 @@ ext.libraries = [
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
         "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5",
         "com.fasterxml.jackson.datatype:jackson-datatype-jdk8",
-        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
     ],
     swagger: [
         "io.swagger:swagger-jaxrs",
-            "io.swagger:swagger-core",
-            "io.swagger:swagger-models",
+        "io.swagger:swagger-core",
+        "io.swagger:swagger-models",
         "io.swagger:swagger-annotations",
+
+        "org.reflections:reflections:0.9.10",
         "org.apache.commons:commons-lang3",
     ],
     sun_jaxb: [
@@ -123,11 +127,11 @@ ext.libraries = [
     gettext: "com.googlecode.gettext-commons:gettext-commons",
     javax_servlet: "javax.servlet:servlet-api",
     javax_validation: "javax.validation:validation-api",
-    jmock                 : [
+    jmock: [
         "org.jmock:jmock",
         "org.jmock:jmock-junit4",
     ],
-    validator             : [
+    validator: [
         "org.hibernate.validator:hibernate-validator",
         "org.hibernate.validator:hibernate-validator-annotation-processor",
     ],
@@ -343,8 +347,8 @@ project(":api") {
       configFile = config_file
       outputDir = "$buildDir/generated"
       configOptions = [
-          interfaceOnly: "true",
-          generatePom: "false",
+          interfaceOnly: true,
+          generatePom: false,
           dateLibrary: "java8"
       ]
       templateDir = "$rootDir/buildSrc/src/main/resources/templates"

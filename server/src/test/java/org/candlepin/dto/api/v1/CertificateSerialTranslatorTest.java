@@ -22,7 +22,6 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.util.Util;
 
-import java.math.BigInteger;
 import java.util.Date;
 
 
@@ -73,9 +72,9 @@ public class CertificateSerialTranslatorTest extends
             // This DTO does not have any nested objects, so we don't need to worry about the
             // childrenGenerated flag
 
-            assertEquals(source.getId(), dest.getId() != null ? Long.valueOf(dest.getId()) : null);
-            assertEquals(source.getSerial(), dest.getSerial() != null ?
-                BigInteger.valueOf(Long.parseLong(dest.getSerial())) : null);
+            assertEquals(source.getId(), dest.getId());
+            assertEquals(source.getSerial() != null ?
+                source.getSerial().longValue() : null, dest.getSerial());
             assertEquals(source.getExpiration(), Util.toDate(dest.getExpiration()));
             assertEquals(source.isCollected(), dest.getCollected());
             assertEquals(source.isRevoked(), dest.getRevoked());

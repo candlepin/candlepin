@@ -4181,7 +4181,7 @@ components:
               type: string
               example: "/jobs/ff808081554a3e4101554a3e9033005d"
             resultData:
-              type: object
+              type: string
               example: "Refresh completed successfully!"
 
     ActivationKeyDTO:
@@ -4286,9 +4286,11 @@ components:
         - type: object
           properties:
             id:
-              type: string
+              type: integer
+              format: int64
             serial:
-              type: string
+              type: integer
+              format: int64
             expiration:
               type: string
               format: date-time

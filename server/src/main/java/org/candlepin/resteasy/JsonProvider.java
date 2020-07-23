@@ -60,6 +60,7 @@ import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.dto.api.v1.TimestampedEntity;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.UserDTO;
+import org.candlepin.jackson.AsyncJobStatusAnnotationMixin;
 import org.candlepin.jackson.ConsumerTypeDeserializer;
 import org.candlepin.jackson.DateSerializer;
 import org.candlepin.jackson.OffsetDateTimeDeserializer;
@@ -181,7 +182,7 @@ public class JsonProvider extends JacksonJsonProvider {
     private void addMixInAnnotationsForDTOs(ObjectMapper mapper) {
         mapper.addMixIn(ActivationKeyDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ActivationKeyPoolDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(AsyncJobStatusDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(AsyncJobStatusDTO.class, AsyncJobStatusAnnotationMixin.class);
         mapper.addMixIn(AttributeDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(BrandingDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(CdnDTO.class, DynamicPropertyFilterMixIn.class);

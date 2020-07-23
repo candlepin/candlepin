@@ -99,8 +99,6 @@ import javax.inject.Provider;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
-
-
 /**
  * ConsumerResourceTest
  */
@@ -199,8 +197,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(4, certificates.size());
 
-        String serial1 = certificates.get(0).getSerial().getId();
-        String serial2 = certificates.get(3).getSerial().getId();
+        Long serial1 = certificates.get(0).getSerial().getId();
+        Long serial2 = certificates.get(3).getSerial().getId();
 
         String serialsToFilter = serial1 + "," + serial2;
 

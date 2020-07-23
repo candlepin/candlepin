@@ -14,7 +14,9 @@
  */
 package org.candlepin.dto.api.v1;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -24,6 +26,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
+import org.candlepin.util.Util;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -67,6 +70,8 @@ public class AsyncJobStatusTranslatorTest extends
         source.setOrigin("localhost_origin");
         source.setExecutor("localhost_exec");
         source.setPrincipalName("admin");
+        source.setState(JobState.QUEUED);
+        source.setState(JobState.RUNNING); // The second set should prime the previous state field
         source.setStartTime(new Date());
         source.setEndTime(new Date());
         source.setMaxAttempts(7);
@@ -94,10 +99,8 @@ public class AsyncJobStatusTranslatorTest extends
             assertEquals(source.getOrigin(), dto.getOrigin());
             assertEquals(source.getExecutor(), dto.getExecutor());
             assertEquals(source.getPrincipalName(), dto.getPrincipal());
-            assertEquals(source.getStartTime(), dto.getStartTime() != null ?
-                new Date(dto.getStartTime().toInstant().toEpochMilli()) : null);
-            assertEquals(source.getEndTime(), dto.getEndTime() != null ?
-                new Date(dto.getEndTime().toInstant().toEpochMilli()) : null);
+            assertEquals(source.getStartTime(), Util.toDate(dto.getStartTime()));
+            assertEquals(source.getEndTime(),  Util.toDate(dto.getEndTime()));
             assertEquals(source.getJobResult(), dto.getResultData());
 
             // Impl note: We test state translation explicitly in other tests
