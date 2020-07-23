@@ -376,7 +376,9 @@ public class JobMessageReceiver {
         @Override
         public void handleMessage(CPMSession session, CPMConsumer consumer, CPMMessage message) {
             try {
-                log.debug("Received message: {}", message);
+                if (log.isDebugEnabled()) {
+                    log.debug("Received message: {}", this.serializeMessage(message));
+                }
 
                 // Acknowledge the message so that the server knows that it was received.
                 // By doing this, the server can update the delivery counts which plays
@@ -407,7 +409,8 @@ public class JobMessageReceiver {
                 JobState intendedState = e.getIntendedState();
 
                 if (intendedState != null && !intendedState.isTerminal()) {
-                    log.error("Job processing failed; rolling back job message to retry later: {}", message);
+                    log.error("Job processing failed; rolling back job message to retry later: {}",
+                        this.serializeMessage(message));
 
                     // The intended state is non-terminal (likely fail-with-retry), so we'll rollback
                     // to allow the message to be redelivered so the job can be re-attempted.
@@ -435,7 +438,7 @@ public class JobMessageReceiver {
                 // want anyway.
 
                 log.error("Failed to dispatch job message during job execution; rolling back job message " +
-                    "to retry later: {}", message);
+                    "to retry later: {}", this.serializeMessage(message));
 
                 this.rollback(session);
             }
@@ -452,13 +455,15 @@ public class JobMessageReceiver {
 
                 if (e.isTerminal()) {
                     log.error("Job processing failed terminally; committing job message as acknowledged: {}",
-                        message);
+                        this.serializeMessage(message));
 
                     // TODO: Move the message to another queue for cleanup/resync later
                     this.commit(session);
                 }
                 else {
-                    log.error("Job processing failed; rolling back job message to retry later: {}", message);
+                    log.error("Job processing failed; rolling back job message to retry later: {}",
+                        this.serializeMessage(message));
+
                     this.rollback(session);
                 }
             }
@@ -475,13 +480,19 @@ public class JobMessageReceiver {
                 log.warn("Job message processing failed! {}: {}", messageId, reason);
 
                 // If debugging is enabled log a more in depth message.
-                log.debug("Unable to process message; rolling back client session.\n{}", message, e);
+                log.debug("Unable to process message; rolling back client session.\n{}",
+                    this.serializeMessage(message), e);
 
                 this.rollback(session);
             }
             finally {
                 this.unitOfWork.end();
             }
+        }
+
+        private String serializeMessage(CPMMessage message) {
+            return String.format("Message [id: %s, address: %s, body: %s]",
+                message.getMessageId(), message.getAddress(), message.getBody());
         }
 
         private void commit(CPMSession session) {

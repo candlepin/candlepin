@@ -185,4 +185,13 @@ public class ArtemisMessage implements CPMMessage {
         return this.message.getStringProperty(key);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("ArtemisMessage [id: %s, address: %s, body: %s]",
+            this.getMessageId(), this.getAddress(), this.getBody());
+    }
+
 }
