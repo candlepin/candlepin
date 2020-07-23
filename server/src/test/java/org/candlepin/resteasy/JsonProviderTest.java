@@ -32,7 +32,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
+import org.junit.ComparisonFailure;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,7 +66,7 @@ public class JsonProviderTest {
             new ProductCachedSerializationModule(productCurator));
         ourMapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
-        ResteasyProviderFactory.clearContextData();
+        ResteasyContext.clearContextData();
     }
 
     // This is kind of silly - basically just testing an initial setting...
@@ -100,6 +101,10 @@ public class JsonProviderTest {
      */
     @Test
     public void canSerializeDatesWithLargeTimestampsConcurrently() {
+        JsonProvider provider = new JsonProvider(config,
+            new ProductCachedSerializationModule(productCurator));
+        ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+
         final AtomicBoolean processingFailure = new AtomicBoolean(false);
         final AtomicBoolean comparisonFailure = new AtomicBoolean(false);
         ExecutorService ex = Executors.newFixedThreadPool(1000);
@@ -112,11 +117,11 @@ public class JsonProviderTest {
                 String expectedDate = "\"" + iso8601WithoutMilliseconds.format(randomDate) + "\"";
 
                 try {
-                    String receivedDate = ourMapper.writeValueAsString(randomDate);
+                    String receivedDate = mapper.writeValueAsString(randomDate);
                     try {
-                        assertEquals(expectedDate, receivedDate, "The date was not serialized properly.");
+                        assertEquals("The date was not serialized properly.", expectedDate, receivedDate);
                     }
-                    catch (AssertionError cf) {
+                    catch (ComparisonFailure cf) {
                         cf.printStackTrace();
                         comparisonFailure.set(true);
                     }
@@ -155,7 +160,7 @@ public class JsonProviderTest {
     public void testDynamicPropertyFilterExcludeSingleProperty() {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.excludeAttribute("name");
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         String serializedKey = "";
@@ -175,10 +180,10 @@ public class JsonProviderTest {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
 
-        assertTrue(akNode.has("id"), "The 'id' field should NOT have been excluded!");
-        assertTrue(akNode.has("description"), "The 'description' field should NOT have been excluded!");
-        assertTrue(akNode.has("releaseVer"), "The 'releaseVer' field should NOT have been excluded!");
-        assertFalse(akNode.has("name"), "The 'name' field should have been excluded!");
+        assertTrue("The 'id' field should NOT have been excluded!", akNode.has("id"));
+        assertTrue("The 'description' field should NOT have been excluded!", akNode.has("description"));
+        assertTrue("The 'releaseVer' field should NOT have been excluded!", akNode.has("releaseVer"));
+        assertFalse("The 'name' field should have been excluded!", akNode.has("name"));
     }
 
     @Test
@@ -187,7 +192,7 @@ public class JsonProviderTest {
         filterData.excludeAttribute("name");
         filterData.excludeAttribute("addOns");
         filterData.excludeAttribute("serviceLevel");
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         String serializedKey = "";
@@ -207,12 +212,12 @@ public class JsonProviderTest {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
 
-        assertTrue(akNode.has("id"), "The 'id' field should NOT have been excluded!");
-        assertTrue(akNode.has("description"), "The 'description' field should NOT have been excluded!");
-        assertTrue(akNode.has("releaseVer"), "The 'releaseVer' field should NOT have been excluded!");
-        assertFalse(akNode.has("name"), "The 'name' field should have been excluded!");
-        assertFalse(akNode.has("addOns"), "The 'addOns' field should have been excluded!");
-        assertFalse(akNode.has("serviceLevel"), "The 'serviceLevel' field should have been excluded!");
+        assertTrue("The 'id' field should NOT have been excluded!", akNode.has("id"));
+        assertTrue("The 'description' field should NOT have been excluded!", akNode.has("description"));
+        assertTrue("The 'releaseVer' field should NOT have been excluded!", akNode.has("releaseVer"));
+        assertFalse("The 'name' field should have been excluded!", akNode.has("name"));
+        assertFalse("The 'addOns' field should have been excluded!", akNode.has("addOns"));
+        assertFalse("The 'serviceLevel' field should have been excluded!", akNode.has("serviceLevel"));
     }
 
     @Test
@@ -220,7 +225,7 @@ public class JsonProviderTest {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.includeAttribute("name");
         filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         String serializedKey = "";
@@ -240,7 +245,7 @@ public class JsonProviderTest {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
         assertEquals(1, akNode.size());
-        assertTrue(akNode.has("name"), "The 'name' field should have been included!");
+        assertTrue("The 'name' field should have been included!", akNode.has("name"));
     }
 
     @Test
@@ -250,7 +255,7 @@ public class JsonProviderTest {
         filterData.includeAttribute("releaseVer");
         filterData.includeAttribute("addOns");
         filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         String serializedKey = "";
@@ -270,9 +275,9 @@ public class JsonProviderTest {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
         assertEquals(3, akNode.size());
-        assertTrue(akNode.has("name"), "The 'name' field should have been included!");
-        assertTrue(akNode.has("releaseVer"), "The 'releaseVer' field should have been included!");
-        assertTrue(akNode.has("addOns"), "The 'addOns' field should have been included!");
+        assertTrue("The 'name' field should have been included!", akNode.has("name"));
+        assertTrue("The 'releaseVer' field should have been included!", akNode.has("releaseVer"));
+        assertTrue("The 'addOns' field should have been included!", akNode.has("addOns"));
     }
 
     @Test
@@ -280,7 +285,7 @@ public class JsonProviderTest {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.includeAttribute("owner.id");
         filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
         NestedOwnerDTO ownerDTO = new NestedOwnerDTO()
@@ -305,9 +310,9 @@ public class JsonProviderTest {
             fail("Parsing serialized ActivationKeyDTO failed!");
         }
         assertEquals(1, akNode.size());
-        assertTrue(akNode.has("owner"), "The 'owner' field should have been included!");
+        assertTrue("The 'owner' field should have been included!", akNode.has("owner"));
         assertEquals(1, akNode.get("owner").size());
-        assertTrue(akNode.get("owner").has("id"), "The 'owner.id' field should have been included!");
+        assertTrue("The 'owner.id' field should have been included!", akNode.get("owner").has("id"));
     }
 
     @Test
@@ -315,7 +320,7 @@ public class JsonProviderTest {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.includeAttribute("owner.id");
         filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
-        ResteasyProviderFactory.pushContext(DynamicFilterData.class, filterData);
+        ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         NestedOwnerDTO ownerDTO = new NestedOwnerDTO()
             .key("owner_key")
@@ -346,11 +351,11 @@ public class JsonProviderTest {
             fail("Parsing serialized ActivationKeyDTO list failed!");
         }
         assertEquals(2, akNode.size());
-        assertTrue(akNode.get(0).has("owner"), "The 'owner' field should have been included!");
+        assertTrue("The 'owner' field should have been included!", akNode.get(0).has("owner"));
         assertEquals(1, akNode.get(0).get("owner").size());
-        assertTrue(akNode.get(0).get("owner").has("id"), "The 'owner.id' field should have been included!");
-        assertTrue(akNode.get(1).has("owner"), "The 'owner' field should have been included!");
+        assertTrue("The 'owner.id' field should have been included!", akNode.get(0).get("owner").has("id"));
+        assertTrue("The 'owner' field should have been included!", akNode.get(1).has("owner"));
         assertEquals(1, akNode.get(1).get("owner").size());
-        assertTrue(akNode.get(1).get("owner").has("id"), "The 'owner.id' field should have been included!");
+        assertTrue("The 'owner.id' field should have been included!", akNode.get(1).get("owner").has("id"));
     }
 }

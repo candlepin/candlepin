@@ -150,7 +150,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -749,20 +748,21 @@ public class ConsumerResource {
         this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
             dto::getGuestIds, dto::getCapabilities);
 
+        // Resolve or create owner if needed
+        Owner owner = setupOwner(principal, ownerKey);
+
         // fix for duplicate hypervisor/consumer problem
         Consumer consumer = null;
-        if (ownerKey != null && config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
+        if (config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
             getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID) != null &&
             !"true".equalsIgnoreCase(getFactValue(dto.getFacts(), "virt.is_guest"))) {
-            Owner owner = ownerCurator.getByKey(ownerKey);
-            if (owner != null) {
-                consumer = consumerCurator.getHypervisor(
-                    getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID), owner);
-                if (consumer != null) {
-                    consumer.setIdCert(generateIdCert(consumer, false));
-                    this.updateConsumer(consumer.getUuid(), dto, principal);
-                    return translator.translate(consumer, ConsumerDTO.class);
-                }
+
+            consumer = consumerCurator.getHypervisor(getFactValue(dto.getFacts(),
+                Consumer.Facts.SYSTEM_UUID), owner);
+            if (consumer != null) {
+                consumer.setIdCert(generateIdCert(consumer, false));
+                this.updateConsumer(consumer.getUuid(), dto, principal);
+                return translator.translate(consumer, ConsumerDTO.class);
             }
         }
 
@@ -1981,15 +1981,15 @@ public class ConsumerResource {
 
         List<CertificateSerialDTO> allCerts = new LinkedList<>();
         for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
-            allCerts.add(new CertificateSerialDTO().setSerial(BigInteger.valueOf(id)));
+            allCerts.add(new CertificateSerialDTO().serial(Long.valueOf(id.longValue())));
         }
 
         // add content access cert if needed
         try {
             ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
             if (cac != null) {
-                allCerts.add(new CertificateSerialDTO().setSerial(
-                    BigInteger.valueOf(cac.getSerial().getId())));
+                allCerts.add(new CertificateSerialDTO().serial(
+                    Long.valueOf(cac.getSerial().getId().longValue())));
             }
         }
         catch (IOException ioe) {

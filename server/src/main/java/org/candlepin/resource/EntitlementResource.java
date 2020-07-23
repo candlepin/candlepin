@@ -131,7 +131,7 @@ public class EntitlementResource implements EntitlementsApi {
         String matches,
         List<KeyValueParamDTO> attrFilters) {
 
-        PageRequest pageRequest = ResteasyProviderFactory.getContextData(PageRequest.class);
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> p;
         if (consumerUuid != null) {

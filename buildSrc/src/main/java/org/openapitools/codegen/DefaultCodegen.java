@@ -3057,6 +3057,7 @@ public class DefaultCodegen implements CodegenConfig {
             } else {
                 codegenParameter.dataType = codegenProperty.dataType;
             }
+
             if (ModelUtils.isArraySchema(parameterSchema) || Boolean.TRUE.equals(parameterSchema.getUniqueItems())) {
                 imports.add(codegenProperty.baseType);
             }
@@ -4680,6 +4681,14 @@ public class DefaultCodegen implements CodegenConfig {
             CodegenProperty codegenProperty = fromProperty("property", schema);
             // only support 1-dimension map only
             imports.add(codegenProperty.baseType);
+
+            CodegenProperty innerCp = codegenProperty;
+            while (innerCp != null) {
+                if (innerCp.complexType != null) {
+                    imports.add(innerCp.complexType);
+                }
+                innerCp = innerCp.items;
+            }
 
             if (StringUtils.isEmpty(bodyParameterName)) {
                 codegenParameter.baseName = "request_body";

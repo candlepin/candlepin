@@ -42,11 +42,14 @@ import java.util.Locale;
 
 import javax.ws.rs.core.Response;
 
+
 /**
  * SubscriptionResourceTest
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SubscriptionResourceTest {
+
     @Mock private SubscriptionServiceAdapter subService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private PoolManager poolManager;

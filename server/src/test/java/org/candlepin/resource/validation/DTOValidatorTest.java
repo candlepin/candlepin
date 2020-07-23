@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource.validation;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -33,9 +35,6 @@ import javax.validation.ConstraintViolationException;
 import javax.validation.Validation;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 
 /**
  * Test suite for the DTOValidator class
