@@ -122,7 +122,6 @@ describe 'Certificate Revocation List', :serial => true do
     cdn.id.should_not be nil
 
     @cp.delete_cdn(cdn_label)
-
     expect(revoked_serials).to include(cdn.certificate.serial.serial)
   end
 

@@ -14,25 +14,19 @@
  */
 package org.candlepin.dto.api.v1;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
-import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
-import java.util.stream.Stream;
-
-
 
 /**
  * Test suite for the AsyncJobStatusTranslator class
@@ -67,6 +61,8 @@ public class AsyncJobStatusTranslatorTest extends
         source.setOrigin("localhost_origin");
         source.setExecutor("localhost_exec");
         source.setPrincipalName("admin");
+        source.setState(JobState.QUEUED);
+        source.setState(JobState.RUNNING); // The second set should prime the previous state field
         source.setStartTime(new Date());
         source.setEndTime(new Date());
         source.setMaxAttempts(7);
@@ -100,7 +96,21 @@ public class AsyncJobStatusTranslatorTest extends
                 new Date(dto.getEndTime().toInstant().toEpochMilli()) : null);
             assertEquals(source.getJobResult(), dto.getResultData());
 
-            // Impl note: We test state translation explicitly in other tests
+            JobState state = source.getState();
+            if (state != null) {
+                assertEquals(state.name(), dto.getState());
+            }
+            else {
+                assertNull(dto.getState());
+            }
+
+            JobState pstate = source.getPreviousState();
+            if (pstate != null) {
+                assertEquals(AsyncJobStatusTranslator.mapState(pstate).name(), dto.getPreviousState());
+            }
+            else {
+                assertNull(dto.getPreviousState());
+            }
 
             Integer attempts = dto.getAttempts();
             if (attempts != null) {
@@ -123,38 +133,43 @@ public class AsyncJobStatusTranslatorTest extends
         }
     }
 
-    public static Stream<Arguments> translatedJobStateProvider() {
-        return Stream.of(
-            Arguments.of(null, null),
-
-            Arguments.of(JobState.CREATED, ExternalJobState.CREATED.name()),
-            Arguments.of(JobState.WAITING, ExternalJobState.CREATED.name()),
-            Arguments.of(JobState.SCHEDULED, ExternalJobState.CREATED.name()),
-            Arguments.of(JobState.QUEUED, ExternalJobState.CREATED.name()),
-
-            Arguments.of(JobState.RUNNING, ExternalJobState.RUNNING.name()),
-            Arguments.of(JobState.FAILED_WITH_RETRY, ExternalJobState.RUNNING.name()),
-
-            Arguments.of(JobState.FINISHED, ExternalJobState.FINISHED.name()),
-
-            Arguments.of(JobState.FAILED, ExternalJobState.FAILED.name()),
-            Arguments.of(JobState.ABORTED, ExternalJobState.FAILED.name()),
-
-            Arguments.of(JobState.CANCELED, ExternalJobState.CANCELED.name())
-        );
+    @Test
+    public void mapsToFinished() {
+        assertEquals(PublicJobState.FINISHED,
+            AsyncJobStatusTranslator.mapState(JobState.FINISHED));
     }
 
-    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
-    @MethodSource("translatedJobStateProvider")
-    public void translatesJobStates(JobState input, String expected) {
-        AsyncJobStatus status = mock(AsyncJobStatus.class);
-        doReturn(input).when(status).getState();
-        doReturn(input).when(status).getPreviousState();
+    @Test
+    public void mapsToCancelled() {
+        assertEquals(PublicJobState.CANCELED,
+            AsyncJobStatusTranslator.mapState(JobState.CANCELED));
+    }
 
-        AsyncJobStatusDTO output = this.translator.translate(status);
+    @Test
+    public void mapsToCreated() {
+        assertEquals(PublicJobState.CREATED,
+            AsyncJobStatusTranslator.mapState(JobState.CREATED));
+        assertEquals(PublicJobState.CREATED,
+            AsyncJobStatusTranslator.mapState(JobState.QUEUED));
+    }
 
-        assertNotNull(output);
-        assertEquals(expected, output.getState());
-        assertEquals(expected, output.getPreviousState());
+    @Test
+    public void mapsToRunning() {
+        assertEquals(PublicJobState.RUNNING,
+            AsyncJobStatusTranslator.mapState(JobState.FAILED_WITH_RETRY));
+        assertEquals(PublicJobState.RUNNING,
+            AsyncJobStatusTranslator.mapState(JobState.RUNNING));
+        assertEquals(PublicJobState.RUNNING,
+            AsyncJobStatusTranslator.mapState(JobState.SCHEDULED));
+        assertEquals(PublicJobState.RUNNING,
+            AsyncJobStatusTranslator.mapState(JobState.WAITING));
+    }
+
+    @Test
+    public void mapsToFailed() {
+        assertEquals(PublicJobState.FAILED,
+            AsyncJobStatusTranslator.mapState(JobState.ABORTED));
+        assertEquals(PublicJobState.FAILED,
+            AsyncJobStatusTranslator.mapState(JobState.FAILED));
     }
 }

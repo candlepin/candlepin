@@ -18,9 +18,6 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
-import org.candlepin.resource.util.JobStateMapper;
-import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
-
 import org.candlepin.util.Util;
 
 
@@ -78,9 +75,8 @@ public class AsyncJobStatusTranslator implements ObjectTranslator<AsyncJobStatus
             .origin(source.getOrigin())
             .executor(source.getExecutor())
             .principal(source.getPrincipalName())
-            .state(source.getState() != null ? source.getState().name() : null)
-            .previousState(source.getPreviousState() != null ?
-                source.getPreviousState().name() : null)
+            .state(stateToString(mapState(source.getState())))
+            .previousState(stateToString(mapState(source.getPreviousState())))
             .startTime(Util.toDateTime(source.getStartTime()))
             .endTime(Util.toDateTime(source.getEndTime()))
             .attempts(source.getAttempts())
@@ -92,19 +88,42 @@ public class AsyncJobStatusTranslator implements ObjectTranslator<AsyncJobStatus
         return destination;
     }
 
-    /**
-     * Translates the internal job state into a string representing the name of the appropriate
-     * external job state. If the internal job state is null, this function returns null.
-     *
-     * @param state
-     *  the internal job state to translate
-     *
-     * @return
-     *  a string representing the name of the translated job state, or null if no state was provided
-     */
-    private static String translateState(JobState state) {
-        ExternalJobState translated = JobStateMapper.translateState(state);
-        return translated != null ? translated.name() : null;
+    private String stateToString(PublicJobState state) {
+        if (state == null) {
+            return null;
+        }
+        return state.name();
+    }
+
+    public static PublicJobState mapState(JobState state) {
+        if (state == null) {
+            return null;
+        }
+        PublicJobState publicJobState;
+        switch (state) {
+            case FINISHED:
+                publicJobState = PublicJobState.FINISHED;
+                break;
+            case CREATED:
+            case QUEUED:
+                publicJobState = PublicJobState.CREATED;
+                break;
+            case CANCELED:
+                publicJobState = PublicJobState.CANCELED;
+                break;
+            case FAILED_WITH_RETRY:
+            case RUNNING:
+            case SCHEDULED:
+            case WAITING:
+                publicJobState = PublicJobState.RUNNING;
+                break;
+            case ABORTED:
+            case FAILED:
+            default:
+                publicJobState = PublicJobState.FAILED;
+                break;
+        }
+        return publicJobState;
     }
 
 }

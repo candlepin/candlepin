@@ -50,6 +50,7 @@ import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.CloudProfileFacts;
@@ -77,6 +78,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.util.Providers;
 
+import org.candlepin.util.Util;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -98,8 +100,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
-
-
 
 /**
  * ConsumerResourceTest
@@ -676,10 +676,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         CertificateDTO original = serials.get(0);
         CertificateSerialDTO serialDTO  = original.getSerial();
-        CertificateSerial serial = new CertificateSerial(serialDTO.getId(), serialDTO.getExpiration());
-        serial.setSerial(serialDTO.getSerial().longValue());
-        serial.setCollected(serialDTO.isCollected());
-        serial.setRevoked(serialDTO.isRevoked());
+        CertificateSerial serial = new CertificateSerial( Long.valueOf(serialDTO.getId()),
+            Util.toDate(serialDTO.getExpiration()));
+        serial.setSerial(Long.valueOf(serialDTO.getSerial()));
+        serial.setCollected(serialDTO.getCollected());
+        serial.setRevoked(serialDTO.getRevoked());
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(serial.getExpiration());
@@ -722,9 +723,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .getRHCloudProfileModified();
 
         Product prod = TestUtil.createProduct("Product One");
-        ConsumerInstalledProductDTO updatedInstalledProduct =
-            new ConsumerInstalledProductDTO(prod.getId(), prod.getName());
-        consumer.addInstalledProduct(updatedInstalledProduct);
+        ConsumerInstalledProductDTO updatedInstalledProduct = new ConsumerInstalledProductDTO()
+            .id(prod.getId())
+            .productId(prod.getId())
+            .productName(prod.getName());
+        consumer.addInstalledProducts(updatedInstalledProduct);
         consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
 
         Date afterUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
@@ -760,7 +763,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Date modifiedDateOnCreate = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
         ConsumerDTO updatedConsumerDTO = new ConsumerDTO();
-        updatedConsumerDTO.setFact("FACT", "FACT_VALUE");
+        updatedConsumerDTO.putFacts("FACT", "FACT_VALUE");
+
         consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO, principal);
         Date modifiedTSOnUnnecessaryFactUpdate = consumerCurator.get(consumer.getId())
             .getRHCloudProfileModified();
@@ -768,7 +772,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(modifiedDateOnCreate, modifiedTSOnUnnecessaryFactUpdate);
 
         updatedConsumerDTO = new ConsumerDTO();
-        updatedConsumerDTO.setFact(CloudProfileFacts.CPU_CORES_PERSOCKET.getFact(), "1");
+        updatedConsumerDTO.putFacts(CloudProfileFacts.CPU_CORES_PERSOCKET.getFact(), "1");
+
         consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO, principal);
         Date modifiedTSOnNecessaryFactUpdate = consumerCurator.get(consumer.getId())
             .getRHCloudProfileModified();
@@ -785,8 +790,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         consumer.setAutoheal(true);
         consumer.setSystemPurposeStatus("test-status");
-        consumer.setReleaseVersion("test-release-version");
-        consumer.setFact("lscpu.model", "78");
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer("test-release-version"));
+        consumer.putFacts("lscpu.model", "78");
         consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
@@ -799,8 +804,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = consumerResource.create(consumer, principal, null, null, null, true);
         Date profileCreated = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
-        consumer.setFact("lscpu.model", "78");
-        consumer.setFact("test-dmi.bios.vendor", "vendorA");
+        consumer.putFacts("lscpu.model", "78");
+        consumer.putFacts("test-dmi.bios.vendor", "vendorA");
         consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 

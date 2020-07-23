@@ -412,7 +412,7 @@ public class ConsumerResourceTest {
     private void verifyCertificateSerialNumbers(
         List<CertificateSerialDTO> serials) {
         assertEquals(3, serials.size());
-        assertTrue(serials.get(0).getSerial().equals(BigInteger.ONE));
+        assertTrue(Long.valueOf(serials.get(0).getSerial()) > 0);
     }
 
     private List<EntitlementCertificate> createEntitlementCertificates() {
