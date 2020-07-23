@@ -1,4 +1,4 @@
-// Version: 5.40
+// Version: 5.41
 
 /*
  * Default Candlepin rule set.
@@ -216,11 +216,14 @@ function createPool(pool, consumer) {
         if (this.productId == productId) {
             return true;
         }
-        for (var k = 0; k < this.providedProducts.length; k++) {
-            var provided = this.providedProducts[k];
+        if (this.providedProducts !== undefined && this.providedProducts !== null
+            && this.providedProducts.length > 0) {
+            for (var k = 0; k < this.providedProducts.length; k++) {
+                var provided = this.providedProducts[k];
 
-            if (provided.productId == productId) {
-                return true;
+                if (provided.productId == productId) {
+                    return true;
+                }
             }
         }
         return false;
