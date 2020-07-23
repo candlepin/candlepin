@@ -20,7 +20,6 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.resource.util.JobStateMapper;
 import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
-
 import org.candlepin.util.Util;
 
 
@@ -78,9 +77,8 @@ public class AsyncJobStatusTranslator implements ObjectTranslator<AsyncJobStatus
             .origin(source.getOrigin())
             .executor(source.getExecutor())
             .principal(source.getPrincipalName())
-            .state(source.getState() != null ? source.getState().name() : null)
-            .previousState(source.getPreviousState() != null ?
-                source.getPreviousState().name() : null)
+            .state(translateState(source.getState()))
+            .previousState(translateState(source.getPreviousState()))
             .startTime(Util.toDateTime(source.getStartTime()))
             .endTime(Util.toDateTime(source.getEndTime()))
             .attempts(source.getAttempts())

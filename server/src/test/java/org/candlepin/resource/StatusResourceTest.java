@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -58,7 +59,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
-
 
 /**
  * Test suite for the StatusResource class

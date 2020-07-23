@@ -49,7 +49,7 @@ import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -106,7 +106,7 @@ public class EntitlementResourceTest {
         PageRequest req = new PageRequest();
         req.setPage(1);
         req.setPerPage(10);
-        ResteasyProviderFactory.pushContext(PageRequest.class, req);
+        ResteasyContext.pushContext(PageRequest.class, req);
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {

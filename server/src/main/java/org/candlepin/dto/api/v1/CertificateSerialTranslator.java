@@ -19,7 +19,6 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.util.Util;
 
-
 /**
  * The CertificateSerialTranslator provides translation from CertificateSerial model objects to
  * CertificateSerialDTOs
@@ -65,9 +64,8 @@ public class CertificateSerialTranslator implements ObjectTranslator<Certificate
             throw new IllegalArgumentException("dest is null");
         }
 
-
-        dest.id(source.getId() == null ? null : source.getId().toString())
-            .serial(source.getSerial() == null ? null : source.getSerial().toString())
+        dest.id(source.getId())
+            .serial(source.getSerial() == null ? null : source.getSerial().longValue())
             .created(Util.toDateTime(source.getCreated()))
             .updated(Util.toDateTime(source.getUpdated()))
             .expiration(Util.toDateTime(source.getExpiration()))

@@ -43,10 +43,6 @@ import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
