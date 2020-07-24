@@ -149,11 +149,38 @@ describe 'Autobind On Owner' do
     @cp.consume_product(nil, {:uuid => consumer.uuid})
     entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
     entitlements.size.should == 2
-    # print ("entitlements: " + entitlements.inspect())
     status = @cp.get_purpose_compliance(consumer.uuid)
     status['status'].should == 'matched'
     status['nonCompliantAddOns'].size.should == 0
     status['compliantAddOns']['addon1'][0]['pool']['id'].should == p1.id
+  end
+
+  it 'should async attach to addon pool when product is not installed' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:addons => "addon1"},
+                               :owner => owner_key})
+    @cp.create_pool(owner_key, product1.id)
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:owner => owner_key})
+    @cp.create_pool(owner_key, product2.id)
+
+    installed = [
+        {:productId => product2.id, :productName => product2['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1'])
+
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 0
+
+    status = @cp.consume_product(nil, {:uuid => consumer.uuid, :async => true})
+    wait_for_job(status['id'], 15)
+
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    entitlements.size.should == 2
   end
 
   it 'should attach to role pool when product is not installed' do

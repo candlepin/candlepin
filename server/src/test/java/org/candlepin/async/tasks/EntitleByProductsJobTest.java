@@ -103,7 +103,7 @@ public class EntitleByProductsJobTest {
     }
 
     @Test
-    void productIdsMustBePresent() {
+    void productIdsCanBeMissing() {
         final List<String> fromPools = Collections.singletonList("pool_id1");
 
         final JobConfig config = EntitleByProductsJob.createConfig()
@@ -111,11 +111,11 @@ public class EntitleByProductsJobTest {
             .setEntitleDate(new Date())
             .setPools(fromPools);
 
-        assertThrows(JobConfigValidationException.class, config::validate);
+        assertDoesNotThrow(config::validate);
     }
 
     @Test
-    void productIdsCannotBeEmpty() {
+    void productIdsCanBeEmpty() {
         final String[] pids = {};
         final List<String> fromPools = Collections.singletonList("pool_id1");
 
@@ -125,7 +125,7 @@ public class EntitleByProductsJobTest {
             .setEntitleDate(new Date())
             .setPools(fromPools);
 
-        assertThrows(JobConfigValidationException.class, config::validate);
+        assertDoesNotThrow(config::validate);
     }
 
     @Test

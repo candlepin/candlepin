@@ -150,11 +150,6 @@ public class EntitleByProductsJob implements AsyncJob {
                     throw new JobConfigValidationException(errmsg);
                 }
 
-                if (prodIds == null || prodIds.length == 0) {
-                    final String errmsg = "Product ids has not been set!";
-                    throw new JobConfigValidationException(errmsg);
-                }
-
                 if (pools == null) {
                     final String errmsg = "Pools has not been set!";
                     throw new JobConfigValidationException(errmsg);
