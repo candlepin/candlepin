@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import com.google.inject.servlet.RequestScoped;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
@@ -39,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -54,8 +56,7 @@ import javax.inject.Inject;
  * An single instance of this object will be created per request/job.
  */
 @CandlepinRequestScoped
-//@Component
-//@Scope("request")
+//@RequestScope
 public class EventSinkImpl implements EventSink {
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
 

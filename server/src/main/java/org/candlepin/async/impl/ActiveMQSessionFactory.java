@@ -28,14 +28,16 @@ import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.remoting.CloseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 
 /**
  * The ActiveMQSessionFactory provides initialization and management of both egress and ingress
  * session factories, as well as a method for fetching sessions configured for each.
  */
-@Singleton
+//@Singleton
+@Component
 public class ActiveMQSessionFactory {
     private static Logger log = LoggerFactory.getLogger(ActiveMQSessionFactory.class);
 
@@ -128,7 +130,8 @@ public class ActiveMQSessionFactory {
      * @param config
      *  The Candlepin configuration to use for configuring this session factory
      */
-    @Inject
+    //@Inject
+    @Autowired
     public ActiveMQSessionFactory(Configuration config) {
         this.config = config;
     }

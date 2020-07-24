@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
@@ -39,6 +40,7 @@ import javax.inject.Inject;
  * The JobMessageDispatcher is responsible for managing sessions to the backing messaging system,
  * and serializing messages as they're sent.
  */
+//@Component
 public class JobMessageDispatcher {
     private static Logger log = LoggerFactory.getLogger(JobMessageDispatcher.class);
 
@@ -64,6 +66,7 @@ public class JobMessageDispatcher {
      *  message bus
      */
     @Inject
+    //@Autowired
     public JobMessageDispatcher(Configuration config, CPMSessionFactory cpmSessionFactory,
         ObjectMapper objMapper) {
 

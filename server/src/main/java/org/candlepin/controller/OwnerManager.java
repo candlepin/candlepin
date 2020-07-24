@@ -35,10 +35,12 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.service.OwnerServiceAdapter;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Date;
@@ -49,6 +51,7 @@ import java.util.Date;
  * Used to perform operations on Owners that need more than just the owner
  * curator.
  */
+@Component
 public class OwnerManager {
 
     private static Logger log = LoggerFactory.getLogger(OwnerManager.class);
@@ -57,7 +60,9 @@ public class OwnerManager {
        PoolManager implementation which has an injection of this class. This method causes
        the injection to occur after the constructor.
      */
-    @Inject PoolManager poolManager;
+    //@Inject PoolManager poolManager;
+    @Autowired
+    PoolManager poolManager;
     private ConsumerCurator consumerCurator;
     private ActivationKeyCurator activationKeyCurator;
     private EnvironmentCurator envCurator;
@@ -73,7 +78,8 @@ public class OwnerManager {
     private OwnerServiceAdapter ownerServiceAdapter;
     private EventSink sink;
 
-    @Inject
+    //@Inject
+    @Autowired
     public OwnerManager(ConsumerCurator consumerCurator,
         ActivationKeyCurator activationKeyCurator,
         EnvironmentCurator envCurator,

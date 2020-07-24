@@ -16,6 +16,7 @@ package org.candlepin.servlet.filter;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +39,8 @@ import javax.servlet.ServletResponse;
 public class CandlepinPersistFilter implements Filter {
     private UnitOfWork unitOfWork;
 
-    @Inject
+    //@Inject
+    @Autowired
     public CandlepinPersistFilter(UnitOfWork unitOfWork) {
         this.unitOfWork = unitOfWork;
     }

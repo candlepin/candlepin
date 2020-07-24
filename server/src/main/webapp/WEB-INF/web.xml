@@ -1,30 +1,36 @@
-<!-- <web-app xmlns="http://java.sun.com/xml/ns/j2ee"-->
-<!--         version="2.4">-->
+ <web-app xmlns="http://java.sun.com/xml/ns/j2ee"
+         version="2.4">
 
-<!--    <display-name>Candlepin</display-name>-->
+    <display-name>Candlepin</display-name>
 
-<!--&lt;!&ndash;    <filter>&ndash;&gt;-->
-<!--&lt;!&ndash;        <filter-name>Guice Filter</filter-name>&ndash;&gt;-->
-<!--&lt;!&ndash;        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>&ndash;&gt;-->
-<!--&lt;!&ndash;    </filter>&ndash;&gt;-->
-<!--&lt;!&ndash;    <filter-mapping>&ndash;&gt;-->
-<!--&lt;!&ndash;        <filter-name>Guice Filter</filter-name>&ndash;&gt;-->
-<!--&lt;!&ndash;        <url-pattern>/*</url-pattern>&ndash;&gt;-->
-<!--&lt;!&ndash;    </filter-mapping>&ndash;&gt;-->
+<!--    <filter>-->
+<!--        <filter-name>Guice Filter</filter-name>-->
+<!--        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>-->
+<!--    </filter>-->
+<!--    <filter-mapping>-->
+<!--        <filter-name>Guice Filter</filter-name>-->
+<!--        <url-pattern>/*</url-pattern>-->
+<!--    </filter-mapping>-->
 
-<!--&lt;!&ndash;    <listener>&ndash;&gt;-->
-<!--&lt;!&ndash;        <listener-class>&ndash;&gt;-->
-<!--&lt;!&ndash;            org.candlepin.guice.CandlepinContextListener&ndash;&gt;-->
-<!--&lt;!&ndash;        </listener-class>&ndash;&gt;-->
-<!--&lt;!&ndash;    </listener>&ndash;&gt;-->
-<!--&lt;!&ndash;     &ndash;&gt;-->
+<!--    <listener>-->
+<!--        <listener-class>-->
+<!--            org.candlepin.guice.CandlepinContextListener-->
+<!--        </listener-class>-->
+<!--    </listener>-->
+<!--     -->
 <!--     <listener>-->
 <!--         <listener-class>org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap</listener-class>-->
 <!--     </listener>-->
-<!--     -->
+
 <!--     <listener>-->
 <!--         <listener-class>org.jboss.resteasy.plugins.spring.SpringContextLoaderListener</listener-class>-->
 <!--     </listener>-->
+
+     <listener>
+         <listener-class>
+             org.springframework.web.context.request.RequestContextListener
+         </listener-class>
+     </listener>
 
 <!--    <context-param>-->
 <!--        &lt;!&ndash;-->
@@ -47,4 +53,4 @@
 <!--        <auth-method>CLIENT-CERT</auth-method>-->
 <!--        <realm-name>candlepin</realm-name>-->
 <!--    </login-config>-->
-<!--</web-app>-->
+</web-app>

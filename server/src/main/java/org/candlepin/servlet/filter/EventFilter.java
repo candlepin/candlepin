@@ -61,6 +61,7 @@ public class EventFilter implements Filter {
         // because on creation of the filter we will be out of the
         // CandlepinRequestScope as the filter must be a singleton.
         //EventSink eventSink = injector.getInstance(EventSink.class);
+        System.out.println("Event Filter");
         TeeHttpServletResponse resp = new TeeHttpServletResponse((HttpServletResponse) response);
         chain.doFilter(request, resp);
         Status status = Status.fromStatusCode(resp.getStatus());

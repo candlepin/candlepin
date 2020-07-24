@@ -77,7 +77,7 @@ import javax.persistence.criteria.Root;
  * curators.
  * @param <E> Entity specific curator.
  */
-@Component
+//@Component
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
@@ -568,7 +568,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * @param entity to be deleted.
      */
-    @Transactional
+    @org.springframework.transaction.annotation.Transactional
+    //@javax.transaction.Transactional
     public void delete(E entity) {
         if (entity != null) {
             Session session = this.currentSession();

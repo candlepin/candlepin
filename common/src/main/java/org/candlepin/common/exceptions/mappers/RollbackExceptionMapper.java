@@ -17,6 +17,7 @@ package org.candlepin.common.exceptions.mappers;
 import org.candlepin.common.util.VersionUtil;
 
 import com.google.inject.Inject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -41,7 +42,8 @@ public class RollbackExceptionMapper extends CandlepinExceptionMapper
 
     private javax.inject.Provider<ValidationExceptionMapper> exceptionMapperProvider;
 
-    @Inject
+    //@Inject
+    @Autowired
     public RollbackExceptionMapper(javax.inject.Provider<ValidationExceptionMapper> mapper) {
         this.exceptionMapperProvider = mapper;
     }

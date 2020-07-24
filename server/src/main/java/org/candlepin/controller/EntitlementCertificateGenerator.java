@@ -37,6 +37,8 @@ import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,6 +63,7 @@ import java.util.Set;
  * duration. Usage of these methods should be carefully evaluated, and bulk operations should be
  * preferred to singular ones.
  */
+@Component
 public class EntitlementCertificateGenerator {
     private static Logger log = LoggerFactory.getLogger(EntitlementCertificateGenerator.class);
 
@@ -75,7 +78,8 @@ public class EntitlementCertificateGenerator {
     private EventFactory eventFactory;
 
 
-    @Inject
+    //@Inject
+    @Autowired
     public EntitlementCertificateGenerator(EntitlementCertificateCurator entitlementCertificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
         PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory,

@@ -17,6 +17,7 @@ package org.candlepin.common.exceptions.mappers;
 import org.candlepin.common.util.JaxRsExceptionResponseBuilder;
 
 import com.google.inject.Inject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.NotFoundException;
@@ -37,7 +38,8 @@ public class NotFoundExceptionMapper extends CandlepinExceptionMapper
     /**
      * Service that handles JAX-RS exceptions.
      */
-    @Inject
+    //@Inject
+    @Autowired
     private JaxRsExceptionResponseBuilder badQueryParamHandler;
 
     // notice this takes in a resteasy NFE *NOT* the candlepin one.

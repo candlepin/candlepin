@@ -237,13 +237,13 @@ public class CandlepinModule extends AbstractModule {
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
         bind(Enforcer.class).to(EntitlementRules.class);
         bind(EntitlementRulesTranslator.class);
-        bind(PoolManager.class).to(CandlepinPoolManager.class);
+        //bind(PoolManager.class).to(CandlepinPoolManager.class);
         bind(CandlepinModeManager.class).asEagerSingleton();
         bind(SuspendModeTransitioner.class).asEagerSingleton();
         bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);
         bind(HypervisorUpdateAction.class);
-        bind(OwnerManager.class);
-        bind(PoolRules.class);
+        //bind(OwnerManager.class);
+        //bind(PoolRules.class);
         bind(CriteriaRules.class);
         bind(Entitler.class);
 //        bind(NotSupportedExceptionMapper.class);
@@ -307,34 +307,34 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void resources() {
-        bind(ActivationKeyContentOverrideResource.class);
-        bind(ActivationKeyResource.class);
-        bind(AdminResource.class);
-        bind(CdnResource.class);
-        bind(CertificateSerialResource.class);
-        bind(CrlResource.class);
-        bind(ConsumerContentOverrideResource.class);
-        bind(ConsumerResource.class);
-        bind(ConsumerTypeResource.class);
-        //bind(ContentResource.class);
-        bind(DeletedConsumerResource.class);
-        bind(DistributorVersionResource.class);
-        bind(EntitlementResource.class);
-        bind(EnvironmentResource.class);
-        bind(GuestIdResource.class);
-        bind(HypervisorResource.class);
-        bind(JobResource.class);
-        bind(OwnerContentResource.class);
-        bind(OwnerProductResource.class);
-        bind(OwnerResource.class);
-        bind(PoolResource.class);
-        bind(ProductResource.class);
-        bind(RoleResource.class);
-        bind(RootResource.class);
-        bind(RulesResource.class);
-        bind(SubscriptionResource.class);
-        //bind(StatusResource.class);
-        bind(UserResource.class);
+//        bind(ActivationKeyContentOverrideResource.class);
+//        bind(ActivationKeyResource.class);
+//        bind(AdminResource.class);
+//        bind(CdnResource.class);
+//        bind(CertificateSerialResource.class);
+//        bind(CrlResource.class);
+//        bind(ConsumerContentOverrideResource.class);
+//        bind(ConsumerResource.class);
+//        bind(ConsumerTypeResource.class);
+//        bind(ContentResource.class);
+//        bind(DeletedConsumerResource.class);
+//        bind(DistributorVersionResource.class);
+//        bind(EntitlementResource.class);
+//        bind(EnvironmentResource.class);
+//        bind(GuestIdResource.class);
+//        bind(HypervisorResource.class);
+//        bind(JobResource.class);
+//        bind(OwnerContentResource.class);
+//        bind(OwnerProductResource.class);
+//        bind(OwnerResource.class);
+//        bind(PoolResource.class);
+//        bind(ProductResource.class);
+//        bind(RoleResource.class);
+//        bind(RootResource.class);
+//        bind(RulesResource.class);
+//        bind(SubscriptionResource.class);
+//        bind(StatusResource.class);
+//        bind(UserResource.class);
 
 
     }

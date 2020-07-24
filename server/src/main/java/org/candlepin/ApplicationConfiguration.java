@@ -16,13 +16,11 @@
 package org.candlepin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Injector;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventFilter;
-import org.candlepin.audit.EventSink;
-import org.candlepin.audit.EventSinkImpl;
+import org.candlepin.audit.*;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.EncryptedConfiguration;
 import org.candlepin.common.config.MapConfiguration;
@@ -58,6 +56,7 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 //@Import({ResteasyAutoConfiguration.class})
 //@EnableRetry
 @EnableAspectJAutoProxy
+//@EnableTransactionManagement
 @EnableWebMvc
 @PropertySource("classpath:application.properties")
 public class ApplicationConfiguration  implements WebMvcConfigurer  {
@@ -188,11 +187,24 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
     }
 
     @Bean
+    //@Scope("request")
+    //@Scope(scopeName = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
     public EventSink eventSink(EventFilter eventFilter, EventFactory eventFactory,
                                ObjectMapper mapper, org.candlepin.common.config.Configuration config, ActiveMQSessionFactory sessionFactory,
                                CandlepinModeManager modeManager) throws ActiveMQException {
-        return new EventSinkImpl(eventFilter, eventFactory,
-                mapper, config, sessionFactory,
-                modeManager);
+        if (config.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED)) {
+            return new EventSinkImpl(eventFilter, eventFactory,
+                    mapper, config, sessionFactory,
+                    modeManager);
+        }
+        else {
+            return new NoopEventSinkImpl();
+        }
     }
+
+//    @Bean
+//    public LocalContainerEntityManagerFactoryBean factoryBean() {
+//        LocalContainerEntityManagerFactoryBean factory =
+//                new LocalContainerEntityManagerFactoryBean();
+//    }
 }

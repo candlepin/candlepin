@@ -53,6 +53,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -76,6 +78,7 @@ import java.util.Set;
  * The ContentAccessManager provides management operations for organization and consumer level
  * content access modes.
  */
+//@Component
 public class ContentAccessManager {
     private static Logger log = LoggerFactory.getLogger(ContentAccessManager.class);
 
@@ -193,6 +196,7 @@ public class ContentAccessManager {
     private EventSink eventSink;
 
     @Inject
+    //@Autowired
     public ContentAccessManager(PKIUtility pki,
         X509V3ExtensionUtil v3extensionUtil,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
