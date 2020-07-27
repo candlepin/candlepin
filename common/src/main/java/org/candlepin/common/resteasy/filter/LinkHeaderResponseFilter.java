@@ -178,7 +178,9 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
             String requestUri = reqContext.getUriInfo().getRequestUri().toString();
 
             int resourceStartOffset = requestUri.lastIndexOf(contextPath);
-            int queryParamsStartOffset = requestUri.lastIndexOf("?");
+            int queryParamsStartOffset = requestUri.lastIndexOf("?") > 0 ?
+                requestUri.lastIndexOf("?") :  requestUri.length();
+
             if (resourceStartOffset >= 0) {
                 // Strip off the context and the query parameters
                 url.append(requestUri, resourceStartOffset + contextPath.length(), queryParamsStartOffset);
