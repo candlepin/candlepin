@@ -14,7 +14,6 @@
  */
 package org.candlepin.async;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMMessage;
 import org.candlepin.messaging.CPMProducer;
@@ -28,6 +27,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -44,12 +48,155 @@ public class JobMessageDispatcher {
     private static final String JOB_KEY_MESSAGE_PROPERTY = "job_key";
     private static final String JOB_MESSAGE_ADDRESS = "job";
 
-    private final Configuration config;
+    /**
+     * The ThreadSessionStore is used to store session information per thread.
+     */
+    private static final class ThreadSessionStore {
+        private final CPMSessionFactory sessionFactory;
+
+        private CPMSession session;
+        private CPMProducer producer;
+
+        /**
+         * Creates a new ThreadSessionStore which will use the given session factory to create new
+         * sessions as necessary.
+         *
+         * @param sessionFactory
+         *  the CPMSessionFactory instance to use to create new sessions
+         *
+         * @throws IllegalArgumentException
+         *  if sessionFactory is null
+         */
+        public ThreadSessionStore(CPMSessionFactory sessionFactory) {
+            if (sessionFactory == null) {
+                throw new IllegalArgumentException("sessionFactory is null");
+            }
+
+            this.sessionFactory = sessionFactory;
+        }
+
+        /**
+         * Fetches the current CPM session, creating a new one if necessary.
+         *
+         * @return
+         *  a CPMSession instance
+         */
+        public CPMSession getSession() throws CPMException {
+            if (this.session == null || this.session.isClosed()) {
+                log.debug("Creating new CPM session for job message dispatch for thread {}",
+                    Thread.currentThread());
+
+                CPMSessionConfig config = this.sessionFactory.createSessionConfig()
+                    .setTransactional(true);
+
+                // Add any other job-system-specific session configuration here
+
+                this.session = this.sessionFactory.createSession(config);
+                this.session.start();
+
+                log.debug("Created new CPM session: {}", this.session);
+            }
+
+            return this.session;
+        }
+
+        /**
+         * Fetches the current CPM producer, creating a new one if necessary.
+         *
+         * @return
+         *  a CPMProducer instance
+         */
+        public CPMProducer getProducer() throws CPMException {
+            if (this.producer == null || this.producer.isClosed()) {
+                log.debug("Creating new CPM producer for job message dispatch for thread {}",
+                    Thread.currentThread());
+
+                CPMSession session = this.getSession();
+                CPMProducerConfig config = session.createProducerConfig();
+
+                // Add any other job-system-specific producer configuration here
+
+                this.producer = session.createProducer(config);
+
+                log.debug("Created new CPM producer: {}", this.producer);
+            }
+
+            return this.producer;
+        }
+
+        /**
+         * Closes any session resources this session store may have open
+         */
+        private void close() throws CPMException {
+            if (this.producer != null) {
+                this.producer.close();
+                this.producer = null;
+            }
+
+            if (this.session != null) {
+                this.session.close();
+                this.session = null;
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return String.format("ThreadSessionStore [session: %s, producer: %s]",
+                this.session, this.producer);
+        }
+    }
+
+    /**
+     * The ThreadReference class is a WeakReference implementation with stable equals and hashCode
+     * methods, allowing it to be used as a key in maps and in sets.
+     */
+    private class ThreadReference extends WeakReference<Thread> {
+        private final int hashCode;
+
+        public ThreadReference(Thread thread, ReferenceQueue<? super Thread> queue) {
+            super(thread, queue);
+
+            this.hashCode = thread != null ? thread.hashCode() : 0;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object cmp) {
+            if (cmp == this) {
+                return true;
+            }
+
+            if (cmp instanceof ThreadReference) {
+                Thread lhs = this.get();
+                Thread rhs = ((ThreadReference) cmp).get();
+
+                return lhs != null ? lhs.equals(rhs) : rhs == null && this.hashCode() == cmp.hashCode();
+            }
+
+            return false;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return this.hashCode;
+        }
+    }
+
+
+
     private final CPMSessionFactory cpmSessionFactory;
     private final ObjectMapper objMapper;
 
-    private CPMSession cpmSession;
-    private CPMProducer cpmProducer;
+    private final ReferenceQueue<Thread> referenceQueue;
+    private Map<ThreadReference, ThreadSessionStore> sessions;
 
     /**
      * Creates a new JobMessageDispatcher instance for sending job messages to the backing
@@ -63,12 +210,12 @@ public class JobMessageDispatcher {
      *  message bus
      */
     @Inject
-    public JobMessageDispatcher(Configuration config, CPMSessionFactory cpmSessionFactory,
-        ObjectMapper objMapper) {
-
-        this.config = Objects.requireNonNull(config);
+    public JobMessageDispatcher(CPMSessionFactory cpmSessionFactory, ObjectMapper objMapper) {
         this.cpmSessionFactory = Objects.requireNonNull(cpmSessionFactory);
         this.objMapper = Objects.requireNonNull(objMapper);
+
+        this.referenceQueue = new ReferenceQueue<>();
+        this.sessions = new HashMap<>();
     }
 
     /**
@@ -76,9 +223,11 @@ public class JobMessageDispatcher {
      */
     public synchronized void shutdown() throws JobException {
         try {
-            if (this.cpmSession != null) {
-                this.cpmSession.close();
+            for (ThreadSessionStore store : this.sessions.values()) {
+                store.close();
             }
+
+            this.sessions.clear();
         }
         catch (CPMException e) {
             throw new JobException(e);
@@ -86,46 +235,40 @@ public class JobMessageDispatcher {
     }
 
     /**
-     * Fetches the current CPM session, creating a new one if necessary.
-     *
-     * @return
-     *  a CPMSession instance
+     * Closes and removes any sessions which are associated with a thread that has been destroyed.
      */
-    private synchronized CPMSession getSession() throws CPMException {
-        if (this.cpmSession == null || this.cpmSession.isClosed()) {
-            CPMSessionConfig config = this.cpmSessionFactory.createSessionConfig()
-                .setTransactional(true);
+    private void expungeAbandonedSessions() throws CPMException {
+        while (true) {
+            Reference<? extends Thread> ref = this.referenceQueue.poll();
+            if (ref == null) {
+                break;
+            }
 
-            // TODO: Add any other job-system-specific session configuration here
-
-            this.cpmSession = this.cpmSessionFactory.createSession(config);
-            this.cpmSession.start();
+            ThreadSessionStore store = this.sessions.remove(ref);
+            if (store != null) {
+                log.warn("Closing abandoned messaging session: {}", store);
+                store.close();
+            }
         }
-
-        return this.cpmSession;
     }
 
     /**
-     * Fetches the current CPM producer, creating a new one if necessary.
+     * Fetches the session store for the current thread, creating one if necessary.
      *
      * @return
-     *  a CPMProducer instance
+     *  the ThreadSessionStore for the current thread
      */
-    private synchronized CPMProducer getProducer() throws CPMException {
-        if (this.cpmProducer == null || this.cpmProducer.isClosed()) {
-            log.debug("Creating new CPM producer for job message dispatch...");
+    private synchronized ThreadSessionStore getSessionStore() throws CPMException {
+        this.expungeAbandonedSessions();
 
-            CPMSession session = this.getSession();
-            CPMProducerConfig config = session.createProducerConfig();
-
-            // TODO: Add any other job-system-specific producer configuration here
-
-            this.cpmProducer = session.createProducer(config);
-
-            log.debug("Created new CPM producer: {}", this.cpmProducer);
+        ThreadReference ref = new ThreadReference(Thread.currentThread(), this.referenceQueue);
+        ThreadSessionStore store = this.sessions.get(ref);
+        if (store == null) {
+            store = new ThreadSessionStore(this.cpmSessionFactory);
+            this.sessions.put(ref, store);
         }
 
-        return this.cpmProducer;
+        return store;
     }
 
     /**
@@ -140,17 +283,19 @@ public class JobMessageDispatcher {
      */
     public void postJobMessage(JobMessage jobMessage) throws JobMessageDispatchException {
         try {
-            CPMSession session = this.getSession();
-            CPMMessage message = session.createMessage()
+            ThreadSessionStore store = this.getSessionStore();
+
+            CPMSession cpmSession = store.getSession();
+            CPMMessage message = cpmSession.createMessage()
                 .setDurable(true)
                 .setProperty(JOB_KEY_MESSAGE_PROPERTY, jobMessage.getJobKey());
 
             String serializedJobMessage = this.objMapper.writeValueAsString(jobMessage);
             message.setBody(serializedJobMessage);
 
-            log.debug("Sending job message to {}: {}", JOB_MESSAGE_ADDRESS, serializedJobMessage);
+            log.debug("Sending job message to queue \"{}\": {}", JOB_MESSAGE_ADDRESS, serializedJobMessage);
 
-            this.getProducer().send(JOB_MESSAGE_ADDRESS, message);
+            store.getProducer().send(JOB_MESSAGE_ADDRESS, message);
         }
         catch (Exception e) {
             throw new JobMessageDispatchException(e);
@@ -166,7 +311,9 @@ public class JobMessageDispatcher {
      */
     public void commit() throws JobMessageDispatchException {
         try {
-            CPMSession session = this.getSession();
+            ThreadSessionStore store = this.getSessionStore();
+
+            CPMSession session = store.getSession();
             session.commit();
         }
         catch (Exception e) {
@@ -184,7 +331,9 @@ public class JobMessageDispatcher {
      */
     public void rollback() throws JobMessageDispatchException {
         try {
-            CPMSession session = this.getSession();
+            ThreadSessionStore store = this.getSessionStore();
+
+            CPMSession session = store.getSession();
             session.rollback();
         }
         catch (Exception e) {
