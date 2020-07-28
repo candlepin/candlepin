@@ -315,6 +315,9 @@ public class ConfigProperties {
         UnmappedGuestEntitlementCleanerJob.JOB_KEY
     };
 
+    // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown
+    public static final String ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT = "candlepin.async.thread.shutdown.timeout";
+
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
@@ -500,6 +503,7 @@ public class ConfigProperties {
             this.put(ASYNC_JOBS_THREADS, "10");
             this.put(ASYNC_JOBS_QUEUE_WHILE_SUSPENDED, "true");
             this.put(ASYNC_JOBS_SCHEDULER_ENABLED, "true");
+            this.put(ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT, "600"); // 10 minutes
 
             this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ActiveEntitlementJob.DEFAULT_SCHEDULE);

@@ -14,6 +14,8 @@
  */
 package org.candlepin.messaging.impl.artemis;
 
+import static org.candlepin.config.ConfigProperties.ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT;
+
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.messaging.CPMContextListener;
@@ -21,6 +23,7 @@ import org.candlepin.messaging.CPMException;
 
 import com.google.inject.Injector;
 
+import org.apache.activemq.artemis.api.core.ActiveMQInterruptedException;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
@@ -28,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
@@ -101,6 +105,43 @@ public class ArtemisContextListener implements CPMContextListener {
 
     /**
      * {@inheritDoc}
+     *
+     * Waits for the client threads to finish their work and terminates them.
+     */
+    @Override
+    public void shutdown() throws CPMException {
+        TimeUnit unit = TimeUnit.SECONDS;
+        long time = this.config.getInt(ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT);
+
+        ActiveMQClient.getGlobalThreadPool().shutdown();
+        try {
+            if (!ActiveMQClient.getGlobalThreadPool().awaitTermination(time, unit)) {
+                ActiveMQClient.getGlobalThreadPool().shutdownNow();
+                log.warn("Could not shut down artemis client threads within {} {}. Forcing shutdown now.",
+                    time, unit);
+            }
+        }
+        catch (InterruptedException e) {
+            throw new ActiveMQInterruptedException(e);
+        }
+
+        ActiveMQClient.getGlobalScheduledThreadPool().shutdown();
+        try {
+            if (!ActiveMQClient.getGlobalScheduledThreadPool().awaitTermination(time, unit)) {
+                ActiveMQClient.getGlobalScheduledThreadPool().shutdownNow();
+                log.warn("Could not shut down artemis client threads within {} {}. Forcing shutdown now.",
+                    time, unit);
+            }
+        }
+        catch (InterruptedException e) {
+            throw new ActiveMQInterruptedException(e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Shuts down the messaging broker (if embedded).
      */
     @Override
     public void destroy() throws CPMException {
@@ -116,7 +157,6 @@ public class ArtemisContextListener implements CPMContextListener {
             log.error("Unexpected exception occurred while stopping embedded Artemis server", e);
             throw new CPMException(e);
         }
-        ActiveMQClient.clearThreadPools();
     }
 
 }
