@@ -40,6 +40,19 @@ public interface CPMContextListener {
     /**
      * Called when the Candlepin context is destroyed, indicating the messaging implementation
      * should shut down any backing services or functionality associated with it.
+     *
+     * Used to perform any required graceful shutdown operations of the messaging implementation,
+     * before the messaging infrastructure itself is destroyed.
+     *
+     * NOTE: Must be called before {@link #destroy()}
+     */
+    void shutdown() throws CPMException;
+
+    /**
+     * Called when the Candlepin context is destroyed, indicating the messaging implementation
+     * should shut down any backing services or functionality associated with it.
+     *
+     * Used to perform the final destruction of the messaging infrastructure.
      */
     void destroy() throws CPMException;
 

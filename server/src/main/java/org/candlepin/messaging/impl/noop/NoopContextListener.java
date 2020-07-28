@@ -42,6 +42,14 @@ public class NoopContextListener implements CPMContextListener {
      * {@inheritDoc}
      */
     @Override
+    public void shutdown() throws CPMException {
+        // Intentionally left empty
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void destroy() throws CPMException {
         // Intentionally left empty
     }
