@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -69,8 +70,8 @@ public class JobCleanerTest {
         return new JobCleaner(this.config, this.jobManager);
     }
 
-    private void setMaxAgeConfig(int maxAgeInMinutes) {
-        String cfg = ConfigProperties.jobConfig(JobCleaner.JOB_KEY, JobCleaner.CFG_MAX_JOB_AGE);
+    private void setMaxAgeConfig(String cfgName, int maxAgeInMinutes) {
+        String cfg = ConfigProperties.jobConfig(JobCleaner.JOB_KEY, cfgName);
         this.config.setProperty(cfg, String.valueOf(maxAgeInMinutes));
     }
 
@@ -78,25 +79,44 @@ public class JobCleanerTest {
         return baseTime - minutes * 60 * 1000;
     }
 
-    private Set<JobState> getExpectedJobStates() {
+    private Set<JobState> getExpectedTerminalJobStates() {
         return Arrays.stream(JobState.values())
-            .filter(state -> state.isTerminal())
+            .filter(JobState::isTerminal)
+            .collect(Collectors.toSet());
+    }
+
+    private Set<JobState> getExpectedNonTerminalJobStates() {
+        return Arrays.stream(JobState.values())
+            .filter(state -> !state.isTerminal() && state != JobState.RUNNING)
+            .collect(Collectors.toSet());
+    }
+
+    private Set<JobState> getExpectedRunningJobStates() {
+        return Arrays.stream(JobState.values())
+            .filter(state -> state == JobState.RUNNING)
             .collect(Collectors.toSet());
     }
 
     private static Stream<Arguments> maxAgeProvider() {
         return Stream.of(
-            Arguments.of(JobCleaner.CFG_DEFAULT_MAX_JOB_AGE),
+            Arguments.of(JobCleaner.CFG_DEFAULT_MAX_TERMINAL_JOB_AGE),
+            Arguments.of(JobCleaner.CFG_DEFAULT_MAX_NONTERMINAL_JOB_AGE),
+            Arguments.of(JobCleaner.CFG_DEFAULT_MAX_RUNNING_JOB_AGE),
             Arguments.of(60),
             Arguments.of(1));
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("maxAgeProvider")
     public void testStandardExecution(int maxAge) throws JobExecutionException {
-        this.setMaxAgeConfig(maxAge);
+        this.setMaxAgeConfig(JobCleaner.CFG_MAX_TERMINAL_JOB_AGE, maxAge);
+        this.setMaxAgeConfig(JobCleaner.CFG_MAX_NONTERMINAL_JOB_AGE, maxAge);
+        this.setMaxAgeConfig(JobCleaner.CFG_MAX_RUNNING_JOB_AGE, maxAge);
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> termCaptor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> nontermCaptor =
             ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
 
         long minTime = this.subtractMinutes(System.currentTimeMillis(), maxAge);
@@ -113,19 +133,33 @@ public class JobCleanerTest {
         long maxTime = this.subtractMinutes(System.currentTimeMillis(), maxAge);
         assertNotNull(result);
 
-        verify(this.jobManager, times(1)).cleanupJobs(captor.capture());
+        verify(this.jobManager, times(1)).cleanupJobs(termCaptor.capture());
+        verify(this.jobManager, times(2)).abortNonTerminalJobs(nontermCaptor.capture());
 
-        AsyncJobStatusQueryBuilder builder = captor.getValue();
+        AsyncJobStatusQueryBuilder termBuilder = termCaptor.getValue();
+        AsyncJobStatusQueryBuilder nontermBuilder = nontermCaptor.getAllValues().get(0);
+        AsyncJobStatusQueryBuilder runningBuilder = nontermCaptor.getAllValues().get(1);
+
+        this.verifyQueryBuilder(termBuilder, this.getExpectedTerminalJobStates(), minTime, maxTime);
+        this.verifyQueryBuilder(nontermBuilder, this.getExpectedNonTerminalJobStates(), minTime, maxTime);
+        this.verifyQueryBuilder(runningBuilder, this.getExpectedRunningJobStates(), minTime, maxTime);
+    }
+
+    private void verifyQueryBuilder(AsyncJobStatusQueryBuilder builder, Set<JobState> expectedStates,
+        long minTime, long maxTime) {
+
+        assertNotNull(builder);
 
         // The job cleaner is not job-specific nor owner-specific
         assertNull(builder.getJobKeys());
         assertNull(builder.getOwnerIds());
 
-        // It should also not define an "after" date limit
-        assertNull(builder.getStartDate());
+        // It should also not care about the origin, executor, or principals
+        assertNull(builder.getOrigins());
+        assertNull(builder.getExecutors());
+        assertNull(builder.getPrincipalNames());
 
-        // Job states should be defined as all terminal states
-        Set<JobState> expectedStates = this.getExpectedJobStates();
+        // Verify the states are as we expect
         Collection<JobState> states = builder.getJobStates();
 
         assertNotNull(states);
@@ -135,6 +169,9 @@ public class JobCleanerTest {
             assertTrue(states.contains(expectedState));
         }
 
+        // It should not define an "after" date limit
+        assertNull(builder.getStartDate());
+
         // The cutoff date should be defined as the "end" date/time:
         Date endTime = builder.getEndDate();
 
@@ -142,19 +179,41 @@ public class JobCleanerTest {
 
         // We allow a bit of leeway in the date to account for deltas in actual test
         // execution time
-        assertTrue(endTime.getTime() >= minTime && endTime.getTime() <= maxTime);
+        assertTrue(endTime.getTime() >= minTime);
+        assertTrue(endTime.getTime() <= maxTime);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = { "0", "-50" })
-    public void testBadAgeConfig(int maxAge) {
-        this.setMaxAgeConfig(maxAge);
+    public void testBadTerminalJobAgeConfig(int maxAge) {
+        this.setMaxAgeConfig(JobCleaner.CFG_MAX_TERMINAL_JOB_AGE, maxAge);
+        this.setMaxAgeConfig(JobCleaner.CFG_MAX_NONTERMINAL_JOB_AGE, 60);
+        this.setMaxAgeConfig(JobCleaner.CFG_MAX_RUNNING_JOB_AGE, 60);
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         JobCleaner job = this.createJobInstance();
         assertThrows(JobExecutionException.class, () -> job.execute(context));
     }
 
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = { "0", "-50" })
+    public void testDisabledNonTerminalJobAgeConfig(int maxAge) throws Exception {
+        this.setMaxAgeConfig(JobCleaner.CFG_MAX_TERMINAL_JOB_AGE, 60);
+        this.setMaxAgeConfig(JobCleaner.CFG_MAX_NONTERMINAL_JOB_AGE, maxAge);
+        this.setMaxAgeConfig(JobCleaner.CFG_MAX_RUNNING_JOB_AGE, maxAge);
 
+        JobExecutionContext context = mock(JobExecutionContext.class);
+        JobCleaner job = this.createJobInstance();
+        ArgumentCaptor<Object> resultCaptor = ArgumentCaptor.forClass(Object.class);
+
+        job.execute(context);
+
+        verify(context, times(1)).setJobResult(resultCaptor.capture());
+        Object result = resultCaptor.getValue();
+        assertNotNull(result);
+
+        verify(this.jobManager, times(1)).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
+        verify(this.jobManager, times(0)).abortNonTerminalJobs(any(AsyncJobStatusQueryBuilder.class));
+    }
 
 }

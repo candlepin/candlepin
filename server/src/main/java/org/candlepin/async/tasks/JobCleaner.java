@@ -49,8 +49,13 @@ public class JobCleaner implements AsyncJob {
     public static final String JOB_KEY = "JobCleaner";
     public static final String JOB_NAME = "Job Cleaner";
 
-    public static final String CFG_MAX_JOB_AGE = "max_job_age_in_minutes";
-    public static final int CFG_DEFAULT_MAX_JOB_AGE = 10080; // 7 days
+    public static final String CFG_MAX_TERMINAL_JOB_AGE = "max_terminal_job_age";
+    public static final String CFG_MAX_NONTERMINAL_JOB_AGE = "max_nonterminal_job_age";
+    public static final String CFG_MAX_RUNNING_JOB_AGE = "max_running_job_age";
+
+    public static final int CFG_DEFAULT_MAX_TERMINAL_JOB_AGE = 10080; // 7 days
+    public static final int CFG_DEFAULT_MAX_NONTERMINAL_JOB_AGE = 4320; // 3 days
+    public static final int CFG_DEFAULT_MAX_RUNNING_JOB_AGE = 2880; // 2 days
 
     private Configuration config;
     private JobManager jobManager;
@@ -63,23 +68,63 @@ public class JobCleaner implements AsyncJob {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        String cfgName = ConfigProperties.jobConfig(JOB_KEY, CFG_MAX_JOB_AGE);
-        int maxAgeInMinutes = this.config.getInt(cfgName, CFG_DEFAULT_MAX_JOB_AGE);
+        Date terminalCutoff = this.parseMaxJobAgeConfig(CFG_MAX_TERMINAL_JOB_AGE,
+            CFG_DEFAULT_MAX_TERMINAL_JOB_AGE, true);
 
-        if (maxAgeInMinutes < 1) {
-            String errmsg = String.format("Invalid value for max age, must be a positive integer: %s",
-                maxAgeInMinutes);
+        Date nonterminalCutoff = this.parseMaxJobAgeConfig(CFG_MAX_NONTERMINAL_JOB_AGE,
+            CFG_DEFAULT_MAX_NONTERMINAL_JOB_AGE, false);
+
+        Date runningCutoff = this.parseMaxJobAgeConfig(CFG_MAX_RUNNING_JOB_AGE,
+            CFG_DEFAULT_MAX_RUNNING_JOB_AGE, false);
+
+        StringBuilder result = new StringBuilder();
+
+        int removed = this.cleanupTerminalJobs(terminalCutoff);
+        result.append(String.format("Removed %1$d terminal jobs older than %2$tF %2$tT%2$tz\n",
+            removed, terminalCutoff));
+
+        if (nonterminalCutoff != null) {
+            int aborted = this.abortNonTerminalJobs(nonterminalCutoff);
+            result.append(
+                String.format("Aborted %1$d non-running, non-terminal jobs older than %2$tF %2$tT%2$tz\n",
+                aborted, nonterminalCutoff));
+        }
+
+        if (runningCutoff != null) {
+            int aborted = this.abortAbandonedRunningJobs(runningCutoff);
+            result.append(String.format("Aborted %1$d running jobs older than %2$tF %2$tT%2$tz\n",
+                aborted, runningCutoff));
+        }
+
+        context.setJobResult(result.toString());
+    }
+
+    private Date parseMaxJobAgeConfig(String cfgName, int defaultValue, boolean required)
+        throws JobExecutionException {
+
+        String fqcn = ConfigProperties.jobConfig(JOB_KEY, cfgName);
+        int value = this.config.getInt(fqcn, defaultValue);
+
+        Date output = null;
+
+        if (value > 0) {
+            output = Util.addMinutesToDt(value * -1);
+        }
+        else if (required) {
+            String errmsg = String.format(
+                "Invalid value for configuration \"%s\", must be a positive integer: %s", fqcn, value);
 
             log.error(errmsg);
             throw new JobExecutionException(errmsg, true);
         }
 
-        // Set cutoff (end) date to now - max age in minutes
-        Date cutoff = Util.addMinutesToDt(maxAgeInMinutes * -1);
+        return output;
+    }
 
+    private int cleanupTerminalJobs(Date cutoff) {
         // We're targeting every terminal job
         Set<JobState> jobStates = Arrays.stream(JobState.values())
-            .filter(state -> state.isTerminal())
+            .filter(JobState::isTerminal)
             .collect(Collectors.toSet());
 
         // Build the query builder with our config
@@ -87,12 +132,41 @@ public class JobCleaner implements AsyncJob {
             .setJobStates(jobStates)
             .setEndDate(cutoff);
 
-        int deleted = this.jobManager.cleanupJobs(queryBuilder);
+        int removed = this.jobManager.cleanupJobs(queryBuilder);
+        log.info("Removed {} terminal jobs older than {}", removed, cutoff);
 
-        String result = String.format("Removed %d terminal jobs older than %2$tF %2$tT%2$tz",
-            deleted, cutoff);
+        return removed;
+    }
 
-        log.info(result);
-        context.setJobResult(result);
+    private int abortNonTerminalJobs(Date cutoff) {
+        // We're targeting every non-terminal, non-running job
+        Set<JobState> jobStates = Arrays.stream(JobState.values())
+            .filter(state -> !state.isTerminal() && state != JobState.RUNNING)
+            .collect(Collectors.toSet());
+
+        // Build the query builder with our config
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(jobStates)
+            .setEndDate(cutoff);
+
+        int aborted = this.jobManager.abortNonTerminalJobs(queryBuilder);
+        log.info("Aborted {} non-running jobs older than {}", aborted, cutoff);
+
+        return aborted;
+    }
+
+    private int abortAbandonedRunningJobs(Date cutoff) {
+        // We're targeting only running jobs
+        Set<JobState> jobStates = Util.asSet(JobState.RUNNING);
+
+        // Build the query builder with our config
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(jobStates)
+            .setEndDate(cutoff);
+
+        int aborted = this.jobManager.abortNonTerminalJobs(queryBuilder);
+        log.info("Aborted {} running jobs older than {}", aborted, cutoff);
+
+        return aborted;
     }
 }

@@ -33,6 +33,7 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
@@ -429,14 +430,53 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
 
         Root<AsyncJobStatus> job = query.from(AsyncJobStatus.class);
 
-        // Sanity check: Don't execute a deletion if we haven't provided at least *some*
-        // restrictions.
+        // Sanity check: Don't execute a deletion if we haven't provided at least *some* restrictions.
         List<Predicate> predicates = this.buildJobQueryPredicates(criteriaBuilder, job, queryBuilder);
         if (predicates.size() > 0) {
             Predicate[] predicateArray = new Predicate[predicates.size()];
             query.where(predicates.toArray(predicateArray));
 
             return entityManager.createQuery(query)
+                .executeUpdate();
+        }
+
+        return 0;
+    }
+
+    /**
+     * Sets all jobs matching the parameters provided by the given query builder to the specified job
+     * state without any state transition validation.
+     * <p></p>
+     * <strong>Warning:</strong> This method provides no state transition validation, and could put
+     * jobs into invalid or desynced states.
+     *
+     * @param queryBuilder
+     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
+     *  to select jobs
+     *
+     * @param state
+     *  the JobState to set to the given jobs
+     *
+     * @return
+     *  the number of jobs updated as a result of a call to this method
+     */
+    public int updateJobState(AsyncJobStatusQueryBuilder queryBuilder, JobState state) {
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaUpdate<AsyncJobStatus> update = criteriaBuilder.createCriteriaUpdate(AsyncJobStatus.class);
+        Root<AsyncJobStatus> job = update.from(AsyncJobStatus.class);
+
+        // Impl note: order of the assignments is important here.
+        update.<Integer>set(job.get("previousState"), job.get("state"))
+            .set(job.get("state"), state);
+
+        // Sanity check: Don't execute a state change if we haven't provided at least *some* restrictions.
+        List<Predicate> predicates = this.buildJobQueryPredicates(criteriaBuilder, job, queryBuilder);
+        if (predicates.size() > 0) {
+            Predicate[] predicateArray = new Predicate[predicates.size()];
+            update.where(predicates.toArray(predicateArray));
+
+            return entityManager.createQuery(update)
                 .executeUpdate();
         }
 

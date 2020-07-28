@@ -64,6 +64,7 @@ import org.slf4j.MDC;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,6 +76,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -479,6 +481,10 @@ public class JobManager implements ModeChangeListener {
                 if (this.modeManager.getCurrentMode() == Mode.SUSPEND) {
                     this.suspendKeys.add(SUSPEND_KEY_TRIGGERED);
                 }
+
+                // Attempt to restore any jobs which were running on this node but did not get
+                // to gracefully shutdown.
+                this.recoverAbandonedJobs();
             }
 
             log.info("Job manager initialization complete");
@@ -500,6 +506,30 @@ public class JobManager implements ModeChangeListener {
             }
 
             throw new StateManagementException(this.state, ManagerState.INITIALIZED, errmsg, e);
+        }
+    }
+
+    /**
+     * Attempts to recover all jobs that were abandoned by this node if it shutdown abnormally
+     * while executing jobs. Any jobs in the RUNNING state with an executor set to this node
+     * will have their state forcefully rewound to QUEUED in an attempt to allow the task to be
+     * rerun.
+     */
+    private void recoverAbandonedJobs() {
+        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+            .setJobStates(Collections.singleton(JobState.RUNNING))
+            .setExecutors(Collections.singleton(Util.getHostname()));
+
+        // Impl note: this violates normal state transitions, but we're trying to recover from an
+        // ungraceful shutdown in which our process was terminated while a job was running. We'll
+        // set the job's state to QUEUED, which will allow us to pick up the job and run it again
+        // next time the message is received. If the message has been lost, then the job cleaner
+        // will eventually nuke this job as part of its non-terminal job aborting step.
+        for (AsyncJobStatus job : this.jobCurator.findJobs(queryBuilder)) {
+            log.warn("Recovering abandoned job: {}", job);
+
+            job.setState(JobState.QUEUED);
+            this.jobCurator.merge(job);
         }
     }
 
@@ -1709,25 +1739,63 @@ public class JobManager implements ModeChangeListener {
             queryBuilder = new AsyncJobStatusQueryBuilder();
         }
 
+        // Make sure we don't attempt to blast some non-terminal jobs.
         Collection<JobState> states = queryBuilder.getJobStates();
-        if (states != null && !states.isEmpty()) {
-            // Make sure we don't attempt to blast some non-terminal jobs.
-            states = states.stream()
-                .filter(state -> state != null && state.isTerminal())
-                .collect(Collectors.toSet());
+        Stream<JobState> stateStream = states != null && !states.isEmpty() ?
+            states.stream() :
+            Arrays.stream(JobState.values());
+
+        states = stateStream.filter(state -> state != null && state.isTerminal())
+            .collect(Collectors.toSet());
+
+        queryBuilder.setJobStates(states);
+
+        // Add any other sanity restrictions deemed necessary here
+
+        return this.jobCurator.deleteJobs(queryBuilder);
+    }
+
+    /**
+     * Aborts all non-terminal jobs matching the query parameters provided. If the query does not
+     * specify any states, this method defaults to all non-terminal states. If any
+     * terminal or running states are provided, they will be ignored.
+     *
+     * @param queryBuilder
+     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
+     *  to select jobs to abort
+     *
+     * @return
+     *  the number of jobs aborted as a result of this operation
+     */
+    @Transactional
+    public int abortNonTerminalJobs(AsyncJobStatusQueryBuilder queryBuilder) {
+        // Prepare for the defaults...
+        if (queryBuilder == null) {
+            queryBuilder = new AsyncJobStatusQueryBuilder();
         }
-        else {
-            // Set the default: all terminal states
-            states = Arrays.stream(JobState.values())
-                .filter(state -> state.isTerminal())
-                .collect(Collectors.toSet());
+
+        // Make sure we don't attempt to abort some terminal jobs
+        Collection<JobState> states = queryBuilder.getJobStates();
+        Stream<JobState> stateStream = states != null && !states.isEmpty() ?
+            states.stream() :
+            Arrays.stream(JobState.values());
+
+        states = stateStream.filter(state -> state != null && !state.isTerminal())
+            .collect(Collectors.toSet());
+
+        // Verify that the state transition is valid for all of the queried states:
+        for (JobState state : states) {
+            if (!state.isValidTransition(JobState.ABORTED)) {
+                throw new IllegalStateException(String.format("Cannot transition from state %s to %s",
+                    state.name(), JobState.ABORTED.name()));
+            }
         }
 
         queryBuilder.setJobStates(states);
 
-        // TODO: any other sanity restrictions deemed necessary
+        // Add any other sanity restrictions deemed necessary here
 
-        return this.jobCurator.deleteJobs(queryBuilder);
+        return this.jobCurator.updateJobState(queryBuilder, JobState.ABORTED);
     }
 
     /**
