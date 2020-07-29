@@ -33,11 +33,7 @@ candlepin.importer.fail_on_unknown=false
 
 <% if (candlepin.external_broker) { %>\
 candlepin.audit.hornetq.embedded=false
-candlepin.audit.hornetq.broker_url=tcp://localhost:61617
-candlepin.audit.hornetq.truststore=/var/lib/artemis/candlepin/certs/artemis-client.ts
-candlepin.audit.hornetq.truststore_password=securepassword
-candlepin.audit.hornetq.keystore=/var/lib/artemis/candlepin/certs/artemis-client.ks
-candlepin.audit.hornetq.keystore_password=securepassword
+candlepin.audit.hornetq.broker_url=tcp://localhost:61613?sslEnabled=true&trustStorePath=/var/lib/artemis/candlepin/certs/artemis-client.ts&trustStorePassword=securepassword&keyStorePath=/var/lib/artemis/candlepin/certs/artemis-client.ks&keyStorePassword=securepassword
 <% } %>\
 candlepin.pretty_print=true
 

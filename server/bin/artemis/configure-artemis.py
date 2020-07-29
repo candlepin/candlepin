@@ -27,7 +27,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger('configure-artemis')
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-DEFAULT_VERSION = "2.4.0"
+DEFAULT_VERSION = "2.12.0"
 
 # Installation paths for Artemis as suggested by the docs.
 # For this reason, we are not allowing these to be changed by
@@ -36,11 +36,11 @@ INSTALL_DIR = "/opt"
 BROKER_ROOT = "/var/lib/artemis"
 BROKER_NAME = "candlepin"
 
-SELINUX_BASE_DIR = os.path.join(BASE_DIR, "selinux");
+SELINUX_BASE_DIR = os.path.join(BASE_DIR, "selinux")
 SELINUX_POLICY_TEMPLATE = os.path.join(SELINUX_BASE_DIR, "artemis.te")
 SELINUX_BUILD_DIR = os.path.join(SELINUX_BASE_DIR, "build")
 
-SERVICE_TEMPLATE_PATH = os.path.join(BASE_DIR, "service", "artemis.service");
+SERVICE_TEMPLATE_PATH = os.path.join(BASE_DIR, "service", "artemis.service")
 SERVICE_FILE_TARGET_PATH = "/usr/lib/systemd/system/artemis.service"
 
 
@@ -174,9 +174,10 @@ def setup_selinux():
 def generate_certs(broker_path):
     logger.debug("Creating the certs/ directory.")
     certs_dir = os.path.join(broker_path, "certs/")
-    if not os.path.exists(certs_dir):
-        logger.debug("%s does not exist. Creating it now." % certs_dir)
-        os.mkdir(certs_dir)
+    if os.path.exists(certs_dir):
+        shutil.rmtree(certs_dir)
+        logger.debug("%s already exists. Recreating it now." % certs_dir)
+    os.mkdir(certs_dir)
 
     logger.debug("Setting file permissions on certs directory for artemis user.")
     call("sudo chown -R artemis:artemis %s" % certs_dir, "Failed to set permissions on certs directory.")
@@ -228,7 +229,7 @@ def modify_broker_xml(broker_xml_path):
         acceptor_nodes[0].setProp("name", "netty")
 
         certs_dir = os.path.join(BROKER_ROOT, BROKER_NAME, "certs")
-        connector_string = ("tcp://localhost:61617?sslEnabled=true;"
+        connector_string = ("tcp://localhost:61613?sslEnabled=true;"
                             "keyStorePath={0}/artemis-server.ks;"
                             "keyStorePassword=securepassword;"
                             "needClientAuth=true;"
