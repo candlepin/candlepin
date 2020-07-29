@@ -74,31 +74,10 @@ public class ActiveMQStatusMonitor implements Closeable, Runnable, CloseListener
 
     // Protected for testing purposes.
     protected void initializeLocator() throws Exception {
-        locator = ActiveMQClient.createServerLocator(generateServerUrl());
+        String brokerUrl = this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+        locator = ActiveMQClient.createServerLocator(brokerUrl);
     }
 
-    private String generateServerUrl() {
-        StringBuilder serverUrlBuilder =
-            new StringBuilder(this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL));
-
-        // TODO: Change this to use ACTIVEMQ_EMBEDDED_BROKER once configuration upgrades are in
-        // place
-        boolean embedded = this.config.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED);
-
-        if (!embedded) {
-            serverUrlBuilder.append("?sslEnabled=true")
-                .append("&trustStorePath=")
-                .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_TRUSTSTORE))
-                .append("&trustStorePassword=")
-                .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_TRUSTSTORE_PASSWORD))
-                .append("&keyStorePath=")
-                .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_KEYSTORE))
-                .append("&keyStorePassword=")
-                .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_KEYSTORE_PASSWORD));
-        }
-
-        return serverUrlBuilder.toString();
-    }
 
     /**
      * Checks the status of the connection to the broker and starts the monitor

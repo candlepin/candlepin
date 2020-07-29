@@ -69,10 +69,6 @@ public class ConfigProperties {
 
     public static final String ACTIVEMQ_EMBEDDED = "candlepin.audit.hornetq.embedded";
     public static final String ACTIVEMQ_BROKER_URL = "candlepin.audit.hornetq.broker_url";
-    public static final String ACTIVEMQ_KEYSTORE = "candlepin.audit.hornetq.keystore";
-    public static final String ACTIVEMQ_KEYSTORE_PASSWORD = "candlepin.audit.hornetq.keystore_password";
-    public static final String ACTIVEMQ_TRUSTSTORE = "candlepin.audit.hornetq.truststore";
-    public static final String ACTIVEMQ_TRUSTSTORE_PASSWORD = "candlepin.audit.hornetq.truststore_password";
     public static final String ACTIVEMQ_SERVER_CONFIG_PATH = "candlepin.audit.hornetq.config_path";
 
     /**

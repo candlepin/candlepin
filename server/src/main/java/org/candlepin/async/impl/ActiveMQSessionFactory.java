@@ -147,7 +147,8 @@ public class ActiveMQSessionFactory {
             // workaround we need on the receiving side of things. If it looks like the
             // egress configuration, something is probably broken.
 
-            ServerLocator locator = ActiveMQClient.createServerLocator(generateServerUrl());
+            String brokerUrl = this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+            ServerLocator locator = ActiveMQClient.createServerLocator(brokerUrl);
 
             // TODO: Maybe make this a bit more defensive and skip setting the property if it's
             // not present in the configuration rather than crashing out?
@@ -167,7 +168,8 @@ public class ActiveMQSessionFactory {
      */
     protected synchronized SessionManager getEgressSessionManager() throws Exception {
         if (this.egressSessionManager == null) {
-            ServerLocator locator = ActiveMQClient.createServerLocator(generateServerUrl());
+            String brokerUrl = this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+            ServerLocator locator = ActiveMQClient.createServerLocator(brokerUrl);
 
             // TODO: Maybe make this a bit more defensive and skip setting the property if it's
             // not present in the configuration rather than crashing out?
@@ -182,29 +184,6 @@ public class ActiveMQSessionFactory {
         }
 
         return this.egressSessionManager;
-    }
-
-    private String generateServerUrl() {
-        StringBuilder serverUrlBuilder =
-            new StringBuilder(this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL));
-
-        // TODO: Change this to use ACTIVEMQ_EMBEDDED_BROKER once configuration upgrades are in
-        // place
-        boolean embedded = this.config.getBoolean(ConfigProperties.ACTIVEMQ_EMBEDDED);
-
-        if (!embedded) {
-            serverUrlBuilder.append("?sslEnabled=true")
-                .append("&trustStorePath=")
-                .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_TRUSTSTORE))
-                .append("&trustStorePassword=")
-                .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_TRUSTSTORE_PASSWORD))
-                .append("&keyStorePath=")
-                .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_KEYSTORE))
-                .append("&keyStorePassword=")
-                .append(this.config.getProperty(ConfigProperties.ACTIVEMQ_KEYSTORE_PASSWORD));
-        }
-
-        return serverUrlBuilder.toString();
     }
 
     /**
