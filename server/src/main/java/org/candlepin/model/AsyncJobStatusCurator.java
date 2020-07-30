@@ -18,6 +18,7 @@ import org.candlepin.model.AsyncJobStatus.JobState;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +40,7 @@ import javax.persistence.criteria.Root;
 /**
  * AsyncJobStatusCurator
  */
-@Singleton
+@Component
 public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStatus> {
 
     /**

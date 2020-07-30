@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 
 import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,7 +30,8 @@ import javax.persistence.NoResultException;
 /**
  * ConsumerTypeCurator
  */
-@Singleton
+//@Singleton
+@Component
 public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> {
 
     public ConsumerTypeCurator() {

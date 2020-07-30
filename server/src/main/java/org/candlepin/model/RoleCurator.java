@@ -18,18 +18,18 @@ import com.google.inject.Inject;
 
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
-
-import javax.inject.Singleton;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 
 /**
  * RoleCurator
  */
-@Singleton
+@Component
 public class RoleCurator extends AbstractHibernateCurator<Role> {
 
-    @Inject private CandlepinQueryFactory cpQueryFactory;
+    @Autowired
+    private CandlepinQueryFactory cpQueryFactory;
 
     public RoleCurator() {
         super(Role.class);

@@ -26,14 +26,9 @@ import org.candlepin.guice.PrincipalProvider;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
+//import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.NaturalIdLoadAccess;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
@@ -47,7 +42,11 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
@@ -60,12 +59,9 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.LockModeType;
+import javax.persistence.*;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -77,15 +73,22 @@ import javax.persistence.criteria.Root;
  * curators.
  * @param <E> Entity specific curator.
  */
-//@Component
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
-    @Inject protected CandlepinQueryFactory cpQueryFactory;
-    @Inject protected Provider<EntityManager> entityManager;
-    @Inject protected Provider<I18n> i18nProvider;
-    @Inject protected Configuration config;
-    @Inject private PrincipalProvider principalProvider;
+    @Autowired protected CandlepinQueryFactory cpQueryFactory;
+    //@PersistenceContext protected Provider<EntityManager> entityManager;
+    @Autowired protected Provider<I18n> i18nProvider;
+    @Autowired protected Configuration config;
+    @Autowired private PrincipalProvider principalProvider;
+    @PersistenceContext
+    protected EntityManager entityManager;
+
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
+
+    @Autowired
+    private SessionFactory sessionFactory;
 
     private final Class<E> entityType;
     private NaturalIdLoadAccess<E> natIdLoader;
@@ -639,8 +642,35 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
     }
 
+    @Transactional
     public Session currentSession() {
-        return (Session) entityManager.get().getDelegate();
+//        return (Session) entityManager.get().getDelegate();
+//        return sessionFactory.getCurrentSession();
+        Session session = null;
+        try {
+            session = sessionFactory.getCurrentSession();
+        } catch (HibernateException e) {
+            session = sessionFactory.openSession();
+        }
+//        Session session = null;
+//        entityManager = entityManager.getEntityManagerFactory().createEntityManager();
+//        session = (Session) entityManager.unwrap(Session.class);
+//        SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
+//        try {
+//            session = sessionFactory.getCurrentSession();
+//        } catch (HibernateException e) {
+//            System.out.println("Session could not be found, opening a new one");
+//            session = sessionFactory.openSession();
+//        }
+//        return sessionFactory.getCurrentSession();
+//        Session session = null;
+//        try{
+//            //session = getEntityManager().unwrap(Session.class);
+//            session = sessionFactory.getCurrentSession();
+//        } catch (Exception e) {
+//            session = entityManagerFactory.unwrap(SessionFactory.class).openSession();
+//        }
+        return session;
     }
 
     public Session openSession() {
@@ -648,8 +678,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return factory.openSession();
     }
 
+    @Transactional
     public EntityManager getEntityManager() {
-        return entityManager.get();
+        if(entityManager != null)
+            return entityManager;
+        else
+            return entityManagerFactory.createEntityManager();
     }
 
     public EntityTransaction getTransaction() {

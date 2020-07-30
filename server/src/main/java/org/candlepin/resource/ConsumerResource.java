@@ -126,8 +126,6 @@ import org.candlepin.util.FactValidator;
 import org.candlepin.util.PropertyValidationException;
 import org.candlepin.util.Util;
 
-//import com.google.inject.Inject;
-//import com.google.inject.persist.Transactional;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -146,6 +144,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
@@ -167,7 +166,6 @@ import java.util.regex.Pattern;
 import javax.inject.Provider;
 import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletResponse;
-import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;

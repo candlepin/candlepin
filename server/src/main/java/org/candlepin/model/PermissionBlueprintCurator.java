@@ -18,6 +18,8 @@ import com.google.inject.Inject;
 
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Singleton;
 
@@ -26,10 +28,11 @@ import javax.inject.Singleton;
 /**
  * PermissionBlueprintCurator
  */
-@Singleton
+@Component
 public class PermissionBlueprintCurator extends AbstractHibernateCurator<PermissionBlueprint> {
 
-    @Inject private CandlepinQueryFactory cpQueryFactory;
+    @Autowired
+    private CandlepinQueryFactory cpQueryFactory;
 
     public PermissionBlueprintCurator() {
         super(PermissionBlueprint.class);

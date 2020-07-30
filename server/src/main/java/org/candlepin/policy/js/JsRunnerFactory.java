@@ -23,20 +23,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Component
+@Transactional
 public class JsRunnerFactory implements FactoryBean<JsRunner> {
 
     private static Logger log = LoggerFactory.getLogger(JsRunnerFactory.class);
 
-    //@Autowired
     private RulesCurator rulesCurator;
-    //private Provider<JsRunnerRequestCache> cacheProvider;
-    //@Autowired
     private JsRunnerRequestCacheFactory cacheProvider;
     private Script script;
     private Scriptable scope;
@@ -84,7 +83,15 @@ public class JsRunnerFactory implements FactoryBean<JsRunner> {
         log.debug("Compiling rules for initial load");
         this.rulesCurator.updateDbRules();
         this.compileRules();
+        //initializeRules();
     }
+
+//    @Transactional
+//    public void initializeRules() {
+//        this.rulesCurator.updateDbRules();
+//        this.compileRules();
+//    }
+
     /**
      * These are the expensive operations (initStandardObjects and compileReader/exec).
      *  We do them once here, and define this provider as a singleton, so it's only

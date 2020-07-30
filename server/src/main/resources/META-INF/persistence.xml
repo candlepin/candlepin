@@ -3,7 +3,7 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
     version="2.0">
 
-    <persistence-unit name="default" transaction-type="RESOURCE_LOCAL">
+    <persistence-unit name="default0" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <validation-mode>NONE</validation-mode>
         <properties>
@@ -14,7 +14,7 @@
             <property name="hibernate.connection.password" value=""/>
             <property name="hibernate.show_sql" value="false" />
             <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
-            <property name="hibernate.connection.provider_class" value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider" />
+<!--            <property name="hibernate.connection.provider_class" value="org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider" />-->
             <!-- c3p0 connection manager settings -->
             <property name="hibernate.c3p0.min_size" value="5" />
             <property name="hibernate.c3p0.max_size" value="20" />

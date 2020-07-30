@@ -40,13 +40,6 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.springframework.data</groupId>
-        <artifactId>spring-data-releasetrain</artifactId>
-        <version>Lovelace-SR9</version>
-        <scope>import</scope>
-        <type>pom</type>
-      </dependency>
-      <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
         <version>2.3.1.RELEASE</version>
@@ -56,7 +49,7 @@
       <dependency>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-c3p0</artifactId>
-        <version>5.4.9.Final</version>
+        <version>5.4.17.Final</version>
       </dependency>
       <dependency>
         <groupId>org.junit.jupiter</groupId>
@@ -226,7 +219,7 @@
       <dependency>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-jcache</artifactId>
-        <version>5.4.6.Final</version>
+        <version>5.4.17.Final</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>

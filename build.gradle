@@ -17,7 +17,7 @@ buildscript {
 
 plugins {
     id "io.spring.dependency-management" version "1.0.8.RELEASE"
-    id "org.springframework.boot" version "2.0.8.RELEASE"
+    id "org.springframework.boot" version "2.3.1.RELEASE"
     id "nebula.lint" version "16.2.3"
 }
 
@@ -111,11 +111,11 @@ ext.libraries = [
 //        "org.springframework.boot:spring-boot-starter-actuator",
         "org.springframework.boot:spring-boot-starter-aop",
         "org.springframework.boot:spring-boot-starter-web",
-        //"org.springframework.boot:spring-boot-starter-activemq",
         "org.springframework.retry:spring-retry",
         "org.springframework:spring-context-support",
         "org.springframework.guice:spring-guice",
-        //"org.springframework.boot:spring-boot-starter-artemis",
+        "org.springframework.boot:spring-boot-starter-data-jpa",
+        "org.springframework.boot:spring-boot-starter-validation",
     ],
     liquibase: "org.liquibase:liquibase-core",
     liquibase_slf4j: "com.mattbertolini:liquibase-slf4j",
@@ -169,8 +169,7 @@ allprojects {
             // See https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies to
             // get listings of the contents of this BOM
             mavenBom "org.springframework.boot:spring-boot-dependencies:$versions.spring_boot_version"
-            mavenBom "org.springframework.data:spring-data-releasetrain:$versions.spring_data_releasetrain"
-            //mavenBom "org.springframework.guice:spring-guice:$versions.spring_guice_version"
+//            mavenBom "org.springframework.data:spring-data-releasetrain:$versions.spring_data_releasetrain"
         }
         dependencies {
             dependency group: 'aopalliance', name: 'aopalliance', version: '1.0'
@@ -194,7 +193,7 @@ allprojects {
             dependency group: 'org.mozilla', name: 'rhino', version: '1.7R3'
             dependency group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.1-api', version: '1.0.2.Final'
             dependency group: 'org.hibernate.validator', name: 'hibernate-validator-annotation-processor', version: '6.1.0.Final'
-            dependency group: 'org.hibernate', name: 'hibernate-jcache', version: '5.4.6.Final'
+            dependency group: 'org.hibernate', name: 'hibernate-jcache', version: '5.4.17.Final'
             dependency group: 'commons-codec', name: 'commons-codec', version: '1.11'
             dependency group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
             dependency group: 'commons-io', name: 'commons-io', version: '1.4'
@@ -229,7 +228,7 @@ allprojects {
                 entry "resteasy-guice"
                 entry "resteasy-atom-provider"
             }
-            dependencySet(group: "org.hibernate", version: "5.4.9.Final") {
+            dependencySet(group: "org.hibernate", version: "5.4.17.Final") {
                 entry "hibernate-c3p0"
             }
             dependencySet(group: "org.hibernate.validator", version: "6.1.0.Final") {

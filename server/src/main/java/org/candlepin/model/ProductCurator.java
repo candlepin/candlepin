@@ -29,6 +29,8 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -49,7 +51,7 @@ import javax.persistence.TypedQuery;
 /**
  * interact with Products.
  */
-@Singleton
+@Component
 public class ProductCurator extends AbstractHibernateCurator<Product> {
     private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
@@ -59,7 +61,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     /**
      * default ctor
      */
-    @Inject
+    @Autowired
     public ProductCurator(Configuration config,
         AttributeValidator attributeValidator) {
 

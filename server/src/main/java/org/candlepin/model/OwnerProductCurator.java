@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.model.activationkeys.ActivationKey;
 
-import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -28,6 +27,8 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -37,15 +38,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Singleton;
-
-
 
 /**
  * The OwnerProductCurator provides functionality for managing the mapping between owners and
  * products.
  */
-@Singleton
+@Component
 public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> {
     private static Logger log = LoggerFactory.getLogger(OwnerProductCurator.class);
 

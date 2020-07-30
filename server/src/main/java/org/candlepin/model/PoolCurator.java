@@ -21,9 +21,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
@@ -47,6 +44,9 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.type.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,7 +62,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.inject.Singleton;
 import javax.persistence.TypedQuery;
 
 
@@ -70,7 +69,7 @@ import javax.persistence.TypedQuery;
 /**
  * PoolCurator
  */
-@Singleton
+@Component
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /** The recommended number of expired pools to fetch in a single call to listExpiredPools */
@@ -80,10 +79,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
 
-    @Inject
-    protected Injector injector;
+//    @Inject
+//    protected Injector injector;
 
-    @Inject
+    @Autowired
     public PoolCurator(ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator) {
         super(Pool.class);
         this.consumerCurator = consumerCurator;

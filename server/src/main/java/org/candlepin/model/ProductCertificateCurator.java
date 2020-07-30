@@ -18,11 +18,12 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.util.X509ExtensionUtil;
 
-import com.google.inject.Inject;
 
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -33,14 +34,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 
-import javax.inject.Singleton;
-
-
 
 /**
  * ProductCertificateCurator
  */
-@Singleton
+@Component
 public class ProductCertificateCurator extends AbstractHibernateCurator<ProductCertificate> {
     private static Logger log = LoggerFactory.getLogger(ProductCertificateCurator.class);
 
@@ -48,7 +46,7 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
     private X509ExtensionUtil extensionUtil;
 
 
-    @Inject
+    @Autowired
     public ProductCertificateCurator(PKIUtility pki, X509ExtensionUtil extensionUtil) {
         super(ProductCertificate.class);
 

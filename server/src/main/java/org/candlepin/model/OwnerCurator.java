@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
@@ -33,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Date;
@@ -45,12 +44,12 @@ import javax.inject.Singleton;
 /**
  * OwnerCurator
  */
-@Singleton
-//@Component
+//@Singleton
+@Component
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
-    @Inject
-    //@Autowired
+    //@Inject
+    @Autowired
     private CandlepinQueryFactory cpQueryFactory;
     private static Logger log = LoggerFactory.getLogger(OwnerCurator.class);
 

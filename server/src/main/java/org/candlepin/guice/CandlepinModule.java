@@ -380,7 +380,7 @@ public class CandlepinModule extends AbstractModule {
 
     protected void configureJPA() {
         Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
-        install(new JpaPersistModule("default").properties(jpaConfig.toProperties()));
+        install(new JpaPersistModule("default0").properties(jpaConfig.toProperties()));
         bind(JPAInitializer.class).asEagerSingleton();
     }
 

@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Component;
 
 import javax.inject.Singleton;
 
@@ -24,7 +25,7 @@ import javax.inject.Singleton;
  *
  * UserCurator
  */
-@Singleton
+@Component
 public class UserCurator extends AbstractHibernateCurator<User> {
 
     public UserCurator() {

@@ -15,6 +15,8 @@
 package org.candlepin.model;
 
 import com.google.inject.Inject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -27,10 +29,10 @@ import javax.persistence.Query;
  * Facilitates the creation and deletion of UeberCertificate objects in the database.
  *
  */
-@Singleton
+@Component
 public class UeberCertificateCurator extends AbstractHibernateCurator<UeberCertificate> {
 
-    @Inject
+    @Autowired
     public UeberCertificateCurator() {
         super(UeberCertificate.class);
     }
