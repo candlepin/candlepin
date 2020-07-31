@@ -24,6 +24,7 @@ import org.candlepin.service.model.UserInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ import javax.inject.Singleton;
 /**
  * PermissionFactory: Creates concrete Java permission classes based on the provided permission info
  */
-@Singleton
+@Component
 public class PermissionFactory {
     private static Logger log = LoggerFactory.getLogger(PermissionFactory.class);
 

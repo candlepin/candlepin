@@ -20,21 +20,23 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.PoolCurator;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 
 /**
  * Manages Cdn entity operations.
  */
+@Component
 public class CdnManager {
 
     private CdnCurator cdnCurator;
     private CertificateSerialCurator certSerialCurator;
     private PoolCurator poolCurator;
 
-    @Inject
+    @Autowired
     public CdnManager(CdnCurator cdnCurator, PoolCurator poolCurator,
         CertificateSerialCurator certSerialCurator) {
         this.cdnCurator = cdnCurator;

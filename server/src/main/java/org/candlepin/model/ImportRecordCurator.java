@@ -17,15 +17,13 @@ package org.candlepin.model;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-
-import javax.inject.Singleton;
-
+import org.springframework.stereotype.Component;
 
 
 /**
  * Curator for {@link ImportRecord}s.
  */
-@Singleton
+@Component
 public class ImportRecordCurator extends AbstractHibernateCurator<ImportRecord> {
 
     public ImportRecordCurator() {

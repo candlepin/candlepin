@@ -48,12 +48,12 @@ public class CandlepinPersistFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
-        unitOfWork.begin();
+//        unitOfWork.begin();
         try {
             chain.doFilter(request, response);
         }
         finally {
-            unitOfWork.end();
+//            unitOfWork.end();
         }
     }
 

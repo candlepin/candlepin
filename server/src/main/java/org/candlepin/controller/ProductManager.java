@@ -35,11 +35,11 @@ import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -62,6 +62,7 @@ import java.util.Set;
  * The methods provided by this class are the prefered methods to use for CRUD operations on
  * products, to ensure product versioning and linking is handled properly.
  */
+@Component
 public class ProductManager {
     private static Logger log = LoggerFactory.getLogger(ProductManager.class);
 
@@ -70,7 +71,7 @@ public class ProductManager {
     private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
 
-    @Inject
+    @Autowired
     public ProductManager(EntitlementCertificateGenerator entitlementCertGenerator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
         ProductCurator productCurator) {

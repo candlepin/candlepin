@@ -19,8 +19,6 @@ import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
@@ -38,6 +36,9 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.type.StringType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,7 +61,7 @@ import javax.persistence.Query;
 /**
  * EntitlementCurator
  */
-@Singleton
+@Component
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
 
@@ -72,7 +73,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     /**
      * default ctor
      */
-    @Inject
+    @Autowired
     public EntitlementCurator(OwnerProductCurator ownerProductCurator, ProductCurator productCurator,
         ConsumerTypeCurator consumerTypeCurator, CandlepinQueryFactory cpQueryFactory) {
         super(Entitlement.class);

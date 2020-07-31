@@ -14,12 +14,13 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -27,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Singleton;
 import javax.persistence.Query;
 
 
@@ -35,11 +35,11 @@ import javax.persistence.Query;
 /**
  * EntitlementCertificateCurator
  */
-@Singleton
+@Component
 public class EntitlementCertificateCurator extends AbstractHibernateCurator<EntitlementCertificate> {
     private static Logger log = LoggerFactory.getLogger(EntitlementCertificateCurator.class);
 
-    @Inject
+    @Autowired
     public EntitlementCertificateCurator() {
         super(EntitlementCertificate.class);
     }

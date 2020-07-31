@@ -18,19 +18,17 @@ import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 
-import com.google.inject.persist.Transactional;
 
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
-
-import javax.inject.Singleton;
-
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
  * SubscriptionTokenCurator
  */
-@Singleton
+@Component
 public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey> {
 
     public ActivationKeyCurator() {

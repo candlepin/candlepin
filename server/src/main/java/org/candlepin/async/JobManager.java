@@ -34,7 +34,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
 
 import com.google.inject.Injector;
-import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -59,6 +58,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -86,7 +87,7 @@ import javax.transaction.Synchronization;
 /**
  * The JobManager manages the queueing, execution and general bookkeeping on jobs
  */
-@Singleton
+@Component
 public class JobManager implements ModeChangeListener {
     private static final Logger log = LoggerFactory.getLogger(JobManager.class);
 

@@ -47,9 +47,6 @@ import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -63,6 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
@@ -103,7 +101,6 @@ public class EntitlementResource {
     private JobManager jobManager;
     private ModelTranslator translator;
 
-    //@Inject
     @Autowired
     public EntitlementResource(EntitlementCurator entitlementCurator,
         ConsumerCurator consumerCurator,

@@ -18,13 +18,13 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
-import javax.inject.Singleton;
 
 /**
  * GuestIdCurator
  */
-@Singleton
+@Component
 public class GuestIdCurator extends AbstractHibernateCurator<GuestId> {
 
     private static Logger log = LoggerFactory.getLogger(GuestIdCurator.class);

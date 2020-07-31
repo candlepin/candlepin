@@ -36,9 +36,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.resteasy.DateFormat;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -49,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
@@ -90,8 +88,6 @@ public class JobResource {
 
     private Set<String> triggerableJobKeys;
 
-
-    //@Inject
     @Autowired
     public JobResource(Configuration config, I18n i18n, ModelTranslator translator, JobManager jobManager,
         AsyncJobStatusCurator jobCurator, OwnerCurator ownerCurator) {

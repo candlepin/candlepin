@@ -24,8 +24,6 @@ import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -45,6 +43,9 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +62,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Provider;
-import javax.inject.Singleton;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
@@ -71,18 +71,26 @@ import javax.persistence.TypedQuery;
 /**
  * ConsumerCurator
  */
-@Singleton
+@Component
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private DeletedConsumerCurator deletedConsumerCurator;
-    @Inject private Configuration config;
-    @Inject private FactValidator factValidator;
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private Provider<HostCache> cachedHostsProvider;
-    @Inject private PrincipalProvider principalProvider;
+    @Autowired
+    private EntitlementCurator entitlementCurator;
+    @Autowired
+    private ConsumerTypeCurator consumerTypeCurator;
+    @Autowired
+    private DeletedConsumerCurator deletedConsumerCurator;
+    @Autowired
+    private Configuration config;
+    @Autowired
+    private FactValidator factValidator;
+    @Autowired
+    private OwnerCurator ownerCurator;
+    @Autowired
+    private Provider<HostCache> cachedHostsProvider;
+    @Autowired
+    private PrincipalProvider principalProvider;
 
     public ConsumerCurator() {
         super(Consumer.class);

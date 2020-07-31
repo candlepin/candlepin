@@ -14,14 +14,13 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.persist.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import javax.inject.Singleton;
 import javax.persistence.Query;
 
 
@@ -30,7 +29,7 @@ import javax.persistence.Query;
  * The OwnerContentCurator provides functionality for managing the mapping between owners and
  * content.
  */
-@Singleton
+@Component
 public class OwnerEnvContentAccessCurator extends AbstractHibernateCurator<OwnerEnvContentAccess> {
     private static Logger log = LoggerFactory.getLogger(OwnerEnvContentAccessCurator.class);
 

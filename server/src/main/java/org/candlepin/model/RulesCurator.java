@@ -19,15 +19,11 @@ import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.util.Util;
 
-//import com.google.inject.persist.Transactional;
-
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
@@ -35,9 +31,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
-
-import javax.inject.Singleton;
-
 /**
  * RulesCurator
  */

@@ -16,8 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.util.ElementTransformer;
 
-import com.google.inject.persist.Transactional;
-
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.LockMode;
@@ -33,7 +31,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;
 import org.hibernate.type.Type;
-import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -55,6 +53,7 @@ import javax.persistence.LockModeType;
  * @param <T>
  *  The entity type to be returned by this criteria's result output methods
  */
+//@Component
 public class DetachedCandlepinQuery<T> implements CandlepinQuery<T> {
 
     protected Session session;

@@ -45,14 +45,15 @@ import org.candlepin.sync.file.ManifestFileServiceException;
 import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.BufferedOutputStream;
@@ -70,6 +71,8 @@ import javax.servlet.http.HttpServletResponse;
  * across multiple classes.
  *
  */
+@Component
+@Scope("prototype")
 public class ManifestManager {
 
     private static Logger log = LoggerFactory.getLogger(ManifestManager.class);
@@ -86,7 +89,7 @@ public class ManifestManager {
     private EventSink sink;
     private EventFactory eventFactory;
 
-    @Inject
+    @Autowired
     public ManifestManager(ManifestFileService manifestFileService, Exporter exporter, Importer importer,
         ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator,
         EntitlementCurator entitlementCurator, CdnCurator cdnCurator, PoolManager poolManager,

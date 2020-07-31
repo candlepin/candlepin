@@ -14,12 +14,14 @@
  */
 package org.candlepin.model;
 
+import org.springframework.stereotype.Component;
+
 import javax.inject.Singleton;
 
 /**
  * ConsumerContentOverrideCurator
  */
-@Singleton
+@Component
 public class ConsumerContentOverrideCurator extends
     ContentOverrideCurator<ConsumerContentOverride, Consumer> {
 

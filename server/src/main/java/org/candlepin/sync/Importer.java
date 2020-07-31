@@ -53,14 +53,15 @@ import org.candlepin.sync.file.ManifestFile;
 import org.candlepin.sync.file.ManifestFileServiceException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
@@ -89,6 +90,7 @@ import javax.persistence.PersistenceException;
 /**
  * Importer
  */
+@Component
 public class Importer {
     private static Logger log = LoggerFactory.getLogger(Importer.class);
 
@@ -149,7 +151,7 @@ public class Importer {
     private ContentAccessManager contentAccessManager;
 
 
-    @Inject
+    @Autowired
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator, IdentityCertificateCurator idCertCurator,
         ContentCurator contentCurator, PoolManager pm, PKIUtility pki, Configuration config,
@@ -470,7 +472,7 @@ public class Importer {
     }
 
     @SuppressWarnings("checkstyle:methodlength")
-    @Transactional(rollbackOn = {IOException.class, ImporterException.class,
+    @Transactional(rollbackFor = {IOException.class, ImporterException.class,
         RuntimeException.class, ImportConflictException.class})
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
     public List<SubscriptionDTO> importObjects(Owner owner, Map<String, File> importFiles,

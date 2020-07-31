@@ -47,12 +47,13 @@ import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductInfo;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -69,6 +70,7 @@ import java.util.Map.Entry;
 /**
  * entitler
  */
+@Component
 public class Entitler {
 
     private static final Logger log = LoggerFactory.getLogger(Entitler.class);
@@ -89,7 +91,7 @@ public class Entitler {
     private ProductManager productManager;
     private ProductServiceAdapter productAdapter;
 
-    @Inject
+    @Autowired
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
         EntitlementCurator entitlementCurator, Configuration config,

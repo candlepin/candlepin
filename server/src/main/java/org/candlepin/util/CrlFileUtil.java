@@ -21,9 +21,6 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509CRLEntryWrapper;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.persist.Transactional;
 
 import org.apache.commons.codec.binary.Base64InputStream;
 import org.apache.commons.codec.binary.Base64OutputStream;
@@ -31,6 +28,9 @@ import org.apache.commons.io.IOUtils;
 import org.mozilla.jss.asn1.InvalidBERException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -68,7 +68,7 @@ import java.util.regex.Pattern;
 /**
  * CrlFileUtil
  */
-@Singleton
+@Component
 public class CrlFileUtil {
     private static final Logger log = LoggerFactory.getLogger(CrlFileUtil.class);
 
@@ -88,7 +88,7 @@ public class CrlFileUtil {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock(true);
 
-    @Inject
+    @Autowired
     public CrlFileUtil(CertificateReader certificateReader, PKIUtility pkiUtility,
         CertificateSerialCurator curator, Configuration config) {
         this.certificateReader = certificateReader;

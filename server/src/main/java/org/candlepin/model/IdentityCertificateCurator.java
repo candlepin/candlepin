@@ -14,19 +14,19 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
 
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import javax.inject.Singleton;
 
 /**
  * IdentityCertificateCurator
  */
-@Singleton
+@Component
 public class IdentityCertificateCurator extends AbstractHibernateCurator<IdentityCertificate> {
 
-    @Inject
+    @Autowired
     public IdentityCertificateCurator() {
         super(IdentityCertificate.class);
     }

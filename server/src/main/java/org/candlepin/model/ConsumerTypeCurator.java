@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 import java.util.Collection;
 import java.util.List;
 
-import javax.inject.Singleton;
 import javax.persistence.NoResultException;
 
 
@@ -30,7 +29,6 @@ import javax.persistence.NoResultException;
 /**
  * ConsumerTypeCurator
  */
-//@Singleton
 @Component
 public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> {
 

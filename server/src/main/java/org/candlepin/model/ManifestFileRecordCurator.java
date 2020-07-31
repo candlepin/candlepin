@@ -16,7 +16,8 @@ package org.candlepin.model;
 
 import org.candlepin.sync.file.ManifestFileType;
 
-import com.google.inject.persist.Transactional;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,14 +25,13 @@ import java.io.IOException;
 import java.sql.Blob;
 import java.util.Date;
 
-import javax.inject.Singleton;
 import javax.persistence.Query;
 
 /**
  * Provides DB management for stored manifest archive files.
  *
  */
-@Singleton
+@Component
 public class ManifestFileRecordCurator extends AbstractHibernateCurator<ManifestFileRecord> {
 
     private static final String QUERY_CLASS_NAME = ManifestFileRecord.class.getCanonicalName();

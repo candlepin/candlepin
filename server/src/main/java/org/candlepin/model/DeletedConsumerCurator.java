@@ -18,17 +18,16 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
-
-import javax.inject.Singleton;
 
 
 
 /**
  * DeletedConsumerCurator
  */
-@Singleton
+@Component
 public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedConsumer> {
 
     public DeletedConsumerCurator() {

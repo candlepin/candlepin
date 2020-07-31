@@ -15,17 +15,16 @@
 package org.candlepin.model;
 
 import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Singleton;
-
 /**
  * DistributorVersionCurator
  */
-@Singleton
+@Component
 public class DistributorVersionCurator
     extends AbstractHibernateCurator<DistributorVersion> {
 

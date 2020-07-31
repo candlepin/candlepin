@@ -14,19 +14,20 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
  * Subscription manager.
  */
+@Component
 public class CdnCurator extends AbstractHibernateCurator<Cdn> {
 
-    @Inject
+    @Autowired
     public CdnCurator() {
         super(Cdn.class);
     }

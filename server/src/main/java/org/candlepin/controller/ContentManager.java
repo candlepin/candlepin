@@ -34,11 +34,11 @@ import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,6 +61,7 @@ import java.util.Set;
  * The methods provided by this class are the prefered methods to use for CRUD operations on
  * content, to ensure content versioning and linking is handled properly.
  */
+@Component
 public class ContentManager {
     private static Logger log = LoggerFactory.getLogger(ContentManager.class);
 
@@ -71,7 +72,7 @@ public class ContentManager {
     private ProductManager productManager;
     private ModelTranslator modelTranslator;
 
-    @Inject
+    @Autowired
     public ContentManager(
         ContentCurator contentCurator, EntitlementCertificateGenerator entitlementCertGenerator,
         OwnerContentCurator ownerContentCurator, ProductCurator productCurator,

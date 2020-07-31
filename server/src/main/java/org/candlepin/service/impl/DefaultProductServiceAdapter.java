@@ -22,9 +22,10 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 
@@ -33,12 +34,14 @@ import java.util.Collection;
 /**
  * Default implementation of the ProductserviceAdapter.
  */
+@Component
+@Scope("prototype")
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
     private OwnerProductCurator ownerProductCurator;
     private ProductCertificateCurator prodCertCurator;
 
-    @Inject
+    @Autowired
     public DefaultProductServiceAdapter(OwnerProductCurator ownerProductCurator,
         ProductCertificateCurator prodCertCurator, ContentCurator contentCurator,
         UniqueIdGenerator idGenerator) {

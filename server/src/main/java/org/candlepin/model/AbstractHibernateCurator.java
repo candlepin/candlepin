@@ -24,9 +24,7 @@ import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.guice.PrincipalProvider;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
-//import com.google.inject.persist.Transactional;
 
 import org.hibernate.*;
 import org.hibernate.criterion.Criterion;
@@ -44,8 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
@@ -77,7 +73,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     private static Logger log = LoggerFactory.getLogger(AbstractHibernateCurator.class);
 
     @Autowired protected CandlepinQueryFactory cpQueryFactory;
-    //@PersistenceContext protected Provider<EntityManager> entityManager;
     @Autowired protected Provider<I18n> i18nProvider;
     @Autowired protected Configuration config;
     @Autowired private PrincipalProvider principalProvider;
@@ -85,10 +80,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     protected EntityManager entityManager;
 
     @Autowired
+    //@Qualifier("entityManagerFactory")
     private EntityManagerFactory entityManagerFactory;
-
-    @Autowired
-    private SessionFactory sessionFactory;
 
     private final Class<E> entityType;
     private NaturalIdLoadAccess<E> natIdLoader;
@@ -571,8 +564,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     /**
      * @param entity to be deleted.
      */
-    @org.springframework.transaction.annotation.Transactional
-    //@javax.transaction.Transactional
+    @Transactional
     public void delete(E entity) {
         if (entity != null) {
             Session session = this.currentSession();
@@ -646,12 +638,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public Session currentSession() {
 //        return (Session) entityManager.get().getDelegate();
 //        return sessionFactory.getCurrentSession();
-        Session session = null;
-        try {
-            session = sessionFactory.getCurrentSession();
-        } catch (HibernateException e) {
-            session = sessionFactory.openSession();
-        }
+//        Session session = null;
+//        try {
+//            session = sessionFactory.getCurrentSession();
+//        } catch (HibernateException e) {
+//            session = sessionFactory.openSession();
+//        }
 //        Session session = null;
 //        entityManager = entityManager.getEntityManagerFactory().createEntityManager();
 //        session = (Session) entityManager.unwrap(Session.class);
@@ -663,13 +655,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 //            session = sessionFactory.openSession();
 //        }
 //        return sessionFactory.getCurrentSession();
-//        Session session = null;
-//        try{
-//            //session = getEntityManager().unwrap(Session.class);
-//            session = sessionFactory.getCurrentSession();
-//        } catch (Exception e) {
-//            session = entityManagerFactory.unwrap(SessionFactory.class).openSession();
-//        }
+        Session session = null;
+        try{
+            session = getEntityManager().unwrap(Session.class);
+            System.out.println("Session object Unwrapped");
+        } catch (Exception e) {
+            System.out.println("Session object could not be unwrapped, opening a fresh session");
+            session = entityManagerFactory.unwrap(SessionFactory.class).openSession();
+        }
         return session;
     }
 

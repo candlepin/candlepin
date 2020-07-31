@@ -23,11 +23,12 @@ import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
@@ -48,6 +49,8 @@ import java.util.TimeZone;
 /**
  * UeberCertificateGenerator
  */
+@Component
+@Scope("prototype")
 public class UeberCertificateGenerator {
     private static final String UEBER_CERT_CONSUMER_TYPE = "uebercert";
     private static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
@@ -66,7 +69,7 @@ public class UeberCertificateGenerator {
     private ConsumerTypeCurator consumerTypeCurator;
     private I18n i18n;
 
-    @Inject
+    @Autowired
     public UeberCertificateGenerator(
         UniqueIdGenerator idGenerator,
         PKIUtility pki,

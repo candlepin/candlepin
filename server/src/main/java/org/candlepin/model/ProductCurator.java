@@ -18,8 +18,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.util.AttributeValidator;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -31,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
 import java.util.Collection;

@@ -248,14 +248,14 @@ public class CandlepinModule extends AbstractModule {
         bind(Entitler.class);
 //        bind(NotSupportedExceptionMapper.class);
 //        bind(NotAuthorizedExceptionMapper.class);
-        bind(NotFoundExceptionMapper.class);
+//        bind(NotFoundExceptionMapper.class);
 //        bind(NotAcceptableExceptionMapper.class);
 //        bind(NoLogWebApplicationExceptionMapper.class);
 //        bind(NotAllowedExceptionMapper.class);
 //        bind(InternalServerErrorExceptionMapper.class);
 //        bind(DefaultOptionsMethodExceptionMapper.class);
-        bind(BadRequestExceptionMapper.class);
-        bind(RollbackExceptionMapper.class);
+//        bind(BadRequestExceptionMapper.class);
+//        bind(RollbackExceptionMapper.class);
 //        bind(ValidationExceptionMapper.class);
 //        bind(WebApplicationExceptionMapper.class);
 //        bind(FailureExceptionMapper.class);
@@ -380,8 +380,8 @@ public class CandlepinModule extends AbstractModule {
 
     protected void configureJPA() {
         Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
-        install(new JpaPersistModule("default0").properties(jpaConfig.toProperties()));
-        bind(JPAInitializer.class).asEagerSingleton();
+//        install(new JpaPersistModule("default0").properties(jpaConfig.toProperties()));
+//        bind(JPAInitializer.class).asEagerSingleton();
     }
 
     private void configureBindFactories() {

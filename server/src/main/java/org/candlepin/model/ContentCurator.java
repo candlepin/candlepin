@@ -14,36 +14,33 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
 
-import javax.inject.Singleton;
 
 
 
 /**
  * ContentCurator
  */
-@Singleton
-//@Component
+@Component
 public class ContentCurator extends AbstractHibernateCurator<Content> {
 
     private static Logger log = LoggerFactory.getLogger(ContentCurator.class);
 
     private ProductCurator productCurator;
 
-    @Inject
+    @Autowired
     public ContentCurator(ProductCurator productCurator) {
         super(Content.class);
 

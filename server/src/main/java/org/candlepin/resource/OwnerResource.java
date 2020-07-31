@@ -110,9 +110,6 @@ import org.candlepin.util.Util;
 
 import ch.qos.logback.classic.Level;
 
-//import com.google.inject.Inject;
-//import com.google.inject.persist.Transactional;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

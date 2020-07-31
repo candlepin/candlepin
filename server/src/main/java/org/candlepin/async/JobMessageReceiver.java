@@ -69,7 +69,7 @@ public class JobMessageReceiver {
 
 
     /**
-     * Creates a new job message receiver instance
+     * CreunitOfWork.begin();ates a new job message receiver instance
      *
      * @param config
      *  the system configuration to use

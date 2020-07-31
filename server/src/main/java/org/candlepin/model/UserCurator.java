@@ -17,9 +17,6 @@ package org.candlepin.model;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Component;
 
-import javax.inject.Singleton;
-
-
 
 /**
  *

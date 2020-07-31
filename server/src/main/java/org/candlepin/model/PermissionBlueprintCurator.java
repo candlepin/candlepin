@@ -14,15 +14,10 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.inject.Singleton;
-
 
 
 /**

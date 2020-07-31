@@ -14,13 +14,11 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-import javax.inject.Singleton;
 import javax.persistence.Query;
 
 /**

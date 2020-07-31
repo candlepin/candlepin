@@ -15,6 +15,8 @@
 package org.candlepin.cache;
 
 import com.google.inject.Inject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.cache.CacheManager;
 import javax.inject.Singleton;
@@ -24,7 +26,7 @@ import javax.inject.Singleton;
  * @author fnguyen
  *
  */
-@Singleton
+@Component
 public class CandlepinCache {
     /**
      * Cache manager for Ehcache configured caches.
@@ -37,7 +39,7 @@ public class CandlepinCache {
      */
     private StatusCache statusCache;
 
-    @Inject
+    @Autowired
     public CandlepinCache(CacheManager cacheManager) {
         this.cacheManager = cacheManager;
         // Safe to create this as many times as you'd like

@@ -81,8 +81,6 @@ import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -91,6 +89,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -164,7 +163,6 @@ public class CandlepinPoolManager implements PoolManager {
      * @param eventFactory
      * @param config
      */
-    //@Inject
     @Autowired
     public CandlepinPoolManager(
         PoolCurator poolCurator,

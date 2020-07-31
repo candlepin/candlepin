@@ -27,9 +27,8 @@ import org.candlepin.model.ContentOverride;
 import org.candlepin.model.ContentOverrideCurator;
 import org.candlepin.util.ContentOverrideValidator;
 
-import com.google.inject.persist.Transactional;
-
 import org.apache.commons.lang.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.List;

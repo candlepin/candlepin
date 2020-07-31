@@ -16,6 +16,7 @@
 package org.candlepin;
 
 //import com.mchange.v2.c3p0.ComboPooledDataSource;
+import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.hibernate.SessionFactory;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -35,6 +36,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
 import java.beans.PropertyVetoException;
 import java.util.Properties;
 
@@ -47,10 +49,56 @@ import java.util.Properties;
 //        transactionManagerRef = "candlepinTransactionManager")
 //@PropertySource("classpath:application.properties")
 public class PersistenceJPAConfig {
-    @Bean
-    public SessionFactory sessionFactory(@Qualifier("entityManagerFactory") EntityManagerFactory emf) {
-        return emf.unwrap(SessionFactory.class);
-    }
+//    @Bean
+//    public SessionFactory sessionFactory(@Qualifier("entityManagerFactory") EntityManagerFactory emf) {
+//        return emf.unwrap(SessionFactory.class);
+//    }
+//
+//    @Autowired
+//    DataSource dataSource;
+
+//    @Autowired
+//    @Qualifier("entityManagerFactory")
+//    private EntityManagerFactory entityManagerFactory;
+
+//    @Bean
+//    @Primary
+//    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+//        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+//        vendorAdapter.setGenerateDdl(false);
+//
+//        LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+//        factory.setJpaVendorAdapter(vendorAdapter);
+//        //Add package to scan for entities.
+//        factory.setPackagesToScan(new String[]{"org.candlepin.model"});
+//        factory.setDataSource(dataSource);
+//        return factory;
+//    }
+//
+//    @Bean
+//    public PlatformTransactionManager hibernateTransactionManager() {
+//        HibernateTransactionManager transactionManager
+//                = new HibernateTransactionManager();
+//        transactionManager.setSessionFactory(sessionFactory().getObject());
+//        return transactionManager;
+//    }
+//
+//    @Bean
+//    public LocalSessionFactoryBean sessionFactory() {
+//        LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
+//        sessionFactory.setDataSource(dataSource);
+//        sessionFactory.setPackagesToScan(new String[]{"org.candlepin.model"});
+//        sessionFactory.setHibernateProperties(hibernateProperties());
+//
+//        return sessionFactory;
+//    }
+
+//    @Bean
+//    public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+//        JpaTransactionManager txManager = new JpaTransactionManager();
+//        txManager.setEntityManagerFactory(entityManagerFactory);
+//        return txManager;
+//    }
 //    @Autowired
 //    public Environment env;
 //

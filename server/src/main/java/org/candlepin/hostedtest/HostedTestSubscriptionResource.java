@@ -29,8 +29,9 @@ import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
-
-import com.google.inject.persist.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -58,14 +59,15 @@ import javax.ws.rs.core.MediaType;
  * mode, while it is built with candlepin, it is not packaged in candlepin.war,
  * as the only purpose of this class is to support spec tests.
  */
+@Component
 @SuppressSwaggerCheck
 @Path("/hostedtest")
 public class HostedTestSubscriptionResource {
 
-    @Inject
+    @Autowired
     private HostedTestSubscriptionServiceAdapter adapter;
 
-    @Inject
+    @Autowired
     private UniqueIdGenerator idGenerator;
 
     /**

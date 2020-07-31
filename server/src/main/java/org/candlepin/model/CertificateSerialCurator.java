@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.persist.Transactional;
-
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Calendar;
 import java.util.Collection;
@@ -26,7 +26,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import javax.inject.Singleton;
 import javax.persistence.Query;
 
 
@@ -34,7 +33,7 @@ import javax.persistence.Query;
 /**
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
  */
-@Singleton
+@Component
 public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
 
     public CertificateSerialCurator() {

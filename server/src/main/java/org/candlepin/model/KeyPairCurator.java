@@ -16,22 +16,22 @@ package org.candlepin.model;
 
 import org.candlepin.pki.PKIUtility;
 
-import com.google.inject.Inject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.security.NoSuchAlgorithmException;
 
-import javax.inject.Singleton;
 
 /**
  * KeyPairCurator
  */
-@Singleton
+@Component
 public class KeyPairCurator extends
     AbstractHibernateCurator<KeyPair> {
 
     private PKIUtility pki;
 
-    @Inject
+    @Autowired
     public KeyPairCurator(PKIUtility pki) {
         super(KeyPair.class);
         this.pki = pki;
