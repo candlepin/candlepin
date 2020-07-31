@@ -214,12 +214,11 @@ public class JobMessageReceiver {
     }
 
     /**
-     * Stops all known sessions, potentially leaving them open to be restarted without needing to
-     * create new sessions.
+     * Close all known sessions.
      */
-    private void stopSessions() throws CPMException {
+    private void closeSessions() throws CPMException {
         for (CPMSession session : this.sessions) {
-            session.stop();
+            session.close();
         }
     }
 
@@ -319,7 +318,7 @@ public class JobMessageReceiver {
     public synchronized void suspend() throws JobException {
         try {
             if (!this.suspended) {
-                this.stopSessions();
+                this.closeSessions();
 
                 log.debug("Job message processing suspended");
                 this.suspended = true;
