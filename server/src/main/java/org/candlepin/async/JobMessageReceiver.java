@@ -14,6 +14,7 @@
  */
 package org.candlepin.async;
 
+import com.google.inject.Inject;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.messaging.CPMConsumer;
@@ -32,6 +33,10 @@ import com.google.inject.persist.UnitOfWork;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,14 +46,13 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
-
-
 
 /**
  *
  *
  */
+//@Component
+//@Scope("prototype")
 public class JobMessageReceiver {
     private static Logger log = LoggerFactory.getLogger(JobMessageReceiver.class);
 
@@ -69,7 +73,7 @@ public class JobMessageReceiver {
 
 
     /**
-     * CreunitOfWork.begin();ates a new job message receiver instance
+     * Creates a new job message receiver instance
      *
      * @param config
      *  the system configuration to use

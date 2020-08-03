@@ -14,6 +14,7 @@
  */
 package org.candlepin.async;
 
+import com.google.inject.Inject;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.JobPrincipal;
 import org.candlepin.auth.Principal;
@@ -75,7 +76,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
@@ -87,7 +87,8 @@ import javax.transaction.Synchronization;
 /**
  * The JobManager manages the queueing, execution and general bookkeeping on jobs
  */
-@Component
+//@Component
+@Singleton
 public class JobManager implements ModeChangeListener {
     private static final Logger log = LoggerFactory.getLogger(JobManager.class);
 

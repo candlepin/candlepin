@@ -30,7 +30,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Component
-@Transactional
 public class JsRunnerFactory implements FactoryBean<JsRunner> {
 
     private static Logger log = LoggerFactory.getLogger(JsRunnerFactory.class);

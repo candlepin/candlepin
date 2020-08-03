@@ -18,6 +18,7 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +32,7 @@ import javax.persistence.NoResultException;
 /**
  * EnvironmentCurator
  */
-@Singleton
+@Component
 public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     private static Logger log = LoggerFactory.getLogger(OwnerContentCurator.class);
 
