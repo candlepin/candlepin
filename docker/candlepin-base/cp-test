@@ -45,7 +45,7 @@ build_lint() {
 build_unittest() {
     UTCMD=$1
     if [ -f ../gradlew ]; then
-        ../gradlew test
+        cd $CP_HOME; ./gradlew test; cd $PROJECT_DIR
     else
         buildr $UTCMD
     fi
