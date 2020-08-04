@@ -118,7 +118,7 @@ public class LinkHeaderResponseFilterTest {
     @Test
     public void testBuildBaseUrlWithConfigDefault() throws Exception {
         when(mockServletContext.getContextPath()).thenReturn("/candlepin");
-        mockReq = MockHttpRequest.get("https://example.com/candlepin/resource");
+        mockReq = MockHttpRequest.get("https://example.com/candlepin/resource?baz=qu%3Dux");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         LinkHeaderResponseFilter interceptorWithDefault =
@@ -135,7 +135,7 @@ public class LinkHeaderResponseFilterTest {
         when(config.getString(eq(this.apiUrlPrefixKey))).thenReturn(
             "localhost:8443/candlepin");
 
-        mockReq = MockHttpRequest.get("https://example.com/candlepin/resource");
+        mockReq = MockHttpRequest.get("https://example.com/candlepin/resource?baz=qu%3Dux");
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         UriBuilder builder = interceptor.buildBaseUrl(mockRequestContext);
