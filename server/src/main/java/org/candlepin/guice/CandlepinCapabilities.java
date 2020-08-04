@@ -29,7 +29,8 @@ public class CandlepinCapabilities extends HashSet<String> {
 
     public static final String[] DEFAULT_CAPABILITIES = { "cores", "ram", "instance_multiplier",
         "derived_product", "cert_v3", "guest_limit", "vcpu", "hypervisors_async", "storage_band",
-        "remove_by_pool_id", "batch_bind", "org_level_content_access", "syspurpose", "hypervisors_heartbeat"};
+        "remove_by_pool_id", "batch_bind", "org_level_content_access", "syspurpose", "hypervisors_heartbeat",
+        "insights_auto_register"};
 
     public static final String KEYCLOAK_AUTH_CAPBILITY = "keycloak_auth";
 
