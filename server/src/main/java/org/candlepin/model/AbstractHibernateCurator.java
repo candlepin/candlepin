@@ -318,6 +318,18 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return c.list();
     }
 
+    private List<E> loadPageData(Root<?> root, CriteriaQuery<E> criteria, PageRequest pageRequest) {
+        criteria.orderBy(createPagingOrder(root, pageRequest));
+
+        TypedQuery<E> query = this.entityManager.get().createQuery(criteria);
+        if (pageRequest.isPaging()) {
+            query.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
+            query.setMaxResults(pageRequest.getPerPage());
+        }
+
+        return query.getResultList();
+    }
+
     private Order createPagingOrder(PageRequest p) {
         String sortBy = (p.getSortBy() == null) ? AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
         PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
@@ -332,9 +344,28 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
     }
 
+    private javax.persistence.criteria.Order createPagingOrder(Root<?> root, PageRequest p) {
+        String sortBy = (p.getSortBy() == null) ? AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
+        PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
+        CriteriaBuilder criteriaBuilder = this.entityManager.get().getCriteriaBuilder();
+
+        if (order == PageRequest.Order.ASCENDING) {
+            return criteriaBuilder.asc(root.get(sortBy));
+        }
+        //DESCENDING
+        return criteriaBuilder.desc(root.get(sortBy));
+    }
+
     private Integer findRowCount(Criteria c) {
         c.setProjection(Projections.rowCount());
         return ((Long) c.uniqueResult()).intValue();
+    }
+
+    private Long findRowCount() {
+        CriteriaBuilder criteriaBuilder = this.entityManager.get().getCriteriaBuilder();
+        CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
+        countQuery.select(criteriaBuilder.count(countQuery.from(this.entityType)));
+        return this.entityManager.get().createQuery(countQuery).getSingleResult();
     }
 
     @SuppressWarnings("unchecked")
@@ -361,6 +392,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Transactional
     public List<E> listByCriteria(Criteria query) {
         return query.list();
+    }
+
+    @Transactional
+    public List<E> listByCriteria(CriteriaQuery<E> query) {
+        return this.getEntityManager()
+            .createQuery(query)
+            .getResultList();
     }
 
     @SuppressWarnings("unchecked")
@@ -556,6 +594,25 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
         else {
             List<E> pageData = listByCriteria(c);
+            page.setMaxRecords(pageData.size());
+            page.setPageData(pageData);
+        }
+
+        return page;
+    }
+
+    @Transactional
+    public Page<List<E>> listByCriteria(Root<E> root, CriteriaQuery<E> criteria, PageRequest pageRequest) {
+        Page<List<E>> page = new Page<>();
+        if (pageRequest != null) {
+            criteria.orderBy(createPagingOrder(root, pageRequest));
+            // TODO page should store long
+            page.setMaxRecords(this.findRowCount().intValue());
+            page.setPageData(loadPageData(root, criteria, pageRequest));
+            page.setPageRequest(pageRequest);
+        }
+        else {
+            List<E> pageData = listByCriteria(criteria);
             page.setMaxRecords(pageData.size());
             page.setPageData(pageData);
         }
