@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-07-08 09:05-0400\n"
+"POT-Creation-Date: 2020-08-05 14:41+0200\n"
 "PO-Revision-Date: 2017-10-18 11:33-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Malayalam\n"
@@ -355,7 +355,7 @@ msgstr "ഉപഭോക്താവ് {1}-നുള്ള കംപ്ലയന
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: server/src/main/java/org/candlepin/auth/BasicAuth.java:74
-#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:313
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:314
 msgid "Invalid Credentials"
 msgstr "തെറ്റായ ആധികാരികതകള്‍"
 
@@ -743,7 +743,7 @@ msgid "activation key ID is null or empty"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyContentOverrideResource.java:70
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1538
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1540
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
 msgstr "id {0} എന്ന ആക്ടിവേഷന്‍കീ ലഭ്യമായില്ല."
@@ -758,7 +758,7 @@ msgid "Activation key with ID \"{0}\" could not be found."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:174
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1272
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1273
 #, java-format
 msgid ""
 "The activation key name \"{0}\" must be alphanumeric or include the "
@@ -809,7 +809,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:436
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1182
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:349
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1717
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1719
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "കീ: {0} ഉള്ള ഉടമസ്ഥന്‍ ലഭ്യമല്ല."
@@ -840,7 +840,7 @@ msgstr ""
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:788
-#: server/src/main/java/org/candlepin/resource/ContentOverrideResource.java:229
+#: server/src/main/java/org/candlepin/resource/ContentOverrideResource.java:237
 msgid "Insufficient permissions"
 msgstr "അപരിമിതമായ അനുമതികള്‍"
 
@@ -959,7 +959,7 @@ msgid "Consumer with UUID {0} was already deleted."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1777
-#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:312
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:313
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "{0} {1} അണ്‍രജിസ്ടര്‍ ചെയ്യുവാന്‍ സാധ്യമല്ല, കാരണം: {2}"
@@ -1094,12 +1094,12 @@ msgstr ""
 msgid "Organization-agnostic content write operations are not supported."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:165
+#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:167
 #, java-format
 msgid "A distributor version with name {0} already exists"
 msgstr "{0} എന്ന പേരുള്ളൊരു വിതരണ പതിപ്പു് നിലവിലുണ്ടു്"
 
-#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:196
+#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:199
 #, java-format
 msgid "No such distributor version: {0}"
 msgstr "അത്തരം വിതരണ പതിപ്പു് ലഭ്യമല്ല: {0}"
@@ -1187,16 +1187,16 @@ msgstr ""
 msgid "One of the content does not exist in the environment anymore: {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:240
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:241
 msgid "Please supply a valid guest id"
 msgstr "ശരിയായൊരു ഗസ്റ്റ് ഐഡി ലഭ്യമാക്കുക"
 
-#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:256
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:257
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
 msgstr "json \"{0}\"-ലുള്ള ഗസ്റ്റ് ഐഡി പാഥ് ഗസ്റ്റ് ഐഡി \"{1}\"-മായി ചേരുന്നില്ല"
 
-#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:296
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:297
 #, java-format
 msgid "Guest with UUID {0} could not be found."
 msgstr ""
@@ -1221,48 +1221,55 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: server/src/main/java/org/candlepin/resource/JobResource.java:165
+#: server/src/main/java/org/candlepin/resource/JobResource.java:168
 msgid "Error setting scheduler status"
 msgstr "ഷെഡ്യൂളര്‍ അവസ്ഥ സജ്ജമാക്കുന്നതില്‍ പിശക്"
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:261
-#: server/src/main/java/org/candlepin/resource/JobResource.java:289
+#: server/src/main/java/org/candlepin/resource/JobResource.java:242
+#, java-format
+msgid ""
+"This endpoint does not support returning more than {0} results at a time, "
+"please use paging."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:272
+#: server/src/main/java/org/candlepin/resource/JobResource.java:300
 msgid "Job ID is null or empty"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:267
-#: server/src/main/java/org/candlepin/resource/JobResource.java:298
+#: server/src/main/java/org/candlepin/resource/JobResource.java:278
+#: server/src/main/java/org/candlepin/resource/JobResource.java:309
 #, java-format
 msgid "No job status found associated with the given job ID: {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:308
+#: server/src/main/java/org/candlepin/resource/JobResource.java:319
 #, java-format
 msgid ""
 "Job {0} is already in a terminal state or otherwise cannot be canceled at "
 "this time"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:386
+#: server/src/main/java/org/candlepin/resource/JobResource.java:397
 msgid "Job key is null or empty"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:394
+#: server/src/main/java/org/candlepin/resource/JobResource.java:405
 #, java-format
 msgid "Job \"{0}\" is not configured for manual scheduling"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:416
+#: server/src/main/java/org/candlepin/resource/JobResource.java:427
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:483
+#: server/src/main/java/org/candlepin/resource/JobResource.java:494
 #, java-format
 msgid "Unknown job states: {0}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/JobResource.java:551
+#: server/src/main/java/org/candlepin/resource/JobResource.java:564
 #, java-format
 msgid "Invalid date range; start date occurs after the end date: {0} > {1}"
 msgstr ""
@@ -1401,21 +1408,21 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1265
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1266
 msgid "Must provide a name for activation key."
 msgstr "ആക്ടിവേഷന്‍ കീയ്ക്കുള്ള നാമം നല്‍കണം"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1284
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1285
 #, java-format
 msgid "The activation key name \"{0}\" is already in use for owner {1}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1371
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1373
 #, java-format
 msgid "{0} is not a valid log level"
 msgstr "{0} ശരിയായൊരു ലോഗ് ലവല്‍ അല്ല"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1518
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1520
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:153
 #, java-format
 msgid "Unit: {0} not found"
@@ -1423,56 +1430,56 @@ msgstr "യൂണിറ്റ്: {0} ലഭ്യമായില്ല"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1528
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1530
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:227
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr "ഉപയോക്താവ് {0}-നു് ഉപഭോക്താവു് {1}-നെ ലഭ്യമാക്കുവാന്‍ സാധ്യമല്ല."
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1544
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1546
 msgid "The flags add_future and only_future cannot be used at the same time."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1549
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1551
 msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1774
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1776
 msgid "Pool product ID not specified"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1814
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1816
 #, java-format
 msgid "Unable to find a pool with the ID \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1822
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1824
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1828
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1830
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1980
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2054
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1982
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2056
 msgid "Error reading export archive"
 msgstr "എക്സ്പോര്‍ട്ട് ആര്‍ക്കൈവ് ലഭ്യമാക്കുന്നതില്‍ പിശക്"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2058
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2060
 msgid "Error storing uploaded archive for asynchronous processing."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2197
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2199
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2278
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2280
 msgid "Unknown conflict to force"
 msgstr "അപരിചിതമായ പൊരുത്തക്കേടു്"
 
@@ -1558,7 +1565,7 @@ msgid "Organization-agnostic product write operations are no longer supported."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:273
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:291
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:292
 msgid "No product IDs specified"
 msgstr ""
 
@@ -1622,15 +1629,15 @@ msgstr "അറിയിപ്പിനായി ഈമെയില്‍ ഏത�
 msgid "A subscription with the ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/UserResource.java:177
+#: server/src/main/java/org/candlepin/resource/UserResource.java:179
 msgid "user data is null or empty"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/UserResource.java:181
+#: server/src/main/java/org/candlepin/resource/UserResource.java:183
 msgid "Username not specified"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/UserResource.java:185
+#: server/src/main/java/org/candlepin/resource/UserResource.java:187
 #, java-format
 msgid "User already exists: {0}"
 msgstr ""
