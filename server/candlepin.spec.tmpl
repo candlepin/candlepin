@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.16
+Version: 3.1.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,29 @@ fi
 
 #raw
 %changelog
+* Wed Aug 05 2020 Nikos Moumoulidis <nmoumoul@redhat.com> 3.1.17-1
+- 1865906: Add "insights_auto_register" capability (csnyder@redhat.com)
+- 1861739: Close sessions when external Artemis goes down (nmoumoul@redhat.com)
+- Fixed a race condition with messaging session committal in the job system
+  (crog@redhat.com)
+- Remove redundant Artemis connection properties (nmoumoul@redhat.com)
+- 1854221: Graceful shutdown of Artemis job threads (nmoumoul@redhat.com)
+- 1854221: Added additional job cleanup to JobManager and JobCleaner
+  (crog@redhat.com)
+- 1855830: Cannot autobind pools asynchronously (ojanus@redhat.com)
+- 1858320: Added a null check in rules.js to guard against TypeError Exceptions
+  (prakgupt@redhat.com)
+- Improved job message related exception logging (crog@redhat.com)
+- 1859693: JobManager now loads Quartz config from candlepin.conf
+  (crog@redhat.com)
+- Added missing constraints and indexes to the job tables (crog@redhat.com)
+- Add constraint for unique activation key names (nmoumoul@redhat.com)
+- Update swagger annotations for accurate API docs (nmoumoul@redhat.com)
+- 1855412: Add a result limit on the GET /jobs endpoint (nmoumoul@redhat.com)
+- 1855838: Add translation of external job states to internal states
+  (crog@redhat.com)
+- 1855847: Added blocking jobs to job result for ABORTED jobs (crog@redhat.com)
+
 * Wed Jul 08 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.16-1
 - Update mysql-connector-java (bcourt@redhat.com)
 
