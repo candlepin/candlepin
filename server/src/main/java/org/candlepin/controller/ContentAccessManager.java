@@ -15,6 +15,8 @@
 package org.candlepin.controller;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -57,6 +59,8 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
@@ -178,6 +182,7 @@ public class ContentAccessManager {
         }
     }
 
+    private Configuration config;
     private PKIUtility pki;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
@@ -192,8 +197,12 @@ public class ContentAccessManager {
     private ContentAccessCertificateCurator contentAccessCertCurator;
     private EventSink eventSink;
 
+    private boolean standalone;
+
     @Inject
-    public ContentAccessManager(PKIUtility pki,
+    public ContentAccessManager(
+        Configuration config,
+        PKIUtility pki,
         X509V3ExtensionUtil v3extensionUtil,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         KeyPairCurator keyPairCurator,
@@ -207,6 +216,7 @@ public class ContentAccessManager {
         ContentAccessCertificateCurator contentAccessCertCurator,
         EventSink eventSink) {
 
+        this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.keyPairCurator = Objects.requireNonNull(keyPairCurator);
@@ -220,6 +230,8 @@ public class ContentAccessManager {
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.contentAccessCertCurator = Objects.requireNonNull(contentAccessCertCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
+
+        this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE, true);
     }
 
     /**
@@ -248,8 +260,7 @@ public class ContentAccessManager {
         ContentAccessCertificate result = new ContentAccessCertificate();
         String pem = "";
 
-        if (existing != null &&
-            existing.getSerial().getExpiration().getTime() < (new Date()).getTime()) {
+        if (existing != null && existing.getSerial().getExpiration().getTime() < (new Date()).getTime()) {
             consumer.setContentAccessCert(null);
             contentAccessCertificateCurator.delete(existing);
             existing = null;
@@ -407,14 +418,34 @@ public class ContentAccessManager {
     }
 
     private String getContentPrefix(Owner owner, Environment environment) throws IOException {
-        StringBuffer contentPrefix = new StringBuffer();
-        contentPrefix.append("/");
-        contentPrefix.append(owner.getKey());
-        if (environment != null) {
-            contentPrefix.append("/");
-            contentPrefix.append(environment.getName());
+        StringBuilder prefix = new StringBuilder();
+
+        // Fix for BZ 1866525:
+        // - In hosted, we do not want an owner- or environment-specific context prefix
+        // - In satellite (standalone), the prefix should use the owner-defined context prefix
+        //   and environment if non-null
+
+        if (!standalone) {
+            String contentPrefix = owner.getContentPrefix();
+
+            if (contentPrefix != null && !contentPrefix.isEmpty()) {
+                String charset =  StandardCharsets.UTF_8.toString();
+
+                if (environment != null) {
+                    contentPrefix = contentPrefix.replaceAll("\\$env", environment.getName());
+                }
+
+                // Encode the components
+                for (String component : contentPrefix.split("/")) {
+                    if (!component.isEmpty()) {
+                        prefix.append(URLEncoder.encode(component, charset).replaceAll("%24", "\\$"))
+                            .append("/");
+                    }
+                }
+            }
         }
-        return contentPrefix.toString();
+
+        return prefix.toString();
     }
 
     private String createDN(Consumer consumer, Owner owner) {
