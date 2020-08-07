@@ -29,7 +29,7 @@ describe 'Content Access' do
 
     @content = @cp.create_content(
         @owner['key'], "cname", 'test-content', random_string("clabel"), "ctype", "cvendor",
-        {:content_url=>'/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
+        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
 
     @content_id = @content['id']
 
@@ -94,16 +94,15 @@ describe 'Content Access' do
       json_body = extract_payload(certs[0]['cert'])
 
       content = json_body['products'][0]['content'][0]
-      content['type'].should == 'ctype'
-      content['name'].should == @content.name
-      content['label'].should == @content.label
-      content['vendor'].should == @content.vendor
-      content['path'].should == '/' + @owner['key'] + '/this/is/the/path'
+      expect(content['type']).to eq('ctype')
+      expect(content['name']).to eq(@content.name)
+      expect(content['label']).to eq(@content.label)
+      expect(content['vendor']).to eq(@content.vendor)
+      expect(content['path']).to eq(@content.contentUrl)
 
       value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
-      urls = []
-      urls[0] = '/' + @owner['key']
-      are_content_urls_present(value, urls).should == true
+      expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+
       type = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.8")
       type.should == 'OrgLevel'
   end
@@ -114,7 +113,7 @@ describe 'Content Access' do
       certs.length.should == 0
   end
 
-  it "does have both owner and environment in the path for the content access cert" do
+  it "does not include environment for the content access cert" do
       @env = @user.create_environment(@owner['key'], random_string('testenv'),
         "My Test Env 1", "For test systems only.")
 
@@ -128,35 +127,34 @@ describe 'Content Access' do
       consumer = @user.register(random_string('consumer'), :system, nil,
           {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
       consumer['environment'].should_not be_nil
-      @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'],
-          consumer['idCert']['key'])
+      @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
       certs = @consumer.list_certificates
       certs.length.should == 1
       json_body = extract_payload(certs[0]['cert'])
 
       content = json_body['products'][0]['content'][0]
-      content['path'].should == '/' + @owner['key'] + '/' + @env['name'] + '/this/is/the/path'
+      content['path'].should == '/this/is/the/path'
       content['enabled'].should == false
 
       value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
-      urls = []
-      urls[0] = '/' + @owner['key'] + '/' + @env['name']
-      are_content_urls_present(value, urls).should == true
+      expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
   end
 
   it "environment content changes show in content access cert" do
     @env = @user.create_environment(@owner['key'], random_string('testenv'),
-                                    "My Test Env 1", "For test systems only.")
-    @env['environmentContent'].size.should == 0
+      "My Test Env 1", "For test systems only.")
+    expect(@env['environmentContent'].size).to eq(0)
 
     consumer = @user.register(random_string('consumer'), :system, nil,
-                              {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
-    consumer['environment'].should_not be_nil
+      {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
+    expect(consumer['environment']).to_not be_nil
+
     @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     certs = @consumer.list_certificates
     certs.length.should == 1
-    json_body = extract_payload(certs[0]['cert'])
-    json_body['products'][0]['content'].length.should == 0
+    cert = certs[0]['cert']
+    json_body = extract_payload(cert)
+    expect(json_body['products'][0]['content'].length).to eq(0)
 
     job = @user.promote_content(@env['id'], [{
       :contentId => @content['id'],
@@ -169,7 +167,8 @@ describe 'Content Access' do
 
     certs = @consumer.list_certificates
     certs.length.should == 1
-    json_body = extract_payload(certs[0]['cert'])
+    cert = certs[0]['cert']
+    json_body = extract_payload(cert)
     json_body['products'][0]['content'].length.should == 1
     content = json_body['products'][0]['content'][0]
     content['id'].should == @content['id']
@@ -181,7 +180,8 @@ describe 'Content Access' do
 
     certs = @consumer.list_certificates
     certs.length.should == 1
-    json_body = extract_payload(certs[0]['cert'])
+    cert = certs[0]['cert']
+    json_body = extract_payload(cert)
     json_body['products'][0]['content'].length.should == 0
   end
 
@@ -194,10 +194,8 @@ describe 'Content Access' do
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     certs = consumer_cp.list_certificates
     certs.length.should == 1
-    value = (extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7"))
-    urls = []
-    urls[0] = '/' + @owner['key'] + '/' + env1['name']
-    are_content_urls_present(value, urls).should == true
+    value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
+    expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
 
     consumer_cp.update_consumer({:environment => env2})
     changed_consumer = consumer_cp.get_consumer();
@@ -205,10 +203,8 @@ describe 'Content Access' do
 
     certs = consumer_cp.list_certificates
     certs.length.should == 1
-    value = (extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7"))
-    urls = []
-    urls[0] = '/' + @owner['key'] + '/' + env2['name']
-    are_content_urls_present(value, urls).should == true
+    value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
+    expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
   end
 
   it "refresh command results in new content access cert" do
@@ -257,14 +253,12 @@ describe 'Content Access' do
     content_body = @consumer.get_content_access_body()
 
     value = extension_from_cert(content_body.contentListing.values[0][0], "1.3.6.1.4.1.2312.9.7")
-    urls = []
-    urls[0] = '/' + @owner['key']
-    are_content_urls_present(value, urls).should == true
+    expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
 
     listing = content_body.contentListing.values[0][1]
     json_body = extract_payload(listing)
     content = json_body['products'][0]['content'][0]
-    content['path'].should == '/' + @owner['key'] + '/this/is/the/path'
+    expect(content['path']).to eq(@content['contentUrl'])
   end
 
   it "does return a not modified return code when the data has not been updated since date" do
@@ -558,10 +552,10 @@ describe 'Content Access' do
     #puts ("json_body:%s" % json_body)
 
     content = json_body['products'][0]['content'][0]
-    content['type'].should == 'ctype'
-    content['name'].should == @content.name
-    content['label'].should == @content.label
-    content['vendor'].should == @content.vendor
-    content['path'].should == '/' + @owner['key'] + '/this/is/the/path'
+    expect(content['type']).to eq('ctype')
+    expect(content['name']).to eq(@content.name)
+    expect(content['label']).to eq(@content.label)
+    expect(content['vendor']).to eq(@content.vendor)
+    expect(content['path']).to eq(@content.contentUrl)
   end
 end

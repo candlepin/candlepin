@@ -156,8 +156,6 @@ public abstract class X509Util {
         return prefix + contentPath;
     }
 
-
-
     /*
      * remove content sets that do not match the consumers arch
      */
@@ -178,8 +176,8 @@ public abstract class X509Util {
         }
 
         if (consumerArches.isEmpty()) {
-            log.debug("consumer: " + consumer.getId() + " has no " +
-                ARCH_FACT + " / " + SUPPORTED_ARCH_FACT + " attribute.");
+            log.debug("consumer: {} has no {} / {} attribute",
+                consumer.getId(), ARCH_FACT, SUPPORTED_ARCH_FACT);
             log.debug("Not filtering by arch");
             return pcSet;
         }

@@ -15,6 +15,8 @@
 package org.candlepin.controller;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.common.config.Configuration;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -57,6 +59,8 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
@@ -69,6 +73,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import javax.naming.ldap.Rdn;
 
 
 
@@ -178,6 +184,7 @@ public class ContentAccessManager {
         }
     }
 
+    private Configuration config;
     private PKIUtility pki;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
@@ -192,8 +199,12 @@ public class ContentAccessManager {
     private ContentAccessCertificateCurator contentAccessCertCurator;
     private EventSink eventSink;
 
+    private boolean standalone;
+
     @Inject
-    public ContentAccessManager(PKIUtility pki,
+    public ContentAccessManager(
+        Configuration config,
+        PKIUtility pki,
         X509V3ExtensionUtil v3extensionUtil,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
         KeyPairCurator keyPairCurator,
@@ -207,6 +218,7 @@ public class ContentAccessManager {
         ContentAccessCertificateCurator contentAccessCertCurator,
         EventSink eventSink) {
 
+        this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.keyPairCurator = Objects.requireNonNull(keyPairCurator);
@@ -220,6 +232,8 @@ public class ContentAccessManager {
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.contentAccessCertCurator = Objects.requireNonNull(contentAccessCertCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
+
+        this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE, true);
     }
 
     /**
@@ -248,8 +262,7 @@ public class ContentAccessManager {
         ContentAccessCertificate result = new ContentAccessCertificate();
         String pem = "";
 
-        if (existing != null &&
-            existing.getSerial().getExpiration().getTime() < (new Date()).getTime()) {
+        if (existing != null && existing.getSerial().getExpiration().getTime() < (new Date()).getTime()) {
             consumer.setContentAccessCert(null);
             contentAccessCertificateCurator.delete(existing);
             existing = null;
@@ -341,7 +354,7 @@ public class ContentAccessManager {
         dtoContents.add(dContent);
 
         Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
-        dContent.setPath(getContentPrefix(owner, environment));
+        dContent.setPath(this.getContainerContentPath(owner, environment));
 
         container.setContent(dtoContents);
 
@@ -406,27 +419,72 @@ public class ContentAccessManager {
         return promotedContent;
     }
 
+    /**
+     * Fetches the path to use for content used to generate the ENTITLEMENT_DATA certificate
+     * extension
+     *
+     * @param owner
+     *  the owner of the entitlement for which the content path is being generated
+     *
+     * @param environment
+     *  the environment to which the consumer receiving the entitlement belongs
+     *
+     * @return
+     *  the container content path for the given owner and environment
+     */
+    private String getContainerContentPath(Owner owner, Environment environment) throws IOException {
+        // Fix for BZ 1866525:
+        // - In hosted, SCA entitlement content path needs to use a dummy value to prevent existing
+        //   clients from breaking, while still being clear the path is present for SCA
+        // - In satellite (standalone), the path should simply be the content prefix
+
+        return this.standalone ?
+            this.getContentPrefix(owner, environment) :
+            "/sca/" + URLEncoder.encode(owner.getKey(), StandardCharsets.UTF_8.toString());
+    }
+
+    /**
+     * Fetches the content prefix to apply to content specified in the entitlement payload.
+     *
+     * @param owner
+     *  the owner of the entitlement for which the content prefix is being generated
+     *
+     * @param environment
+     *  the environment to which the consumer receiving the entitlement belongs
+     *
+     * @return
+     *  the content prefix for the given owner and environment
+     */
     private String getContentPrefix(Owner owner, Environment environment) throws IOException {
-        StringBuffer contentPrefix = new StringBuffer();
-        contentPrefix.append("/");
-        contentPrefix.append(owner.getKey());
-        if (environment != null) {
-            contentPrefix.append("/");
-            contentPrefix.append(environment.getName());
+        StringBuilder prefix = new StringBuilder();
+
+        // Fix for BZ 1866525:
+        // - In hosted, SCA entitlement content paths should not have any prefix
+        // - In satellite (standalone), the prefix should use the owner key and environment name
+        //   if available
+
+        if (this.standalone) {
+            String charset =  StandardCharsets.UTF_8.toString();
+
+            prefix.append('/').append(URLEncoder.encode(owner.getKey(), charset));
+
+            if (environment != null) {
+                prefix.append('/').append(URLEncoder.encode(environment.getName(), charset));
+            }
         }
-        return contentPrefix.toString();
+
+        return prefix.toString();
     }
 
     private String createDN(Consumer consumer, Owner owner) {
-        StringBuilder sb = new StringBuilder("CN=");
-        sb.append(consumer.getUuid());
-        sb.append(", O=");
-        sb.append(owner.getKey());
+        StringBuilder sb = new StringBuilder("CN=")
+            .append(consumer.getUuid())
+            .append(", O=")
+            .append(Rdn.escapeValue(owner.getKey()));
 
         if (consumer.getEnvironmentId() != null) {
             Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
-            sb.append(", OU=");
-            sb.append(environment.getName());
+            sb.append(", OU=").append(Rdn.escapeValue(environment.getName()));
         }
 
         return sb.toString();
@@ -456,7 +514,7 @@ public class ContentAccessManager {
         Set<String> entitledProductIds = new HashSet<>();
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(environment);
-        String contentPrefix = getContentPrefix(owner, environment);
+        String contentPrefix = this.getContentPrefix(owner, environment);
         Product container = new Product();
         Entitlement emptyEnt = new Entitlement();
         Pool emptyPool = new Pool();
