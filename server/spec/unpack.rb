@@ -29,8 +29,12 @@ module Unpack
   end
 
   def are_content_urls_present(value, urls)
-    parent = prepare_from_blob(value)
-    return content_in_tree(parent, urls)
+    if !value.nil? && !value.empty?
+      parent = prepare_from_blob(value)
+      return content_in_tree(parent, urls)
+    end
+
+    return false
   end
 
   def prepare_from_blob(byte_data)
