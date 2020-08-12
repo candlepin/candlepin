@@ -38,7 +38,6 @@ public class NotFoundExceptionMapper extends CandlepinExceptionMapper
     /**
      * Service that handles JAX-RS exceptions.
      */
-    //@Inject
     @Autowired
     private JaxRsExceptionResponseBuilder badQueryParamHandler;
 

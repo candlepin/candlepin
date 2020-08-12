@@ -41,7 +41,6 @@ import org.hibernate.transform.ResultTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
@@ -76,6 +75,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Autowired protected Provider<I18n> i18nProvider;
     @Autowired protected Configuration config;
     @Autowired private PrincipalProvider principalProvider;
+    //@PersistenceContext(type = PersistenceContextType.EXTENDED)
     @PersistenceContext
     protected EntityManager entityManager;
 

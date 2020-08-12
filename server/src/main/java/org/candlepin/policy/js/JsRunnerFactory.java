@@ -23,13 +23,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-@Component
+//@Component
 public class JsRunnerFactory implements FactoryBean<JsRunner> {
 
     private static Logger log = LoggerFactory.getLogger(JsRunnerFactory.class);
@@ -194,5 +193,10 @@ public class JsRunnerFactory implements FactoryBean<JsRunner> {
     @Override
     public Class<?> getObjectType() {
         return JsRunner.class;
+    }
+
+    @Override
+    public boolean isSingleton() {
+        return false;
     }
 }

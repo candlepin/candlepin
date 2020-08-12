@@ -27,6 +27,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -40,6 +41,7 @@ import javax.ws.rs.core.MediaType;
  * CertificateSerialResource
  */
 @Component
+@Transactional
 @Path("/serials")
 @Api(value = "serials", authorizations = { @Authorization("basic") })
 public class CertificateSerialResource {

@@ -16,10 +16,11 @@
 package org.candlepin.policy.js;
 
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-@Component
 public class JsRunnerRequestCacheFactory implements FactoryBean<JsRunnerRequestCache> {
+
     @Override
     public JsRunnerRequestCache getObject() {
         return new JsRunnerRequestCache();
@@ -29,4 +30,5 @@ public class JsRunnerRequestCacheFactory implements FactoryBean<JsRunnerRequestC
     public Class<?> getObjectType() {
         return JsRunnerRequestCache.class;
     }
+
 }

@@ -69,12 +69,12 @@ public class CandlepinScopeFilter implements Filter {
             return;
         }
 
-        requestScope.enter();
+        //requestScope.enter();
         try {
             chain.doFilter(request, response);
         }
         finally {
-            requestScope.exit();
+            //requestScope.exit();
         }
     }
 

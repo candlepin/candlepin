@@ -60,7 +60,6 @@ public class SystemPurposeComplianceRules {
     private ConsumerTypeCurator consumerTypeCurator;
     private I18n i18n;
 
-    //@Inject
     @Autowired
     public SystemPurposeComplianceRules(EventSink eventSink, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, I18n i18n) {

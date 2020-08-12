@@ -82,6 +82,7 @@ import javax.ws.rs.core.MediaType;
  * REST API for managing Environments.
  */
 @Component
+@Transactional
 @Path("/environments")
 @Api(value = "environments", authorizations = { @Authorization("basic") })
 public class EnvironmentResource {

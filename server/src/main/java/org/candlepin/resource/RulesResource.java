@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.Consumes;
@@ -52,6 +53,7 @@ import javax.ws.rs.core.Response;
  * Rules API entry path
  */
 @Component
+@Transactional
 @Path("/rules")
 @Api(value = "rules", authorizations = { @Authorization("basic") })
 public class RulesResource {

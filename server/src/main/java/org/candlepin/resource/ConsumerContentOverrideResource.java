@@ -21,8 +21,6 @@ import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.util.ContentOverrideValidator;
 
-import com.google.inject.Inject;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.Authorization;
 
@@ -45,7 +43,6 @@ public class ConsumerContentOverrideResource extends
 
     private ConsumerCurator consumerCurator;
 
-    //@Inject
     @Autowired
     public ConsumerContentOverrideResource(I18n i18n, ConsumerContentOverrideCurator ccoCurator,
         ConsumerCurator consumerCurator, ContentOverrideValidator validator, ModelTranslator translator) {

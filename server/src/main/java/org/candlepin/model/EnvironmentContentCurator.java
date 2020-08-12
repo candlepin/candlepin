@@ -15,17 +15,14 @@
 package org.candlepin.model;
 
 import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
-
-import javax.inject.Singleton;
-
-
 
 /**
  * EnvironmentContentCurator
  */
-@Singleton
+@Component
 public class EnvironmentContentCurator extends AbstractHibernateCurator<EnvironmentContent> {
 
     public EnvironmentContentCurator() {

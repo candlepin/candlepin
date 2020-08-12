@@ -44,6 +44,7 @@ import java.util.List;
  */
 //@Singleton
 @Component
+@Transactional
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     //@Inject

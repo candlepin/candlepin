@@ -40,7 +40,8 @@ import javax.inject.Singleton;
 /**
  * PermissionFactory: Creates concrete Java permission classes based on the provided permission info
  */
-@Component
+//@Component
+@Singleton
 public class PermissionFactory {
     private static Logger log = LoggerFactory.getLogger(PermissionFactory.class);
 

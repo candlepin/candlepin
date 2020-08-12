@@ -42,7 +42,6 @@ public class RollbackExceptionMapper extends CandlepinExceptionMapper
 
     private javax.inject.Provider<ValidationExceptionMapper> exceptionMapperProvider;
 
-    //@Inject
     @Autowired
     public RollbackExceptionMapper(javax.inject.Provider<ValidationExceptionMapper> mapper) {
         this.exceptionMapperProvider = mapper;

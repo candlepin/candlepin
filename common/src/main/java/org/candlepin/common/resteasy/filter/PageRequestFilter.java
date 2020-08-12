@@ -18,9 +18,9 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.common.paging.PageRequest.Order;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.core.ResteasyContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import javax.annotation.Priority;
@@ -35,12 +35,13 @@ import javax.ws.rs.ext.Provider;
 /**
  * PageRequestFilter parses a common set of query parameters used to page through results from Candlepin.
  */
+@Component
 @Provider
 @Priority(Priorities.USER)
 public class PageRequestFilter implements ContainerRequestFilter {
     private javax.inject.Provider<I18n> i18nProvider;
 
-    @Inject
+    @Autowired
     public PageRequestFilter(javax.inject.Provider<I18n> i18nProvider) {
         this.i18nProvider = i18nProvider;
     }

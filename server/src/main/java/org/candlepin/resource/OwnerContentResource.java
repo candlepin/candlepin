@@ -69,6 +69,7 @@ import javax.ws.rs.core.MediaType;
  * Manage the content that exists in an organization.
  */
 @Component
+@Transactional
 @Path("/owners/{owner_key}/content")
 @Api(value = "owners", authorizations = { @Authorization("basic") })
 public class OwnerContentResource {

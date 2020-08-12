@@ -38,6 +38,7 @@ import org.apache.activemq.artemis.api.core.client.ClientProducer;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
@@ -55,7 +56,7 @@ import javax.inject.Inject;
  *
  * An single instance of this object will be created per request/job.
  */
-@CandlepinRequestScoped
+//@CandlepinRequestScoped
 //@RequestScope
 public class EventSinkImpl implements EventSink {
     private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
@@ -72,7 +73,7 @@ public class EventSinkImpl implements EventSink {
     private ActiveMQSessionFactory sessionFactory;
     private EventMessageSender messageSender;
 
-    @Inject
+    @Autowired
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
         ObjectMapper mapper, Configuration config, ActiveMQSessionFactory sessionFactory,
         CandlepinModeManager modeManager) throws ActiveMQException {

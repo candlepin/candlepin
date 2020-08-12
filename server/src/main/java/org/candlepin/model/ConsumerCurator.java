@@ -72,6 +72,7 @@ import javax.persistence.TypedQuery;
  * ConsumerCurator
  */
 @Component
+@Transactional
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
 

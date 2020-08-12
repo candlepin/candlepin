@@ -304,7 +304,7 @@ public class CandlepinContextListener {
         }
 
         //injector.getInstance(PersistService.class).stop();
-        persistService.stop();
+        //persistService.stop();
         // deregister jdbc driver to avoid warning in tomcat shutdown log
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {

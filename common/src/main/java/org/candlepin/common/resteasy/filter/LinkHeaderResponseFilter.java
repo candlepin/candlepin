@@ -18,13 +18,14 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 
-import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.LinkHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map.Entry;
@@ -47,6 +48,7 @@ import javax.ws.rs.ext.Provider;
  * The Link header is defined in RFC 5988 and is used to communicated to the client the URLs for the next
  * page, previous page, first page, and last page.
  */
+@Component
 @Provider
 @Priority(Priorities.HEADER_DECORATOR)
 public class LinkHeaderResponseFilter implements ContainerResponseFilter {
@@ -66,7 +68,7 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
     private Configuration config;
     private String contextPath;
 
-    @Inject
+    @Autowired
     public LinkHeaderResponseFilter(Configuration config,
         @Named("PREFIX_APIURL_KEY") String apiUrlPrefixKey) {
         this.config = config;

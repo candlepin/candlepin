@@ -85,6 +85,7 @@ import javax.ws.rs.core.Response;
  * REST api gateway for the User object.
  */
 @Component
+@Transactional
 @Path("/entitlements")
 @Api(value = "entitlements", authorizations = { @Authorization("basic") })
 public class EntitlementResource {

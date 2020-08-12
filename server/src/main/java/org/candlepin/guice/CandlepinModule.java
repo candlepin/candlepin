@@ -44,27 +44,6 @@ import org.candlepin.bind.BindContextFactory;
 import org.candlepin.bind.PreEntitlementRulesCheckOpFactory;
 import org.candlepin.cache.JCacheManagerProvider;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.ConfigurationPrefixes;
-import org.candlepin.common.exceptions.mappers.BadRequestExceptionMapper;
-import org.candlepin.common.exceptions.mappers.CandlepinExceptionMapper;
-import org.candlepin.common.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
-import org.candlepin.common.exceptions.mappers.FailureExceptionMapper;
-import org.candlepin.common.exceptions.mappers.InternalServerErrorExceptionMapper;
-import org.candlepin.common.exceptions.mappers.JAXBMarshalExceptionMapper;
-import org.candlepin.common.exceptions.mappers.JAXBUnmarshalExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NoLogWebApplicationExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotAcceptableExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotAllowedExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotAuthorizedExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotFoundExceptionMapper;
-import org.candlepin.common.exceptions.mappers.NotSupportedExceptionMapper;
-import org.candlepin.common.exceptions.mappers.ReaderExceptionMapper;
-import org.candlepin.common.exceptions.mappers.RollbackExceptionMapper;
-import org.candlepin.common.exceptions.mappers.RuntimeExceptionMapper;
-import org.candlepin.common.exceptions.mappers.ValidationExceptionMapper;
-import org.candlepin.common.exceptions.mappers.WebApplicationExceptionMapper;
-import org.candlepin.common.exceptions.mappers.WriterExceptionMapper;
-import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.resteasy.filter.DynamicJsonFilter;
 import org.candlepin.common.resteasy.filter.LinkHeaderResponseFilter;
@@ -212,9 +191,9 @@ public class CandlepinModule extends AbstractModule {
     public void configure() {
 
         // Bindings for our custom scope
-        CandlepinRequestScope requestScope = new CandlepinRequestScope();
-        bindScope(CandlepinRequestScoped.class, requestScope);
-        bind(CandlepinRequestScope.class).toInstance(requestScope);
+        //CandlepinRequestScope requestScope = new CandlepinRequestScope();
+        //bindScope(CandlepinRequestScoped.class, requestScope);
+        //bind(CandlepinRequestScope.class).toInstance(requestScope);
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
         bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
@@ -379,9 +358,9 @@ public class CandlepinModule extends AbstractModule {
     }
 
     protected void configureJPA() {
-        Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
-        install(new JpaPersistModule("default0").properties(jpaConfig.toProperties()));
-        bind(JPAInitializer.class).asEagerSingleton();
+//        Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
+//        install(new JpaPersistModule("default0").properties(jpaConfig.toProperties()));
+//        bind(JPAInitializer.class).asEagerSingleton();
     }
 
     private void configureBindFactories() {

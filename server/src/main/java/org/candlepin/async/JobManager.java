@@ -1288,7 +1288,7 @@ public class JobManager implements ModeChangeListener {
      */
     private void setupJobRuntimeEnvironment(AsyncJobStatus status) {
         // Enter custom scope
-        this.candlepinRequestScope.enter();
+        //this.candlepinRequestScope.enter();
 
         // Save MDC state
         this.mdcState.set(MDC.getCopyOfContextMap());
@@ -1363,7 +1363,7 @@ public class JobManager implements ModeChangeListener {
         }
 
         // Leave scope
-        this.candlepinRequestScope.exit();
+        //this.candlepinRequestScope.exit();
     }
 
     /**

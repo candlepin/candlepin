@@ -36,7 +36,6 @@ import javax.ws.rs.ext.Provider;
  * Filter which check if Candlepin is currently in SUSPEND mode,
  * and if so, returns appropriate error.
  */
-@Component
 @PreMatching
 @Provider
 public class CandlepinSuspendModeFilter implements ContainerRequestFilter {
@@ -44,7 +43,6 @@ public class CandlepinSuspendModeFilter implements ContainerRequestFilter {
     private Configuration config;
     private I18n i18n;
 
-    //@Inject
     @Autowired
     public CandlepinSuspendModeFilter(CandlepinModeManager modeManager, ObjectMapper mapper,
         Configuration config, I18n i18n) {

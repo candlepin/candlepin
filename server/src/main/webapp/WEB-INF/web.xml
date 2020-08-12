@@ -31,7 +31,11 @@
 <!--             org.springframework.web.context.request.RequestContextListener-->
 <!--         </listener-class>-->
 <!--     </listener>-->
-
+<!--     <listener>-->
+<!--         <listener-class>-->
+<!--             org.springframework.web.context.request.RequestContextListener-->
+<!--         </listener-class>-->
+<!--     </listener>-->
 <!--    <context-param>-->
 <!--        &lt;!&ndash;-->
 <!--            RestEasy tries to dynamically determine what to use for logging in its-->

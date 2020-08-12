@@ -39,6 +39,7 @@ import io.swagger.annotations.Authorization;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.Consumes;
@@ -56,6 +57,7 @@ import javax.ws.rs.core.MediaType;
  * CdnResource
  */
 @Component
+@Transactional
 @Path("/cdn")
 @Api(value = "cdn", authorizations = { @Authorization("basic") })
 public class CdnResource {

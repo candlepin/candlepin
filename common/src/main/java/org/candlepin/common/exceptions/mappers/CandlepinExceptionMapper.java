@@ -21,8 +21,6 @@ import org.candlepin.common.exceptions.CandlepinException;
 import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.util.VersionUtil;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,11 +61,9 @@ public class CandlepinExceptionMapper {
     );
 
     // Use a provider so we get a scoped HttpServletRequest
-    //@Inject
 //    @Autowired
 //    private javax.inject.Provider<HttpServletRequest> requestProvider;
 
-    //@Inject
     @Autowired
     protected Provider<I18n> i18n;
 

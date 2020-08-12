@@ -37,6 +37,7 @@ import io.swagger.annotations.Authorization;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.List;
@@ -55,6 +56,7 @@ import javax.ws.rs.core.MediaType;
  * ContentResource
  */
 @Component
+@Transactional
 @Path("/content")
 @Api(value = "content", authorizations = { @Authorization("basic") })
 public class ContentResource {

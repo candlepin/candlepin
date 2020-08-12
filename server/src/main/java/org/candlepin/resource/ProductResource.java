@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.LinkedList;
@@ -74,6 +75,7 @@ import javax.ws.rs.core.MediaType;
  * API Gateway into /product
  */
 @Component
+@Transactional
 @Path("/products")
 @Api(value = "products", authorizations = { @Authorization("basic") })
 public class ProductResource {

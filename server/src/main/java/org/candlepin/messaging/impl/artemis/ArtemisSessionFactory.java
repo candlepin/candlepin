@@ -143,7 +143,6 @@ public class ArtemisSessionFactory implements CPMSessionFactory {
      * @param config
      *  The Candlepin configuration to use to initialize this session factory
      */
-    //@Inject
     @Autowired
     public ArtemisSessionFactory(Configuration config) {
         this.config = Objects.requireNonNull(config);

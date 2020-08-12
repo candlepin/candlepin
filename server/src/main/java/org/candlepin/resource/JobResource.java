@@ -72,6 +72,7 @@ import javax.ws.rs.core.MediaType;
  * JobResource
  */
 @Component
+@Transactional
 @Path("/jobs")
 @Api(value = "jobs", authorizations = { @Authorization("basic") })
 public class JobResource {

@@ -64,12 +64,11 @@ import java.util.TreeSet;
 
 import javax.persistence.TypedQuery;
 
-
-
 /**
  * PoolCurator
  */
 @Component
+@Transactional
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     /** The recommended number of expired pools to fetch in a single call to listExpiredPools */
@@ -79,8 +78,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
 
-//    @Inject
-//    protected Injector injector;
 
     @Autowired
     public PoolCurator(ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator) {

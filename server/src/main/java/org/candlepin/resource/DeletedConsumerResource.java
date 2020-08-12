@@ -29,6 +29,7 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -40,6 +41,7 @@ import javax.ws.rs.core.MediaType;
  * DeletedConsumerResource
  */
 @Component
+@Transactional
 @Path("/deleted_consumers")
 @Api(value = "deleted_consumers", authorizations = { @Authorization("basic") })
 public class DeletedConsumerResource {

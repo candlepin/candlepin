@@ -66,7 +66,6 @@ public class DistributorVersionResource {
     private DistributorVersionCurator curator;
     private ModelTranslator translator;
 
-    //@Inject
     @Autowired
     public DistributorVersionResource(I18n i18n, DistributorVersionCurator curator,
         ModelTranslator translator) {

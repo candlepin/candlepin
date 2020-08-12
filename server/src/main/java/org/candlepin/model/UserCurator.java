@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Component;
  * UserCurator
  */
 @Component
+@Transactional
 public class UserCurator extends AbstractHibernateCurator<User> {
 
     public UserCurator() {

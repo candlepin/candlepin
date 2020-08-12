@@ -93,6 +93,7 @@ import javax.ws.rs.core.MediaType;
  * HypervisorResource
  */
 @Component
+@Transactional
 @Path("/hypervisors")
 @Api(value = "hypervisors", authorizations = { @Authorization("basic") })
 public class HypervisorResource {

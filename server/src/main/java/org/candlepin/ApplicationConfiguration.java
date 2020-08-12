@@ -36,13 +36,21 @@ import org.candlepin.messaging.impl.artemis.ArtemisSessionFactory;
 import org.candlepin.messaging.impl.artemis.ArtemisUtil;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
+import org.candlepin.model.RulesCurator;
+import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.JsRunnerFactory;
+import org.candlepin.policy.js.JsRunnerRequestCacheFactory;
+import org.candlepin.resteasy.filter.CandlepinSuspendModeFilter;
 import org.hibernate.dialect.PostgreSQL92Dialect;
+import org.jgroups.annotations.MBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.*;
 import org.springframework.guice.annotation.EnableGuiceModules;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.xnap.commons.i18n.I18n;
 
 import javax.servlet.ServletContext;
 import java.io.File;
@@ -53,10 +61,8 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 @EnableGuiceModules
 @Configuration
-//@Import({ResteasyAutoConfiguration.class})
-//@EnableRetry
 @EnableAspectJAutoProxy
-//@EnableTransactionManagement
+@EnableTransactionManagement
 @EnableWebMvc
 @PropertySource("classpath:application.properties")
 public class ApplicationConfiguration  implements WebMvcConfigurer  {
@@ -188,7 +194,7 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
 
     @Bean
     //@Scope("request")
-    //@Scope(scopeName = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
+    //@Scope(scopeName = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
     public EventSink eventSink(EventFilter eventFilter, EventFactory eventFactory,
                                ObjectMapper mapper, org.candlepin.common.config.Configuration config, ActiveMQSessionFactory sessionFactory,
                                CandlepinModeManager modeManager) throws ActiveMQException {
@@ -202,9 +208,25 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
         }
     }
 
-//    @Bean
-//    public LocalContainerEntityManagerFactoryBean factoryBean() {
-//        LocalContainerEntityManagerFactoryBean factory =
-//                new LocalContainerEntityManagerFactoryBean();
-//    }
+    // Only bind the suspend mode filter if configured to do so
+    @Bean
+    public CandlepinSuspendModeFilter candlepinSuspendModeFilter(CandlepinModeManager modeManager, ObjectMapper mapper,
+                                                                 org.candlepin.common.config.Configuration config, I18n i18n) {
+        if (config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED))
+            return new CandlepinSuspendModeFilter(modeManager, mapper, config, i18n);
+        return null;
+    }
+
+    @Bean
+    public JsRunnerFactory jsRunnerFactory(RulesCurator rulesCurator, JsRunnerRequestCacheFactory cacheProvider) {
+        JsRunnerFactory jsRunnerFactory = new JsRunnerFactory(rulesCurator, cacheProvider);
+        return jsRunnerFactory;
+    }
+
+    @Bean
+    public JsRunnerRequestCacheFactory jsRunnerRequestCacheFactory() {
+        JsRunnerRequestCacheFactory jsRunnerRequestCacheFactory = new JsRunnerRequestCacheFactory();
+        return jsRunnerRequestCacheFactory;
+    }
+
 }

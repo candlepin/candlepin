@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
@@ -69,6 +70,7 @@ import javax.ws.rs.core.MediaType;
  * ActivationKeyResource
  */
 @Component
+@Transactional
 @Path("/activation_keys")
 @Api(value = "activation_keys", authorizations = { @Authorization("basic") })
 public class ActivationKeyResource {

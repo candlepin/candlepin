@@ -23,7 +23,6 @@ import org.candlepin.resteasy.JsonProvider;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import org.hibernate.Session;
@@ -36,6 +35,8 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContext;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
@@ -54,9 +55,12 @@ public class CandlepinQueryInterceptor implements ContainerResponseFilter {
 
     protected final JsonProvider jsonProvider;
     protected final Provider<EntityManager> emProvider;
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
+    @PersistenceContext
+    public EntityManager entityManager;
 
-    @Inject
-    //@Autowired
+    @Autowired
     public CandlepinQueryInterceptor(
         final JsonProvider jsonProvider, final Provider<EntityManager> emProvider) {
         this.jsonProvider = Objects.requireNonNull(jsonProvider);
@@ -69,10 +73,16 @@ public class CandlepinQueryInterceptor implements ContainerResponseFilter {
      * @return a newly opened session
      */
     protected Session openSession() {
-        Session currentSession = (Session) this.emProvider.get().getDelegate();
-        SessionFactory factory = currentSession.getSessionFactory();
-
-        return factory.openSession();
+//        Session currentSession = (Session) this.emProvider.get().getDelegate();
+//        SessionFactory factory = currentSession.getSessionFactory();
+//        return factory.openSession();
+        Session session;
+        System.out.println("Candlepin Query Interceptor: opening a fresh session");
+        session = entityManagerFactory.unwrap(SessionFactory.class).openSession();
+        return session;
+//        Session currentSession = entityManager.unwrap(Session.class);
+//        SessionFactory sessionFactory = currentSession.getSessionFactory();
+//        return sessionFactory.openSession();
     }
 
     @Override

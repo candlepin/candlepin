@@ -29,6 +29,7 @@ import io.swagger.annotations.Authorization;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.Path;
@@ -39,6 +40,7 @@ import javax.ws.rs.Path;
  * ActivationKeyContentOverrideResource
  */
 @Component
+@Transactional
 @Path("/activation_keys/{activation_key_id}/content_overrides")
 @Api(value = "activation_keys", authorizations = { @Authorization("basic") })
 public class ActivationKeyContentOverrideResource extends

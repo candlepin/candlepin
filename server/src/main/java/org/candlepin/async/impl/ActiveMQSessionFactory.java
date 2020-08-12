@@ -17,9 +17,6 @@ package org.candlepin.async.impl;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
@@ -36,7 +33,6 @@ import org.springframework.stereotype.Component;
  * The ActiveMQSessionFactory provides initialization and management of both egress and ingress
  * session factories, as well as a method for fetching sessions configured for each.
  */
-//@Singleton
 @Component
 public class ActiveMQSessionFactory {
     private static Logger log = LoggerFactory.getLogger(ActiveMQSessionFactory.class);
@@ -130,7 +126,6 @@ public class ActiveMQSessionFactory {
      * @param config
      *  The Candlepin configuration to use for configuring this session factory
      */
-    //@Inject
     @Autowired
     public ActiveMQSessionFactory(Configuration config) {
         this.config = config;

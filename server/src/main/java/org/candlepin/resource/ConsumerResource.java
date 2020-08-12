@@ -186,6 +186,7 @@ import javax.ws.rs.core.Response;
  * API Gateway for Consumers
  */
 @Component
+@Transactional
 @Path("/consumers")
 @Api(value = "consumers", authorizations = { @Authorization("basic") })
 public class ConsumerResource {

@@ -39,6 +39,7 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.spi.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
@@ -60,6 +61,7 @@ import javax.ws.rs.core.MediaType;
  *
  */
 @Component
+@Transactional
 @Path("/roles")
 @Api(value = "roles", authorizations = { @Authorization("basic") })
 public class RoleResource {

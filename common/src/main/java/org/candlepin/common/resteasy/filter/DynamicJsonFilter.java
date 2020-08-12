@@ -17,6 +17,7 @@ package org.candlepin.common.resteasy.filter;
 import org.candlepin.common.jackson.DynamicFilterData;
 
 import org.jboss.resteasy.core.ResteasyContext;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import javax.ws.rs.ext.Provider;
  *
  * This supports subtypes, ex: ?exclude=owner.href
  */
+@Component
 @Provider
 @PreMatching
 public class DynamicJsonFilter implements ContainerRequestFilter {

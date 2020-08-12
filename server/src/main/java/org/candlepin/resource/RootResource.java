@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -46,6 +47,7 @@ import javax.ws.rs.Path;
  * permissions of the caller.
  */
 @Component
+@Transactional
 public class RootResource implements RootApi {
 
     private static Logger log = LoggerFactory.getLogger(RootResource.class);

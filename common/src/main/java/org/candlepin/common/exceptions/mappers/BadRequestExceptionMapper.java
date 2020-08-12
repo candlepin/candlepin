@@ -18,8 +18,6 @@ import org.candlepin.common.exceptions.ExceptionMessage;
 import org.candlepin.common.util.JaxRsExceptionResponseBuilder;
 import org.candlepin.common.util.VersionUtil;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.spi.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -48,7 +46,6 @@ public class BadRequestExceptionMapper extends CandlepinExceptionMapper
     /**
      * Service that handles JAX-RS exceptions.
      */
-    //@Inject
     @Autowired
     private JaxRsExceptionResponseBuilder badQueryParamHandler;
 

@@ -23,6 +23,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +35,8 @@ import java.util.Date;
 /**
  * RulesCurator
  */
-//@Component
-@Repository
+@Component
+//@Repository
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
     private static Logger log = LoggerFactory.getLogger(RulesCurator.class);
     public static final String DEFAULT_RULES_FILE = "/rules/rules.js";
