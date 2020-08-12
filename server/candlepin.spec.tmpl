@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.17
+Version: 3.1.18
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,9 @@ fi
 
 #raw
 %changelog
+* Wed Aug 12 2020 Nikos Moumoulidis <nmoumoul@redhat.com> 3.1.18-1
+- 1866525: Updated SCA certificate content prefixes and paths (crog@redhat.com)
+
 * Wed Aug 05 2020 Nikos Moumoulidis <nmoumoul@redhat.com> 3.1.17-1
 - 1865906: Add "insights_auto_register" capability (csnyder@redhat.com)
 - 1861739: Close sessions when external Artemis goes down (nmoumoul@redhat.com)
