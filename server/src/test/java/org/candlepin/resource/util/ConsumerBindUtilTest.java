@@ -19,6 +19,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -29,7 +30,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.Role;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.test.TestUtil;
@@ -46,6 +46,7 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -69,39 +70,41 @@ public class ConsumerBindUtilTest {
 
     private I18n i18n;
 
-    private ConsumerType system;
+    private ConsumerType systemConsumerType;
     protected Owner owner;
-    protected Role role;
-
-    private ConsumerBindUtil consumerBindUtil;
 
     @BeforeEach
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        this.system = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        this.system.setId("test-ctype-" + TestUtil.randomInt());
-        owner = TestUtil.createOwner();
-        owner.setId(TestUtil.randomString());
-        consumerBindUtil = new ConsumerBindUtil(
-            this.entitler,
-            this.i18n,
-            this.consumerContentOverrideCurator,
-            this.ownerCurator,
-            null,
-            this.serviceLevelValidator
-        );
+        this.systemConsumerType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        this.systemConsumerType.setId("test-ctype-" + TestUtil.randomInt());
+        this.owner = TestUtil.createOwner();
+        this.owner.setId(TestUtil.randomString());
+    }
+
+    private ConsumerBindUtil buildConsumerBindUtil() {
+        return new ConsumerBindUtil(this.entitler, this.i18n, this.consumerContentOverrideCurator,
+            this.ownerCurator, null, this.serviceLevelValidator);
     }
 
     private List<ActivationKey> mockActivationKeys() {
-        ActivationKey key1 = new ActivationKey("key1", owner);
-        ActivationKey key2 = new ActivationKey("key2", owner);
-        ActivationKey key3 = new ActivationKey("key3", owner);
+        ActivationKey key1 = new ActivationKey("key1", this.owner);
+        ActivationKey key2 = new ActivationKey("key2", this.owner);
+        ActivationKey key3 = new ActivationKey("key3", this.owner);
         List<ActivationKey> keys = new LinkedList<>();
         keys.add(key1);
         keys.add(key2);
         keys.add(key3);
         return keys;
+    }
+
+    private Pool createTestPool(Owner owner, int quantity) {
+        Product product = TestUtil.createProduct();
+        Pool pool = TestUtil.createPool(owner, product, quantity);
+        pool.setId("test_pool-" + TestUtil.randomInt());
+
+        return pool;
     }
 
     @Test
@@ -120,13 +123,14 @@ public class ConsumerBindUtilTest {
         key1.addPool(pool, 0L);
         key1.setAutoAttach(true);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
         Set<ConsumerInstalledProduct> cips = new HashSet<>();
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod);
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
         AutobindData ad = new AutobindData(consumer, owner).withPools(poolIds).forProducts(prodIds);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
     }
@@ -141,13 +145,14 @@ public class ConsumerBindUtilTest {
         keys.add(key1);
         key1.setAutoAttach(true);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
         Set<ConsumerInstalledProduct> cips = new HashSet<>();
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod);
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
         AutobindData ad = new AutobindData(consumer, owner).forProducts(prodIds);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
     }
@@ -166,13 +171,14 @@ public class ConsumerBindUtilTest {
         key1.addProduct(prod2);
         key1.setAutoAttach(true);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
         Set<ConsumerInstalledProduct> cips = new HashSet<>();
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod1);
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
         AutobindData ad = new AutobindData(consumer, owner).forProducts(prodIds);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
     }
@@ -184,7 +190,9 @@ public class ConsumerBindUtilTest {
         keys.add(key1);
         key1.setServiceLevel("I don't exist");
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
+
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
             .validate(eq(owner.getId()), eq(key1.getServiceLevel()));
 
@@ -199,7 +207,9 @@ public class ConsumerBindUtilTest {
         keys.add(key1);
         key1.setServiceLevel("I don't exist");
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
+
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
             .validate(eq(owner.getId()), eq(key1.getServiceLevel()));
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
@@ -216,7 +226,9 @@ public class ConsumerBindUtilTest {
         ghost.setId("ghost-pool");
         key1.addPool(ghost, 10L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
+
         when(entitler.bindByPoolQuantity(eq(consumer), eq(ghost.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
 
@@ -243,11 +255,14 @@ public class ConsumerBindUtilTest {
         pool3.setId("pool3");
         key1.addPool(pool3, 5L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
+
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool2.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
+
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 
@@ -272,11 +287,14 @@ public class ConsumerBindUtilTest {
         pool3.setId("pool3");
         key2.addPool(pool3, 5L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
+
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool2.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
+
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
     }
 
@@ -292,10 +310,71 @@ public class ConsumerBindUtilTest {
         pool1.setId("pool1");
         key1.addPool(pool1, 10L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
+
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
             .thenThrow(new ForbiddenException("fail"));
+
         consumerBindUtil.handleActivationKeys(consumer, keys, true);
     }
 
+    @Test
+    public void handleActivationKeysWithoutAutoAttachUsingSCA() throws Exception {
+        this.owner.setContentAccessModeList(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        this.owner.setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+
+        Pool pool1 = this.createTestPool(this.owner, 1);
+
+        ActivationKey key1 = new ActivationKey("test_key-1", this.owner);
+        key1.setAutoAttach(false);
+        key1.addPool(pool1, 1L);
+
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
+
+        consumerBindUtil.handleActivationKeys(consumer, Arrays.asList(key1), false);
+
+        verify(this.entitler, times(1)).bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(1));
+    }
+
+    @Test
+    public void handleActivationKeysWithoutAutoAttachUsingSCAWhenBindFails() throws Exception {
+        this.owner.setContentAccessModeList(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        this.owner.setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+
+        Pool pool1 = this.createTestPool(this.owner, 1);
+
+        ActivationKey key1 = new ActivationKey("test_key-1", this.owner);
+        key1.setAutoAttach(false);
+        key1.addPool(pool1, 5L);
+
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
+
+        doThrow(new ForbiddenException("exception")).when(this.entitler)
+            .bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(5));
+
+        // This should not throw an exception even though the bind fails
+        consumerBindUtil.handleActivationKeys(consumer, Arrays.asList(key1), false);
+
+        verify(this.entitler, times(1)).bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(5));
+    }
+
+    @Test
+    public void handleActivationKeysWithAutoAttachUsingSCA() throws Exception {
+        this.owner.setContentAccessModeList(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+        this.owner.setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+
+        ActivationKey key1 = new ActivationKey("test_key-1", this.owner);
+        key1.setAutoAttach(true);
+
+        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
+
+        consumerBindUtil.handleActivationKeys(consumer, Arrays.asList(key1), false);
+
+        // Bind should not be invoked if we're in SCA mode
+        verify(this.entitler, never()).bindByProducts(any(AutobindData.class));
+    }
 }
