@@ -18,6 +18,7 @@ describe 'Content Access' do
       'contentAccessModeList' => 'org_environment,entitlement',
       'contentAccessMode' => "org_environment"
     })
+    @org_admin = user_client(@owner, random_string('guy'))
 
     @username = random_string("user")
     @consumername = random_string("consumer")
@@ -511,7 +512,6 @@ describe 'Content Access' do
     expect(owner['contentAccessMode']).to eq("org_environment")
     expect(owner['upstreamConsumer']).to_not be_nil
     expect(owner['upstreamConsumer']['contentAccessMode']).to eq("org_environment")
-
     expect(@consumer.list_certificate_serials().size).to eq(1)
     expect(@consumer.list_certificates().size).to eq(1)
 
@@ -558,4 +558,128 @@ describe 'Content Access' do
     expect(content['vendor']).to eq(@content.vendor)
     expect(content['path']).to eq(@content.contentUrl)
   end
+
+  it 'should honour the content defaults for owner in SCA mode' do
+    product = create_product('test-product-p1', 'some product-p1')
+
+    # Content enabled = true
+    content_c1 = @cp.create_content(
+        @owner['key'], "cname-c1", 'test-content-c1', random_string("clabel"), "ctype", "cvendor",
+        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
+    @cp.add_content_to_product(@owner['key'], product['id'], content_c1['id'], true)
+
+    # Content enabled = false
+    content_c2 = @cp.create_content(
+        @owner['key'], "cname-c2", 'test-content-c2', random_string("clabel"), "ctype", "cvendor",
+        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
+    @cp.add_content_to_product(@owner['key'], product['id'], content_c2['id'], false)
+    @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+    certs = @consumer.list_certificates
+
+    expect(certs.length).to eq(1)
+
+    cert = certs[0]['cert']
+    json_body = extract_payload(cert)
+
+    expect(json_body['products'][0]['content'].length).to eq(3)
+
+    # Check content status
+    json_body['products'][0]['content'].each do |content|
+      if content.id == content_c1.id
+        expect(content.enabled).to be_nil
+      end
+      if content.id == content_c2.id
+        expect(content.enabled).to eq(false)
+      end
+    end
+  end
+
+  it 'filter out content not promoted to environment when owner is in SCA mode' do
+    @env = @org_admin.create_environment(@owner['key'], 'testenv1', "My Test Env 1", "For test systems only.")
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil,
+      {'system.certificate_version' => '3.1'}, nil, nil, [], [], @env['id'])
+
+    expect(consumer['environment']).to_not be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    content = create_content # promoted
+    content2 = create_content # not promoted
+
+    # content enabled = true
+    @cp.add_content_to_product(@owner['key'], product['id'], content['id'], true)
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'], true)
+
+    # Promote content with enabled false
+    job = @org_admin.promote_content(@env['id'],
+    [{
+      :contentId => content['id'],
+      :enabled => false ,
+     }])
+    wait_for_job(job['id'], 15)
+
+    pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
+
+    expect(value).to eq("3.4")
+
+    json_body = extract_payload(ent['certificates'][0]['cert'])
+
+    expect(json_body['products'][0]['content'].size).to eq(1)
+    expect(json_body['products'][0]['content'][0]['id']).to eq(content['id'])
+    expect(json_body['products'][0]['content'][0]['enabled']).to eq(false)
+  end
+
+  it 'should handle mixed enablement of content for owner in SCA mode' do
+    product_1 = create_product('test-product-p1', 'some product-p1')
+    product_2 = create_product('test-product-p2', 'some product-p2')
+
+    content_c1 = @cp.create_content(
+        @owner['key'], "cname-c1", 'test-content-c1', random_string("clabel"), "ctype", "cvendor",
+        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
+
+    content_c2 = @cp.create_content(
+        @owner['key'], "cname-c2", 'test-content-c2', random_string("clabel"), "ctype", "cvendor",
+        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
+
+    content_c3 = @cp.create_content(
+        @owner['key'], "cname-c3", 'test-content-c3', random_string("clabel"), "ctype", "cvendor",
+        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
+
+    # Content enabled in both product
+    @cp.add_content_to_product(@owner['key'], product_1['id'], content_c1['id'], true)
+    @cp.add_content_to_product(@owner['key'], product_2['id'], content_c1['id'], true)
+
+    # Mixed content enablement in both product
+    @cp.add_content_to_product(@owner['key'], product_1['id'], content_c2['id'], false)
+    @cp.add_content_to_product(@owner['key'], product_2['id'], content_c2['id'], true)
+
+    # Content disabled in both product
+    @cp.add_content_to_product(@owner['key'], product_1['id'], content_c3['id'], false)
+    @cp.add_content_to_product(@owner['key'], product_2['id'], content_c3['id'], false)
+
+    @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+    certs = @consumer.list_certificates
+
+    expect(certs.length).to eq(1)
+
+    cert = certs[0]['cert']
+    json_body = extract_payload(cert)
+
+    expect(json_body['products'][0]['content'].length).to eq(4)
+
+    json_body['products'][0]['content'].each do |content|
+      if content.id == content_c1.id
+        expect(content.enabled).to be_nil()
+      end
+      if content.id == content_c2.id
+        expect(content.enabled).to be_nil()
+      end
+      if content.id == content_c3.id
+        expect(content.enabled).to eq(false)
+      end
+    end
+  end
+
 end
