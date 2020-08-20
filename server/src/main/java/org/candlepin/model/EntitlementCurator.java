@@ -227,7 +227,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
         return cb.or(
             poolAttributeFilterSubquery(query, key, values, pool),
-            productAttributeFilterSubquery(query, key, values, product)
+            productAttributeFilterSubquery(query, key, values, product, pool)
         );
     }
 
@@ -269,13 +269,13 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     private Predicate productAttributeFilterSubquery(
-        CriteriaQuery<Entitlement> query,
-        String key, Collection<String> values, Join<Entitlement, Product> parentProduct) {
+        CriteriaQuery<Entitlement> query, String key, Collection<String> values, Join<Entitlement,
+        Product> parentProduct, Join<Entitlement, Pool> pool) {
 
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
         Subquery<String> prodAttrSubquery = query.subquery(String.class);
         Root<Product> product = prodAttrSubquery.from(Product.class);
-        prodAttrSubquery.select(product.get("id"));
+        prodAttrSubquery.select(product.get("uuid"));
         MapJoin<Product, String, String> attributes = product.joinMap("attributes");
 
         List<Predicate> predicates = new ArrayList<>();
@@ -283,7 +283,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         Join<Entitlement, Product> correlatedProduct = prodAttrSubquery.correlate(parentProduct);
         predicates.add(cb.equal(product.get("uuid"), correlatedProduct.get("uuid")));
-        predicates.add(subSubQuery(query.subquery(String.class), product.get("id"), key));
+        predicates.add(attributeNotExists(prodAttrSubquery, pool.get("id"), key));
 
         if (values != null && !values.isEmpty()) {
             List<Predicate> poolAttrValueDisjunction = new ArrayList<>();
@@ -326,7 +326,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         Join<Entitlement, Product> correlatedProduct = prodAttributeSubquery.correlate(parentProduct);
         predicates.add(cb.equal(product.get("uuid"), correlatedProduct.get("uuid")));
         predicates.add(cb.equal(attributes.key(), key));
-        predicates.add(subSubQuery(prodAttributeSubquery.subquery(String.class), poolId, key));
+        predicates.add(attributeNotExists(prodAttributeSubquery, poolId, key));
 
         if (values != null && !values.isEmpty()) {
             List<Predicate> prodAttrValueDisjunction = new ArrayList<>();
@@ -349,8 +349,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return cb.exists(prodAttributeSubquery);
     }
 
-    private Predicate subSubQuery(Subquery<String> subquery, Path<Object> poolId, String key) {
+    private Predicate attributeNotExists(Subquery<?> query, Path<Object> poolId, String key) {
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
+        Subquery<String> subquery = query.subquery(String.class);
         Root<PoolAttribute> poolAttribute = subquery.from(PoolAttribute.class);
 
         subquery.select(poolAttribute.get("poolId"));
