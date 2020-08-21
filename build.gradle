@@ -191,7 +191,7 @@ allprojects {
             dependency group: 'org.junit.vintage', name: 'junit-vintage-engine', version: "$versions.junit5"
             dependency group: 'junit', name: 'junit', version: '4.12'
             // Testing DB Drivers
-            dependency group: 'org.hsqldb', name: 'hsqldb', version: '2.5.1'
+            dependency group: 'org.hsqldb', name: 'hsqldb', version: '2.3.3'
             dependency group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
             dependency group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '5.3'
             dependency group: 'org.liquibase', name: 'liquibase-core', version: '3.1.0'

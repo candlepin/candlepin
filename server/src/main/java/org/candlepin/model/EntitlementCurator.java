@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Singleton;
@@ -51,10 +52,12 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
 
@@ -63,12 +66,12 @@ import javax.persistence.criteria.Subquery;
  */
 @Singleton
 public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
-    private static Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
+    private static final Logger log = LoggerFactory.getLogger(EntitlementCurator.class);
 
-    private CandlepinQueryFactory cpQueryFactory;
-    private OwnerProductCurator ownerProductCurator;
-    private ProductCurator productCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
+    private final CandlepinQueryFactory cpQueryFactory;
+    private final OwnerProductCurator ownerProductCurator;
+    private final ProductCurator productCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
 
     /**
      * default ctor
@@ -78,10 +81,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         ConsumerTypeCurator consumerTypeCurator, CandlepinQueryFactory cpQueryFactory) {
         super(Entitlement.class);
 
-        this.cpQueryFactory = cpQueryFactory;
-        this.ownerProductCurator = ownerProductCurator;
-        this.productCurator = productCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
+        this.cpQueryFactory = Objects.requireNonNull(cpQueryFactory);
+        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
     }
 
     // TODO: handles addition of new entitlements only atm!
@@ -109,60 +112,62 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         CriteriaQuery<Entitlement> query,
         EntitlementFilterBuilder filterBuilder) {
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
-        Join<Entitlement, Pool> pool = root.join("pool");
-        Join<Entitlement, Product> product = pool.join("product");
+        Join<Entitlement, Pool> pool = root.join(Entitlement_.pool);
+        Join<Pool, Product> product = pool.join(Pool_.product);
 
         List<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.greaterThanOrEqualTo(pool.get("endDate"), new Date()));
+        predicates.add(cb.greaterThanOrEqualTo(pool.get(Pool_.endDate), new Date()));
 
         if (filterBuilder != null) {
-            Collection<String> values = filterBuilder.getIdFilters();
-
-            if (values != null && !values.isEmpty()) {
-                predicates.add(cb.in(pool.get("id")).value(values));
+            Collection<String> idFilters = filterBuilder.getIdFilters();
+            if (idFilters != null && !idFilters.isEmpty()) {
+                predicates.add(inPredicate(cb, pool.get(Pool_.id), idFilters));
             }
 
-            values = filterBuilder.getProductIdFilter();
+            Collection<String> productIdFilters = filterBuilder.getProductIdFilter();
 
-            if (values != null && !values.isEmpty()) {
-                Join<Object, Object> providedProducts = pool.join("providedProducts", JoinType.LEFT);
+            if (productIdFilters != null && !productIdFilters.isEmpty()) {
+                SetJoin<Pool, Product> providedProducts = pool.join(Pool_.providedProducts, JoinType.LEFT);
 
                 predicates.add(cb.or(
-                    cb.in(product.get("id")).value(values),
-                    cb.in(providedProducts.get("id")).value(values)));
+                    inPredicate(cb, product.get(Product_.id), productIdFilters),
+                    inPredicate(cb, providedProducts.get(Product_.id), productIdFilters)));
             }
 
             // Subscription ID filter
-            String value = filterBuilder.getSubscriptionIdFilter();
+            String subscriptionIdFilter = filterBuilder.getSubscriptionIdFilter();
 
-            if (value != null && !value.isEmpty()) {
-                Join<Object, Object> sourceSubscription = pool.join("sourceSubscription");
-                predicates.add(cb.equal(sourceSubscription.get("subscriptionId"), value));
+            if (subscriptionIdFilter != null && !subscriptionIdFilter.isEmpty()) {
+                Join<Pool, SourceSubscription> sourceSubscription = pool.join(Pool_.sourceSubscription);
+                predicates.add(cb.equal(
+                    sourceSubscription.get(SourceSubscription_.subscriptionId), subscriptionIdFilter));
             }
 
             // Matches stuff
-            values = filterBuilder.getMatchesFilters();
-            if (values != null && !values.isEmpty()) {
-                Join<Object, Object> providedProducts = pool.join("providedProducts", JoinType.LEFT);
-                Join<Object, Object> productContent = providedProducts.join("productContent", JoinType.LEFT);
-                Join<Object, Object> content = productContent.join("content", JoinType.LEFT);
+            Collection<String> matchesFilters = filterBuilder.getMatchesFilters();
+            if (matchesFilters != null && !matchesFilters.isEmpty()) {
+                SetJoin<Pool, Product> providedProducts = pool.join(Pool_.providedProducts, JoinType.LEFT);
+                ListJoin<Product, ProductContent> productContent = providedProducts
+                    .join(Product_.productContent, JoinType.LEFT);
+                Join<ProductContent, Content> content = productContent
+                    .join(ProductContent_.content, JoinType.LEFT);
 
-                for (String matches : values) {
+                for (String matches : matchesFilters) {
                     String sanitized = this.sanitizeMatchesFilter(matches);
 
                     Predicate matchesDisjunction = cb.or(
-                        ilike(cb, pool.get("contractNumber"), sanitized),
-                        ilike(cb, pool.get("orderNumber"), sanitized),
-                        ilike(cb, product.get("id"), sanitized),
-                        ilike(cb, product.get("name"), sanitized),
-                        ilike(cb, providedProducts.get("id"), sanitized),
-                        ilike(cb, providedProducts.get("name"), sanitized),
-                        ilike(cb, content.get("name"), sanitized),
-                        ilike(cb, content.get("label"), sanitized),
+                        ilike(cb, pool.get(Pool_.contractNumber), sanitized),
+                        ilike(cb, pool.get(Pool_.orderNumber), sanitized),
+                        ilike(cb, product.get(Product_.id), sanitized),
+                        ilike(cb, product.get(Product_.name), sanitized),
+                        ilike(cb, providedProducts.get(Product_.id), sanitized),
+                        ilike(cb, providedProducts.get(Product_.name), sanitized),
+                        ilike(cb, content.get(Content_.name), sanitized),
+                        ilike(cb, content.get(Content_.label), sanitized),
                         this.addProductAttributeFilterSubquery(
                             query,
-                            pool.get("id"),
+                            pool.get(Pool_.id),
                             product,
                             Product.Attributes.SUPPORT_LEVEL,
                             Collections.singletonList(matches)
@@ -176,7 +181,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             // Attribute filters
             for (Map.Entry<String, List<String>> entry : filterBuilder.getAttributeFilters().entrySet()) {
                 String attrib = entry.getKey();
-                values = entry.getValue();
+                Collection<String> attributeFilters = entry.getValue();
 
                 if (attrib != null && !attrib.isEmpty()) {
                     // TODO:
@@ -186,16 +191,16 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                     // If this is not the case, then the following logic is broken and will need to be
                     // adjusted to account for one having priority over the other.
 
-                    if (values != null && !values.isEmpty()) {
+                    if (attributeFilters != null && !attributeFilters.isEmpty()) {
                         List<String> positives = new LinkedList<>();
                         List<String> negatives = new LinkedList<>();
 
-                        for (String attrValue : values) {
-                            if (attrValue.startsWith("!")) {
-                                negatives.add(attrValue.substring(1));
+                        for (String attributeFilter : attributeFilters) {
+                            if (attributeFilter.startsWith("!")) {
+                                negatives.add(attributeFilter.substring(1));
                             }
                             else {
-                                positives.add(attrValue);
+                                positives.add(attributeFilter);
                             }
                         }
 
@@ -211,7 +216,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                     }
                     else {
                         predicates.add(this.addAttributeFilterSubquery(
-                            query, attrib, values, pool, product));
+                            query, attrib, attributeFilters, pool, product));
                     }
                 }
             }
@@ -220,9 +225,17 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return predicates;
     }
 
+    private Predicate inPredicate(CriteriaBuilder cb, Expression<String> path, Collection<String> values) {
+        CriteriaBuilder.In<String> in = cb.in(path);
+        for (String value : values) {
+            in.value(value);
+        }
+        return in;
+    }
+
     private Predicate addAttributeFilterSubquery(
         CriteriaQuery<Entitlement> query, String key, Collection<String> values,
-        Join<Entitlement, Pool> pool, Join<Entitlement, Product> product) {
+        Join<Entitlement, Pool> pool, Join<Pool, Product> product) {
 
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
         return cb.or(
@@ -238,13 +251,13 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
         Subquery<String> poolAttrSubquery = query.subquery(String.class);
         Root<Pool> pool = poolAttrSubquery.from(Pool.class);
-        poolAttrSubquery.select(pool.get("id"));
-        MapJoin<Product, String, String> attributes = pool.joinMap("attributes");
+        poolAttrSubquery.select(pool.get(Pool_.id));
+        MapJoin<Pool, String, String> attributes = pool.join(Pool_.attributes);
 
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(attributes.key(), key));
         Join<Entitlement, Pool> correlatedPool = poolAttrSubquery.correlate(parentPool);
-        predicates.add(cb.equal(pool.get("id"), correlatedPool.get("id")));
+        predicates.add(cb.equal(pool.get(Pool_.id), correlatedPool.get(Pool_.id)));
 
         if (values != null && !values.isEmpty()) {
             List<Predicate> poolAttrValueDisjunction = new ArrayList<>();
@@ -269,21 +282,21 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     private Predicate productAttributeFilterSubquery(
-        CriteriaQuery<Entitlement> query, String key, Collection<String> values, Join<Entitlement,
-        Product> parentProduct, Join<Entitlement, Pool> pool) {
+        CriteriaQuery<Entitlement> query, String key, Collection<String> values,
+        Join<Pool, Product> parentProduct, Join<Entitlement, Pool> pool) {
 
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
         Subquery<String> prodAttrSubquery = query.subquery(String.class);
         Root<Product> product = prodAttrSubquery.from(Product.class);
-        prodAttrSubquery.select(product.get("uuid"));
-        MapJoin<Product, String, String> attributes = product.joinMap("attributes");
+        prodAttrSubquery.select(product.get(Product_.uuid));
+        MapJoin<Product, String, String> attributes = product.join(Product_.attributes);
 
         List<Predicate> predicates = new ArrayList<>();
         predicates.add(cb.equal(attributes.key(), key));
 
-        Join<Entitlement, Product> correlatedProduct = prodAttrSubquery.correlate(parentProduct);
-        predicates.add(cb.equal(product.get("uuid"), correlatedProduct.get("uuid")));
-        predicates.add(attributeNotExists(prodAttrSubquery, pool.get("id"), key));
+        Join<Pool, Product> correlatedProduct = prodAttrSubquery.correlate(parentProduct);
+        predicates.add(cb.equal(product.get(Product_.uuid), correlatedProduct.get(Product_.uuid)));
+        predicates.add(attributeNotExists(prodAttrSubquery, pool.get(Pool_.id), key));
 
         if (values != null && !values.isEmpty()) {
             List<Predicate> poolAttrValueDisjunction = new ArrayList<>();
@@ -309,22 +322,22 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     private Predicate addProductAttributeFilterSubquery(
         CriteriaQuery<Entitlement> query,
-        Path<Object> poolId,
-        Join<Entitlement, Product> parentProduct,
+        Path<String> poolId,
+        Join<Pool, Product> parentProduct,
         String key, Collection<String> values) {
         // Find all pools which have the given attribute (and values) on a product, unless the pool
         // defines that same attribute
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
-        Subquery<Product> prodAttributeSubquery = query.subquery(Product.class);
+        Subquery<String> prodAttributeSubquery = query.subquery(String.class);
         Root<Product> product = prodAttributeSubquery.from(Product.class);
 
-        prodAttributeSubquery.select(product.get("uuid"));
+        prodAttributeSubquery.select(product.get(Product_.uuid));
 
         List<Predicate> predicates = new ArrayList<>();
 
-        MapJoin<Product, String, String> attributes = product.joinMap("attributes");
-        Join<Entitlement, Product> correlatedProduct = prodAttributeSubquery.correlate(parentProduct);
-        predicates.add(cb.equal(product.get("uuid"), correlatedProduct.get("uuid")));
+        MapJoin<Product, String, String> attributes = product.join(Product_.attributes);
+        Join<Pool, Product> correlatedProduct = prodAttributeSubquery.correlate(parentProduct);
+        predicates.add(cb.equal(product.get(Product_.uuid), correlatedProduct.get(Product_.uuid)));
         predicates.add(cb.equal(attributes.key(), key));
         predicates.add(attributeNotExists(prodAttributeSubquery, poolId, key));
 
@@ -349,14 +362,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return cb.exists(prodAttributeSubquery);
     }
 
-    private Predicate attributeNotExists(Subquery<?> query, Path<Object> poolId, String key) {
+    private Predicate attributeNotExists(Subquery<?> query, Path<String> poolId, String key) {
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
         Subquery<String> subquery = query.subquery(String.class);
         Root<PoolAttribute> poolAttribute = subquery.from(PoolAttribute.class);
 
-        subquery.select(poolAttribute.get("poolId"));
-        subquery.where(cb.and(cb.equal(poolAttribute.get("poolId"), poolId),
-            ilike(cb, poolAttribute.get("name"), key)));
+        subquery.select(poolAttribute.get(PoolAttribute_.poolId));
+        subquery.where(cb.and(cb.equal(poolAttribute.get(PoolAttribute_.poolId), poolId),
+            ilike(cb, poolAttribute.get(PoolAttribute_.name), key)));
 
         return cb.not(cb.exists(subquery));
     }
@@ -414,7 +427,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         CriteriaQuery<Entitlement> query = cb.createQuery(Entitlement.class);
         Root<Entitlement> root = query.from(Entitlement.class);
         List<Predicate> criteria = this.createCriteriaFromFilters(root, query, filters);
-        criteria.add(cb.equal(root.get("consumer"), consumer));
+        criteria.add(cb.equal(root.get(Entitlement_.consumer), consumer));
 
         query.distinct(true);
         query.where(toArray(criteria));
@@ -769,15 +782,15 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         CriteriaQuery<Entitlement> entitlementQuery = builder.createQuery(Entitlement.class);
         Root<Entitlement> entitlement = entitlementQuery.from(Entitlement.class);
 
-        Join<Entitlement, Pool> pool = entitlement.join("pool");
-        Join<Pool, Product> product = pool.join("product");
-        Join<Pool, Product> providedProducts = pool.join("providedProducts", JoinType.LEFT);
+        Join<Entitlement, Pool> pool = entitlement.join(Entitlement_.pool);
+        Join<Pool, Product> product = pool.join(Pool_.product);
+        Join<Pool, Product> providedProducts = pool.join(Pool_.providedProducts, JoinType.LEFT);
 
         entitlementQuery.where(builder.and(
             builder.equal(entitlement.get(objectType), object),
-            builder.greaterThanOrEqualTo(pool.get("endDate"), new Date()),
-            builder.or(builder.equal(product.get("id"), productId),
-            builder.equal(providedProducts.get("id"), productId))));
+            builder.greaterThanOrEqualTo(pool.get(Pool_.endDate), new Date()),
+            builder.or(builder.equal(product.get(Product_.id), productId),
+            builder.equal(providedProducts.get(Product_.id), productId))));
 
         return listByCriteria(entitlement, entitlementQuery, pageRequest);
     }
@@ -1175,10 +1188,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return entitlementIds;
     }
 
-    private Predicate ilike(CriteriaBuilder cb, Expression<String> x, String attrValue) {
+    private Predicate ilike(CriteriaBuilder cb, Expression<String> expression, String attrValue) {
         return cb.like(
             cb.lower(
-                x
+                expression
             ), cb.lower(
                 cb.literal("%" + attrValue + "%")
             ), '!'

@@ -191,6 +191,12 @@ dependencies {
 
     // Testing DB Drivers
     testRuntime "org.hsqldb:hsqldb"
+
+    annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.18.Final'
+}
+
+tasks.withType(JavaCompile) {
+    options.annotationProcessorGeneratedSourcesDirectory = file("src/main/generated/")
 }
 
 task pom {
