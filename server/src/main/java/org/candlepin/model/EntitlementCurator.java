@@ -462,7 +462,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return entitlementsPage;
     }
 
-
     private Page<List<Entitlement>> matchByProducts(String ownerId, AbstractHibernateObject object,
         String objectType, String productId, PageRequest pageRequest) {
 
@@ -529,7 +528,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .createCriteria("consumer")
             .add(Restrictions.eq("environmentId", environmentId));
 
-        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -970,7 +969,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
     }
 
-    @SuppressWarnings("unchecked")
     public CandlepinQuery<Entitlement> findByPoolAttribute(String attributeName, String value) {
         return findByPoolAttribute(null, attributeName, value);
     }
