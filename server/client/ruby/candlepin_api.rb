@@ -347,7 +347,7 @@ class Candlepin
   end
 
   def update_owner(owner_key, owner)
-    put("/owners/#{owner_key}",{},  owner)
+    put("/owners/#{owner_key}", {}, owner)
   end
 
   def set_owner_log_level(owner_key, log_level=nil)

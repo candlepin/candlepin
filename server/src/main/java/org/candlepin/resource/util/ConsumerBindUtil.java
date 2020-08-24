@@ -82,60 +82,64 @@ public class ConsumerBindUtil {
     public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys,
         boolean autoattachDisabledForOwner)
         throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
-        // Process activation keys.
 
         boolean listSuccess = false;
-        boolean isCAModeEnabledForAny = false;
+        boolean scaEnabledForAny = false;
         boolean isAutoheal = BooleanUtils.isTrue(consumer.isAutoheal());
+
         for (ActivationKey key : keys) {
             boolean keySuccess = true;
+            boolean scaEnabled = key.getOwner().isContentAccessEnabled();
+            scaEnabledForAny |= scaEnabled;
+
+            keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
             handleActivationKeyOverrides(consumer, key.getContentOverrides());
             handleActivationKeyRelease(consumer, key.getReleaseVer());
-            keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());
             handleActivationKeyUsage(consumer, key.getUsage());
             handleActivationKeyRole(consumer, key.getRole());
             handleActivationKeyAddons(consumer, key.getAddOns());
 
-            if (key.isAutoAttach() != null && key.isAutoAttach()) {
-                if (autoattachDisabledForOwner || key.getOwner().isContentAccessEnabled()) {
-                    String caMessage = "";
-                    String autohealMessage = "";
-                    if (key.getOwner().isContentAccessEnabled()) {
-                        caMessage = " because of the content access mode setting";
-                        isCAModeEnabledForAny = true;
-                    }
-                    if (!isAutoheal) {
-                        autohealMessage = " .Also, the consumer autoheal value is false";
-                    }
-                    log.warn(
-                        "Auto-attach is disabled for owner{}{}. Skipping auto-attach for consumer/key: {}/{}",
-                        caMessage, autohealMessage, consumer.getUuid(), key.getName());
+            if (Boolean.TRUE.equals(key.isAutoAttach())) {
+                if (autoattachDisabledForOwner) {
+                    log.warn("Auto-attach disabled for owner; skipping auto-attach for consumer with " +
+                        "activation key: {}, {}", consumer.getUuid(), key.getName());
+                }
+                else if (scaEnabled) {
+                    log.warn("Owner is using simple content access; skipping auto-attach for consumer with " +
+                        "activation key: {}, {}", consumer.getUuid(), key.getName());
                 }
                 else if (!isAutoheal) {
-                    log.warn(
-                        "The consumer autoheal value is false. Skipping auto-attach for consumer/key: {}/{}",
-                        consumer.getUuid(), key.getName());
+                    log.warn("Auto-heal disabled for consumer; skipping auto-attach for consumer with " +
+                        "activation key: {}, {}", consumer.getUuid(), key.getName());
                 }
                 else {
-                    handleActivationKeyAutoBind(consumer, key);
+                    // State checks passed, perform auto-attach
+                    this.handleActivationKeyAutoBind(consumer, key);
                 }
             }
             else {
+                // Activation key does not specify auto-attach; attach designated pools
+
+                // Impl note: while this doesn't make a great deal of sense in SCA mode, compared to
+                // the check above for auto-attach, this is still intended behavior, as attaching
+                // specific pools is still an desired feature in SCA mode.
                 keySuccess &= handleActivationKeyPools(consumer, key);
             }
+
             listSuccess |= keySuccess;
         }
-        if (!listSuccess && !isCAModeEnabledForAny) {
+
+        if (!listSuccess && !scaEnabledForAny) {
             throw new BadRequestException(
                 i18n.tr("None of the subscriptions on the activation key were available for attaching."));
         }
     }
 
-    private boolean handleActivationKeyPools(Consumer consumer,
-        ActivationKey key) {
+    private boolean handleActivationKeyPools(Consumer consumer, ActivationKey key) {
         if (key.getPools().size() == 0) {
             return true;
         }
+
         boolean onePassed = false;
         List<ActivationKeyPool> toBind = new LinkedList<>();
         for (ActivationKeyPool akp : key.getPools()) {
@@ -150,6 +154,7 @@ public class ConsumerBindUtil {
             int quantity = (akp.getQuantity() == null) ?
                 getQuantityToBind(akp.getPool(), consumer) :
                 akp.getQuantity().intValue();
+
             try {
                 entitler.sendEvents(entitler.bindByPoolQuantity(consumer, akp.getPool().getId(), quantity));
                 onePassed = true;
@@ -159,6 +164,7 @@ public class ConsumerBindUtil {
                     akp.getPool().getId(), akp.getKey().getName(), e.getMessage()));
             }
         }
+
         return onePassed;
     }
 
