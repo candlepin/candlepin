@@ -250,7 +250,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public CandlepinQuery<E> listAll() {
         DetachedCriteria criteria = this.createSecureDetachedCriteria();
 
-        return this.cpQueryFactory.<E>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     public CandlepinQuery<E> listAllByIds(Collection<? extends Serializable> ids) {
