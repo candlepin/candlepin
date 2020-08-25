@@ -1061,6 +1061,242 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /environments:
+    get:
+      description: Lists the Environments.  Only available to super admins.
+      operationId: getEnvironments
+      tags:
+        - Environment
+      security: []
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: Environment was successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+  /environments/{env_id}:
+    get:
+      description: Retrieves a single Environment
+      operationId: getEnvironment
+      tags:
+        - Environment
+      parameters:
+        - name: env_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Environment was successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentDTO'
+        404:
+          description: "No such environment: test_env"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "No such environment: test_env"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: "Deletes an environment. WARNING: this will delete all consumers in the environment and revoke their entitlement certificates."
+      operationId: deleteEnvironment
+      tags:
+        - Environment
+      parameters:
+        - name: env_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        204:
+          description: Environment was successfully deleted.
+        404:
+          description: "No such environment: test_env"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "No such environment: test_env"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /environments/{env_id}/consumers:
+    post:
+      description: Creates an Environment
+      operationId: createEnvironment
+      tags:
+        - Environment
+      parameters:
+        - name: env_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: username
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: owner
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: activation_keys
+          in: query
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumerDTO'
+      security: []
+      responses:
+        200:
+          description: Environment was successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumerDTO'
+        400:
+          description: Unit type must be specified.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unit type must be specified.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /environments/{env_id}/content:
+    post:
+      description: Promotes a Content into an Environment. This call accepts multiple content sets to promote at once, after which all affected certificates for consumers in the environment will be regenerated. Consumers registered to this environment will now receive this content in their entitlement certificates. Because the certificate regeneraiton can be quite time consuming, this is done as an asynchronous job. The content will be promoted and immediately available for new entitlements, but existing entitlements could take some time to be regenerated and sent down to clients as they check in.
+      operationId: promoteContent
+      tags:
+        - Environment
+        - Content
+      parameters:
+        - name: env_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lazy_regen
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+      requestBody:
+        description: Contents to promote
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentToPromoteDTO'
+      security: []
+      responses:
+        200:
+          description: Content was successfully promoted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        404:
+          description: "No such environment: test_env"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "No such environment: test_env"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        409:
+          description: The content with id test_env has already been promoted in this environment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: The content with id test_env has already been promoted in this environment.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: "Demotes a Content from an Environment. Consumer's registered to this environment will not see this content in their entitlement certificates. (after they are regenerated and synced to clients) This call accepts multiple content IDs to demote at once, allowing us to mass demote, then trigger a cert regeneration. NOTE: This call expects the actual content IDs, *not* the ID created for each EnvironmentContent object created after a promotion. This is to help integrate with other management apps which should not have to track/lookup a specific ID for the content to demote."
+      operationId: demoteContent
+      tags:
+        - Environment
+        - Content
+      parameters:
+        - name: env_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: content
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: lazy_regen
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+      security: []
+      responses:
+        200:
+          description: Content was successfully demoted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        404:
+          description: "Content does not exist in environment: test_content"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "Content does not exist in environment: test_content"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /entitlements:
     get:
       description: Retrieves list of Entitlements. This endpoint supports paging with query parameters. For more details please visit https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin
@@ -4594,6 +4830,16 @@ components:
               minLength: 1
             value:
               type: string
+
+    ContentToPromoteDTO:
+      description: Represents the JSON input when promoting content, or updating promoted content.
+      properties:
+        environmentId:
+          type: string
+        contentId:
+          type: string
+        enabled:
+          type: boolean
 
     CdnDTO:
       description: DTO representing a Cdn
