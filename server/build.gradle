@@ -4,8 +4,12 @@ import org.yaml.snakeyaml.Yaml
 
 description = "Candlepin Server"
 
+
 apply plugin: "war"
 apply plugin: Gettext
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+
 
 // Copy the resources to the main classes directory so that the
 // persistence context is in the the same classpath entry for
@@ -138,6 +142,7 @@ task apiJar(type: Jar) {
     ].collect { "/org/candlepin/${it}/" }
     duplicatesStrategy = 'exclude'
 }
+
 
 dependencies {
     annotationProcessor libraries.hibernate_validator_ap

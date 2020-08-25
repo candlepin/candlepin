@@ -23,6 +23,8 @@ import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfigura
 import org.springframework.boot.autoconfigure.jms.artemis.ArtemisAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.PropertySource;
 
 /** Bootstrapper for Spring Boot. */
@@ -32,6 +34,7 @@ import org.springframework.context.annotation.PropertySource;
 //        DataSourceTransactionManagerAutoConfiguration.class,
 //        HibernateJpaAutoConfiguration.class})
 public class BootApplication {
+    
     public static void main(String[] args) {
         try {
             SpringApplication.run(BootApplication.class, args);
