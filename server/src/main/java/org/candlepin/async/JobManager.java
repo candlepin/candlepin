@@ -19,7 +19,7 @@ import org.candlepin.auth.JobPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.filter.LoggingFilter;
+import org.candlepin.common.logging.LoggingUtil;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
@@ -99,11 +99,6 @@ public class JobManager implements ModeChangeListener {
     private static final Logger log = LoggerFactory.getLogger(JobManager.class);
 
     private static final String UNKNOWN_OWNER_KEY = "-UNKNOWN-";
-
-    private static final String MDC_REQUEST_TYPE_KEY = "requestType";
-    private static final String MDC_REQUEST_UUID_KEY = "requestUuid";
-    private static final String MDC_JOB_KEY_KEY = "jobKey";
-    private static final String MDC_LOG_LEVEL_KEY = "logLevel";
 
     private static final String QRTZ_GROUP_CONFIG = "cp_async_config";
     private static final String QRTZ_GROUP_MANUAL = "cp_async_manual";
@@ -969,7 +964,7 @@ public class JobManager implements ModeChangeListener {
         Principal principal = this.principalProvider.get();
         job.setPrincipalName(principal != null ? principal.getName() : null);
 
-        String csid = MDC.get(LoggingFilter.CSID_KEY);
+        String csid = MDC.get(LoggingUtil.MDC_CSID_KEY);
         job.setCorrelationId(csid != null && !csid.isEmpty() ? csid : null);
 
         // Set logging configuration...
@@ -1357,9 +1352,9 @@ public class JobManager implements ModeChangeListener {
         // Save MDC state
         this.mdcState.set(MDC.getCopyOfContextMap());
 
-        MDC.put(MDC_REQUEST_TYPE_KEY, "job");
-        MDC.put(MDC_REQUEST_UUID_KEY, status.getId());
-        MDC.put(MDC_JOB_KEY_KEY, status.getJobKey());
+        MDC.put(LoggingUtil.MDC_REQUEST_TYPE_KEY, "job");
+        MDC.put(LoggingUtil.MDC_REQUEST_UUID_KEY, status.getId());
+        MDC.put(LoggingUtil.MDC_JOB_KEY_KEY, status.getJobKey());
 
         // Attempt to lookup the owner
         String ownerId = status.getContextOwnerId();
@@ -1381,11 +1376,11 @@ public class JobManager implements ModeChangeListener {
 
         // If we have an owner, override whatever metadata we've set with the actual owner's key.
         if (ownerKey != null) {
-            MDC.put(LoggingFilter.OWNER_KEY, ownerKey);
+            MDC.put(LoggingUtil.MDC_OWNER_KEY, ownerKey);
         }
 
         // Inject the correlation ID
-        MDC.put(LoggingFilter.CSID_KEY, status.getCorrelationId());
+        MDC.put(LoggingUtil.MDC_CSID_KEY, status.getCorrelationId());
 
         // Set our logging level according to the following:
         // - If the job has an explicit log level set, use that
@@ -1393,10 +1388,10 @@ public class JobManager implements ModeChangeListener {
         String jobLogLevel = status.getLogLevel();
 
         if (jobLogLevel != null && !jobLogLevel.isEmpty()) {
-            MDC.put(MDC_LOG_LEVEL_KEY, jobLogLevel);
+            MDC.put(LoggingUtil.MDC_LOG_LEVEL_KEY, jobLogLevel);
         }
         else if (ownerLogLevel != null && !ownerLogLevel.isEmpty()) {
-            MDC.put(MDC_LOG_LEVEL_KEY, ownerLogLevel);
+            MDC.put(LoggingUtil.MDC_LOG_LEVEL_KEY, ownerLogLevel);
         }
 
         // Setup and inject the principal

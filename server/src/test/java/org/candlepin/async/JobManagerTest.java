@@ -49,7 +49,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.common.config.Configuration;
-import org.candlepin.common.filter.LoggingFilter;
+import org.candlepin.common.logging.LoggingUtil;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.mode.CandlepinModeManager;
@@ -459,10 +459,10 @@ public class JobManagerTest {
         assertEquals(expectedLogLevel, mdcCapture.get("logLevel"));
 
         if (owner != null) {
-            assertEquals(owner.getKey(), mdcCapture.get(LoggingFilter.OWNER_KEY));
+            assertEquals(owner.getKey(), mdcCapture.get(LoggingUtil.MDC_OWNER_KEY));
         }
         else {
-            assertNull(mdcCapture.get(LoggingFilter.OWNER_KEY));
+            assertNull(mdcCapture.get(LoggingUtil.MDC_OWNER_KEY));
         }
     }
 
