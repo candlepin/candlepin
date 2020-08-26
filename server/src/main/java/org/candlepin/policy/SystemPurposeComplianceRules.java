@@ -198,7 +198,11 @@ public class SystemPurposeComplianceRules {
                 if (StringUtils.isNotEmpty(preferredSla) &&
                     product.hasAttribute(Product.Attributes.SUPPORT_LEVEL)) {
                     String sla = product.getAttributeValue(Product.Attributes.SUPPORT_LEVEL);
-                    if (sla.equalsIgnoreCase(preferredSla)) {
+                    //TODO: This is a short term fix for bug 1858167. Added a condition to ignore
+                    // Syspurpose status for entitlement which has SLA exempt as true
+                    boolean slaExempt = Boolean.parseBoolean(product
+                        .getAttributeValue(Product.Attributes.SUPPORT_LEVEL_EXEMPT));
+                    if (!slaExempt && sla.equalsIgnoreCase(preferredSla)) {
                         status.addCompliantSLA(sla, entitlement);
                     }
                 }

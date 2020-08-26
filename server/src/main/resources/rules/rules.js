@@ -1,4 +1,4 @@
-// Version: 5.36.1
+// Version: 5.36.2
 
 /*
  * Default Candlepin rule set.
@@ -506,20 +506,25 @@ function get_pool_priority(pool, consumer) {
         var null_rule_score = 0;
         var mismatch_rule_score = 0;
 
-        log.debug("Evaluating attribute {} with weight {}", attr, attrs[attr]);
-        if (unsatisfiedSet.length === 0 && poolSet.length === 0) {
-            null_rule_score = 0.1;
-            log.debug("NULL rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, null_rule_score]);
+        if(Utils.equalsIgnoreCase(attr, 'support_level') && Utils.equalsIgnoreCase(poolSet[0], 'Layered')) {
+            log.debug("Ignoring the pool prioritization when SLA is Layered", attr, poolSet[0]);
         }
+        else {
+            log.debug("Evaluating attribute {} with weight {}", attr, attrs[attr]);
+            if (unsatisfiedSet.length === 0 && poolSet.length === 0) {
+                null_rule_score = 0.1;
+                log.debug("NULL rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, null_rule_score]);
+            }
 
-        if (unsatisfiedSet.length > 0) {
-            match_rule_score = Utils.intersection(unsatisfiedSet, poolSet).length / unsatisfiedSet.length;
-            log.debug("MATCH rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, match_rule_score]);
-        }
+            if (unsatisfiedSet.length > 0) {
+                match_rule_score = Utils.intersection(unsatisfiedSet, poolSet).length / unsatisfiedSet.length;
+                log.debug("MATCH rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, match_rule_score]);
+            }
 
-        if (specifiedSet.length > 0 && poolSet.length > 0) {
-            mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.05;
-            log.debug("MISMATCH rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, mismatch_rule_score]);
+            if (specifiedSet.length > 0 && poolSet.length > 0) {
+                mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.05;
+                log.debug("MISMATCH rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, mismatch_rule_score]);
+            }
         }
 
         attrScore = (null_rule_score + match_rule_score + mismatch_rule_score) * attrs[attr];

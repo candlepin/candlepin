@@ -3715,4 +3715,54 @@ public class AutobindRulesTest {
         PoolQuantity q = bestPools.get(0);
         assertEquals(new Integer(2), q.getQuantity());
     }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCaseNotToConsiderLayeredSLADuringAutoAttach()
+        throws NoSuchMethodException {
+
+        Product product69 = new Product();
+        product69.setId("non-compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceLevel("Premium");
+        consumer.setUsage("Production");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null,
+            "Layered", "Production");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+        RH00009.addProvidedProduct(product69);
+
+        Product prodMCT_HA = createSysPurposeProduct(null, "RHEL Server", null,
+            "Premium", "Production");
+        Pool MCT_HA = TestUtil.createPool(owner, prodMCT_HA);
+        MCT_HA.setId("MCT_HA");
+        MCT_HA.addProvidedProduct(product69);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(RH00009);
+        pools.add(MCT_HA);
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", consumer);
+        args.put("compliance", compliance);
+
+        args.put("pool", RH00009);
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", MCT_HA);
+        Double MCT_HAPriority = jsRules.invokeMethod("get_pool_priority_test", args);
+        assertTrue("Pool MCT_HA should have a higher priority than pool RH00009.",
+            MCT_HAPriority > RH00009Priority);
+    }
 }

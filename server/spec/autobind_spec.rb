@@ -682,4 +682,56 @@ describe 'Autobind On Owner' do
     entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
     entitlements.size.should == 1
   end
+
+  it 'should be matched with consumer on auto attach when SLA of current entitlement is layered exempt' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Standard'},
+                               :owner => owner_key})
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Layered',
+                                               :support_level_exempt => 'true'},
+                               :owner => owner_key})
+
+    @cp.create_pool(owner_key, product1.id)
+    @cp.create_pool(owner_key, product2.id)
+
+    installed = [
+        {'productId' => product1.id, 'productName' => product1['name']},
+        {'productId' => product2.id, 'productName' => product2['name']}]
+
+    consumer = @cp.register(
+        random_string('system'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, 'Standard')
+
+    @cp.consume_product(product2['id'], {:uuid => consumer.uuid})
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    expect(status['status']).to eq('mismatched')
+
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+
+    # Trying to bind the without SLA exempt.
+    # Then system purpose status should be match.
+
+    entitlements.each do |ent|
+      @cp.unbind_entitlement(ent.id, {:uuid => consumer.uuid})
+    end
+
+    product3 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Standard',
+                                               :support_level_exempt => 'false'},
+                               :owner => owner_key})
+
+    @cp.create_pool(owner_key, product3.id)
+
+    @cp.consume_product(product3['id'], {:uuid => consumer.uuid})
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    expect(status['status']).to eq('matched')
+
+  end
+
 end
