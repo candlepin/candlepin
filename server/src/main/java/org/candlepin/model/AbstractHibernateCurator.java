@@ -318,9 +318,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return c.list();
     }
 
-    private List<E> loadPageData(Root<?> root, CriteriaQuery<E> criteria, PageRequest pageRequest) {
-        criteria.orderBy(createPagingOrder(root, pageRequest));
-
+    private List<E> loadPageData(CriteriaQuery<E> criteria, PageRequest pageRequest) {
         TypedQuery<E> query = this.entityManager.get().createQuery(criteria);
         if (pageRequest.isPaging()) {
             query.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
@@ -602,13 +600,14 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     @Transactional
-    public Page<List<E>> listByCriteria(Root<E> root, CriteriaQuery<E> criteria, PageRequest pageRequest) {
+    public Page<List<E>> listByCriteria(Root<E> root, CriteriaQuery<E> criteria, PageRequest pageRequest,
+        int maxRecords) {
         Page<List<E>> page = new Page<>();
         if (pageRequest != null) {
             criteria.orderBy(createPagingOrder(root, pageRequest));
             // TODO page should store long
-            page.setMaxRecords(this.findRowCount().intValue());
-            page.setPageData(loadPageData(root, criteria, pageRequest));
+            page.setMaxRecords(maxRecords);
+            page.setPageData(loadPageData(criteria, pageRequest));
             page.setPageRequest(pageRequest);
         }
         else {

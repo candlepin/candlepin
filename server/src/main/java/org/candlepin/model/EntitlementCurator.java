@@ -88,6 +88,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     // TODO: handles addition of new entitlements only atm!
+
     /**
      * @param entitlements entitlements to update
      * @return updated entitlements.
@@ -109,7 +110,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @SuppressWarnings("checkstyle:indentation")
     private List<Predicate> createCriteriaFromFilters(
         Root<Entitlement> root,
-        CriteriaQuery<Entitlement> query,
+        CriteriaQuery<?> query,
         EntitlementFilterBuilder filterBuilder) {
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
         Join<Entitlement, Pool> pool = root.join(Entitlement_.pool);
@@ -234,7 +235,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     private Predicate addAttributeFilterSubquery(
-        CriteriaQuery<Entitlement> query, String key, Collection<String> values,
+        CriteriaQuery<?> query, String key, Collection<String> values,
         Join<Entitlement, Pool> pool, Join<Pool, Product> product) {
 
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
@@ -245,7 +246,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     private Predicate poolAttributeFilterSubquery(
-        CriteriaQuery<Entitlement> query,
+        CriteriaQuery<?> query,
         String key, Collection<String> values, Join<Entitlement, Pool> parentPool) {
 
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
@@ -282,7 +283,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     private Predicate productAttributeFilterSubquery(
-        CriteriaQuery<Entitlement> query, String key, Collection<String> values,
+        CriteriaQuery<?> query, String key, Collection<String> values,
         Join<Pool, Product> parentProduct, Join<Entitlement, Pool> pool) {
 
         CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
@@ -321,7 +322,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     private Predicate addProductAttributeFilterSubquery(
-        CriteriaQuery<Entitlement> query,
+        CriteriaQuery<?> query,
         Path<String> poolId,
         Join<Pool, Product> parentProduct,
         String key, Collection<String> values) {
@@ -504,7 +505,23 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         query.distinct(true);
         query.where(toArray(criteria));
-        return listByCriteria(root, query, pageRequest);
+        return listByCriteria(root, query, pageRequest, countMatchesByFilters(object, objectType, filters));
+    }
+
+    private int countMatchesByFilters(AbstractHibernateObject<?> object, String objectType,
+        EntitlementFilterBuilder filters) {
+        CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
+        CriteriaQuery<Long> query = cb.createQuery(Long.class);
+        Root<Entitlement> root = query.from(Entitlement.class);
+        List<Predicate> criteria = this.createCriteriaFromFilters(root, query, filters);
+        if (object != null) {
+            criteria.add(cb.equal(root.get(objectType), object));
+        }
+
+        query.distinct(true);
+        query.select(cb.count(root));
+        query.where(toArray(criteria));
+        return this.entityManager.get().createQuery(query).getSingleResult().intValue();
     }
 
     public CandlepinQuery<Entitlement> listByOwner(Owner owner) {
@@ -776,23 +793,41 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     @Transactional
     private Page<List<Entitlement>> listByProduct(
         AbstractHibernateObject object, String objectType, String productId, PageRequest pageRequest) {
-
         CriteriaBuilder builder = this.entityManager.get().getCriteriaBuilder();
 
         CriteriaQuery<Entitlement> entitlementQuery = builder.createQuery(Entitlement.class);
         Root<Entitlement> entitlement = entitlementQuery.from(Entitlement.class);
+        entitlementQuery.where(createListByProductCriteria(object, objectType, productId, entitlement));
+
+        return listByCriteria(entitlement, entitlementQuery, pageRequest,
+            countProducts(object, objectType, productId));
+    }
+
+    private int countProducts(
+        AbstractHibernateObject object, String objectType, String productId) {
+        CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
+
+        CriteriaQuery<Long> entitlementQuery = cb.createQuery(Long.class);
+        Root<Entitlement> entitlement = entitlementQuery.from(Entitlement.class);
+        entitlementQuery.select(cb.count(entitlement));
+        entitlementQuery.where(createListByProductCriteria(object, objectType, productId, entitlement));
+
+        return this.entityManager.get().createQuery(entitlementQuery).getSingleResult().intValue();
+    }
+
+    private Predicate createListByProductCriteria(AbstractHibernateObject object, String objectType,
+        String productId, Root<Entitlement> entitlement) {
+        CriteriaBuilder cb = this.entityManager.get().getCriteriaBuilder();
 
         Join<Entitlement, Pool> pool = entitlement.join(Entitlement_.pool);
         Join<Pool, Product> product = pool.join(Pool_.product);
         Join<Pool, Product> providedProducts = pool.join(Pool_.providedProducts, JoinType.LEFT);
 
-        entitlementQuery.where(builder.and(
-            builder.equal(entitlement.get(objectType), object),
-            builder.greaterThanOrEqualTo(pool.get(Pool_.endDate), new Date()),
-            builder.or(builder.equal(product.get(Product_.id), productId),
-            builder.equal(providedProducts.get(Product_.id), productId))));
-
-        return listByCriteria(entitlement, entitlementQuery, pageRequest);
+        return cb.and(
+            cb.equal(entitlement.get(objectType), object),
+            cb.greaterThanOrEqualTo(pool.get(Pool_.endDate), new Date()),
+            cb.or(cb.equal(product.get(Product_.id), productId),
+                cb.equal(providedProducts.get(Product_.id), productId)));
     }
 
     /**
@@ -911,7 +946,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Entitlement findByCertificateSerial(Long serial) {
         return (Entitlement) currentSession().createCriteria(Entitlement.class)
             .createCriteria("certificates")
-                .add(Restrictions.eq("serial.id", serial))
+            .add(Restrictions.eq("serial.id", serial))
             .uniqueResult();
     }
 
