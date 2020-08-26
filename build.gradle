@@ -116,6 +116,7 @@ ext.libraries = [
         "org.springframework.guice:spring-guice",
         "org.springframework.boot:spring-boot-starter-data-jpa",
         "org.springframework.boot:spring-boot-starter-validation",
+        //"org.springframework.boot:spring-boot-starter-log4j2",
     ],
     liquibase: "org.liquibase:liquibase-core",
     liquibase_slf4j: "com.mattbertolini:liquibase-slf4j",
@@ -169,7 +170,6 @@ allprojects {
             // See https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies to
             // get listings of the contents of this BOM
             mavenBom "org.springframework.boot:spring-boot-dependencies:$versions.spring_boot_version"
-//            mavenBom "org.springframework.data:spring-data-releasetrain:$versions.spring_data_releasetrain"
         }
         dependencies {
             dependency group: 'aopalliance', name: 'aopalliance', version: '1.0'
@@ -352,6 +352,11 @@ subprojects {
         // Temporary repo, which stores jss 4.4.6
         maven { url "https://barnabycourt.fedorapeople.org/repo/candlepin/" }
     }
+}
+
+/* TODO: Sring-guice below lines need to be in build.gradle file */
+configurations {
+    compile.exclude module: 'spring-boot-starter-logging'
 }
 
 project(":api") {

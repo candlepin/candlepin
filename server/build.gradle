@@ -21,6 +21,10 @@ gettext {
     keys_project_dir = "${project.rootDir}/common"
 }
 
+configurations {
+    compile.exclude module: 'spring-boot-starter-logging'
+}
+
 // substitute the version & release in the version.properties used by the status resource at runtime
 processResources {
     from("src/main/resources") {
@@ -90,6 +94,11 @@ war {
         into("META-INF")
     }
 }
+
+//tasks.withType(JavaExec) {
+//        environment('LD_LIBRARY_PATH', './usr/lib64/jss/libjss4.so')
+//        classpath = files("./usr/lib64/jss/9libjss4.so","server/build/libs/candlepin-3.1.11.jar")
+//    }
 
 task rspec(type: Rspec)
 
