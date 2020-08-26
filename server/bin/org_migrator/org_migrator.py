@@ -64,10 +64,12 @@ def list_orgs(db):
 
 def jsonify(data):
     def data_converter(obj):
-        if isinstance(obj, (bytearray, memoryview)):
+        if isinstance(obj, (bytearray, buffer, memoryview)):
             return binascii.b2a_base64(obj)
         if isinstance(obj, datetime.datetime):
             return str(obj)
+
+        raise TypeError("Unexpected type: %s" % (type(obj)))
 
     return json.dumps(data, default=data_converter)
 
@@ -926,7 +928,7 @@ def main():
                 log.error("No such org: %s", args[0])
 
         elif options.act_list:
-            print(f"Available orgs: {list_orgs(db)}")
+            print("Available orgs: %s" % (list_orgs(db)))
 
     finally:
         if db is not None:
