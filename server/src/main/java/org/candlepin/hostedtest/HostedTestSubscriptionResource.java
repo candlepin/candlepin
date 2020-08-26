@@ -193,6 +193,10 @@ public class HostedTestSubscriptionResource {
             subscription.setId(this.idGenerator.generateId());
         }
 
+        if (this.adapter.getSubscription(subscription.getId()) != null) {
+            throw new ConflictException("subscription already exists: " + subscription.getId());
+        }
+
         // Create the subobjects first
         this.createSubscriptionObjects(subscription);
 

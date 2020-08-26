@@ -287,7 +287,7 @@ module HostedTest
 
 
 
-def create_upstream_subscription(subscription_id, owner_key, product_id, params = {})
+  def create_upstream_subscription(subscription_id, owner_key, product_id, params = {})
     start_date = params.delete(:start_date) || Date.today
     end_date = params.delete(:end_date) || start_date + 365
 
@@ -477,7 +477,5 @@ def create_upstream_subscription(subscription_id, owner_key, product_id, params 
   def remove_content_from_product_upstream(product_id, content_id)
     @cp.delete("/hostedtest/products/#{product_id}/content/#{content_id}")
   end
-
-
 
 end

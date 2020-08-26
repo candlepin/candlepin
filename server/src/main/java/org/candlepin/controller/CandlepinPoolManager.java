@@ -234,7 +234,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // If trace output is enabled, dump some JSON representing the subscriptions we received so
         // we can simulate this in a testing environment.
-        if (log.isTraceEnabled() || "TRACE".equalsIgnoreCase(owner.getLogLevel())) {
+        if (log.isTraceEnabled()) {
             try {
                 ObjectMapper mapper = this.jsonProvider
                     .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
