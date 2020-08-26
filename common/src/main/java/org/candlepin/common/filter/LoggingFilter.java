@@ -14,6 +14,8 @@
  */
 package org.candlepin.common.filter;
 
+import org.candlepin.common.logging.LoggingUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -45,12 +47,8 @@ public class LoggingFilter implements Filter {
 
     private static Logger log = LoggerFactory.getLogger(LoggingFilter.class);
 
-    public static final String CSID_KEY = "csid";
     private static final int CSID_MAX_LENGTH = 40;
     private static final Pattern CSID_REGEX = Pattern.compile("^([a-zA-Z0-9-]){1,}$");
-
-    /** The metadata key used to display the owner's key or display name */
-    public static final String OWNER_KEY = "org"; // This value must match that set in logback.xml
 
     private String customHeaderName;
 
@@ -78,9 +76,9 @@ public class LoggingFilter implements Filter {
         try {
             // Generate a UUID for this request and store in the thread local MDC.
             // Will be logged with every request if the ConversionPattern uses it.
-            MDC.put("requestType", "req");
+            MDC.put(LoggingUtil.MDC_REQUEST_TYPE_KEY, "req");
             String requestUUID = UUID.randomUUID().toString();
-            MDC.put("requestUuid", requestUUID);
+            MDC.put(LoggingUtil.MDC_REQUEST_UUID_KEY, requestUUID);
 
             String correlationId = null;
 
@@ -100,7 +98,7 @@ public class LoggingFilter implements Filter {
                             correlationId, CSID_MAX_LENGTH, CSID_MAX_LENGTH);
                         correlationId = correlationId.substring(0, CSID_MAX_LENGTH);
                     }
-                    MDC.put(CSID_KEY, correlationId);
+                    MDC.put(LoggingUtil.MDC_CSID_KEY, correlationId);
                 }
                 else {
                     log.warn("Correlation Id must consist of alphanumeric characters or hypens");

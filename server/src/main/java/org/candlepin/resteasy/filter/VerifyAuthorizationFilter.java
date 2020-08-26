@@ -20,6 +20,7 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.common.logging.LoggingUtil;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Persisted;
 import org.candlepin.resteasy.AnnotationLocator;
@@ -233,10 +234,10 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
         }
 
         if (hasAccess && owner != null) {
-            MDC.put("org", owner.getKey());
+            MDC.put(LoggingUtil.MDC_OWNER_KEY, owner.getKey());
 
             if (owner.getLogLevel() != null) {
-                MDC.put("orgLogLevel", owner.getLogLevel());
+                MDC.put(LoggingUtil.MDC_LOG_LEVEL_KEY, owner.getLogLevel());
             }
         }
 

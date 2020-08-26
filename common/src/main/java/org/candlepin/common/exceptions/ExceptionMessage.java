@@ -14,6 +14,8 @@
  */
 package org.candlepin.common.exceptions;
 
+import org.candlepin.common.logging.LoggingUtil;
+
 import org.slf4j.MDC;
 
 import java.io.Serializable;
@@ -61,17 +63,15 @@ public class ExceptionMessage implements Serializable {
     }
 
     /**
-     * Pulls the request UUID from the log4j MDC if possible, and sets them
-     * for return to the client.
+     * Pulls the request UUID from the log4j MDC if possible, and sets them for return to the client.
      *
      * Doesn't include the requestType, as I believe we can assume it's an HTTP request
      * and not a job, if this exception is being used.
      */
     private void setRequestUuid() {
-        if (MDC.get("requestUuid") != null) {
-            this.requestUuid = (String) MDC.get("requestUuid");
+        if (MDC.get(LoggingUtil.MDC_REQUEST_UUID_KEY) != null) {
+            this.requestUuid = (String) MDC.get(LoggingUtil.MDC_REQUEST_UUID_KEY);
         }
-
     }
 
     public String toString() {
