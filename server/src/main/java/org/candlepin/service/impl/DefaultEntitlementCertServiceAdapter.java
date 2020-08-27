@@ -348,7 +348,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             result.addAll(extensionUtil.productExtensions(prod));
 
             Set<ProductContent> filteredContent = extensionUtil.filterProductContent(
-                prod, consumer, promotedContent, enableEnvironmentFiltering, entitledProductIds, false);
+                prod, consumer, promotedContent, enableEnvironmentFiltering, entitledProductIds,
+                consumer.getOwner().isContentAccessEnabled());
 
             filteredContent = extensionUtil.filterContentByContentArch(filteredContent,
                 consumer, prod);
