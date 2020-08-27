@@ -1,20 +1,22 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2020. #zanata
+# Julien Humbert <julroy67@gmail.com>, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-08-05 14:41+0200\n"
-"PO-Revision-Date: 2020-08-05 08:08-0400\n"
-"Last-Translator: Nikos Moumoulidis <nmoumoul@redhat.com>\n"
-"Language-Team: French\n"
+"PO-Revision-Date: 2020-08-28 02:29+0000\n"
+"Last-Translator: Julien Humbert <julroy67@gmail.com>\n"
+"Language-Team: French <https://translate.fedoraproject.org/projects/"
+"candlepin/candlepin/fr/>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1)\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 4.2.1\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -734,7 +736,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
 #, java-format
 msgid "Unable to attach pool with ID \"{1}\".: {0}."
-msgstr "Impossible d’attacher le pool ayant comme ID « {1} ».: {0}."
+msgstr "Impossible d’attacher le pool ayant comme ID « {1} » : {0}."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:193
 #, java-format
@@ -763,7 +765,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:201
 #, java-format
 msgid "Unable to attach subscription for the product \"{1}\": {0}."
-msgstr "Impossible d’attacher un abonnement pour le produit « {1} »: {0}."
+msgstr "Impossible d’attacher un abonnement pour le produit « {1} » : {0}."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:209
 #, java-format
@@ -786,8 +788,8 @@ msgstr ""
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
 msgstr ""
-"Impossible d’ajuster la quantité pour le droit d’accès ayant comme id "
-"« {1} »: {0}"
+"Impossible d’ajuster la quantité pour le droit d’accès ayant comme id « {1} »"
+" : {0}"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyContentOverrideResource.java:64
 msgid "activation key ID is null or empty"
@@ -1200,7 +1202,7 @@ msgstr "La valeur de la quantité doit être supérieure à 0."
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:280
 #, java-format
 msgid "Unable to find upstream certificate for entitlement: {0}"
-msgstr "Certificat de droit d’accès en amont introuvable: {0}"
+msgstr "Certificat de droit d’accès en amont introuvable : {0}"
 
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:353
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:359
@@ -1324,6 +1326,8 @@ msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
 msgstr ""
+"Ce terminal ne permet pas de renvoyer plus de {0} résultats à la fois, "
+"veuillez utiliser la pagination."
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:272
 #: server/src/main/java/org/candlepin/resource/JobResource.java:300
@@ -1370,8 +1374,8 @@ msgstr "États de la tâche inconnus : {0}"
 #, java-format
 msgid "Invalid date range; start date occurs after the end date: {0} > {1}"
 msgstr ""
-"Plage de dates non valid; la date de commencement est postérieure à la date "
-"de complétion : {0} > {1}"
+"Plage de dates non valide ; la date de commencement est postérieure à la "
+"date de complétion : {0} > {1}"
 
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:127
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:139
