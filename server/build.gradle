@@ -139,6 +139,12 @@ task apiJar(type: Jar) {
     duplicatesStrategy = 'exclude'
 }
 
+tasks.withType(JavaCompile) {
+    options.annotationProcessorGeneratedSourcesDirectory = file("${buildDir}/generated/src/gen/java")
+}
+
+sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/gen/java", "src/main/java"]
+
 dependencies {
     annotationProcessor libraries.hibernate_validator_ap
 
@@ -193,10 +199,6 @@ dependencies {
     testRuntime "org.hsqldb:hsqldb"
 
     annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.18.Final'
-}
-
-tasks.withType(JavaCompile) {
-    options.annotationProcessorGeneratedSourcesDirectory = file("src/main/generated/")
 }
 
 task pom {
