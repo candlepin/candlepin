@@ -33,9 +33,6 @@ import org.candlepin.service.model.UserInfo;
 
 import com.google.inject.Inject;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.Authorization;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
@@ -45,15 +42,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.ws.rs.Path;
-
 
 
 /**
  * UserResource
  */
-@Path("/users")
-@Api(value = "users", authorizations = { @Authorization("basic") })
 public class UserResource implements UsersApi {
 
     private final UserServiceAdapter userService;
