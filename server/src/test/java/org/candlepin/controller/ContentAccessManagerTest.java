@@ -40,10 +40,10 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerEnvContentAccess;
 import org.candlepin.model.OwnerEnvContentAccessCurator;
+import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.pki.CertificateReader;
@@ -81,7 +81,6 @@ import java.util.Map;
 import java.util.Set;
 
 
-
 /**
  * Test suite for the ContentAccessManager class
  */
@@ -99,11 +98,11 @@ public class ContentAccessManagerTest {
     @Mock private ConsumerCurator mockConsumerCurator;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private ContentAccessCertificateCurator mockContentAccessCertCurator;
-    @Mock private OwnerContentCurator mockOwnerContentCurator;
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private OwnerEnvContentAccessCurator mockOwnerEnvContentAccessCurator;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private EntitlementCurator mockEntitlementCurator;
+    @Mock private OwnerProductCurator mockOwnerProductCurator;
     private PKIUtility pkiUtility;
     private ObjectMapper objMapper;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
@@ -162,10 +161,10 @@ public class ContentAccessManagerTest {
     private ContentAccessManager createManager() {
         return new ContentAccessManager(
             this.config, this.pkiUtility, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
-            this.mockKeyPairCurator, this.mockCertSerialCurator, this.mockOwnerContentCurator,
-            this.mockOwnerCurator, this.mockOwnerEnvContentAccessCurator, this.mockConsumerCurator,
+            this.mockKeyPairCurator, this.mockCertSerialCurator, this.mockOwnerCurator,
+            this.mockOwnerEnvContentAccessCurator, this.mockConsumerCurator,
             this.mockConsumerTypeCurator, this.mockEnvironmentCurator, this.mockContentAccessCertCurator,
-            this.mockEventSink);
+            this.mockOwnerProductCurator, this.mockEventSink);
     }
 
     private Owner mockOwner() {
@@ -210,24 +209,22 @@ public class ContentAccessManagerTest {
         content.setMetadataExpiration(3200L);
         content.setRequiredTags("TAG1,TAG2");
 
-        List<Content> contentList = Arrays.asList(content);
-
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        doReturn(contentList).when(cqmock).list();
-        doAnswer(iom -> contentList.iterator()).when(cqmock).iterator();
-
-        doReturn(cqmock).when(this.mockOwnerContentCurator).getContentByOwner(eq(owner));
-
         return content;
     }
 
-    private Product mockProduct(Content content) {
+    private Product mockProduct(Owner owner, Content content) {
         Product product = new Product("test_product_id", "test_product", null);
         product.setAttribute(Product.Attributes.VERSION, "version");
         product.setAttribute(Product.Attributes.VARIANT, "variant");
         product.setAttribute(Product.Attributes.TYPE, "SVC");
         product.setAttribute(Product.Attributes.ARCHITECTURE, "x86_64");
         product.addContent(content, false);
+        List<Product> productList = Arrays.asList(product);
+
+        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        doReturn(productList).when(cqmock).list();
+        doAnswer(iom -> productList.iterator()).when(cqmock).iterator();
+        doReturn(cqmock).when(this.mockOwnerProductCurator).getProductsByOwner(eq(owner));
 
         return product;
     }
@@ -536,7 +533,7 @@ public class ContentAccessManagerTest {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
-        Product product = this.mockProduct(content);
+        Product product = this.mockProduct(owner, content);
         Pool pool = this.mockPool(product);
         Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
 
@@ -556,7 +553,7 @@ public class ContentAccessManagerTest {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
-        Product product = this.mockProduct(content);
+        Product product = this.mockProduct(owner, content);
         Pool pool = this.mockPool(product);
         Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
 
@@ -575,7 +572,7 @@ public class ContentAccessManagerTest {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
-        Product product = this.mockProduct(content);
+        Product product = this.mockProduct(owner, content);
         Pool pool = this.mockPool(product);
         Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
 
@@ -595,7 +592,7 @@ public class ContentAccessManagerTest {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
-        Product product = this.mockProduct(content);
+        Product product = this.mockProduct(owner, content);
         Pool pool = this.mockPool(product);
         Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
 
@@ -617,7 +614,7 @@ public class ContentAccessManagerTest {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
-        Product product = this.mockProduct(content);
+        Product product = this.mockProduct(owner, content);
         Pool pool = this.mockPool(product);
         Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
         Environment environment = this.mockEnvironment(owner, consumer, content);
@@ -640,7 +637,7 @@ public class ContentAccessManagerTest {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
-        Product product = this.mockProduct(content);
+        Product product = this.mockProduct(owner, content);
         Pool pool = this.mockPool(product);
         Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
         Environment environment = this.mockEnvironment(owner, consumer, content);
