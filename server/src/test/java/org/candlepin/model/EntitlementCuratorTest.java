@@ -51,8 +51,6 @@ import javax.inject.Inject;
 public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Inject private ModifierTestDataGenerator modifierData;
 
-    private Entitlement ent1modif;
-    private Entitlement ent2modif;
     private Entitlement secondEntitlement;
     private Entitlement firstEntitlement;
     private EntitlementCertificate firstCertificate;
@@ -179,7 +177,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement e2 = TestUtil.createEntitlement(e1.getOwner(), e1.getConsumer(), e1.getPool(), null);
         e2.getCertificates().addAll(e1.getCertificates());
         e2.setId(e1.getId());
-        assertTrue(e1.equals(e2));
+        assertEquals(e2, e1);
         assertEquals(0, e1.compareTo(e2));
     }
 
@@ -313,110 +311,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testListByConsumerAndProduct() {
-        PageRequest req = createPageRequest();
-        Product product = TestUtil.createProduct();
-        productCurator.create(product);
-
-        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
-        poolCurator.create(pool);
-
-        for (int i = 0; i < 10; i++) {
-            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-            Entitlement ent = createEntitlement(owner, consumer, pool, cert);
-            entitlementCurator.create(ent);
-        }
-
-        Page<List<Entitlement>> page =
-            entitlementCurator.listByConsumerAndProduct(consumer, product.getId(), req);
-        assertEquals(Integer.valueOf(10), page.getMaxRecords());
-
-        List<Entitlement> ents = page.getPageData();
-        assertEquals(10, ents.size());
-
-        // Make sure we have the real PageRequest, not the dummy one we send in
-        // with the order and sortBy fields.
-        assertEquals(req, page.getPageRequest());
-
-        // Check that we've sorted ascending on the id
-        for (int i = 0; i < ents.size(); i++) {
-            if (i < ents.size() - 1) {
-                assertTrue(ents.get(i).getId().compareTo(ents.get(i + 1).getId()) < 1);
-            }
-        }
-    }
-
-    @Test
-    public void testListByConsumerAndProductWithoutPaging() {
-        Product product = TestUtil.createProduct();
-        productCurator.create(product);
-
-        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
-        poolCurator.create(pool);
-
-        for (int i = 0; i < 10; i++) {
-            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-            Entitlement ent = createEntitlement(owner, consumer, pool, cert);
-            entitlementCurator.create(ent);
-        }
-
-        Product product2 = TestUtil.createProduct();
-        productCurator.create(product2);
-
-        Pool pool2 = createPool(owner, product2, 1L, dateSource.currentDate(), createFutureDate(1));
-        poolCurator.create(pool2);
-
-        for (int i = 0; i < 10; i++) {
-            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-            Entitlement ent2 = createEntitlement(owner, consumer, pool2, cert);
-            entitlementCurator.create(ent2);
-        }
-
-        Page<List<Entitlement>> page =
-            entitlementCurator.listByConsumerAndProduct(consumer, product.getId(), null);
-        assertEquals(Integer.valueOf(10), page.getMaxRecords());
-
-        List<Entitlement> ents = page.getPageData();
-        assertEquals(10, ents.size());
-
-        assertNull(page.getPageRequest());
-    }
-
-    @Test
-    public void testListByConsumerAndProductFiltered() {
-        PageRequest req = createPageRequest();
-
-        Product product = TestUtil.createProduct();
-        productCurator.create(product);
-
-        Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
-        poolCurator.create(pool);
-
-        for (int i = 0; i < 5; i++) {
-            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-            Entitlement ent = createEntitlement(owner, consumer, pool, cert);
-            entitlementCurator.create(ent);
-        }
-
-        Product product2 = TestUtil.createProduct();
-        productCurator.create(product2);
-
-        Pool pool2 = createPool(owner, product2, 1L, dateSource.currentDate(), createFutureDate(1));
-        poolCurator.create(pool2);
-
-        for (int i = 0; i < 5; i++) {
-            EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-            Entitlement ent = createEntitlement(owner, consumer, pool2, cert);
-            entitlementCurator.create(ent);
-        }
-
-        Page<List<Entitlement>> page =
-            entitlementCurator.listByConsumerAndProduct(consumer, product.getId(), req);
-        assertEquals(Integer.valueOf(5), page.getMaxRecords());
-        assertEquals(5, page.getPageData().size());
-    }
-
-    @Test
     public void listByConsumerExpired() {
         List<Entitlement> ents = entitlementCurator.listByConsumer(consumer);
         assertEquals(2, ents.size(), "Setup should add 2 entitlements:");
@@ -532,8 +426,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByStackIdsTest() {
         Set<String> stackingIds = new HashSet<>();
-        for (Integer i = 0; i < 4; i++) {
-            String stackingId = "test_stack_id" + i.toString();
+        for (int i = 0; i < 4; i++) {
+            String stackingId = "test_stack_id" + i;
             if (i > 0) {
                 stackingIds.add(stackingId);
             }

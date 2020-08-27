@@ -133,7 +133,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(
-            consumer, consumer.getOwnerId(), (Collection<String>) null, TestUtil.createDate(20450, 3, 2));
+            consumer, consumer.getOwnerId(), null, TestUtil.createDate(2450, 3, 2));
         assertEquals(0, results.size());
     }
 
@@ -151,12 +151,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(
-            consumer, consumer.getOwnerId(), (Collection<String>) null, TestUtil.createDate(2005, 3, 3));
+            consumer, consumer.getOwnerId(), null, TestUtil.createDate(2005, 3, 3));
         assertEquals(0, results.size());
 
         // If we specify no date filtering, the expired pool should be returned:
         results = poolCurator.listAvailableEntitlementPools(
-            consumer, consumer.getOwnerId(), (Collection<String>) null, (Date) null);
+            consumer, consumer.getOwnerId(), null, null);
 
         assertEquals(1, results.size());
     }
@@ -177,7 +177,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         ueberCertGenerator.generate(owner.getKey(), new NoAuthPrincipal());
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(
-            consumer, consumer.getOwnerId(), (Collection<String>) null, null);
+            consumer, consumer.getOwnerId(), null, null);
 
         assertEquals(1, results.size());
     }
