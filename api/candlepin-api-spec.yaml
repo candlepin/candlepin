@@ -1144,8 +1144,8 @@ paths:
 
   /environments/{env_id}/consumers:
     post:
-      description: Creates an Environment
-      operationId: createEnvironment
+      description: Creates a Consumer in an Environment
+      operationId: createConsumerInEnvironment
       tags:
         - Environment
       parameters:
@@ -1178,11 +1178,20 @@ paths:
       security: []
       responses:
         200:
-          description: Environment was successfully created.
+          description: Consumer was successfully created.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConsumerDTO'
+        404:
+          description: "No such environment: test_env"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "No such environment: test_env"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         400:
           description: Unit type must be specified.
           content:
@@ -1191,6 +1200,15 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
                 displayMessage: Unit type must be specified.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Principal is not authorized to register with organization org
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "test_principal is not authorized to register with organization test_org"
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
