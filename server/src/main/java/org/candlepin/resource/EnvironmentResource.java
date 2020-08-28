@@ -262,7 +262,7 @@ public class EnvironmentResource implements EnvironmentsApi {
 
     @Override
     @SecurityHole(noAuth = true)
-    public ConsumerDTO createEnvironment(String envId, ConsumerDTO consumer,
+    public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer,
         String userName, String ownerKey, String activationKeys) throws BadRequestException {
 
         this.validator.validateConstraints(consumer);
