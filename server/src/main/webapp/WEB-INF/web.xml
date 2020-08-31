@@ -2,7 +2,6 @@
          version="2.4">
 
     <display-name>Candlepin</display-name>
-
 <!--    <filter>-->
 <!--        <filter-name>Guice Filter</filter-name>-->
 <!--        <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>-->

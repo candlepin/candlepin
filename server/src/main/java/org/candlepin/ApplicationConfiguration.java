@@ -45,6 +45,8 @@ import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.jgroups.annotations.MBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
+import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.*;
 import org.springframework.guice.annotation.EnableGuiceModules;
 import org.springframework.transaction.annotation.EnableTransactionManagement;

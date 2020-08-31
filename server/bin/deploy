@@ -58,6 +58,7 @@ gendb() {
     evalrc $? "Liquibase command failed"
 }
 
+# TODO: Commented to test the spring-guice project
 deploy() {
   printf "\nDeploying Candlepin War File\n"
   VERSION="$(grep Version: $PROJECT_DIR/candlepin.spec.tmpl | cut --delim=' ' -f2)"
@@ -372,9 +373,10 @@ else
     DATABASE_SERVER="-Pdatabase_server=postgres"
 fi
 
+# TODO: spring-guice commented for testing
 printf "\nBuilding Candlepin\n"
-echo $(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
-$(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
+#echo $(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
+#$(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
 
 if [ "$?" -ne "0" ]; then
   err_msg "ERROR: Compile failed."
@@ -394,6 +396,7 @@ bash $SELF_DIR/gen-certs $GEN_CERTS_ARGS
 update_keystore
 
 # update server.xml
+# TODO: Commented to test the spring-guice project
 $SUDO python $PROJECT_DIR/bin/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
 
 create_var_lib_candlepin
@@ -406,6 +409,7 @@ if [ "$AUTOCONF" == "1" ]; then
 fi
 
 # deploy the webapp
+# TODO: Commented to test the spring-guice project
 deploy
 
 # Need to use newer APIs in context.xml for Tomcat 8+
@@ -421,6 +425,7 @@ eval $START
 
 START_TIME=$(date +%s)
 
+# TODO: Commented to test the spring-guice project
 printf "\nWaiting for Candlepin to start...\n"
 until curl -k -s "https://localhost:8443/candlepin/status" > /dev/null
 do
