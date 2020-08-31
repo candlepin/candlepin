@@ -198,6 +198,8 @@ dependencies {
     // Testing DB Drivers
     testRuntime "org.hsqldb:hsqldb"
 
+    compile "org.hibernate:hibernate-jpamodelgen:5.4.18.Final"
+
     annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.18.Final'
 }
 
