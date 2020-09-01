@@ -114,7 +114,6 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.policy.js.pool.PoolRules;
-import org.candlepin.resource.ActivationKeyContentOverrideResource;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.AdminResource;
 import org.candlepin.resource.CdnResource;
@@ -325,7 +324,6 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void resources() {
-        bind(ActivationKeyContentOverrideResource.class);
         bind(ActivationKeyResource.class);
         bind(AdminResource.class);
         bind(CdnResource.class);
