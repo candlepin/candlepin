@@ -9,7 +9,7 @@
   </parent>
   <groupId>org.candlepin</groupId>
   <artifactId>api</artifactId>
-  <version>3.1.18</version>
+  <version>3.1.19</version>
   <name>Candlepin API</name>
   <description>OpenAPI-based API for Candlepin</description>
   <dependencies>

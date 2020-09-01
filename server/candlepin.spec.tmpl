@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.18
+Version: 3.1.19
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,28 @@ fi
 
 #raw
 %changelog
+* Tue Sep 01 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.19-1
+- 1872357: [RFE] Filter syspurpose SLA values available to an Owner if the SLA
+  is exempt (ojanus@redhat.com)
+- Standardize upstream subscription injection tooling (crog@redhat.com)
+- Add missing jpa metamodel dependency (nmoumoul@redhat.com)
+- Reconcile pom files with build.gradle change (nmoumoul@redhat.com)
+- ENT-2455: Fix too many params for Entitlements query (ojanus@redhat.com)
+- 1868383: Honour content default for owner in SCA mode (ENT-2742)   - When
+  more than one product provides the same content with different     enablement
+  values,deduplicate them by keeping the enabled content only.
+  (prakgupt@redhat.com)
+- Made improvements to org_migrator for python2+3 compatibility
+  (crog@redhat.com)
+- Added the upstream_subscription_loader debugging tool (crog@redhat.com)
+- 1871873: Fixed an NPE during refresh when adding new derived products
+  (crog@redhat.com)
+- Standardized string keys used for modifying the logging context
+  (crog@redhat.com)
+- Migrate org_migrator to pipenv + python3 (thsimmon@redhat.com)
+- 1591315: Registration with activation keys no longer fails in SCA mode
+  (crog@redhat.com)
+
 * Wed Aug 12 2020 Nikos Moumoulidis <nmoumoul@redhat.com> 3.1.18-1
 - 1866525: Updated SCA certificate content prefixes and paths (crog@redhat.com)
 
