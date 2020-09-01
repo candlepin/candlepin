@@ -14,8 +14,12 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
@@ -30,11 +34,13 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.Injector;
@@ -64,7 +70,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     private ActivationKeyCurator mockActivationKeyCurator;
     private PoolManager mockPoolManager;
-
+    private ActivationKeyContentOverrideCurator akcoCurator;
+    private ContentOverrideValidator coValidator;
     private Owner owner;
 
     @BeforeEach
@@ -74,13 +81,16 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         this.mockActivationKeyCurator = mock(ActivationKeyCurator.class);
         this.mockPoolManager = mock(PoolManager.class);
+        this.akcoCurator = mock(ActivationKeyContentOverrideCurator.class);
+        this.coValidator = mock(ContentOverrideValidator.class);
 
         this.owner = createOwner();
     }
 
     private ActivationKeyResource buildActivationKeyResource() {
         return new ActivationKeyResource(this.mockActivationKeyCurator, this.i18n, this.mockPoolManager,
-            this.serviceLevelValidator, this.activationKeyRules, null, this.modelTranslator, null);
+            this.serviceLevelValidator, this.activationKeyRules, this.ownerProductCurator,
+            this.modelTranslator, this.validator, this.akcoCurator, this.coValidator);
     }
 
 
@@ -120,9 +130,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         key = activationKeyCurator.create(key);
         assertNotNull(key.getId());
         activationKeyResource.addPoolToKey(key.getId(), pool.getId(), 1L);
-        assertTrue(key.getPools().size() == 1);
+        assertEquals(1, key.getPools().size());
         activationKeyResource.removePoolFromKey(key.getId(), pool.getId());
-        assertTrue(key.getPools().size() == 0);
+        assertEquals(0, key.getPools().size());
     }
 
     @Test
@@ -138,7 +148,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         assertNotNull(key.getId());
 
         activationKeyResource.addPoolToKey(key.getId(), pool.getId(), 1L);
-        assertTrue(key.getPools().size() == 1);
+        assertEquals(1, key.getPools().size());
 
         ActivationKey finalKey = key;
         assertThrows(BadRequestException.class, () ->
@@ -335,7 +345,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         assertNotNull(key.getId());
         activationKeyResource.addProductIdToKey(key.getId(), product.getId());
-        assertTrue(key.getProducts().size() == 1);
+        assertEquals(1, key.getProducts().size());
         activationKeyResource.removeProductIdFromKey(key.getId(), product.getId());
         assertEquals(0, key.getProducts().size());
     }
