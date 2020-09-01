@@ -36,8 +36,6 @@ import org.springframework.context.annotation.PropertySource;
 public class BootApplication {
     
     public static void main(String[] args) {
-        String property = System.getProperty("java.library.path");
-        System.out.println(property);
         try {
             SpringApplication.run(BootApplication.class, args);
         } catch (Exception e) {

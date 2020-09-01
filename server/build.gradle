@@ -176,6 +176,7 @@ dependencies {
     implementation libraries.javax_validation
     implementation libraries.hibernate
     implementation libraries.ehcache
+    implementation files('/usr/lib/java/jss4.jar')
     compileOnly "org.mozilla:jss"
     testImplementation "org.mozilla:jss"
     implementation "ldapjdk:ldapjdk"
