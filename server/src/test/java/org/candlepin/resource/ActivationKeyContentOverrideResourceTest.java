@@ -25,13 +25,14 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
-import org.candlepin.model.Owner;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 
-import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
+import com.google.inject.Injector;
+
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,10 +46,9 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
-
+import javax.inject.Inject;
 
 
 /**
@@ -60,32 +60,22 @@ import javax.ws.rs.core.UriInfo;
 public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Mock private Principal principal;
-    @Mock private UriInfo context;
 
-    private Owner owner;
     private ActivationKey key;
 
-    private ContentOverrideValidator validator;
-    private ActivationKeyContentOverrideResource resource;
+    private ActivationKeyResource resource;
+    @Inject private Injector injector;
 
     @BeforeEach
     public void setUp() {
-        this.owner = this.createOwner();
-        this.key = this.createActivationKey(owner);
+        this.key = this.createActivationKey(this.createOwner());
 
-        MultivaluedMap<String, String> mvm = new MultivaluedMapImpl<>();
-        mvm.add("activation_key_id", key.getId());
-
-        when(this.context.getPathParameters()).thenReturn(mvm);
+        ResteasyContext.pushContext(Principal.class, principal);
 
         when(this.principal.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
             .thenReturn(true);
 
-        this.validator = new ContentOverrideValidator(this.config, this.i18n);
-
-        this.resource = new ActivationKeyContentOverrideResource(this.i18n,
-            this.activationKeyContentOverrideCurator, this.activationKeyCurator, this.validator,
-            this.modelTranslator);
+        this.resource = injector.getInstance(ActivationKeyResource.class);
     }
 
     private List<ActivationKeyContentOverride> createOverrides(ActivationKey key, int offset,
@@ -120,11 +110,19 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         return list;
     }
 
+    private List<ContentOverrideDTO> stripTimestamps(Iterable<ContentOverrideDTO> list) {
+        return stripTimestamps(StreamSupport.stream(list.spliterator(), false).collect(Collectors.toList()));
+    }
+
+    private long sizeOf(Iterable<ContentOverrideDTO> list) {
+        return StreamSupport.stream(list.spliterator(), false).count();
+    }
+
     /**
      * Compares the collections of override DTOs by converting them to generic override lists and
      * stripping their timestamps.
      */
-    private void compareOverrideDTOs(List<ContentOverrideDTO> expected, List<ContentOverrideDTO> actual) {
+    private void compareOverrideDTOs(List<ContentOverrideDTO> expected, Iterable<ContentOverrideDTO> actual) {
         assertEquals(this.stripTimestamps(expected), this.stripTimestamps(actual));
     }
 
@@ -141,26 +139,23 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
     @Test
     public void testGetOverrides() {
         List<ActivationKeyContentOverride> overrides = this.createOverrides(this.key, 1, 3);
-
         List<ContentOverrideDTO> expected = overrides.stream()
             .map(this.modelTranslator.getStreamMapper(ActivationKeyContentOverride.class,
                 ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        List<ContentOverrideDTO> actual = this.resource
-            .getContentOverrideList(context, principal)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .listActivationKeyContentOverrides(key.getId());
 
         this.compareOverrideDTOs(expected, actual);
     }
 
     @Test
     public void testGetOverridesEmptyList() {
-        List<ContentOverrideDTO> actual = this.resource
-            .getContentOverrideList(context, principal)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .listActivationKeyContentOverrides(key.getId());
 
-        assertEquals(0, actual.size());
+        assertEquals(0, sizeOf(actual));
     }
 
     @Test
@@ -177,9 +172,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
                 ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteContentOverrides(context, principal, Arrays.asList(toDeleteDTO))
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .deleteActivationKeyContentOverrides(key.getId(), Arrays.asList(toDeleteDTO));
 
         this.compareOverrideDTOs(expected, actual);
     }
@@ -197,9 +191,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
                 ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteContentOverrides(context, principal, Arrays.asList(toDeleteDTO))
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .deleteActivationKeyContentOverrides(key.getId(), Arrays.asList(toDeleteDTO));
 
         this.compareOverrideDTOs(expected, actual);
     }
@@ -208,22 +201,20 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
     public void testDeleteAllOverridesUsingEmptyList() {
         this.createOverrides(this.key, 1, 3);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteContentOverrides(context, principal, Collections.emptyList())
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .deleteActivationKeyContentOverrides(key.getId(), Collections.emptyList());
 
-        assertEquals(0, actual.size());
+        assertEquals(0, sizeOf(actual));
     }
 
     @Test
     public void testDeleteAllOverridesUsingEmptyContentLabel() {
-        List<ActivationKeyContentOverride> overrides = this.createOverrides(this.key, 1, 3);
+        this.createOverrides(this.key, 1, 3);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteContentOverrides(context, principal, Collections.emptyList())
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .deleteActivationKeyContentOverrides(key.getId(), Collections.emptyList());
 
-        assertEquals(0, actual.size());
+        assertEquals(0, sizeOf(actual));
     }
 
     @Test
@@ -238,9 +229,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .addActivationKeyContentOverrides(key.getId(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
 
@@ -252,7 +242,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        actual = this.resource.addContentOverrides(context, principal, Arrays.asList(dto)).list();
+        actual = this.resource.addActivationKeyContentOverrides(key.getId(), Arrays.asList(dto));
 
         this.compareOverrideDTOs(overrides, actual);
     }
@@ -269,9 +259,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .addActivationKeyContentOverrides(key.getId(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
 
@@ -285,7 +274,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.clear();
         overrides.add(dto);
 
-        actual = this.resource.addContentOverrides(context, principal, overrides).list();
+        actual = this.resource.addActivationKeyContentOverrides(key.getId(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
     }
@@ -302,9 +291,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .addActivationKeyContentOverrides(key.getId(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
     }
@@ -322,7 +310,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            resource.addContentOverrides(context, principal, overrides).list()
+            resource.addActivationKeyContentOverrides(key.getId(), overrides)
         );
     }
 
@@ -339,7 +327,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            resource.addContentOverrides(context, principal, overrides).list()
+            resource.addActivationKeyContentOverrides(key.getId(), overrides)
         );
     }
 
@@ -356,7 +344,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            resource.addContentOverrides(context, principal, overrides).list()
+            resource.addActivationKeyContentOverrides(key.getId(), overrides)
         );
     }
 
@@ -373,7 +361,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            resource.addContentOverrides(context, principal, overrides).list()
+            resource.addActivationKeyContentOverrides(key.getId(), overrides)
         );
     }
 
@@ -390,7 +378,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            resource.addContentOverrides(context, principal, overrides).list()
+            resource.addActivationKeyContentOverrides(key.getId(), overrides)
         );
     }
 
@@ -407,7 +395,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            resource.addContentOverrides(context, principal, overrides).list()
+            resource.addActivationKeyContentOverrides(key.getId(), overrides)
         );
     }
 
@@ -424,7 +412,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            resource.addContentOverrides(context, principal, overrides).list()
+            resource.addActivationKeyContentOverrides(key.getId(), overrides)
         );
     }
 
@@ -441,7 +429,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            resource.addContentOverrides(context, principal, overrides).list()
+            resource.addActivationKeyContentOverrides(key.getId(), overrides)
         );
     }
 
@@ -458,7 +446,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            resource.addContentOverrides(context, principal, overrides).list()
+            resource.addActivationKeyContentOverrides(key.getId(), overrides)
         );
     }
 }

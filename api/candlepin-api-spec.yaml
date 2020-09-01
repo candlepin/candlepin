@@ -152,6 +152,166 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /activation_keys/{activation_key_id}/content_overrides:
+    get:
+      description: Retrieves list of Content Overrides
+      tags:
+        - Activation Key
+        - Content Override
+      operationId: listActivationKeyContentOverrides
+      security: []
+      parameters:
+        - name: activation_key_id
+          in: path
+          description: The ID of the activation key
+          required: true
+          schema:
+            type: string
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of content overrides of the Activation Key
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        400:
+          description: ActivationKey with id test_id could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: ActivationKey with id test_id could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Adds or Updates a list of Content Overrides
+      tags:
+        - Activation Key
+        - Content Override
+      operationId: addActivationKeyContentOverrides
+      security: []
+      parameters:
+        - name: activation_key_id
+          in: path
+          description: The ID of the activation key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of the content overrides
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentOverrideDTO'
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of the created/update content overrides of the Activation Key
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        400:
+          description: ActivationKey with id test_id could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: ActivationKey with id test_id could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Deletes a list of Content Overrides
+      tags:
+        - Activation Key
+        - Content Override
+      operationId: deleteActivationKeyContentOverrides
+      security: []
+      parameters:
+        - name: activation_key_id
+          in: path
+          description: The ID of the activation key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of the content overrides
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentOverrideDTO'
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of the deleted content overrides of the Activation Key
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        400:
+          description: ActivationKey with id test_id could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: ActivationKey with id test_id could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /activation_keys/{activation_key_id}/pools:
     get:
       description: Retrieves a list of pools based on the activation key
