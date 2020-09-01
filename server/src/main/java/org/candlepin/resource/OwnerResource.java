@@ -2106,6 +2106,11 @@ public class OwnerResource {
 
         for (Product p : products) {
             for (SystemPurposeAttributeType type : SystemPurposeAttributeType.values()) {
+                boolean slaExempt = Boolean.parseBoolean(
+                    p.getAttributeValue(Product.Attributes.SUPPORT_LEVEL_EXEMPT));
+                if (type == SystemPurposeAttributeType.SERVICE_LEVEL && slaExempt) {
+                    continue;
+                }
                 String purposeValue = p.getAttributeValue(type.toString());
                 Set<String> purposes = new LinkedHashSet<>();
                 if (purposeValue != null) {

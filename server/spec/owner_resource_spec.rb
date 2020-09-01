@@ -611,7 +611,19 @@ describe 'Owner Resource' do
         :attributes => {:usage => "Development", :roles => "Server1,Server2", :addons => "addon1,addon2", :support_level => "mysla"}
       }
     )
+    product2 = create_product(random_string("p1"), random_string("Product1"),
+      {
+        :owner => owner_key,
+        :attributes => {
+            :usage => "Development",
+            :roles => "Server1,Server2",
+            :addons => "addon1,addon2",
+            :support_level_exempt => "true",
+            :support_level => "Layered"}
+      }
+    )
     create_pool_and_subscription(owner_key, product.id, 10, [], '', '', '', nil, nil, true)
+    create_pool_and_subscription(owner_key, product2.id, 10, [], '', '', '', nil, nil, true)
     res = @cp.get_owner_syspurpose(owner_key)
     expect(res["owner"]["key"]).to eq(owner_key)
     expect(res["systemPurposeAttributes"]["usage"]).to include("Development")
@@ -620,6 +632,7 @@ describe 'Owner Resource' do
     expect(res["systemPurposeAttributes"]["addons"]).to include("addon1")
     expect(res["systemPurposeAttributes"]["addons"]).to include("addon2")
     expect(res["systemPurposeAttributes"]["support_level"]).to include("mysla")
+    expect(res["systemPurposeAttributes"]["support_level"]).to_not include("Layered")
   end
 
   it 'user with owner pools permission can see system purpose of the owner products' do
