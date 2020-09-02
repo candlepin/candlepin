@@ -29,7 +29,7 @@ import javax.inject.Singleton;
  * which no provider is configured or available.
  */
 //@Singleton
-@Component
+//@Component
 public class NoopSessionFactory implements CPMSessionFactory {
 
     /**

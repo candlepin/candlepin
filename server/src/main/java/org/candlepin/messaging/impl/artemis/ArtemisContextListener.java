@@ -24,6 +24,7 @@ import com.google.inject.Injector;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
+import org.candlepin.messaging.CPMSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,16 +39,19 @@ import javax.inject.Singleton;
 /**
  * CPMContextListener implementation backed by Artemis
  */
-//@Singleton
-@Component
+//@Component
 public class ArtemisContextListener implements CPMContextListener {
     private static  Logger log = LoggerFactory.getLogger(ArtemisContextListener.class);
     @Autowired
     private Configuration config;
     private EmbeddedActiveMQ activeMQServer;
 
+    /* TODO candlepin-spring: According to the guice configuration, factory should be a instance of
+        ArtemisSessionFactory, but in Spring there is a Bean created for CPMSessionFactory which is
+        getting bind to ArtemisSessionFactory. This needs to be confirmed if it okay to have
+        factory a instance of CPMSessionFactory here. */
     @Autowired
-    private ArtemisSessionFactory factory;
+    private CPMSessionFactory factory;
     /**
      * {@inheritDoc}
      */

@@ -41,7 +41,7 @@ import javax.inject.Singleton;
  * CPMSessionFactory implementation backed by Artemis
  */
 //@Singleton
-@Component
+//@Component
 public class ArtemisSessionFactory implements CPMSessionFactory {
     private static Logger log = LoggerFactory.getLogger(ArtemisSessionFactory.class);
 

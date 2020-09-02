@@ -27,7 +27,7 @@ import javax.inject.Singleton;
  * CPMContextListener implementation which does nothing. Used for environments in which no provider
  * is configured or available.
  */
-@Singleton
+//@Singleton
 public class NoopContextListener implements CPMContextListener {
 
     /**
