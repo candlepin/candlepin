@@ -58,8 +58,14 @@ docker stack deploy -c temp-cp/docker-compose.yml load_and_dump_stack
 evalrc $? "load_and_dump_stack stack deploy was not successful."
 
 echo "============ Waiting for data to be dumped... ============ "
-retry 30 "dump.sql" test -f /tmp/cp-docker/dump.sql
-evalrc $? "dump.sql did not get dumped in time. Exiting..."
+retry 35 "dump.sql" test -f /tmp/cp-docker/dump.sql
+
+if [ "$?" -ne "0" ]; then
+  docker stack rm load_and_dump_stack
+  docker swarm leave --force
+  echo "dump.sql did not get dumped in time. Exiting..."
+  exit $1
+fi
 
 echo "============ Removing temporary stack ============ "
 docker stack rm load_and_dump_stack
