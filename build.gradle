@@ -443,6 +443,7 @@ project(":api") {
         compile 'javax.ws.rs:javax.ws.rs-api'
         compile 'io.swagger:swagger-annotations'
         compile 'javax.annotation:javax.annotation-api'
+        compile 'org.jboss.resteasy:resteasy-multipart-provider'
     }
 
     sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/gen/java"]
