@@ -405,11 +405,6 @@ msgstr "OAuth 장치 키를 가져오는 도중 오류 발생"
 msgid "User not found: {0}"
 msgstr "사용자를 찾을 수 없습니다: {0}"
 
-#: server/src/main/java/org/candlepin/bind/BindContext.java:117
-#, java-format
-msgid "Subscription pool(s) {0} do not exist."
-msgstr "서브스크립션 풀 {0}이/가 존재하지 않습니다."
-
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:306
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:56
 msgid "No owner specified, or owner lacks identifying information"
@@ -1688,11 +1683,6 @@ msgstr "{0}{1}"
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
 msgstr "연결에 사용할 수 있는 활성 키의 서브스크립션이 없습니다."
-
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:158
-#, java-format
-msgid "Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}"
-msgstr "활성키 ''{1}''에서 풀 ''{0}''에 바인딩할 수 없습니다: {2}"
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerTypeValidator.java:59
 #, java-format

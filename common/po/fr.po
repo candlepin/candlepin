@@ -408,11 +408,6 @@ msgstr "Erreur lors de l’obtention de la clé d’unité OAuth"
 msgid "User not found: {0}"
 msgstr "L’utilisateur {0} est introuvable"
 
-#: server/src/main/java/org/candlepin/bind/BindContext.java:117
-#, java-format
-msgid "Subscription pool(s) {0} do not exist."
-msgstr "Pool(s) d’abonnement) {0} non existant(s)."
-
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:306
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:56
 msgid "No owner specified, or owner lacks identifying information"
@@ -1781,13 +1776,6 @@ msgstr "{0}{1}"
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
 msgstr "Aucun abonnement lié à la clé d’activation ne peut être attaché."
-
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:158
-#, java-format
-msgid "Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}"
-msgstr ""
-"Impossible de créer la liaison au pool \"{0}\" dans la clé d’activation "
-"\"{1}\" : {2}"
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerTypeValidator.java:59
 #, java-format
