@@ -112,11 +112,6 @@ public class BindContext {
                 poolQuantities.put(pool.getId(), new PoolQuantity(pool, quantity));
                 quantities.remove(pool.getId());
             }
-
-            if (!quantities.isEmpty()) {
-                throw new IllegalArgumentException(i18n.tr("Subscription pool(s) {0} do not exist.",
-                    quantities.keySet()));
-            }
         }
         return poolQuantities;
     }
