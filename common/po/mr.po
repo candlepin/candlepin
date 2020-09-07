@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-05 14:41+0200\n"
+"POT-Creation-Date: 2020-09-07 14:04+0000\n"
 "PO-Revision-Date: 2014-11-18 12:27-0500\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Marathi <sshedmak@redhat.com>\n"
@@ -484,7 +484,7 @@ msgstr ""
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "लेबल {0} सह CDN प्रणालीवर अस्तित्वात नाही."
 
-#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:907
+#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:963
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "समवर्ती सुधारणामुळे विनंती अपयशी, कृपया पुन्हा प्रयत्न करा."
 
@@ -500,7 +500,7 @@ msgstr "UUID {0} सह प्रणाली वर्च्युअल अत
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:426
+#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:490
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:164
 #, java-format
 msgid "Product with ID \"{0}\" could not be found."
@@ -1469,12 +1469,12 @@ msgstr "एक्सपोर्ट आर्काइव्ह वाचते�
 msgid "Error storing uploaded archive for asynchronous processing."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2199
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2204
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2280
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2285
 msgid "Unknown conflict to force"
 msgstr "फोर्सकरीता अपरिचीत मतभेद"
 
@@ -1642,9 +1642,14 @@ msgstr ""
 msgid "{0}{1}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:130
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:134
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:163
+#, java-format
+msgid "Cannot bind AT ALL to pool \"{0}\" in activation key \"{1}\": {2}"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerTypeValidator.java:59
@@ -1681,16 +1686,16 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:270
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:271
 msgid "Organization"
 msgstr "संस्था"
 
-#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:272
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:273
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "{0} , id {1} सह आढळले नाही."
 
-#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:368
+#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:369
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
