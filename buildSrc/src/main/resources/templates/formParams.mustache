@@ -1,0 +1,1 @@
+{{#isFormParam}}{{^isFile}}@FormParam(value = "{{baseName}}")  {{{dataType}}} {{paramName}}{{/isFile}}{{#isFile}} MultipartInput {{paramName}}{{/isFile}}{{/isFormParam}}
