@@ -78,14 +78,18 @@ ext {
         "true".equals(project.findProperty("async_scheduler_enabled"))
 }
 
-war {
+
+bootWar {
+    mainClassName = 'org.candlepin.BootApplication'
     if (!hostedtest) {
         rootSpec.exclude("**/hostedtest/**")
     }
     manifest {
         attributes(
             "Implementation-Title": "The Candlepin Project",
-            "Copyright": "Red Hat, Inc. 2009-" + new Date().format("y")
+            "Copyright": "Red Hat, Inc. 2009-" + new Date().format("y"),
+            "Main-Class": "org.springframework.boot.loader.PropertiesLauncher",
+            "Loader-Path": "/usr/lib/java/jss4.jar,WEB-INF/lib-provided,WEB-INF/lib,WEB-INF/classes"
         )
     }
     // Copy the license file into place in the final manifest
@@ -94,11 +98,6 @@ war {
         into("META-INF")
     }
 }
-
-//tasks.withType(JavaExec) {
-//        environment('LD_LIBRARY_PATH', './usr/lib64/jss/libjss4.so')
-//        classpath = files("./usr/lib64/jss/9libjss4.so","server/build/libs/candlepin-3.1.11.jar")
-//    }
 
 task rspec(type: Rspec)
 
@@ -176,7 +175,6 @@ dependencies {
     implementation libraries.javax_validation
     implementation libraries.hibernate
     implementation libraries.ehcache
-    implementation files('/usr/lib/java/jss4.jar')
     compileOnly "org.mozilla:jss"
     testImplementation "org.mozilla:jss"
     implementation "ldapjdk:ldapjdk"
