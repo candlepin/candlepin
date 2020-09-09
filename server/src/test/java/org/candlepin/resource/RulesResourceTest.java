@@ -37,7 +37,7 @@ public class RulesResourceTest extends DatabaseTestFixture {
     public void testUpload() {
         String rulesBuffer = new String(Base64.encodeBase64String((
             TestUtil.createRulesBlob(10000).getBytes())));
-        rulesResource.upload(rulesBuffer);
+        rulesResource.uploadRules(rulesBuffer);
         Rules rules = rulesCurator.getRules();
         String expected = "" + RulesCurator.RULES_API_VERSION + "." + 10000;
         assertEquals(expected, rules.getVersion());
@@ -47,19 +47,19 @@ public class RulesResourceTest extends DatabaseTestFixture {
     public void testGet() {
         String rulesBuffer = new String(Base64.encodeBase64String((
             TestUtil.createRulesBlob(10000).getBytes())));
-        rulesResource.upload(rulesBuffer);
-        String rulesBlob = rulesResource.get();
+        rulesResource.uploadRules(rulesBuffer);
+        String rulesBlob = rulesResource.getRules();
         assertEquals(rulesBlob, rulesBuffer);
     }
 
     @Test
     public void testDelete() {
-        String origRules = rulesResource.get();
+        String origRules = rulesResource.getRules();
         String rulesBuffer = new String(Base64.encodeBase64String((
             TestUtil.createRulesBlob(10000).getBytes())));
-        rulesResource.upload(rulesBuffer);
-        rulesResource.delete();
-        String rulesAfterDelete = rulesResource.get();
+        rulesResource.uploadRules(rulesBuffer);
+        rulesResource.deleteRules();
+        String rulesAfterDelete = rulesResource.getRules();
         assertEquals(rulesAfterDelete, origRules);
     }
 }
