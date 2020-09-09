@@ -28,7 +28,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.PropertySource;
 
 /** Bootstrapper for Spring Boot. */
-@SpringBootApplication(exclude = { ArtemisAutoConfiguration.class, ActiveMQAutoConfiguration.class, LiquibaseAutoConfiguration.class })
+@SpringBootApplication(exclude = { ArtemisAutoConfiguration.class, ActiveMQAutoConfiguration.class })
 //        ,
 //        DataSourceAutoConfiguration.class,
 //        DataSourceTransactionManagerAutoConfiguration.class,

@@ -17,6 +17,7 @@ package org.candlepin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
+import liquibase.integration.spring.SpringLiquibase;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
@@ -45,6 +46,7 @@ import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.jgroups.annotations.MBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
 import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.*;
@@ -55,6 +57,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.xnap.commons.i18n.I18n;
 
 import javax.servlet.ServletContext;
+import javax.sql.DataSource;
 import java.io.File;
 import java.nio.charset.Charset;
 
@@ -66,7 +69,7 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 @EnableAspectJAutoProxy
 @EnableTransactionManagement
 @EnableWebMvc
-@PropertySource("classpath:application.properties")
+@PropertySource({"classpath:application.properties","file:/etc/candlepin/candlepin.conf"})
 public class ApplicationConfiguration  implements WebMvcConfigurer  {
     @Autowired
     private ServletContext servletContext;
@@ -74,10 +77,15 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
     @Autowired
     private ObjectMapper objectMapper;
 
+//    @Autowired
+//    private DataSource dataSource;
+
     private org.candlepin.common.config.Configuration config;
+
 
     @Bean
     public org.candlepin.common.config.Configuration configuration() {
+
         try {
             //log.info("Candlepin reading configuration.");
             config = readConfiguration(servletContext);

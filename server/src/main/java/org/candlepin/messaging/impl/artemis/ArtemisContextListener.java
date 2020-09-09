@@ -18,9 +18,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMException;
-
-import com.google.inject.Injector;
-
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
@@ -28,13 +25,8 @@ import org.candlepin.messaging.CPMSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.io.File;
-
-import javax.inject.Singleton;
-
-
 
 /**
  * CPMContextListener implementation backed by Artemis
@@ -52,6 +44,8 @@ public class ArtemisContextListener implements CPMContextListener {
         factory a instance of CPMSessionFactory here. */
     @Autowired
     private CPMSessionFactory factory;
+
+
     /**
      * {@inheritDoc}
      */

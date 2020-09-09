@@ -215,7 +215,7 @@ allprojects {
             dependency group: 'org.hsqldb', name: 'hsqldb', version: '2.3.2'
             dependency group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
             dependency group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '5.3'
-            dependency group: 'org.liquibase', name: 'liquibase-core', version: '3.1.0'
+            dependency group: 'org.liquibase', name: 'liquibase-core', version: '3.8.9'
             dependency group: 'com.mattbertolini', name: 'liquibase-slf4j', version: '1.2.1'
             dependency group: 'org.eclipse.microprofile.config', name: 'microprofile-config-api', version:'1.3'
             dependency group: 'com.mchange', name: 'c3p0', version: '0.9.5.4'
