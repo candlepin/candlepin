@@ -3895,6 +3895,104 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /rules:
+    get:
+      description: Retrieves the Rules
+      tags:
+        - Rules
+      operationId: getRules
+      security: []
+      responses:
+        200:
+          description: Returns the rules
+          content:
+            text/plain:
+              schema:
+                type: string
+        404:
+          description: No rules file found in the database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: No rules file found in the database
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        503:
+          description: Could not read rules file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Could not read rules file
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes the Rules, deletes any uploaded rules, uses bundled rules instead
+      tags:
+        - Rules
+      operationId: deleteRules
+      security: []
+      responses:
+        204:
+          description: Rules deleted successfully
+        404:
+          description: No rules file found in the database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: No rules file found in the database
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: Uploads the Rules and returns a copy of the uploaded rules
+      tags:
+        - Rules
+      operationId: uploadRules
+      requestBody:
+        description: Rules to be uploaded
+        content:
+          text/plain:
+            schema:
+              type: string
+      security: []
+      responses:
+        200:
+          description: Rules uploaded
+          content:
+            text/plain:
+              schema:
+                type: string
+        400:
+          description: Either Rules file is empty or has incorrect format. The text should be base 64
+            encoded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Either Rules file is empty or has incorrect format. The text should be base 64
+                  encoded
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Older copy of rules file is not found in database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Older copy of rules file is not found in database
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /serials:
     get:
       description: Retrieves a list of Certificate Serials
