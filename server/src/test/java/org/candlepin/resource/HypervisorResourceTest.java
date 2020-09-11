@@ -14,8 +14,15 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event.Target;
@@ -29,17 +36,24 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.Entitler;
+import org.candlepin.controller.ManifestManager;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
@@ -51,15 +65,20 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.js.consumer.ConsumerRules;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
+import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -119,52 +138,83 @@ public class HypervisorResourceTest {
     @Mock private PrincipalProvider principalProvider;
     @Mock private DTOValidator dtoValidator;
 
-    private GuestIdResource guestIdResource;
 
-    private ConsumerResource consumerResource;
+    @Mock private PoolManager poolManager;
+    @Mock private Entitler entitler;
+    @Mock private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
+    @Mock private EntitlementCurator entitlementCurator;
+    @Mock private ContentAccessManager contentAccessManager;
+    @Mock private ManifestManager manifestManager;
+    @Mock private ConsumerRules consumerRules;
+    @Mock private CalculatedAttributesUtil calculatedAttributesUtil;
+    @Mock private DistributorVersionCurator distributorVersionCurator;
+    @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Mock private ContentOverrideValidator contentOverrideValidator;
+
     private I18n i18n;
-    private Provider<I18n> i18nProvider = () -> i18n;
+    private Provider<I18n> i18nProvider;
     private ConsumerType hypervisorType;
     private HypervisorResource hypervisorResource;
-    private ModelTranslator modelTranslator;
-
-    private Provider<GuestMigration> migrationProvider;
-    private GuestMigration testMigration;
 
     @BeforeEach
     public void setupTest() {
         Configuration config = new CandlepinCommonTestConfig();
 
-        testMigration = new GuestMigration(consumerCurator);
-        migrationProvider = Providers.of(testMigration);
-
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        this.i18nProvider = () -> this.i18n;
 
         this.hypervisorType = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         this.hypervisorType.setId("test-hypervisor-ctype");
 
         this.mockConsumerType(this.hypervisorType);
 
-        this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+        ModelTranslator modelTranslator = new StandardTranslator(
+            this.consumerTypeCurator, this.environmentCurator, this.ownerCurator);
 
-        this.consumerResource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, null, this.subscriptionService, this.productService, null,
-            this.idCertService, null, this.i18n, this.sink, this.eventFactory, null,
-            this.userService, null, null, this.ownerCurator,
-            this.activationKeyCurator, null, this.complianceRules, this.systemPurposeComplianceRules,
-            this.deletedConsumerCurator, null, null, config,
-            null, null, this.consumerBindUtil, null, null,
-            new FactValidator(config, this.i18nProvider), null, consumerEnricher, migrationProvider,
-            modelTranslator, this.jobManager, this.dtoValidator);
-
-        this.guestIdResource = new GuestIdResource(this.guestIdCurator, this.consumerCurator,
-            this.consumerTypeCurator, this.consumerResource, this.i18n, this.eventFactory, this.sink,
-            migrationProvider, modelTranslator);
+        ConsumerResource consumerResource = new ConsumerResource(
+            this.consumerCurator,
+            this.consumerTypeCurator,
+            this.subscriptionService,
+            this.productService,
+            this.entitlementCurator,
+            this.idCertService,
+            this.entitlementCertServiceAdapter,
+            this.i18n,
+            this.sink,
+            this.eventFactory,
+            this.userService,
+            this.poolManager,
+            this.consumerRules,
+            this.ownerCurator,
+            this.activationKeyCurator,
+            this.entitler,
+            this.complianceRules,
+            this.systemPurposeComplianceRules,
+            this.deletedConsumerCurator,
+            this.environmentCurator,
+            this.distributorVersionCurator,
+            config,
+            this.calculatedAttributesUtil,
+            this.consumerBindUtil,
+            this.manifestManager,
+            this.contentAccessManager,
+            new FactValidator(config, this.i18nProvider),
+            new ConsumerTypeValidator(consumerTypeCurator, i18n),
+            this.consumerEnricher,
+            Providers.of(new GuestMigration(consumerCurator)),
+            modelTranslator,
+            this.jobManager,
+            this.dtoValidator,
+            this.guestIdCurator,
+            this.principalProvider,
+            this.contentOverrideValidator,
+            this.consumerContentOverrideCurator
+        );
 
         this.hypervisorResource = new HypervisorResource(consumerResource,
-            consumerCurator, consumerTypeCurator, i18n, ownerCurator, migrationProvider, modelTranslator,
-            guestIdResource, jobManager, principalProvider, new ObjectMapper());
+            consumerCurator, consumerTypeCurator, i18n, ownerCurator,
+            Providers.of(new GuestMigration(consumerCurator)), modelTranslator,
+            jobManager, principalProvider, new ObjectMapper());
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class)))
@@ -447,7 +497,7 @@ public class HypervisorResourceTest {
         assertEquals(1, created.size());
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
+    @SuppressWarnings({"unchecked", "deprecation"})
     @Test
     public void treatNullGuestListsAsEmptyGuestLists() throws Exception {
         Owner owner = new Owner("admin");

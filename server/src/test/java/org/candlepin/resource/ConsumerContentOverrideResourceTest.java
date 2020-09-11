@@ -16,22 +16,58 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.async.JobManager;
+import org.candlepin.audit.EventBuilder;
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.Entitler;
+import org.candlepin.controller.ManifestManager;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
-import org.candlepin.model.Owner;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.GuestIdCurator;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.policy.SystemPurposeComplianceRules;
+import org.candlepin.policy.activationkey.ActivationKeyRules;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.consumer.ConsumerRules;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
+import org.candlepin.resource.util.ConsumerBindUtil;
+import org.candlepin.resource.util.ConsumerEnricher;
+import org.candlepin.resource.util.ConsumerTypeValidator;
+import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
+import org.candlepin.util.FactValidator;
+import org.candlepin.util.ServiceLevelValidator;
 
-import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,47 +81,106 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriInfo;
+import javax.inject.Provider;
 
 
-
-/**
- * ConsumerContentOverrideResourceTest
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings("checkstyle:indentation")
 public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
-    @Mock private Principal principal;
-    @Mock private UriInfo context;
+    @Mock private ConsumerCurator consumerCurator;
+    @Mock private OwnerCurator ownerCurator;
+    @Mock private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
+    @Mock private SubscriptionServiceAdapter subscriptionServiceAdapter;
+    @Mock private ProductServiceAdapter mockProductServiceAdapter;
+    @Mock private PoolManager poolManager;
+    @Mock private EntitlementCurator entitlementCurator;
+    @Mock private ComplianceRules complianceRules;
+    @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
+    @Mock private ServiceLevelValidator serviceLevelValidator;
+    @Mock private ActivationKeyRules activationKeyRules;
+    @Mock private EventFactory eventFactory;
+    @Mock private EventBuilder eventBuilder;
+    @Mock private ConsumerRules consumerRules;
+    @Mock private CalculatedAttributesUtil calculatedAttributesUtil;
+    @Mock private ConsumerBindUtil consumerBindUtil;
+    @Mock private ConsumerEnricher consumerEnricher;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
+    @Mock private ContentAccessManager contentAccessManager;
+    @Mock private EventSink sink;
+    @Mock private EnvironmentCurator environmentCurator;
+    @Mock private DistributorVersionCurator distributorVersionCurator;
+    @Mock private IdentityCertServiceAdapter identityCertServiceAdapter;
+    @Mock private ActivationKeyCurator activationKeyCurator;
+    @Mock private Entitler entitler;
+    @Mock private ManifestManager manifestManager;
+    @Mock private UserServiceAdapter userServiceAdapter;
+    @Mock private DeletedConsumerCurator deletedConsumerCurator;
+    @Mock private JobManager jobManager;
+    @Mock private DTOValidator dtoValidator;
+    @Mock private FactValidator factValidator;
+    @Mock private Provider<GuestMigration> guestMigrationProvider;
+    @Mock private GuestIdCurator guestIdCurator;
+    @Mock private PrincipalProvider principalProvider;
 
-    private Owner owner;
     private Consumer consumer;
-
-    private ContentOverrideValidator validator;
-    private ConsumerContentOverrideResource resource;
+    private ContentOverrideValidator contentOverrideValidator;
+    private ConsumerResource resource;
 
     @BeforeEach
     public void setUp() {
-        this.owner = this.createOwner();
-        this.consumer = this.createConsumer(owner);
+        this.consumer = this.createConsumer(this.createOwner());
 
-        MultivaluedMap<String, String> mvm = new MultivaluedMapImpl<>();
-        mvm.add("consumer_uuid", consumer.getUuid());
-
-        when(this.context.getPathParameters()).thenReturn(mvm);
-
-        when(this.principal.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
+        Principal principal = mock(Principal.class);
+        when(principal.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
             .thenReturn(true);
+        ResteasyContext.pushContext(Principal.class, principal);
 
-        this.validator = new ContentOverrideValidator(this.config, this.i18n);
+        this.contentOverrideValidator = new ContentOverrideValidator(this.config, this.i18n);
+        when(this.consumerCurator.verifyAndLookupConsumer(anyString()))
+            .thenReturn(this.consumer);
 
-        this.resource = new ConsumerContentOverrideResource(this.i18n,
-            this.consumerContentOverrideCurator, this.consumerCurator, this.validator,
-            this.modelTranslator);
+        this.resource = new ConsumerResource(
+            this.consumerCurator,
+            this.consumerTypeCurator,
+            this.subscriptionServiceAdapter,
+            this.mockProductServiceAdapter,
+            this.entitlementCurator,
+            this.identityCertServiceAdapter,
+            this.entitlementCertServiceAdapter,
+            this.i18n,
+            this.sink,
+            this.eventFactory,
+            this.userServiceAdapter,
+            this.poolManager,
+            this.consumerRules,
+            this.ownerCurator,
+            this.activationKeyCurator,
+            this.entitler,
+            this.complianceRules,
+            this.systemPurposeComplianceRules,
+            this.deletedConsumerCurator,
+            this.environmentCurator,
+            this.distributorVersionCurator,
+            this.config,
+            this.calculatedAttributesUtil,
+            this.consumerBindUtil,
+            this.manifestManager,
+            this.contentAccessManager,
+            this.factValidator,
+            new ConsumerTypeValidator(consumerTypeCurator, i18n),
+            this.consumerEnricher,
+            this.guestMigrationProvider,
+            this.modelTranslator,
+            this.jobManager,
+            this.dtoValidator,
+            this.guestIdCurator,
+            this.principalProvider,
+            this.contentOverrideValidator,
+            this.consumerContentOverrideCurator
+        );
     }
 
     private List<ConsumerContentOverride> createOverrides(Consumer consumer, int offset, int count) {
@@ -119,11 +214,19 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         return list;
     }
 
+    private List<ContentOverrideDTO> stripTimestamps(Iterable<ContentOverrideDTO> list) {
+        return stripTimestamps(StreamSupport.stream(list.spliterator(), false).collect(Collectors.toList()));
+    }
+
+    private long sizeOf(Iterable<ContentOverrideDTO> list) {
+        return StreamSupport.stream(list.spliterator(), false).count();
+    }
+
     /**
      * Compares the collections of override DTOs by converting them to generic override lists and
      * stripping their timestamps.
      */
-    private void compareOverrideDTOs(List<ContentOverrideDTO> expected, List<ContentOverrideDTO> actual) {
+    private void compareOverrideDTOs(List<ContentOverrideDTO> expected, Iterable<ContentOverrideDTO> actual) {
         assertEquals(this.stripTimestamps(expected), this.stripTimestamps(actual));
     }
 
@@ -142,24 +245,22 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(ConsumerContentOverride.class,
-                ContentOverrideDTO.class))
+            .map(this.modelTranslator.getStreamMapper(
+            ConsumerContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        List<ContentOverrideDTO> actual = this.resource
-            .getContentOverrideList(context, principal)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .listConsumerContentOverrides(this.consumer.getUuid());
 
         this.compareOverrideDTOs(expected, actual);
     }
 
     @Test
     public void testGetOverridesEmptyList() {
-        List<ContentOverrideDTO> actual = this.resource
-            .getContentOverrideList(context, principal)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .listConsumerContentOverrides(this.consumer.getUuid());
 
-        assertEquals(0, actual.size());
+        assertEquals(0, sizeOf(actual));
     }
 
     @Test
@@ -172,13 +273,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             .name(toDelete.getName());
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(ConsumerContentOverride.class,
-                ContentOverrideDTO.class))
+            .map(this.modelTranslator.getStreamMapper(
+            ConsumerContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteContentOverrides(context, principal, Arrays.asList(toDeleteDTO))
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO));
 
         this.compareOverrideDTOs(expected, actual);
     }
@@ -192,13 +292,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             .contentLabel(toDelete.getContentLabel());
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(ConsumerContentOverride.class,
-                ContentOverrideDTO.class))
+            .map(this.modelTranslator.getStreamMapper(
+            ConsumerContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteContentOverrides(context, principal, Arrays.asList(toDeleteDTO))
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO));
 
         this.compareOverrideDTOs(expected, actual);
     }
@@ -207,22 +306,20 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     public void testDeleteAllOverridesUsingEmptyList() {
         List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteContentOverrides(context, principal, Collections.emptyList())
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList());
 
-        assertEquals(0, actual.size());
+        assertEquals(0, sizeOf(actual));
     }
 
     @Test
     public void testDeleteAllOverridesUsingEmptyContentLabel() {
         List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .deleteContentOverrides(context, principal, Collections.emptyList())
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList());
 
-        assertEquals(0, actual.size());
+        assertEquals(0, sizeOf(actual));
     }
 
     @Test
@@ -237,9 +334,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .addConsumerContentOverrides(this.consumer.getUuid(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
 
@@ -251,7 +347,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        actual = this.resource.addContentOverrides(context, principal, Arrays.asList(dto)).list();
+        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(dto));
 
         this.compareOverrideDTOs(overrides, actual);
     }
@@ -268,9 +364,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .addConsumerContentOverrides(this.consumer.getUuid(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
 
@@ -284,7 +379,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.clear();
         overrides.add(dto);
 
-        actual = this.resource.addContentOverrides(context, principal, overrides).list();
+        actual = this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
     }
@@ -301,9 +396,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        List<ContentOverrideDTO> actual = this.resource
-            .addContentOverrides(context, principal, overrides)
-            .list();
+        Iterable<ContentOverrideDTO> actual = this.resource
+            .addConsumerContentOverrides(this.consumer.getUuid(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
     }
@@ -321,7 +415,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            this.resource.addContentOverrides(context, principal, overrides).list()
+            this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
         );
     }
 
@@ -338,7 +432,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            this.resource.addContentOverrides(context, principal, overrides).list()
+            this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
         );
     }
 
@@ -355,7 +449,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            this.resource.addContentOverrides(context, principal, overrides).list()
+            this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
         );
     }
 
@@ -372,7 +466,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            this.resource.addContentOverrides(context, principal, overrides).list()
+            this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
         );
     }
 
@@ -389,7 +483,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            this.resource.addContentOverrides(context, principal, overrides).list()
+            this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
         );
     }
 
@@ -406,7 +500,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            this.resource.addContentOverrides(context, principal, overrides).list()
+            this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
         );
     }
 
@@ -423,7 +517,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            this.resource.addContentOverrides(context, principal, overrides).list()
+            this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
         );
     }
 
@@ -440,7 +534,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            this.resource.addContentOverrides(context, principal, overrides).list()
+            this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
         );
     }
 
@@ -457,7 +551,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         overrides.add(dto);
 
         assertThrows(BadRequestException.class, () ->
-            this.resource.addContentOverrides(context, principal, overrides).list()
+            this.resource.addConsumerContentOverrides(this.consumer.getUuid(), overrides)
         );
     }
 }

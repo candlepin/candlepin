@@ -14,38 +14,71 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
+import org.candlepin.audit.Event;
+import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
+import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.paging.Page;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.Entitler;
+import org.candlepin.controller.ManifestManager;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.policy.SystemPurposeComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.consumer.ConsumerRules;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
+import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
+import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ElementTransformer;
-import org.candlepin.util.ServiceLevelValidator;
+import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
 import com.google.inject.util.Providers;
@@ -65,8 +98,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.inject.Provider;
-
 
 
 /**
@@ -82,44 +113,106 @@ public class GuestIdResourceTest {
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
     @Mock private GuestIdCurator guestIdCurator;
-    @Mock private ConsumerResourceForTesting consumerResource;
     @Mock private EventFactory eventFactory;
+    @Mock private EventBuilder eventBuilder;
     @Mock private EventSink sink;
-    @Mock private ServiceLevelValidator mockedServiceLevelValidator;
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private EnvironmentCurator environmentCurator;
     @Mock private JobManager jobManager;
     @Mock private DTOValidator dtoValidator;
+    @Mock private IdentityCertServiceAdapter idCertService;
+    @Mock private ActivationKeyCurator activationKeyCurator;
+    @Mock private PoolManager poolManager;
+    @Mock private ComplianceRules complianceRules;
+    @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
+    @Mock private Entitler entitler;
+    @Mock private DeletedConsumerCurator deletedConsumerCurator;
+    @Mock private ConsumerBindUtil consumerBindUtil;
+    @Mock private Principal principal;
+    @Mock private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
+    @Mock private SubscriptionServiceAdapter subscriptionServiceAdapter;
+    @Mock private ProductServiceAdapter productService;
+    @Mock private EntitlementCurator entitlementCurator;
+    @Mock private ContentAccessManager contentAccessManager;
+    @Mock private ManifestManager manifestManager;
+    @Mock private UserServiceAdapter userServiceAdapter;
+    @Mock private ConsumerRules consumerRules;
+    @Mock private CalculatedAttributesUtil calculatedAttributesUtil;
+    @Mock private DistributorVersionCurator distributorVersionCurator;
+    @Mock private PrincipalProvider principalProvider;
+    @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Mock private ContentOverrideValidator contentOverrideValidator;
 
-    private GuestIdResource guestIdResource;
+    private ConsumerResource resource;
 
+    private Configuration config;
     private Consumer consumer;
     private Owner owner;
     private ConsumerType ct;
     protected ModelTranslator modelTranslator;
 
     private GuestMigration testMigration;
-    private Provider<GuestMigration> migrationProvider;
 
     @BeforeEach
     public void setUp() {
-        testMigration = spy(new GuestMigration(consumerCurator));
-        migrationProvider = Providers.of(testMigration);
+        this.config = new CandlepinCommonTestConfig();
+        this.testMigration = spy(new GuestMigration(consumerCurator));
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
             this.ownerCurator);
 
-        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        owner = TestUtil.createOwner();
-        ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct.setId("test-system-ctype");
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        this.owner = TestUtil.createOwner();
+        this.ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        this.ct.setId("test-system-ctype");
 
-        consumer = new Consumer("consumer", "test", owner, ct).setUuid(Util.generateUUID());
-        guestIdResource = new GuestIdResource(guestIdCurator, consumerCurator, consumerTypeCurator,
-            consumerResource, i18n, eventFactory, sink, migrationProvider, this.modelTranslator);
+        this.consumer = new Consumer("consumer", "test", owner, ct).setUuid(Util.generateUUID());
+        this.resource = new ConsumerResource(
+            this.consumerCurator,
+            this.consumerTypeCurator,
+            this.subscriptionServiceAdapter,
+            this.productService,
+            this.entitlementCurator,
+            this.idCertService,
+            this.entitlementCertServiceAdapter,
+            this.i18n,
+            this.sink,
+            this.eventFactory,
+            this.userServiceAdapter,
+            this.poolManager,
+            this.consumerRules,
+            this.ownerCurator,
+            this.activationKeyCurator,
+            this.entitler,
+            this.complianceRules,
+            this.systemPurposeComplianceRules,
+            this.deletedConsumerCurator,
+            this.environmentCurator,
+            this.distributorVersionCurator,
+            this.config,
+            this.calculatedAttributesUtil,
+            this.consumerBindUtil,
+            this.manifestManager,
+            this.contentAccessManager,
+            new FactValidator(this.config, () -> this.i18n),
+            new ConsumerTypeValidator(consumerTypeCurator, i18n),
+            this.consumerEnricher,
+            Providers.of(this.testMigration),
+            this.modelTranslator,
+            this.jobManager,
+            this.dtoValidator,
+            this.guestIdCurator,
+            this.principalProvider,
+            this.contentOverrideValidator,
+            this.consumerContentOverrideCurator
+        );
 
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
         when(consumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
+        when(this.eventBuilder.setEventData(any(Consumer.class)))
+            .thenReturn(this.eventBuilder);
+        when(this.eventFactory.getEventBuilder(any(Event.Target.class), any(Event.Type.class)))
+            .thenReturn(this.eventBuilder);
     }
 
     @Test
@@ -128,7 +221,9 @@ public class GuestIdResourceTest {
         CandlepinQuery<GuestIdDTO> dtoQuery = mock(CandlepinQuery.class);
         when(guestIdCurator.listByConsumer(eq(consumer))).thenReturn(query);
         when(query.transform((any(ElementTransformer.class)))).thenReturn(dtoQuery);
-        CandlepinQuery<GuestIdDTOArrayElement> result = guestIdResource.getGuestIds(consumer.getUuid());
+
+        CandlepinQuery<GuestIdDTOArrayElement> result = resource.getGuestIds(consumer.getUuid());
+
         verify(query, times(1)).transform(any(ElementTransformer.class));
         assertEquals(result, dtoQuery);
     }
@@ -138,14 +233,14 @@ public class GuestIdResourceTest {
         when(guestIdCurator.findByConsumerAndId(eq(consumer), any(String.class))).thenReturn(null);
 
         assertThrows(NotFoundException.class,
-            () -> guestIdResource.getGuestId(consumer.getUuid(), "some-id"));
+            () -> resource.getGuestId(consumer.getUuid(), "some-id"));
     }
 
     @Test
     public void getGuestId() {
         when(guestIdCurator.findByConsumerAndId(eq(consumer), any(String.class)))
             .thenReturn(new GuestId("guest"));
-        GuestIdDTO result = guestIdResource.getGuestId(consumer.getUuid(), "some-id");
+        GuestIdDTO result = resource.getGuestId(consumer.getUuid(), "some-id");
         assertEquals(TestUtil.createGuestIdDTO("guest"), result);
     }
 
@@ -153,15 +248,9 @@ public class GuestIdResourceTest {
     public void updateGuests() {
         List<GuestIdDTO> guestIds = new LinkedList<>();
         guestIds.add(TestUtil.createGuestIdDTO("1"));
-        when(consumerResource.performConsumerUpdates(any(ConsumerDTO.class),
-            eq(consumer), any(GuestMigration.class))).
-            thenReturn(true);
 
-        guestIdResource.updateGuests(consumer.getUuid(), guestIds);
+        resource.updateGuests(consumer.getUuid(), guestIds);
 
-        verify(consumerResource, times(1))
-            .performConsumerUpdates(any(ConsumerDTO.class), eq(consumer), any(GuestMigration.class));
-        // consumerResource returned true, so the consumer should be updated
         verify(testMigration, times(1)).migrate();
     }
 
@@ -170,14 +259,9 @@ public class GuestIdResourceTest {
         List<GuestIdDTO> guestIds = new LinkedList<>();
         guestIds.add(TestUtil.createGuestIdDTO("1"));
 
-        // consumerResource tells us nothing changed
-        when(consumerResource.performConsumerUpdates(any(ConsumerDTO.class),
-            eq(consumer), any(GuestMigration.class))).
-            thenReturn(false);
+        // resource tells us nothing changed
+        resource.updateGuests(consumer.getUuid(), guestIds);
 
-        guestIdResource.updateGuests(consumer.getUuid(), guestIds);
-        verify(consumerResource, times(1))
-            .performConsumerUpdates(any(ConsumerDTO.class), eq(consumer), any(GuestMigration.class));
         verify(consumerCurator, never()).update(eq(consumer));
     }
 
@@ -186,7 +270,7 @@ public class GuestIdResourceTest {
         GuestIdDTO guest = TestUtil.createGuestIdDTO("some_guest");
         GuestId guestEnt = new GuestId();
         guestEnt.setId("some_id");
-        guestIdResource.updateGuest(consumer.getUuid(), guest.getGuestId(), guest);
+        resource.updateGuest(consumer.getUuid(), guest.getGuestId(), guest);
         when(guestIdCurator.findByGuestIdAndOrg(anyString(), any(String.class))).thenReturn(guestEnt);
         ArgumentCaptor<GuestId> guestCaptor = ArgumentCaptor.forClass(GuestId.class);
         verify(guestIdCurator, times(1)).merge(guestCaptor.capture());
@@ -199,7 +283,7 @@ public class GuestIdResourceTest {
         GuestIdDTO guest = TestUtil.createGuestIdDTO("some_guest");
 
         assertThrows(BadRequestException.class,
-            () -> guestIdResource.updateGuest(consumer.getUuid(), "other_id", guest));
+            () -> resource.updateGuest(consumer.getUuid(), "other_id", guest));
     }
 
     /*
@@ -209,7 +293,9 @@ public class GuestIdResourceTest {
     @Test
     public void updateGuestNoGuestId() {
         GuestIdDTO guestIdDTO = new GuestIdDTO();
-        guestIdResource.updateGuest(consumer.getUuid(), "some_id", guestIdDTO);
+
+        resource.updateGuest(consumer.getUuid(), "some_id", guestIdDTO);
+
         ArgumentCaptor<GuestId> guestCaptor = ArgumentCaptor.forClass(GuestId.class);
         verify(guestIdCurator, times(1)).merge(guestCaptor.capture());
         GuestId guest = guestCaptor.getValue();
@@ -225,10 +311,11 @@ public class GuestIdResourceTest {
             eq(guest.getGuestId()))).thenReturn(guest);
         when(consumerCurator.findByVirtUuid(guest.getGuestId(),
             consumer.getOwnerId())).thenReturn(null);
-        guestIdResource.deleteGuest(consumer.getUuid(),
+
+        resource.deleteGuest(consumer.getUuid(),
             guest.getGuestId(), false);
+
         verify(guestIdCurator, times(1)).delete(eq(guest));
-        verify(consumerResource, never()).checkForMigration(eq(consumer), any(Consumer.class));
     }
 
     @Test
@@ -243,7 +330,7 @@ public class GuestIdResourceTest {
         when(consumerCurator.findByVirtUuid(eq(guest.getGuestId()),
             eq(owner.getId()))).thenReturn(guestConsumer);
 
-        guestIdResource.updateGuest(consumer.getUuid(),
+        resource.updateGuest(consumer.getUuid(),
             guest.getGuestId(), guest);
 
         ArgumentCaptor<GuestId> captor = ArgumentCaptor.forClass(GuestId.class);
@@ -253,26 +340,27 @@ public class GuestIdResourceTest {
         assertEquals("guest-id", guestId.getGuestId());
 
         // We now check for migration when the system checks in, not during guest ID updates.
-        verify(consumerResource, times(0))
-            .checkForMigration(any(Consumer.class), any(Consumer.class));
+        verify(testMigration, never()).migrate();
     }
 
     @Test
     public void deleteGuestAndUnregister() {
         Consumer guestConsumer =
-            new Consumer("guest_consumer", "guest_consumer", owner, ct);
+            new Consumer("guest_consumer", "guest_consumer", owner, ct).setUuid(Util.generateUUID());
         GuestId guest = new GuestId("guest-id", consumer);
         when(guestIdCurator.findByConsumerAndId(eq(consumer),
             eq(guest.getGuestId()))).thenReturn(guest);
         when(consumerCurator.findByVirtUuid(guest.getGuestId(),
             consumer.getOwnerId())).thenReturn(guestConsumer);
-        guestIdResource.deleteGuest(consumer.getUuid(),
+        when(consumerCurator.findByUuid(eq(guestConsumer.getUuid())))
+            .thenReturn(guestConsumer);
+
+        resource.deleteGuest(consumer.getUuid(),
             guest.getGuestId(), true);
+
         verify(guestIdCurator, times(1)).delete(eq(guest));
-        verify(consumerResource, never())
-            .checkForMigration(eq(consumer), eq(guestConsumer));
-        verify(consumerResource, times(1))
-            .deleteConsumer(eq(guestConsumer.getUuid()), nullable(Principal.class));
+        verify(consumerCurator, times(1))
+            .delete(eq(guestConsumer));
     }
 
     /*
@@ -286,34 +374,10 @@ public class GuestIdResourceTest {
         when(consumerCurator.findByVirtUuid(guest.getGuestId(), consumer.getOwnerId()))
             .thenReturn(null);
 
-        guestIdResource.deleteGuest(consumer.getUuid(), guest.getGuestId(), true);
+        resource.deleteGuest(consumer.getUuid(), guest.getGuestId(), true);
 
         verify(guestIdCurator, times(1)).delete(eq(guest));
-        verify(consumerResource, never())
-            .checkForMigration(eq(consumer), any(Consumer.class));
+        verify(testMigration, never()).migrate();
     }
 
-    private Page<List<GuestId>> buildPaginatedGuestIdList(List<GuestId> guests) {
-        Page<List<GuestId>> page = new Page<>();
-        page.setPageData(guests);
-        return page;
-    }
-
-    /*
-     * ConsumerResource.performConsumerUpdates and revokeGuestEntitlementsNotMatchingHost
-     * are protected, so we cannot verify that they have been called.
-     * This class allows us to override the methods to make sure they have been used.
-     */
-    private class ConsumerResourceForTesting extends ConsumerResource {
-        public ConsumerResourceForTesting() {
-            super(null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, consumerEnricher, null, modelTranslator, jobManager,
-                dtoValidator);
-        }
-
-        public void checkForMigration(Consumer host, Consumer guest) {
-            // Intentionally left empty
-        }
-    }
 }
