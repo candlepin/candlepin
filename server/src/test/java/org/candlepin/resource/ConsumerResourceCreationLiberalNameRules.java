@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
@@ -39,7 +39,7 @@ public class ConsumerResourceCreationLiberalNameRules extends ConsumerResourceCr
 
     private static class ConfigForTesting extends MapConfiguration {
         @SuppressWarnings("serial")
-        public ConfigForTesting() {
+        ConfigForTesting() {
             super(new HashMap<String, String>() {
                 {
                     this.put(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN, ".+");

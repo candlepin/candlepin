@@ -128,7 +128,6 @@ import org.candlepin.resource.DeletedConsumerResource;
 import org.candlepin.resource.DistributorVersionResource;
 import org.candlepin.resource.EntitlementResource;
 import org.candlepin.resource.EnvironmentResource;
-import org.candlepin.resource.GuestIdResource;
 import org.candlepin.resource.HypervisorResource;
 import org.candlepin.resource.JobResource;
 import org.candlepin.resource.OwnerResource;
@@ -330,7 +329,6 @@ public class CandlepinModule extends AbstractModule {
         bind(CertificateSerialResource.class);
         bind(CloudRegistrationResource.class);
         bind(CrlResource.class);
-        bind(ConsumerContentOverrideResource.class);
         bind(ConsumerResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);
@@ -338,7 +336,6 @@ public class CandlepinModule extends AbstractModule {
         bind(DistributorVersionResource.class);
         bind(EntitlementResource.class);
         bind(EnvironmentResource.class);
-        bind(GuestIdResource.class);
         bind(HypervisorResource.class);
         bind(JobResource.class);
         bind(OwnerResource.class);
