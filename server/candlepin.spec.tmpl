@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.19
+Version: 3.1.20
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,9 @@ fi
 
 #raw
 %changelog
+* Fri Sep 11 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.20-1
+- 1877340: Remove stale Quartz data on upgrade (nmoumoul@redhat.com)
+
 * Tue Sep 01 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.19-1
 - 1872357: [RFE] Filter syspurpose SLA values available to an Owner if the SLA
   is exempt (ojanus@redhat.com)
