@@ -16,7 +16,6 @@
 package org.candlepin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Injector;
 import liquibase.integration.spring.SpringLiquibase;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.commons.lang.StringUtils;
@@ -38,17 +37,13 @@ import org.candlepin.messaging.impl.artemis.ArtemisUtil;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerFactory;
 import org.candlepin.policy.js.JsRunnerRequestCacheFactory;
 import org.candlepin.resteasy.filter.CandlepinSuspendModeFilter;
 import org.hibernate.dialect.PostgreSQL92Dialect;
-import org.jgroups.annotations.MBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.web.embedded.tomcat.TomcatConnectorCustomizer;
-import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.*;
 import org.springframework.guice.annotation.EnableGuiceModules;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -58,6 +53,7 @@ import org.xnap.commons.i18n.I18n;
 
 import javax.servlet.ServletContext;
 import javax.sql.DataSource;
+import javax.swing.*;
 import java.io.File;
 import java.nio.charset.Charset;
 
@@ -77,8 +73,6 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
     @Autowired
     private ObjectMapper objectMapper;
 
-//    @Autowired
-//    private DataSource dataSource;
 
     private org.candlepin.common.config.Configuration config;
 
@@ -239,4 +233,18 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
         return jsRunnerRequestCacheFactory;
     }
 
+    @Bean
+    public SpringLiquibase liquibase(DataSource dataSource, @Value("${candlepin.create_database}") boolean createDatabase) {
+        SpringLiquibase liquibase = new SpringLiquibase();
+        // Default value of candlepin.create_database is set in properties file, it can be overridden
+        // by passing command line arguments
+        if (createDatabase) {
+            liquibase.setChangeLog("classpath:db/changelog/changelog-create.xml");
+        }
+        else {
+            liquibase.setChangeLog("classpath:db/changelog/changelog-update.xml");
+        }
+        liquibase.setDataSource(dataSource);
+        return liquibase;
+    }
 }

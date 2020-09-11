@@ -24,20 +24,20 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
-@Profile("liquibase-update-only")
-public class LiquibaseUpdateOnly implements CommandLineRunner {
+@Profile("liquibase-only")
+public class LiquibaseOnly implements CommandLineRunner {
 
-    private static Logger log = LoggerFactory.getLogger(LiquibaseUpdateOnly.class);
+    private static Logger log = LoggerFactory.getLogger(LiquibaseOnly.class);
 
     private final ApplicationContext context;
 
-    public LiquibaseUpdateOnly(ApplicationContext context) {
+    public LiquibaseOnly(ApplicationContext context) {
         this.context = context;
     }
 
     @Override
     public void run(String... args) {
-        log.info("Running in liquibase update only mode. Exiting.");
+        log.info("Running in liquibase only mode. Exiting.");
         SpringApplication.exit(context);
         log.info("Exited from application");
     }

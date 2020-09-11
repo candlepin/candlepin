@@ -17,24 +17,13 @@ package org.candlepin;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration;
 import org.springframework.boot.autoconfigure.jms.artemis.ArtemisAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.context.annotation.PropertySource;
 
 /** Bootstrapper for Spring Boot. */
 @SpringBootApplication(exclude = { ArtemisAutoConfiguration.class, ActiveMQAutoConfiguration.class })
-//        ,
-//        DataSourceAutoConfiguration.class,
-//        DataSourceTransactionManagerAutoConfiguration.class,
-//        HibernateJpaAutoConfiguration.class})
 public class BootApplication {
-    
     public static void main(String[] args) {
         try {
             SpringApplication.run(BootApplication.class, args);
