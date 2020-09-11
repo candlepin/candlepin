@@ -35,7 +35,7 @@ public class RootResourceTest {
 
     @SuppressSwaggerCheck
     @Path("/foo")
-    public class FooResource {
+    public static class FooResource {
 
         @Path("/slash")
         public void methodWithSlash() {
