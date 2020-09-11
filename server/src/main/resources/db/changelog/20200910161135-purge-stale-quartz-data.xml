@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20200910161135-1" author="nmoumoul" dbms="postgresql">
+        <comment>
+            This task that removes stale Pinsetter job data from Quartz tables so that the new Artemis-based job
+            framework has a clean slate during startup and avoid errors caused by said stale data.
+        </comment>
+
+        <sql>
+            TRUNCATE TABLE qrtz_blob_triggers CASCADE;
+            TRUNCATE TABLE qrtz_cron_triggers CASCADE;
+            TRUNCATE TABLE qrtz_simple_triggers CASCADE;
+            TRUNCATE TABLE qrtz_simprop_triggers CASCADE;
+            TRUNCATE TABLE qrtz_triggers CASCADE;
+            TRUNCATE TABLE qrtz_job_details CASCADE;
+            TRUNCATE TABLE qrtz_calendars CASCADE;
+            TRUNCATE TABLE qrtz_fired_triggers CASCADE;
+            TRUNCATE TABLE qrtz_locks CASCADE;
+            TRUNCATE TABLE qrtz_paused_trigger_grps CASCADE;
+            TRUNCATE TABLE qrtz_scheduler_state CASCADE;
+        </sql>
+    </changeSet>
+</databaseChangeLog>
