@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.28
+Version: 2.9.29
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,16 @@ fi
 
 #raw
 %changelog
+* Tue Sep 15 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.29-1
+-  1878817: When delete the hypervisor from satellite, the manifest will be
+  broken (ojanus@redhat.com)
+- [2.9] ENT-2376: Find out why Tomcat binds to a udp6 port  - The
+  SyslogAppender configuration is commented on    because it is opening a
+  random UDP port to send messages    to the Syslog server.    Candlepin is
+  sending messages to the Syslog server.    But the Syslog server is not
+  configured to listen to the messages.    Hence this part of the code is
+  commented. (sonalidhome@gmail.com)
+
 * Tue Jun 09 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.28-1
 - 1842933: Delete removed Artemis queues on broker.xml reload
   (nmoumoul@redhat.com)
