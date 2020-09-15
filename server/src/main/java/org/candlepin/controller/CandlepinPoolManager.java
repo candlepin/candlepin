@@ -1965,6 +1965,9 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.info("Starting batch delete of pools");
         poolCurator.batchDelete(poolsToDelete, alreadyDeletedPools);
+        for (Pool pool : poolsToDelete) {
+            this.sink.queueEvent(this.eventFactory.poolDeleted(pool));
+        }
         log.info("Starting batch delete of entitlements");
         entitlementCurator.batchDelete(entsToRevoke);
         log.info("Starting delete flush");
