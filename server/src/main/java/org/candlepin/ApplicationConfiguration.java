@@ -76,6 +76,20 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
 
     private org.candlepin.common.config.Configuration config;
 
+    @Bean
+    public SpringLiquibase liquibase(DataSource dataSource, @Value("${candlepin.create_database}") boolean createDatabase) {
+        SpringLiquibase liquibase = new SpringLiquibase();
+        // Default value of candlepin.create_database is set in properties file, it can be overridden
+        // by passing command line arguments
+        if (createDatabase) {
+            liquibase.setChangeLog("classpath:db/changelog/changelog-create.xml");
+        }
+        else {
+            liquibase.setChangeLog("classpath:db/changelog/changelog-update.xml");
+        }
+        liquibase.setDataSource(dataSource);
+        return liquibase;
+    }
 
     @Bean
     public org.candlepin.common.config.Configuration configuration() {
@@ -233,18 +247,5 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
         return jsRunnerRequestCacheFactory;
     }
 
-    @Bean
-    public SpringLiquibase liquibase(DataSource dataSource, @Value("${candlepin.create_database}") boolean createDatabase) {
-        SpringLiquibase liquibase = new SpringLiquibase();
-        // Default value of candlepin.create_database is set in properties file, it can be overridden
-        // by passing command line arguments
-        if (createDatabase) {
-            liquibase.setChangeLog("classpath:db/changelog/changelog-create.xml");
-        }
-        else {
-            liquibase.setChangeLog("classpath:db/changelog/changelog-update.xml");
-        }
-        liquibase.setDataSource(dataSource);
-        return liquibase;
-    }
+
 }

@@ -24,7 +24,6 @@ import org.hibernate.criterion.Projections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
@@ -36,7 +35,6 @@ import java.util.Date;
  * RulesCurator
  */
 @Component
-//@Repository
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
     private static Logger log = LoggerFactory.getLogger(RulesCurator.class);
     public static final String DEFAULT_RULES_FILE = "/rules/rules.js";
@@ -85,7 +83,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
             .setMaxResults(1)
             .uniqueResult();
     }
-
+    @Transactional
     public void updateDbRules() {
         Rules dbRules = getDbRules();
 
