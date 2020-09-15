@@ -51,10 +51,7 @@ import org.jboss.resteasy.springboot.ResteasyAutoConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.*;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -81,7 +78,8 @@ import static org.candlepin.config.ConfigProperties.*;
 @Configuration
 @Import(ResteasyAutoConfiguration.class)
 @EnableRetry
-@EnableAspectJAutoProxy
+//@EnableAspectJAutoProxy
+@Profile("!liquibase-only")
 public class CandlepinContextListener {
     public static final String CONFIGURATION_NAME = org.candlepin.common.config.Configuration.class.getName();
 
