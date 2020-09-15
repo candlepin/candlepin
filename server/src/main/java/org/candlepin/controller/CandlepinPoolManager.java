@@ -1868,9 +1868,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.trace("Additional pool IDs: {}", getPoolIds(poolsToDelete));
         }
 
-        Set<Pool> poolsToLock = new HashSet<>();
-        poolsToLock.addAll(poolsToDelete);
-
+        Set<Pool> poolsToLock = new HashSet<>(poolsToDelete);
         for (Entitlement ent: entsToRevoke) {
             poolsToLock.add(ent.getPool());
 
@@ -1939,6 +1937,9 @@ public class CandlepinPoolManager implements PoolManager {
 
         log.info("Starting batch delete of pools");
         poolCurator.batchDelete(poolsToDelete, alreadyDeletedPools);
+        for (Pool pool : poolsToDelete) {
+            this.sink.queueEvent(this.eventFactory.poolDeleted(pool));
+        }
         log.info("Starting batch delete of entitlements");
         entitlementCurator.batchDelete(entsToRevoke);
         log.info("Starting delete flush");

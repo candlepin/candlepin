@@ -157,7 +157,7 @@ import java.util.stream.Stream;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class PoolManagerTest {
-    private static Logger log = LoggerFactory.getLogger(PoolManagerTest.class);
+    private static final Logger log = LoggerFactory.getLogger(PoolManagerTest.class);
 
     private I18n i18n;
 
@@ -1125,7 +1125,7 @@ public class PoolManagerTest {
         manager.revokeEntitlements(entsToDelete);
         entsToDelete.add(e3);
         verify(entitlementCurator).batchDelete(eq(entsToDelete));
-        verify(mockPoolCurator).batchDelete(eq(poolsWithSourceAsSet), nullable(Collection.class));
+        verify(mockPoolCurator).batchDelete(eq(poolsWithSourceAsSet), any());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
