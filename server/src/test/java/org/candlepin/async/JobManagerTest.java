@@ -84,11 +84,14 @@ import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
+import org.quartz.JobPersistenceException;
 import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.MDC;
 import org.slf4j.event.Level;
 
@@ -1703,5 +1706,31 @@ public class JobManagerTest {
         manager.initialize();
 
         verify(schedulerFactory, times(1)).initialize(eq(expected));
+    }
+
+    @Test
+    public void testSchedulerRemovesDeadJobsOnStartup() throws Exception {
+        StdSchedulerFactory schedulerFactory = mock(StdSchedulerFactory.class);
+        this.schedulerFactory = schedulerFactory;
+
+        doReturn(this.scheduler).when(this.schedulerFactory).getScheduler();
+
+        JobKey jobkey1 = new JobKey("job-1", "test_job_group");
+        JobKey jobkey2 = new JobKey("job-2", "test_job_group");
+        JobKey jobkey3 = new JobKey("job-3", "test_job_group");
+
+        doReturn(Util.asSet(jobkey1, jobkey2, jobkey3)).when(this.scheduler)
+            .getJobKeys(any(GroupMatcher.class));
+
+        doThrow(new JobPersistenceException("kaboom")).when(this.scheduler).getJobDetail(eq(jobkey2));
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+
+        verify(this.scheduler, times(1)).getJobDetail(eq(jobkey1));
+        verify(this.scheduler, times(1)).getJobDetail(eq(jobkey2));
+        verify(this.scheduler, times(1)).getJobDetail(eq(jobkey3));
+
+        verify(this.scheduler, times(1)).deleteJob(eq(jobkey2));
     }
 }

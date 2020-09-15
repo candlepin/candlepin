@@ -46,6 +46,7 @@ import org.quartz.CronTrigger;
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
+import org.quartz.JobPersistenceException;
 import org.quartz.ScheduleBuilder;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -102,6 +103,7 @@ public class JobManager implements ModeChangeListener {
 
     private static final String QRTZ_GROUP_CONFIG = "cp_async_config";
     private static final String QRTZ_GROUP_MANUAL = "cp_async_manual";
+    private static final String QRTZ_GROUP_PINSETTER = "cron group";
 
     private static final Object SUSPEND_KEY_DEFAULT = "default_suspend_key";
     private static final Object SUSPEND_KEY_TRIGGERED = "triggered_suspend_key";
@@ -841,10 +843,10 @@ public class JobManager implements ModeChangeListener {
     private void synchronizeJobSchedule() throws SchedulerException {
         // TODO: Quartz isn't doing much for us here. Perhaps we'd be better off with our own
         // minimalistic scheduler, since we only need cron, delay and interval scheduling. Quartz
-        // seems pretty heavy considering what we actually use it for here.
+        // seems pretty heavy considering how we actually use it.
 
-        GroupMatcher<JobKey> qrtzJobMatcher = GroupMatcher.jobGroupEquals(QRTZ_GROUP_CONFIG);
-        Set<JobKey> qrtzJobKeys = this.scheduler.getJobKeys(qrtzJobMatcher);
+        GroupMatcher<JobKey> cronJobMatcher = GroupMatcher.jobGroupEquals(QRTZ_GROUP_CONFIG);
+        Set<JobKey> qrtzJobKeys = this.scheduler.getJobKeys(GroupMatcher.anyJobGroup());
 
         Set<String> existing = new HashSet<>();
         Set<JobKey> unschedule = new HashSet<>();
@@ -855,39 +857,56 @@ public class JobManager implements ModeChangeListener {
             log.debug("Checking {} existing scheduled jobs...", qrtzJobKeys.size());
 
             for (JobKey key : qrtzJobKeys) {
-                // Impl note: using the key's name as the job key works, but it limits each
-                // job to exactly one schedule, which may or may not be a good thing.
-                Configuration config = this.jobConfig.get(key.getName());
-
-                // Check if the job has any configuration at all
-                if (config == null) {
-                    unschedule.add(key);
-                    continue;
+                // Verify the job exists and is in a valid state by loading its job detail
+                try {
+                    this.scheduler.getJobDetail(key);
                 }
-
-                String schedule = config.getString(ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE, null);
-                boolean enabled = this.isJobEnabled(key.getName());
-
-                // Check that the job is enabled and is still scheduled
-                if (!enabled || schedule == null) {
-                    unschedule.add(key);
-                    continue;
-                }
-
-                Trigger trigger = this.scheduler.getTrigger(
-                    TriggerKey.triggerKey(key.getName(), key.getGroup()));
-
-                // Check that the job has a trigger, it's a cron trigger, and the schedule matches
-                // the schedule in the current configuration
-                if (trigger == null || !(trigger instanceof CronTrigger) ||
-                    !((CronTrigger) trigger).getCronExpression().equals(schedule)) {
+                catch (JobPersistenceException e) {
+                    log.warn("Unable to load job detail for job, removing it from the scheduler: {}",
+                        key.getName());
 
                     unschedule.add(key);
                     continue;
                 }
 
-                // Job exists and matches our schedule, we can skip it later
-                existing.add(key.getName());
+                // Continue checking the job schedule if it's one of ours
+                if (cronJobMatcher.isMatch(key)) {
+                    // Impl note: using the key's name as the job key works, but it limits each
+                    // job to exactly one schedule, which may or may not be a good thing.
+                    Configuration config = this.jobConfig.get(key.getName());
+
+                    // Check if the job has any configuration at all
+                    // TODO: this check may not be a good thing -- this only works because of hard-coded
+                    // defaults in ConfigProperties.
+                    if (config == null) {
+                        unschedule.add(key);
+                        continue;
+                    }
+
+                    String schedule = config.getString(ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE, null);
+                    boolean enabled = this.isJobEnabled(key.getName());
+
+                    // Check that the job is enabled and is still scheduled
+                    if (!enabled || schedule == null) {
+                        unschedule.add(key);
+                        continue;
+                    }
+
+                    Trigger trigger = this.scheduler.getTrigger(
+                        TriggerKey.triggerKey(key.getName(), key.getGroup()));
+
+                    // Check that the job has a trigger, it's a cron trigger, and the schedule matches
+                    // the schedule in the current configuration
+                    if (trigger == null || !(trigger instanceof CronTrigger) ||
+                        !((CronTrigger) trigger).getCronExpression().equals(schedule)) {
+
+                        unschedule.add(key);
+                        continue;
+                    }
+
+                    // Job exists and matches our schedule, we can skip it later
+                    existing.add(key.getName());
+                }
             }
         }
 
