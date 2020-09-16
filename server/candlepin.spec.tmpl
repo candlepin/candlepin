@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.20
+Version: 3.1.21
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,12 @@ fi
 
 #raw
 %changelog
+* Wed Sep 16 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.21-1
+- 1877340: JobManager now removes dead jobs from the scheduler
+  (crog@redhat.com)
+- 1874531: When delete the hypervisor from satellite, the manifest will be
+  broken - Updated to send deleted events for derived pools (ojanus@redhat.com)
+
 * Fri Sep 11 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.20-1
 - 1877340: Remove stale Quartz data on upgrade (nmoumoul@redhat.com)
 
