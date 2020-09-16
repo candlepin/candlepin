@@ -3,6 +3,8 @@
 APP_DB_NAME="candlepin"
 MAX_STARTUP_WAIT_TIME=30
 CP_EXTRACT_DIR=/var/tmp/candlepin
+# user running the application war file with embedded tomcat
+CP_USER="vagrant"
 
 prepare_classpath() {
     mkdir -p ${CP_EXTRACT_DIR}
@@ -25,6 +27,7 @@ gendb() {
     if [ "$GENDB" == "1" ]; then
         MESSAGE="Generating New Database"
         CHANGELOG="changelog-create.xml"
+        CREATEDB=true
         if [ "$USE_MYSQL" == "1" ]; then
             recreate_mysql $APP_DB_NAME $DBUSER
         else
@@ -39,26 +42,47 @@ gendb() {
     else
         MESSAGE="Updating Database"
         CHANGELOG="changelog-update.xml"
+        CREATEDB=false
     fi
 
     prepare_classpath
 
     info_msg "$MESSAGE"
-    LQCOMMAND="${PROJECT_DIR}/bin/liquibase.sh --driver=${JDBC_DRIVER} --classpath=$PROJECT_DIR/src/main/resources/:build/classes/java/main/:${JDBC_JAR} --changeLogFile=db/changelog/$CHANGELOG --url=${JDBC_URL} --username=candlepin"
-    if [ -n "$DBPASSWORD" ] ; then
-        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
-    fi
+#    LQCOMMAND="${PROJECT_DIR}/bin/liquibase.sh --driver=${JDBC_DRIVER} --classpath=$PROJECT_DIR/src/main/resources/:build/classes/java/main/:${JDBC_JAR} --changeLogFile=db/changelog/$CHANGELOG --url=${JDBC_URL} --username=candlepin"
+#    if [ -n "$DBPASSWORD" ] ; then
+#        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
+#    fi
+#
+#    if [ "$VERBOSE" == "1" ]; then
+#        LQCOMMAND="$LQCOMMAND --logLevel=debug "
+#    fi
+#
+#    LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
+#    (cd $PROJECT_DIR && $LQCOMMAND)
+#    evalrc $? "Liquibase command failed"
 
-    if [ "$VERBOSE" == "1" ]; then
-        LQCOMMAND="$LQCOMMAND --logLevel=debug "
-    fi
+    # Run the liquibase-only profile in Spring to perform the liquibase migration
+    printf "\nWaiting for Liquibase migration to finish...\n"
+    echo java -jar -Dspring.profiles.active=liquibase-only -Dcandlepin.create_database=$CREATEDB $PROJECT_DIR/build/libs/candlepin-3.1.11.war
+    until java -jar -Dspring.profiles.active=liquibase-only -Dcandlepin.create_database=$CREATEDB $PROJECT_DIR/build/libs/candlepin-3.1.11.war > /dev/null
+    do
+        CURRENT_TIME=$(date +%s)
+        ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
 
-    LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
-    (cd $PROJECT_DIR && $LQCOMMAND)
-    evalrc $? "Liquibase command failed"
+        if [ "$ELAPSED_TIME" -gt "$MAX_STARTUP_WAIT_TIME" ]; then
+            echo
+            err_msg "Liquibase migration failed to complete within $MAX_STARTUP_WAIT_TIME seconds. Aborting..."
+            exit 1
+        fi
+
+        printf "."
+        sleep 1
+    done
+    # TODO candlepin-spring: write a logic to check if application resulted in error
+    printf "\nLiquibase migration finished\n"
+    echo
 }
 
-# TODO: Commented to test the spring-guice project
 deploy() {
   printf "\nDeploying Candlepin War File\n"
   VERSION="$(grep Version: $PROJECT_DIR/candlepin.spec.tmpl | cut --delim=' ' -f2)"
@@ -67,8 +91,10 @@ deploy() {
     else
         $SUDO rm -rf $DEPLOY_DIR
     fi
-    echo cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
-    $SUDO cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
+    #echo cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
+    #$SUDO cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
+    echo java -jar $PROJECT_DIR/build/libs/candlepin-$VERSION.war
+    java -jar $PROJECT_DIR/build/libs/candlepin-$VERSION.war > /dev/null 2>&1 &
 }
 
 stopappserver() {
@@ -84,22 +110,22 @@ isrpm() {
 }
 
 
-update_keystore() {
-    if [ ! -f $CONTAINER_CONF_DIR/keystore ]; then
-        info_msg "Symlinking keystore for tomcat"
-        $SUDO ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
-    else
-        if [ ! -L "$CONTAINER_CONF_DIR/keystore" -a "$(readlink $CONTAINER_CONF_DIR/keystore)" != "/etc/candlepin/certs/keystore" ]; then
-          warn_msg "Using existing keystore"
-        fi
-
-        local candlepin_fp="$(fp_pkcs12 "/etc/candlepin/certs/keystore" "tomcat" "password")"
-        local tomcat_fp="$(fp_pkcs12 "$CONTAINER_CONF_DIR/keystore" "tomcat" "password")"
-        if [ "$candlepin_fp" != "$tomcat_fp" ]; then
-          err_msg "The keys in the Tomcat keystore don't match Candlepin's!"
-        fi
-    fi
-}
+#update_keystore() {
+#    if [ ! -f $CONTAINER_CONF_DIR/keystore ]; then
+#        info_msg "Symlinking keystore for tomcat"
+#        $SUDO ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+#    else
+#        if [ ! -L "$CONTAINER_CONF_DIR/keystore" -a "$(readlink $CONTAINER_CONF_DIR/keystore)" != "/etc/candlepin/certs/keystore" ]; then
+#          warn_msg "Using existing keystore"
+#        fi
+#
+#        local candlepin_fp="$(fp_pkcs12 "/etc/candlepin/certs/keystore" "tomcat" "password")"
+#        local tomcat_fp="$(fp_pkcs12 "$CONTAINER_CONF_DIR/keystore" "tomcat" "password")"
+#        if [ "$candlepin_fp" != "$tomcat_fp" ]; then
+#          err_msg "The keys in the Tomcat keystore don't match Candlepin's!"
+#        fi
+#    fi
+#}
 
 upload_products() {
   if [ "$TESTDATA" = "1" ]; then
@@ -145,17 +171,44 @@ configure_tomcat_root_dir() {
 
 create_var_lib_candlepin() {
     $SUDO mkdir -p /var/lib/candlepin
-    $SUDO chown tomcat:tomcat /var/lib/candlepin
+    $SUDO chown $CP_USER:$CP_USER /var/lib/candlepin
 }
 
 create_var_log_candlepin() {
     $SUDO mkdir -p /var/log/candlepin
-    $SUDO chown tomcat:tomcat /var/log/candlepin
+    #$SUDO chown tomcat:tomcat /var/log/candlepin
+    $SUDO chown $CP_USER:$CP_USER /var/log/candlepin
 }
 
 create_var_cache_candlepin() {
     $SUDO mkdir -p /var/cache/candlepin
-    $SUDO chown tomcat:tomcat /var/cache/candlepin
+    #$SUDO chown tomcat:tomcat /var/cache/candlepin
+    $SUDO chown $CP_USER:$CP_USER /var/cache/candlepin
+}
+
+generate_ssl_certificate() {
+    CP_SSL_CERT_DIR=/etc/candlepin/certs
+    CP_SSL_CERT_FILE=$CP_SSL_CERT_DIR/myssl.p12
+    HOSTNAME=${HOSTNAME:-$(hostname)}
+    # first and last name
+    CN=$HOSTNAME
+    # organizational unit
+    OU="candlepin"
+    # organization
+    O="candlepin"
+    # City or Locality
+    L="raleigh"
+    # State or Province
+    S="north carolina"
+    # two-letter country code
+    C="US"
+
+    $SUDO mkdir -p $CP_SSL_CERT_DIR
+
+    if [ ! -e $CP_SSL_CERT_FILE ]; then
+        info_msg "Generating ssl certificate"
+        $SUDO keytool -genkeypair -alias myssl -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore $CP_SSL_CERT_FILE -validity 3650 -storepass password -dname "CN=$CN,OU=$OU,O=$O,L=$L,S=$S,C=$C"
+    fi
 }
 
 autoconf() {
@@ -168,7 +221,13 @@ autoconf() {
     return 1
   fi
 
+  CANDLEPIN_CONF_DIR="/etc/candlepin/"
   CANDLEPIN_CONF="/etc/candlepin/candlepin.conf"
+
+  if [ ! -e $CANDLEPIN_CONF_DIR ]; then
+    $SUDO mkdir -p $CANDLEPIN_CONF_DIR
+    $SUDO chown $CP_USER:$CP_USER $CANDLEPIN_CONF_DIR
+  fi
 
   if [ ! -e $CANDLEPIN_CONF ] || $($SUDO head -n 1 $CANDLEPIN_CONF | grep -q "AUTOGENERATED"); then
     $SUDO cp $PROJECT_DIR/build/candlepin.conf $CANDLEPIN_CONF
@@ -228,6 +287,7 @@ init() {
 
     # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
     SELF_DIR="${BASH_SOURCE%/*}"
+
 }
 
 ### Main
@@ -268,50 +328,50 @@ if [ $(id -u) -ne 0 ]; then
     fi
 fi
 
-# use tomcat 6, unless it doesnt exist and tomcat does
-TC=tomcat6
-TC_VERSION=6
-
-if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
-then
-    TC=tomcat
-
-    # Determine which Tomcat version we're using
-    TC_VERSION=$(rpm -q tomcat | grep -oP "(?<=^tomcat-)[0-9]+\.[0-9]+")
-fi
-
-if [ -z $TC_HOME ]; then
-    TC_HOME=/var/lib/$TC
-fi
-
-info_msg "Configuring Tomcat $TC_VERSION found at $TC_HOME"
-
-isrpm $TC_HOME
-if [ "$?" -ne 0 ]; then
-    START="$TC_HOME/bin/catalina.sh jpda start"
-    STOP="$TC_HOME/bin/catalina.sh stop"
-    CONTAINER_CONF_DIR="$TC_HOME/conf"
-else
-    START="$SUDO /sbin/service $TC start"
-    STOP="$SUDO /sbin/service $TC stop"
-    CONTAINER_CONF_DIR="/etc/$TC"
-fi
+## use tomcat 6, unless it doesnt exist and tomcat does
+#TC=tomcat6
+#TC_VERSION=6
+#
+#if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
+#then
+#    TC=tomcat
+#
+#    # Determine which Tomcat version we're using
+#    TC_VERSION=$(rpm -q tomcat | grep -oP "(?<=^tomcat-)[0-9]+\.[0-9]+")
+#fi
+#
+#if [ -z $TC_HOME ]; then
+#    TC_HOME=/var/lib/$TC
+#fi
+#
+#info_msg "Configuring Tomcat $TC_VERSION found at $TC_HOME"
+#
+#isrpm $TC_HOME
+#if [ "$?" -ne 0 ]; then
+#    START="$TC_HOME/bin/catalina.sh jpda start"
+#    STOP="$TC_HOME/bin/catalina.sh stop"
+#    CONTAINER_CONF_DIR="$TC_HOME/conf"
+#else
+#    START="$SUDO /sbin/service $TC start"
+#    STOP="$SUDO /sbin/service $TC stop"
+#    CONTAINER_CONF_DIR="/etc/$TC"
+#fi
 
 # Check if we're in a container using supervisord instead:
-if [ "$SUPERVISOR" == "1" ]; then
-    START="supervisorctl start tomcat"
-    STOP="supervisorctl stop tomcat"
-fi
-
-DEPLOY="$TC_HOME/webapps/candlepin.war"
-DEPLOY_DIR="$TC_HOME/webapps/candlepin/"
-
-REPOS="$TC_HOME/webapps/ROOT"
+#if [ "$SUPERVISOR" == "1" ]; then
+#    START="supervisorctl start tomcat"
+#    STOP="supervisorctl stop tomcat"
+#fi
+#
+#DEPLOY="$TC_HOME/webapps/candlepin.war"
+#DEPLOY_DIR="$TC_HOME/webapps/candlepin/"
+#
+#REPOS="$TC_HOME/webapps/ROOT"
 
 
 
 # stop the appserver
-eval $STOP
+# eval $STOP
 
 if [ "$EXTERNAL_BROKER" == "1" ]; then
     # Set up an external Artemis server
@@ -373,59 +433,64 @@ else
     DATABASE_SERVER="-Pdatabase_server=postgres"
 fi
 
-# TODO: spring-guice commented for testing
 printf "\nBuilding Candlepin\n"
 #echo $(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
 #$(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
+echo $(checkout_directory)/gradlew bootWar $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
+$(checkout_directory)/gradlew bootWar $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
 
 if [ "$?" -ne "0" ]; then
   err_msg "ERROR: Compile failed."
   exit 1
 fi
 
-gendb
-
-if [ "$FORCECERT" == "1" ]; then
-    GEN_CERTS_ARGS="-f"
-fi
-
-# generate SSL certs if they are needed
-bash $SELF_DIR/gen-certs $GEN_CERTS_ARGS
-
-# update keystore file and put it into tomcat's conf directory
-update_keystore
-
-# update server.xml
-# TODO: Commented to test the spring-guice project
-$SUDO python $PROJECT_DIR/bin/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
-
 create_var_lib_candlepin
 configure_tomcat_root_dir
 create_var_log_candlepin
 create_var_cache_candlepin
 
+# update keystore file and put it into tomcat's conf directory
+# update_keystore
+
 if [ "$AUTOCONF" == "1" ]; then
   autoconf
 fi
 
+# generate SSL certificates
+# TODO candlepin-spring: generate_ssl_certificate is for temporary purpose, certificates needs to be created in gen-certs
+generate_ssl_certificate
+
+if [ "$FORCECERT" == "1" ]; then
+    GEN_CERTS_ARGS="-f"
+fi
+
+
+cd $PROJECT_DIR
+# generate SSL certs if they are needed
+#bash $SELF_DIR/gen-certs $GEN_CERTS_ARGS
+bash bin/gen-certs $GEN_CERTS_ARGS
+
+# update server.xml
+# $SUDO python $PROJECT_DIR/bin/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
+
+gendb
+
 # deploy the webapp
-# TODO: Commented to test the spring-guice project
 deploy
 
 # Need to use newer APIs in context.xml for Tomcat 8+
-MAJOR_TC_VERSION=${TC_VERSION%.*}
-if (( MAJOR_TC_VERSION >= 8 )); then
-    printf "\nTomcat version is 8 or newer. Updating context.xml...\n\n"
-    $SUDO unzip -q $DEPLOY -d $DEPLOY_DIR
-    $SUDO mv $DEPLOY_DIR/META-INF/context_tomcat8.xml $DEPLOY_DIR/META-INF/context.xml
-    $SUDO chown -R tomcat:tomcat $DEPLOY_DIR
-fi
+#MAJOR_TC_VERSION=${TC_VERSION%.*}
+#if (( MAJOR_TC_VERSION >= 8 )); then
+#    printf "\nTomcat version is 8 or newer. Updating context.xml...\n\n"
+#    $SUDO unzip -q $DEPLOY -d $DEPLOY_DIR
+#    $SUDO mv $DEPLOY_DIR/META-INF/context_tomcat8.xml $DEPLOY_DIR/META-INF/context.xml
+#    $SUDO chown -R tomcat:tomcat $DEPLOY_DIR
+#fi
 
 eval $START
 
 START_TIME=$(date +%s)
 
-# TODO: Commented to test the spring-guice project
 printf "\nWaiting for Candlepin to start...\n"
 until curl -k -s "https://localhost:8443/candlepin/status" > /dev/null
 do
