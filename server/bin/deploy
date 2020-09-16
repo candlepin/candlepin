@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP_DB_NAME="candlepin"
-MAX_STARTUP_WAIT_TIME=30
+MAX_STARTUP_WAIT_TIME=60
 CP_EXTRACT_DIR=/var/tmp/candlepin
 # user running the application war file with embedded tomcat
 CP_USER="vagrant"
