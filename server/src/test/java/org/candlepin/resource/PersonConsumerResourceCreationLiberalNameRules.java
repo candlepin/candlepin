@@ -14,7 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
@@ -30,7 +31,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
 
 
 /**
@@ -63,12 +63,7 @@ public class PersonConsumerResourceCreationLiberalNameRules extends
     @Test
     public void registerWithKeys() {
         // we expect a BadRequestException here
-        try {
-            super.registerWithKeys();
-        }
-        catch (BadRequestException e) {
-            return;
-        }
+        assertThrows(BadRequestException.class, super::registerWithKeys);
     }
 
     @Test

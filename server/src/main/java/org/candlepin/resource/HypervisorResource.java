@@ -83,7 +83,6 @@ public class HypervisorResource implements HypervisorsApi {
     private OwnerCurator ownerCurator;
     private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
-    private GuestIdResource guestIdResource;
     private ConsumerType hypervisorType;
     private JobManager jobManager;
     private ObjectMapper mapper;
@@ -92,8 +91,8 @@ public class HypervisorResource implements HypervisorsApi {
     @Inject
     public HypervisorResource(ConsumerResource consumerResource, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, I18n i18n, OwnerCurator ownerCurator,
-        Provider<GuestMigration> migrationProvider, ModelTranslator translator,
-        GuestIdResource guestIdResource, JobManager jobManager, PrincipalProvider principalProvider,
+        Provider<GuestMigration> migrationProvider, ModelTranslator translator, JobManager jobManager,
+        PrincipalProvider principalProvider,
         @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper mapper) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
@@ -102,7 +101,6 @@ public class HypervisorResource implements HypervisorsApi {
         this.ownerCurator = ownerCurator;
         this.migrationProvider = migrationProvider;
         this.translator = translator;
-        this.guestIdResource = guestIdResource;
         this.jobManager = jobManager;
         this.mapper = mapper;
 
@@ -209,7 +207,7 @@ public class HypervisorResource implements HypervisorsApi {
                     }
                 }
                 List<GuestId> guestIds = new ArrayList<>();
-                guestIdResource.populateEntities(guestIds, hostEntry.getValue());
+                consumerResource.populateEntities(guestIds, hostEntry.getValue());
                 boolean guestIdsUpdated = addGuestIds(consumer, guestIds);
 
                 Date now = new Date();

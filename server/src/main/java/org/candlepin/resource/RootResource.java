@@ -75,8 +75,6 @@ public class RootResource implements RootApi {
         addResource(RootResource.class);
         addResource(DistributorVersionResource.class);
         addResource(DeletedConsumerResource.class);
-        addResource(GuestIdResource.class);
-        addResource(ConsumerContentOverrideResource.class);
     }
 
     @Inject

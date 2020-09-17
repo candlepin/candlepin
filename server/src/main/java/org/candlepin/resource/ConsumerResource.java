@@ -22,7 +22,6 @@ import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
-import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -59,26 +58,29 @@ import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerContentOverride;
+import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentAccessCertificate;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeleteResult;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -92,14 +94,15 @@ import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
+import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
@@ -124,6 +127,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.UserInfo;
 import org.candlepin.sync.ExportCreationException;
+import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.PropertyValidationException;
 import org.candlepin.util.Util;
@@ -140,6 +144,7 @@ import io.swagger.annotations.Authorization;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -160,6 +165,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -187,53 +193,53 @@ import javax.ws.rs.core.Response;
  */
 @Path("/consumers")
 @Api(value = "consumers", authorizations = { @Authorization("basic") })
-public class ConsumerResource {
-    private Pattern consumerSystemNamePattern;
-    private Pattern consumerPersonNamePattern;
+public class ConsumerResource implements ConsumersApi {
+    private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
 
-    private static Logger log = LoggerFactory.getLogger(ConsumerResource.class);
+    private final ConsumerCurator consumerCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final SubscriptionServiceAdapter subAdapter;
+    private final EntitlementCurator entitlementCurator;
+    private final IdentityCertServiceAdapter identityCertService;
+    private final EntitlementCertServiceAdapter entCertService;
+    private final ContentAccessManager contentAccessManager;
+    private final UserServiceAdapter userService;
+    private final I18n i18n;
+    private final EventSink sink;
+    private final EventFactory eventFactory;
+    private final PoolManager poolManager;
+    private final ConsumerRules consumerRules;
+    private final OwnerCurator ownerCurator;
+    private final ActivationKeyCurator activationKeyCurator;
+    private final Entitler entitler;
+    private final ComplianceRules complianceRules;
+    private final SystemPurposeComplianceRules systemPurposeComplianceRules;
+    private final DeletedConsumerCurator deletedConsumerCurator;
+    private final EnvironmentCurator environmentCurator;
+    private final DistributorVersionCurator distributorVersionCurator;
+    private final Configuration config;
+    private final CalculatedAttributesUtil calculatedAttributesUtil;
+    private final ConsumerBindUtil consumerBindUtil;
+    private final ManifestManager manifestManager;
+    private final FactValidator factValidator;
+    private final ConsumerTypeValidator consumerTypeValidator;
+    private final ConsumerEnricher consumerEnricher;
+    private final Provider<GuestMigration> migrationProvider;
+    private final ModelTranslator translator;
+    private final JobManager jobManager;
+    private final DTOValidator validator;
+    private final GuestIdCurator guestIdCurator;
+    private final PrincipalProvider principalProvider;
+    private final ContentOverrideValidator coValidator;
+    private final ConsumerContentOverrideCurator ccoCurator;
 
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private OwnerProductCurator ownerProductCurator;
-    private SubscriptionServiceAdapter subAdapter;
-    private EntitlementCurator entitlementCurator;
-    private IdentityCertServiceAdapter identityCertService;
-    private EntitlementCertServiceAdapter entCertService;
-    private ContentAccessManager contentAccessManager;
-    private UserServiceAdapter userService;
-    private I18n i18n;
-    private EventSink sink;
-    private EventFactory eventFactory;
-    private EventAdapter eventAdapter;
-    private PoolManager poolManager;
-    private ConsumerRules consumerRules;
-    private OwnerCurator ownerCurator;
-    private ActivationKeyCurator activationKeyCurator;
-    private Entitler entitler;
-    private ComplianceRules complianceRules;
-    private SystemPurposeComplianceRules systemPurposeComplianceRules;
-    private DeletedConsumerCurator deletedConsumerCurator;
-    private EnvironmentCurator environmentCurator;
-    private DistributorVersionCurator distributorVersionCurator;
-    private CdnCurator cdnCurator;
-    private Configuration config;
-    private CalculatedAttributesUtil calculatedAttributesUtil;
-    private ConsumerBindUtil consumerBindUtil;
-    private ManifestManager manifestManager;
-    private FactValidator factValidator;
-    private ConsumerTypeValidator consumerTypeValidator;
-    private ConsumerEnricher consumerEnricher;
-    private Provider<GuestMigration> migrationProvider;
-    private ModelTranslator translator;
-    private JobManager jobManager;
-    private DTOValidator validator;
+    private final Pattern consumerSystemNamePattern;
+    private final Pattern consumerPersonNamePattern;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        OwnerProductCurator ownerProductCurator,
         SubscriptionServiceAdapter subAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
@@ -241,7 +247,6 @@ public class ConsumerResource {
         I18n i18n,
         EventSink sink,
         EventFactory eventFactory,
-        EventAdapter eventAdapter,
         UserServiceAdapter userService,
         PoolManager poolManager,
         ConsumerRules consumerRules,
@@ -254,8 +259,6 @@ public class ConsumerResource {
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
         Configuration config,
-        ContentCurator contentCurator,
-        CdnCurator cdnCurator,
         CalculatedAttributesUtil calculatedAttributesUtil,
         ConsumerBindUtil consumerBindUtil,
         ManifestManager manifestManager,
@@ -266,47 +269,158 @@ public class ConsumerResource {
         Provider<GuestMigration> migrationProvider,
         ModelTranslator translator,
         JobManager jobManager,
-        DTOValidator validator) {
+        DTOValidator validator,
+        GuestIdCurator guestIdCurator,
+        PrincipalProvider principalProvider,
+        ContentOverrideValidator coValidator,
+        ConsumerContentOverrideCurator ccoCurator) {
 
-        this.consumerCurator = consumerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.ownerProductCurator = ownerProductCurator;
-        this.subAdapter = subAdapter;
-        this.entitlementCurator = entitlementCurator;
-        this.identityCertService = identityCertService;
-        this.entCertService = entCertServiceAdapter;
-        this.i18n = i18n;
-        this.sink = sink;
-        this.eventFactory = eventFactory;
-        this.userService = userService;
-        this.poolManager = poolManager;
-        this.consumerRules = consumerRules;
-        this.ownerCurator = ownerCurator;
-        this.eventAdapter = eventAdapter;
-        this.activationKeyCurator = activationKeyCurator;
-        this.entitler = entitler;
-        this.complianceRules = complianceRules;
-        this.systemPurposeComplianceRules = systemPurposeComplianceRules;
-        this.deletedConsumerCurator = deletedConsumerCurator;
-        this.environmentCurator = environmentCurator;
-        this.distributorVersionCurator = distributorVersionCurator;
-        this.cdnCurator = cdnCurator;
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.subAdapter = Objects.requireNonNull(subAdapter);
+        this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
+        this.identityCertService = Objects.requireNonNull(identityCertService);
+        this.entCertService = Objects.requireNonNull(entCertServiceAdapter);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.sink = Objects.requireNonNull(sink);
+        this.eventFactory = Objects.requireNonNull(eventFactory);
+        this.userService = Objects.requireNonNull(userService);
+        this.poolManager = Objects.requireNonNull(poolManager);
+        this.consumerRules = Objects.requireNonNull(consumerRules);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
+        this.entitler = Objects.requireNonNull(entitler);
+        this.complianceRules = Objects.requireNonNull(complianceRules);
+        this.systemPurposeComplianceRules = Objects.requireNonNull(systemPurposeComplianceRules);
+        this.deletedConsumerCurator = Objects.requireNonNull(deletedConsumerCurator);
+        this.environmentCurator = Objects.requireNonNull(environmentCurator);
+        this.distributorVersionCurator = Objects.requireNonNull(distributorVersionCurator);
+        this.config = Objects.requireNonNull(config);
+        this.calculatedAttributesUtil = Objects.requireNonNull(calculatedAttributesUtil);
+        this.consumerBindUtil = Objects.requireNonNull(consumerBindUtil);
+        this.manifestManager = Objects.requireNonNull(manifestManager);
+        this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
+        this.factValidator = Objects.requireNonNull(factValidator);
+        this.consumerTypeValidator = Objects.requireNonNull(consumerTypeValidator);
+        this.consumerEnricher = Objects.requireNonNull(consumerEnricher);
+        this.migrationProvider = Objects.requireNonNull(migrationProvider);
+        this.translator = Objects.requireNonNull(translator);
+        this.jobManager = Objects.requireNonNull(jobManager);
+        this.validator = Objects.requireNonNull(validator);
+        this.guestIdCurator = Objects.requireNonNull(guestIdCurator);
+        this.principalProvider = Objects.requireNonNull(principalProvider);
+        this.coValidator = Objects.requireNonNull(coValidator);
+        this.ccoCurator = Objects.requireNonNull(ccoCurator);
         this.consumerPersonNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_PERSON_NAME_PATTERN));
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
-        this.config = config;
-        this.calculatedAttributesUtil = calculatedAttributesUtil;
-        this.consumerBindUtil = consumerBindUtil;
-        this.manifestManager = manifestManager;
-        this.contentAccessManager = contentAccessManager;
-        this.factValidator = factValidator;
-        this.consumerTypeValidator = consumerTypeValidator;
-        this.consumerEnricher = consumerEnricher;
-        this.migrationProvider = migrationProvider;
-        this.translator = translator;
-        this.jobManager = jobManager;
-        this.validator = validator;
+    }
+
+    @Override
+    @SecurityHole
+    public Iterable<ContentOverrideDTO> listConsumerContentOverrides(String consumerUuid) {
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.READ_ONLY);
+
+        CandlepinQuery<ConsumerContentOverride> query = this.ccoCurator.getList(parent);
+        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+    }
+
+    @Override
+    @Transactional
+    @SecurityHole
+    public Iterable<ContentOverrideDTO> addConsumerContentOverrides(
+        String consumerUuid, List<ContentOverrideDTO> entries) {
+
+        // Validate our input
+        this.coValidator.validate(entries);
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        // Fetch the "parent" content override object...
+        Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.ALL);
+
+        try {
+            for (ContentOverrideDTO dto : entries) {
+                ConsumerContentOverride override = this.ccoCurator
+                    .retrieve(parent, dto.getContentLabel(), dto.getName());
+
+                // We're counting on Hibernate to do our batching for us here...
+                if (override != null) {
+                    override.setValue(dto.getValue());
+                    this.ccoCurator.merge(override);
+                }
+                else {
+                    override = new ConsumerContentOverride();
+
+                    override.setParent(parent);
+                    override.setContentLabel(dto.getContentLabel());
+                    override.setName(dto.getName());
+                    override.setValue(dto.getValue());
+
+                    this.ccoCurator.create(override);
+                }
+            }
+        }
+        catch (RuntimeException e) {
+            // Make sure we clear all pending changes, since we don't want to risk storing only a
+            // portion of the changes.
+            this.ccoCurator.clear();
+
+            // Re-throw the exception
+            throw e;
+        }
+
+        // Hibernate typically persists automatically before executing a query against a table with
+        // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
+        // correct values
+        CandlepinQuery<ConsumerContentOverride> query = this.ccoCurator.getList(parent);
+        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+    }
+
+    @Override
+    @Transactional
+    @SecurityHole
+    public Iterable<ContentOverrideDTO> deleteConsumerContentOverrides(
+        String consumerUuid, List<ContentOverrideDTO> entries) {
+
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.ALL);
+
+        if (entries.size() == 0) {
+            this.ccoCurator.removeByParent(parent);
+        }
+        else {
+            for (ContentOverrideDTO dto : entries) {
+                String label = dto.getContentLabel();
+                if (StringUtils.isBlank(label)) {
+                    this.ccoCurator.removeByParent(parent);
+                }
+                else {
+                    String name = dto.getName();
+                    if (StringUtils.isBlank(name)) {
+                        this.ccoCurator.removeByContentLabel(parent, dto.getContentLabel());
+                    }
+                    else {
+                        this.ccoCurator.removeByName(parent, dto.getContentLabel(), name);
+                    }
+                }
+            }
+        }
+
+        CandlepinQuery<ConsumerContentOverride> query = this.ccoCurator.getList(parent);
+        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+    }
+
+    private Consumer verifyAndGetParent(String parentId, Principal principal, Access access) {
+        // Throws exception if criteria block the id
+        Consumer result = this.consumerCurator.verifyAndLookupConsumer(parentId);
+
+        // Now that we know it exists, verify access level
+        if (!principal.canAccess(result, SubResource.NONE, access)) {
+            throw new ForbiddenException(i18n.tr("Insufficient permissions"));
+        }
+
+        return result;
     }
 
     /**
@@ -979,12 +1093,6 @@ public class ConsumerResource {
         return keys;
     }
 
-    /**
-     * @param consumer
-     * @param principal
-     * @param userName
-     * @return a String object
-     */
     private String setUserName(ConsumerDTO consumer, Principal principal, String userName) {
         if (userName == null) {
             userName = principal.getUsername();
@@ -996,11 +1104,6 @@ public class ConsumerResource {
         return userName;
     }
 
-    /**
-     * @param existing
-     * @param update
-     * @return a String object
-     */
     private boolean updateCapabilities(Consumer existing, ConsumerDTO update) {
         boolean change = false;
         if (update == null) {
@@ -1057,10 +1160,6 @@ public class ConsumerResource {
         return change;
     }
 
-    /**
-     * @param consumer
-     * @return a String object
-     */
     private void checkConsumerName(ConsumerDTO consumer) {
         // for now this applies to both types consumer
         if (consumer.getName() != null) {
@@ -1769,7 +1868,7 @@ public class ConsumerResource {
         catch (OptimisticLockException e) {
             DeletedConsumer deleted = deletedConsumerCurator.findByConsumerUuid(uuid);
             if (deleted != null) {
-                log.debug("The consumer with UUID {} was deleted while waiting for lock.");
+                log.debug("The consumer with UUID {} was deleted while waiting for lock.", uuid);
                 throw new GoneException(
                     i18n.tr("Consumer with UUID {0} was already deleted.", uuid));
             }
@@ -1950,9 +2049,7 @@ public class ConsumerResource {
     private Set<String> splitKeys(String activationKeyString) {
         Set<String> keys = new LinkedHashSet<>();
         if (activationKeyString != null) {
-            for (String s : activationKeyString.split(",")) {
-                keys.add(s);
-            }
+            Collections.addAll(keys, activationKeyString.split(","));
         }
         return keys;
     }
@@ -1981,7 +2078,7 @@ public class ConsumerResource {
 
         List<CertificateSerialDTO> allCerts = new LinkedList<>();
         for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
-            allCerts.add(new CertificateSerialDTO().serial(Long.valueOf(id.longValue())));
+            allCerts.add(new CertificateSerialDTO().serial(id.longValue()));
         }
 
         // add content access cert if needed
@@ -1989,7 +2086,7 @@ public class ConsumerResource {
             ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
             if (cac != null) {
                 allCerts.add(new CertificateSerialDTO().serial(
-                    Long.valueOf(cac.getSerial().getId().longValue())));
+                    cac.getSerial().getId().longValue()));
             }
         }
         catch (IOException ioe) {
@@ -2224,13 +2321,13 @@ public class ConsumerResource {
             dryRunPools = entitler.getDryRun(consumer, owner, serviceLevel);
         }
         catch (ForbiddenException fe) {
-            return Collections.<PoolQuantityDTO>emptyList();
+            return Collections.emptyList();
         }
         catch (BadRequestException bre) {
             throw bre;
         }
         catch (RuntimeException re) {
-            return Collections.<PoolQuantityDTO>emptyList();
+            return Collections.emptyList();
         }
         if (dryRunPools != null) {
             List<PoolQuantityDTO> dryRunPoolDtos = new ArrayList<>();
@@ -2240,7 +2337,7 @@ public class ConsumerResource {
             return dryRunPoolDtos;
         }
         else {
-            return Collections.<PoolQuantityDTO>emptyList();
+            return Collections.emptyList();
         }
     }
 
@@ -2856,4 +2953,180 @@ public class ConsumerResource {
         }
         return null;
     }
+
+    @Override
+    public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+        return  translator.translateQuery(guestIdCurator.listByConsumer(consumer),
+            GuestIdDTOArrayElement.class);
+    }
+
+    @Override
+    public GuestIdDTO getGuestId(@Verify(Consumer.class) String consumerUuid, String guestId) {
+        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+        GuestId result = validateGuestId(
+            guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
+        return translator.translate(result, GuestIdDTO.class);
+    }
+
+    /**
+     * Populates the specified entity with data from the provided DTO.
+     *
+     * @param guestId
+     *  The entity instance to populate
+     *
+     * @param dto
+     *  The DTO containing the data with which to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntity(GuestId guestId, GuestIdDTO dto) {
+        if (guestId == null) {
+            throw new IllegalArgumentException("the guestId model entity is null");
+        }
+
+        if (dto == null) {
+            throw new IllegalArgumentException("the guestId dto is null");
+        }
+
+        guestId.setId(dto.getId());
+        guestId.setGuestId(dto.getGuestId());
+        if (dto.getAttributes() != null) {
+            guestId.setAttributes(dto.getAttributes());
+        }
+    }
+
+    /**
+     * Populates the specified entities with data from the provided guestIds.
+     *
+     * @param entities
+     *  The entities instance to populate
+     *
+     * @param guestIds
+     *  The list of string containing the guestIds to populate the entity
+     *
+     * @throws IllegalArgumentException
+     *  if either entity or dto are null
+     */
+    protected void populateEntities(List<GuestId> entities, List<String> guestIds) {
+        if (entities == null) {
+            throw new IllegalArgumentException("the guestId model entity is null");
+        }
+
+        if (guestIds == null) {
+            throw new IllegalArgumentException("the list of guestId is null");
+        }
+
+        for (String guestId : guestIds) {
+            if (guestId == null) {
+                continue;
+            }
+            entities.add(new GuestId(guestId));
+        }
+    }
+
+    @Override
+    public void updateGuests(@Verify(Consumer.class) String consumerUuid, List<GuestIdDTO> guestIdDTOs) {
+        Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
+
+        // Create a skeleton consumer for consumerResource.performConsumerUpdates
+        ConsumerDTO consumer = new ConsumerDTO();
+        consumer.setGuestIds(guestIdDTOs);
+
+        Set<String> allGuestIds = new HashSet<>();
+        for (GuestIdDTO gid : consumer.getGuestIds()) {
+            allGuestIds.add(gid.getGuestId());
+        }
+        VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
+            toUpdate.getOwnerId(), allGuestIds);
+
+        GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(consumer, toUpdate);
+        if (performConsumerUpdates(consumer, toUpdate, guestMigration)) {
+
+            if (guestMigration.isMigrationPending()) {
+                guestMigration.migrate();
+            }
+            else {
+                consumerCurator.update(toUpdate);
+            }
+        }
+    }
+
+    @Override
+    public void updateGuest(
+        @Verify(Consumer.class) String consumerUuid, String guestId, GuestIdDTO updatedDTO) {
+
+        // I'm not sure this can happen
+        if (guestId == null || guestId.isEmpty()) {
+            throw new BadRequestException(
+                i18n.tr("Please supply a valid guest id"));
+        }
+
+        if (updatedDTO == null) {
+            // If they're not sending attributes, we can get the guestId from the url
+            updatedDTO = new GuestIdDTO().guestId(guestId);
+        }
+
+        // Allow the id to be left out in this case, we can use the path param
+        if (updatedDTO.getGuestId() == null) {
+            updatedDTO.setGuestId(guestId);
+        }
+
+        // If the guest uuids do not match, something is wrong
+        if (!guestId.equalsIgnoreCase(updatedDTO.getGuestId())) {
+            throw new BadRequestException(
+                i18n.tr("Guest ID in json \"{0}\" does not match path guest ID \"{1}\"",
+                    updatedDTO.getGuestId(), guestId));
+        }
+
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        GuestId guestIdEntity = new GuestId();
+        populateEntity(guestIdEntity, updatedDTO);
+        guestIdEntity.setConsumer(consumer);
+        GuestId toUpdate = guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwnerId());
+        if (toUpdate != null) {
+            guestIdEntity.setId(toUpdate.getId());
+        }
+        guestIdCurator.merge(guestIdEntity);
+    }
+
+    @Override
+    public void deleteGuest(@Verify(Consumer.class) String consumerUuid, String guestId, Boolean unregister) {
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        GuestId toDelete = validateGuestId(guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
+
+        if (unregister) {
+            Principal principal = (this.principalProvider == null ? null : this.principalProvider.get());
+            unregisterConsumer(toDelete, principal);
+        }
+
+        sink.queueEvent(eventFactory.guestIdDeleted(toDelete));
+        guestIdCurator.delete(toDelete);
+    }
+
+    private GuestId validateGuestId(GuestId guest, String guestUuid) {
+        if (guest == null) {
+            throw new NotFoundException(i18n.tr("Guest with UUID {0} could not be found.", guestUuid));
+        }
+
+        return guest;
+    }
+
+    private void unregisterConsumer(GuestId guest, Principal principal) {
+        Consumer guestConsumer = consumerCurator.findByVirtUuid(guest.getGuestId(),
+            guest.getConsumer().getOwnerId());
+        if (guestConsumer != null) {
+            if ((principal == null) || principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
+                deleteConsumer(guestConsumer.getUuid(), principal);
+            }
+            else {
+                ConsumerType type = this.consumerTypeCurator.get(guestConsumer.getTypeId());
+
+                throw new ForbiddenException(i18n.tr("Cannot unregister {0} {1} because: {2}",
+                    type, guestConsumer.getName(), i18n.tr("Invalid Credentials")));
+            }
+        }
+    }
+
 }

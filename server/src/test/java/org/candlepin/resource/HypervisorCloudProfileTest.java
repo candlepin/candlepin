@@ -65,7 +65,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
     @Inject private ConsumerCurator consumerCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private GuestIdResource guestIdResource;
+    @Inject private ConsumerResource guestIdResource;
     @Inject private OwnerCurator ownerCurator;
     @Inject private EnvironmentCurator environmentCurator;
     @Inject private PermissionFactory permFactory;

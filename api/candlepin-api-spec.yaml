@@ -509,6 +509,178 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /consumers/{consumer_uuid}/content_overrides:
+    get:
+      description: Retrieves list of Content Overrides
+      tags:
+        - Consumer
+        - Content Override
+      operationId: listConsumerContentOverrides
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The ID of the consumer
+          required: true
+          schema:
+            type: string
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of content overrides of the Consumer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Unit with ID "test_id" could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unit with ID "test_id" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Adds or Updates a list of Content Overrides
+      tags:
+        - Consumer
+        - Content Override
+      operationId: addConsumerContentOverrides
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The ID of the Consumer
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of the content overrides
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentOverrideDTO'
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of the created/update content overrides of the Consumer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        400:
+          description: |
+            The following content labels are invalid: test_label
+            The following content properties cannot be overridden: test_property
+            The following override values are invalid: test_value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: "The following override values are invalid: test_value"
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Unit with ID "test_id" could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unit with ID "test_id" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Deletes a list of Content Overrides
+      tags:
+        - Consumer
+        - Content Override
+      operationId: deleteConsumerContentOverrides
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The ID of the Consumer
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The list of the content overrides
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContentOverrideDTO'
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of the deleted content overrides of the Consumer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentOverrideDTO'
+        403:
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Unit with ID "test_id" could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unit with ID "test_id" could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers/{consumer_uuid}/guestids:
     get:
       description: Retrieves the list of a Consumer's Guests

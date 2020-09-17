@@ -65,10 +65,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.resource.util.ConsumerBindUtil;
-import org.candlepin.resource.util.ConsumerEnricher;
-import org.candlepin.resource.util.GuestMigration;
-import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
@@ -77,7 +73,6 @@ import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
-import com.google.inject.util.Providers;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,7 +91,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
@@ -114,10 +108,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Inject private ConsumerResource consumerResource;
     @Inject private IdentityCertServiceAdapter icsa;
     @Inject private CertificateSerialCurator serialCurator;
-    @Inject private ConsumerEnricher consumerEnricher;
     @Inject protected ModelTranslator modelTranslator;
     @Inject protected JobManager jobManager;
-    @Inject private DTOValidator dtoValidator;
 
     private ConsumerType standardSystemType;
     private ConsumerTypeDTO standardSystemTypeDTO;
@@ -610,17 +602,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() throws JobException {
-        GuestMigration testMigration = new GuestMigration(consumerCurator);
-        Provider<GuestMigration> migrationProvider = Providers.of(testMigration);
-
-        ConsumerResource cr = new ConsumerResource(
-            this.consumerCurator, this.consumerTypeCurator, null, null, this.entitlementCurator, null,
-            null, null, null, null, null, null, this.poolManager, null, null, null, null,
-            null, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
-            null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator,
-            this.jobManager, this.dtoValidator);
-
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null,
             null, false, null, null);
 
@@ -629,7 +610,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(1, ent.getCertificates().size());
         CertificateDTO entCertBefore = ent.getCertificates().iterator().next();
 
-        cr.regenerateEntitlementCertificates(this.consumer.getUuid(), ent.getId(), false);
+        consumerResource.regenerateEntitlementCertificates(this.consumer.getUuid(), ent.getId(), false);
 
         Entitlement entWithRefreshedCerts = entitlementCurator.get(ent.getId());
         ent = this.modelTranslator.translate(entWithRefreshedCerts, EntitlementDTO.class);
@@ -654,9 +635,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         }
     }
 
-    private Set<String> toSet(String s) {
+    private Set<String> toSet(String item) {
         Set<String> result = new HashSet<>();
-        result.add(s);
+        result.add(item);
         return result;
     }
 
@@ -675,9 +656,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         CertificateDTO original = serials.get(0);
         CertificateSerialDTO serialDTO  = original.getSerial();
-        CertificateSerial serial = new CertificateSerial(Long.valueOf(serialDTO.getId()),
+        CertificateSerial serial = new CertificateSerial(serialDTO.getId(),
             Util.toDate(serialDTO.getExpiration()));
-        serial.setSerial(Long.valueOf(serialDTO.getSerial()));
+        serial.setSerial(serialDTO.getSerial());
         serial.setCollected(serialDTO.getCollected());
         serial.setRevoked(serialDTO.getRevoked());
 
