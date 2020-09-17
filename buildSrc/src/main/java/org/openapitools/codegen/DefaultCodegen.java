@@ -2759,7 +2759,7 @@ public class DefaultCodegen implements CodegenConfig {
     public CodegenResponse fromResponse(String responseCode, ApiResponse response) {
         CodegenResponse r = CodegenModelFactory.newInstance(CodegenModelType.RESPONSE);
         if ("default".equals(responseCode)) {
-            r.code = "0";
+            r.code = "500";
         } else {
             r.code = responseCode;
         }
