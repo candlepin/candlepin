@@ -346,6 +346,11 @@ describe 'Content Access' do
     expect {
       @consumer.update_consumer({'contentAccessMode' => "invalid"})
     }.to raise_exception(RestClient::BadRequest)
+
+    # We should also be able to set the correct content access mode when registering (instead of updating)
+    consumer2 = @user.register(random_string('consumer'), :candlepin, nil, {}, nil, nil, [], [], nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, [], nil, nil, "org_environment")
+    expect(consumer2["contentAccessMode"]).to eq("org_environment")
   end
 
   it "will not set the content access mode for a regular consumer" do
