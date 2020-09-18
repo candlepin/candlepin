@@ -901,7 +901,7 @@ public class ConsumerResource {
                 throw new BadRequestException(
                     i18n.tr("The consumer cannot be assigned a content access mode."));
             }
-            if (owner.isAllowedContentAccessMode(consumer.getContentAccessMode())) {
+            if (!owner.isAllowedContentAccessMode(consumer.getContentAccessMode())) {
                 throw new BadRequestException(
                     i18n.tr("The consumer cannot use the supplied content access mode."));
             }
