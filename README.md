@@ -137,7 +137,8 @@ Fedora 28.  Change those values as appropriate.
 * `buildr pom` creates a `pom.xml` file with the project dependencies in it
 * `buildr rpmlint` runs `rpmlint` on all `*.spec` files
 
-### Candlepin-Spring
+
+## Candlepin-Spring
 * Deploying application via script:
   ```
   ./server/bin/deploy
