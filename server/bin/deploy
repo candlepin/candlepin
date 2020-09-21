@@ -61,7 +61,9 @@ gendb() {
 #    (cd $PROJECT_DIR && $LQCOMMAND)
 #    evalrc $? "Liquibase command failed"
 
-    # Run the liquibase-only profile in Spring to perform the liquibase migration
+    # TODO candlepin-spring: a logic to clean up of the existing candlepin processes is needed at this point
+
+    # run the liquibase-only profile in Spring to perform the liquibase migration
     printf "\nWaiting for Liquibase migration to finish...\n"
     echo java -jar -Dspring.profiles.active=liquibase-only -Dcandlepin.create_database=$CREATEDB $PROJECT_DIR/build/libs/candlepin-3.1.11.war
     until java -jar -Dspring.profiles.active=liquibase-only -Dcandlepin.create_database=$CREATEDB $PROJECT_DIR/build/libs/candlepin-3.1.11.war > /dev/null
@@ -91,8 +93,8 @@ deploy() {
     else
         $SUDO rm -rf $DEPLOY_DIR
     fi
-    #echo cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
-    #$SUDO cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
+
+    # run the bootable war file with embedded tomcat
     echo java -jar $PROJECT_DIR/build/libs/candlepin-$VERSION.war
     java -jar $PROJECT_DIR/build/libs/candlepin-$VERSION.war > /dev/null 2>&1 &
 }
