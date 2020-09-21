@@ -137,3 +137,34 @@ Fedora 28.  Change those values as appropriate.
 * `buildr pom` creates a `pom.xml` file with the project dependencies in it
 * `buildr rpmlint` runs `rpmlint` on all `*.spec` files
 
+
+## Candlepin-Spring
+* Deploying application via script:
+  ```
+  ./server/bin/deploy
+  ```
+  
+* Deploying with -g flag will drop the existing database and generate a new one:
+  ```
+  ./server/bin/deploy -g
+  ```
+  
+* For running application with liquibase update database: 
+  ```
+  java -jar server/build/libs/candlepin-3.1.11.war
+  ```
+  
+* For liquibase changes only (exiting application after updates): 
+  ```
+  java -jar -Dspring.profiles.active=liquibase-only server/build/libs/candlepin-3.1.11.war 
+  ```
+  
+* To change the mode to create database, override the candlepin.create_database property to true. (See example below):
+  ```
+  java -jar -Dcandlepin.create_database=true server/build/libs/candlepin-3.1.11.war
+  ```
+  ```
+  java -jar -Dspring.profiles.active=liquibase-only -Dcandlepin.create_database=true server/build/libs/candlepin-3.1.11.war 
+  ```
+
+
