@@ -621,8 +621,8 @@ public class PoolRules {
 
         boolean productsChanged = false;
         if (pool.getDerivedProduct() != null) {
-            productsChanged = !pool.getDerivedProduct().getId()
-                .equals(existingPool.getDerivedProduct().getId());
+            productsChanged = existingPool.getDerivedProduct() == null ||
+                !pool.getDerivedProduct().getId().equals(existingPool.getDerivedProduct().getId());
 
             productsChanged |=
                 (changedProducts != null && changedProducts.containsKey(pool.getDerivedProduct().getId()));
