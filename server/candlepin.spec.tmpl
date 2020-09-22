@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.29
+Version: 2.9.30
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Tue Sep 22 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.30-1
+- 1881181: Fixed an NPE during refresh when adding new derived products
+  (crog@redhat.com)
+
 * Tue Sep 15 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.29-1
 -  1878817: When delete the hypervisor from satellite, the manifest will be
   broken (ojanus@redhat.com)
