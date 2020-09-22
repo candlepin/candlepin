@@ -16,14 +16,7 @@ package org.candlepin.async;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
@@ -892,6 +885,48 @@ public class JobManagerTest {
 
         assertThrows(JobStateManagementException.class,
             () -> manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY)));
+    }
+
+    @Test
+    public void testTryingToExecuteJobInRunningStateThrowsIllegalStateException() {
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(TestJob.JOB_KEY)
+            .setState(JobState.RUNNING)
+            .setMaxAttempts(3))
+            .setExecutor("random.hostname.com");  // this job was running on another node previously
+
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        doReturn(JOB_ID).when(status).getId();
+        this.injectMockedJobStatus(status);
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+        manager.start();
+
+        assertThrows(IllegalStateException.class,
+            () -> manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY)));
+    }
+
+    @Test
+    public void testTryingToExecuteJobInRunningStateOnTheSameExecutorShouldContinueExecutingTheJob() {
+        AsyncJobStatus status = spy(new AsyncJobStatus()
+            .setJobKey(TestJob.JOB_KEY)
+            .setState(JobState.RUNNING)
+            .setMaxAttempts(3))
+            .setExecutor(Util.getHostname()); // this job was running on the current node previously
+
+        AsyncJob job = jdata -> { /* do nothing */ };
+
+        // TODO: Stop doing this when we stop relying on Hibernate to generate the ID for us
+        doReturn(JOB_ID).when(status).getId();
+        doReturn(job).when(this.injector).getInstance(TestJob.class);
+        this.injectMockedJobStatus(status);
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+        manager.start();
+
+        assertDoesNotThrow(() -> manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY)));
     }
 
     @Test

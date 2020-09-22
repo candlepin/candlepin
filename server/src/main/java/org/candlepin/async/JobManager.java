@@ -1539,6 +1539,21 @@ public class JobManager implements ModeChangeListener {
             log.error(errmsg);
             throw new JobInitializationException(errmsg, true);
         }
+        else if (jobState == JobState.RUNNING) {
+            if (Util.getHostname().equals(status.getExecutor())) {
+                // This goes against valid state transitions, but this node was the previous executor,
+                // so we should be fine to go on executing it again here.
+                status.setState(JobState.QUEUED);
+            }
+            else {
+                String errmsg = String.format(
+                    "Job \"%s\" (%s) is already running on host \"%s\"; ignoring execution request",
+                    status.getId(), status.getJobKey(), status.getExecutor());
+
+                log.error(errmsg);
+                throw new IllegalStateException(errmsg);
+            }
+        }
         else if (jobState != JobState.QUEUED) {
             // Warn if we're about to execute a job that's not queued for execution (this is likely
             // just state recovery and is probably okay).
