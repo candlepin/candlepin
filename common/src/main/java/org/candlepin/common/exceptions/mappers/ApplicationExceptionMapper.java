@@ -26,7 +26,8 @@ import javax.ws.rs.ext.Provider;
  * into JSON and allows the proper header to be set. This allows
  * Candlepin to control the flow of the exceptions.
  */
-@Component
+// TODO spring: This is not registered as Component since there was no binding present in guice module.
+//  Registering this as component will cause all the exceptions to be routed to this class which we do not want.
 @Provider
 public class ApplicationExceptionMapper extends CandlepinExceptionMapper
     implements ExceptionMapper<ApplicationException> {
