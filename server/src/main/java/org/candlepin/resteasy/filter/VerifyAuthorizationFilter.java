@@ -71,7 +71,6 @@ public class VerifyAuthorizationFilter extends AbstractAuthorizationFilter {
     private StoreFactory storeFactory;
     private AnnotationLocator annotationLocator;
 
-    //@Inject
     @Autowired
     public VerifyAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider, StoreFactory storeFactory,
         AnnotationLocator annotationLocator) {

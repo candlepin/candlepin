@@ -15,12 +15,7 @@
 
 package org.candlepin.spring;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Module;
 import com.google.inject.Stage;
-import com.google.inject.persist.PersistService;
-import com.google.inject.util.Modules;
 import io.swagger.converter.ModelConverters;
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.async.JobManager;
@@ -41,12 +36,7 @@ import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.util.CrlFileUtil;
 import org.candlepin.util.Util;
-import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.dialect.PostgreSQL92Dialect;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.jboss.resteasy.springboot.ResteasyAutoConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,16 +44,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.ContextStartedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.guice.annotation.EnableGuiceModules;
 import org.springframework.retry.annotation.EnableRetry;
-import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18nManager;
 
 import javax.cache.CacheManager;
-import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -98,8 +86,6 @@ public class CandlepinContextListener {
         I18nManager.getInstance().setDefaultLocale(Locale.US);
        // i18nManager.setDefaultLocale(Locale.US);
     }
-
-    //private static Logger log = LoggerFactory.getLogger(org.candlepin.guice.CandlepinContextListener.class);
 
     private static Logger log = LoggerFactory.getLogger(org.candlepin.spring.CandlepinContextListener.class);
 
@@ -148,9 +134,6 @@ public class CandlepinContextListener {
     private AMQPBusPublisher amqpBusPublisher;
 
     @Autowired
-    private PersistService persistService;
-
-    @Autowired
     private LoggerContextListener loggerListener;
 
     @EventListener(classes = { ContextRefreshedEvent.class})
@@ -192,7 +175,8 @@ public class CandlepinContextListener {
         //insertValidationEventListeners(injector);
 
         //AnnotationLocator annotationLocator = injector.getInstance(AnnotationLocator.class);
-        annotationLocator.init();
+        // TODO spring-guice: this is moved to the constructor of AuthorizationFeature.
+        //annotationLocator.init();
 
 
         // make sure our session factory is initialized before we attempt to start something

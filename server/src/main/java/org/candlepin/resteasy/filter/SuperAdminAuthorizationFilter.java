@@ -43,8 +43,7 @@ import javax.ws.rs.container.ResourceInfo;
 public class SuperAdminAuthorizationFilter extends AbstractAuthorizationFilter {
     private static final Logger log = LoggerFactory.getLogger(SuperAdminAuthorizationFilter.class);
 
-    @Inject
-    //@Autowired
+    @Autowired
     public SuperAdminAuthorizationFilter(javax.inject.Provider<I18n> i18nProvider) {
         this.i18nProvider = i18nProvider;
     }

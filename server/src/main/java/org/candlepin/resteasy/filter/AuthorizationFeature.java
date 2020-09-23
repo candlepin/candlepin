@@ -43,7 +43,7 @@ import javax.ws.rs.ext.Provider;
  * Guice will throw a ProvisionException if nothing is bound to the
  * AuthorizationFilter annotation.
  */
-//@Component
+@Component
 @Provider
 public class AuthorizationFeature implements DynamicFeature {
     private static final Logger log = LoggerFactory.getLogger(AuthorizationFeature.class);
@@ -53,12 +53,14 @@ public class AuthorizationFeature implements DynamicFeature {
     private AbstractAuthorizationFilter securityHoleFilter;
     private AnnotationLocator annotationLocator;
 
-    @Inject
-    //@Autowired
+    @Autowired
     public AuthorizationFeature(VerifyAuthorizationFilter authorizationFilter,
         SuperAdminAuthorizationFilter superAdminFilter,
         SecurityHoleAuthorizationFilter securityHoleFilter,
         AnnotationLocator annotationLocator) {
+        // TODO spring: this is temporarily moved from CandlepinContextListener
+        // A right spot is yet to be found for this
+        annotationLocator.init();
         this.authorizationFilter = authorizationFilter;
         this.superAdminFilter = superAdminFilter;
         this.securityHoleFilter = securityHoleFilter;
