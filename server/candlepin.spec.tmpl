@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.21
+Version: 3.2.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,11 @@ fi
 
 #raw
 %changelog
+* Thu Sep 24 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.0-1
+- 1854221: Validate early if executing job in RUNNING state
+  (nmoumoul@redhat.com)
+- 1879494: Allow consumer registration with SCA mode (nmoumoul@redhat.com)
+
 * Wed Sep 16 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.21-1
 - 1877340: JobManager now removes dead jobs from the scheduler
   (crog@redhat.com)
