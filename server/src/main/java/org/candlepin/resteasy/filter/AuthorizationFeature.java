@@ -28,7 +28,6 @@ import org.springframework.stereotype.Component;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
-import javax.inject.Inject;
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
@@ -58,13 +57,13 @@ public class AuthorizationFeature implements DynamicFeature {
         SuperAdminAuthorizationFilter superAdminFilter,
         SecurityHoleAuthorizationFilter securityHoleFilter,
         AnnotationLocator annotationLocator) {
-        // TODO spring: this is temporarily moved from CandlepinContextListener
-        // A right spot is yet to be found for this
-        annotationLocator.init();
+
+
         this.authorizationFilter = authorizationFilter;
         this.superAdminFilter = superAdminFilter;
         this.securityHoleFilter = securityHoleFilter;
         this.annotationLocator = annotationLocator;
+
     }
 
     @Override

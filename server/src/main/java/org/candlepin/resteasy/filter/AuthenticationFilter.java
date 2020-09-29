@@ -32,7 +32,6 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.resteasy.AnnotationLocator;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.swagger.jaxrs.listing.ApiListingResource;
@@ -43,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -71,7 +69,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private static Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     @Context
-    //@Autowired
     private HttpServletRequest request;
 
     private ConsumerCurator consumerCurator;
@@ -80,8 +77,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private AnnotationLocator annotationLocator;
     private List<AuthProvider> providers = new ArrayList<>();
 
-    @Inject
-    //@Autowired
+    @Autowired
     public AuthenticationFilter(Configuration config,
         ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator,
@@ -91,7 +87,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         this.injector = injector;
         this.config = config;
         this.annotationLocator = annotationLocator;
-
+        // TODO spring: this is temporarily moved from CandlepinContextListener
+        // A right spot is yet to be found for this
+        annotationLocator.init();
         setupAuthStrategies();
     }
 
