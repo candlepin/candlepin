@@ -17,6 +17,7 @@ package org.candlepin.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,11 +28,14 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -139,7 +143,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         List<Long> expected = builder
             .fetch((serial) -> serial != null && !serial.isCollected() &&
                 serial.isRevoked() && serial.getExpiration().compareTo(now) >= 0)
-            .map((serial) -> serial.getId())
+            .map(CertificateSerial::getId)
             .collect(Collectors.toList());
 
         List<Long> uncollected = this.certSerialCurator.getUncollectedRevokedCertSerials().list();
@@ -206,7 +210,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         Date cutoff = Util.midnight();
         List<Long> expected = builder
             .fetch((serial) -> serial != null && serial.isRevoked() && serial.getExpiration().before(cutoff))
-            .map((serial) -> serial.getId())
+            .map(CertificateSerial::getId)
             .collect(Collectors.toList());
 
         List<Long> uncollected = this.certSerialCurator.getExpiredRevokedCertSerials().list();
@@ -238,7 +242,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
 
         List<Long> expected = builder
             .fetch((serial) -> serial != null && serial.isRevoked() && serial.getExpiration().before(now))
-            .map((serial) -> serial.getId())
+            .map(CertificateSerial::getId)
             .collect(Collectors.toList());
 
         List<Long> uncollected = this.certSerialCurator.getExpiredRevokedCertSerials().list();
@@ -279,7 +283,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
 
         List<Long> expected = builder
             .fetch((serial) -> serial != null && serial.isRevoked() && serial.getExpiration().before(cutoff))
-            .map((serial) -> serial.getId())
+            .map(CertificateSerial::getId)
             .collect(Collectors.toList());
 
         List<Long> uncollected = this.certSerialCurator.getExpiredRevokedCertSerials(cutoff).list();
@@ -303,9 +307,10 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         CertificateSerial serial = builder.withExpDate("03/10/2010").collected(false).revoked(false).build();
         CertificateSerial serial1 = builder.withExpDate("03/10/2012").collected(true).revoked(true).build();
 
-        String[] ids = new String[2];
-        ids[0] = String.valueOf(serial.getSerial());
-        ids[1] = String.valueOf(serial1.getSerial());
+        List<String> ids = Arrays.asList(
+            String.valueOf(serial.getSerial()),
+            String.valueOf(serial1.getSerial())
+        );
 
         List<CertificateSerial> serials = certSerialCurator.listBySerialIds(ids).list();
         assertEquals(2, serials.size());
@@ -323,7 +328,7 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testListBySerialIdsReturnsNullGivenNull() {
-        assertEquals(null, certSerialCurator.listBySerialIds(null));
+        assertNull(certSerialCurator.listBySerialIds(null));
     }
 
     @Test
@@ -338,13 +343,13 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         assertEquals(expectedSerialNumber, serial.getId());
 
         CandlepinQuery<CertificateSerial> serialQuery =
-            certSerialCurator.listBySerialIds(new String[] {serial.getId().toString()});
+            certSerialCurator.listBySerialIds(Collections.singletonList(serial.getId().toString()));
 
         assertEquals(1, serialQuery.getRowCount());
     }
 
     @Test
-    public void deleteAllExpiredCertsThatHaveBeenRevokedButNotYetBeenCollected() throws Exception {
+    public void deleteAllExpiredCertsThatHaveBeenRevokedButNotYetBeenCollected() {
         CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);
 
         // Should not get deleted as it has not yet been expired.
@@ -357,14 +362,14 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         CertificateSerial serial4 = builder.withExpDate("03/10/2012").collected(true).revoked(true).build();
 
         List<String> expected = builder
-            .fetch((serial) -> serial != null)
+            .fetch(Objects::nonNull)
             .map((serial) -> serial.getId().toString())
             .collect(Collectors.toList());
 
         certSerialCurator.deleteRevokedExpiredAndNotCollectedSerials();
 
         List<CertificateSerial> fetched =
-            certSerialCurator.listBySerialIds(expected.toArray(new String[expected.size()])).list();
+            certSerialCurator.listBySerialIds(expected).list();
         assertEquals(3, fetched.size());
         assertTrue(fetched.contains(serial1));
         assertTrue(fetched.contains(serial2));
