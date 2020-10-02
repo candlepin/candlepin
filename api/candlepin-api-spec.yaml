@@ -1215,6 +1215,64 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /crl:
+    get:
+      tags:
+        - Certificate Revocation List
+      description: Retrieves the certificate revocation list
+      operationId: getCurrentCrl
+      security: []
+      x-java-response:
+        type: javax.ws.rs.core.Response
+        isContainer: false
+      responses:
+        200:
+          description: Certificate revocation list successfully retrieved
+          content:
+            text/plain:
+              schema:
+                type: string
+        500:
+          description: CRL file path not defined in config file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: CRL file path not defined in config file
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      tags:
+        - Certificate Revocation List
+      description: Deletes a certificate from the revocation List
+      operationId: unrevoke
+      security: []
+      parameters:
+        - name: serial
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        204:
+          description: Certificates successfully unrevoked
+        500:
+          description: CRL file path not defined in config file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: CRL file path not defined in config file
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /deleted_consumers:
     get:
       description: Retrieves a list of deleted consumers by deletion date or all. List returned is the deleted Consumers.

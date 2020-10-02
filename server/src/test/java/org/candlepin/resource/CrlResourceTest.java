@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyCollection;
 import static org.mockito.Mockito.eq;
@@ -32,24 +32,25 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.CrlFileUtil;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 
-
 /**
  * CrlResourceTest
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CrlResourceTest {
     private CrlResource resource;
 
@@ -60,7 +61,7 @@ public class CrlResourceTest {
     @Mock private CertificateSerialCurator certSerialCurator;
     @Mock private PKIUtility pkiUtility;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         this.testFile = File.createTempFile("test-", "crl");
 
@@ -70,7 +71,7 @@ public class CrlResourceTest {
         );
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         if (this.testFile != null) {
             this.testFile.delete();
@@ -79,27 +80,27 @@ public class CrlResourceTest {
 
     @Test
     public void testGetCurrentCrl() throws Exception {
-        Object response = this.resource.getCurrentCrl(null);
+        Object response = this.resource.getCurrentCrl();
 
-        assertTrue(response != null);
+        assertNotNull(response);
         verify(crlFileUtil).syncCRLWithDB(any(File.class));
     }
 
     @Test
     public void testGetCurrentCrlWithNoFile() throws Exception {
         this.cleanup();
-        Object response = this.resource.getCurrentCrl(null);
+        Object response = this.resource.getCurrentCrl();
 
-        assertTrue(response != null);
+        assertNotNull(response);
         verify(crlFileUtil).syncCRLWithDB(any(File.class));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void testUnrevokeWithArguments() throws Exception {
-        String[] input = new String[] { "123", "456", "789" };
+        List<String> input = Arrays.asList("123", "456", "789");
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        CandlepinQuery<CertificateSerial> cqmock = mock(CandlepinQuery.class);
         List<CertificateSerial> serials = new LinkedList<>();
         serials.add(new CertificateSerial(123L));
         serials.add(new CertificateSerial(456L));
@@ -116,10 +117,10 @@ public class CrlResourceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testUnrevokeWithNoArguments() throws Exception {
-        String[] input = new String[] { };
+    public void testUnrevokeWithNoArguments() {
+        List<String> input = new ArrayList<>();
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        CandlepinQuery<CertificateSerial> cqmock = mock(CandlepinQuery.class);
         List<CertificateSerial> serials = new LinkedList<>();
 
         when(cqmock.iterator()).thenReturn(serials.iterator());
