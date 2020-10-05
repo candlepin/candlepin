@@ -103,7 +103,8 @@ public class QuantityRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCuratorMock);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator,
+            ownerCuratorMock, productCurator);
         quantityRules = new QuantityRules(provider.get(), new RulesObjectMapper(
             new ProductCachedSerializationModule(productCurator)), translator);
 

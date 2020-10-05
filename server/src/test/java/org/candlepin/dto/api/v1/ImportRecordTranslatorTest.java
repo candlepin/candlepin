@@ -21,6 +21,7 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportUpstreamConsumer;
+import org.candlepin.util.Util;
 
 import java.util.Date;
 
@@ -79,9 +80,9 @@ public class ImportRecordTranslatorTest extends
             assertEquals(source.getStatusMessage(), dest.getStatusMessage());
             assertEquals(source.getFileName(), dest.getFileName());
             assertEquals(source.getGeneratedBy(), dest.getGeneratedBy());
-            assertEquals(source.getGeneratedDate(), dest.getGeneratedDate());
-            assertEquals(source.getCreated(), dest.getCreated());
-            assertEquals(source.getUpdated(), dest.getUpdated());
+            assertEquals(source.getGeneratedDate(),  Util.toDate(dest.getGeneratedDate()));
+            assertEquals(source.getCreated(), Util.toDate(dest.getCreated()));
+            assertEquals(source.getUpdated(), Util.toDate(dest.getUpdated()));
 
             ImportRecord.Status status = source.getStatus();
             assertEquals(status != null ? status.toString() : null, dest.getStatus());

@@ -19,9 +19,7 @@ import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -36,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -107,22 +104,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.populate(source);
     }
 
-    /**
-     * Creates a new subscription DTO, copying data the given pool entity.
-     *
-     * @param source
-     *  The source pool entity from which to copy data
-     *
-     * @throws IllegalArgumentException
-     *  if pool is null
-     */
-    public Subscription(Pool source, ProductCurator productCurator) {
-        if (source == null) {
-            throw new IllegalArgumentException("source is null");
-        }
-
-        this.populate(source, productCurator);
-    }
 
     public String toString() {
         String subscription = "Subscription [id = " + getId();
@@ -550,153 +531,4 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
         return this;
     }
-
-    /**
-     * Populates this DTO with data from the given source entity.
-     * This method assumes that source parameter is a Pool entity
-     * that is stored in the database and links to provided products
-     * are stored in the database.
-     *
-     * @param source
-     *  The source entity from which to copy data
-     *
-     * @throws IllegalArgumentException
-     *  if source is null
-     *
-     * @return
-     *  a reference to this DTO
-     */
-    public Subscription populate(Pool source, ProductCurator productCurator) {
-        if (source == null) {
-            throw new IllegalArgumentException("source is null");
-        }
-
-        super.populate(source);
-
-        this.setId(source.getSubscriptionId());
-
-        this.setOwner(source.getOwner());
-        this.setStartDate(source.getStartDate());
-        this.setEndDate(source.getEndDate());
-        this.setModified(source.getUpdated());
-        this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
-        this.setCdn(source.getCdn());
-        this.setCertificate(source.getCertificate());
-        this.setContractNumber(source.getContractNumber());
-        this.setAccountNumber(source.getAccountNumber());
-        this.setOrderNumber(source.getOrderNumber());
-        this.setUpstreamPoolId(source.getUpstreamPoolId());
-        this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
-        this.setUpstreamConsumerId(source.getUpstreamConsumerId());
-
-        // Attempt to calculate the quantity from the pool and its product:
-        this.setQuantityFromPool(source);
-
-        // Map actual products into product data
-        this.setProduct(source.getProduct() != null ? new ProductData(source.getProduct()) : null);
-        this.setDerivedProduct(
-            source.getDerivedProduct() != null ? new ProductData(source.getDerivedProduct()) : null
-        );
-
-        // Will work only if source is stored in the database and linked to provided products there!
-        Collection<Product> products = productCurator.getPoolProvidedProductsCached(source);
-        if (products != null) {
-            Collection<ProductData> pdata = new LinkedList<>();
-
-            for (Product product : products) {
-                pdata.add(product.toDTO());
-            }
-
-            this.setProvidedProducts(pdata);
-        }
-        else {
-            this.setProvidedProducts(null);
-        }
-
-        products = productCurator.getPoolDerivedProvidedProductsCached(source);
-        if (products != null) {
-            Collection<ProductData> pdata = new LinkedList<>();
-
-            for (Product product : products) {
-                pdata.add(product.toDTO());
-            }
-
-            this.setDerivedProvidedProducts(pdata);
-        }
-        else {
-            this.setDerivedProvidedProducts(null);
-        }
-
-        return this;
-    }
-
-    private void setQuantityFromPool(Pool pool) {
-        Product product = pool.getProduct();
-        Long poolQuantity = pool.getQuantity();
-
-        /**
-         * The following code reconstructs Subscription quantity from the Pool quantity.
-         * To understand it, it is important to understand how pool (the parameter)
-         * is created in candlepin from a source subscription.
-         * The pool has quantity was computed from
-         * source subscription quantity and was multiplied by product.multiplier.
-         * To reconstruct subscription, we must therefore divide the quantity of the pool
-         * by the product.multiplier.
-         * It's not easy to find COMPLETE code related to the conversion of
-         * subscription to the pool. There is a method convertToMasterPool in this class,
-         * that should do part of that (multiplication is not there).
-         * But looking at its javadoc, it directly instructs callers of the
-         * convertToMasterPool method to override quantity with method
-         * PoolRules.calculateQuantity (when browsing the code that calls convertToMasterPool,
-         * the calculateQuantity is usually called after convertToMasterPool).
-         * The method PoolRules.calculateQuantity does the actual
-         * multiplication of pool.quantity by pool.product.multiplier.
-         * It seems that we also need to account account for
-         * instance_multiplier (again logic is in calculateQuantity). If the attribute
-         * is present, we must further divide the poolQuantity by
-         * product.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER).
-         */
-        if (product != null && poolQuantity != null) {
-            Long multiplier = pool.getProduct().getMultiplier();
-
-            if (multiplier != null && multiplier != 0) {
-                if (poolQuantity % multiplier != 0) {
-                    log.error("Unable to calculate subscription quantity from pool; " +
-                        "Pool quantity is not divisible by its product's multiplier: {}, {}, {}",
-                        pool, poolQuantity, multiplier);
-                }
-                else {
-                    poolQuantity /= multiplier;
-                }
-
-                //This is reverse of what part of PoolRules.calculateQuantity does. See that method
-                //to understand why we check that upstreamPoolId must be null.
-                if (product.hasAttribute(Product.Attributes.INSTANCE_MULTIPLIER) &&
-                    pool.getUpstreamPoolId() == null) {
-
-                    String instMultiplier = product.getAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER);
-                    if (instMultiplier != null) {
-                        try {
-                            Integer parsed = Integer.parseInt(instMultiplier);
-
-                            if (parsed != 0 && poolQuantity % parsed == 0) {
-                                poolQuantity /= parsed;
-                            }
-                        }
-                        catch (NumberFormatException nfe) {
-                            log.error("Malformed instance multiplier value on product: {}", instMultiplier);
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            log.warn("Unable to calculate subscription quantity from pool; " +
-                "Pool quantity or product is null (quantity: {}, product: {})",
-                poolQuantity, product);
-        }
-
-        this.setQuantity(poolQuantity);
-    }
-
 }

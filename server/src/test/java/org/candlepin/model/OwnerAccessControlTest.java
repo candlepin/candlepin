@@ -16,11 +16,15 @@ package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
+import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -35,6 +39,7 @@ import javax.inject.Inject;
 public class OwnerAccessControlTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private OwnerResource resource;
+    private PrincipalProvider principalProvider;
 
     private Owner owner;
 
@@ -43,6 +48,7 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
     public void init() throws Exception {
         super.init();
         this.owner = createOwner();
+        this.principalProvider = mock(PrincipalProvider.class);
     }
 
     @Test
@@ -62,7 +68,8 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
 
     @Test
     public void ownerAdminCannotCreateAnOwner() {
-        setupPrincipal(owner, Access.ALL);
+        Principal principal = setupPrincipal(owner, Access.ALL);
+        when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
 
         OwnerDTO dto = new OwnerDTO();
@@ -75,7 +82,8 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
     @Test
     public void consumerCannotCreateAnOwner() {
         Consumer consumer = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(consumer, owner));
+        Principal principal = setupPrincipal(new ConsumerPrincipal(consumer, owner));
+        when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
 
         OwnerDTO dto = new OwnerDTO();

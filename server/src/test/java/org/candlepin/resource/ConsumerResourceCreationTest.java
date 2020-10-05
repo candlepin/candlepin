@@ -66,6 +66,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -160,6 +161,7 @@ public class ConsumerResourceCreationTest {
     @Mock private GuestIdCurator guestIdCurator;
     @Mock private PrincipalProvider principalProvider;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private ProductCurator productCurator;
 
 
     protected ModelTranslator modelTranslator;
@@ -179,7 +181,7 @@ public class ConsumerResourceCreationTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator, this.productCurator);
 
         this.config = initConfig();
         this.resource = new ConsumerResource(

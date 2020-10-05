@@ -15,16 +15,17 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ImportRecord;
-
+import org.candlepin.util.Util;
 
 
 /**
  * The ImportRecordTranslator provides translation from ImportRecord model objects to
  * ImportRecordDTOs
  */
-public class ImportRecordTranslator extends TimestampedEntityTranslator<ImportRecord, ImportRecordDTO> {
+public class ImportRecordTranslator implements
+    ObjectTranslator<ImportRecord, ImportRecordDTO> {
 
     /**
      * {@inheritDoc}
@@ -56,13 +57,21 @@ public class ImportRecordTranslator extends TimestampedEntityTranslator<ImportRe
      */
     @Override
     public ImportRecordDTO populate(ModelTranslator translator, ImportRecord source, ImportRecordDTO dest) {
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId());
-        dest.setStatusMessage(source.getStatusMessage());
-        dest.setFileName(source.getFileName());
-        dest.setGeneratedBy(source.getGeneratedBy());
-        dest.setGeneratedDate(source.getGeneratedDate());
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
+
+        dest.id(source.getId())
+            .statusMessage(source.getStatusMessage())
+            .fileName(source.getFileName())
+            .generatedBy(source.getGeneratedBy())
+            .generatedDate(Util.toDateTime(source.getGeneratedDate()))
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()));
 
         ImportRecord.Status status = source.getStatus();
         dest.setStatus(status != null ? status.name() : null);

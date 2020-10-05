@@ -78,6 +78,8 @@ public class UeberCertificateTranslatorTest extends
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getKey(), dest.getKey());
             assertEquals(source.getCert(), dest.getCert());
+            assertEquals(source.getCreated(), dest.getCreated());
+            assertEquals(source.getUpdated(), dest.getUpdated());
 
             if (childrenGenerated) {
                 this.certSerialTranslatorTest.verifyOutput(source.getSerial(),

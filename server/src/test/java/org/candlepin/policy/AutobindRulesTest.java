@@ -119,7 +119,8 @@ public class AutobindRulesTest {
         jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
         mapper =  new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator));
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator,
+            mockProductCurator);
         autobindRules = new AutobindRules(jsRules, mockProductCurator, consumerTypeCurator, mockOwnerCurator,
            mapper, translator);
 

@@ -152,7 +152,7 @@ public class ImporterTest {
 
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
-            this.mockEnvironmentCurator, this.mockOwnerCurator);
+            this.mockEnvironmentCurator, this.mockOwnerCurator, this.mockProductCurator);
 
         ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(
             this.mockProductCurator);
