@@ -72,7 +72,7 @@ public class HttpMethodMatcherTest {
     @Test
     public void testMatches() {
         HttpMethodMatcher matcher = new HttpMethodMatcher();
-        Method[] methods = TestResource.class.getMethods();
+        Method[] methods = TestResource.class.getDeclaredMethods();
 
         for (int i = 0; i < methods.length; i++) {
             if (methods[i].getAnnotations().length != 0) {
