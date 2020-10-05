@@ -24,11 +24,13 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -38,6 +40,9 @@ import java.util.HashMap;
  * ProductExporterTest
  */
 public class ProductExporterTest {
+
+    @Mock ProductCurator productCurator;
+
     @Test
     public void testProductExport() throws IOException {
         ObjectMapper mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
@@ -49,7 +54,8 @@ public class ProductExporterTest {
         ));
 
         ProductExporter exporter = new ProductExporter(
-            new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(), new OwnerCurator()));
+            new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(),
+            new OwnerCurator(), productCurator));
 
         StringWriter writer = new StringWriter();
 

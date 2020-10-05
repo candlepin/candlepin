@@ -24,6 +24,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +47,7 @@ public class ConsumerTypeExporterTest {
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private OwnerCurator ownerCurator;
+    @Mock private ProductCurator productCurator;
     private ModelTranslator translator;
 
     @Test
@@ -58,7 +60,8 @@ public class ConsumerTypeExporterTest {
             }
         ));
 
-        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
+        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator,
+            productCurator);
         ConsumerTypeExporter consumerType = new ConsumerTypeExporter(translator);
 
         StringWriter writer = new StringWriter();

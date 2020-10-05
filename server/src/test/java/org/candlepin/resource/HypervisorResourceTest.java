@@ -60,6 +60,7 @@ import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
@@ -148,6 +149,7 @@ public class HypervisorResourceTest {
     @Mock private DistributorVersionCurator distributorVersionCurator;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private ProductCurator productCurator;
 
     private I18n i18n;
     private Provider<I18n> i18nProvider;
@@ -167,7 +169,7 @@ public class HypervisorResourceTest {
         this.mockConsumerType(this.hypervisorType);
 
         ModelTranslator modelTranslator = new StandardTranslator(
-            this.consumerTypeCurator, this.environmentCurator, this.ownerCurator);
+            this.consumerTypeCurator, this.environmentCurator, this.ownerCurator, this.productCurator);
 
         ConsumerResource consumerResource = new ConsumerResource(
             this.consumerCurator,

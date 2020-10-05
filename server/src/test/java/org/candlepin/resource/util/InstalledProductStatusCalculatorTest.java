@@ -111,7 +111,8 @@ public class InstalledProductStatusCalculatorTest {
     public void setUp() {
         translator = new StandardTranslator(this.consumerTypeCurator,
             this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator,
+            this.productCurator);
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);

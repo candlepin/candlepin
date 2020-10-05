@@ -131,7 +131,8 @@ public class EntitlementRulesTestFixture {
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator,
+            productCurator);
         enforcer = new EntitlementRules(
             new DateSourceImpl(),
             jsRules,

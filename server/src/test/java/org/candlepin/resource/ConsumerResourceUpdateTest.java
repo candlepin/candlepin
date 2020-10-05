@@ -80,6 +80,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
@@ -170,6 +171,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private ModelTranslator modelTranslator;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private ProductCurator productCurator;
 
     private ModelTranslator translator;
 
@@ -187,7 +189,9 @@ public class ConsumerResourceUpdateTest {
 
         this.translator = new StandardTranslator(this.consumerTypeCurator,
             this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator,
+            this.productCurator);
+
         this.resource = new ConsumerResource(
             this.consumerCurator,
             this.consumerTypeCurator,

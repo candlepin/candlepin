@@ -101,7 +101,8 @@ public class EntitlementImporterTest {
 
         this.translator = new StandardTranslator(mockConsumerTypeCurator,
             mockEnvironmentCurator,
-            ownerCurator);
+            ownerCurator,
+            mockProductCurator);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, mockProductCurator, ec,

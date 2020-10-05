@@ -60,6 +60,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -140,6 +141,7 @@ public class GuestIdResourceTest {
     @Mock private PrincipalProvider principalProvider;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private ProductCurator productCurator;
 
     private ConsumerResource resource;
 
@@ -157,7 +159,7 @@ public class GuestIdResourceTest {
         this.testMigration = spy(new GuestMigration(consumerCurator));
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator, this.productCurator);
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.owner = TestUtil.createOwner();

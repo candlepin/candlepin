@@ -126,7 +126,8 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
-        translator = new StandardTranslator(consumerTypeCurator, mockEnvironmentCurator, mockOwnerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, mockEnvironmentCurator, mockOwnerCurator,
+            productCurator);
 
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, consumerTypeCurator,
