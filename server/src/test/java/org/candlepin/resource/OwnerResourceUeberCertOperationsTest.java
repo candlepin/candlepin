@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.auth.Principal;
@@ -27,6 +28,7 @@ import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Role;
 import org.candlepin.model.UeberCertificateCurator;
@@ -56,6 +58,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Inject private ServiceLevelValidator serviceLevelValidator;
     @Inject private ContentOverrideValidator contentOverrideValidator;
 
+    private PrincipalProvider principalProvider;
     private JobManager jobManager;
 
     private Owner owner;
@@ -76,6 +79,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         setupPrincipal(principal);
 
         this.jobManager = mock(JobManager.class);
+        this.principalProvider = mock(PrincipalProvider.class);
 
         or = new OwnerResource(
             ownerCurator, null, consumerCurator, i18n, null, null, null, null,
@@ -83,27 +87,30 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
             null, null, entitlementCurator,
             ueberCertCurator, ueberCertGenerator, null,  null, contentOverrideValidator,
             serviceLevelValidator, null, null, null, null, null, this.modelTranslator, this.jobManager,
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, this.principalProvider);
     }
 
     @Test
     public void testUeberCertIsRegeneratedOnNextInvocation() throws Exception {
-        UeberCertificateDTO firstCert = or.createUeberCertificate(principal, owner.getKey());
-        UeberCertificateDTO secondCert = or.createUeberCertificate(principal, owner.getKey());
+        when(this.principalProvider.get()).thenReturn(principal);
+        UeberCertificateDTO firstCert = or.createUeberCertificate(owner.getKey());
+        UeberCertificateDTO secondCert = or.createUeberCertificate(owner.getKey());
         assertNotSame(firstCert.getId(), secondCert.getId());
     }
 
     @Test
     public void certificateGenerationRaisesExceptionIfOwnerNotFound() throws Exception {
+        when(this.principalProvider.get()).thenReturn(principal);
         assertThrows(NotFoundException.class, () ->
-            or.createUeberCertificate(principal, "non-existant")
+            or.createUeberCertificate("non-existant")
         );
     }
 
     @Test
     public void certificateRetrievalRaisesExceptionIfOwnerNotFound() throws Exception {
+        when(this.principalProvider.get()).thenReturn(principal);
         assertThrows(NotFoundException.class, () ->
-            or.getUeberCertificate(principal, "non-existant")
+            or.getUeberCertificate("non-existant")
         );
     }
 
@@ -112,17 +119,20 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         throws Exception {
         // verify that owner under test doesn't have a certificate
         Owner anotherOwner = ownerCurator.create(new Owner(OWNER_NAME + "1"));
+        when(this.principalProvider.get()).thenReturn(principal);
         assertThrows(NotFoundException.class, () ->
-            or.getUeberCertificate(principal, anotherOwner.getKey())
+            or.getUeberCertificate(anotherOwner.getKey())
         );
     }
 
     @Test
     public void certificateRetrievalReturnsCert() {
-        UeberCertificateDTO generated = or.createUeberCertificate(principal, owner.getKey());
+        when(this.principalProvider.get()).thenReturn(principal);
+
+        UeberCertificateDTO generated = or.createUeberCertificate(owner.getKey());
         assertNotNull(generated);
 
-        UeberCertificateDTO retrieved = or.getUeberCertificate(principal, owner.getKey());
+        UeberCertificateDTO retrieved = or.getUeberCertificate(owner.getKey());
         assertNotNull(retrieved);
 
         assertEquals(generated, retrieved);

@@ -923,7 +923,9 @@ public class HostedTestDataStore {
         if (cinfo != null) {
             CdnCertificate cert = new CdnCertificate();
 
-            cert.setKey(cinfo.getKey());
+            if (cinfo.getKey() != null) {
+                cert.setKey(cinfo.getKey());
+            }
             cert.setCert(cinfo.getCertificate());
 
             if (cinfo.getSerial() != null) {
@@ -948,7 +950,9 @@ public class HostedTestDataStore {
         if (cinfo != null) {
             SubscriptionsCertificate cert = new SubscriptionsCertificate();
 
-            cert.setKey(cinfo.getKey());
+            if (cinfo.getKey() != null) {
+                cert.setKey(cinfo.getKey());
+            }
             cert.setCert(cinfo.getCertificate());
 
             if (cinfo.getSerial() != null) {

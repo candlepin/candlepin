@@ -34,9 +34,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -94,8 +92,6 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private EventSink eventSink;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
-    @Mock private PoolCurator poolCurator;
-    @Mock private ProductCurator productCurator;
     @Mock private OwnerProductCurator ownerProductCurator;
     @Mock private OwnerCurator ownerCurator;
 

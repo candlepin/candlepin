@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2018 Red Hat, Inc.
+ * Copyright (c) 2009 - 2017 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -19,39 +19,36 @@ import static org.junit.Assert.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.model.ImportUpstreamConsumer;
-
-
+import org.candlepin.model.UpstreamConsumer;
 
 /**
- * Test suite for the ImportUpstreamConsumerTranslator class
+ * Test suite for the UpstreamConsumerArrayElementTranslator class
  */
-public class ImportUpstreamConsumerTranslatorTest extends
-    AbstractTranslatorTest<ImportUpstreamConsumer, ImportUpstreamConsumerDTO,
-    ImportUpstreamConsumerTranslator> {
+public class UpstreamConsumerArrayElementTranslatorTest extends
+    AbstractTranslatorTest<UpstreamConsumer, UpstreamConsumerDTOArrayElement,
+    UpstreamConsumerArrayElementTranslator> {
 
-    protected ImportUpstreamConsumerTranslator translator = new ImportUpstreamConsumerTranslator();
-
-    protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest = new ConsumerTypeTranslatorTest();
+    protected UpstreamConsumerArrayElementTranslator translator =
+        new UpstreamConsumerArrayElementTranslator();
+    protected ConsumerTypeTranslatorTest consumerTypeTranslatorTest =
+        new ConsumerTypeTranslatorTest();
 
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.consumerTypeTranslatorTest.initModelTranslator(modelTranslator);
-
         modelTranslator.registerTranslator(
-            this.translator, ImportUpstreamConsumer.class, ImportUpstreamConsumerDTO.class);
+            this.translator, UpstreamConsumer.class, UpstreamConsumerDTOArrayElement.class);
     }
 
     @Override
-    protected ImportUpstreamConsumerTranslator initObjectTranslator() {
+    protected UpstreamConsumerArrayElementTranslator initObjectTranslator() {
         return this.translator;
     }
 
     @Override
-    protected ImportUpstreamConsumer initSourceObject() {
-        ImportUpstreamConsumer consumer = new ImportUpstreamConsumer();
-
+    protected UpstreamConsumer initSourceObject() {
+        UpstreamConsumer consumer = new UpstreamConsumer();
         consumer.setId("consumer_id");
         consumer.setUuid("consumer_uuid");
         consumer.setName("consumer_name");
@@ -64,13 +61,13 @@ public class ImportUpstreamConsumerTranslatorTest extends
     }
 
     @Override
-    protected ImportUpstreamConsumerDTO initDestinationObject() {
+    protected UpstreamConsumerDTOArrayElement initDestinationObject() {
         // Nothing fancy to do here.
-        return new ImportUpstreamConsumerDTO();
+        return new UpstreamConsumerDTOArrayElement();
     }
 
     @Override
-    protected void verifyOutput(ImportUpstreamConsumer source, ImportUpstreamConsumerDTO dest,
+    protected void verifyOutput(UpstreamConsumer source, UpstreamConsumerDTOArrayElement dest,
         boolean childrenGenerated) {
 
         if (source != null) {
@@ -84,7 +81,8 @@ public class ImportUpstreamConsumerTranslatorTest extends
             assertEquals(source.getUpdated(), dest.getUpdated());
 
             if (childrenGenerated) {
-                this.consumerTypeTranslatorTest.verifyOutput(source.getType(), dest.getType(), true);
+                this.consumerTypeTranslatorTest
+                    .verifyOutput(source.getType(), dest.getType(), true);
             }
             else {
                 assertNull(dest.getType());

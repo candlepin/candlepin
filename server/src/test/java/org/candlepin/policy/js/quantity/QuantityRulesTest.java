@@ -33,7 +33,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -86,7 +85,6 @@ public class QuantityRulesTest {
     @Mock private OwnerCurator ownerCuratorMock;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
-    @Mock private ProductCurator productCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private EnvironmentCurator environmentCurator;
 

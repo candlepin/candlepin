@@ -187,8 +187,7 @@ public class ConsumerResourceUpdateTest {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.testMigration = new GuestMigration(this.consumerCurator);
 
-        this.translator = new StandardTranslator(this.consumerTypeCurator,
-            this.environmentCurator,
+        this.translator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
             this.ownerCurator);
 
         this.resource = new ConsumerResource(

@@ -112,8 +112,6 @@ import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
-import com.google.inject.util.Providers;
-
 import org.apache.commons.lang.RandomStringUtils;
 import org.hibernate.mapping.Collection;
 import org.junit.jupiter.api.Assertions;
@@ -199,7 +197,6 @@ public class ConsumerResourceTest {
     @Mock private ContentOverrideValidator contentOverrideValidator;
 
     private GuestMigration testMigration;
-    private Provider<GuestMigration> migrationProvider;
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
     private ConsumerResource mockedConsumerResource;
@@ -218,7 +215,6 @@ public class ConsumerResourceTest {
         this.factValidator = new FactValidator(this.config, this.i18nProvider);
 
         testMigration = new GuestMigration(consumerCurator);
-        migrationProvider = Providers.of(testMigration);
 
         this.consumerResource = new ConsumerResource(
             this.consumerCurator,
@@ -828,9 +824,6 @@ public class ConsumerResourceTest {
         when(entitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
         when(consumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
         when(entitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
-
-        GuestMigration migrationSpy = Mockito.spy(testMigration);
-        migrationProvider = Providers.of(migrationSpy);
 
         mockedConsumerResource.getEntitlementCertificates(consumer.getUuid(), "123");
         verify(mockedConsumerResource).revokeOnGuestMigration(consumer);

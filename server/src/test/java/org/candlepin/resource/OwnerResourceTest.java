@@ -40,7 +40,6 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
-import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
@@ -56,7 +55,6 @@ import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ManifestManager;
-import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
@@ -66,7 +64,6 @@ import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
-import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -80,9 +77,10 @@ import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTOArrayElement;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -101,7 +99,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
-import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
@@ -136,10 +133,10 @@ import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 
 import org.hibernate.exception.ConstraintViolationException;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -154,7 +151,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -179,7 +175,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Inject private CandlepinPoolManager poolManager;
     @Inject private I18n i18n;
     @Inject private OwnerResource ownerResource;
-    @Inject private EventFactory eventFactory;
     @Inject private CalculatedAttributesUtil calculatedAttributesUtil;
     @Inject private Configuration config;
     @Inject private ContentOverrideValidator contentOverrideValidator;
@@ -202,6 +197,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private OwnerInfoCurator mockOwnerInfoCurator;
     private OwnerProductCurator mockOwnerProductCurator;
     private ProductCurator mockProductCurator;
+    private PrincipalProvider principalProvider;
     private UeberCertificateCurator mockUeberCertCurator;
     private UeberCertificateGenerator mockUeberCertificateGenerator;
 
@@ -263,6 +259,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.mockOwnerManager = mock(OwnerManager.class);
         this.mockPoolManager = mock(PoolManager.class);
         this.mockJobManager = mock(JobManager.class);
+        this.principalProvider = mock(PrincipalProvider.class);
 
         this.resolverUtil = new ResolverUtil(this.i18n, this.mockOwnerCurator, this.mockOwnerProductCurator,
             this.mockProductCurator);
@@ -282,7 +279,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.contentOverrideValidator, this.serviceLevelValidator, this.ownerServiceAdapter, this.config,
             this.resolverUtil, this.consumerTypeValidator, this.mockOwnerProductCurator, this.modelTranslator,
             this.mockJobManager, this.dtoValidator, this.ownerContentCurator, new DefaultUniqueIdGenerator(),
-            this.contentManager, this.productManager, this.productCertificateCurator, this.productCurator);
+            this.contentManager, this.productManager, this.productCertificateCurator, this.productCurator,
+            this.principalProvider);
     }
 
     // TODO: This test does not belong here; it does not hit the resource at all
@@ -326,7 +324,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testSimpleDeleteOwner() {
         String id = owner.getId();
-        ownerResource.deleteOwner(owner.getKey(), true, false);
+        ownerResource.deleteOwner(owner.getKey(), new Boolean(true), new Boolean(true));
         owner = ownerCurator.get(id);
         assertNull(owner);
     }
@@ -634,7 +632,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UeberCertificate uCert = ueberCertGenerator.generate(owner.getKey(), setupAdminPrincipal("test"));
         assertNotNull(uCert);
 
-        ownerResource.deleteOwner(owner.getKey(), true, false);
+        ownerResource.deleteOwner(owner.getKey(), new Boolean(true),  new Boolean(true));
 
         assertEquals(0, consumerCurator.listByOwner(owner).list().size());
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
@@ -648,8 +646,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testConsumerRoleCannotGetOwner() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c, owner));
-
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
+        when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
 
         assertThrows(ForbiddenException.class, () -> ownerResource.getOwner(owner.getKey()));
@@ -659,11 +657,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testConsumerCanListPools() {
         Consumer c = createConsumer(owner);
         Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
-
+        when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
 
         ownerResource.listPools(owner.getKey(), null, null, null, null, false, null,
-            null, new ArrayList<>(), false, false, null, null, principal, null);
+            null, new ArrayList<>(), false, false, null, null);
     }
 
     @Test
@@ -695,15 +693,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
 
+        when(this.principalProvider.get()).thenReturn(principal);
         List<PoolDTO> nowList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null, false,
-            new Date(), null, new ArrayList<>(), false, false, null, null, principal, null);
+            Util.toDateTime(new Date()), null, new ArrayList<>(), false, false, null, null);
 
         assertEquals(1, nowList.size());
         assert (nowList.get(0).getId().equals(pool1.getId()));
 
         Date activeOn = new Date(pool2.getStartDate().getTime() + 1000L * 60 * 60 * 24);
         List<PoolDTO> futureList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null,
-            false, activeOn, null, new ArrayList<>(), false, false, null, null, principal, null);
+            false, Util.toDateTime(activeOn), null, new ArrayList<>(), false, false, null, null);
         assertEquals(1, futureList.size());
         assert (futureList.get(0).getId().equals(pool2.getId()));
     }
@@ -718,9 +717,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
 
+        when(this.principalProvider.get()).thenReturn(principal);
+
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(),
-            null, null, null, null, true, null, null, new ArrayList<>(), false, false, null, null,
-            principal, null);
+            null, null, null, null, true, null, null, new ArrayList<>(), false, false, null, null);
         assertEquals(2, pools.size());
     }
 
@@ -742,8 +742,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<KeyValueParamDTO> params = new ArrayList<>();
         params.add(createKeyValueParam("cores", "12"));
 
+        when(this.principalProvider.get()).thenReturn(principal);
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), null,
-            null, null, null, true, null, null, params, false, false, null, null, principal, null);
+            null, null, null, true, null, null, params, false, false, null, null);
         assertEquals(1, pools.size());
         assertModelEqualsDTO(pool2, pools.get(0));
 
@@ -751,7 +752,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         params.add(createKeyValueParam("virt_only", "true"));
 
         pools = ownerResource.listPools(owner.getKey(), null, null,
-            null, null, true, null, null, params, false, false, null, null, principal, null);
+            null, null, true, null, null, params, false, false, null, null);
         assertEquals(1, pools.size());
         assertModelEqualsDTO(pool1, pools.get(0));
     }
@@ -771,14 +772,16 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         List<KeyValueParamDTO> params = new ArrayList<>();
+
+        when(this.principalProvider.get()).thenReturn(principal);
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), null,
-            null, null, null, true, null, null, params, false, false, null, null, principal, null);
+            null, null, null, true, null, null, params, false, false, null, null);
         assertEquals(2, pools.size());
 
         params = new ArrayList<>();
         params.add(createKeyValueParam(Pool.Attributes.DEVELOPMENT_POOL, "!true"));
         pools = ownerResource.listPools(owner.getKey(), null,
-            null, null, null, true, null, null, params, false, false, null, null, principal, null);
+            null, null, null, true, null, null, params, false, false, null, null);
         assertEquals(1, pools.size());
         assertModelEqualsDTO(pool2, pools.get(0));
     }
@@ -804,26 +807,28 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         securityInterceptor.enable();
+        OwnerResource ownerResource = this.buildOwnerResource();
+        when(this.principalProvider.get()).thenReturn(principal);
 
         // Filtering should just cause this to return no results:
         assertThrows(NotFoundException.class, () ->
             ownerResource.listPools(owner.getKey(), null, null, null, null, true, null,
-            null, new ArrayList<>(), false, false, null, null, principal, null)
-        );
+            null, new ArrayList<>(), false, false, null, null));
     }
 
     @Test
     public void testOwnerAdminCannotListAllOwners() {
-        setupPrincipal(owner, Access.ALL);
-
+        Principal principal = setupPrincipal(owner, Access.ALL);
+        when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
 
-        assertThrows(ForbiddenException.class, () -> ownerResource.list(null));
+        assertThrows(ForbiddenException.class, () -> ownerResource.listOwners(null));
     }
 
     @Test
     public void testOwnerAdminCannotDelete() {
-        setupPrincipal(owner, Access.ALL);
+        Principal principal = setupPrincipal(owner, Access.ALL);
+        when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
         assertThrows(ForbiddenException.class, () ->
             ownerResource.deleteOwner(owner.getKey(), true, false)
@@ -833,12 +838,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void consumerCannotListAllConsumersInOwner() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c, owner));
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
+        when(this.principalProvider.get()).thenReturn(principal);
 
         securityInterceptor.enable();
         assertThrows(ForbiddenException.class, () ->
             ownerResource.listConsumers(owner.getKey(), null, null, new ArrayList<>(), null, null, null,
-            null, null, null)
+            null, null)
         );
     }
 
@@ -856,7 +862,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(new ConsumerType("type"));
 
         CandlepinQuery<ConsumerDTOArrayElement> result = ownerResource.listConsumers(
-            owner.getKey(), "username", types, uuids, null, null, null, null, null, new PageRequest());
+            owner.getKey(), "username", types, uuids, null, null, null, null, null);
 
         assertNotNull(result);
         List<ConsumerDTOArrayElement> consumers = result.list();
@@ -879,7 +885,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         CandlepinQuery<ConsumerDTOArrayElement> result = ownerResource.listConsumers(
-            owner.getKey(), null, null, uuids, null, null, null, null, null, null);
+            owner.getKey(), null, null, uuids, null, null, null, null, null);
 
         assertNotNull(result);
         List<ConsumerDTOArrayElement> consumers = result.list();
@@ -899,7 +905,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         BadRequestException ex = assertThrows(BadRequestException.class, () ->
             ownerResource.listConsumers(owner.getKey(), null, types, new ArrayList<>(), null,
-            null, null, null, null, null)
+            null, null, null, null)
         );
         assertEquals("No such unit type(s): unknown", ex.getMessage());
     }
@@ -917,7 +923,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         CandlepinQuery<ConsumerDTOArrayElement> result = ownerResource.listConsumers(
-            owner.getKey(), null, null, uuids, null, null, null, null, null, null);
+            owner.getKey(), null, null, uuids, null, null, null, null, null);
 
         assertNotNull(result);
         List<ConsumerDTOArrayElement> consumers = result.list();
@@ -929,7 +935,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void consumerCannotCountAllConsumersInOwner() {
         Consumer c = createConsumer(owner);
-        setupPrincipal(new ConsumerPrincipal(c, owner));
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
+        when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
 
         assertThrows(ForbiddenException.class, () ->
@@ -969,11 +976,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Consumer c = this.createConsumer(owner);
 
         Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
+        when(this.principalProvider.get()).thenReturn(principal);
+
         securityInterceptor.enable();
 
         List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), c.getUuid(), null,
-            p.getId(), null, true, null, null, new ArrayList<>(), false, false, null, null,
-            principal, null);
+            p.getId(), null, true, null, null, new ArrayList<>(), false, false, null, null);
         assertEquals(1, pools.size());
         PoolDTO returnedPool = pools.get(0);
         assertNotNull(returnedPool.getCalculatedAttributes());
@@ -992,9 +1000,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
+        Principal principal = setupPrincipal(owner2, Access.NONE);
+        when(this.principalProvider.get()).thenReturn(principal);
+
         assertThrows(NotFoundException.class, () -> ownerResource.listPools(
             owner.getKey(), c.getUuid(), null, p.getUuid(),  null, true, null, null,
-            new ArrayList<>(), false, false, null, null, setupPrincipal(owner2, Access.NONE), null)
+            new ArrayList<>(), false, false, null, null)
         );
     }
 
@@ -1429,7 +1440,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Role r = new Role("rolename");
         r.addPermission(p);
         roleCurator.create(r);
-        ownerResource.deleteOwner(owner.getKey(), false, false);
+        ownerResource.deleteOwner(owner.getKey(), new Boolean(false),  new Boolean(false));
     }
 
     @Test
@@ -1441,7 +1452,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         dto = ownerResource.createOwner(dto);
         OwnerDTO finalDto = dto;
         assertThrows(NotFoundException.class, () ->
-            ownerResource.undoImports(finalDto.getKey(), new UserPrincipal("JarjarBinks", null, true))
+            ownerResource.undoImports(finalDto.getKey())
         );
     }
 
@@ -1456,7 +1467,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource resource = this.buildOwnerResource();
 
-        assertThrows(ConflictException.class, () -> resource.deleteOwner("testOwner", true, true));
+        assertThrows(ConflictException.class, () -> resource.deleteOwner("testOwner",
+            new Boolean(true), new Boolean(true)));
     }
 
     @Test
@@ -1603,10 +1615,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testImportManifestSynchronousSuccess() throws IOException, ImporterException {
         OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, null, null, i18n, this.mockEventSink, eventFactory, null, null,
+            ownerCurator, null, null, i18n, this.mockEventSink, mockEventFactory, null, null,
             this.mockManifestManager, null, null, null, null, importRecordCurator, null, null, null, null,
             null, contentOverrideValidator, serviceLevelValidator, null, null, null, null, null,
-            this.modelTranslator, this.mockJobManager, null, null, null, null, null, null, null);
+            this.modelTranslator, this.mockJobManager, null, null, null, null, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1627,7 +1639,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             any(ConflictOverrides.class))).thenReturn(ir);
 
         ImportRecordDTO expected = this.modelTranslator.translate(ir, ImportRecordDTO.class);
-        ImportRecordDTO response = thisOwnerResource.importManifest(owner.getKey(), new String [] {}, input);
+        ImportRecordDTO response = thisOwnerResource.importManifest(owner.getKey(), new ArrayList<>(), input);
 
         assertNotNull(response);
         assertEquals(expected, response);
@@ -1636,10 +1648,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testImportManifestAsyncSuccess() throws IOException, ImporterException, JobException {
         OwnerResource thisOwnerResource = new OwnerResource(
-            this.mockOwnerCurator, null, null, i18n, this.mockEventSink, eventFactory, null, null,
+            this.mockOwnerCurator, null, null, i18n, this.mockEventSink, mockEventFactory, null, null,
             this.mockManifestManager, null, null, null, null, importRecordCurator, null, null, null, null,
             null, contentOverrideValidator, serviceLevelValidator, null, null, null, null, null,
-            this.modelTranslator, this.mockJobManager, null, null, null, null, null, null, null);
+            this.modelTranslator, this.mockJobManager, null, null, null, null, null, null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1668,8 +1680,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.mockOwnerCurator.getByKey(anyString())).thenReturn(owner);
         when(this.mockJobManager.queueJob(eq(job))).thenReturn(asyncJobStatus);
 
-        AsyncJobStatusDTO dto =
-            thisOwnerResource.importManifestAsync(owner.getKey(), new String [] {}, input);
+        AsyncJobStatusDTO dto = thisOwnerResource
+            .importManifestAsync(owner.getKey(), new ArrayList<>(), input);
         assertNotNull(dto);
         assertEquals(job.getJobName(), dto.getName());
 
@@ -1680,10 +1692,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testImportManifestFailure() throws IOException, ImporterException {
         OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, null, null, i18n, this.mockEventSink, eventFactory, null, contentAccessManager,
-            this.mockManifestManager, null, null, null, null, importRecordCurator, null, null, null, null,
-            null, contentOverrideValidator, serviceLevelValidator, null, null, null, null, null,
-            this.modelTranslator, this.mockJobManager, null, null, null, null, null, null, null);
+            ownerCurator, null, null, i18n, this.mockEventSink, this.mockEventFactory, null,
+            contentAccessManager, this.mockManifestManager, null, null, null, null, importRecordCurator,
+            null, null, null, null, null, contentOverrideValidator, serviceLevelValidator, null, null, null,
+            null, null, this.modelTranslator, this.mockJobManager, null, null, null, null, null, null,
+            null, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -1704,7 +1717,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             any(ConflictOverrides.class))).thenThrow(expectedException);
 
         try {
-            thisOwnerResource.importManifest(owner.getKey(), new String [] {}, input);
+            thisOwnerResource.importManifest(owner.getKey(), new ArrayList<>(), input);
             fail("Expected IseException was not thrown");
         }
         catch (IseException ise) {
@@ -1725,8 +1738,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         when(this.mockOwnerCurator.getByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);
-
-        List<UpstreamConsumerDTO> results = resource.getUpstreamConsumers(p, "admin");
+        when(this.principalProvider.get()).thenReturn(p);
+        List<UpstreamConsumerDTOArrayElement> results = resource.getUpstreamConsumers("admin");
 
         assertNotNull(results);
         assertEquals(1, results.size());
@@ -1759,16 +1772,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         return new KeyValueParamDTO()
             .key(key)
             .value(val);
-    }
-
-    @Test
-    public void createSubscription() {
-        Product p = this.createProduct(owner);
-        Subscription s = TestUtil.createSubscription(owner, p);
-        s.setId("MADETHISUP");
-        assertEquals(0, poolCurator.listByOwner(owner).list().size());
-        ownerResource.createSubscription(owner.getKey(), s);
-        assertEquals(1, poolCurator.listByOwner(owner).list().size());
     }
 
     @Test
@@ -1928,8 +1931,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Page<List<Entitlement>> page = new Page<>();
         page.setPageData(entitlements);
 
+        ResteasyContext.pushContext(PageRequest.class, req);
+
         List<EntitlementDTO> result = this.ownerResource
-            .ownerEntitlements(owner.getKey(), null, null, null, req);
+            .ownerEntitlements(owner.getKey(), null, null, null);
 
         assertEquals(1, result.size());
         assertEquals(e.getId(), result.get(0).getId());
@@ -1941,10 +1946,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         req.setPage(1);
         req.setPerPage(10);
 
+        ResteasyContext.pushContext(PageRequest.class, req);
+
         OwnerResource resource = this.buildOwnerResource();
 
         assertThrows(NotFoundException.class, () ->
-            resource.ownerEntitlements("Taylor Swift", null, null, null, req)
+            resource.ownerEntitlements("Taylor Swift", null, null, null)
         );
     }
 
@@ -1959,11 +1966,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         when(this.mockUeberCertificateGenerator.generate(eq(owner.getKey()), eq(principal)))
             .thenReturn(entCert);
+        when(this.principalProvider.get()).thenReturn(principal);
 
         OwnerResource resource = this.buildOwnerResource();
 
         UeberCertificateDTO expected = this.modelTranslator.translate(entCert, UeberCertificateDTO.class);
-        UeberCertificateDTO result = resource.createUeberCertificate(principal, owner.getKey());
+        UeberCertificateDTO result = resource.createUeberCertificate(owner.getKey());
         assertEquals(expected, result);
     }
 
@@ -1977,9 +1985,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         when(this.mockUeberCertificateGenerator.generate(eq(owner.getKey()), eq(principal)))
             .thenReturn(entCert);
+        when(this.principalProvider.get()).thenReturn(principal);
 
         UeberCertificateDTO expected = this.modelTranslator.translate(entCert, UeberCertificateDTO.class);
-        UeberCertificateDTO result = resource.createUeberCertificate(principal, owner.getKey());
+        UeberCertificateDTO result = resource.createUeberCertificate(owner.getKey());
 
         assertEquals(expected, result);
     }
@@ -2351,60 +2360,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertThrows(BadRequestException.class, () -> ownerResource.updateOwner(owner.getKey(), changes));
     }
 
-    @Test
-    void shouldThrowWhenOwnerNotFound() {
-        when(mockOwnerCurator.getOwnerContentAccess(anyString()))
-            .thenThrow(OwnerNotFoundException.class);
-
-        OwnerResource resource = this.buildOwnerResource();
-
-        Assertions.assertThrows(NotFoundException.class,
-            () -> resource.getOwnerContentAccess("test_owner_key"));
-    }
-
-    @Test
-    void usesOwnersCAModeWhenAvailable() {
-        String ownerKey = "test-owner-key";
-        String expectedMode = "owner-ca-mode";
-        List<String> expectedModeList = Collections.singletonList(expectedMode);
-        OwnerContentAccess access = new OwnerContentAccess(expectedMode, expectedMode);
-        when(mockOwnerCurator.getOwnerContentAccess(eq(ownerKey)))
-            .thenReturn(access);
-
-        OwnerResource resource = this.buildOwnerResource();
-        ContentAccessDTO contentAccess = resource.getOwnerContentAccess(ownerKey);
-
-        assertEquals(expectedMode, contentAccess.getContentAccessMode());
-        assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
-    }
-
-    @Test
-    void usesDefaultWhenOwnerCANotAvailable() {
-        String expectedMode = ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue();
-        List<String> expectedModeList = Arrays.asList(ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
-            ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
-        when(mockOwnerCurator.getOwnerContentAccess(anyString()))
-            .thenReturn(new OwnerContentAccess(null, null));
-
-        OwnerResource resource = this.buildOwnerResource();
-        ContentAccessDTO contentAccess = resource.getOwnerContentAccess("test_owner_key");
-
-        assertEquals(expectedMode, contentAccess.getContentAccessMode());
-        assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
-    }
-
-
-    @Test
-    void returns404WhenOwnerNotFound() {
-        when(mockOwnerCurator.getOwnerContentAccess(anyString()))
-            .thenThrow(OwnerNotFoundException.class);
-
-        OwnerResource resource = this.buildOwnerResource();
-
-        Assertions.assertThrows(NotFoundException.class,
-            () -> resource.getOwnerContentAccess("test_owner"));
-    }
-
     //
     // Tests related to Owner Content
     //
@@ -2735,7 +2690,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, null, null,
             null, null, opc, this.modelTranslator, this.jobManager,
             this.dtoValidator, mock(OwnerContentCurator.class), null, null, mock(ProductManager.class),
-            mock(ProductCertificateCurator.class), pc);
+            mock(ProductCertificateCurator.class), pc, null);
 
         Owner o = mock(Owner.class);
         Product p = mock(Product.class);

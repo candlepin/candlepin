@@ -17,7 +17,6 @@ package org.candlepin.sync;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ContentDTO;
@@ -41,8 +40,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,11 +67,9 @@ import java.util.Locale;
 @SuppressWarnings("synthetic-access")
 public class SubscriptionReconcilerTest {
 
-    @Mock private EventSink sink;
     @Mock private PoolCurator poolCurator;
     @Mock private CertificateSerialCurator certSerialCurator;
     @Mock private CdnCurator cdnCurator;
-    @Mock private ObjectMapper om;
     @Mock private ProductCurator pc;
     @Mock private EntitlementCurator ec;
 

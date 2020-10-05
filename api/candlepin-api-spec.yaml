@@ -1,3 +1,4 @@
+
 openapi: 3.0.2
 info:
   title: Candlepin
@@ -2582,6 +2583,325 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /owners:
+    get:
+      description: Retrieves a list of owners that match the key provided, or all owners if no key was provided
+      tags:
+        - Owner
+      operationId: listOwners
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: key
+          in: query
+          description: The owner key
+          required: false
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: A list of owners
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OwnerDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: Creates an owner
+      tags:
+        - Owner
+      operationId: createOwner
+      security: []
+      requestBody:
+        description: Owner to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OwnerDTO'
+      responses:
+        200:
+          description: Owner successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerDTO'
+        400:
+          description: |
+            Invalid inputs, Owner cannot be created.
+            Reasons could be, invalid key
+            or the default service level is specified
+            or the owner content access mode and content access mode list cannot be set directly in standalone mode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Invalid inputs, Owner cannot be created.
+                  Reasons could be, invalid key
+                  or the default service level is specified
+                  or the owner content access mode and content access mode list cannot be set directly in standalone mode
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}:
+    get:
+      description: Retrieves a single owner
+      tags:
+        - Owner
+      operationId: getOwner
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Owner successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerDTO'
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: |
+        Updates an owner.
+        Note: To un-set the defaultServiceLevel for an owner, submit an empty string.
+      tags:
+        - Owner
+      operationId: updateOwner
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Owner to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OwnerDTO'
+      responses:
+        200:
+          description: Owner successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerDTO'
+        400:
+          description: |
+            Invalid inputs, Owner cannot be updated.
+            Reasons could be, invalid key
+            or the owner content access mode and content access mode list cannot be set directly in standalone mode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Invalid inputs, Owner cannot be updated.
+                  Reasons could be, invalid key
+                  or the owner content access mode and content access mode list cannot be set directly in standalone mode
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes an owner
+      tags:
+        - Owner
+      operationId: deleteOwner
+      parameters:
+        - name: owner_key
+          in: path
+          description: The owner key
+          required: true
+          schema:
+            type: string
+        - name: revoke
+          in: query
+          description: Boolean value to revoke an owner
+          schema:
+            type: boolean
+            default: true
+        - name: force
+          in: query
+          description: Boolean value to forcefully delete an owner. This is not in use.
+          schema:
+            type: boolean
+            default: false
+      security: []
+      responses:
+        204:
+          description: Owner successfully deleted
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        409:
+          description: Conflict occured while owner deleting an owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Conflict occured while owner deleting an owner
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/activation_keys:
+    get:
+      description: Retrieves a list of activation keys for an owner
+      tags:
+        - Owner
+      operationId: ownerActivationKeys
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: The name of the activation key
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Activation keys successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActivationKeyDTO'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: Creates an activation key for the owner
+      tags:
+        - Owner
+      operationId: createActivationKey
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Activation key to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationKeyDTO'
+      responses:
+        200:
+          description: Activation key for the owner successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivationKeyDTO'
+        400:
+          description: |
+            Invalid inputs, activation key cannot be created.
+            Reasons could be,
+            The activation key name is already in use for owner
+            or the activation key name must be alphanumeric or include the characters - or _
+            or the name for activation key is not provided
+            or owner key is not provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Invalid inputs, activation key cannot be created.
+                  Reasons could be,
+                  The activation key name is already in use for owner
+                  or the activation key name must be alphanumeric or include the characters - or _
+                  or the name for activation key is not provided
+                  or owner key is not provided
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /owners/{owner_key}/content:
     get:
       description: Retrieves list of owner contents
@@ -2818,6 +3138,1101 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
                 displayMessage: Invalid inputs, could not create content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/consumers:
+    get:
+      description: Retrieves a list of Consumers for the Owner
+      tags:
+        - Owner
+        - Consumer
+      operationId: listConsumers
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: username
+          in: query
+          description: The username of the consumer
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: The consumer type
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+        - name: uuid
+          in: query
+          description: The UUID of consumers
+          schema:
+            type: array
+            items:
+              type: string
+        - name: hypervisor_id
+          in: query
+          description: The hypervisor IDs
+          schema:
+            type: array
+            items:
+              type: string
+        - name: fact
+          in: query
+          description: The consumer facts
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/KeyValueParamDTO'
+        - name: sku
+          in: query
+          description: The list of skus
+          schema:
+            type: array
+            items:
+              type: string
+        - name: subscription_id
+          in: query
+          description: The list of subscription IDs
+          schema:
+            type: array
+            items:
+              type: string
+        - name: contract
+          in: query
+          description: The list of contract numbers
+          schema:
+            type: array
+            items:
+              type: string
+      security: []
+      responses:
+        200:
+          description: Consumers successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsumerDTOArrayElement'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/consumers/count:
+    get:
+      description: Retrieves a count of consumers for the owner
+      tags:
+        - Owner
+        - Consumer
+      operationId: countConsumers
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: The type of the consumer
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+        - name: sku
+          in: query
+          description: The list product ids
+          schema:
+            type: array
+            items:
+              type: string
+        - name: subscription_id
+          in: query
+          description: The list of subscription ids
+          schema:
+            type: array
+            items:
+              type: string
+        - name: contract
+          in: query
+          description: The list of contract numbers
+          schema:
+            type: array
+            items:
+              type: string
+      security: []
+      responses:
+        200:
+          description: Consumer counts successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: integer
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/consumers_system_purpose:
+    get:
+      description: Retrieves an aggregate of the system purpose settings of the owner's consumers
+      tags:
+        - Owner
+        - Consumer
+      operationId: getConsumersSyspurpose
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description:  The system purpose settings sucessfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemPurposeAttributesDTO'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/entitlements:
+    get:
+      description: |
+        Retrieves the list of entitlements for an owner.
+        This endpoint supports paging with query parameters. For more details please visit
+        https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin
+      tags:
+        - Owner
+        - Entitlements
+      operationId: ownerEntitlements
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: product
+          in: query
+          description: The product id
+          schema:
+            type: string
+        - name: matches
+          in: query
+          description: A text to search for in various fields on the entitlements
+          schema:
+            type: string
+        - name: attribute
+          in: query
+          description: The pair of attribute values
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/KeyValueParamDTO'
+      security: []
+      responses:
+        200:
+          description: Entitlement details successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntitlementDTO'
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: |
+        Starts an asynchronous healing for the given Owner.
+        At the end of the process the idea is that all of the consumers
+        in the owned by the owner will be up to date.
+      tags:
+        - Owner
+        - Entitlements
+      operationId: healEntire
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: The Owner is being healed
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/AsyncJobStatusDTO'
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/environments:
+    get:
+      description: Retrieves a list of environment for an owner
+      tags:
+        - Owner Environment
+      operationId: listEnvironments
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: The name of the environment
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Environments successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentDTO'
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: Creates an environment for the owner
+      tags:
+        - Owner Environment
+      operationId: createEnv
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Environment to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnvironmentDTO'
+      responses:
+        200:
+          description: Environment for the owner successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentDTO'
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/hypervisors:
+    get:
+      description: Retrieves a list of hypervisors for an owner
+      tags:
+        - Owner
+        - Hypervisors
+      operationId: getHypervisors
+      security: []
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: hypervisor_id
+          in: query
+          description: The list of hypervisor Ids
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: A list of hypervisors successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumerDTOArrayElement'
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/imports:
+    get:
+      description: Retrieves a list of import records for an owner
+      tags:
+        - Owner Import
+      operationId: getImports
+      security: []
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Import records successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportRecordDTO'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An import owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An import owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: |
+        Imports a manifest zip file for the given organization.
+        This will bring in any products, content, and subscriptions that were
+        assigned to the distributor who generated the manifest.
+        Note: This endpoint is deprecated. Please use /owners/{owner_key}/imports/async
+      tags:
+        - Owner Import
+      operationId: importManifest
+      deprecated: true
+      security: []
+      requestBody:
+        description: A manifest file to be imported
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                input:
+                  type: string
+                  format: binary
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: force
+          in: query
+          description: This is used to override the conflicts
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: Manifest successfully imported
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportRecordDTO'
+        400:
+          description: |
+            Bad request error. Reasons could be,
+            Owner key is null
+            or empty or Unknown conflict to force
+            or format error of the data in a manifest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Bad request error. Reasons could be,
+                  Owner key is null
+                  or empty or Unknown conflict to force
+                  or format error of the data in a manifest
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An import owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An import owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        500:
+          description: |
+            Internal server error. Reasons could be,
+            Reading error during importing
+            or problem with archive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Internal server error. Reasons could be,
+                  Reading error during importing
+                  or problem with archive
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: |
+        Removes Imports for an Owner. Cleans out all imported subscriptions
+        and triggers a background refresh pools. Link to an upstream distributor is
+        removed for the owner, so they can import from another distributor. Other
+        owners can also now import the manifests originally used in this owner. This
+        call does not differentiate between any specific import, it just destroys all
+        subscriptions with an upstream pool ID, essentially anything from an import.
+        Custom subscriptions will be left alone. Imports do carry rules and product
+        information which is global to the candlepin server. This import data is *not*
+        undone, we assume that updates to this data can be safely kept.
+      tags:
+        - Owner Import
+      operationId: undoImports
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      security: [ ]
+      responses:
+        200:
+          description: Imports for an Owner successfully removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        404:
+          description: An import owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An import owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/imports/async:
+    post:
+      description: |
+        Initiates an asynchronous manifest import for the given organization.
+        This will bring in any products, content, and subscriptions that were
+        assigned to the distributor who generated the manifest.
+      tags:
+        - Owner Import
+        - Async
+      operationId: importManifestAsync
+      security: []
+      requestBody:
+        description: A manifest file to be imported
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                input:
+                  type: string
+                  format: binary
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: force
+          in: query
+          description: This is used to override the conflicts
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: Manifest successfully imported
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An import owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An import owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        500:
+          description: |
+            Internal server error. Reasons could be,
+            An unexpected exception occurred while scheduling job
+            or error reading export archive
+            or error storing uploaded archive for asynchronous processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Internal server error. Reasons could be,
+                  An unexpected exception occurred while scheduling job
+                  or error reading export archive
+                  or error storing uploaded archive for asynchronous processing
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/info:
+    get:
+      description: Retrieves the Owner Info for an Owner
+      tags:
+        - Owner
+      operationId: getOwnerInfo
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Owner info successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerInfo'
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/log:
+    put:
+      description: Sets the log level for an owner
+      tags:
+        - Owner log
+      operationId: setLogLevel
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: level
+          in: query
+          description: The log level
+          required: false
+          schema:
+            type: string
+            default: DEBUG
+            enum:
+              - ALL
+              - TRACE
+              - DEBUG
+              - INFO
+              - WARN
+              - ERROR
+              - OFF
+      responses:
+        200:
+          description: Log level successfully set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerDTO'
+        400:
+          description: |
+            Provided level is not a valid log level
+            or owner key is not provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Provided level is not a valid log level
+                  or owner key is not provided
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Remove the log level of an owner
+      tags:
+        - Owner log
+      operationId: deleteLogLevel
+      parameters:
+        - name: owner_key
+          in: path
+          description: The owner key
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        204:
+          description: Owner log level successfully removed
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/pools:
+    get:
+      description: |
+        Retrieves a list of Pools for an Owner. This endpoint
+        supports paging with query parameters. For more details please visit
+        https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin
+      tags:
+        - Owner Pool
+      operationId: listPools
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: consumer
+          in: query
+          description: The consumer UUID
+          schema:
+            type: string
+        - name: activation_key
+          in: query
+          description: The activation key name
+          schema:
+            type: string
+        - name: product
+          in: query
+          description: The product id
+          schema:
+            type: string
+        - name: subscription
+          in: query
+          description: The subscription id
+          schema:
+            type: string
+        - name: listall
+          in: query
+          description: Include pools that are not suited to the unit's facts
+          schema:
+            type: boolean
+            default: false
+        - name: activeon
+          in: query
+          description: Active on date
+          schema:
+            type: string
+            format: date-time
+        - name: matches
+          in: query
+          description: |
+            Find pools matching the given pattern in a variety of fields
+            * and ? wildcards are supported; may be specified multiple times
+          schema:
+            type: array
+            items:
+              type: string
+        - name: attribute
+          in: query
+          description: The attributes to return based on the specified types
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/KeyValueParamDTO'
+        - name: add_future
+          in: query
+          description: |
+            When set to true, it will add future dated pools to the result,
+            based on the activeon date
+          schema:
+            type: boolean
+            default: false
+        - name: only_future
+          in: query
+          description: |
+            When set to true, it will return only future dated pools to the result,
+            based on the activeon date
+          schema:
+            type: boolean
+            default: false
+        - name: after
+          in: query
+          description: |
+            Will only return pools with a start date after the supplied date.
+            Overrides the activeOn date
+          schema:
+            type: string
+            format: date-time
+        - name: poolid
+          in: query
+          description: |
+            One or more pool IDs to use to filter the output; only pools with IDs matching
+            those provided will be returned; may be specified multiple times
+          schema:
+            type: array
+            items:
+              type: string
+      security: []
+      responses:
+        200:
+          description: Pools successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PoolDTO'
+        400:
+          description: Invalid inputs, pools cannot be listed.
+            Reasons could be,
+            Owner key is null or empty
+            or the consumer specified does not belong to owner on path
+            or activationKey could not be found with provided key
+            or the flags add_future and only_future cannot be used at the same time
+            or the flags add_future and only_future cannot be used with the parameter after
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, pools cannot be listed.
+                  Reasons could be,
+                  Owner key is null or empty
+                  or the consumer specified does not belong to owner on path
+                  or activationKey could not be found with provided key
+                  or the flags add_future and only_future cannot be used at the same time
+                  or the flags add_future and only_future cannot be used with the parameter after
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: User cannot access the consumer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: User cannot access the consumer
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: |
+            Invalid inputs, pools cannot be listed.
+            Reasons could be,
+            An owner could not be found using the provided key
+            or the consumer not found using the provided uuid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Invalid inputs, pools cannot be listed.
+                  Reasons could be,
+                  An owner could not be found using the provided key
+                  or the consumer not found using the provided uuid
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: |
+        Creates a custom pool for an Owner. Floating pools are not tied to any
+        upstream subscription, and are most commonly used for custom content delivery
+        in Satellite. Also helps in on-site deployment testing
+      tags:
+        - Owner Pool
+      operationId: createPool
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: A pool to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoolDTO'
+      responses:
+        200:
+          description: Pool successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolDTO'
+        400:
+          description: |
+            Invalid inputs, pool cannot be created.
+            Reasons could be,
+            Owner key is null or empty
+            or Pool product ID not specified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, pool cannot be created.
+                  Reasons could be,
+                  Owner key is null or empty
+                  or Pool product ID not specified
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: |
+        Updates a pool for an Owner. assumes this is a normal pool, and
+        errors out otherwise cause we cannot create master pools from bonus pools
+      tags:
+        - Owner Pool
+      operationId: updatePool
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: Owner key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: A pool to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoolDTO'
+      responses:
+        200:
+          description: Pool successfully updated
+        400:
+          description: |
+            Invalid inputs, pool cannot be updated.
+            Reasons could be,
+            Owner key is null or empty
+            or Pool product ID not specified
+            or cannot update bonus pools, as they are auto generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Invalid inputs, pool cannot be updated.
+                  Reasons could be,
+                  Owner key is null or empty
+                  or Pool product ID not specified
+                  or cannot update bonus pools, as they are auto generated
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: |
+            Invalid inputs, pool cannot be created.
+            Reasons could be,
+            An owner could not be found using the provided key
+            or pool could not be found using provided pool with the ID
+            or provided pool does not belong to the specified owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  Invalid inputs, pool cannot be created.
+                  Reasons could be,
+                  An owner could not be found using the provided key
+                  or pool could not be found using provided pool with the ID
+                  or provided pool does not belong to the specified owner
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
@@ -3083,7 +4498,7 @@ paths:
             type: string
         - name: lazy_regen
           in: query
-          description: Lazy regeneration
+          description: Regenerate certificates immediatelly or allow them to be regenerated on demand
           required: true
           schema:
             type: boolean
@@ -3236,7 +4651,7 @@ paths:
     delete:
       description: Removes a single Content from a product
       tags:
-        - OwnerProduct
+        - Owner Product
       operationId: removeContent
       security: []
       parameters:
@@ -3422,6 +4837,328 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
                 displayMessage: Owner key could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/servicelevels:
+    get:
+      description: Retrieves a list of support levels for an owner
+      tags:
+        - Owner
+      operationId: ownerServiceLevels
+      security: []
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: exempt
+          in: query
+          description: exempt
+          schema:
+            type: string
+            default: false
+      responses:
+        200:
+          description:  A list of support levels for an owner
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/subscriptions:
+    get:
+      description: Retrieves a list of subscriptions for an owner
+      tags:
+        - Owner Subscription
+      operationId: getOwnerSubscriptions
+      security: []
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description:  A list of subscriptions for an owner
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionDTO'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: |
+        Tickle an owner to have all of their entitlement pools synced with their
+        subscriptions. This method (and the one below may not be entirely RESTful,
+        as the updated data is not supplied as an argument.
+        This API call is only relevant in a top level hosted deployment where
+        subscriptions and products are sourced from adapters. Calling this in
+        an on-site deployment is just a no-op.
+      tags:
+        - Owner Subscription
+      operationId: refreshPools
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+        - name: auto_create_owner
+          in: query
+          description: Specify Whether or not to create an owner automatically. Default is false.
+          schema:
+            type: boolean
+            default: false
+        - name: lazy_regen
+          in: query
+          description: Regenerate certificates immediatelly or allow them to be regenerated on demand. Default is true.
+          schema:
+            type: boolean
+            default: true
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        404:
+          description: Owner key could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/system_purpose:
+    get:
+      description: Retrieves the system purpose settings available to an owner
+      tags:
+        - Owner
+      operationId: getSyspurpose
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description:  The details of system purpose settings for an owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemPurposeAttributesDTO'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/uebercert:
+    get:
+      description: Retrieves the Ueber Entitlement Certificate
+      tags:
+        - Owner
+        - Ueber certificate
+      operationId: getUeberCertificate
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: Ueber Entitlement Certificate for the owner successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UeberCertificateDTO'
+        404:
+          description: |
+            An owner could not be found using the provided key
+            or Uber certificate for owner was not found. Please generate one.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: |
+                  An owner could not be found using the provided key
+                  or Uber certificate for owner was not found. Please generate one.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: |
+        Creates an Ueber Entitlement Certificate. If a certificate
+        already exists, it will be regenerated.
+      tags:
+        - Owner
+        - Ueber certificate
+      operationId: createUeberCertificate
+      security: []
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Ueber Entitlement Certificate for the owner successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UeberCertificateDTO'
+        400:
+          description: Problem generating ueber cert for an owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Problem generating ueber cert for an owner
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: An owner could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: An owner could not be found using the provided key
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /owners/{owner_key}/upstream_consumers:
+    get:
+      description: Retrieves a list of upstream consumers for an owner
+      tags:
+        - Owner
+        - Upstream Consumers
+      operationId: getUpstreamConsumers
+      security: []
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description:  A list of upstream consumers successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UpstreamConsumerDTOArrayElement'
+        400:
+          description: Owner key is null or empty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key is null or empty
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key could not be found using the provided key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key could not be found using the provided key
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
@@ -4926,6 +6663,23 @@ components:
               type: string
               example: "Refresh completed successfully!"
 
+    AbstractCertificateDTO:
+      description: |
+        Represents the base of most Candlepin certificates
+        presented to the API (exceptions include ProductCertificate which has its own DTO).
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            key:
+              type: string
+            cert:
+              type: string
+            serial:
+              $ref: '#/components/schemas/CertificateSerialDTO'
+
     ActivationKeyDTO:
       description: A token that allows registration without username/password and sets subscription and content related properties at registration.
       allOf:
@@ -5264,6 +7018,15 @@ components:
             manifest:
               type: boolean
 
+    ConsumptionTypeCountsDTO:
+      description: Represents virtual / physical entitlement consumption counts
+      type: object
+      properties:
+        physical:
+          type: integer
+        guest:
+          type: integer
+
     ContentDTO:
       description: Represents the content data exposed to the API.
       allOf:
@@ -5549,6 +7312,51 @@ components:
           items:
             type: string
 
+    ImportRecordDTO:
+      description: Represents a import record details
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            status:
+              type: string
+            statusMessage:
+              type: string
+            fileName:
+              type: string
+            generatedBy:
+              type: string
+            generatedDate:
+              type: string
+              format: date-time
+            upstreamConsumer:
+              $ref: '#/components/schemas/ImportUpstreamConsumerDTO'
+
+    ImportUpstreamConsumerDTO:
+      description: Represents an import upstream consumer
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            uuid:
+              type: string
+            name:
+              type: string
+            apiUrl:
+              type: string
+            webUrl:
+              type: string
+            ownerId:
+              type: string
+            contentAccessMode:
+              type: string
+            type:
+              $ref: '#/components/schemas/ConsumerTypeDTO'
+
     KeyValueParamDTO:
       required:
         - key
@@ -5621,6 +7429,47 @@ components:
               $ref: '#/components/schemas/NestedOwnerDTO'
             upstreamConsumer:
               $ref: '#/components/schemas/UpstreamConsumerDTO'
+
+    OwnerInfo:
+      description: Represents owner information
+      type: object
+      required:
+        - consumerCounts
+        - consumerGuestCounts
+        - entitlementsConsumedByType
+        - consumerTypeCountByPool
+        - enabledConsumerTypeCountByPool
+        - consumerCountsByComplianceStatus
+        - entitlementsConsumedByFamily
+      properties:
+        consumerCounts:
+          type: object
+          additionalProperties:
+            type: integer
+        consumerGuestCounts:
+          type: object
+          additionalProperties:
+            type: integer
+        entitlementsConsumedByType:
+          type: object
+          additionalProperties:
+            type: integer
+        consumerTypeCountByPool:
+          type: object
+          additionalProperties:
+            type: integer
+        enabledConsumerTypeCountByPool:
+          type: object
+          additionalProperties:
+            type: integer
+        consumerCountsByComplianceStatus:
+          type: object
+          additionalProperties:
+            type: integer
+        entitlementsConsumedByFamily:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ConsumptionTypeCountsDTO"
 
     PermissionBlueprintDTO:
       description: Represents the permission blueprints exposed to the API layer
@@ -5950,7 +7799,7 @@ components:
               type: string
             upstreamConsumerId:
               type: string
-            cert:
+            certificate:
               $ref: "#/components/schemas/CertificateDTO"
             cdn:
               $ref: "#/components/schemas/CdnDTO"
@@ -5958,6 +7807,28 @@ components:
               type: boolean
             stackId:
               type: string
+
+    SystemPurposeAttributesDTO:
+      description: Represents system purpose attribute details
+      properties:
+        owner:
+          $ref: '#/components/schemas/NestedOwnerDTO'
+        systemPurposeAttributes:
+          type: object
+          additionalProperties:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+
+    UeberCertificateDTO:
+      description: Represents an ueber certificate
+      allOf:
+        - $ref: '#/components/schemas/AbstractCertificateDTO'
+        - type: object
+          properties:
+            owner:
+              $ref: '#/components/schemas/NestedOwnerDTO'
 
     UserDTO:
       description: "Represents user information for a given user"
@@ -6004,6 +7875,30 @@ components:
               $ref: '#/components/schemas/ConsumerTypeDTO'
             idCert:
               $ref: '#/components/schemas/CertificateDTO'
+
+    UpstreamConsumerDTOArrayElement:
+      description: |
+        Represents a reduced view of a upstream consumer (excluding identify certificate)
+      allOf:
+        - $ref: '#/components/schemas/TimestampedEntity'
+        - type: object
+          properties:
+            id:
+              type: string
+            uuid:
+              type: string
+            name:
+              type: string
+            apiUrl:
+              type: string
+            webUrl:
+              type: string
+            ownerId:
+              type: string
+            contentAccessMode:
+              type: string
+            type:
+              $ref: '#/components/schemas/ConsumerTypeDTO'
 
   securitySchemes:
     basicAuth:

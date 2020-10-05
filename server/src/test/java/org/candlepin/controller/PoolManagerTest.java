@@ -73,7 +73,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.SystemPurposeComplianceRules;
@@ -491,10 +490,6 @@ public class PoolManagerTest {
 
         doAnswer(iom -> sids).when(this.mockSubAdapter).getSubscriptionIds(eq(owner.getKey()));
         doAnswer(iom -> subscriptions).when(this.mockSubAdapter).getSubscriptions(eq(owner.getKey()));
-    }
-
-    private void mockProduct(Owner owner, Product p) {
-        when(mockOwnerProductCurator.getProductById(eq(owner), eq(p.getId()))).thenReturn(p);
     }
 
     private void mockProducts(Owner owner, final Map<String, Product> products) {
@@ -1654,119 +1649,6 @@ public class PoolManagerTest {
         p.setSourceSubscription(new SourceSubscription(TestUtil.randomString(), "derived"));
         existingPools.add(p);
         assertThrows(IllegalStateException.class, () -> pRules.createAndEnrichPools(p, existingPools));
-    }
-
-    @Test
-    public void testFabricateSubscriptionFromPool() {
-        Product product = TestUtil.createProduct("product", "Product");
-        Product provided1 = TestUtil.createProduct("provided-1", "Provided 1");
-        Product provided2 = TestUtil.createProduct("provided-2", "Provided 2");
-        product.setLocked(true);
-        provided1.setLocked(true);
-        provided2.setLocked(true);
-
-        ProductData productDTO = product.toDTO();
-        ProductData provided1DTO = provided1.toDTO();
-        ProductData provided2DTO = provided2.toDTO();
-
-        Pool pool = mock(Pool.class);
-
-        HashSet<Product> provided = new HashSet<>();
-        HashSet<ProductData> providedDTOs = new HashSet<>();
-        provided.add(provided1);
-        provided.add(provided2);
-
-        product.setProvidedProducts(provided);
-
-        providedDTOs.add(provided1DTO);
-        providedDTOs.add(provided2DTO);
-        productDTO.setProvidedProducts(providedDTOs);
-
-        Long quantity = 42L;
-
-        Date startDate = new Date(System.currentTimeMillis() - 86400000);
-        Date endDate = new Date(System.currentTimeMillis() + 86400000);
-        Date updated = new Date();
-
-        String subscriptionId = "test-subscription-1";
-
-        when(pool.getOwner()).thenReturn(owner);
-        when(pool.getProduct()).thenReturn(product);
-        when(pool.getQuantity()).thenReturn(quantity);
-        when(pool.getStartDate()).thenReturn(startDate);
-        when(pool.getEndDate()).thenReturn(endDate);
-        when(pool.getUpdated()).thenReturn(updated);
-        when(pool.getSubscriptionId()).thenReturn(subscriptionId);
-        // TODO: Add other attributes to check here.
-
-        Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
-        assertEquals(owner, fabricated.getOwner());
-        assertEquals(productDTO, fabricated.getProduct());
-        assertEquals(providedDTOs, fabricated.getProvidedProducts());
-        assertEquals(quantity, fabricated.getQuantity());
-        assertEquals(startDate, fabricated.getStartDate());
-        assertEquals(endDate, fabricated.getEndDate());
-        assertEquals(updated, fabricated.getModified());
-        assertEquals(subscriptionId, fabricated.getId());
-    }
-
-
-    /**
-     * See BZ1292283
-     */
-    @Test
-    public void testFabricateSubWithMultiplier() {
-        Product product = TestUtil.createProduct("product", "Product");
-
-        Pool pool = mock(Pool.class);
-
-        Long quantity = 22L;
-        Long multiplier = 2L;
-        product.setMultiplier(multiplier);
-
-        when(pool.getQuantity()).thenReturn(quantity);
-        when(pool.getProduct()).thenReturn(product);
-        Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
-
-        assertEquals((Long) (quantity / multiplier), fabricated.getQuantity());
-    }
-
-    @Test
-    public void testFabricateSubWithZeroInstanceMultiplier() {
-        // Product product = TestUtil.createProduct("product", "Product");
-
-        Pool pool = mock(Pool.class);
-
-        Long quantity = 64L;
-        Long multiplier = 2L;
-
-        product.setMultiplier(multiplier);
-        product.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "0");
-
-        when(pool.getQuantity()).thenReturn(quantity);
-        when(pool.getProduct()).thenReturn(product);
-        Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
-
-        assertEquals((Long) 32L, fabricated.getQuantity());
-    }
-
-    @Test
-    public void testFabricateSubWithMultiplierAndInstanceMultiplier() {
-        Product product = TestUtil.createProduct("product", "Product");
-
-        Pool pool = mock(Pool.class);
-
-        Long quantity = 64L;
-        Long multiplier = 2L;
-
-        product.setMultiplier(multiplier);
-        product.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");
-
-        when(pool.getQuantity()).thenReturn(quantity);
-        when(pool.getProduct()).thenReturn(product);
-        Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
-
-        assertEquals((Long) 8L, fabricated.getQuantity());
     }
 
     @Test

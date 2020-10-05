@@ -21,15 +21,13 @@ import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductContentData;
-import org.candlepin.model.dto.ProductData;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.OwnerInfo;
+import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -94,32 +92,22 @@ public class HostedTestResource {
      *  The subscription for which to create or update subobjects.
      */
     @Deprecated
-    protected void createSubscriptionObjects(Subscription subscription) {
+    protected void createSubscriptionObjects(SubscriptionInfo subscription) {
         if (subscription == null) {
             throw new IllegalArgumentException("subscription is null");
         }
 
-        Map<String, ProductData> pmap = new LinkedHashMap<>();
-        Map<String, ContentData> cmap = new HashMap<>();
-
-        if (subscription.getProduct() != null && subscription.getProduct().getProvidedProducts() != null) {
-            this.addProductsToMap(subscription.getProduct().getProvidedProducts(), pmap);
-        }
-
-        if (subscription.getDerivedProduct() != null &&
-            subscription.getDerivedProduct().getProvidedProducts() != null) {
-            this.addProductsToMap(subscription.getDerivedProduct().getProvidedProducts(), pmap);
-        }
+        Map<String, ProductInfo> pmap = new LinkedHashMap<>();
+        Map<String, ContentInfo> cmap = new HashMap<>();
 
         this.addProductsToMap(subscription.getProduct(), pmap);
-        this.addProductsToMap(subscription.getDerivedProduct(), pmap);
 
-        for (ProductData product : pmap.values()) {
+        for (ProductInfo product : pmap.values()) {
             this.addContentToMap(product.getProductContent(), cmap);
         }
 
         // Create content...
-        for (ContentData content : cmap.values()) {
+        for (ContentInfo content : cmap.values()) {
             if (this.datastore.getContent(content.getId()) != null) {
                 this.datastore.updateContent(content.getId(), content);
             }
@@ -129,7 +117,7 @@ public class HostedTestResource {
         }
 
         // Create products...
-        for (ProductData product : pmap.values()) {
+        for (ProductInfo product : pmap.values()) {
             if (this.datastore.getProduct(product.getId()) != null) {
                 this.datastore.updateProduct(product.getId(), product);
             }
@@ -139,19 +127,21 @@ public class HostedTestResource {
         }
     }
 
-    private void addProductsToMap(ProductData product, Map<String, ProductData> pmap) {
+    private void addProductsToMap(ProductInfo product, Map<String, ProductInfo> pmap) {
         if (product != null) {
             if (product.getId() == null || product.getId().matches("\\A\\s*\\z")) {
                 throw new BadRequestException("product has a null or empty product ID: " + product);
             }
 
             pmap.put(product.getId(), product);
+            addProductsToMap(product.getDerivedProduct(), pmap);
+            addProductsToMap(product.getProvidedProducts(), pmap);
         }
     }
 
-    private void addProductsToMap(Collection<ProductData> products, Map<String, ProductData> pmap) {
+    private void addProductsToMap(Collection<? extends ProductInfo> products, Map<String, ProductInfo> pmap) {
         if (products != null) {
-            for (ProductData product : products) {
+            for (ProductInfo product : products) {
                 if (product == null) {
                     throw new BadRequestException("product collection contains a null product");
                 }
@@ -161,11 +151,13 @@ public class HostedTestResource {
         }
     }
 
-    private void addContentToMap(Collection<ProductContentData> content, Map<String, ContentData> cmap) {
+    private void addContentToMap(Collection<? extends ProductContentInfo> content,
+        Map<String, ContentInfo> cmap) {
+
         if (content != null) {
-            for (ProductContentData pcdata : content) {
+            for (ProductContentInfo pcdata : content) {
                 if (pcdata != null) {
-                    ContentData cdata = pcdata.getContent();
+                    ContentInfo cdata = pcdata.getContent();
 
                     if (cdata == null) {
                         throw new BadRequestException("product contains a null content: " + pcdata);
@@ -213,7 +205,7 @@ public class HostedTestResource {
      * Creates a new subscription from the subscription JSON provided. Any UUID
      * provided in the JSON will be ignored when creating the new subscription.
      *
-     * @param subscription
+     * @param subscriptionDTO
      *  A Subscription object built from the JSON provided in the request
      *
      * @return
@@ -223,15 +215,17 @@ public class HostedTestResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
-    public SubscriptionInfo createSubscription(Subscription subscription) {
+    public SubscriptionInfo createSubscription(SubscriptionDTO subscriptionDTO) {
         // Generate an ID if necessary
-        if (subscription.getId() == null || subscription.getId().matches("\\A\\s*\\z")) {
-            subscription.setId(this.idGenerator.generateId());
+        if (subscriptionDTO.getId() == null || subscriptionDTO.getId().matches("\\A\\s*\\z")) {
+            subscriptionDTO.setId(this.idGenerator.generateId());
         }
 
-        if (this.datastore.getSubscription(subscription.getId()) != null) {
-            throw new ConflictException("subscription already exists: " + subscription.getId());
+        if (this.datastore.getSubscription(subscriptionDTO.getId()) != null) {
+            throw new ConflictException("subscription already exists: " + subscriptionDTO.getId());
         }
+
+        SubscriptionInfo subscription = InfoAdapter.subscriptionInfoAdapter(subscriptionDTO);
 
         // Create the subobjects first
         this.createSubscriptionObjects(subscription);
@@ -274,7 +268,7 @@ public class HostedTestResource {
      * Updates the specified subscription with the provided subscription data.
      *
      * @param subscriptionId the ID of the subscription to update
-     * @param subscription
+     * @param subscriptionDTO
      *        A Subscription object built from the JSON provided in the request;
      *        contains the data to use
      *        to update the specified subscription
@@ -287,15 +281,17 @@ public class HostedTestResource {
     @Path("/subscriptions/{subscription_id}")
     public SubscriptionInfo updateSubscription(
         @PathParam("subscription_id") String subscriptionId,
-        Subscription subscription) {
+        SubscriptionDTO subscriptionDTO) {
 
-        if (subscription == null) {
+        if (subscriptionDTO == null) {
             throw new BadRequestException("no subscription data provided");
         }
 
         if (this.datastore.getSubscription(subscriptionId) == null) {
             throw new NotFoundException("subscription does not yet exist: " + subscriptionId);
         }
+
+        SubscriptionInfo subscription = InfoAdapter.subscriptionInfoAdapter(subscriptionDTO);
 
         // Create/Update sub objects
         this.createSubscriptionObjects(subscription);

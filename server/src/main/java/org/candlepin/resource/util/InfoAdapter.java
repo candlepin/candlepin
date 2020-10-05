@@ -17,6 +17,9 @@ package org.candlepin.resource.util;
 
 import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.BrandingDTO;
+import org.candlepin.dto.api.v1.CdnDTO;
+import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
@@ -24,19 +27,25 @@ import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.RoleDTO;
+import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.dto.api.v1.UserDTO;
 import org.candlepin.service.model.BrandingInfo;
+import org.candlepin.service.model.CdnInfo;
+import org.candlepin.service.model.CertificateInfo;
+import org.candlepin.service.model.CertificateSerialInfo;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.RoleInfo;
+import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.service.model.UserInfo;
 import org.candlepin.util.ListView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -607,4 +616,186 @@ public class InfoAdapter {
         };
     }
 
+    /**
+     * This method adapts the CdnDTO
+     * into CdnInfo object.
+     *
+     * @param source CdnDTO object
+     *
+     * @return CdnInfo object
+     */
+    public static CdnInfo cdnInfoAdapter(CdnDTO source) {
+        return new CdnInfo() {
+            @Override
+            public String getName() {
+                return source.getName();
+            }
+
+            @Override
+            public String getLabel() {
+                return source.getLabel();
+            }
+
+            @Override
+            public String getUrl() {
+                return source.getUrl();
+            }
+
+            @Override
+            public CertificateInfo getCertificate() {
+                return source.getCertificate() != null ?
+                    certificateInfoAdapter(source.getCertificate()) : null;
+            }
+        };
+    }
+
+    /**
+     * This method adapts the CertificateDTO
+     * into CertificateInfo object.
+     *
+     * @param source CertificateDTO object
+     *
+     * @return CertificateInfo object
+     */
+    public static CertificateInfo certificateInfoAdapter(CertificateDTO source) {
+        return new CertificateInfo() {
+
+            @Override
+            public CertificateSerialInfo getSerial() {
+                return source.getSerial() != null ? certificateSerialInfoAdapter(source.getSerial()) : null;
+            }
+
+            @Override
+            public String getKey() {
+                return source.getKey();
+            }
+
+            @Override
+            public String getCertificate() {
+                return source.getCert();
+            }
+        };
+    }
+
+    /**
+     * This method adapts the CertificateSerialDTO
+     * into CertificateSerialInfo object.
+     *
+     * @param source CertificateSerialDTO object
+     *
+     * @return CertificateSerialInfo object
+     */
+    public static CertificateSerialInfo certificateSerialInfoAdapter(CertificateSerialDTO source) {
+        return new CertificateSerialInfo() {
+
+            @Override
+            public BigInteger getSerial() {
+                return BigInteger.valueOf(source.getSerial());
+            }
+
+            @Override
+            public Boolean isRevoked() {
+                return source.getRevoked();
+            }
+
+            @Override
+            public Boolean isCollected() {
+                return source.getCollected();
+            }
+
+            @Override
+            public Date getExpiration() {
+                return Util.toDate(source.getExpiration());
+            }
+        };
+    }
+
+    /**
+     * This method adapts the SubscriptionDTO
+     * into SubscriptionInfo object.
+     *
+     * @param source SubscriptionDTO object
+     *
+     * @return SubscriptionInfo object
+     */
+    public static SubscriptionInfo subscriptionInfoAdapter(SubscriptionDTO source) {
+        return new SubscriptionInfo() {
+
+            @Override
+            public String getId() {
+                return source.getId();
+            }
+
+            @Override
+            public OwnerInfo getOwner() {
+                return source.getOwner() != null ? ownerInfoAdapter(source.getOwner()) : null;
+            }
+
+            @Override
+            public ProductInfo getProduct() {
+                return source.getProduct() != null ? productInfoAdapter(source.getProduct()) : null;
+            }
+
+            @Override
+            public Long getQuantity() {
+                return source.getQuantity();
+            }
+
+            @Override
+            public Date getStartDate() {
+                return Util.toDate(source.getStartDate());
+            }
+
+            @Override
+            public Date getEndDate() {
+                return Util.toDate(source.getEndDate());
+            }
+
+            @Override
+            public Date getLastModified() {
+                return Util.toDate(source.getLastModified());
+            }
+
+            @Override
+            public String getContractNumber() {
+                return source.getContractNumber();
+            }
+
+            @Override
+            public String getAccountNumber() {
+                return source.getAccountNumber();
+            }
+
+            @Override
+            public String getOrderNumber() {
+                return source.getOrderNumber();
+            }
+
+            @Override
+            public String getUpstreamPoolId() {
+                return source.getUpstreamPoolId();
+            }
+
+            @Override
+            public String getUpstreamEntitlementId() {
+                return source.getUpstreamEntitlementId();
+            }
+
+            @Override
+            public String getUpstreamConsumerId() {
+                return source.getUpstreamConsumerId();
+            }
+
+            @Override
+            public CdnInfo getCdn() {
+                return source.getCdn() != null ? cdnInfoAdapter(source.getCdn()) : null;
+            }
+
+            @Override
+            public CertificateInfo getCertificate() {
+                return source.getCertificate() != null ?
+                    certificateInfoAdapter(source.getCertificate()) : null;
+            }
+        };
+    }
 }
