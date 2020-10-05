@@ -35,6 +35,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
@@ -70,6 +71,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
     @Inject private EnvironmentCurator environmentCurator;
     @Inject private PermissionFactory permFactory;
     @Inject private HypervisorResource hypervisorResource;
+    @Inject private ProductCurator productCurator;
 
     private ConsumerType hypervisorType;
 
@@ -83,7 +85,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
     public void setUp() {
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
-            this.ownerCurator);
+            this.ownerCurator, this.productCurator);
 
         owner = ownerCurator.create(new Owner("test-owner"));
 

@@ -15,9 +15,10 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.UeberCertificate;
-
+import org.candlepin.util.Util;
 
 
 /**
@@ -25,7 +26,7 @@ import org.candlepin.model.UeberCertificate;
  * UeberCertificateDTOs
  */
 public class UeberCertificateTranslator
-    extends AbstractCertificateTranslator<UeberCertificate, UeberCertificateDTO> {
+    implements ObjectTranslator<UeberCertificate, UeberCertificateDTO> {
 
     /**
      * {@inheritDoc}
@@ -58,14 +59,28 @@ public class UeberCertificateTranslator
     public UeberCertificateDTO populate(ModelTranslator translator, UeberCertificate source,
         UeberCertificateDTO dest) {
 
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
+
+        dest.id(source.getId())
+            .key(source.getKey())
+            .cert(source.getCert())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()));
 
         if (translator != null) {
+            dest.setSerial(translator.translate(source.getSerial(), CertificateSerialDTO.class));
+
             Owner owner = source.getOwner();
             dest.setOwner(owner != null ? translator.translate(owner, NestedOwnerDTO.class) : null);
-
         }
         else {
+            dest.setSerial(null);
             dest.setOwner(null);
         }
 

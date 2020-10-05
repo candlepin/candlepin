@@ -1802,6 +1802,33 @@ public class PoolManagerTest {
         assertEquals((Long) 8L, fabricated.getQuantity());
     }
 
+    private Content buildContent(Owner owner) {
+        Content content = new Content();
+
+        int rand = TestUtil.randomInt();
+        HashSet<String> modifiedProductIds = new HashSet<>(
+            Arrays.asList("mpid-a-" + rand, "mpid-d-" + rand, "mpid-c-" + rand));
+
+        content.setId("cid" + rand);
+
+        content.setContentUrl("https://www.content_url.com/" + rand);
+        content.setGpgUrl("https://www.gpg_url.com/" + rand);
+        content.setLabel("content_label-" + rand);
+        content.setName("content-" + rand);
+        content.setReleaseVersion("content_releasever-" + rand);
+        content.setRequiredTags("content_tags-" + rand);
+        content.setType("content_type-" + rand);
+        content.setVendor("content_vendor-" + rand);
+        content.setArches("content_arches-" + rand);
+        content.setModifiedProductIds(modifiedProductIds);
+
+        // Since CPM sets all inbound products and content as "locked," we do this to ensure we
+        // don't always trigger a change because the lock state looks different from our mocks.
+        content.setLocked(true);
+
+        return content;
+    }
+
     @Test
     public void expiredEntitlementEvent() {
         Date now = new Date();
