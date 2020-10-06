@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import org.candlepin.dto.api.v1.QueueStatus;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;

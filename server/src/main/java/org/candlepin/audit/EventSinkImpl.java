@@ -18,6 +18,7 @@ import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.dto.api.v1.QueueStatus;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.model.Consumer;
@@ -89,7 +90,10 @@ public class EventSinkImpl implements EventSink {
             for (String listenerClassName : ActiveMQContextListener.getActiveMQListeners(config)) {
                 String queueName = "event." + listenerClassName;
                 long msgCount = session.queueQuery(SimpleString.toSimpleString(queueName)).getMessageCount();
-                results.add(new QueueStatus(queueName, msgCount));
+                results.add(new QueueStatus()
+                    .queueName(queueName)
+                    .pendingMessageCount(msgCount)
+                );
             }
         }
         catch (Exception e) {

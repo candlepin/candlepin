@@ -15,12 +15,10 @@
 package org.candlepin.resource;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.audit.QueueStatus;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SystemPrincipal;
-import org.candlepin.cache.CandlepinCache;
 import org.candlepin.common.auth.SecurityHole;
-import org.candlepin.common.config.Configuration;
+import org.candlepin.dto.api.v1.QueueStatus;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
@@ -28,55 +26,33 @@ import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
 import com.google.inject.Inject;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
 /**
  * Candlepin server administration REST calls.
  */
-@Path("/admin")
-@Api("admin")
-public class AdminResource {
+public class AdminResource implements AdminApi {
 
     private static Logger log = LoggerFactory.getLogger(AdminResource.class);
 
     private UserServiceAdapter userService;
     private UserCurator userCurator;
     private EventSink sink;
-    private Configuration config;
-    private CandlepinCache candlepinCache;
 
     @Inject
     public AdminResource(UserServiceAdapter userService, UserCurator userCurator,
-        EventSink dispatcher, Configuration config, CandlepinCache candlepinCache) {
+        EventSink dispatcher) {
         this.userService = userService;
         this.userCurator = userCurator;
         this.sink = dispatcher;
-        this.config = config;
-        this.candlepinCache = candlepinCache;
     }
 
-    @GET
-    @Produces({MediaType.TEXT_PLAIN})
-    @Path("init")
+    @Override
     @SecurityHole(noAuth = true)
-    @ApiOperation(notes = "Initializes the Candlepin database. Currently this just" +
-        " creates the admin user for standalone deployments using the" +
-        " default user service adapter. It must be called once after" +
-        " candlepin is installed, repeat calls are not required, but" +
-        " will be harmless. The String returned is the description if" +
-        " the db was or already is initialized.", value = "initialize")
     public String initialize() {
         log.debug("Called initialize()");
 
@@ -101,12 +77,7 @@ public class AdminResource {
         }
     }
 
-    @GET
-    @Produces({MediaType.APPLICATION_JSON})
-    @Path("queues")
-    @ApiOperation(
-        notes = "Basic information on the ActiveMQ queues and how many messages are pending in each.",
-        value = "Get Queue Stats")
+    @Override
     public List<QueueStatus> getQueueStats() {
         return sink.getQueueInfo();
     }
