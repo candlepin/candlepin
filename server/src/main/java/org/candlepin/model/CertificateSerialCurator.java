@@ -181,22 +181,19 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
         return query.executeUpdate();
     }
 
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<CertificateSerial> listBySerialIds(String[] ids) {
-        if (ids == null) {
+    public CandlepinQuery<CertificateSerial> listBySerialIds(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
             return null;
         }
 
-        // convert IDs to Longs for the query
-        Long[] lids = new Long[ids.length];
-        for (int i = 0; i < ids.length; i++) {
-            lids[i] = Long.valueOf(ids[i]);
-        }
+        Long[] lids = ids.stream()
+            .map(Long::valueOf)
+            .toArray(Long[]::new);
 
         DetachedCriteria criteria = DetachedCriteria.forClass(CertificateSerial.class)
             .add(CPRestrictions.in("id", lids));
 
-        return this.cpQueryFactory.<CertificateSerial>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
