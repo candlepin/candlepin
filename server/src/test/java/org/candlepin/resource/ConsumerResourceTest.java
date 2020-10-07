@@ -87,6 +87,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
@@ -197,6 +198,7 @@ public class ConsumerResourceTest {
     @Mock private PrincipalProvider principalProvider;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private ProductCurator productCurator;
 
     private GuestMigration testMigration;
     private Provider<GuestMigration> migrationProvider;
@@ -210,7 +212,8 @@ public class ConsumerResourceTest {
         this.config = new CandlepinCommonTestConfig();
         this.translator = new StandardTranslator(consumerTypeCurator,
             environmentCurator,
-            ownerCurator);
+            ownerCurator,
+            productCurator);
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         when(eventBuilder.setEventData(any(Consumer.class))).thenReturn(eventBuilder);
         when(eventFactory.getEventBuilder(any(Target.class), any(Type.class))).thenReturn(eventBuilder);

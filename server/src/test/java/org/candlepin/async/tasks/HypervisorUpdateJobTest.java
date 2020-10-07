@@ -51,6 +51,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -94,6 +95,7 @@ public class HypervisorUpdateJobTest {
     private EventSink sink;
     private EventFactory evtFactory;
     private EntityManager entityManager;
+    private ProductCurator productCurator;
 
     private ModelTranslator translator;
 
@@ -129,7 +131,8 @@ public class HypervisorUpdateJobTest {
         when(principal.getUsername()).thenReturn("joe user");
 
         EnvironmentCurator environmentCurator = mock(EnvironmentCurator.class);
-        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator,
+            productCurator);
 
         hypervisorJson =
             "{\"hypervisors\":" +

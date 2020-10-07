@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.dto.api.v1.OwnerInfo;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
@@ -67,7 +69,7 @@ public class OwnerInfoCurator {
     }
 
     public OwnerInfo getByOwner(Owner owner) {
-        OwnerInfo info = new OwnerInfo();
+        OwnerInfoBuilder info = new OwnerInfoBuilder();
         Date now = new Date();
 
         // TODO:
@@ -114,11 +116,11 @@ public class OwnerInfoCurator {
         setConsumerGuestCounts(owner, info);
         setConsumerCountsByComplianceStatus(owner, info);
 
-        return info;
+        return info.build();
     }
 
     @SuppressWarnings("unchecked")
-    private void setConsumerGuestCounts(Owner owner, OwnerInfo info) {
+    private void setConsumerGuestCounts(Owner owner, OwnerInfoBuilder info) {
         Criteria cr = consumerCurator.createSecureCriteria()
             .createAlias("facts", "f")
             .add(Restrictions.eq("ownerId", owner.getId()))
@@ -140,7 +142,7 @@ public class OwnerInfoCurator {
     }
 
     @SuppressWarnings("checkstyle:indentation")
-    private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {
+    private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfoBuilder info) {
         Criteria countCriteria = consumerCurator.createSecureCriteria()
             .add(Restrictions.eq("ownerId", owner.getId()))
             .add(Restrictions.isNotNull("entitlementStatus"))

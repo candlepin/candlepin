@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2018 Red Hat, Inc.
+ * Copyright (c) 2009 - 2017 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,22 +16,21 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.model.ImportUpstreamConsumer;
+import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.util.Util;
 
-
 /**
- * The ImportUpstreamConsumerTranslator provides translation from ImportUpstreamConsumer model objects to
- * ImportUpstreamConsumerDTOs
+ * The UpstreamConsumerArrayElementTranslator provides translation
+ * from UpstreamConsumer model objects to UpstreamConsumerDTOArrayElements
  */
-public class ImportUpstreamConsumerTranslator implements
-    ObjectTranslator<ImportUpstreamConsumer, ImportUpstreamConsumerDTO> {
+public class UpstreamConsumerArrayElementTranslator implements
+    ObjectTranslator<UpstreamConsumer, UpstreamConsumerDTOArrayElement> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ImportUpstreamConsumerDTO translate(ImportUpstreamConsumer source) {
+    public UpstreamConsumerDTOArrayElement translate(UpstreamConsumer source) {
         return this.translate(null, source);
     }
 
@@ -39,17 +38,17 @@ public class ImportUpstreamConsumerTranslator implements
      * {@inheritDoc}
      */
     @Override
-    public ImportUpstreamConsumerDTO translate(ModelTranslator translator, ImportUpstreamConsumer source) {
-        return source != null ? this.populate(translator, source, new ImportUpstreamConsumerDTO()) : null;
+    public UpstreamConsumerDTOArrayElement translate(ModelTranslator translator, UpstreamConsumer source) {
+        return source != null ? this.populate(translator, source,
+            new UpstreamConsumerDTOArrayElement()) : null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ImportUpstreamConsumerDTO populate(ImportUpstreamConsumer source,
-        ImportUpstreamConsumerDTO destination) {
-
+    public UpstreamConsumerDTOArrayElement populate(UpstreamConsumer source,
+        UpstreamConsumerDTOArrayElement destination) {
         return this.populate(null, source, destination);
     }
 
@@ -57,26 +56,29 @@ public class ImportUpstreamConsumerTranslator implements
      * {@inheritDoc}
      */
     @Override
-    public ImportUpstreamConsumerDTO populate(ModelTranslator translator, ImportUpstreamConsumer source,
-        ImportUpstreamConsumerDTO dest) {
+    public UpstreamConsumerDTOArrayElement populate(ModelTranslator translator, UpstreamConsumer source,
+        UpstreamConsumerDTOArrayElement dest) {
 
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
 
         if (dest == null) {
-            throw new IllegalArgumentException("dest is null");
+            throw new IllegalArgumentException("destination is null");
         }
 
         dest.id(source.getId())
             .uuid(source.getUuid())
             .name(source.getName())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
             .ownerId(source.getOwnerId())
             .apiUrl(source.getApiUrl())
             .webUrl(source.getWebUrl())
             .contentAccessMode(source.getContentAccessMode())
             .created(Util.toDateTime(source.getCreated()))
             .updated(Util.toDateTime(source.getUpdated()));
+
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {

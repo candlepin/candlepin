@@ -33,7 +33,6 @@ import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -66,8 +65,6 @@ import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -291,38 +288,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             .forProducts(new String [] {provisioning.getId()});
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
-    }
-
-    @Test
-    public void testFabricateWithBranding()
-        throws Exception {
-        List<Pool> masterPools = poolManager.getPoolsBySubscriptionId(sub4.getId()).list();
-        Pool masterPool = null;
-        for (Pool pool: masterPools) {
-            if (pool.getType() == Pool.PoolType.NORMAL) {
-                masterPool = pool;
-            }
-        }
-        Collection<Branding> brandingSet =
-            poolManager.fabricateSubscriptionFromPool(masterPool).getProduct().getBranding();
-
-        assertNotNull(brandingSet);
-        assertEquals(2, brandingSet.size());
-        ArrayList<Branding> list = new ArrayList<>(brandingSet);
-        list.sort(new Comparator<Branding>() {
-
-            @Override
-            public int compare(Branding o1, Branding o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
-
-        assertEquals("branding1", list.get(0).getName());
-        assertEquals("product1", list.get(0).getProductId());
-        assertEquals("type1", list.get(0).getType());
-        assertEquals("branding2", list.get(1).getName());
-        assertEquals("product2", list.get(1).getProductId());
-        assertEquals("type2", list.get(1).getType());
     }
 
     @Test

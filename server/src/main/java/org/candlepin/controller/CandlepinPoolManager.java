@@ -53,7 +53,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.ValidationError;
@@ -2519,25 +2518,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         page.setPageData(resultingPools);
         return page;
-    }
-
-    /**
-     * Creates a Subscription object using information derived from the specified pool. Used to
-     * support deprecated API calls that still require a subscription.
-     *
-     * @param pool
-     *  The pool from which to build a subscription
-     *
-     * @return
-     *  a new subscription object derived from the specified pool.
-     */
-    @Override
-    public Subscription fabricateSubscriptionFromPool(Pool pool) {
-        if (pool == null) {
-            throw new IllegalArgumentException("pool is null");
-        }
-
-        return new Subscription(pool, productCurator);
     }
 
     @Override

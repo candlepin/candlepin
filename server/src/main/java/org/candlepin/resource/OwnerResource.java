@@ -18,7 +18,6 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.HealEntireOrgJob;
-import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.async.tasks.RefreshPoolsForProductJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
@@ -39,7 +38,6 @@ import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.exceptions.ResourceMovedException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.ConfigProperties;
@@ -64,14 +62,17 @@ import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.OwnerInfo;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProvidedProductDTO;
+import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
+import org.candlepin.dto.api.v1.UpstreamConsumerDTOArrayElement;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -90,7 +91,6 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
@@ -112,13 +112,11 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.resteasy.DateFormat;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.sync.ConflictOverrides;
@@ -134,13 +132,6 @@ import ch.qos.logback.classic.Level;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -155,6 +146,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -173,26 +165,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * Owner Resource
  */
-@Path("/owners")
-@Api(value = "owners", authorizations = { @Authorization("basic") })
 public class OwnerResource implements OwnersApi {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
@@ -234,6 +212,7 @@ public class OwnerResource implements OwnersApi {
     private ProductManager productManager;
     private ProductCertificateCurator productCertCurator;
     private ProductCurator productCurator;
+    private PrincipalProvider principalProvider;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
@@ -271,7 +250,8 @@ public class OwnerResource implements OwnersApi {
         ContentManager contentManager,
         ProductManager productManager,
         ProductCertificateCurator productCertCurator,
-        ProductCurator productCurator) {
+        ProductCurator productCurator,
+        PrincipalProvider principalProvider) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -308,6 +288,7 @@ public class OwnerResource implements OwnersApi {
         this.productManager = productManager;
         this.productCertCurator = productCertCurator;
         this.productCurator = productCurator;
+        this.principalProvider = principalProvider;
     }
 
     /**
@@ -849,18 +830,10 @@ public class OwnerResource implements OwnersApi {
         }
     }
 
-    /**
-     * Retrieves a list of Owners
-     *
-     * @return a list of Owner objects
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Wrapped(element = "owners")
-    @ApiOperation(notes = "Retrieves a list of Owners", value = "List Owners", response = OwnerDTO.class,
-        responseContainer = "list")
-    public CandlepinQuery<OwnerDTO> list(@QueryParam("key") String keyFilter) {
+    public CandlepinQuery<OwnerDTO> listOwners(String keyFilter) {
+
         CandlepinQuery<Owner> query = keyFilter != null ?
             this.ownerCurator.getByKeys(Arrays.asList(keyFilter)) :
             this.ownerCurator.listAll();
@@ -868,72 +841,22 @@ public class OwnerResource implements OwnersApi {
         return this.translator.translateQuery(query, OwnerDTO.class);
     }
 
-    /**
-     * Retrieves a single Owner
-     * <p>
-     * <pre>
-     * {
-     *   "parentOwner" : null,
-     *   "id" : "database_id",
-     *   "key" : "admin",
-     *   "displayName" : "Admin Owner",
-     *   "contentPrefix" : null,
-     *   "defaultServiceLevel" : null,
-     *   "upstreamConsumer" : null,
-     *   "logLevel" : null,
-     *   "href" : "/owners/admin",
-     *   "created" : [date],
-     *   "updated" : [date]
-     * }
-     * </pre>
-     *
-     * @param ownerKey Owner ID.
-     * @return an Owner object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Path("/{owner_key}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(notes = "Retrieves a single Owner", value = "Get Owner", response = OwnerDTO.class)
-    @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
-    public OwnerDTO getOwner(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+    @Override
+    public OwnerDTO getOwner(@Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
         return this.translator.translate(owner, OwnerDTO.class);
     }
 
-    /**
-     * Retrieves the Owner Info for an Owner
-     *
-     * @param ownerKey Owner ID.
-     * @return an OwnerInfo object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Path("/{owner_key}/info")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(notes = "Retrieves the Owner Info for an Owner", value = "Get Owner Info")
-    @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
-    public OwnerInfo getOwnerInfo(@PathParam("owner_key")
+    @Override
+    public OwnerInfo getOwnerInfo(
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
         return ownerInfoCurator.getByOwner(owner);
     }
 
-    /**
-     * Creates an Owner
-     *
-     * @return an Owner object
-     * @httpcode 400
-     * @httpcode 200
-     */
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @ApiOperation(notes = "Creates an Owner", value = "Create Owner", response = OwnerDTO.class)
-    @ApiResponses({ @ApiResponse(code = 400, message = "Invalid owner specified in body") })
-    public OwnerDTO createOwner(@ApiParam(name = "owner", required = true) OwnerDTO dto) {
+    @Override
+    public OwnerDTO createOwner(OwnerDTO dto) {
+
         // Verify that we have an owner key (as required)
         if (StringUtils.isBlank(dto.getKey())) {
             throw new BadRequestException(i18n.tr("Owners must be created with a valid key"));
@@ -1014,27 +937,10 @@ public class OwnerResource implements OwnersApi {
         return this.translator.translate(owner, OwnerDTO.class);
     }
 
-    /**
-     * Updates an Owner
-     * <p>
-     * To un-set the defaultServiceLevel for an owner, submit an empty string.
-     *
-     * @param key
-     * @param dto
-     * @return an Owner object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}")
+    @Override
     @Transactional
-    @ApiOperation(notes = "To un-set the defaultServiceLevel for an owner, submit an empty string.",
-        value = "Update Owner", response = OwnerDTO.class)
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public OwnerDTO updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
-        @ApiParam(name = "owner", required = true) OwnerDTO dto) {
+    public OwnerDTO updateOwner(@Verify(Owner.class) String key,
+        OwnerDTO dto) {
         log.debug("Updating owner: {}", key);
 
         Owner owner = findOwnerByKey(key);
@@ -1140,26 +1046,15 @@ public class OwnerResource implements OwnersApi {
         }
     }
 
-    /**
-     * Removes an Owner
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @DELETE
-    @Path("/{owner_key}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(notes = "Removes an Owner", value = "Delete Owner")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public void deleteOwner(@PathParam("owner_key") String ownerKey,
-        @QueryParam("revoke") @DefaultValue("true") boolean revoke,
-        @QueryParam("force") @DefaultValue("false") boolean force) {
+    @Override
+    public void deleteOwner(String ownerKey,
+        Boolean revoke, Boolean force) {
 
         Owner owner = findOwnerByKey(ownerKey);
         Event event = eventFactory.ownerDeleted(owner);
 
         try {
-            ownerManager.cleanupAndDelete(owner, revoke);
+            ownerManager.cleanupAndDelete(owner, Boolean.valueOf(revoke));
         }
         catch (PersistenceException e) {
             if (e.getCause() instanceof ConstraintViolationException) {
@@ -1173,30 +1068,13 @@ public class OwnerResource implements OwnersApi {
         sink.queueEvent(event);
     }
 
-    /**
-     * Retrieves the list of Entitlements for an Owner
-     *
-     * @param ownerKey id of the owner whose entitlements are sought.
-     * @return a list of Entitlement objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/entitlements")
-    @ApiOperation(notes = "Retrieves the list of Entitlements for an Owner. This" +
-        " endpoint supports paging with query parameters. For more details please visit " +
-        "https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin",
-        value = "List Owner Entitlements")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
+    @Override
     public List<EntitlementDTO> ownerEntitlements(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @QueryParam("product") String productId,
-        @QueryParam("matches") String matches,
-        @QueryParam("attribute") List<KeyValueParamDTO> attrFilters,
-        @Context PageRequest pageRequest) {
+        @Verify(Owner.class) String ownerKey, String productId,
+        String matches, List<KeyValueParamDTO> attrFilters) {
 
         Owner owner = findOwnerByKey(ownerKey);
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator
@@ -1213,58 +1091,31 @@ public class OwnerResource implements OwnersApi {
         return entitlementDTOs;
     }
 
-    /**
-     * Heals an Owner
-     *
-     * Starts an asynchronous healing for the given Owner. At the end of the
-     * process the idea is that all of the consumers in the owned by the Owner
-     * will be up to date.
-     *
-     * @param ownerKey id of the owner to be healed.
-     * @return a JobDetail object
-     * @httpcode 404
-     * @httpcode 202
-     */
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    @Path("{owner_key}/entitlements")
-    @ApiOperation(notes = "Starts an asynchronous healing for the given Owner." +
-        " At the end of the process the idea is that all of the consumers " +
-        "in the owned by the Owner will be up to date.", value = "Heal owner")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
+    @Override
     public AsyncJobStatusDTO healEntire(
-        @ApiParam("ownerKey id of the owner to be healed.") @PathParam("owner_key") @Verify(Owner.class)
-        String ownerKey)
-        throws JobException {
+        @Verify(Owner.class) String ownerKey) {
 
         Owner owner = findOwnerByKey(ownerKey);
         JobConfig config = HealEntireOrgJob.createJobConfig().setOwner(owner).setEntitleDate(new Date());
 
-        AsyncJobStatus job = this.jobManager.queueJob(config);
-        return this.translator.translate(job, AsyncJobStatusDTO.class);
+        try {
+            AsyncJobStatus job = this.jobManager.queueJob(config);
+            return this.translator.translate(job, AsyncJobStatusDTO.class);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                config.getJobKey());
+            log.error(errmsg, e);
+            throw new IseException(errmsg, e);
+        }
     }
 
-    /**
-     * Retrieves a list of Support Levels for an Owner
-     *
-     * @param ownerKey id of the owner whose support levels are sought.
-     * @return a set of String objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/servicelevels")
-    @ApiOperation(notes = "Retrieves a list of Support Levels for an Owner", value = "Get Service Levels")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
+    @Override
     public Set<String> ownerServiceLevels(
-        @ApiParam("ownerKey id of the owner whose support levels are sought.")
-        @PathParam("owner_key") @Verify(value = Owner.class,
-        subResource = SubResource.SERVICE_LEVELS) String ownerKey,
-        @Context Principal principal,
-        @QueryParam("exempt") @DefaultValue("false") String exempt) {
+        @Verify(value = Owner.class, subResource = SubResource.SERVICE_LEVELS) String ownerKey,
+        String exempt) {
         Owner owner = findOwnerByKey(ownerKey);
+        Principal principal = this.principalProvider.get();
 
         if (principal.getType().equals("consumer")) {
             Consumer c = consumerCurator.findByUuid(principal.getName());
@@ -1278,47 +1129,18 @@ public class OwnerResource implements OwnersApi {
         return poolManager.retrieveServiceLevelsForOwner(owner.getId(), Boolean.parseBoolean(exempt));
     }
 
-    /**
-     * Retrieves a list of Activation Keys for an Owner
-     *
-     * @param ownerKey id of the owner whose keys are sought.
-     * @return a list of Activation Key objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/activation_keys")
-    @ApiOperation(notes = "Retrieves a list of Activation Keys for an Owner", value = "Owner Activation Keys",
-        response = ActivationKeyDTO.class, responseContainer = "List")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
+    @Override
     public CandlepinQuery<ActivationKeyDTO> ownerActivationKeys(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @QueryParam("name") String keyName) {
+        @Verify(Owner.class) String ownerKey, String keyName) {
         Owner owner = findOwnerByKey(ownerKey);
 
         CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
         return translator.translateQuery(keys, ActivationKeyDTO.class);
     }
 
-    /**
-     * Creates an Activation Key for the Owner
-     *
-     * @param ownerKey id of the owner whose keys are sought.
-     * @return an Activation Key object
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/activation_keys")
-    @ApiOperation(notes = "Creates an Activation Key for the Owner", value = "Create Activation Key")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 400, message = "Invalid activation key") })
-    public ActivationKeyDTO createActivationKey(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @ApiParam(name = "activation_key", required = true) ActivationKeyDTO dto) {
+    @Override
+    public ActivationKeyDTO createActivationKey(@Verify(Owner.class) String ownerKey,
+        ActivationKeyDTO dto) {
 
         validator.validateConstraints(dto);
         validator.validateCollectionElementsNotNull(dto::getContentOverrides, dto::getPools,
@@ -1360,22 +1182,10 @@ public class OwnerResource implements OwnersApi {
         return translator.translate(newKey, ActivationKeyDTO.class);
     }
 
-    /**
-     * Creates an Environment for an Owner
-     *
-     * @return an Environment object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/environments")
-    @ApiOperation(notes = "Creates an Environment for an Owner", value = "Create environment")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
+    @Override
     public EnvironmentDTO createEnv(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @ApiParam(name = "environment", required = true) EnvironmentDTO envDTO) {
+        @Verify(Owner.class) String ownerKey,
+        EnvironmentDTO envDTO) {
 
         Environment env = new Environment();
         NestedOwnerDTO ownerDTO = new NestedOwnerDTO().key(ownerKey);
@@ -1386,24 +1196,9 @@ public class OwnerResource implements OwnersApi {
         return translator.translate(env, EnvironmentDTO.class);
     }
 
-    /**
-     * Retrieves a list of Environments for an Owner
-     *
-     * @param envName Optional environment name filter to search for.
-     * @return a list of Environment objects
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/environments")
-    @Wrapped(element = "environments")
-    @ApiOperation(notes = "Retrieves a list of Environments for an Owner", value = "List environments",
-        response = EnvironmentDTO.class, responseContainer = "List")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public CandlepinQuery<EnvironmentDTO> listEnvironments(@PathParam("owner_key")
-        @Verify(Owner.class) String ownerKey,
-        @ApiParam("Environment name filter to search for.")
-        @QueryParam("name") String envName) {
+    @Override
+    public CandlepinQuery<EnvironmentDTO> listEnvironments(
+        @Verify(Owner.class) String ownerKey, String envName) {
         Owner owner = findOwnerByKey(ownerKey);
         CandlepinQuery<Environment> query = envName == null ?
             envCurator.listForOwner(owner) :
@@ -1411,22 +1206,8 @@ public class OwnerResource implements OwnersApi {
         return translator.translateQuery(query, EnvironmentDTO.class);
     }
 
-    /**
-     * Sets the Log Level for an Owner
-     *
-     * @param ownerKey
-     * @param level
-     * @return an Owner object
-     */
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    @Path("{owner_key}/log")
-    @ApiOperation(notes = "Sets the Log Level for an Owner", value = "Set Log Level")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public OwnerDTO setLogLevel(@PathParam("owner_key") String ownerKey,
-        @QueryParam("level") @DefaultValue("DEBUG")
-        @ApiParam(allowableValues = "ALL, TRACE, DEBUG, INFO, WARN, ERROR, OFF") String level) {
+    @Override
+    public OwnerDTO setLogLevel(String ownerKey, String level) {
 
         Owner owner = findOwnerByKey(ownerKey);
 
@@ -1441,53 +1222,24 @@ public class OwnerResource implements OwnersApi {
         return this.translator.translate(owner, OwnerDTO.class);
     }
 
-    /**
-     * Remove the Log Level of an Owner
-     *
-     * @param ownerKey
-     */
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/log")
-    @ApiOperation(notes = "Remove the Log Level of an Owner", value = "Remove Log Level")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public void deleteLogLevel(@PathParam("owner_key") String ownerKey) {
+    @Override
+    public void deleteLogLevel(String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
         owner.setLogLevel((String) null);
         ownerCurator.merge(owner);
     }
 
-    /**
-     * Retrieve a list of Consumers for the Owner
-     *
-     * @param ownerKey id of the owner whose consumers are sought.
-     * @return a list of Consumer objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/consumers")
-    @SuppressWarnings("checkstyle:indentation")
-    @ApiOperation(notes = "Retrieve a list of Consumers for the Owner", value = "List Consumers",
-        response = ConsumerDTOArrayElement.class, responseContainer = "list")
-    @ApiResponses({
-        @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 400, message = "Invalid request")
-    })
+    @Override
     public CandlepinQuery<ConsumerDTOArrayElement> listConsumers(
-        @PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
-        @QueryParam("username") String userName,
-        @QueryParam("type") Set<String> typeLabels,
-        @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true) List<String> uuids,
-        @QueryParam("hypervisor_id") List<String> hypervisorIds,
-        @QueryParam("fact") List<KeyValueParamDTO> attrFilters,
-        @QueryParam("sku") List<String> skus,
-        @QueryParam("subscription_id") List<String> subscriptionIds,
-        @QueryParam("contract") List<String> contracts,
-        @Context PageRequest pageRequest) {
+        String userName,
+        Set<String> typeLabels,
+        @Verify(value = Consumer.class, nullable = true) List<String> uuids,
+        List<String> hypervisorIds,
+        List<KeyValueParamDTO> attrFilters,
+        List<String> skus,
+        List<String> subscriptionIds,
+        List<String> contracts) {
 
         Owner owner = findOwnerByKey(ownerKey);
         List<ConsumerType> types = consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
@@ -1498,22 +1250,13 @@ public class OwnerResource implements OwnersApi {
         return translator.translateQuery(query, ConsumerDTOArrayElement.class);
     }
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/consumers/count")
-    @SuppressWarnings("checkstyle:indentation")
-    @ApiOperation(notes = "Retrieve a count of Consumers for the Owner", value = "consumers count")
-    @ApiResponses({
-        @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 400, message = "Invalid request")
-    })
-    public int countConsumers(
-        @PathParam("owner_key")
+    @Override
+    public Integer countConsumers(
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
-        @QueryParam("type") Set<String> typeLabels,
-        @QueryParam("sku") List<String> skus,
-        @QueryParam("subscription_id") List<String> subscriptionIds,
-        @QueryParam("contract") List<String> contracts) {
+        Set<String> typeLabels,
+        List<String> skus,
+        List<String> subscriptionIds,
+        List<String> contracts) {
 
         this.findOwnerByKey(ownerKey);
         consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
@@ -1521,62 +1264,31 @@ public class OwnerResource implements OwnersApi {
         return consumerCurator.countConsumers(ownerKey, typeLabels, skus, subscriptionIds, contracts);
     }
 
-    /**
-     * Retrieves a list of Pools for an Owner
-     *
-     * @param ownerKey id of the owner whose entitlement pools are sought.
-     * @param matches Find pools matching the given pattern in a variety of fields.
-     * * and ? wildcards are supported.
-     * @return a list of Pool objects
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
+    @Override
     @Transactional
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/pools")
-    @SuppressWarnings("checkstyle:indentation")
-    @ApiOperation(notes = "Retrieves a list of Pools for an Owner. This endpoint " +
-        "supports paging with query parameters. For more details please visit " +
-        "https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin",
-        value = "List Pools")
-    @ApiResponses({
-        @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 400, message = "Invalid request")
-    })
     public List<PoolDTO> listPools(
-        @PathParam("owner_key") @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
-        @QueryParam("consumer") String consumerUuid,
-        @QueryParam("activation_key") String activationKeyName,
-        @QueryParam("product") String productId,
-        @QueryParam("subscription") String subscriptionId,
-        @ApiParam("Include pools that are not suited to the unit's facts.")
-        @QueryParam("listall") @DefaultValue("false") boolean listAll,
-        @ApiParam("Date to use as current time for lookup criteria. Defaults" +
-                " to current date if not specified.")
-        @QueryParam("activeon") @DefaultValue(DateFormat.NOW) @DateFormat Date activeOn,
-        @ApiParam("Find pools matching the given pattern in a variety of fields;" +
-                " * and ? wildcards are supported; may be specified multiple times")
-        @QueryParam("matches") List<String> matches,
-        @ApiParam("The attributes to return based on the specified types.")
-        @QueryParam("attribute") List<KeyValueParamDTO> attrFilters,
-        @ApiParam("When set to true, it will add future dated pools to the result, " +
-                "based on the activeon date.")
-        @QueryParam("add_future") @DefaultValue("false") boolean addFuture,
-        @ApiParam("When set to true, it will return only future dated pools to the result, " +
-                "based on the activeon date.")
-        @QueryParam("only_future") @DefaultValue("false") boolean onlyFuture,
-        @ApiParam("Will only return pools with a start date after the supplied date. " +
-                "Overrides the activeOn date.")
-        @QueryParam("after") @DateFormat Date after,
-        @ApiParam("One or more pool IDs to use to filter the output; only pools with IDs matching " +
-                "those provided will be returned; may be specified multiple times")
-        @QueryParam("poolid") List<String> poolIds,
-        @Context Principal principal,
-        @Context PageRequest pageRequest) {
+        @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
+        String consumerUuid,
+        String activationKeyName,
+        String productId,
+        String subscriptionId,
+        Boolean listAll,
+        OffsetDateTime activeOn,
+        List<String> matches,
+        List<KeyValueParamDTO> attrFilters,
+        Boolean addFuture,
+        Boolean onlyFuture,
+        OffsetDateTime after,
+        List<String> poolIds) {
+
+        Principal principal = this.principalProvider.get();
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
         Owner owner = findOwnerByKey(ownerKey);
+
+        // set default to current date
+        Date activeOnDate = activeOn != null ? Util.toDate(activeOn) : new Date();
+        Date afterDate = Util.toDate(after);
 
         Consumer c = null;
         if (consumerUuid != null) {
@@ -1611,13 +1323,13 @@ public class OwnerResource implements OwnersApi {
                 i18n.tr("The flags add_future and only_future cannot be used at the same time."));
         }
 
-        if (after != null && (addFuture || onlyFuture)) {
+        if (afterDate != null && (addFuture || onlyFuture)) {
             throw new BadRequestException(
                     i18n.tr("The flags add_future and only_future cannot be used with the parameter after."));
         }
 
-        if (after != null) {
-            activeOn = null;
+        if (afterDate != null) {
+            activeOnDate = null;
         }
 
         // Process the filters passed for the attributes
@@ -1637,12 +1349,12 @@ public class OwnerResource implements OwnersApi {
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
-            c, key, owner.getId(), productId, subscriptionId, activeOn, listAll, poolFilters, pageRequest,
-            addFuture, onlyFuture, after);
+            c, key, owner.getId(), productId, subscriptionId, activeOnDate, listAll, poolFilters, pageRequest,
+            addFuture, onlyFuture, afterDate);
 
         List<Pool> poolList = page.getPageData();
-        calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOn);
-        calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOn);
+        calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
+        calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);
 
         // Store the page for the LinkHeaderResponseFilter
         ResteasyContext.pushContext(Page.class, page);
@@ -1655,125 +1367,26 @@ public class OwnerResource implements OwnersApi {
         return poolDTOs;
     }
 
-    /**
-     * Retrieves a list of Subscriptions for an Owner
-     *
-     * @return a list of Subscription objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/subscriptions")
-    @ApiOperation(notes = "Retrieves a list of Subscriptions for an Owner", value = "List Subscriptions")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<Subscription> getSubscriptions(@PathParam("owner_key") String ownerKey) {
+    @Override
+    public List<SubscriptionDTO> getOwnerSubscriptions(String ownerKey) {
         Owner owner = this.findOwnerByKey(ownerKey);
 
-        List<Subscription> subscriptions = new LinkedList<>();
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
 
         for (Pool pool : this.poolManager.listPoolsByOwner(owner).list()) {
-            SourceSubscription srcsub = pool.getSourceSubscription();
 
+            SourceSubscription srcsub = pool.getSourceSubscription();
             if (srcsub != null && "master".equalsIgnoreCase(srcsub.getSubscriptionSubKey())) {
-                subscriptions.add(this.poolManager.fabricateSubscriptionFromPool(pool));
+                subscriptions.add(this.translator.translate(pool, SubscriptionDTO.class));
             }
         }
 
         return subscriptions;
     }
 
-    /**
-     * Creates a Subscription for an Owner
-     *
-     * DEPRECATED: Please create pools directly with POST /pools.
-     *
-     * @deprecated Please create pools directly with POST /pools.
-     * @return a Subscription object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/subscriptions")
-    @Deprecated
-    @ApiOperation(notes = "Creates a Subscription for an Owner DEPRECATED: Please create " +
-        "pools directly with POST /pools.", value = "Create Subscription")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public Subscription createSubscription(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        Subscription subscription) {
-
-        // Correct owner & products
-        Owner owner = findOwnerByKey(ownerKey);
-        subscription.setOwner(owner);
-
-        subscription = resolverUtil.resolveSubscription(subscription);
-
-        if (subscription.getId() == null) {
-            subscription.setId(Util.generateDbUUID());
-        }
-
-        poolManager.createAndEnrichPools(subscription);
-        return subscription;
-    }
-
-    /**
-     * Updates a Subscription for an Owner
-     *
-     * @deprecated Please update pools directly with POST /pools.
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/subscriptions")
-    @Deprecated
-    @ApiOperation(
-        notes = "Updates a Subscription for an Owner.  Please " + "update pools directly with POST /pools.",
-        value = "Update Subscription")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public void updateSubscription(
-        @ApiParam(name = "subscription", required = true) Subscription subscription) {
-
-        throw new ResourceMovedException("owners/{owner_key}/pools");
-    }
-
-    /**
-     * Refreshes the Pools for an Owner
-     * <p>
-     * 'Tickle' an owner to have all of their entitlement pools synced with
-     * their subscriptions. This method (and the one below may not be entirely
-     * RESTful, as the updated data is not supplied as an argument.
-     *
-     * This API call is only relevant in a top level hosted deployment where subscriptions
-     * and products are sourced from adapters. Calling this in an on-site deployment
-     * is just a no-op.
-     *
-     * @param ownerKey unique id key of the owner whose pools should be updated
-     * @return a JobDetail object
-     * @httpcode 404
-     * @httpcode 202
-     */
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    @Path("{owner_key}/subscriptions")
-    @ApiOperation(notes = "Tickle an owner to have all of their entitlement pools synced with their " +
-        "subscriptions. This method (and the one below may not be entirely RESTful, " +
-        "as the updated data is not supplied as an argument. " +
-        "This API call is only relevant in a top level hosted deployment where " +
-        "subscriptions and products are sourced from adapters. Calling this in " +
-        "an on-site deployment is just a no-op.", value = "Update Subscription")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 202, message = "") })
+    @Override
     public AsyncJobStatusDTO refreshPools(
-        @PathParam("owner_key") String ownerKey,
-        @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner,
-        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) throws JobException {
+        String ownerKey, Boolean autoCreateOwner, Boolean lazyRegen) {
 
         Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
@@ -1794,30 +1407,20 @@ public class OwnerResource implements OwnersApi {
             .setOwner(owner)
             .setLazyRegeneration(lazyRegen);
 
-        AsyncJobStatus job = this.jobManager.queueJob(config);
-        return this.translator.translate(job, AsyncJobStatusDTO.class);
+        try {
+            AsyncJobStatus job = this.jobManager.queueJob(config);
+            return this.translator.translate(job, AsyncJobStatusDTO.class);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                config.getJobKey());
+            log.error(errmsg, e);
+            throw new IseException(errmsg, e);
+        }
     }
 
-    /**
-     * Creates a custom pool for an Owner. Floating pools are not tied to any
-     * upstream subscription, and are most commonly used for custom content
-     * delivery in Satellite.
-     * Also helps in on-site deployment testing
-     *
-     * @return a Pool object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/pools")
-    @ApiOperation(notes = "Creates a custom pool for an Owner. Floating pools are not tied to any " +
-        "upstream subscription, and are most commonly used for custom content delivery " +
-        "in Satellite. Also helps in on-site deployment testing", value = "Create Pool")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public PoolDTO createPool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @ApiParam(name = "pool", required = true) PoolDTO inputPoolDTO) {
+    @Override
+    public PoolDTO createPool(@Verify(Owner.class) String ownerKey, PoolDTO inputPoolDTO) {
 
         log.info("Creating custom pool for owner {}: {}", ownerKey, inputPoolDTO);
 
@@ -1859,25 +1462,9 @@ public class OwnerResource implements OwnersApi {
         return this.translator.translate(pool, PoolDTO.class);
     }
 
-    /**
-     * Updates a pool for an Owner.
-     * assumes this is a normal pool, and errors out otherwise cause we cannot
-     * create master pools from bonus pools
-     *
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @PUT
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/pools")
-    @ApiOperation(
-        notes = "Updates a pool for an Owner. assumes this is a normal pool, and " +
-        "errors out otherwise cause we cannot create master pools from bonus pools ",
-        value = "Update Pool")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public void updatePool(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @ApiParam(name = "pool", required = true) PoolDTO newPoolDTO) {
+    @Override
+    public void updatePool(@Verify(Owner.class) String ownerKey,
+        PoolDTO newPoolDTO) {
 
         this.validator.validateConstraints(newPoolDTO);
         this.validator.validateCollectionElementsNotNull(
@@ -1956,43 +1543,8 @@ public class OwnerResource implements OwnersApi {
         this.poolManager.updateMasterPool(newPool);
     }
 
-    /**
-     * Removes Imports for an Owner
-     * <p>
-     * Cleans out all imported subscriptions and triggers a background refresh pools.
-     * Link to an upstream distributor is removed for the owner, so they can import from
-     * another distributor. Other owners can also now import the manifests originally
-     * used in this owner.
-     * <p>
-     * This call does not differentiate between any specific import, it just
-     * destroys all subscriptions with an upstream pool ID, essentially anything from
-     * an import. Custom subscriptions will be left alone.
-     * <p>
-     * Imports do carry rules and product information which is global to the candlepin
-     * server. This import data is *not* undone, we assume that updates to this data
-     * can be safely kept.
-     *
-     * @return a JobDetail object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @DELETE
-    @Path("{owner_key}/imports")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(notes = "Removes Imports for an Owner. Cleans out all imported subscriptions " +
-        "and triggers a background refresh pools. Link to an upstream distributor is " +
-        "removed for the owner, so they can import from another distributor. Other " +
-        "owners can also now import the manifests originally used in this owner. This  " +
-        "call does not differentiate between any specific import, it just destroys all " +
-        "subscriptions with an upstream pool ID, essentially anything from an import." +
-        " Custom subscriptions will be left alone. Imports do carry rules and product " +
-        "information which is global to the candlepin server. This import data is *not* " +
-        "undone, we assume that updates to this data can be safely kept. ", value = "Undo Imports")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found")})
-    public AsyncJobStatusDTO undoImports(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey, @Context Principal principal)
-        throws JobException {
-
+    @Override
+    public AsyncJobStatusDTO undoImports(@Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
 
         if (this.exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner) == null) {
@@ -2002,42 +1554,26 @@ public class OwnerResource implements OwnersApi {
         JobConfig config = UndoImportsJob.createJobConfig()
             .setOwner(owner);
 
-        AsyncJobStatus job = this.jobManager.queueJob(config);
-        return this.translator.translate(job, AsyncJobStatusDTO.class);
+        try {
+            AsyncJobStatus job = this.jobManager.queueJob(config);
+            return this.translator.translate(job, AsyncJobStatusDTO.class);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                config.getJobKey());
+            log.error(errmsg, e);
+            throw new IseException(errmsg, e);
+        }
     }
 
-    /**
-     * Imports a manifest zip file for the given organization.
-     *
-     * This will bring in any products, content, and subscriptions that were assigned to
-     * the distributor who generated the manifest.
-     *
-     * @deprecated use GET /owners/:owner_key/imports/async
-     *
-     * @return a ImportRecord object if the import is successful.
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 500
-     * @httpcode 200
-     * @httpcode 409
-     */
-    @POST
-    @Path("{owner_key}/imports")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @ApiOperation(
-        notes = "Imports a manifest zip file for the given organization. " +
-        "This will bring in any products, content, and subscriptions that were " +
-        "assigned to the distributor who generated the manifest.", value = "Import Manifest")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 404, message = "Owner not found"), @ApiResponse(code = 500, message = ""),
-        @ApiResponse(code = 409, message = "") })
+    @Override
     @Deprecated
     public ImportRecordDTO importManifest(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @QueryParam("force") String[] overrideConflicts,
+        @Verify(Owner.class) String ownerKey,
+        List<String> force,
         MultipartInput input) {
 
+        String[] overrideConflicts = force.isEmpty() ? new String[]{} : force.stream().toArray(String[]::new);
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
         UploadMetadata fileData = new UploadMetadata();
         Owner owner = findOwnerByKey(ownerKey);
@@ -2077,39 +1613,12 @@ public class OwnerResource implements OwnersApi {
         }
     }
 
-    /**
-     * Initiates an asynchronous manifest import for the given organization. The details of
-     * the started job can be obtained via the {@link JobResource}.
-     *
-     * This will bring in any products, content, and subscriptions that were assigned to
-     * the distributor who generated the manifest.
-     *
-     * @return a JobDetail object representing the newly started {@link ImportJob}.
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 500
-     * @httpcode 200
-     * @httpcode 409
-     */
-    @POST
-    @Path("{owner_key}/imports/async")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @ApiOperation(
-        notes = "Initiates an asynchronous manifest import for the given organization. " +
-        "This will bring in any products, content, and subscriptions that were " +
-        "assigned to the distributor who generated the manifest.",
-        value = "Import Manifest Asynchronously")
-    @ApiResponses({
-        @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 500, message = ""),
-        @ApiResponse(code = 409, message = "")})
+    @Override
     public AsyncJobStatusDTO importManifestAsync(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @QueryParam("force") String[] overrideConflicts,
-        MultipartInput input) throws JobException {
+        @Verify(Owner.class) String ownerKey, List<String> force,
+        MultipartInput input) {
 
+        String[] overrideConflicts = force.isEmpty() ? new String[]{} : force.stream().toArray(String[]::new);
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
         UploadMetadata fileData = new UploadMetadata();
         Owner owner = findOwnerByKey(ownerKey);
@@ -2121,8 +1630,16 @@ public class OwnerResource implements OwnersApi {
             JobConfig config =  manifestManager.importManifestAsync(owner, fileData.getData(),
                 fileData.getUploadedFilename(), overrides);
 
-            AsyncJobStatus job = this.jobManager.queueJob(config);
-            return this.translator.translate(job, AsyncJobStatusDTO.class);
+            try {
+                AsyncJobStatus job = this.jobManager.queueJob(config);
+                return this.translator.translate(job, AsyncJobStatusDTO.class);
+            }
+            catch (JobException e) {
+                String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                    config.getJobKey());
+                log.error(errmsg, e);
+                throw new IseException(errmsg, e);
+            }
         }
         catch (IOException e) {
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
@@ -2138,35 +1655,18 @@ public class OwnerResource implements OwnersApi {
         }
     }
 
-    /**
-     * Retrieves a list of Import Records for an Owner
-     *
-     * @return a list of ImportRecord objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/imports")
-    @ApiOperation(notes = " Retrieves a list of Import Records for an Owner", value = "Get Imports",
-        response = ImportRecord.class, responseContainer = "list")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public CandlepinQuery<ImportRecord> getImports(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+    @Override
+    public CandlepinQuery<ImportRecordDTO> getImports(
+        @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
 
-        return this.importRecordCurator.findRecords(owner);
+        return this.translator.translateQuery(
+            this.importRecordCurator.findRecords(owner),
+            ImportRecordDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves the system purpose settings available to an owner", value =
-        "getSyspurpose")
-    @ApiResponses({@ApiResponse(code = 404, message = "Owner not found")})
-    @GET
-    @Path("{owner_key}/system_purpose")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     public SystemPurposeAttributesDTO getSyspurpose(
-        @PathParam("owner_key")
         @Verify(value = Owner.class, subResource = SubResource.POOLS, require = Access.READ_ONLY)
         String ownerKey) {
 
@@ -2194,14 +1694,9 @@ public class OwnerResource implements OwnersApi {
         return dto;
     }
 
-    @ApiOperation(notes = "Retrieves an aggregate of the system purpose settings of the owner's consumers",
-        value = "getConsumersSyspurpose")
-    @ApiResponses({@ApiResponse(code = 404, message = "Owner not found")})
-    @GET
-    @Path("{owner_key}/consumers_system_purpose")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     public SystemPurposeAttributesDTO getConsumersSyspurpose(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
         List<String> consumerRoles = this.consumerCurator.getDistinctSyspurposeRolesByOwner(owner);
         List<String> consumerUsages = this.consumerCurator.getDistinctSyspurposeUsageByOwner(owner);
@@ -2223,48 +1718,17 @@ public class OwnerResource implements OwnersApi {
         return dto;
     }
 
-    /**
-     * Creates an Ueber Entitlement Certificate
-     *
-     * @return an EntitlementCertificate object
-     * @httpcode 400
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/uebercert")
-    @ApiOperation(notes = "Creates an Ueber Entitlement Certificate. If a certificate " +
-        "already exists, it will be regenerated.",
-        value = "Create Ueber Entitlement Certificate")
-    @ApiResponses({
-        @ApiResponse(code = 404, message = "Owner not found"),
-        @ApiResponse(code = 400, message = "") })
-    public UeberCertificateDTO createUeberCertificate(@Context Principal principal,
-        @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
-
+    @Override
+    public UeberCertificateDTO createUeberCertificate(
+        @Verify(Owner.class) String ownerKey) {
+        Principal principal = this.principalProvider.get();
         UeberCertificate ueberCert = ueberCertGenerator.generate(ownerKey, principal);
 
         return this.translator.translate(ueberCert, UeberCertificateDTO.class);
     }
 
-    /**
-     * Retrieves the Ueber Entitlement Certificate
-     *
-     * @return an EntitlementCertificate object
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/uebercert")
-    @ApiOperation(notes = "Retrieves the Ueber Entitlement Certificate",
-        value = "Get Ueber Entitlement Certificate")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public UeberCertificateDTO getUeberCertificate(@Context Principal principal,
-        @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
-
+    @Override
+    public UeberCertificateDTO getUeberCertificate(@Verify(Owner.class) String ownerKey) {
         Owner owner = this.findOwnerByKey(ownerKey);
         UeberCertificate ueberCert = ueberCertCurator.findForOwner(owner);
         if (ueberCert == null) {
@@ -2275,26 +1739,13 @@ public class OwnerResource implements OwnersApi {
         return this.translator.translate(ueberCert, UeberCertificateDTO.class);
     }
 
-    /**
-     * Retrieves a list of Upstream Consumers for an Owner
-     *
-     * @return a list of UpstreamConsumer objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/upstream_consumers")
-    @ApiOperation(notes = " Retrieves a list of Upstream Consumers for an Owner",
-        value = "Get Upstream Consumers")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
-    public List<UpstreamConsumerDTO> getUpstreamConsumers(@Context Principal principal,
-        @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
+    @Override
+    public List<UpstreamConsumerDTOArrayElement> getUpstreamConsumers(@Verify(Owner.class) String ownerKey) {
 
         Owner owner = this.findOwnerByKey(ownerKey);
         UpstreamConsumer consumer = owner.getUpstreamConsumer();
-        UpstreamConsumerDTO dto =
-            this.translator.translate(consumer, UpstreamConsumerDTO.class);
+        UpstreamConsumerDTOArrayElement dto =
+            this.translator.translate(consumer, UpstreamConsumerDTOArrayElement.class);
 
         // returning as a list for future proofing. today we support one, but
         // users of this api want to protect against having to change their code
@@ -2302,22 +1753,9 @@ public class OwnerResource implements OwnersApi {
         return Arrays.asList(dto);
     }
 
-    /**
-     * Retrieves a list of Hypervisors for an Owner
-     *
-     * @param ownerKey
-     * @param hypervisorIds
-     * @return a list of Consumer objects
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{owner_key}/hypervisors")
-    @ApiOperation(notes = "Retrieves a list of Hypervisors for an Owner", value = "Get Hypervisors",
-        response = ConsumerDTOArrayElement.class, responseContainer = "list")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Owner not found") })
+    @Override
     public CandlepinQuery<ConsumerDTOArrayElement> getHypervisors(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @QueryParam("hypervisor_id") List<String> hypervisorIds) {
+        @Verify(Owner.class) String ownerKey, List<String> hypervisorIds) {
 
         Owner owner = ownerCurator.getByKey(ownerKey);
         CandlepinQuery<Consumer> query = (hypervisorIds == null || hypervisorIds.isEmpty()) ?

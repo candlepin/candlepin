@@ -138,7 +138,7 @@ public class ExporterTest {
         mockEnvironmentCurator = mock(EnvironmentCurator.class);
         oc = mock(OwnerCurator.class);
         me = new MetaExporter();
-        translator = new StandardTranslator(ctc, mockEnvironmentCurator, oc);
+        translator = new StandardTranslator(ctc, mockEnvironmentCurator, oc, pc);
         ce = new ConsumerExporter(translator);
         cte = new ConsumerTypeExporter(translator);
         rc = mock(RulesCurator.class);
