@@ -143,7 +143,7 @@ public class JobMessageReceiverTest {
     private JobMessageReceiver buildJobMessageReceiver() {
         try {
             JobMessageReceiver receiver = new JobMessageReceiver(this.config, this.cpmSessionFactory,
-                this.mapper, this.unitOfWork);
+                this.mapper);
 
             receiver.initialize(this.jobManager);
 

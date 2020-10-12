@@ -77,7 +77,7 @@ public class PoolRulesInstanceTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdCuratorMock,
+        poolRules = new PoolRules(configMock, entCurMock, ownerProdCuratorMock,
             productCurator);
     }
 

@@ -28,7 +28,7 @@ import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.guice.HttpMethodMatcher;
-import org.candlepin.common.guice.JPAInitializer;
+//import org.candlepin.common.guice.JPAInitializer;
 import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -181,7 +181,7 @@ public class TestingModules {
 
             bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
             bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
-            bind(JPAInitializer.class).asEagerSingleton();
+            //bind(JPAInitializer.class).asEagerSingleton();
         }
 
         @Provides @Named("ValidationProperties")

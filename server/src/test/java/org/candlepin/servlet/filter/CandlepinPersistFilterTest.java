@@ -45,7 +45,7 @@ public class CandlepinPersistFilterTest {
     @Before
     public void init() {
         work = mock(UnitOfWork.class);
-        filter = new CandlepinPersistFilter(work);
+        filter = new CandlepinPersistFilter();
     }
 
     @Test

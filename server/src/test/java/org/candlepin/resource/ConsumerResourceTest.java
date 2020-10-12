@@ -387,9 +387,9 @@ public class ConsumerResourceTest {
             .thenThrow(new IOException());
 
         CandlepinPoolManager poolManager = new CandlepinPoolManager(
-            null, null, null, this.config, null, null, mockEntitlementCurator,
+            null, null, null, this.config, null, mockEntitlementCurator,
             mockConsumerCurator, mockConsumerTypeCurator, null, null, null, null, null,
-            mockActivationKeyRules, null, null, null, null, null, null, null, null, null, null
+            mockActivationKeyRules, null, null, null, null, null, null, null, null, null
         );
 
         ConsumerResource consumerResource = new ConsumerResource(

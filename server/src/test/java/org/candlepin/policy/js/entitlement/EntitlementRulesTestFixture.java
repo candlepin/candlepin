@@ -153,7 +153,7 @@ public class EntitlementRulesTestFixture {
         consumerType = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
         consumer = new Consumer("test consumer", "test user", owner, consumerType);
 
-        poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductCuratorMock,
+        poolRules = new PoolRules(config, entCurMock, ownerProductCuratorMock,
                 productCurator);
     }
 

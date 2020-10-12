@@ -90,7 +90,7 @@ public class PoolRulesTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdCuratorMock,
+        poolRules = new PoolRules(configMock, entCurMock, ownerProdCuratorMock,
                 productCurator);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);

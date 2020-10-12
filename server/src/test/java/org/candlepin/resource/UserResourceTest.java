@@ -41,6 +41,8 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.HashSet;
 import java.util.List;
@@ -55,8 +57,10 @@ import javax.inject.Inject;
 /**
  * UserResourceTest
  */
+@SpringBootTest
 public class UserResourceTest extends DatabaseTestFixture {
-    @Inject private UserResource resource;
+    @Autowired
+    private UserResource resource;
 
     @Test
     public void testCreateUser() {

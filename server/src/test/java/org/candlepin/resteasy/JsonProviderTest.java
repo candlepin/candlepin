@@ -33,6 +33,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -44,19 +47,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.core.MediaType;
 
-
-
 @RunWith(MockitoJUnitRunner.class)
 public class JsonProviderTest {
 
-    @Mock private Configuration config;
-    @Mock private ProductCurator productCurator;
+    @Mock
+    private Configuration config;
+    @MockBean private ProductCurator productCurator;
+
+    @Mock private ObjectMapper mapper;
 
     // This is kind of silly - basically just testing an initial setting...
     @Test
     public void dateFormat() {
         JsonProvider provider = new JsonProvider(config,
-            new ProductCachedSerializationModule(productCurator));
+            new ProductCachedSerializationModule(productCurator), mapper);
 
         boolean datesAsTimestamps = isEnabled(provider, SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
@@ -71,7 +75,7 @@ public class JsonProviderTest {
         iso8601WithoutMilliseconds.setTimeZone(TimeZone.getTimeZone("UTC"));
         String expectedDate = "\"" + iso8601WithoutMilliseconds.format(now) + "\"";
         JsonProvider provider = new JsonProvider(config,
-            new ProductCachedSerializationModule(productCurator));
+            new ProductCachedSerializationModule(productCurator), mapper);
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         String serializedDate = mapper.writeValueAsString(now);
         assertTrue(serializedDate.equals(expectedDate));
@@ -88,7 +92,7 @@ public class JsonProviderTest {
     @Test
     public void canSerializeDatesWithLargeTimestampsConcurrently() {
         JsonProvider provider = new JsonProvider(config,
-            new ProductCachedSerializationModule(productCurator));
+            new ProductCachedSerializationModule(productCurator), mapper);
         ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
         final AtomicBoolean processingFailure = new AtomicBoolean(false);

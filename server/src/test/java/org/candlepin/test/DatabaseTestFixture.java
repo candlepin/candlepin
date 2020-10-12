@@ -96,6 +96,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -128,34 +129,35 @@ public class DatabaseTestFixture {
 
     protected Configuration config;
 
-    @Inject protected ActivationKeyCurator activationKeyCurator;
-    @Inject protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
-    @Inject protected AsyncJobStatusCurator asyncJobCurator;
-    @Inject protected CdnCurator cdnCurator;
-    @Inject protected ConsumerCurator consumerCurator;
-    @Inject protected ConsumerTypeCurator consumerTypeCurator;
-    @Inject protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    @Inject protected CertificateSerialCurator certSerialCurator;
-    @Inject protected ContentCurator contentCurator;
-    @Inject protected EntitlementCurator entitlementCurator;
-    @Inject protected EntitlementCertificateCurator entitlementCertificateCurator;
-    @Inject protected EnvironmentCurator environmentCurator;
-    @Inject protected EnvironmentContentCurator environmentContentCurator;
-    @Inject protected IdentityCertificateCurator identityCertificateCurator;
-    @Inject protected ImportRecordCurator importRecordCurator;
-    @Inject protected OwnerContentCurator ownerContentCurator;
-    @Inject protected OwnerCurator ownerCurator;
-    @Inject protected OwnerInfoCurator ownerInfoCurator;
-    @Inject protected OwnerProductCurator ownerProductCurator;
-    @Inject protected ProductCertificateCurator productCertificateCurator;
-    @Inject protected ProductCurator productCurator;
-    @Inject protected PoolCurator poolCurator;
-    @Inject protected RoleCurator roleCurator;
-    @Inject protected UserCurator userCurator;
+    @Autowired
+    protected ActivationKeyCurator activationKeyCurator;
+    @Autowired protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
+    @Autowired protected AsyncJobStatusCurator asyncJobCurator;
+    @Autowired protected CdnCurator cdnCurator;
+    @Autowired protected ConsumerCurator consumerCurator;
+    @Autowired protected ConsumerTypeCurator consumerTypeCurator;
+    @Autowired protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Autowired protected CertificateSerialCurator certSerialCurator;
+    @Autowired protected ContentCurator contentCurator;
+    @Autowired protected EntitlementCurator entitlementCurator;
+    @Autowired protected EntitlementCertificateCurator entitlementCertificateCurator;
+    @Autowired protected EnvironmentCurator environmentCurator;
+    @Autowired protected EnvironmentContentCurator environmentContentCurator;
+    @Autowired protected IdentityCertificateCurator identityCertificateCurator;
+    @Autowired protected ImportRecordCurator importRecordCurator;
+    @Autowired protected OwnerContentCurator ownerContentCurator;
+    @Autowired protected OwnerCurator ownerCurator;
+    @Autowired protected OwnerInfoCurator ownerInfoCurator;
+    @Autowired protected OwnerProductCurator ownerProductCurator;
+    @Autowired protected ProductCertificateCurator productCertificateCurator;
+    @Autowired protected ProductCurator productCurator;
+    @Autowired protected PoolCurator poolCurator;
+    @Autowired protected RoleCurator roleCurator;
+    @Autowired protected UserCurator userCurator;
 
-    @Inject protected PermissionFactory permissionFactory;
-    @Inject protected AnnotationLocator annotationLocator;
-    @Inject protected ModelTranslator modelTranslator;
+    @Autowired protected PermissionFactory permissionFactory;
+    @Autowired protected AnnotationLocator annotationLocator;
+    @Autowired protected ModelTranslator modelTranslator;
 
     private static Injector parentInjector;
     protected Injector injector;
