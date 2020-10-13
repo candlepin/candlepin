@@ -42,7 +42,8 @@ public class Role extends AbstractHibernateObject implements Linkable, RoleInfo 
     @NotNull
     private String id;
 
-    @ManyToMany(targetEntity = User.class)
+    // TODO: spring-guice FetchType.EAGER was added to avoid the lazy initialization error
+    @ManyToMany(targetEntity = User.class, fetch = FetchType.EAGER)
     @JoinTable(
         name = "cp_role_users",
         joinColumns = @JoinColumn(name = "role_id"),
