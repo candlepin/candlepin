@@ -67,7 +67,7 @@ import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.resteasy.JsonProvider;
+import org.candlepin.resteasy.CustomResteasyJackson2Provider;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.CdnInfo;
 import org.candlepin.service.model.CertificateInfo;
@@ -153,9 +153,8 @@ public class CandlepinPoolManager implements PoolManager {
 
     private BindChainFactory bindChainFactory;
 
-    //@Inject protected JsonProvider jsonProvider;
     @Autowired
-    protected JsonProvider jsonProvider;
+    protected CustomResteasyJackson2Provider jackson2Provider;
 
     /**
      * @param poolCurator
@@ -244,7 +243,7 @@ public class CandlepinPoolManager implements PoolManager {
         // we can simulate this in a testing environment.
         if (log.isTraceEnabled() || "TRACE".equalsIgnoreCase(owner.getLogLevel())) {
             try {
-                ObjectMapper mapper = this.jsonProvider
+                ObjectMapper mapper = this.jackson2Provider
                     .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
                 log.trace("Received {} subscriptions from upstream:", subscriptionMap.size());

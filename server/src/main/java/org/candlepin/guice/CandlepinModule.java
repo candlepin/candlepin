@@ -107,7 +107,6 @@ import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.DateFormatter;
-import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.candlepin.resteasy.filter.AuthorizationFeature;
 import org.candlepin.resteasy.filter.CandlepinQueryInterceptor;
@@ -258,7 +257,7 @@ public class CandlepinModule extends AbstractModule {
         requestStaticInjection(CPRestrictions.class);
 
         bind(SystemPurposeComplianceRules.class);
-        bind(JsonProvider.class);
+//        bind(JsonProvider.class);
         miscConfigurations();
 
         // UeberCerts

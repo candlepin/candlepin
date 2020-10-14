@@ -19,7 +19,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ResultIterator;
-import org.candlepin.resteasy.JsonProvider;
+import org.candlepin.resteasy.CustomResteasyJackson2Provider;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,7 +53,7 @@ import javax.ws.rs.core.StreamingOutput;
 @javax.ws.rs.ext.Provider
 public class CandlepinQueryInterceptor implements ContainerResponseFilter {
 
-    protected final JsonProvider jsonProvider;
+    protected final CustomResteasyJackson2Provider jackson2Provider;
     protected final Provider<EntityManager> emProvider;
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -62,8 +62,8 @@ public class CandlepinQueryInterceptor implements ContainerResponseFilter {
 
     @Autowired
     public CandlepinQueryInterceptor(
-        final JsonProvider jsonProvider, final Provider<EntityManager> emProvider) {
-        this.jsonProvider = Objects.requireNonNull(jsonProvider);
+            final CustomResteasyJackson2Provider jackson2Provider, final Provider<EntityManager> emProvider) {
+        this.jackson2Provider = Objects.requireNonNull(jackson2Provider);
         this.emProvider = Objects.requireNonNull(emProvider);
     }
 
@@ -156,7 +156,7 @@ public class CandlepinQueryInterceptor implements ContainerResponseFilter {
     }
 
     private StreamingOutput buildOutputStreamer(Session session, CandlepinQuery query) {
-        ObjectMapper mapper = this.jsonProvider
+        ObjectMapper mapper = this.jackson2Provider
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
         return stream -> {
