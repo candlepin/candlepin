@@ -18,6 +18,7 @@ PACKAGES=(
     gettext
     git
     hostname
+    java-11-openjdk-devel
     java-$JAVA_VERSION-openjdk-devel
     jss
     libxml2-python
