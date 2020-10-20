@@ -256,7 +256,7 @@ public class PoolRules {
         }
         catch (NumberFormatException nfe) {
             // Nothing to update if we get here.
-            log.warn("Invalid virt_limit attribute specified.");
+            log.debug("Null or invalid virt_limit attribute specified, Assuming no virt_limit necessary.");
         }
 
         return null;
