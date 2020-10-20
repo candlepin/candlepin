@@ -14,19 +14,25 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.Certificate;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 
 /**
- * EntitlementCertExporter
+ * Certificate exporter
  */
-public class EntitlementCertExporter {
+public class CertificateExporter {
 
-    void export(Writer writer, EntitlementCertificate cert)
-        throws IOException {
-        writer.write(cert.getCert());
-        writer.write(cert.getKey());
+    void exportCertificate(Certificate cert, File file) throws IOException {
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(cert.getCert());
+            writer.write(cert.getKey());
+        }
+        catch (IOException ioExp) {
+            throw new IOException("Error occurred while exporting certificates", ioExp);
+        }
+
     }
 }

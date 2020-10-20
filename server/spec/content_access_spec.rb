@@ -687,4 +687,39 @@ describe 'Content Access' do
     end
   end
 
+  it 'should export content access certs for a consumer belonging to owner in SCA mode' do
+    product = create_product('test-product-p1', 'some product-p1')
+    content_c1 = @cp.create_content(
+        @owner['key'], "cname-c1", 'test-content-c1', random_string("clabel"), "ctype", "cvendor",
+        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
+
+    # Content enabled in product
+    @cp.add_content_to_product(@owner['key'], product['id'], content_c1['id'], true)
+    consumer = consumer_client(@user, @consumername, type=:system, username=nil,
+        facts= {'system.certificate_version' => '3.3'})
+    pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
+    consumer.consume_pool(pool['id'], {:quantity => 1})[0]
+
+    cert_export = StandardExporter.new
+    cert_export.create_certificate_export_for_client(consumer)
+    content_access_cert_dir = File.join(cert_export.export_dir, 'content_access_certificates')
+    entitlement_cert_dir = File.join(cert_export.export_dir, 'entitlement_certificates')
+
+    exported_content_access_cert = Dir.entries(content_access_cert_dir).select {|e| e != '.' and e != '..' }
+    exported_entitlement_cert = Dir.entries(entitlement_cert_dir).select {|e| e != '.' and e != '..' }
+
+    # Check if content access certs are present in exported zip file.
+    exported_content_access_cert.each do |file|
+      exported_cert = File.read(File.join(content_access_cert_dir, file))
+      expect(exported_cert[0..26]).to include("-----BEGIN CERTIFICATE-----")
+    end
+
+    # Check if entitlement certs are present in exported zip file.
+    exported_entitlement_cert.each do |file|
+      exported_cert = File.read(File.join(entitlement_cert_dir, file))
+      expect(exported_cert[0..26]).to include("-----BEGIN CERTIFICATE-----")
+    end
+
+    cert_export.cleanup
+  end
 end

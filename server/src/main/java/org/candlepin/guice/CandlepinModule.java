@@ -163,7 +163,6 @@ import org.candlepin.service.impl.HypervisorUpdateAction;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.sync.ConsumerExporter;
 import org.candlepin.sync.ConsumerTypeExporter;
-import org.candlepin.sync.EntitlementCertExporter;
 import org.candlepin.sync.Exporter;
 import org.candlepin.sync.MetaExporter;
 import org.candlepin.sync.RulesExporter;
@@ -462,7 +461,6 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerTypeExporter.class);
         bind(ConsumerExporter.class);
         bind(RulesExporter.class);
-        bind(EntitlementCertExporter.class);
     }
 
     private void configureSwagger() {

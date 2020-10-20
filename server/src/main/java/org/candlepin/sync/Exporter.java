@@ -17,6 +17,7 @@ package org.candlepin.sync;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.guice.PrincipalProvider;
@@ -25,6 +26,7 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
@@ -59,6 +61,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.GeneralSecurityException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -83,7 +86,6 @@ public class Exporter {
     private ProductCertExporter productCertExporter;
     private ConsumerTypeExporter consumerType;
     private RulesExporter rules;
-    private EntitlementCertExporter entCert;
     private EntitlementExporter entExporter;
     private DistributorVersionCurator distVerCurator;
     private DistributorVersionExporter distVerExporter;
@@ -102,6 +104,7 @@ public class Exporter {
     private ProductCurator productCurator;
     private ExportExtensionAdapter exportExtensionAdapter;
     private ModelTranslator translator;
+    private ContentAccessManager contentAccessManager;
 
     private static final String LEGACY_RULES_FILE = "/rules/default-rules.js";
     private SyncUtils syncUtils;
@@ -109,7 +112,7 @@ public class Exporter {
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator, MetaExporter meta,
         ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType,
-        RulesExporter rules, EntitlementCertExporter entCert,
+        RulesExporter rules,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
@@ -120,7 +123,8 @@ public class Exporter {
         CdnExporter cdnExporter,
         ProductCurator productCurator,
         SyncUtils syncUtils, ExportExtensionAdapter extensionAdapter,
-        ModelTranslator translator) {
+        ModelTranslator translator,
+        ContentAccessManager contentAccessManager) {
 
         this.consumerTypeCurator = consumerTypeCurator;
         this.ownerCurator = ownerCurator;
@@ -128,7 +132,6 @@ public class Exporter {
         this.consumerExporter = consumerExporter;
         this.consumerType = consumerType;
         this.rules = rules;
-        this.entCert = entCert;
         this.entCertAdapter = entCertAdapter;
         this.productExporter = productExporter;
         this.productAdapter = productAdapter;
@@ -148,6 +151,7 @@ public class Exporter {
         mapper = syncUtils.getObjectMapper();
         this.exportExtensionAdapter = extensionAdapter;
         this.translator = translator;
+        this.contentAccessManager = contentAccessManager;
     }
 
     /**
@@ -197,6 +201,7 @@ public class Exporter {
 
             exportMeta(baseDir, null);
             exportEntitlementsCerts(baseDir, consumer, serials, false);
+            exportContentAccessCerts(baseDir, consumer);
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
@@ -409,17 +414,44 @@ public class Exporter {
                 log.debug("Exporting entitlement certificate: " + cert.getSerial());
                 File file = new File(entCertDir.getCanonicalPath(),
                     cert.getSerial().getId() + ".pem");
-                FileWriter writer = null;
-                try {
-                    writer = new FileWriter(file);
-                    entCert.export(writer, cert);
-                }
-                finally {
-                    if (writer != null) {
-                        writer.close();
-                    }
-                }
+                CertificateExporter crt = new CertificateExporter();
+                crt.exportCertificate(cert, file);
             }
+        }
+    }
+
+    /**
+     * Exports content access certificates for a consumer.
+     * Consumer must belong to owner with SCA enabled.
+     *
+     * @param consumer
+     *  Consumer for which content access certificates needs to be exported.
+     *
+     * @param baseDir
+     *  Base directory path.
+     *
+     * @throws IOException
+     *  Throws IO exception if unable to export content access certs for the consumer.
+     */
+    private void exportContentAccessCerts(File baseDir, Consumer consumer) throws IOException {
+        ContentAccessCertificate contentAccessCert = null;
+
+        try {
+            contentAccessCert = this.contentAccessManager.getCertificate(consumer);
+        }
+        catch (GeneralSecurityException gse) {
+            throw new IOException("Cannot retrieve content access certificate", gse);
+        }
+
+        if (contentAccessCert != null) {
+            File contentAccessCertDir = new File(baseDir.getCanonicalPath(),
+                "content_access_certificates");
+            contentAccessCertDir.mkdir();
+            log.debug("Exporting content access certificate: " + contentAccessCert.getSerial());
+            File file = new File(contentAccessCertDir.getCanonicalPath(),
+                contentAccessCert.getSerial().getId() + ".pem");
+            CertificateExporter crt = new CertificateExporter();
+            crt.exportCertificate(contentAccessCert, file);
         }
     }
 

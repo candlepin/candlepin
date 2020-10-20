@@ -375,6 +375,14 @@ class Exporter
     export
   end
 
+  def create_certificate_export_for_client(consumer_client)
+    export = Export.new
+    export.export_filename = consumer_client.export_certificates(export.tmp_dir)
+    export.extract()
+    @exports << export
+    export
+  end
+
   def cleanup
     Dir.chdir(@orig_working_dir)
     @exports.each do |export|
