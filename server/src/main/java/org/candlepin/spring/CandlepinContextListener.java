@@ -119,7 +119,7 @@ public class CandlepinContextListener implements ServletContextListener {
     @Autowired
     private LoggerContextListener loggerListener;
 
-    //@EventListener(classes = { ContextRefreshedEvent.class})
+    @Override
     public void contextInitialized(ServletContextEvent sce) {
         log.info("Candlepin initializing context.");
 
