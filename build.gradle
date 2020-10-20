@@ -191,7 +191,7 @@ allprojects {
             dependency group: 'mysql', name: 'mysql-connector-java', version: '8.0.20'
             dependency group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.3.0'
             dependency group: 'org.junit.vintage', name: 'junit-vintage-engine', version: "$versions.junit5"
-            dependency group: 'junit', name: 'junit', version: '4.12'
+            dependency group: 'junit', name: 'junit', version: '4.13'
             // Testing DB Drivers
             dependency group: 'org.hsqldb', name: 'hsqldb', version: '2.3.3'
             dependency group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
