@@ -43,15 +43,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.*;
 import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.ContextStartedEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.guice.annotation.EnableGuiceModules;
-import org.springframework.retry.annotation.EnableRetry;
 import org.xnap.commons.i18n.I18nManager;
 
 import javax.cache.CacheManager;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -62,36 +60,21 @@ import java.util.*;
 
 import static org.candlepin.config.ConfigProperties.*;
 
-@EnableGuiceModules
-@Configuration
-@Import(ResteasyAutoConfiguration.class)
-@EnableRetry
-//@EnableAspectJAutoProxy
+@WebListener
 @Profile("!liquibase-only")
-public class CandlepinContextListener {
+public class CandlepinContextListener implements ServletContextListener {
     public static final String CONFIGURATION_NAME = org.candlepin.common.config.Configuration.class.getName();
 
-    //private CPMContextListener cpmContextListener;
-
-//    private ActiveMQContextListener activeMQContextListener;
-//    private JobManager jobManager;
-//    private LoggerContextListener loggerListener;
-//    private CrlFileUtil crlFileUtil;
-
-//    @Autowired
-//    private static I18nManager i18nManager;
     // a bit of application-initialization code. Not sure if this is the
     // best spot for it.
     static {
         I18nManager.getInstance().setDefaultLocale(Locale.US);
-       // i18nManager.setDefaultLocale(Locale.US);
     }
 
     private static Logger log = LoggerFactory.getLogger(org.candlepin.spring.CandlepinContextListener.class);
 
     private org.candlepin.common.config.Configuration config;
 
-    @Autowired
     private ServletContext servletContext;
 
     @Autowired
@@ -136,13 +119,14 @@ public class CandlepinContextListener {
     @Autowired
     private LoggerContextListener loggerListener;
 
-    @EventListener(classes = { ContextRefreshedEvent.class})
-    public void contextInitialized() {
+    //@EventListener(classes = { ContextRefreshedEvent.class})
+    public void contextInitialized(ServletContextEvent sce) {
         log.info("Candlepin initializing context.");
 
         JSSProviderLoader.addProvider();
 
         I18nManager.getInstance().setDefaultLocale(Locale.US);
+        servletContext = sce.getServletContext();
 
         try {
             log.info("Candlepin reading configuration.");
@@ -171,22 +155,15 @@ public class CandlepinContextListener {
     }
 
     private void initializeSubsystems() throws Exception {
-        // Must call super.contextInitialized() before accessing injector
-        //insertValidationEventListeners(injector);
 
-        //AnnotationLocator annotationLocator = injector.getInstance(AnnotationLocator.class);
-        // TODO spring-guice: this is moved to the constructor of AuthorizationFeature.
-        //annotationLocator.init();
-
+        annotationLocator.init();
 
         // make sure our session factory is initialized before we attempt to start something
         // that relies upon it
-
         this.cpmContextListener.initialize();
 
         if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
             if (!config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
-                //QpidQmf qmf = injector.getInstance(QpidQmf.class);
                 QpidStatus status = qmf.getStatus();
                 if (status != QpidStatus.CONNECTED) {
                     log.error("Qpid is in status {}. Please fix Qpid configuration " +
@@ -195,12 +172,9 @@ public class CandlepinContextListener {
                 }
             }
 
-            //QpidStatusMonitor qpidMonitor = injector.getInstance(QpidStatusMonitor.class);
-            //qpidMonitor.addStatusChangeListener(injector.getInstance(QpidConnection.class));
             qpidMonitor.addStatusChangeListener(qpidConnection);
 
             if (config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
-                //qpidMonitor.addStatusChangeListener(injector.getInstance(SuspendModeTransitioner.class));
                 qpidMonitor.addStatusChangeListener(suspendModeTransitioner);
             }
 
@@ -212,13 +186,10 @@ public class CandlepinContextListener {
 
         if (config.getBoolean(ACTIVEMQ_ENABLED)) {
             // If Artemis can not be started candlepin will not start.
-            //activeMQContextListener = injector.getInstance(ActiveMQContextListener.class);
-            //activeMQContextListener.contextInitialized(injector);
             activeMQContextListener.contextInitialized();
         }
 
         if (config.getBoolean(ConfigProperties.CACHE_JMX_STATS)) {
-            //CacheManager cacheManager = injector.getInstance(CacheManager.class);
             cacheManager.getCacheNames().forEach(cacheName -> {
                 log.info("Enabling management and statistics for {} cache", cacheName);
                 cacheManager.enableManagement(cacheName, true);
@@ -228,16 +199,10 @@ public class CandlepinContextListener {
         }
 
         // Setup the job manager
-        //this.jobManager = injector.getInstance(JobManager.class);
         this.jobManager.initialize();
         this.jobManager.start();
 
-        //loggerListener = injector.getInstance(LoggerContextListener.class);
-
         // Custom ModelConverter to handle our specific serialization requirements
-//        ModelConverters.getInstance()
-//                .addConverter(injector.getInstance(CandlepinSwaggerModelConverter.class));
-
         modelConverters.addConverter(candlepinSwaggerModelConverter);
 
         if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
@@ -246,7 +211,6 @@ public class CandlepinContextListener {
         }
 
         // Init CRL file
-        //this.crlFileUtil = injector.getInstance(CrlFileUtil.class);
         String filePath = getCrlFilePath();
         File crlFile = new File(filePath);
         if (!crlFile.exists() || crlFile.length() == 0) {
@@ -259,13 +223,10 @@ public class CandlepinContextListener {
             }
             return;
         }
-        //this.injector = injector;
-
     }
 
-    //@Override
-    @EventListener(classes = { ContextClosedEvent.class})
-    public void contextDestroyed() {
+    @Override
+    public void contextDestroyed(ServletContextEvent event) {
         //super.contextDestroyed(event);
         try {
             this.destroySubsystems();
@@ -287,6 +248,7 @@ public class CandlepinContextListener {
 
         //injector.getInstance(PersistService.class).stop();
         //persistService.stop();
+
         // deregister jdbc driver to avoid warning in tomcat shutdown log
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
@@ -300,7 +262,6 @@ public class CandlepinContextListener {
         }
 
         if (config.getBoolean(ACTIVEMQ_ENABLED)) {
-            //activeMQContextListener.contextDestroyed(injector);
             activeMQContextListener.contextDestroyed();
         }
 

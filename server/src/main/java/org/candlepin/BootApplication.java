@@ -20,9 +20,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration;
 import org.springframework.boot.autoconfigure.jms.artemis.ArtemisAutoConfiguration;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 
 /** Bootstrapper for Spring Boot. */
 @SpringBootApplication(exclude = { ArtemisAutoConfiguration.class, ActiveMQAutoConfiguration.class })
+@ServletComponentScan
 public class BootApplication {
     public static void main(String[] args) {
         try {

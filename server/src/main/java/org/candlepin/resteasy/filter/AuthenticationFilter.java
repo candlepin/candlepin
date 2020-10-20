@@ -87,9 +87,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         this.injector = injector;
         this.config = config;
         this.annotationLocator = annotationLocator;
-        // TODO spring: this is temporarily moved from CandlepinContextListener
-        // A right spot is yet to be found for this
-        annotationLocator.init();
         setupAuthStrategies();
     }
 
