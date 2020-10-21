@@ -615,7 +615,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             this.consumerCurator, this.consumerTypeCurator, null, null, this.entitlementCurator, null,
             null, null, null, null, null, null, this.poolManager, null, null, null, null,
             null, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, null, mock(ConsumerBindUtil.class),
+            new CandlepinCommonTestConfig(), null, null, mock(ConsumerBindUtil.class),
             null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator,
             this.jobManager);
 

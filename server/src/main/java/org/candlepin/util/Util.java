@@ -40,8 +40,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -535,4 +537,33 @@ public class Util {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Returns the first non-null non-empty value from the given array
+
+     * @param values values to be searched
+     * @return first non-null non-empty value or null
+     */
+    public static String firstOf(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isEmpty()) {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Split a given string and return in as a List
+     * @param list a string to be split
+     * @return a list of values
+     */
+    public static List<String> toList(String list) {
+        if (list == null) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(list.split(","));
+    }
+
 }

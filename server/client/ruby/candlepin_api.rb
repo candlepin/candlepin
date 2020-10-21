@@ -285,6 +285,14 @@ class Candlepin
     return get(path)
   end
 
+  def get_consumer_content_access(consumer_uuid)
+    get("/consumers/#{consumer_uuid}/content_access")
+  end
+
+  def get_owner_content_access(owner_key)
+    get("/owners/#{owner_key}/content_access")
+  end
+
   # Can pass an owner key, or an href to follow:
   def get_owner(owner)
     # Looks like a path to follow:

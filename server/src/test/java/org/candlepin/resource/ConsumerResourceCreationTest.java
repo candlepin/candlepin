@@ -14,8 +14,14 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
@@ -159,7 +165,7 @@ public class ConsumerResourceCreationTest {
             this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService,
             null, this.idCertService, null, this.i18n, this.sink, null, null, this.userService, null,
             null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
-            this.systemPurposeComplianceRules, this.deletedConsumerCurator, null, null, this.config, null,
+            this.systemPurposeComplianceRules, this.deletedConsumerCurator, null, null, this.config,
             null, null, this.consumerBindUtil, null, null, new FactValidator(this.config, this.i18nProvider),
             null, consumerEnricher, migrationProvider, modelTranslator, jobManager);
 

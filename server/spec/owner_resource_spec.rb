@@ -20,6 +20,14 @@ describe 'Owner Resource' do
     user1.list_owner_consumers(owner1['key'], ['system']).length.should == 1
   end
 
+  it "get owner content access" do
+    owner = create_owner random_string('test_owner1')
+    access = @cp.get_owner_content_access(owner["key"])
+
+    expect(access['contentAccessModeList']).to eq(%w[org_environment entitlement])
+    expect(access['contentAccessMode']).to eq("entitlement")
+  end
+
   it 'lets an owner admin see only their consumers' do
     owner1 = create_owner random_string('test_owner1')
     username1 = random_string("user1")

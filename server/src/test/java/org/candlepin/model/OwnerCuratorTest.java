@@ -21,10 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -336,4 +338,26 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         assertNull(actual);
     }
+
+    @Test
+    public void fetchesOwnerContentAccess() {
+        String expected = "entitlement";
+        Owner owner = this.createOwner("test_key");
+        this.ownerCurator.flush();
+        this.ownerCurator.clear();
+
+        OwnerContentAccess actual = this.ownerCurator.getOwnerContentAccess(owner.getKey());
+
+        assertEquals(expected, actual.getContentAccessMode());
+        assertEquals(expected, actual.getContentAccessModeList());
+    }
+
+    @Test
+    public void throwsWhenOwnerMissing() {
+        String unknownOwnerKey = "test_key";
+
+        Assertions.assertThrows(OwnerNotFoundException.class,
+            () -> this.ownerCurator.getOwnerContentAccess(unknownOwnerKey));
+    }
+
 }

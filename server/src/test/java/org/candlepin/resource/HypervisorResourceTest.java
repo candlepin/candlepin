@@ -150,7 +150,7 @@ public class HypervisorResourceTest {
             this.userService, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules, this.systemPurposeComplianceRules,
             this.deletedConsumerCurator, null, null, config,
-            null, null, null, this.consumerBindUtil, null, null,
+            null, null, this.consumerBindUtil, null, null,
             new FactValidator(config, this.i18nProvider), null, consumerEnricher, migrationProvider,
             modelTranslator, this.jobManager);
 
