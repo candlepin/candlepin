@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.0
+Version: 3.2.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,16 @@ fi
 
 #raw
 %changelog
+* Wed Oct 21 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.1-1
+- Updated JUnit version from 4.13 to 4.13.1 (crog@redhat.com)
+- Updated JUnit version from 4.12 to 4.13 (vagrant@candlepin.example.com)
+- Convert warn to debug message & add details to reduce log noise
+  (bcourt@redhat.com)
+- ENT-1675: Upgrade candlepin to use Java 11 (prakgupt@redhat.com)
+- 1841591: Manifest delete takes 24 hours or more in large environment (60k
+  consumers in owner)  - Switch to a faster implementation of pool deletion.
+  (ojanus@redhat.com)
+
 * Thu Sep 24 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.0-1
 - 1854221: Validate early if executing job in RUNNING state
   (nmoumoul@redhat.com)
