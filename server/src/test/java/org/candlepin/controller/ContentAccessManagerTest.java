@@ -41,10 +41,10 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerEnvContentAccess;
 import org.candlepin.model.OwnerEnvContentAccessCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.pki.CertificateReader;
@@ -54,7 +54,6 @@ import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
-import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
@@ -84,7 +83,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 /**
  * Test suite for the ContentAccessManager class
  */
@@ -103,10 +101,10 @@ public class ContentAccessManagerTest {
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
     @Mock private ContentAccessCertificateCurator mockContentAccessCertCurator;
     @Mock private OwnerCurator mockOwnerCurator;
+    @Mock private OwnerContentCurator mockOwnerContentCurator;
     @Mock private OwnerEnvContentAccessCurator mockOwnerEnvContentAccessCurator;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private EntitlementCurator mockEntitlementCurator;
-    @Mock private OwnerProductCurator mockOwnerProductCurator;
     private PKIUtility pkiUtility;
     private ObjectMapper objMapper;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
@@ -185,9 +183,8 @@ public class ContentAccessManagerTest {
         return new ContentAccessManager(
             this.config, this.pkiUtility, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
             this.mockKeyPairCurator, this.mockCertSerialCurator, this.mockOwnerCurator,
-            this.mockOwnerEnvContentAccessCurator, this.mockConsumerCurator,
-            this.mockConsumerTypeCurator, this.mockEnvironmentCurator, this.mockOwnerProductCurator,
-            this.mockEventSink);
+            this.mockOwnerContentCurator, this.mockOwnerEnvContentAccessCurator, this.mockConsumerCurator,
+            this.mockConsumerTypeCurator, this.mockEnvironmentCurator, this.mockEventSink);
     }
 
     private Owner mockOwner() {
@@ -247,8 +244,6 @@ public class ContentAccessManagerTest {
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         doReturn(productList).when(cqmock).list();
         doAnswer(iom -> productList.iterator()).when(cqmock).iterator();
-        doReturn(cqmock).when(this.mockOwnerProductCurator).getProductsByOwner(eq(owner));
-
         return product;
     }
 
@@ -256,8 +251,8 @@ public class ContentAccessManagerTest {
         Pool pool = new Pool();
         pool.setQuantity(1L);
         pool.setProduct(product);
-        pool.setStartDate(TestUtil.createDate(2000, 1, 1));
-        pool.setEndDate(TestUtil.createDate(2050, 1, 1));
+        pool.setStartDate(Util.yesterday());
+        pool.setEndDate(Util.tomorrow());
 
         return pool;
     }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
@@ -28,11 +29,16 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 /**
  * The OwnerContentCurator provides functionality for managing the mapping between owners and
@@ -548,4 +554,69 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         }
     }
 
+    /**
+     * Returns a mapping of content and content enabled flag.
+     *
+     * Note - If same content (say C1) is being enabled/disabled by two or more products, with at least
+     * one of the product enabling the content C1 then, content (C1) with enabled (true)
+     * state will have precedence.
+     *
+     * @param ownerId
+     *  Id of an owner
+     *
+     * @return
+     *  Returns a mapping of content and content enabled flag.
+     */
+    public Map<Content, Boolean> getActiveContentByOwner(String ownerId) {
+        EntityManager entityManager = this.getEntityManager();
+        Date now = new Date();
+
+        // Get all the active pools
+        String jpql = "SELECT p.id FROM Pool p " +
+            "WHERE p.owner.id = :owner_id AND p.startDate <= :start_date AND p.endDate >= :end_date";
+
+        List<String> poolIds = entityManager.createQuery(jpql, String.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("start_date", now)
+            .setParameter("end_date", now)
+            .getResultList();
+
+        // Use the pool IDs to select all related product UUIDs
+        // Note: we have to start partitioning now to safely handle any number of active pools
+        String sql = "SELECT pool.product_uuid FROM cp_pool pool WHERE pool.id IN (:pool_ids) " +
+            "UNION " +
+            "SELECT pool.derived_product_uuid FROM cp_pool pool WHERE pool.id IN (:pool_ids) " +
+            "UNION " +
+            "SELECT pp.product_uuid FROM cp2_pool_provided_products pp WHERE pp.pool_id IN (:pool_ids) " +
+            "UNION " +
+            "SELECT dpp.product_uuid FROM cp2_pool_derprov_products dpp WHERE dpp.pool_id IN (:pool_ids) ";
+
+        Query prodQuery = entityManager.createNativeQuery(sql);
+        Set<String> prodIds = new HashSet<>();
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 4);
+
+        for (List<String> block : Iterables.partition(poolIds, blockSize)) {
+            prodIds.addAll(prodQuery.setParameter("pool_ids", block).getResultList());
+        }
+
+        // Use the product UUIDs to select all related enabled content
+        jpql = "SELECT DISTINCT pc.content, pc.enabled FROM ProductContent pc " +
+            "WHERE pc.product.uuid IN (:product_uuids)";
+
+        Query contentQuery = entityManager.createQuery(jpql);
+        HashMap<Content, Boolean> activeContent = new HashMap<>();
+
+        for (List<String> block : this.partition(prodIds)) {
+            contentQuery.setParameter("product_uuids", block)
+                .getResultList()
+                .forEach(col -> {
+                    Content content = (Content) ((Object[]) col)[0];
+                    Boolean enabled = (Boolean) ((Object[]) col)[1];
+                    activeContent.merge(content, enabled, (v1, v2) ->
+                        v1 != null && v1.booleanValue() ? v1 : v2);
+                });
+        }
+
+        return activeContent;
+    }
 }

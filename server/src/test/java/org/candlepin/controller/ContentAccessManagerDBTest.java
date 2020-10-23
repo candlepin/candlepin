@@ -89,8 +89,8 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private ContentAccessManager createManager() {
         return new ContentAccessManager(this.config, this.pkiUtility, this.x509V3ExtensionUtil,
             this.caCertCurator, this.keyPairCurator, this.certSerialCurator, this.ownerCurator,
-            this.ownerEnvContentAccessCurator, this.consumerCurator, this.consumerTypeCurator,
-            this.environmentCurator, this.ownerProductCurator, this.mockEventSink);
+            this.ownerContentCurator, this.ownerEnvContentAccessCurator, this.consumerCurator,
+            this.consumerTypeCurator, this.environmentCurator, this.mockEventSink);
     }
 
     private Owner createSCAOwner() {
