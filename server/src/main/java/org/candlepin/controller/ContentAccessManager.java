@@ -17,7 +17,6 @@ package org.candlepin.controller;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -34,13 +33,12 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerEnvContentAccess;
 import org.candlepin.model.OwnerEnvContentAccessCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -189,6 +187,7 @@ public class ContentAccessManager {
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private OwnerCurator ownerCurator;
+    private OwnerContentCurator ownerContentCurator;
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
     private X509V3ExtensionUtil v3extensionUtil;
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
@@ -196,7 +195,6 @@ public class ContentAccessManager {
     private ConsumerTypeCurator consumerTypeCurator;
     private EnvironmentCurator environmentCurator;
     private ContentAccessCertificateCurator contentAccessCertCurator;
-    private OwnerProductCurator ownerProductCurator;
     private EventSink eventSink;
 
     private boolean standalone;
@@ -210,12 +208,12 @@ public class ContentAccessManager {
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
+        OwnerContentCurator ownerContentCurator,
         OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator,
         ContentAccessCertificateCurator contentAccessCertCurator,
-        OwnerProductCurator ownerProductCurator,
         EventSink eventSink) {
 
         this.config = Objects.requireNonNull(config);
@@ -225,13 +223,13 @@ public class ContentAccessManager {
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
         this.ownerEnvContentAccessCurator = Objects.requireNonNull(ownerEnvContentAccessCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.contentAccessCertCurator = Objects.requireNonNull(contentAccessCertCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
         this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE, true);
     }
 
@@ -509,7 +507,6 @@ public class ContentAccessManager {
     private byte[] createContentAccessDataPayload(Owner owner, Environment environment) throws IOException {
         // fake a product dto as a container for the org content
         Set<Product> containerSet = new HashSet<>();
-        CandlepinQuery<Product> ownerProduct = ownerProductCurator.getProductsByOwner(owner);
         Set<String> entitledProductIds = new HashSet<>();
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(environment);
@@ -524,21 +521,9 @@ public class ContentAccessManager {
         containerSet.add(container);
         container.setId("content_access");
         container.setName(" Content Access");
-        Map<String, Boolean> contentEnabledMap = new HashMap<>();
 
-        for (Product product : ownerProduct) {
-            for (ProductContent pc : product.getProductContent()) {
-                if (!contentEnabledMap.containsKey(pc.getContent().getUuid())) {
-                    container.addContent(pc.getContent(), pc.isEnabled());
-                    contentEnabledMap.put(pc.getContent().getUuid(), pc.isEnabled());
-                }
-                else if (pc.isEnabled() && !contentEnabledMap.get(pc.getContent().getUuid())) {
-                    // Overwrite the content
-                    container.addContent(pc.getContent(), pc.isEnabled());
-                    contentEnabledMap.put(pc.getContent().getUuid(), pc.isEnabled());
-                }
-            }
-        }
+        this.ownerContentCurator.getActiveContentByOwner(owner.getId())
+            .forEach((content, enabled) -> container.addContent(content, enabled));
 
         emptyConsumer.setEnvironment(environment);
         emptyEnt.setPool(emptyPool);
