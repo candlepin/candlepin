@@ -29,6 +29,7 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
@@ -41,10 +42,12 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -80,6 +83,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.GeneralSecurityException;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -111,7 +115,6 @@ public class ExporterTest {
     private ConsumerTypeExporter cte;
     private RulesCurator rc;
     private RulesExporter re;
-    private EntitlementCertExporter ece;
     private EntitlementCertServiceAdapter ecsa;
     private ProductExporter pe;
     private ProductServiceAdapter psa;
@@ -131,6 +134,7 @@ public class ExporterTest {
     private SyncUtils su;
     private ExportExtensionAdapter exportExtensionAdapter;
     private ModelTranslator translator;
+    private ContentAccessManager contentAccessManager;
 
     @Before
     public void setUp() {
@@ -143,7 +147,6 @@ public class ExporterTest {
         cte = new ConsumerTypeExporter(translator);
         rc = mock(RulesCurator.class);
         re = new RulesExporter(rc);
-        ece = new EntitlementCertExporter();
         ecsa = mock(EntitlementCertServiceAdapter.class);
         pe = new ProductExporter(translator);
         psa = mock(ProductServiceAdapter.class);
@@ -162,7 +165,7 @@ public class ExporterTest {
         ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(pc);
         su = new SyncUtils(config, productCachedModule);
         exportExtensionAdapter = mock(ExportExtensionAdapter.class);
-
+        contentAccessManager = mock(ContentAccessManager.class);
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
 
@@ -276,9 +279,9 @@ public class ExporterTest {
         when(oc.findOwnerById(eq(owner.getId()))).thenReturn(owner);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator);
+            exportExtensionAdapter, translator, contentAccessManager);
 
         File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
@@ -331,9 +334,9 @@ public class ExporterTest {
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
 
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator);
+            exportExtensionAdapter, translator, contentAccessManager);
 
         e.getFullExport(consumer, null, null, null, new HashMap<>());
     }
@@ -373,9 +376,9 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator);
+            exportExtensionAdapter, translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
         // VERIFY
@@ -425,9 +428,9 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator);
+            exportExtensionAdapter, translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
         // VERIFY
@@ -483,9 +486,9 @@ public class ExporterTest {
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator);
+            exportExtensionAdapter, translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
         verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
@@ -547,9 +550,9 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator);
+            exportExtensionAdapter, translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
@@ -565,9 +568,9 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
 
         Map<String, String> extensionData = new HashMap<>();
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ece, ecsa, pe, psa,
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator);
+            exportExtensionAdapter, translator, contentAccessManager);
 
         Principal principal = mock(Principal.class);
         when(pprov.get()).thenReturn(principal);
@@ -593,6 +596,66 @@ public class ExporterTest {
         // Default implementation of the ExportExtensionAdapter does nothing so
         // we only verify that the extension method was invoked.
         verify(exportExtensionAdapter).extendManifest(any(File.class), eq(consumer), eq(extensionData));
+    }
+
+    @Test
+    public void testGetEntitlementExport() throws ExportCreationException,
+        IOException, GeneralSecurityException {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        // Setup consumer
+        Consumer consumer = mock(Consumer.class);
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype");
+        KeyPair keyPair = createKeyPair();
+        when(consumer.getKeyPair()).thenReturn(keyPair);
+        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        when(consumer.getUuid()).thenReturn("consumer");
+        when(consumer.getName()).thenReturn("consumer_name");
+        when(consumer.getTypeId()).thenReturn(ctype.getId());
+        when(ctc.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(ctc.get(eq(ctype.getId()))).thenReturn(ctype);
+
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
+
+        // Setup principal
+        Principal principal = mock(Principal.class);
+        when(pprov.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("testUser");
+
+        // Create dummy ent cert
+        EntitlementCertificate entCert = new EntitlementCertificate();
+        CertificateSerial entSerial = new CertificateSerial();
+        entSerial.setId(123456L);
+        entCert.setSerial(entSerial);
+        entCert.setCert("ent-cert");
+        entCert.setKey("ent-cert-key");
+
+        // Create dummy content access cert
+        ContentAccessCertificate cac = new ContentAccessCertificate();
+        CertificateSerial cacSerial = new CertificateSerial();
+        cacSerial.setId(654321L);
+        cac.setSerial(cacSerial);
+        cac.setCert("content-access-cert");
+        cac.setKey("content-access-key");
+
+        when(ecsa.listForConsumer(consumer)).thenReturn(Arrays.asList(entCert));
+        when(contentAccessManager.getCertificate(consumer)).thenReturn(cac);
+
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
+            exportExtensionAdapter, translator, contentAccessManager);
+        File export = e.getEntitlementExport(consumer, null);
+
+        // Verify
+        assertNotNull(export);
+        assertTrue(export.exists());
+
+        // Check consumer export has entitlement cert.
+        assertTrue(verifyHasEntry(export, "export/entitlement_certificates/123456.pem"));
+
+        // Check consumer export has content access cert.
+        assertTrue(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
     }
 
     /**
@@ -623,7 +686,7 @@ public class ExporterTest {
                     os.close();
                     File exportdata = new File("/tmp/consumer_export.zip");
                     // open up the zip and look for the metadata
-                    verifyHasEntry(exportdata, name);
+                    found = verifyHasEntry(exportdata, name);
                 }
                 else if (entry.getName().equals(name)) {
                     found = true;
