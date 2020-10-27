@@ -19,9 +19,10 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collections;
+
 
 
 /**
@@ -74,43 +75,48 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
         dest.setAttributes(source.getAttributes());
         dest.setRestrictedToUsername(source.getRestrictedToUsername());
         dest.setConsumed(source.getConsumed());
-        dest.setProductId(source.getProductId());
-        dest.setProductAttributes(source.getProductAttributes());
-        dest.setDerivedProductId(source.getDerivedProductId());
 
-        // Process nested objects if we have a model translator to use to the translation...
-        if (modelTranslator != null) {
+        // Set product fields
+        Product product = source.getProduct();
+        Product derived = null;
 
-            Collection<Product> products = source.getProduct() == null ? null :
-                source.getProduct().getProvidedProducts();
-            Set<PoolDTO.ProvidedProductDTO> providedProductDTOs = new HashSet<>();
-            addProvidedProducts(products, providedProductDTOs);
-            dest.setProvidedProducts(providedProductDTOs);
+        if (product != null) {
+            dest.setProductId(product.getId());
+            dest.setProductAttributes(product.getAttributes());
+            dest.setProvidedProducts(this.translateProvidedProducts(product.getProvidedProducts()));
 
-            Collection<Product> derivedProducts = source.getDerivedProduct() == null ? null :
-                source.getDerivedProduct().getProvidedProducts();
-            Set<PoolDTO.ProvidedProductDTO> derivedProvidedProductDTOs = new HashSet<>();
-            addProvidedProducts(derivedProducts, derivedProvidedProductDTOs);
-            dest.setDerivedProvidedProducts(derivedProvidedProductDTOs);
+            derived = product.getDerivedProduct();
+        }
+        else {
+            dest.setProductId(null);
+            dest.setProductAttributes(Collections.emptyMap());
+            dest.setProvidedProducts(Collections.emptySet());
+        }
 
+        if (derived != null) {
+            dest.setDerivedProductId(derived.getId());
+            dest.setDerivedProvidedProducts(this.translateProvidedProducts(derived.getProvidedProducts()));
+        }
+        else {
+            dest.setDerivedProductId(null);
+            dest.setDerivedProvidedProducts(Collections.emptySet());
         }
 
         return dest;
     }
 
-    private void addProvidedProducts(Collection<Product> providedProducts,
-        Set<PoolDTO.ProvidedProductDTO> providedProductDTOs) {
+    private Collection<PoolDTO.ProvidedProductDTO> translateProvidedProducts(Collection<Product> provided) {
+        Collection<PoolDTO.ProvidedProductDTO> output = new ArrayList<>();
 
-        if (providedProducts == null || providedProducts.isEmpty()) {
-            return;
-        }
-
-        for (Product product : providedProducts) {
-            if (product != null) {
-                providedProductDTOs.add(new PoolDTO.ProvidedProductDTO(product.getId(), product.getName()));
-                addProvidedProducts(product.getProvidedProducts(), providedProductDTOs);
+        if (provided != null) {
+            // Impl note: This does not handle n-tier properly. Update this as necessary to add support
+            // when we figure out exactly what n-tier means/needs.
+            for (Product product : provided) {
+                output.add(new PoolDTO.ProvidedProductDTO(product.getId(), product.getName()));
             }
         }
+
+        return output;
     }
 
 }

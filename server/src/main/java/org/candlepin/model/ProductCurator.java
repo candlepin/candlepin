@@ -27,7 +27,6 @@ import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,11 +140,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return Set of UUIDs
      */
     public Set<String> getDerivedPoolProvidedProductUuids(String poolId) {
-        TypedQuery<String> query = getEntityManager().createQuery(
-            "SELECT product.uuid FROM Pool p INNER JOIN p.derivedProduct.providedProducts product " +
-            "WHERE p.id = :poolid",
-            String.class);
-        query.setParameter("poolid", poolId);
+        String hql = "SELECT dpp.uuid " +
+            "FROM Pool pool " +
+            "JOIN pool.product.derivedProduct.providedProducts dpp " +
+            "WHERE pool.id = :poolid";
+
+        TypedQuery<String> query = getEntityManager()
+            .createQuery(hql, String.class)
+            .setParameter("poolid", poolId);
+
         return new HashSet<>(query.getResultList());
     }
 
@@ -421,7 +424,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Checks if any of the provided product is linked to one or more pools for the given owner.
+     * Checks if the specified product is referenced by any subscriptions as its marketing product.
+     * Indirect references to products, such as provided products and derived products, are not
+     * considered by this method.
      *
      * @param owner
      *  The owner to use for finding pools/subscriptions
@@ -430,22 +435,48 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  The product to check for subscriptions
      *
      * @return
-     *  true if the product is linked to one or more subscriptions; false otherwise.
+     *  true if the product is referenced by one or more pools; false otherwise
      */
     public boolean productHasSubscriptions(Owner owner, Product product) {
-        return ((Long) currentSession().createCriteria(Pool.class, "Pool")
-            .createAlias("Pool.product", "Product")
-            .createAlias("Pool.derivedProduct", "DProduct")
-            .createAlias("Product.providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
-            .createAlias("DProduct.providedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.or(
-                Restrictions.eq("product.uuid", product.getUuid()),
-                Restrictions.eq("derivedProduct.uuid", product.getUuid()),
-                Restrictions.eq("providedProd.uuid", product.getUuid()),
-                Restrictions.eq("derivedProvidedProd.uuid", product.getUuid())))
-            .setProjection(Projections.count("id"))
-            .uniqueResult()) > 0;
+        String jpql = "SELECT count(pool) FROM Pool pool " +
+            "WHERE pool.owner.id = :owner_id " +
+            "  AND pool.product.uuid = :product_uuid";
+
+        TypedQuery<Long> query = this.getEntityManager()
+            .createQuery(jpql, Long.class)
+            .setParameter("owner_id", owner.getId())
+            .setParameter("product_uuid", product.getUuid());
+
+        return query.getSingleResult() != 0;
+    }
+
+    /**
+     * Checks if the specified product is referenced by any other products as a derived or provided
+     * product.
+     *
+     * @param owner
+     *  the owner of the product to check
+     *
+     * @param product
+     *  the product to check for parent products
+     *
+     * @return
+     *  true if the product is referenced by one or more other products; false otherwise
+     */
+    public boolean productHasParentProducts(Owner owner, Product product) {
+        String jpql = "SELECT count(product) FROM OwnerProduct op " +
+            "JOIN op.product product " +
+            "LEFT JOIN product.providedProducts pp " +
+            "WHERE op.owner.id = :owner_id " +
+            "  AND (product.derivedProduct.uuid = :product_uuid " +
+            "   OR pp.uuid = :product_uuid)";
+
+        TypedQuery<Long> query = this.getEntityManager()
+            .createQuery(jpql, Long.class)
+            .setParameter("owner_id", owner.getId())
+            .setParameter("product_uuid", product.getUuid());
+
+        return query.getSingleResult() != 0;
     }
 
     /**

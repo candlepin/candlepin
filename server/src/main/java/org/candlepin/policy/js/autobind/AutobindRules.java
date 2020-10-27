@@ -109,7 +109,7 @@ public class AutobindRules {
         }
 
         if (log.isDebugEnabled()) {
-            logProducts("Selecting best entitlement pool for products: {}" +
+            logProducts("Selecting best entitlement pool for products: {} " +
                 "and consumer installed products: {}", productIds, consumer, true);
 
             if (poolsBeforeContentFilter != pools.size()) {

@@ -359,8 +359,15 @@ public class Entitler {
         Product skuProduct = devProducts.getSku();
         Date startDate = consumer.getCreated();
         Date endDate = getEndDate(skuProduct, startDate);
-        Pool pool = new Pool(owner, skuProduct, devProducts.getProvided(), 1L, startDate,
-            endDate, "", "", "");
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(skuProduct)
+            .setQuantity(1L)
+            .setStartDate(startDate)
+            .setEndDate(endDate);
+
+        // FIXME: We may need to do something explicit with the provided products!
 
         log.info("Created development pool with SKU {}", skuProduct.getId());
         pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");

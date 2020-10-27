@@ -56,6 +56,26 @@ public interface ProductInfo extends ServiceAdapterModel {
     Long getMultiplier();
 
     /**
+     * Fetches the derived product of this product. If the derived product has not yet been set, or
+     * this product does not have a derived product, this method returns null.
+     *
+     * @return
+     *  the derived product of this product, or null if this product does not have a derived product
+     */
+    ProductInfo getDerivedProduct();
+
+    /**
+     * Fetches a collection of engineering products of this product. If the provided
+     * products have not yet been set, this method returns null. If this product does not
+     * provide any engineering products, this method returns an empty collection.
+     *
+     * @return
+     *  A collection of engineering products provided by this Product, or null if the provided
+     *  products have not been set.
+     */
+    Collection<? extends ProductInfo> getProvidedProducts();
+
+    /**
      * Fetches a collection of IDs of products dependent on this product. If the dependent products
      * have not yet been set, this method returns null. If this product has no dependent products,
      * this method returns an empty collection.
@@ -127,14 +147,4 @@ public interface ProductInfo extends ServiceAdapterModel {
      */
     Date getUpdated();
 
-    /**
-     * Fetches a collection of engineering products of this product. If the provided
-     * products have not yet been set, this method returns null. If this product does not
-     * provide any engineering products, this method returns an empty collection.
-     *
-     * @return
-     *  A collection of engineering products provided by this Product, or null if the provided
-     *  products have not been set.
-     */
-    Collection<? extends ProductInfo> getProvidedProducts();
 }

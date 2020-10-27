@@ -83,6 +83,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
     // These are used to provide reverse lookups from child objects back to their parents
     protected Map<String, Set<String>> contentProductMap;
+    protected Map<String, Set<String>> productProductMap;
     protected Map<String, Set<String>> productSubscriptionMap;
 
     /**
@@ -98,6 +99,7 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         this.contentMap = new ConcurrentHashMap();
 
         this.contentProductMap = new ConcurrentHashMap();
+        this.productProductMap = new ConcurrentHashMap();
         this.productSubscriptionMap = new ConcurrentHashMap();
     }
 
@@ -127,7 +129,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         sdata.setId(sinfo.getId());
         sdata.setOwner(this.resolveOwner(sinfo.getOwner()));
         sdata.setProduct(this.resolveProduct(sinfo.getProduct()));
-        sdata.setDerivedProduct(this.resolveProduct(sinfo.getDerivedProduct()));
         sdata.setQuantity(sinfo.getQuantity());
         sdata.setStartDate(sinfo.getStartDate());
         sdata.setEndDate(sinfo.getEndDate());
@@ -147,7 +148,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
         return sdata;
     }
-
 
     public SubscriptionInfo updateSubscription(String subscriptionId, SubscriptionInfo sinfo) {
         if (subscriptionId == null) {
@@ -169,9 +169,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         // Do product resolution here
         ProductData product = this.resolveProduct(sinfo.getProduct());
         sdata.setProduct(product);
-
-        ProductData dProduct = this.resolveProduct(sinfo.getDerivedProduct());
-        sdata.setDerivedProduct(dProduct);
 
         // Set the other "safe" properties here...
         if (sinfo.getOwner() != null) {
@@ -274,13 +271,18 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         pdata.setUpdated(new Date());
         pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
         pdata.setProvidedProducts(this.resolveProducts(pinfo.getProvidedProducts()));
+        pdata.setDerivedProduct(this.resolveProduct(pinfo.getDerivedProduct()));
 
         // Create our mappings...
         this.productMap.put(pdata.getId(), pdata);
+        this.productProductMap.put(pdata.getId(), new HashSet<>());
         this.productSubscriptionMap.put(pdata.getId(), new HashSet<>());
 
         // Update content=>product mappings
         this.updateProductContentMappings(pdata);
+
+        // Update product=>product mappings
+        this.updateProductProductMappings(pdata);
 
         return pdata;
     }
@@ -300,10 +302,15 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
             throw new IllegalStateException("product does not exist: " + productId);
         }
 
-        // Apply updates...
-        // Don't allow changing the ID
-
+        // Perform child reference resolutions before making changes to our data
+        Collection<Branding> branding = this.resolveBranding(pinfo.getBranding());
+        Collection<ProductData> providedProducts = this.resolveProducts(pinfo.getProvidedProducts());
         Collection<ProductContentData> pcdata = this.resolveProductContent(pinfo.getProductContent());
+        ProductData derivedProduct = this.resolveProduct(pinfo.getDerivedProduct());
+
+        // Apply updates...
+        // Note: Don't allow changing the ID
+
         if (pcdata != null) {
             pdata.setProductContent(pcdata);
         }
@@ -324,16 +331,23 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
             pdata.setDependentProductIds(pinfo.getDependentProductIds());
         }
 
-        if (pinfo.getBranding() != null) {
-            pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
+        if (branding != null) {
+            pdata.setBranding(branding);
         }
 
-        if (pinfo.getProvidedProducts() != null) {
-            pdata.setProvidedProducts(this.resolveProducts(pinfo.getProvidedProducts()));
+        if (providedProducts != null) {
+            pdata.setProvidedProducts(providedProducts);
         }
 
-        // Update product=>content mappings
+        // Impl note: the derived product is always updated, since we have to treat null as a "no ref"
+        // value rather than a "no change" value for this field.
+        pdata.setDerivedProduct(derivedProduct);
+
+        // Update content=>product mappings
         this.updateProductContentMappings(pdata);
+
+        // Update product=>product mappings
+        this.updateProductProductMappings(pdata);
 
         pdata.setUpdated(new Date());
 
@@ -356,11 +370,20 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
                 "Product is still referenced by one or more subscriptions: " + productId);
         }
 
+        if (this.productProductMap.containsKey(productId) &&
+            !this.productProductMap.get(productId).isEmpty()) {
+
+            throw new IllegalStateException(
+                "Product is still referenced by one or more parent products: " + productId);
+        }
+
         ProductData pdata = this.productMap.remove(productId);
 
         // Update our mappings...
-        // Impl note: no need to update the subscriptions since we know none are using this product.
+        // Impl note: no need to update the subscription or products since we know none are using this
+        // product.
         this.productSubscriptionMap.remove(productId);
+        this.productProductMap.remove(productId);
 
         // Update content=>product mappings to no longer reference this product
         for (Set<String> pids : this.contentProductMap.values()) {
@@ -585,35 +608,10 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         }
 
         // Compile list of products this subscription uses...
-        Set<String> pids = new HashSet<>();
+        ProductInfo pinfo = sdata.getProduct();
+        String pid = pinfo != null ? pinfo.getId() : null;
 
-        if (sdata.getProduct() != null && sdata.getProduct().getId() != null) {
-            pids.add(sdata.getProduct().getId());
-
-            if (sdata.getProduct().getProvidedProducts() != null) {
-                for (ProductData pdata : sdata.getProduct().getProvidedProducts()) {
-                    if (pdata != null && pdata.getId() != null) {
-                        pids.add(pdata.getId());
-                    }
-                }
-            }
-        }
-
-        if (sdata.getDerivedProduct() != null && sdata.getDerivedProduct().getId() != null) {
-            pids.add(sdata.getDerivedProduct().getId());
-
-            if (sdata.getDerivedProduct().getProvidedProducts() != null) {
-                for (ProductData pdata : sdata.getDerivedProduct().getProvidedProducts()) {
-                    if (pdata != null && pdata.getId() != null) {
-                        pids.add(pdata.getId());
-                    }
-                }
-            }
-        }
-
-        // Sanity check: Make sure every pid we're refrencing is one we're tracking. This shouldn't
-        // ever fail, but if it does, something very bad has happened.
-        for (String pid : pids) {
+        if (pid != null) {
             if (!this.productMap.containsKey(pid)) {
                 throw new IllegalStateException("unknown/unexpected product id: " + pid);
             }
@@ -626,14 +624,63 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
         // Step through our mapped products and either add the subscription or remove it depending
         // on if the product ID exists in our compiled map
         for (Map.Entry<String, Set<String>> entry : this.productSubscriptionMap.entrySet()) {
-            String pid = entry.getKey();
+            String mpid = entry.getKey();
             Set<String> sids = entry.getValue();
 
-            if (pids.contains(pid)) {
+            if (mpid.equals(pid)) {
                 sids.add(sdata.getId());
             }
             else {
                 sids.remove(sdata.getId());
+            }
+        }
+    }
+
+    protected void updateProductProductMappings(ProductInfo pinfo) {
+        if (pinfo == null) {
+            throw new IllegalArgumentException("pinfo is null");
+        }
+
+        if (StringUtils.isBlank(pinfo.getId())) {
+            throw new IllegalArgumentException("product lacks identifying information: " + pinfo);
+        }
+
+        // Get a list of products the base product references
+        Set<String> pids = new HashSet<>();
+
+        if (pinfo.getDerivedProduct() != null) {
+            pids.add(pinfo.getDerivedProduct().getId());
+        }
+
+        if (pinfo.getProvidedProducts() != null) {
+            for (ProductInfo provided : pinfo.getProvidedProducts()) {
+                pids.add(provided.getId());
+            }
+        }
+
+        // Sanity check: Make sure every cid we're refrencing is one we're tracking. This shouldn't
+        // ever fail, but if it does, something very bad has happened.
+        for (String pid : pids) {
+            if (!this.productMap.containsKey(pid)) {
+                throw new IllegalStateException("unknown/unexpected product id: " + pid);
+            }
+
+            if (!this.productProductMap.containsKey(pid)) {
+                throw new IllegalStateException("product=>product map lacks table for product: " + pid);
+            }
+        }
+
+        // Step through our mapped products and either add the subscription or remove it depending
+        // on if the product ID exists in our compiled map
+        for (Map.Entry<String, Set<String>> entry : this.productSubscriptionMap.entrySet()) {
+            String pid = entry.getKey();
+            Set<String> mpids = entry.getValue();
+
+            if (pids.contains(pid)) {
+                mpids.add(pinfo.getId());
+            }
+            else {
+                mpids.remove(pinfo.getId());
             }
         }
     }

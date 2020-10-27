@@ -39,7 +39,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -187,8 +186,13 @@ public class UeberCertificateGenerator {
             this.content = createUeberContent(idGenerator, owner, product);
             this.product.addContent(this.content, true);
 
-            this.pool = new Pool(this.owner, this.product, new LinkedList<>(), 1L, this.startDate,
-                this.endDate, "", "", "");
+            this.pool = new Pool()
+                .setOwner(this.owner)
+                .setProduct(this.product)
+                .setQuantity(1L)
+                .setStartDate(this.startDate)
+                .setEndDate(this.endDate);
+
             this.entitlement = new Entitlement(this.pool, this.consumer, owner, 1);
         }
 

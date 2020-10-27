@@ -15,7 +15,6 @@
 package org.candlepin.policy.js;
 
 import org.candlepin.common.exceptions.IseException;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -61,7 +60,7 @@ public class RulesObjectMapper {
 
     @Inject
     @SuppressWarnings("checkstyle:indentation")
-    public RulesObjectMapper(ProductCachedSerializationModule poolCachedSerializationModule) {
+    public RulesObjectMapper() {
         this.mapper = new ObjectMapper();
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider()
@@ -87,7 +86,6 @@ public class RulesObjectMapper {
 
         mapper.registerModule(new Jdk8Module());
         mapper.registerModule(hbm);
-        mapper.registerModule(poolCachedSerializationModule);
 
         // Very important for deployments so new rules files can return additional
         // properties that this current server doesn't know how to serialize, but still

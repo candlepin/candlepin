@@ -77,96 +77,93 @@ public class X509ExtensionUtil  extends X509Util{
         // NOTE: order ~= subscription
         // entitlement == entitlement
 
+        Product poolProduct = pool.getProduct();
+        if (poolProduct == null) {
+            throw new IllegalArgumentException("pool lacks a valid product");
+        }
+
         String subscriptionOid = OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
-        if (pool.getProductId() != null) {
+
+        if (poolProduct.getId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false, pool.getProductName()));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false, poolProduct.getName()));
         }
+
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false, pool
-            .getOrderNumber()));
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false, pool.getOrderNumber()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false,
-            pool.getProductId().toString()));
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false, poolProduct.getId().toString()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, pool
-            .getQuantity().toString()));
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, pool.getQuantity().toString()));
+
         String socketLimit = pool.getProduct().getAttributeValue(Product.Attributes.SOCKETS);
         if (socketLimit != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SOCKETLIMIT_KEY), false,
-                socketLimit));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SOCKETLIMIT_KEY), false, socketLimit));
         }
+
+        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + OIDUtil.ORDER_OIDS
+            .get(OIDUtil.ORDER_STARTDATE_KEY), false, iso8601DateFormat.format(pool.getStartDate())));
+        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." + OIDUtil.ORDER_OIDS
+            .get(OIDUtil.ORDER_ENDDATE_KEY), false, iso8601DateFormat.format(pool.getEndDate())));
+
+        String warningPeriod = poolProduct.getAttributeValue(Product.Attributes.WARNING_PERIOD);
+        warningPeriod = (warningPeriod == null ? "0" : warningPeriod);
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STARTDATE_KEY), false,
-            iso8601DateFormat.format(pool.getStartDate())));
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
-            iso8601DateFormat.format(pool.getEndDate())));
-        // TODO : use keys
-        String warningPeriod = pool.getProduct().getAttributeValue(Product.Attributes.WARNING_PERIOD);
-        if (warningPeriod == null) {
-            warningPeriod = "0";
-        }
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_WARNING_PERIOD), false,
-            warningPeriod));
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_WARNING_PERIOD), false, warningPeriod));
+
         if (pool.getContractNumber() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
-                false, pool.getContractNumber()));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY), false, pool.getContractNumber()));
         }
+
         // Add the account number
         if (pool.getAccountNumber() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ACCOUNT_NUMBER_KEY),
-                false, pool.getAccountNumber()));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ACCOUNT_NUMBER_KEY), false, pool.getAccountNumber()));
         }
-        // Add Smart Management, default to "not managed"
-        String mgmt = pool.getProduct().getAttributeValue(Product.Attributes.MANAGEMENT_ENABLED);
-        mgmt = (mgmt == null) ? "0" : mgmt;
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY),
-            false, mgmt));
 
-        String supportLevel = pool.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL);
-        String supportType = pool.getProduct().getAttributeValue(Product.Attributes.SUPPORT_TYPE);
+        // Add Smart Management, default to "not managed"
+        String mgmt = poolProduct.getAttributeValue(Product.Attributes.MANAGEMENT_ENABLED);
+        mgmt = (mgmt == null ? "0" : mgmt);
+        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY), false, mgmt));
+
+        String supportLevel = poolProduct.getAttributeValue(Product.Attributes.SUPPORT_LEVEL);
+        String supportType = poolProduct.getAttributeValue(Product.Attributes.SUPPORT_TYPE);
         if (supportLevel != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false,
-                supportLevel));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false, supportLevel));
         }
+
         if (supportType != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false,
-                supportType));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false, supportType));
         }
+
         String stackingId = pool.getProduct().getAttributeValue(Product.Attributes.STACKING_ID);
         if (stackingId != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STACKING_ID), false,
-                stackingId));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STACKING_ID), false, stackingId));
         }
+
         //code "true" as "1" so it matches other bools in the cert
         String virtOnly = pool.getAttributeValue(Product.Attributes.VIRT_ONLY);
         if (virtOnly != null && virtOnly.equals("true")) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_VIRT_ONLY_KEY), false,
-                "1"));
-
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_VIRT_ONLY_KEY), false, "1"));
         }
+
         return toReturn;
     }
 
-    public List<X509ExtensionWrapper> entitlementExtensions(
-        Integer quantity) {
+    public List<X509ExtensionWrapper> entitlementExtensions(Integer quantity) {
         String entitlementOid = OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
-        return Collections.singletonList(new X509ExtensionWrapper(
-            entitlementOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_USED), false,
-            quantity.toString()));
+
+        return Collections.singletonList(new X509ExtensionWrapper(entitlementOid + "." +
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_USED), false, quantity.toString()));
     }
 
     public Set<X509ExtensionWrapper> productExtensions(Product product) {
@@ -179,8 +176,7 @@ public class X509ExtensionUtil  extends X509Util{
         String productOid = productCertOid + "." + product.getId();
 
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
-            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false, product
-            .getName()));
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false, product.getName()));
 
         String arch = product.getAttributeValue(Product.Attributes.ARCHITECTURE);
         toReturn.add(new X509ExtensionWrapper(productOid + "." +

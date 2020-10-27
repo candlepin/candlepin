@@ -454,6 +454,64 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     /**
+     * Fetches a list of products within the given organization which directly reference the
+     * specified product. Indirect references, such as a product which has a derived product that
+     * provides the specified product, are not included in the collection returned by this method.
+     *
+     * @param ownerId
+     *  the ID of the owner/organization in which to search for referencing products
+     *
+     * @param productUuid
+     *  the UUID of the product for which to fetch product references
+     *
+     * @return
+     *  a collection of products directly referencing the specified product
+     */
+    public List<Product> getProductsReferencingProduct(String ownerId, String productUuid) {
+        String jpql = "SELECT prod FROM OwnerProduct op " +
+            "JOIN op.product prod " +
+            "LEFT JOIN prod.providedProducts providedProd " +
+            "WHERE op.owner.id = :owner_id " +
+            "  AND (prod.derivedProduct.uuid = :product_uuid " +
+            "   OR providedProd.uuid = :product_uuid)";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("product_uuid", productUuid)
+            .getResultList();
+    }
+
+    /**
+     * Fetches a list of products within the given organization which directly reference the
+     * specified content. Indirect references, such as a product which has a derived product that
+     * provides the specified content, are not included in the collection returned by this method.
+     *
+     * @param ownerId
+     *  the ID of the owner/organization in which to search for referencing products
+     *
+     * @param contentUuid
+     *  the UUID of the content for which to fetch product references
+     *
+     * @return
+     *  a collection of products directly referencing the specified content
+     */
+    public List<Product> getProductsReferencingContent(String ownerId, String contentUuid) {
+        String jpql = "SELECT prod FROM OwnerProduct op " +
+            "JOIN op.product prod " +
+            "JOIN prod.productContent pc " +
+            "JOIN pc.content content " +
+            "WHERE op.owner.id = :owner_id " +
+            "  AND content.uuid = :content_uuid";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("content_uuid", contentUuid)
+            .getResultList();
+    }
+
+    /**
      * Retrieves a map containing all known versions of the products specified by IDs, for all orgs
      * <em>except</em> the org specified. If no products are found for the specified IDs in other
      * orgs, this method returns an empty map.
@@ -570,7 +628,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
     /**
      * Updates the product references currently pointing to the original product to instead point to
-     * the updated product for the specified owners.
+     * the updated product for the specified owners. This method does not update references which
+     * would normally affect product versioning, such as references from other products.
      * <p/></p>
      * <strong>Warning:</strong> Hibernate does not gracefully handle situations where the data
      * backing an entity changes via direct SQL or other outside influence. While, logically, a
@@ -614,42 +673,15 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         log.debug("{} owner-product relations updated", count);
 
-        // pool provided and derived products
+        // pool->product
         count = this.bulkSQLUpdate(Pool.DB_TABLE, "product_uuid", uuidMap, criteria);
 
-        criteria.remove("product_uuid");
-        criteria.put("derived_product_uuid", productUuidMap.keySet());
-
-        count += this.bulkSQLUpdate(Pool.DB_TABLE, "derived_product_uuid", uuidMap, criteria);
-
         log.debug("{} pools updated", count);
-
-        // pool provided products
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_pool WHERE owner_id = :ownerId")
-            .setParameter("ownerId", owner.getId())
-            .list();
-
-        if (ids != null && !ids.isEmpty()) {
-            criteria.clear();
-            criteria.put("product_uuid", productUuidMap.keySet());
-            criteria.put("pool_id", ids);
-
-            count = this.bulkSQLUpdate("cp2_pool_provided_products", "product_uuid", uuidMap, criteria);
-            log.debug("{} provided products updated", count);
-
-            count = this.bulkSQLUpdate("cp2_pool_derprov_products", "product_uuid", uuidMap, criteria);
-            log.debug("{} derived provided products updated", count);
-        }
-        else {
-            log.debug("0 provided products updated");
-            log.debug("0 derived provided products updated");
-        }
-
 
         // Activation key products
         String sql = "SELECT id FROM cp_activation_key WHERE owner_id = :ownerId";
 
-        ids = session.createSQLQuery(sql)
+        List<String> ids = session.createSQLQuery(sql)
             .setParameter("ownerId", owner.getId())
             .list();
 
@@ -672,8 +704,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
     /**
      * Removes the product references currently pointing to the specified product for the given
-     * owners. This method cannot be used to remove references to products which are still mapped
-     * to pools. Attempting to do so will result in an IllegalStateException.
+     * owners.
      * <p/></p>
      * <strong>Warning:</strong> Hibernate does not gracefully handle situations where the data
      * backing an entity changes via direct SQL or other outside influence. While, logically, a

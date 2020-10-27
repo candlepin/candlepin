@@ -145,18 +145,6 @@ public class ResolverUtil {
 
         // Ensure the specified product(s) exists for the given owner
         this.validateProductData(subscription.getProduct(), owner, false);
-        this.validateProductData(subscription.getDerivedProduct(), owner, true);
-        if (subscription.getProvidedProducts() != null) {
-            for (ProductData product : subscription.getProvidedProducts()) {
-                this.validateProductData(product, owner, true);
-            }
-        }
-
-        if (subscription.getDerivedProvidedProducts() != null) {
-            for (ProductData product : subscription.getDerivedProvidedProducts()) {
-                this.validateProductData(product, owner, true);
-            }
-        }
 
         // TODO: Do we need to resolve Branding objects?
 
@@ -184,11 +172,6 @@ public class ResolverUtil {
 
         subscription.setProduct(
             new ProductData(this.resolveProduct(owner, subscription.getProduct().getId())));
-        if (subscription.getDerivedProduct() != null) {
-            ProductData p = new ProductData(
-                this.resolveProduct(owner, subscription.getDerivedProduct().getId()));
-            subscription.setDerivedProduct(p);
-        }
 
         // TODO: Do we need to resolve Branding objects?
 
