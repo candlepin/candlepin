@@ -45,7 +45,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -301,8 +303,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 masterPool = pool;
             }
         }
-        Collection<Branding> brandingSet =
-            poolManager.fabricateSubscriptionFromPool(masterPool).getProduct().getBranding();
+
+        Subscription fabricated = poolManager.fabricateSubscriptionFromPool(masterPool);
+        assertNotNull(fabricated);
+        assertNotNull(masterPool.getProduct());
+        assertNotNull(fabricated.getProduct());
+
+        Collection<Branding> brandingSet = fabricated.getProduct().getBranding();
 
         assertNotNull(brandingSet);
         assertEquals(2, brandingSet.size());
@@ -882,6 +889,20 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertNull(this.poolCurator.get(pool4.getId()));           // Expired pool, derived attrib
     }
 
+    private Pool createPool(Owner owner, Product product, long quantity, Date startDate, Date endDate,
+        String subscriptionId, String subscriptionSubkey) {
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(quantity)
+            .setStartDate(startDate)
+            .setEndDate(endDate)
+            .setSourceSubscription(new SourceSubscription(subscriptionId, subscriptionSubkey));
+
+        return this.poolCurator.create(pool);
+    }
+
     @Test
     public void testCleanupExpiredDerivedPoolsAndItsEnt() {
         long ct = System.currentTimeMillis();
@@ -891,8 +912,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Owner owner = this.createOwner();
         Product product1 = this.createProduct("test-product-1", "Test Product 1", owner);
         String suscriptionId = Util.generateDbUUID();
-        Pool pool2 = this.createPool(owner, product1, 1L, suscriptionId, "master", expiredStart, expiredEnd);
-        Pool pool3 = this.createPool(owner, product1, 1L, suscriptionId, "derived", expiredStart, expiredEnd);
+        Pool pool2 = this.createPool(owner, product1, 1L, expiredStart, expiredEnd, suscriptionId, "master");
+        Pool pool3 = this.createPool(owner, product1, 1L, expiredStart, expiredEnd, suscriptionId, "derived");
 
         pool3.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         this.poolCurator.merge(pool3);

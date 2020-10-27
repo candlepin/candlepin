@@ -69,7 +69,6 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 
 import com.google.inject.AbstractModule;
@@ -170,7 +169,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         pool = createPool(owner, product, 10L,
-            TestDateUtil.date(2010, 1, 1), TestUtil.createFutureDate(10));
+            TestUtil.createDate(2010, 1, 1), TestUtil.createDateOffset(10, 0, 0));
     }
 
     @AfterEach
@@ -190,14 +189,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void testGetSerialFiltering() throws JobException {
-        consumerResource.bind(consumer.getUuid(), pool.getId(),
-            null, 1, null, null, false, null, null);
-        consumerResource.bind(consumer.getUuid(), pool.getId(),
-            null, 1, null, null, false, null, null);
-        consumerResource.bind(consumer.getUuid(), pool.getId(),
-            null, 1, null, null, false, null, null);
-        consumerResource.bind(consumer.getUuid(), pool.getId(),
-            null, 1, null, null, false, null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         List<CertificateDTO> certificates = consumerResource
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(4, certificates.size());
@@ -261,8 +256,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertNotNull(consumerCurator.findByUuid(uuid));
-        assertEquals(standardSystemType.getLabel(), submitted.getType()
-            .getLabel());
+        assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
         assertEquals(uuid, submitted.getUuid());
 
@@ -273,8 +267,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         anotherToSubmit.setFact(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
         assertThrows(BadRequestException.class, () ->
-            consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null, true)
-        );
+            consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null, true));
     }
 
     @Test

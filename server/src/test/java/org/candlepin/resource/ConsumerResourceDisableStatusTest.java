@@ -30,7 +30,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -61,8 +60,8 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
 
         Product product = this.createProduct(owner);
 
-        Pool pool = createPool(owner, product, 10L, TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2020, 12, 31));
+        Pool pool = createPool(owner, product, 10L, TestUtil.createDate(2010, 1, 1),
+            TestUtil.createDate(2020, 12, 31));
         poolCurator.create(pool);
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);

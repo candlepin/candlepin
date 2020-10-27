@@ -519,30 +519,21 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Owner owner = this.createOwner();
         Product original = this.createProduct();
         Product updated = this.createProduct();
+        Product untouched = this.createProduct();
         this.createOwnerProductMapping(owner, original);
+        this.createOwnerProductMapping(owner, untouched);
+
+        Pool pool = TestUtil.createPool(owner, original);
+        this.poolCurator.create(pool);
 
         ActivationKey key = TestUtil.createActivationKey(owner, null);
         key.setProducts(Util.asSet(original));
 
-        Pool pool1 = TestUtil.createPool(owner, original);
-        Pool pool2 = TestUtil.createPool(owner);
-        pool2.addProvidedProduct(original);
-        Pool pool3 = TestUtil.createPool(owner);
-        pool3.setDerivedProduct(original);
-        Pool pool4 = TestUtil.createPool(owner);
-        pool4.setDerivedProvidedProducts(Arrays.asList(original));
-
         this.activationKeyCurator.create(key);
-        this.poolCurator.create(pool1);
-        this.productCurator.create(pool2.getProduct());
-        this.poolCurator.create(pool2);
-        this.productCurator.create(pool3.getProduct());
-        this.poolCurator.create(pool3);
-        this.productCurator.create(pool4.getProduct());
-        this.poolCurator.create(pool4);
 
         assertTrue(this.isProductMappedToOwner(original, owner));
         assertFalse(this.isProductMappedToOwner(updated, owner));
+        assertTrue(this.isProductMappedToOwner(untouched, owner));
 
         Map<String, String> uuidMap = new HashMap<>();
         uuidMap.put(original.getUuid(), updated.getUuid());
@@ -551,30 +542,15 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
 
         assertFalse(this.isProductMappedToOwner(original, owner));
         assertTrue(this.isProductMappedToOwner(updated, owner));
+        assertTrue(this.isProductMappedToOwner(untouched, owner));
 
         this.activationKeyCurator.refresh(key);
         Collection<Product> products = key.getProducts();
         assertEquals(1, products.size());
         assertEquals(updated.getUuid(), products.iterator().next().getUuid());
 
-        this.poolCurator.refresh(pool1);
-        assertEquals(updated.getUuid(), pool1.getProduct().getUuid());
-
-        this.poolCurator.refresh(pool2);
-        assertNotEquals(updated.getUuid(), pool2.getProduct().getUuid());
-        products = pool2.getProvidedProducts();
-        assertEquals(1, products.size());
-        assertEquals(updated.getUuid(), products.iterator().next().getUuid());
-
-        this.poolCurator.refresh(pool3);
-        assertNotEquals(updated.getUuid(), pool3.getProduct().getUuid());
-        assertEquals(updated.getUuid(), pool3.getDerivedProduct().getUuid());
-
-        this.poolCurator.refresh(pool4);
-        assertNotEquals(updated.getUuid(), pool4.getProduct().getUuid());
-        products = pool4.getDerivedProvidedProducts();
-        assertEquals(1, products.size());
-        assertEquals(updated.getUuid(), products.iterator().next().getUuid());
+        this.poolCurator.refresh(pool);
+        assertEquals(updated.getUuid(), pool.getProduct().getUuid());
     }
 
     @Test

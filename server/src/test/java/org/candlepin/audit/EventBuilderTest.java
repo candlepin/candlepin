@@ -20,7 +20,12 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.common.exceptions.IseException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,20 +35,35 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+
+
 public class EventBuilderTest {
+    private ConsumerTypeCurator mockConsumerTypeCurator;
+    private EnvironmentCurator mockEnvironmentCurator;
+    private OwnerCurator mockOwnerCurator;
+    private ModelTranslator modelTranslator;
 
     private EventFactory factory;
     private EventBuilder eventBuilder;
     private PrincipalProvider principalProvider;
+
 
     @Rule
     public ExpectedException exceptions = ExpectedException.none();
 
     @Before
     public void init() throws Exception {
+        this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
+        this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
+        this.mockOwnerCurator = mock(OwnerCurator.class);
+
+        this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
+            this.mockEnvironmentCurator, this.mockOwnerCurator);
+
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
-        factory = new EventFactory(principalProvider, new ObjectMapper());
+
+        factory = new EventFactory(principalProvider, new ObjectMapper(), this.modelTranslator);
         when(principalProvider.get()).thenReturn(principal);
     }
 

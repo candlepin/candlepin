@@ -14,7 +14,6 @@
  */
 package org.candlepin.test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -280,16 +279,6 @@ public class TestUtil {
 
     public static Product createProduct(String id, String name) {
         return new Product(id, name, null);
-
-        // TODO:
-        // Leaving these comments in for the moment for reference when a few tests that are
-        // expecting these attributes break.
-
-        // ProductAttribute a1 = new ProductAttribute("a1", "a1");
-        // rhel.addAttribute(a1);
-
-        // ProductAttribute a2 = new ProductAttribute("a2", "a2");
-        // rhel.addAttribute(a2);
     }
 
     public static Product createProduct(String id) {
@@ -419,27 +408,16 @@ public class TestUtil {
     public static Pool createPool(Owner owner, Product product, int quantity) {
         String random = String.valueOf(randomInt());
 
-        Pool pool = new Pool();
-        pool.setOwner(owner);
-        pool.setProduct(product);
-        pool.setQuantity(Long.valueOf(quantity));
-        pool.setStartDate(TestUtil.createDate(2009, 11, 30));
-        pool.setEndDate(
-            TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 11, 30));
-        pool.setContractNumber("SUB234598S" + random);
-        pool.setAccountNumber("ACC123" + random);
-        pool.setOrderNumber("ORD222" + random);
-        pool.setSourceSubscription(new SourceSubscription("SUB234598S" + random, "master" + random));
-
-        return pool;
-    }
-
-    public static Pool createPool(Owner owner, Product product, Product derivedProduct, int quantity) {
-        Pool pool = createPool(owner, product, quantity);
-
-        if (derivedProduct != null) {
-            pool.setDerivedProduct(derivedProduct);
-        }
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(Long.valueOf(quantity))
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("SUB234598S" + random)
+            .setAccountNumber("ACC123" + random)
+            .setOrderNumber("ORD222" + random)
+            .setSourceSubscription(new SourceSubscription("SUB234598S" + random, "master" + random));
 
         return pool;
     }
@@ -448,8 +426,7 @@ public class TestUtil {
         Calendar cal = Calendar.getInstance();
 
         cal.set(Calendar.YEAR, year);
-        // Watch out! Java expects month as 0-11
-        cal.set(Calendar.MONTH, month - 1);
+        cal.set(Calendar.MONTH, month - 1); // Java months are zero-indexed
         cal.set(Calendar.DATE, day);
 
         cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -457,17 +434,31 @@ public class TestUtil {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
 
-        Date jsqlD = new Date(cal.getTime().getTime());
-        return jsqlD;
+        return cal.getTime();
     }
 
-    public static Date createFutureDate(int afterYears) {
+    /**
+     * Creates a new Date offset from the current date by the specified years, months and days. If
+     * the provided offsets are negative, the date created may be in the past.
+     *
+     * @param years
+     *  the number of years to offset the created date
+     *
+     * @param months
+     *  the number of months to offset the created date
+     *
+     * @param days
+     *  the number of days to offset the created date
+     *
+     * @return
+     *  a new date offset from the current date by the specified date units
+     */
+    public static Date createDateOffset(int years, int months, int days) {
         LocalDate now = LocalDate.now();
-        return createDate(now.getYear() + afterYears, now.getMonthValue(), now.getDayOfMonth());
+        return createDate(now.getYear() + years, now.getMonthValue() + months, now.getDayOfMonth() + days);
     }
 
     public static String xmlToBase64String(String xml) {
-
         // byte[] bytes = Base64.encode(xml);
         Base64 encoder = new Base64();
         byte[] bytes = encoder.encode(xml.getBytes());
@@ -622,9 +613,9 @@ public class TestUtil {
             pool.setProduct(product);
         }
 
-        if (derivedProduct != null) {
+        if (product != null && derivedProduct != null) {
             derivedProduct.setProvidedProducts(derivedProvidedProducts);
-            pool.setDerivedProduct(derivedProduct);
+            product.setDerivedProduct(derivedProduct);
         }
 
         if (sub.getId() != null) {
@@ -636,36 +627,6 @@ public class TestUtil {
         pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
         return pool;
-    }
-
-    /**
-     * @param pool source pool
-     * @return pool the clone pool
-     */
-    public static Pool clone(Pool pool) {
-        Pool p = new Pool(pool.getOwner(),
-            pool.getProduct(), new HashSet<>(pool.getProvidedProducts()),
-            pool.getQuantity(),
-            pool.getStartDate(),
-            pool.getEndDate(),
-            pool.getContractNumber(),
-            pool.getAccountNumber(),
-            pool.getOrderNumber()
-        );
-
-        p.setSourceSubscription(
-            new SourceSubscription(pool.getSubscriptionId(), pool.getSubscriptionSubKey()));
-
-        // Copy sub-product data if there is any:
-        if (pool.getDerivedProduct() != null) {
-            p.setDerivedProduct((Product) pool.getDerivedProduct().clone());
-        }
-
-        if (pool.getProduct() != null) {
-            p.setProduct((Product) pool.getProduct().clone());
-        }
-
-        return p;
     }
 
     public static ActivationKey createActivationKey(Owner owner, List<Pool> pools) {
@@ -730,39 +691,6 @@ public class TestUtil {
         return result;
     }
 
-    public static void assertPoolsAreEqual(Pool pool1, Pool pool2) {
-        assertEquals(pool1.getAccountNumber(), pool2.getAccountNumber());
-        assertEquals(pool1.getContractNumber(), pool2.getContractNumber());
-        assertEquals(pool1.getOrderNumber(), pool2.getOrderNumber());
-        assertEquals(pool1.getType(), pool2.getType());
-        assertEquals(pool1.getOwner(), pool2.getOwner());
-        assertEquals(pool1.getQuantity(), pool2.getQuantity());
-        assertEquals(pool1.getActiveSubscription(), pool2.getActiveSubscription());
-        assertEquals(pool1.getSourceEntitlement(), pool2.getSourceEntitlement());
-        assertEquals(pool1.getSourceStack(), pool2.getSourceStack());
-        assertEquals(pool1.getSubscriptionId(), pool2.getSubscriptionId());
-        assertEquals(pool1.getSubscriptionSubKey(), pool2.getSubscriptionSubKey());
-        assertEquals(pool1.getStartDate(), pool2.getStartDate());
-        assertEquals(pool1.getEndDate(), pool2.getEndDate());
-        assertEquals(pool1.getProduct(), pool2.getProduct());
-        assertEquals(pool1.getProvidedProducts(), pool2.getProvidedProducts());
-        assertEquals(pool1.getDerivedProvidedProducts(), pool2.getDerivedProvidedProducts());
-        assertEquals(pool1.getProvidedProductDtos(), pool2.getProvidedProductDtos());
-        assertEquals(pool1.getDerivedProvidedProductDtos(), pool2.getDerivedProvidedProductDtos());
-        assertEquals(pool1.getAttributes(), pool2.getAttributes());
-        assertEquals(pool1.getEntitlements(), pool2.getEntitlements());
-        assertEquals(pool1.getConsumed(), pool2.getConsumed());
-        assertEquals(pool1.getExported(), pool2.getExported());
-        assertEquals(pool1.getCalculatedAttributes(), pool2.getCalculatedAttributes());
-        assertEquals(pool1.isMarkedForDelete(), pool2.isMarkedForDelete());
-        assertEquals(pool1.getUpstreamConsumerId(), pool2.getUpstreamConsumerId());
-        assertEquals(pool1.getUpstreamEntitlementId(), pool2.getUpstreamEntitlementId());
-        assertEquals(pool1.getUpstreamPoolId(), pool2.getUpstreamPoolId());
-        assertEquals(pool1.getCertificate(), pool2.getCertificate());
-        assertEquals(pool1.getCdn(), pool2.getCdn());
-
-    }
-
     public static void mockTransactionalFunctionality(EntityManager mockEntityManager,
         AbstractHibernateCurator mockCurator) {
 
@@ -816,4 +744,5 @@ public class TestUtil {
             return new Transactional(mockEntityManager).wrap(action);
         }).when(mockCurator).transactional(any());
     }
+
 }

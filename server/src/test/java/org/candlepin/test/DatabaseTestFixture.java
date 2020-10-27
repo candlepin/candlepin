@@ -102,7 +102,6 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Locale;
 
 import javax.inject.Inject;
@@ -220,7 +219,7 @@ public class DatabaseTestFixture {
         this.injector.injectMembers(this);
 
         dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
-        dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
+        dateSource.currentDate(TestUtil.createDate(2010, 1, 1));
 
         HttpServletRequest req = parentInjector.getInstance(HttpServletRequest.class);
         when(req.getAttribute("username")).thenReturn("mock_user");
@@ -560,82 +559,29 @@ public class DatabaseTestFixture {
         return owner;
     }
 
-    protected Pool createPool(Owner owner, Product product) {
-        return this.createPool(
-            owner, product, 1L, TestUtil.createDate(2000, 1, 1), TestUtil.createDate(2100, 1, 1)
-        );
-    }
-
     /**
      * Create an entitlement pool.
      *
      * @return an entitlement pool
      */
     protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate) {
-        Pool pool = new Pool(
-            owner,
-            product,
-            new HashSet<>(),
-            quantity,
-            startDate,
-            endDate,
-            DEFAULT_CONTRACT,
-            DEFAULT_ACCOUNT,
-            DEFAULT_ORDER
-        );
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(quantity)
+            .setStartDate(startDate)
+            .setEndDate(endDate)
+            .setContractNumber(DEFAULT_CONTRACT)
+            .setAccountNumber(DEFAULT_ACCOUNT)
+            .setOrderNumber(DEFAULT_ORDER)
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        return poolCurator.create(pool);
+        return this.poolCurator.create(pool);
     }
 
-    protected Pool createPool(Owner owner, Product product, Long quantity, String subscriptionId,
-        String subscriptionSubKey, Date startDate, Date endDate) {
-        Pool pool = new Pool(
-            owner,
-            product,
-            new HashSet<>(),
-            quantity,
-            startDate,
-            endDate,
-            DEFAULT_CONTRACT,
-            DEFAULT_ACCOUNT,
-            DEFAULT_ORDER
-        );
-
-        pool.setSourceSubscription(new SourceSubscription(subscriptionId, subscriptionSubKey));
-        return poolCurator.create(pool);
-    }
-
-    protected Pool createPool(Owner owner, Product product, Collection<Product> provided, Long quantity,
-        Date startDate, Date endDate) {
-
-        Pool pool = new Pool(
-            owner,
-            product,
-            new HashSet<>(),
-            quantity,
-            startDate,
-            endDate,
-            DEFAULT_CONTRACT,
-            DEFAULT_ACCOUNT,
-            DEFAULT_ORDER
-        );
-
-        return poolCurator.create(pool);
-    }
-
-    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate,
-        String contractNr) {
-        Pool pool = createPool(owner, product, quantity, startDate, endDate);
-        pool.setContractNumber(contractNr);
-        return poolCurator.merge(pool);
-    }
-
-    protected Pool createPool(Owner owner, Product product, Long quantity, Date startDate, Date endDate,
-        String contractNr, String subscriptionId) {
-        Pool pool = createPool(owner, product, quantity, subscriptionId, "master", startDate, endDate);
-        pool.setContractNumber(contractNr);
-        return poolCurator.merge(pool);
+    protected Pool createPool(Owner owner, Product product) {
+        return this.createPool(owner, product, 1L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
     }
 
     protected Product createProduct(Owner... owners) {

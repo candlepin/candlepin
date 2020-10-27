@@ -100,6 +100,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         contracts = null;
     }
 
+    private Pool createPool(Owner owner, Product product, long quantity, Date startDate, Date endDate,
+        String contractNumber, String subscriptionId, String subscriptionSubKey) {
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(quantity)
+            .setStartDate(startDate)
+            .setEndDate(endDate)
+            .setContractNumber(contractNumber)
+            .setSourceSubscription(new SourceSubscription(subscriptionId, subscriptionSubKey));
+
+        return this.poolCurator.create(pool);
+    }
+
     private Product createConsumerWithBindingToMKTProduct(Owner owner) {
         Consumer c = createConsumer(owner);
         return createMktProductAndBindItToConsumer(owner, c);
@@ -128,15 +143,20 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         return product;
     }
 
-    private void createProductAndBindItToConsumer(Owner owner, Consumer consumer,
-        String contractName) {
-        Product p1 = createProduct(owner);
-        Pool pool1 = createPool(
-            owner, p1, 1L,
-            Util.yesterday(),
-            Util.tomorrow(),
-            contractName);
-        createEntitlement(owner, consumer, pool1, null);
+    private void createProductAndBindItToConsumer(Owner owner, Consumer consumer, String contractName) {
+        Product product = createProduct(owner);
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(1L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow())
+            .setContractNumber(contractName);
+
+        pool = this.poolCurator.create(pool);
+
+        this.createEntitlement(owner, consumer, pool, null);
     }
 
     private Pool createPoolAndBindItToConsumer(Owner owner, Consumer c) {
@@ -153,11 +173,16 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     private Pool createConsumerWithBindingToProduct(Owner owner, Product product, String contract) {
-        Pool pool = createPool(
-            owner, product, 1L,
-            Util.yesterday(),
-            Util.tomorrow(),
-            contract);
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(1L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow())
+            .setContractNumber(contract);
+
+        pool = this.poolCurator.create(pool);
+
         createConsumerAndEntitlement(owner, pool);
         return pool;
     }
@@ -174,19 +199,41 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         return c;
     }
 
-    private Consumer createConsumerAndBindItToProduct(Owner o, Product product, String subId) {
-        Consumer c = createConsumer(o);
-        Pool p = createPool(o, product, 1L, subId, "subsSubKey", Util.yesterday(), Util.tomorrow());
-        createEntitlement(o, c, p, null);
-        return c;
+    private Consumer createConsumerAndBindItToProduct(Owner owner, Product product, String subId) {
+        Consumer consumer = createConsumer(owner);
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(1L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow())
+            .setSourceSubscription(new SourceSubscription(subId, "subsSubKey"));
+
+        pool = this.poolCurator.create(pool);
+
+        createEntitlement(owner, consumer, pool, null);
+        return consumer;
     }
 
-    private Consumer createConsumerAndBindItToProduct(Owner o, Product product, String subId,
+    private Consumer createConsumerAndBindItToProduct(Owner owner, Product product, String subId,
         String contract) {
-        Consumer cSkuAndSubIdAndContract = createConsumer(o);
-        Pool p = createPool(o, product, 1L, Util.yesterday(), Util.tomorrow(), contract, subId);
-        createEntitlement(o, cSkuAndSubIdAndContract, p, null);
-        return cSkuAndSubIdAndContract;
+
+        Consumer consumer = createConsumer(owner);
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(1L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow())
+            .setContractNumber(contract)
+            .setSourceSubscription(new SourceSubscription(subId, "master"));
+
+        pool = this.poolCurator.create(pool);
+
+        createEntitlement(owner, consumer, pool, null);
+        return consumer;
     }
 
     private List<Consumer> getConsumersDirect() {
