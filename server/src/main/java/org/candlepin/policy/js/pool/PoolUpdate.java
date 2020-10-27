@@ -56,21 +56,6 @@ public class PoolUpdate {
      */
     private Boolean orderChanged = false;
 
-    /**
-     * True if derived product ID or name has changed for the pool's derived product,
-     * or any
-     * provided derived-products. (also covers addition/removal of derived
-     * provided products.
-     */
-    private Boolean derivedProductsChanged = false;
-
-    /**
-     * True if derived product attributes changed. Will be false in situations where we're
-     * refreshing a derived pool, and the subscription's derived product attributes have
-     * changed because that update would show up as a productAttributesChanged.
-     */
-    private Boolean derivedProductAttributesChanged = false;
-
     public PoolUpdate(Pool p) {
         this.pool = p;
     }
@@ -79,9 +64,7 @@ public class PoolUpdate {
      * @return true if any subscription change was detected and applied to this pool.
      */
     public boolean changed() {
-        return datesChanged || quantityChanged || productsChanged ||
-            productAttributesChanged ||
-            orderChanged || derivedProductsChanged || derivedProductAttributesChanged;
+        return datesChanged || quantityChanged || productsChanged || productAttributesChanged || orderChanged;
     }
 
     /**
@@ -99,24 +82,23 @@ public class PoolUpdate {
         if (datesChanged) {
             changes.add("dates");
         }
+
         if (quantityChanged) {
             changes.add("quantity");
         }
+
         if (productsChanged) {
             changes.add("products");
         }
+
         if (productAttributesChanged) {
             changes.add("productattributes");
         }
+
         if (orderChanged) {
             changes.add("order");
         }
-        if (derivedProductsChanged) {
-            changes.add("derivedproducts");
-        }
-        if (derivedProductAttributesChanged) {
-            changes.add("derivedproductattributes");
-        }
+
         buffer.append(StringUtils.join(changes, " "));
         buffer.append("]");
 
@@ -163,23 +145,6 @@ public class PoolUpdate {
 
     public void setOrderChanged(Boolean orderChanged) {
         this.orderChanged = orderChanged;
-    }
-
-    public Boolean getDerivedProductsChanged() {
-        return derivedProductsChanged;
-    }
-
-    public void setDerivedProductsChanged(Boolean derivedProductsChanged) {
-        this.derivedProductsChanged = derivedProductsChanged;
-    }
-
-    public Boolean getDerivedProductAttributesChanged() {
-        return derivedProductAttributesChanged;
-    }
-
-    public void setDerivedProductAttributesChanged(
-        Boolean derivedProductAttributesChanged) {
-        this.derivedProductAttributesChanged = derivedProductAttributesChanged;
     }
 
     public Boolean getProductAttributesChanged() {

@@ -162,7 +162,10 @@ public class RefreshWorker {
                 this.poolMapper.addImportedEntity(subscription);
 
                 // Add any products attached to this subscription...
-                this.addProducts(subscription.getProduct(), subscription.getDerivedProduct());
+                this.addProducts(subscription.getProduct());
+
+                // Should we still add derivedProduct and the provided/derived provided collections here
+                // for backward compatibility?
             }
         }
 
@@ -231,7 +234,8 @@ public class RefreshWorker {
 
                 this.productMapper.addImportedEntity(product);
 
-                // Add any nested provided products
+                // Add any nested products
+                this.addProducts(product.getDerivedProduct());
                 this.addProducts(product.getProvidedProducts());
 
                 // Add any content attached to this product...

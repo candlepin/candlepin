@@ -85,13 +85,15 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
     @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
     protected Map<String, String> attributes;
 
+    protected ProductData derivedProduct;
+
+    protected Set<ProductData> providedProducts;
+
     protected Map<String, ProductContentData> content;
 
     protected Set<String> dependentProductIds;
 
     protected Set<Branding> branding;
-
-    protected Set<ProductData> providedProducts;
 
     @ApiModelProperty(example = "/products/ff808081554a3e4101554a3e9033005d")
     protected String href;
@@ -409,6 +411,88 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         }
 
         return this;
+    }
+
+    /**
+     * Sets or clears the derived product for this product.
+     *
+     * @param derivedProduct
+     *  the product to set as the derived product of this product, or null to clear any existing
+     *  value
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public ProductData setDerivedProduct(ProductData derivedProduct) {
+        this.derivedProduct = derivedProduct;
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ProductData getDerivedProduct() {
+        return this.derivedProduct;
+    }
+
+    /**
+     * Retrieves a collection of provided product for this product.
+     *
+     * @return
+     *  Returns the provided product of this product.
+     */
+    public Collection<ProductData> getProvidedProducts() {
+        return this.providedProducts != null ? new SetView(this.providedProducts) : null;
+    }
+
+    /**
+     * Method to set provided products for this product.
+     *
+     * @param providedProducts
+     *  A collection of provided products.
+     * @return
+     *  A reference to this product.
+     */
+    public ProductData setProvidedProducts(Collection<ProductData> providedProducts) {
+        if (providedProducts != null) {
+            if (this.providedProducts == null) {
+                this.providedProducts = new HashSet<>();
+            }
+            else {
+                this.providedProducts.clear();
+            }
+
+            for (ProductData pData : providedProducts) {
+                this.addProvidedProduct(pData);
+            }
+        }
+        else {
+            this.providedProducts = null;
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the provided product for this product.
+     *
+     * @param providedProduct
+     *  Provided product to be added.
+     *
+     * @return
+     *  Returns true is added successfully, otherwise false.
+     */
+    public boolean addProvidedProduct(ProductData providedProduct) {
+        if (providedProduct == null) {
+            throw new IllegalArgumentException("Provided product is null");
+        }
+
+        if (this.providedProducts == null) {
+            this.providedProducts = new HashSet<>();
+        }
+
+        return this.providedProducts.add(providedProduct);
     }
 
     /**
@@ -958,65 +1042,6 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         return this;
     }
 
-    /**
-     * Retrieves a collection of provided product for this product.
-     *
-     * @return
-     *  Returns the provided product of this product.
-     */
-    public Collection<ProductData> getProvidedProducts() {
-        return this.providedProducts != null ? new SetView(this.providedProducts) : null;
-    }
-
-    /**
-     * Method to set provided products for this product.
-     *
-     * @param providedProducts
-     *  A collection of provided products.
-     * @return
-     *  A reference to this product.
-     */
-    public ProductData setProvidedProducts(Collection<ProductData> providedProducts) {
-        if (providedProducts != null) {
-            if (this.providedProducts == null) {
-                this.providedProducts = new HashSet<>();
-            }
-            else {
-                this.providedProducts.clear();
-            }
-
-            for (ProductData pData : providedProducts) {
-                this.addProvidedProduct(pData);
-            }
-        }
-        else {
-            this.providedProducts = null;
-        }
-
-        return this;
-    }
-
-    /**
-     * Adds the provided product for this product.
-     *
-     * @param providedProduct
-     *  Provided product to be added.
-     *
-     * @return
-     *  Returns true is added successfully, otherwise false.
-     */
-    public boolean addProvidedProduct(ProductData providedProduct) {
-        if (providedProduct == null) {
-            throw new IllegalArgumentException("Provided product is null");
-        }
-
-        if (this.providedProducts == null) {
-            this.providedProducts = new HashSet<>();
-        }
-
-        return this.providedProducts.add(providedProduct);
-    }
-
     @Override
     public String toString() {
         return String.format("ProductData [id = %s, name = %s]", this.id, this.name);
@@ -1040,10 +1065,11 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
             .append(this.name, that.name)
             .append(this.multiplier, that.multiplier)
             .append(this.attributes, that.attributes)
+            .append(this.derivedProduct, that.derivedProduct)
+            .append(this.providedProducts, that.providedProducts)
             .append(this.content, that.content)
             .append(this.dependentProductIds, that.dependentProductIds)
             .append(this.branding, that.branding)
-            .append(this.providedProducts, that.providedProducts)
             .append(this.href, that.href)
             .append(this.locked, that.locked);
 
@@ -1060,11 +1086,12 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
             .append(this.multiplier)
             .append(this.href)
             .append(this.attributes)
+            .append(this.derivedProduct)
+            .append(this.providedProducts)
             .append(this.content)
             .append(this.dependentProductIds)
             .append(this.branding)
-            .append(this.locked)
-            .append(this.providedProducts);
+            .append(this.locked);
 
         return builder.toHashCode();
     }
@@ -1091,18 +1118,31 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
             copy.dependentProductIds.addAll(this.dependentProductIds);
         }
 
-        if (this.branding != null) {
-            copy.branding = new HashSet<>();
-            copy.branding.addAll(
-                this.branding.stream().map(Branding::clone).collect(Collectors.toSet()));
+        ProductData srcDerived = this.getDerivedProduct();
+        copy.setDerivedProduct(srcDerived != null ? (ProductData) srcDerived.clone() : null);
+
+        Collection<ProductData> srcProvidedProducts = this.getProvidedProducts();
+        if (srcProvidedProducts != null) {
+            Set<ProductData> destProvidedProducts = srcProvidedProducts.stream()
+                .map(dto -> (ProductData) dto.clone())
+                .collect(Collectors.toSet());
+
+            copy.setProvidedProducts(destProvidedProducts);
+        }
+        else {
+            copy.setProvidedProducts(null);
         }
 
-        if (this.providedProducts != null) {
-            copy.providedProducts = new HashSet<>();
+        Collection<Branding> srcBranding = this.getBranding();
+        if (srcBranding != null) {
+            Set<Branding> destBranding = srcBranding.stream()
+                .map(dto -> dto.clone())
+                .collect(Collectors.toSet());
 
-            for (ProductData productData : this.getProvidedProducts()) {
-                copy.providedProducts.add((ProductData) productData.clone());
-            }
+            copy.setBranding(destBranding);
+        }
+        else {
+            copy.setBranding(null);
         }
 
         return copy;
@@ -1135,25 +1175,11 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
         this.locked = source.isLocked();
 
         this.setAttributes(source.getAttributes());
+        this.setDerivedProduct(source.getDerivedProduct());
+        this.setProvidedProducts(source.getProvidedProducts());
         this.setProductContent(source.getProductContent());
         this.setDependentProductIds(source.getDependentProductIds());
         this.setBranding(source.getBranding());
-
-        if (source.getProvidedProducts() != null) {
-            if (this.providedProducts == null) {
-                this.providedProducts = new HashSet<>();
-            }
-            else {
-                this.providedProducts.clear();
-            }
-
-            for (ProductData pData : source.getProvidedProducts()) {
-                this.providedProducts.add(new ProductData(pData));
-            }
-        }
-        else {
-            this.setProvidedProducts(null);
-        }
 
         return this;
     }
@@ -1186,6 +1212,25 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
 
         this.setAttributes(source.getAttributes());
 
+        Product srcDerived = source.getDerivedProduct();
+        this.setDerivedProduct(srcDerived != null ? new ProductData(srcDerived) : null);
+
+        if (source.getProvidedProducts() != null) {
+            if (this.providedProducts == null) {
+                this.providedProducts = new HashSet<>();
+            }
+            else {
+                this.providedProducts.clear();
+            }
+
+            for (Product pData : source.getProvidedProducts()) {
+                this.providedProducts.add(new ProductData(pData));
+            }
+        }
+        else {
+            this.setProvidedProducts(null);
+        }
+
         if (source.getProductContent() != null) {
             if (this.content == null) {
                 this.content = new HashMap<>();
@@ -1204,22 +1249,6 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
 
         this.setDependentProductIds(source.getDependentProductIds());
         this.setBranding(source.getBranding());
-
-        if (source.getProvidedProducts() != null) {
-            if (this.providedProducts == null) {
-                this.providedProducts = new HashSet<>();
-            }
-            else {
-                this.providedProducts.clear();
-            }
-
-            for (Product pData : source.getProvidedProducts()) {
-                this.providedProducts.add(new ProductData(pData));
-            }
-        }
-        else {
-            this.setProvidedProducts(null);
-        }
 
         return this;
     }

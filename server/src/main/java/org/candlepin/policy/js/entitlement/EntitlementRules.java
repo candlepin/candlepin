@@ -25,6 +25,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
 import org.candlepin.dto.rules.v1.PoolDTO;
+import org.candlepin.dto.rules.v1.PoolQuantityDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -163,13 +164,16 @@ public class EntitlementRules implements Enforcer {
             consumer.getEntitlements().stream()
                 .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
+        Stream<PoolQuantityDTO> quantityStream = entitlementPoolQuantities == null ? Stream.empty() :
+            entitlementPoolQuantities.stream()
+                .map(this.translator.getStreamMapper(PoolQuantity.class, PoolQuantityDTO.class));
 
         JsonJsContext args = new JsonJsContext(objectMapper);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
         args.put("hostConsumer", this.translator.translate(host, ConsumerDTO.class));
         args.put("consumerEntitlements", entStream.collect(Collectors.toSet()));
         args.put("standalone", config.getBoolean(ConfigProperties.STANDALONE));
-        args.put("poolQuantities", entitlementPoolQuantities);
+        args.put("poolQuantities", quantityStream);
         args.put("caller", caller.getLabel());
         args.put("log", log, false);
 
@@ -281,13 +285,13 @@ public class EntitlementRules implements Enforcer {
         if (!ctype.isManifest()) {
             Pool pool = entitlement.getPool();
             // multi ent check
-            if (!"yes".equalsIgnoreCase(pool.getProductAttributeValue(Pool.Attributes.MULTI_ENTITLEMENT)) &&
+            if (!"yes".equalsIgnoreCase(pool.getProductAttributes().get(Pool.Attributes.MULTI_ENTITLEMENT)) &&
                 entitlement.getQuantity() + change > 1) {
                 result.addError(new ValidationError(
                     EntitlementRulesTranslator.PoolErrorKeys.MULTI_ENTITLEMENT_UNSUPPORTED));
             }
             if (!consumer.isGuest()) {
-                String multiplier = pool.getProductAttributeValue(Product.Attributes.INSTANCE_MULTIPLIER);
+                String multiplier = pool.getProductAttributes().get(Product.Attributes.INSTANCE_MULTIPLIER);
                 if (multiplier != null) {
                     int instanceMultiplier = Integer.parseInt(multiplier);
                     // quantity should be divisible by multiplier

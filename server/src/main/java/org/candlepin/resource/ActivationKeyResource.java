@@ -20,7 +20,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
@@ -76,7 +75,6 @@ public class ActivationKeyResource {
     private I18n i18n;
     private ServiceLevelValidator serviceLevelValidator;
     private ActivationKeyRules activationKeyRules;
-    private ProductCachedSerializationModule productCachedModule;
     private ModelTranslator translator;
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 
@@ -84,7 +82,7 @@ public class ActivationKeyResource {
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
         ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
-        ProductCachedSerializationModule productCachedModule, ModelTranslator translator) {
+        ModelTranslator translator) {
 
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
@@ -92,7 +90,6 @@ public class ActivationKeyResource {
         this.serviceLevelValidator = serviceLevelValidator;
         this.activationKeyRules = activationKeyRules;
         this.ownerProductCurator = ownerProductCurator;
-        this.productCachedModule = productCachedModule;
         this.translator = translator;
     }
 

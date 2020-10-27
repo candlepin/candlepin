@@ -428,57 +428,51 @@ public class ComplianceRules {
                     pool.setRestrictedToUsername(poolDTO.getRestrictedToUsername());
                 }
 
-                if (poolDTO.getProductId() != null) {
-                    pool.setProductId(poolDTO.getProductId());
-                }
-
-                if (poolDTO.getDerivedProductId() != null) {
-                    pool.setDerivedProductId(poolDTO.getDerivedProductId());
-                }
-
                 if (poolDTO.getAttributes() != null) {
                     pool.setAttributes(poolDTO.getAttributes());
                 }
 
-                if (poolDTO.getProductAttributes() != null) {
-                    pool.setProductAttributes(poolDTO.getProductAttributes());
+                if (poolDTO.getProductId() == null) {
+                    throw new IllegalArgumentException("Received null product ID on entitlement");
                 }
 
-                if (poolDTO.getProvidedProducts() != null) {
-                    if (poolDTO.getProvidedProducts().isEmpty()) {
-                        pool.setProvidedProducts(Collections.emptySet());
-                    }
-                    else {
-                        Set<Product> products = new HashSet<>();
-                        for (PoolDTO.ProvidedProductDTO providedProductDTO : poolDTO.getProvidedProducts()) {
-                            if (providedProductDTO != null) {
-                                Product newProd = new Product();
-                                newProd.setId(providedProductDTO.getProductId());
-                                newProd.setName(providedProductDTO.getProductName());
-                                products.add(newProd);
-                            }
-                        }
-                        pool.setProvidedProducts(products);
-                    }
+                Product product = new Product()
+                    .setId(poolDTO.getProductId())
+                    .setAttributes(poolDTO.getProductAttributes());
+
+                pool.setProduct(product);
+
+                // Impl note: we don't support N-tier here in any capacity. This will need to be
+                // updated accordingly once we know what N-tier means/requires.
+                Collection<PoolDTO.ProvidedProductDTO> ppDTOs = poolDTO.getProvidedProducts();
+                if (ppDTOs != null) {
+                    Map<String, Product> providedProducts = ppDTOs.stream()
+                        .collect(Collectors.toMap(PoolDTO.ProvidedProductDTO::getProductId, ppDTO -> {
+                            return new Product()
+                                .setId(ppDTO.getProductId())
+                                .setName(ppDTO.getProductName());
+                        }));
+
+                    product.setProvidedProducts(providedProducts.values());
                 }
 
-                if (poolDTO.getDerivedProvidedProducts() != null) {
-                    if (poolDTO.getDerivedProvidedProducts().isEmpty()) {
-                        pool.setDerivedProvidedProducts(Collections.emptySet());
+                if (poolDTO.getDerivedProductId() != null) {
+                    Product derived = new Product()
+                        .setId(poolDTO.getDerivedProductId());
+
+                    Collection<PoolDTO.ProvidedProductDTO> dppDTOs = poolDTO.getDerivedProvidedProducts();
+                    if (dppDTOs != null) {
+                        Map<String, Product> providedProducts = dppDTOs.stream()
+                            .collect(Collectors.toMap(PoolDTO.ProvidedProductDTO::getProductId, dppDTO -> {
+                                return new Product()
+                                    .setId(dppDTO.getProductId())
+                                    .setName(dppDTO.getProductName());
+                            }));
+
+                        derived.setProvidedProducts(providedProducts.values());
                     }
-                    else {
-                        Set<Product> derivedProducts = new HashSet<>();
-                        for (PoolDTO.ProvidedProductDTO derivedProvidedProductDTO :
-                            poolDTO.getDerivedProvidedProducts()) {
-                            if (derivedProvidedProductDTO != null) {
-                                Product newDerivedProd = new Product();
-                                newDerivedProd.setId(derivedProvidedProductDTO.getProductId());
-                                newDerivedProd.setName(derivedProvidedProductDTO.getProductName());
-                                derivedProducts.add(newDerivedProd);
-                            }
-                        }
-                        pool.setDerivedProvidedProducts(derivedProducts);
-                    }
+
+                    product.setDerivedProduct(derived);
                 }
 
                 entitlementModel.setPool(pool);

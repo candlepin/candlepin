@@ -56,8 +56,6 @@ import org.candlepin.dto.api.v1.OwnerInfoTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.v1.PermissionBlueprintInfoTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintTranslator;
-import org.candlepin.dto.api.v1.PoolQuantityDTO;
-import org.candlepin.dto.api.v1.PoolQuantityTranslator;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductCertificateTranslator;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -201,7 +199,8 @@ public class StandardTranslator extends SimpleModelTranslator {
             new org.candlepin.dto.api.v1.PoolTranslator(),
             Pool.class, org.candlepin.dto.api.v1.PoolDTO.class);
         this.registerTranslator(
-            new PoolQuantityTranslator(), PoolQuantity.class, PoolQuantityDTO.class);
+            new org.candlepin.dto.api.v1.PoolQuantityTranslator(),
+            PoolQuantity.class, org.candlepin.dto.api.v1.PoolQuantityDTO.class);
         this.registerTranslator(
             new ProductTranslator(), Product.class, ProductDTO.class);
         this.registerTranslator(
@@ -306,6 +305,9 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new org.candlepin.dto.rules.v1.PoolTranslator(),
             Pool.class, org.candlepin.dto.rules.v1.PoolDTO.class);
+        this.registerTranslator(
+            new org.candlepin.dto.rules.v1.PoolQuantityTranslator(),
+            PoolQuantity.class, org.candlepin.dto.rules.v1.PoolQuantityDTO.class);
     }
 
     // Nothing else to do here.

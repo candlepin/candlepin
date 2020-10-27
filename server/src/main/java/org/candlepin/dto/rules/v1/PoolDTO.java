@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -498,7 +499,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      * @return
      *  A reference to this DTO
      */
-    public PoolDTO setProvidedProducts(Set<ProvidedProductDTO> providedProducts) {
+    public PoolDTO setProvidedProducts(Collection<ProvidedProductDTO> providedProducts) {
         if (providedProducts != null) {
             if (this.providedProducts == null) {
                 this.providedProducts = new HashSet<>();
@@ -569,7 +570,7 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      * @return
      *  A reference to this DTO
      */
-    public PoolDTO setDerivedProvidedProducts(Set<ProvidedProductDTO> derivedProvidedProducts) {
+    public PoolDTO setDerivedProvidedProducts(Collection<ProvidedProductDTO> derivedProvidedProducts) {
         if (derivedProvidedProducts != null) {
             if (this.derivedProvidedProducts == null) {
                 this.derivedProvidedProducts = new HashSet<>();

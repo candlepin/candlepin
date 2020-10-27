@@ -113,8 +113,7 @@ public class X509V3ExtensionUtil extends X509Util {
     public byte[] createEntitlementDataPayload(List<org.candlepin.model.dto.Product> productModels,
         Consumer consumer, Pool pool, Integer quantity) throws IOException {
 
-        EntitlementBody map = createEntitlementBody(productModels,
-            consumer, pool, quantity);
+        EntitlementBody map = createEntitlementBody(productModels, consumer, pool, quantity);
 
         String json = toJson(map);
         return processPayload(json);
@@ -165,8 +164,7 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public TinySubscription createSubscription(
-        Pool pool) {
+    public TinySubscription createSubscription(Pool pool) {
         TinySubscription toReturn = new TinySubscription();
         Product product = pool.getProduct();
 
