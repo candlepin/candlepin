@@ -33,18 +33,25 @@ public class ProductEntitlements {
 
     public ProductEntitlements(Collection<Entitlement> entitlements, ProductCurator productCurator) {
         for (Entitlement ent : entitlements) {
-            addProductIdToMap(ent.getPool().getProductId(), ent);
-            for (Product pp : ent.getPool().getProduct().getProvidedProducts()) {
-                addProductIdToMap(pp.getId(), ent);
+            Pool entPool = ent.getPool();
+            Product poolProduct = entPool.getProduct();
+
+            if (poolProduct != null) {
+                this.mapEntitlementByProduct(ent, poolProduct);
+
+                Collection<Product> providedProducts = poolProduct.getProvidedProducts();
+                if (providedProducts != null) {
+                    for (Product provided : providedProducts) {
+                        this.mapEntitlementByProduct(ent, provided);
+                    }
+                }
             }
         }
     }
 
-    private void addProductIdToMap(String pid, Entitlement e) {
-        if (!entsByProductIds.containsKey(pid)) {
-            entsByProductIds.put(pid, new HashSet<>());
-        }
-        entsByProductIds.get(pid).add(e);
+    private void mapEntitlementByProduct(Entitlement entitlement, Product product) {
+        this.entsByProductIds.computeIfAbsent(product.getId(), key -> new HashSet<>())
+            .add(entitlement);
     }
 
     public boolean isEmpty() {

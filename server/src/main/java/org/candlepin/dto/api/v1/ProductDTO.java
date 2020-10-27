@@ -155,19 +155,21 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
     @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
     protected Map<String, String> attributes;
 
+    protected ProductDTO derivedProduct;
+
+    protected Set<ProductDTO> providedProducts;
+
     protected Map<String, ProductContentDTO> content;
 
     protected Set<String> dependentProductIds;
+
+    protected Set<BrandingDTO> branding;
 
     @ApiModelProperty(example = "/products/ff808081554a3e4101554a3e9033005d")
     protected String href;
 
     @ApiModelProperty(hidden = true)
     protected Boolean locked;
-
-    protected Set<BrandingDTO> branding;
-
-    protected Set<ProductDTO> providedProducts;
 
     /**
      * Initializes a new ProductDTO instance with null values.
@@ -438,6 +440,115 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
     }
 
     /**
+     * Retrieves the derived product of this product. If the derived product has not yet been set, or
+     * this product does not have a derived product, this method returns null.
+     *
+     * @return
+     *  the derived product of this product, or null if this product does not have a derived product
+     */
+    public ProductDTO getDerivedProduct() {
+        return this.derivedProduct;
+    }
+
+    /**
+     * Sets or clears the derived product for this product.
+     *
+     * @param derivedProduct
+     *  the product to set as the derived product of this product, or null to clear any existing
+     *  value
+     *
+     * @return
+     *  a reference to this DTO
+     */
+    public ProductDTO setDerivedProduct(ProductDTO derivedProduct) {
+        this.derivedProduct = derivedProduct;
+        return this;
+    }
+
+    /**
+     * Retrieves a view of the provided products for the product represented by this DTO.
+     * If the provided products have not yet been defined, this method returns null.
+     *
+     * Note that the collection returned by this method is a view of the collection backing this
+     * set of provided products. Elements cannot be added to the collection, but elements may be removed.
+     * Changes made to the collection will be reflected by this product DTO instance.
+     *
+     * @return
+     *  The provided products associated with this key, or null if they have not yet been defined
+     */
+    public Set<ProductDTO> getProvidedProducts() {
+        return this.providedProducts != null ? new SetView<>(this.providedProducts) : null;
+    }
+
+    /**
+     * Utility method to validate ProvidedProductDTO input
+     *
+     * @param providedProductDTO
+     *  Product's DTO to be checked.
+     */
+    private boolean isNullOrIncomplete(ProductDTO providedProductDTO) {
+        return providedProductDTO == null ||
+            providedProductDTO.getId() == null ||
+            providedProductDTO.getId().isEmpty();
+    }
+
+    /**
+     * Adds the collection of provided products to this Product DTO.
+     *
+     * @param providedProducts
+     *  A set of provided products to attach to this DTO, or null to clear the existing ones
+     *
+     * @return
+     *  A reference to this DTO
+     */
+    public ProductDTO setProvidedProducts(Set<ProductDTO> providedProducts) {
+        if (providedProducts != null) {
+            if (this.providedProducts == null) {
+                this.providedProducts = new HashSet<>();
+            }
+            else {
+                this.providedProducts.clear();
+            }
+
+            for (ProductDTO dto : providedProducts) {
+                if (isNullOrIncomplete(dto)) {
+                    throw new IllegalArgumentException(
+                        "collection contains null or incomplete product objects");
+                }
+            }
+
+            this.providedProducts.addAll(providedProducts);
+        }
+        else {
+            this.providedProducts = null;
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the given provided product to this product DTO.
+     *
+     * @param providedProduct
+     *  The provided product to add to this product DTO.
+     *
+     * @return
+     *  True if this provided product was not already contained in this product DTO.
+     */
+    @JsonIgnore
+    public boolean addProvidedProduct(ProductDTO providedProduct) {
+        if (isNullOrIncomplete(providedProduct)) {
+            throw new IllegalArgumentException("providedProduct is null or incomplete");
+        }
+
+        if (this.providedProducts == null) {
+            this.providedProducts = new HashSet<>();
+        }
+
+        return this.providedProducts.add(providedProduct);
+    }
+
+    /**
      * Retrieves the content of the product represented by this DTO. If the product content has not
      * yet been defined, this method returns null.
      * <p></p>
@@ -686,7 +797,8 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
 
             for (ProductContentDTO dto : productContent) {
                 if (dto == null || dto.getContent() == null || dto.getContent().getId() == null) {
-                    throw new IllegalArgumentException("collection contains null or incomplete dtos");
+                    throw new IllegalArgumentException(
+                        "collection contains null or incomplete product content objects");
                 }
 
                 this.content.put(dto.getContent().getId(), dto);
@@ -918,89 +1030,6 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
             branding.getType() == null || branding.getType().isEmpty();
     }
 
-    /**
-     * Retrieves a view of the provided products for the product represented by this DTO.
-     * If the provided products have not yet been defined, this method returns null.
-     *
-     * Note that the collection returned by this method is a view of the collection backing this
-     * set of provided products. Elements cannot be added to the collection, but elements may be removed.
-     * Changes made to the collection will be reflected by this product DTO instance.
-     *
-     * @return
-     *  The provided products associated with this key, or null if they have not yet been defined
-     */
-    public Set<ProductDTO> getProvidedProducts() {
-        return this.providedProducts != null ? new SetView<>(this.providedProducts) : null;
-    }
-
-    /**
-     * Adds the collection of provided products to this Product DTO.
-     *
-     * @param providedProducts
-     *  A set of provided products to attach to this DTO, or null to clear the existing ones
-     *
-     * @return
-     *  A reference to this DTO
-     */
-    public ProductDTO setProvidedProducts(Set<ProductDTO> providedProducts) {
-        if (providedProducts != null) {
-            if (this.providedProducts == null) {
-                this.providedProducts = new HashSet<>();
-            }
-            else {
-                this.providedProducts.clear();
-            }
-
-            for (ProductDTO dto : providedProducts) {
-                if (isNullOrIncomplete(dto)) {
-                    throw new IllegalArgumentException("Collection is null or incomplete");
-                }
-            }
-
-            this.providedProducts.addAll(providedProducts);
-        }
-        else {
-            this.providedProducts = null;
-        }
-
-        return this;
-    }
-
-    /**
-     * Utility method to validate ProvidedProductDTO input
-     *
-     * @param providedProductDTO
-     *  Product's DTO to be checked.
-     *
-     */
-    private boolean isNullOrIncomplete(ProductDTO providedProductDTO) {
-        return providedProductDTO == null ||
-            providedProductDTO.getId() == null ||
-            providedProductDTO.getId().isEmpty();
-    }
-
-    /**
-     * Adds the given provided product to this product DTO.
-     *
-     * @param providedProduct
-     *  The provided product to add to this product DTO.
-     *
-     * @return
-     *  True if this provided product was not already contained in this product DTO.
-     */
-    @JsonIgnore
-    public boolean addProvidedProduct(ProductDTO providedProduct) {
-        if (isNullOrIncomplete(providedProduct)) {
-            throw new IllegalArgumentException("providedProduct is null or incomplete");
-        }
-
-        if (this.providedProducts == null) {
-            this.providedProducts = new HashSet<>();
-        }
-
-        return this.providedProducts.add(providedProduct);
-    }
-
     @Override
     public String toString() {
         return String.format("ProductDTO [id = %s, name = %s]", this.id, this.name);
@@ -1021,11 +1050,10 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
                 .append(this.getName(), that.getName())
                 .append(this.getMultiplier(), that.getMultiplier())
                 .append(this.getAttributes(), that.getAttributes())
+                .append(this.getDerivedProduct(), that.getDerivedProduct())
                 .append(this.getDependentProductIds(), that.getDependentProductIds())
                 .append(this.getHref(), that.getHref())
-                .append(this.isLocked(), that.isLocked())
-                .append(this.getBranding(), that.getBranding())
-                .append(this.getProvidedProducts(), that.getProvidedProducts());
+                .append(this.isLocked(), that.isLocked());
 
             // As with many collections here, we need to explicitly check the elements ourselves,
             // since it seems very common for collection implementations to not properly implement
@@ -1034,8 +1062,12 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
             // when the equality check has already failed.
             boolean equals = builder.isEquals();
 
-            // Check product content
+            equals = equals && Util.collectionsAreEqual(this.getProvidedProducts(),
+                that.getProvidedProducts());
+
             equals = equals && Util.collectionsAreEqual(this.getProductContent(), that.getProductContent());
+
+            equals = equals && Util.collectionsAreEqual(this.getBranding(), that.getBranding());
 
             return equals;
         }
@@ -1064,10 +1096,12 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
             .append(this.getMultiplier())
             .append(this.getHref())
             .append(this.getAttributes())
-            .append(this.getDependentProductIds())
-            .append(this.isLocked())
-            .append(this.getBranding())
+            .append(this.getDerivedProduct())
             .append(this.getProvidedProducts())
+            .append(this.getDerivedProduct())
+            .append(this.getDependentProductIds())
+            .append(this.getBranding())
+            .append(this.isLocked())
             .append(pcHashCode);
 
         return builder.toHashCode();
@@ -1080,13 +1114,32 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
         copy.setAttributes(this.getAttributes());
         copy.setProductContent(this.getProductContent());
         copy.setDependentProductIds(this.getDependentProductIds());
-        copy.setBranding(this.getBranding());
 
-        if (this.getProvidedProducts() != null) {
-            copy.providedProducts = new HashSet<>();
-            copy.providedProducts.addAll(this.getProvidedProducts().stream()
-                .map(prodDTO -> prodDTO.clone())
-                .collect(Collectors.toSet()));
+        ProductDTO srcDerived = this.getDerivedProduct();
+        copy.setDerivedProduct(srcDerived != null ? (ProductDTO) srcDerived.clone() : null);
+
+        Collection<ProductDTO> srcProvidedProducts = this.getProvidedProducts();
+        if (srcProvidedProducts != null) {
+            Set<ProductDTO> destProvidedProducts = srcProvidedProducts.stream()
+                .map(dto -> dto.clone())
+                .collect(Collectors.toSet());
+
+            copy.setProvidedProducts(destProvidedProducts);
+        }
+        else {
+            copy.setProvidedProducts(null);
+        }
+
+        Collection<BrandingDTO> srcBranding = this.getBranding();
+        if (srcBranding != null) {
+            Set<BrandingDTO> destBranding = srcBranding.stream()
+                .map(dto -> dto.clone())
+                .collect(Collectors.toSet());
+
+            copy.setBranding(destBranding);
+        }
+        else {
+            copy.setBranding(null);
         }
 
         return copy;
@@ -1114,17 +1167,13 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
         this.setName(source.getName());
         this.setMultiplier(source.getMultiplier());
         this.setAttributes(source.getAttributes());
+        this.setDerivedProduct(source.getDerivedProduct());
+        this.setProvidedProducts(source.getProvidedProducts());
         this.setProductContent(source.getProductContent());
         this.setDependentProductIds(source.getDependentProductIds());
         this.setHref(source.getHref());
         this.setLocked(source.isLocked());
         this.setBranding(source.getBranding());
-
-        if (source.getProvidedProducts() != null) {
-            this.setProvidedProducts(source.getProvidedProducts().stream()
-                .map(prod -> new ProductDTO(prod))
-                .collect(Collectors.toSet()));
-        }
 
         return this;
     }

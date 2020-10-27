@@ -83,11 +83,13 @@ public class PoolHelper {
         List<Pool> poolsToUpdateFromStack = new ArrayList<>();
         for (Pool pool : pools) {
             Product product = pool.getProduct();
-            Pool consumerSpecificPool = null;
+            Product derivedProduct = pool.getDerivedProduct();
             Map<String, String> attributes = attributeMaps.get(pool.getId());
             String quantity = attributes.get("virt_limit");
 
-            if (pool.getDerivedProduct() == null) {
+            Pool consumerSpecificPool = null;
+
+            if (derivedProduct == null) {
                 consumerSpecificPool = createPool(
                     product,
                     pool.getOwner(),
@@ -102,14 +104,11 @@ public class PoolHelper {
                     pool);
             }
             else {
-                // If a derived product is on the pool, we want to define the
-                // derived pool
-                // with the derived product data that was defined on the parent
-                // pool,
-                // allowing the derived pool to have different attributes than
-                // the parent.
+                // If a derived product is on the pool, we want to define the derived pool with the
+                // derived product data that was defined on the parent pool, allowing the derived
+                // pool to have different attributes than the parent.
                 consumerSpecificPool = createPool(
-                    pool.getDerivedProduct(),
+                    derivedProduct,
                     pool.getOwner(),
                     quantity,
                     pool.getStartDate(),

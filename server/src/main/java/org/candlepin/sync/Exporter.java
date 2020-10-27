@@ -356,9 +356,11 @@ public class Exporter {
         if (!StringUtils.isBlank(override)) {
             return override;
         }
+
         if (StringUtils.isBlank(prefixWebUrl)) {
             return null;
         }
+
         return prefixWebUrl;
     }
 
@@ -367,9 +369,11 @@ public class Exporter {
         if (!StringUtils.isBlank(override)) {
             return override;
         }
+
         if (StringUtils.isBlank(prefixApiUrl)) {
             return null;
         }
+
         return prefixApiUrl;
     }
 
@@ -378,20 +382,13 @@ public class Exporter {
         return map.get("version") + "-" + map.get("release");
     }
 
-    private void exportConsumer(File baseDir, Consumer consumer, String webAppPrefix,
-        String apiUrl)
+    private void exportConsumer(File baseDir, Consumer consumer, String webAppPrefix, String apiUrl)
         throws IOException {
+
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(file);
+        try (FileWriter writer = new FileWriter(file)) {
             this.consumerExporter.export(mapper, writer, consumer,
                 getPrefixWebUrl(webAppPrefix), getPrefixApiUrl(apiUrl));
-        }
-        finally {
-            if (writer != null) {
-                writer.close();
-            }
         }
     }
 
@@ -404,17 +401,15 @@ public class Exporter {
 
         for (EntitlementCertificate cert : entCertAdapter.listForConsumer(consumer)) {
             if (manifest && !this.exportRules.canExport(cert.getEntitlement())) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Skipping export of entitlement cert with product: {}",
-                        cert.getEntitlement().getPool().getProductId());
-                }
+                log.debug("Skipping export of entitlement cert with product: {}",
+                    cert.getEntitlement().getPool().getProductId());
+
                 continue;
             }
 
             if ((serials == null) || (serials.contains(cert.getSerial().getId()))) {
-                log.debug("Exporting entitlement certificate: " + cert.getSerial());
-                File file = new File(entCertDir.getCanonicalPath(),
-                    cert.getSerial().getId() + ".pem");
+                log.debug("Exporting entitlement certificate: {}", cert.getSerial());
+                File file = new File(entCertDir.getCanonicalPath(), cert.getSerial().getId() + ".pem");
                 CertificateExporter crt = new CertificateExporter();
                 crt.exportCertificate(cert, file);
             }
@@ -463,10 +458,9 @@ public class Exporter {
         idcertdir.mkdir();
 
         IdentityCertificate cert = consumer.getIdCert();
-        File file = new File(idcertdir.getCanonicalPath(),
-            cert.getSerial().getId() + ".json");
 
         // paradigm dictates this should go in an exporter.export method
+        File file = new File(idcertdir.getCanonicalPath(), cert.getSerial().getId() + ".json");
         try (FileWriter writer = new FileWriter(file)) {
             mapper.writeValue(writer, this.translator.translate(cert, CertificateDTO.class));
         }
@@ -479,32 +473,20 @@ public class Exporter {
 
         for (Entitlement ent : entitlementCurator.listByConsumer(consumer)) {
             if (ent.isDirty()) {
-                log.error("Entitlement " + ent.getId() + " is marked as dirty.");
+                log.error("Entitlement {} is marked as dirty.", ent.getId());
                 throw new ExportCreationException("Attempted to export dirty entitlements");
             }
 
             if (!this.exportRules.canExport(ent)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Skipping export of entitlement with product: {}",
-                        ent.getPool().getProductId());
-                }
-
+                log.debug("Skipping export of entitlement with product: {}", ent.getPool().getProductId());
                 continue;
             }
 
-            if (log.isDebugEnabled()) {
-                log.debug("Exporting entitlement for product" + ent.getPool().getProductId());
-            }
-            FileWriter writer = null;
-            try {
-                File file = new File(entCertDir.getCanonicalPath(), ent.getId() + ".json");
-                writer = new FileWriter(file);
+            log.debug("Exporting entitlement for product {}", ent.getPool().getProductId());
+
+            File file = new File(entCertDir.getCanonicalPath(), ent.getId() + ".json");
+            try (FileWriter writer = new FileWriter(file)) {
                 entExporter.export(mapper, writer, ent);
-            }
-            finally {
-                if (writer != null) {
-                    writer.close();
-                }
             }
         }
     }
@@ -524,7 +506,7 @@ public class Exporter {
             addProvidedProducts(product.getProvidedProducts(), products);
 
             // Also need to check for sub products
-            Product derivedProduct = pool.getDerivedProduct();
+            Product derivedProduct = product.getDerivedProduct();
             if (derivedProduct != null) {
                 products.put(derivedProduct.getId(), derivedProduct);
                 addProvidedProducts(derivedProduct.getProvidedProducts(), products);
@@ -538,16 +520,10 @@ public class Exporter {
 
             String path = productDir.getCanonicalPath();
             String productId = product.getId();
+
             File file = new File(path, productId + ".json");
-            FileWriter writer = null;
-            try {
-                writer = new FileWriter(file);
+            try (FileWriter writer = new FileWriter(file)) {
                 productExporter.export(mapper, writer, product);
-            }
-            finally {
-                if (writer != null) {
-                    writer.close();
-                }
             }
 
             // Real products have a numeric id.
@@ -561,9 +537,9 @@ public class Exporter {
                 // XXX: need to decide if the cert should always be in the export, or never.
                 if (cert != null) {
                     file = new File(productDir.getCanonicalPath(), product.getId() + ".pem");
-                    writer = new FileWriter(file);
-                    productCertExporter.export(writer, cert);
-                    writer.close();
+                    try (FileWriter writer = new FileWriter(file)) {
+                        productCertExporter.export(writer, cert);
+                    }
                 }
             }
         }

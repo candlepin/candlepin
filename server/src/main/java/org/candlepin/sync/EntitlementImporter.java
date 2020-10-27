@@ -158,6 +158,7 @@ public class EntitlementImporter {
      */
     public void associateProducts(Map<String, ProductDTO> productsById, PoolDTO upstreamPoolDTO,
         SubscriptionDTO subscription) throws SyncDataFormatException {
+
         // Product
         ProductDTO productDTO = this.findProduct(productsById, upstreamPoolDTO.getProductId());
         subscription.setProduct(productDTO);
@@ -167,27 +168,25 @@ public class EntitlementImporter {
         }
 
         for (ProvidedProductDTO pp : upstreamPoolDTO.getProvidedProducts()) {
-            ProductDTO product = this.findProduct(productsById, pp.getProductId());
+            ProductDTO providedDTO = this.findProduct(productsById, pp.getProductId());
 
-            if (product != null) {
-                productDTO.addProvidedProduct(product);
+            if (providedDTO != null) {
+                productDTO.addProvidedProduct(providedDTO);
             }
         }
 
-        // Derived product
         if (upstreamPoolDTO.getDerivedProductId() != null) {
-            productDTO = this.findProduct(productsById, upstreamPoolDTO.getDerivedProductId());
-            subscription.setDerivedProduct(productDTO);
+            ProductDTO derivedDTO = this.findProduct(productsById, upstreamPoolDTO.getDerivedProductId());
+            productDTO.setDerivedProduct(derivedDTO);
 
             for (ProvidedProductDTO pp : upstreamPoolDTO.getDerivedProvidedProducts()) {
-                ProductDTO product = this.findProduct(productsById, pp.getProductId());
+                ProductDTO providedDTO = this.findProduct(productsById, pp.getProductId());
 
-                if (product != null) {
-                    productDTO.addProvidedProduct(product);
+                if (providedDTO != null) {
+                    derivedDTO.addProvidedProduct(providedDTO);
                 }
             }
         }
-
     }
 
     private ProductDTO findProduct(Map<String, ProductDTO> productsById, String productId)

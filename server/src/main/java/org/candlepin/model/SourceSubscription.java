@@ -68,13 +68,16 @@ public class SourceSubscription extends AbstractHibernateObject<SourceSubscripti
     private Pool pool;
 
     public SourceSubscription() {
+        // Intentionally left empty
     }
 
     public SourceSubscription(String subscriptionId, String subscriptionSubKey) {
         this();
+
         this.setSubscriptionId(subscriptionId);
         this.setSubscriptionSubKey(subscriptionSubKey);
     }
+
     /**
      * @return subscription id associated with this pool.
      */
@@ -84,9 +87,13 @@ public class SourceSubscription extends AbstractHibernateObject<SourceSubscripti
 
     /**
      * @param subscriptionId associates the given subscription.
+     *
+     * @return
+     *  a reference to this SourceSubscription instance
      */
-    public void setSubscriptionId(String subscriptionId) {
+    public SourceSubscription setSubscriptionId(String subscriptionId) {
         this.subscriptionId = subscriptionId;
+        return this;
     }
 
     /**
@@ -98,9 +105,13 @@ public class SourceSubscription extends AbstractHibernateObject<SourceSubscripti
 
     /**
      * @param subscriptionSubKey the subscriptionSubKey to set
+     *
+     * @return
+     *  a reference to this SourceSubscription instance
      */
-    public void setSubscriptionSubKey(String subscriptionSubKey) {
+    public SourceSubscription setSubscriptionSubKey(String subscriptionSubKey) {
         this.subscriptionSubKey = subscriptionSubKey;
+        return this;
     }
 
     /**
@@ -112,9 +123,13 @@ public class SourceSubscription extends AbstractHibernateObject<SourceSubscripti
 
     /**
      * @param pool the pool to set
+     *
+     * @return
+     *  a reference to this SourceSubscription instance
      */
-    public void setPool(Pool pool) {
+    public SourceSubscription setPool(Pool pool) {
         this.pool = pool;
+        return this;
     }
 
     /**
@@ -127,9 +142,13 @@ public class SourceSubscription extends AbstractHibernateObject<SourceSubscripti
 
     /**
      * @param id the id to set
+     *
+     * @return
+     *  a reference to this SourceSubscription instance
      */
-    public void setId(String id) {
+    public SourceSubscription setId(String id) {
         this.id = id;
+        return this;
     }
 
     @Override

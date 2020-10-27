@@ -27,7 +27,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.AsyncJobStatus;
@@ -59,9 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -254,10 +251,10 @@ public class OwnerProductResource {
     @Transactional
     public ProductDTO createProduct(
         @PathParam("owner_key") String ownerKey,
-        ProductDTO dto) {
+        ProductDTO pdto) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product entity = productManager.createProduct(dto, owner);
+        Product entity = productManager.createProduct(owner, pdto);
 
         return this.translator.translate(entity, ProductDTO.class);
     }
@@ -297,9 +294,26 @@ public class OwnerProductResource {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
         }
 
-        Product updated = this.productManager.updateProduct(update, owner, true);
+        Product updated = this.productManager.updateProduct(owner, update, true);
 
         return this.translator.translate(updated, ProductDTO.class);
+    }
+
+    /**
+     * Creates an new, unmanaged product instance using the Red Hat product ID and content of the
+     * given product entity.
+     *
+     * @param entity
+     *  the product instance from which to copy the Red Hat product ID and content
+     *
+     * @return
+     *  an unmanaged product instance
+     */
+    private Product buildProductForBatchContentChange(Product entity) {
+        // Impl note: we need to fully clone the object to ensure we don't make any changes to any
+        // other fields; or we need to create a new product implementation that returns the correct
+        // no-change value for every other field.
+        return (Product) entity.clone();
     }
 
     @ApiOperation(notes = "Adds one or more Content entities to a Product", value = "addBatchContent")
@@ -322,20 +336,12 @@ public class OwnerProductResource {
         ownerProductCurator.refresh(ownerProduct);
 
         Product product = ownerProduct.getProduct();
-        Collection<ProductContent> productContent = new LinkedList<>();
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
-        ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
-
-        // Impl note:
-        // This is a wholely inefficient way of doing this. When we return to using ID-based linking
-        // and we're not linking the universe with our model, we can just attach the IDs directly
-        // without needing all this DTO conversion back and forth.
-        // Alternatively, we can shut off Hibernate's auto-commit junk and get in the habit of
-        // calling commit methods as necessary so we don't have to work with DTOs internally.
+        Product update = this.buildProductForBatchContentChange(product);
 
         boolean changed = false;
         for (Entry<String, Boolean> entry : contentMap.entrySet()) {
@@ -344,13 +350,11 @@ public class OwnerProductResource {
                 entry.getValue() :
                 ProductContent.DEFAULT_ENABLED_STATE;
 
-            ContentDTO cdto = this.translator.translate(content, ContentDTO.class);
-
-            changed |= pdto.addContent(cdto, enabled);
+            changed |= update.addContent(content, enabled);
         }
 
         if (changed) {
-            product = this.productManager.updateProduct(pdto, owner, true);
+            product = this.productManager.updateProduct(owner, update, true);
         }
 
         return this.translator.translate(product, ProductDTO.class);
@@ -373,7 +377,6 @@ public class OwnerProductResource {
         return this.addBatchContent(ownerKey, productId, contentMap);
     }
 
-
     @ApiOperation(notes = "Adds one or more Content entities to a Product", value = "addBatchContent")
     @DELETE
     @Consumes(MediaType.APPLICATION_JSON)
@@ -392,28 +395,22 @@ public class OwnerProductResource {
         OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
         ownerProductCurator.lock(ownerProduct);
         ownerProductCurator.refresh(ownerProduct);
+
         Product product = ownerProduct.getProduct();
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
         }
 
-        ProductDTO pdto = this.translator.translate(product, ProductDTO.class);
-
-        // Impl note:
-        // This is a wholely inefficient way of doing this. When we return to using ID-based linking
-        // and we're not linking the universe with our model, we can just attach the IDs directly
-        // without needing all this DTO conversion back and forth.
-        // Alternatively, we can shut off Hibernate's auto-commit junk and get in the habit of
-        // calling commit methods as necessary so we don't have to work with DTOs internally.
+        Product update = this.buildProductForBatchContentChange(product);
 
         boolean changed = false;
         for (String contentId : contentIds) {
-            changed |= pdto.removeContent(contentId);
+            changed |= update.removeContent(contentId);
         }
 
         if (changed) {
-            product = this.productManager.updateProduct(pdto, owner, true);
+            product = this.productManager.updateProduct(owner, update, true);
         }
 
         return this.translator.translate(product, ProductDTO.class);
@@ -451,8 +448,15 @@ public class OwnerProductResource {
         }
 
         if (this.productCurator.productHasSubscriptions(owner, product)) {
-            throw new BadRequestException(
-                i18n.tr("Product with ID \"{0}\" cannot be deleted while subscriptions exist.", productId));
+            throw new BadRequestException(i18n.tr(
+                "Product \"{0}\" cannot be deleted while referenced by one or more subscriptions",
+                productId));
+        }
+
+        if (this.productCurator.productHasParentProducts(owner, product)) {
+            throw new BadRequestException(i18n.tr(
+                "Product \"{0}\" cannot be deleted while referenced by one or more products",
+                productId));
         }
 
         this.productManager.removeProduct(owner, product);

@@ -217,7 +217,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
                 .setProjection(Projections.distinct(Projections.id()))
                 .createAlias("Owner.pools", "Pool")
                 .createAlias("Pool.product", "Prod", JoinType.LEFT_OUTER_JOIN)
-                .createAlias("Pool.derivedProduct", "DProd", JoinType.LEFT_OUTER_JOIN)
+                .createAlias("Prod.derivedProduct", "DProd", JoinType.LEFT_OUTER_JOIN)
                 .createAlias("Prod.providedProducts", "PProd", JoinType.LEFT_OUTER_JOIN)
                 .createAlias("DProd.providedProducts", "DPProd", JoinType.LEFT_OUTER_JOIN)
                 .add(Restrictions.or(

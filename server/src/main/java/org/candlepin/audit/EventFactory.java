@@ -17,6 +17,8 @@ package org.candlepin.audit;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.common.exceptions.IseException;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
@@ -40,10 +42,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+
 
 /**
  * EventFactory
@@ -53,13 +57,16 @@ public class EventFactory {
 
     protected final PrincipalProvider principalProvider;
     private ObjectMapper mapper;
+    private ModelTranslator modelTranslator;
 
     @Inject
     public EventFactory(PrincipalProvider principalProvider,
-        @Named("EventFactoryObjectMapper") ObjectMapper objectMapper) {
+        @Named("EventFactoryObjectMapper") ObjectMapper objectMapper,
+        ModelTranslator modelTranslator) {
 
-        this.mapper = objectMapper;
-        this.principalProvider = principalProvider;
+        this.mapper = Objects.requireNonNull(objectMapper);
+        this.principalProvider = Objects.requireNonNull(principalProvider);
+        this.modelTranslator = Objects.requireNonNull(modelTranslator);
     }
 
     public EventBuilder getEventBuilder(Target target, Type type) {
@@ -181,7 +188,8 @@ public class EventFactory {
     }
 
     public Event ownerContentAccessModeChanged(Owner owner) {
-        return getEventBuilder(Target.OWNER_CONTENT_ACCESS_MODE, Type.MODIFIED).setEventData(owner)
+        return getEventBuilder(Target.OWNER_CONTENT_ACCESS_MODE, Type.MODIFIED)
+            .setEventData(owner)
             .buildEvent();
     }
 
@@ -213,17 +221,25 @@ public class EventFactory {
     }
 
     public Event complianceCreated(Consumer consumer, SystemPurposeComplianceStatus compliance) {
+
+        // TODO: We *should* have an event-specific set of DTOs if we're going to output model objects
+        // directly like this. However, at the time of writing, the API DTOs will be sufficient.
+
+        SystemPurposeComplianceStatusDTO dto = this.modelTranslator
+            .translate(compliance, SystemPurposeComplianceStatusDTO.class);
+
         Map<String, Object> eventData = new HashMap<>();
-        eventData.put("status", compliance.getStatus());
-        eventData.put("reasons", Collections.unmodifiableSet(compliance.getReasons()));
-        eventData.put("nonCompliantSLA", compliance.getNonCompliantSLA());
-        eventData.put("nonCompliantRole", compliance.getNonCompliantRole());
-        eventData.put("nonCompliantUsage", compliance.getNonCompliantUsage());
-        eventData.put("nonCompliantAddOns", compliance.getNonCompliantAddOns());
-        eventData.put("compliantSLA", compliance.getCompliantSLA());
-        eventData.put("compliantRole", compliance.getCompliantRole());
-        eventData.put("compliantUsage", compliance.getCompliantUsage());
-        eventData.put("compliantAddOns", compliance.getCompliantAddOns());
+        eventData.put("status", dto.getStatus());
+        eventData.put("reasons", dto.getReasons());
+        eventData.put("nonCompliantSLA", dto.getNonCompliantSLA());
+        eventData.put("nonCompliantRole", dto.getNonCompliantRole());
+        eventData.put("nonCompliantUsage", dto.getNonCompliantUsage());
+        eventData.put("nonCompliantAddOns", dto.getNonCompliantAddOns());
+        eventData.put("compliantSLA", dto.getCompliantSLA());
+        eventData.put("compliantRole", dto.getCompliantRole());
+        eventData.put("compliantUsage", dto.getCompliantUsage());
+        eventData.put("compliantAddOns", dto.getCompliantAddOns());
+
         try {
             String eventDataJson = mapper.writeValueAsString(eventData);
             // Instead of an internal db id, compliance.created events now use

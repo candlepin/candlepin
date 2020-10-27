@@ -14,18 +14,12 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.CandlepinAttributeDeserializer;
-import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.ListView;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -63,6 +57,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
@@ -70,10 +65,6 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -83,8 +74,6 @@ import javax.xml.bind.annotation.XmlTransient;
  * descriptive meta data that might limit the Product i.e. 4 cores per server
  * with 4 guests.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Immutable
 @Table(name = Product.DB_TABLE)
@@ -214,8 +203,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Column(name = "value")
     @Cascade({CascadeType.DELETE, CascadeType.PERSIST})
     @Fetch(FetchMode.SUBSELECT)
-    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
-    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
     @Immutable
     @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private Map<String, String> attributes;
@@ -243,11 +230,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds;
 
-    @XmlTransient
     @Column(name = "entity_version")
     private Integer entityVersion;
 
-    @XmlTransient
     @Column
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private boolean locked;
@@ -268,6 +253,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     @Immutable
     private Set<Product> providedProducts;
+
+    @ManyToOne
+    @JoinColumn(name = "derived_product_uuid", nullable = true)
+    private Product derivedProduct;
 
     public Product() {
         this.attributes = new HashMap<>();
@@ -454,6 +443,12 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return copy;
     }
 
+    @PrePersist
+    @PreUpdate
+    public void updateEntityVersion() {
+        this.entityVersion = this.getEntityVersion();
+    }
+
     /**
      * Returns a DTO representing this entity.
      *
@@ -463,7 +458,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public ProductData toDTO() {
         return new ProductData(this);
     }
-
 
     /**
      * Retrieves this product's object/database UUID. While the product ID may exist multiple times
@@ -483,9 +477,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *
      * @param uuid
      *  The object ID to assign to this product.
+     *
+     * @return
+     *  a reference to this product instance
      */
-    public void setUuid(String uuid) {
+    public Product setUuid(String uuid) {
         this.uuid = uuid;
+        return this;
     }
 
     /**
@@ -505,9 +503,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *
      * @param productId
      *  The new product ID for this product.
+     *
+     * @return
+     *  a reference to this product instance
      */
-    public void setId(String productId) {
+    public Product setId(String productId) {
         this.id = productId;
+        return this;
     }
 
     /**
@@ -521,9 +523,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * sets the product name.
      *
      * @param name name of the product
+     *
+     * @return
+     *  a reference to this product instance
      */
-    public void setName(String name) {
+    public Product setName(String name) {
         this.name = name;
+        return this;
     }
 
     /**
@@ -535,14 +541,19 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     /**
      * @param multiplier the multiplier to set
+     *
+     * @return
+     *  a reference to this product instance
      */
-    public void setMultiplier(Long multiplier) {
+    public Product setMultiplier(Long multiplier) {
         if (multiplier == null) {
             this.multiplier = 1L;
         }
         else {
             this.multiplier = Math.max(1L, multiplier);
         }
+
+        return this;
     }
 
     /**
@@ -569,7 +580,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  the value set for the given attribute, or null if the attribute is not set
      */
-    @XmlTransient
     public String getAttributeValue(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
@@ -590,7 +600,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  true if the attribute is defined for this product; false otherwise
      */
-    @XmlTransient
     public boolean hasAttribute(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
@@ -773,7 +782,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return this.branding.removeAll(remove);
     }
 
-    @XmlTransient
     public List<String> getSkuEnabledContentIds() {
         List<String> skus = new LinkedList<>();
 
@@ -790,7 +798,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return skus;
     }
 
-    @XmlTransient
     public List<String> getSkuDisabledContentIds() {
         List<String> skus = new LinkedList<>();
 
@@ -1166,14 +1173,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return String.format("Product [uuid: %s, id: %s, name: %s]", this.uuid, this.id, this.name);
     }
 
-    @XmlTransient
-    @JsonIgnore
     public Product setLocked(boolean locked) {
         this.locked = locked;
         return this;
     }
 
-    @XmlTransient
     public boolean isLocked() {
         return this.locked;
     }
@@ -1201,6 +1205,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 .append(this.name, that.name)
                 .append(this.multiplier, that.multiplier)
                 .append(this.attributes, that.attributes)
+                .append(this.derivedProduct, that.derivedProduct)
                 .isEquals();
 
             // Check our collections.
@@ -1268,12 +1273,25 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .append(this.multiplier)
             .append(this.attributes);
 
+        if (this.derivedProduct != null) {
+            builder.append(this.derivedProduct.getEntityVersion());
+        }
+
         // Impl note:
         // Stepping through the collections here is as painful as it looks, but Hibernate, once
         // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
         // manually step through these and add the elements to ensure the hash code is
         // generated properly.
         int accumulator;
+
+        if (!this.providedProducts.isEmpty()) {
+            accumulator = 0;
+            for (Product product : this.providedProducts) {
+                accumulator += (product != null ? product.getEntityVersion() : 0);
+            }
+
+            builder.append(accumulator);
+        }
 
         if (!this.dependentProductIds.isEmpty()) {
             accumulator = 0;
@@ -1302,24 +1320,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             builder.append(accumulator);
         }
 
-        if (!this.providedProducts.isEmpty()) {
-            accumulator = 0;
-            for (Product product : this.providedProducts) {
-                accumulator += (product != null ? product.getEntityVersion() : 0);
-            }
-
-            builder.append(accumulator);
-        }
-
         return builder.toHashCode();
-    }
-
-    // TODO: Maybe remove these isChangedBy methods and move them to the translation bits?
-
-    @PrePersist
-    @PreUpdate
-    public void updateEntityVersion() {
-        this.entityVersion = this.getEntityVersion();
     }
 
     /**
@@ -1338,13 +1339,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return A reference to this product.
      */
     public Product setProvidedProducts(Collection<Product> providedProducts) {
-        if (providedProducts != null) {
-            this.providedProducts = new HashSet<>(providedProducts);
-        }
-        else {
-            this.providedProducts = new HashSet<>();
-        }
-
+        this.providedProducts = providedProducts != null ? new HashSet<>(providedProducts) : new HashSet<>();
         return this;
     }
 
@@ -1361,5 +1356,31 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public boolean addProvidedProduct(Product providedProduct) {
         return providedProduct != null && this.providedProducts.add(providedProduct);
+    }
+
+    /**
+     * Fetches the derived product of this product instance. If this product does not have a derived
+     * product, this method returns null.
+     *
+     * @return
+     *  this product's derived product, or null if it does not have a derived product
+     */
+    public Product getDerivedProduct() {
+        return this.derivedProduct;
+    }
+
+    /**
+     * Sets the derived product for this product. If the given derived product is null, any existing
+     * derived product will be cleared.
+     *
+     * @param derivedProduct
+     *  the derived product to set for this product, or null to clear any set derived product
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product setDerivedProduct(Product derivedProduct) {
+        this.derivedProduct = derivedProduct;
+        return this;
     }
 }
