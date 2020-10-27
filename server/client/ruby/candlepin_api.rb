@@ -527,7 +527,7 @@ class Candlepin
     return get("/pools", params)
   end
 
-  def list_owner_pools(owner_key, params = {}, attribute_filters=[], dont_parse= false)
+  def list_owner_pools(owner_key, params = {}, attribute_filters=[], dont_parse=false)
     path = "/owners/#{owner_key}/pools"
 
     params[:attribute] = attribute_filters if !attribute_filters.empty?
@@ -806,6 +806,7 @@ class Candlepin
     branding = params[:branding] || []
     relies_on = params[:relies_on] || []
     providedProducts = params[:providedProducts] || []
+    derivedProduct = params[:derivedProduct]
 
     #if product don't have type attributes, create_product will fail on server
     #side.
@@ -818,7 +819,8 @@ class Candlepin
       'dependentProductIds' => dependentProductIds,
       'branding' => branding,
       'reliesOn' => relies_on,
-      'providedProducts' => providedProducts.collect { |pid| {'id' => pid}}
+      'providedProducts' => providedProducts.collect { |pid| {'id' => pid} },
+      'derivedProduct' => derivedProduct
     }
 
     post("/owners/#{owner_key}/products", {}, product)
@@ -835,6 +837,7 @@ class Candlepin
     product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
     product[:branding] = params[:branding] if params[:branding]
     product[:relies_on] = params[:relies_on] if params[:relies_on]
+    product[:derivedProduct] = params[:derivedProduct] if params[:derivedProduct]
 
     if params[:providedProducts]
       product['providedProducts'] = params[:providedProducts]
