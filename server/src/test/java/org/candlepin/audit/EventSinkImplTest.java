@@ -34,9 +34,14 @@ import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -72,7 +77,6 @@ import java.util.ArrayList;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EventSinkImplTest {
-
     @Mock private ClientSessionFactory mockSessionFactory;
     @Mock private ClientSession mockClientSession;
     @Mock private ClientProducer mockClientProducer;
@@ -80,6 +84,11 @@ public class EventSinkImplTest {
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Mock private ServerLocator mockLocator;
     @Mock private CandlepinModeManager mockModeManager;
+
+    private ConsumerTypeCurator mockConsumerTypeCurator;
+    private EnvironmentCurator mockEnvironmentCurator;
+    private OwnerCurator mockOwnerCurator;
+    private ModelTranslator modelTranslator;
 
     private ActiveMQSessionFactory amqSessionFactory;
     private EventFactory factory;
@@ -91,10 +100,7 @@ public class EventSinkImplTest {
 
     @BeforeEach
     public void init() throws Exception {
-        this.factory = new EventFactory(mockPrincipalProvider, mapper);
         this.principal = TestUtil.createOwnerPrincipal();
-        eventFilter = new EventFilter(new CandlepinCommonTestConfig());
-
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         when(mockSessionFactory.createSession()).thenReturn(mockClientSession);
         when(mockClientSession.createProducer(anyString())).thenReturn(mockClientProducer);
@@ -105,6 +111,17 @@ public class EventSinkImplTest {
 
         this.amqSessionFactory = new TestingActiveMQSessionFactory(null, mockSessionFactory);
         this.mapper = spy(new ObjectMapper());
+
+        this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
+        this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
+        this.mockOwnerCurator = mock(OwnerCurator.class);
+
+        this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
+            this.mockEnvironmentCurator, this.mockOwnerCurator);
+
+        this.factory = new EventFactory(mockPrincipalProvider, mapper, this.modelTranslator);
+        this.eventFilter = new EventFilter(new CandlepinCommonTestConfig());
+
         this.eventSinkImpl = createEventSink(mockSessionFactory);
         o = new Owner("test owner");
     }

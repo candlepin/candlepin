@@ -14,10 +14,7 @@
  */
 package org.candlepin.pki.impl;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -29,7 +26,6 @@ import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509CRLEntryWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.test.CertificateReaderForTesting;
-import org.candlepin.test.TestDateUtil;
 import org.candlepin.util.OIDUtil;
 
 import com.google.common.base.Charsets;
@@ -54,8 +50,8 @@ import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mozilla.jss.netscape.security.x509.AuthorityKeyIdentifierExtension;
 import org.mozilla.jss.netscape.security.x509.KeyIdentifier;
 import org.mozilla.jss.netscape.security.x509.PKIXExtensions;
@@ -82,6 +78,7 @@ import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
@@ -101,7 +98,7 @@ public class JSSPKIUtilityTest {
 
     @Inject private JSSPKIUtility jssUtil;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         JSSProviderLoader.addProvider();
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
@@ -120,6 +117,30 @@ public class JSSPKIUtilityTest {
         injector.injectMembers(this);
     }
 
+    /**
+     * Assert two dates are equal with variance allowed within a given ChronoUnit.  E.g. Two instants that are
+     * only milliseconds apart within the same second would pass the assertion if ChronoUnit.SECONDS (or
+     * higher) was passed in.  For practical purposes, ChronoUnit.HOURS is as low as you'd want to go since
+     * using ChronoUnit.MINUTES can result in sporadic failures when the two times straddle the 60th second
+     * of a minute.  The same can happen with ChronoUnit.HOURS but much more rarely.
+     * @param expected expected value
+     * @param actual actual value
+     * @param fuzz threshold of variance to allow
+     */
+    public void assertDatesMatch(Date expected, Date actual, ChronoUnit fuzz) {
+        ZonedDateTime zonedExpected = expected
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .truncatedTo(fuzz);
+
+        ZonedDateTime zonedActual = actual
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .truncatedTo(fuzz);
+
+        assertEquals(zonedExpected, zonedActual);
+    }
+
     @Test
     public void testCreateX509Certificate() throws Exception {
         Date start = new Date();
@@ -132,17 +153,17 @@ public class JSSPKIUtilityTest {
 
         X509CertificateHolder holder = new X509CertificateHolder(cert.getEncoded());
         Extensions bcExtensions = holder.getExtensions();
-        assertTrue("KeyUsage extension incorrect", KeyUsage.fromExtensions(bcExtensions).hasUsages(
-            KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment)
-        );
 
-        assertTrue("ExtendedKeyUsage extension incorrect",
-            ExtendedKeyUsage.fromExtensions(bcExtensions).hasKeyPurposeId(KeyPurposeId.id_kp_clientAuth)
-        );
+        // KeyUsage extension incorrect
+        assertTrue(KeyUsage.fromExtensions(bcExtensions)
+            .hasUsages(KeyUsage.digitalSignature | KeyUsage.keyEncipherment | KeyUsage.dataEncipherment));
 
-        assertFalse("Basic constraints incorrectly identify this cert as a CA",
-            BasicConstraints.fromExtensions(bcExtensions).isCA()
-        );
+        // ExtendedKeyUsage extension incorrect
+        assertTrue(ExtendedKeyUsage
+            .fromExtensions(bcExtensions).hasKeyPurposeId(KeyPurposeId.id_kp_clientAuth));
+
+        // Basic constraints incorrectly identify this cert as a CA
+        assertFalse(BasicConstraints.fromExtensions(bcExtensions).isCA());
 
         NetscapeCertType expected = new NetscapeCertType(
             NetscapeCertType.sslClient | NetscapeCertType.smime);
@@ -223,13 +244,9 @@ public class JSSPKIUtilityTest {
         ASN1Integer crlNumber = (ASN1Integer) ASN1Integer.fromByteArray(extOctet.getOctets());
         assertEquals(BigInteger.ONE, crlNumber.getValue());
 
-        assertEquals(
-            "Test CA",
-            new X500Name(crl.getIssuerX500Principal().getEncoded()).getCommonName()
-        );
-
+        assertEquals("Test CA", new X500Name(crl.getIssuerX500Principal().getEncoded()).getCommonName());
         assertEquals(2, crl.getVersion());
-        TestDateUtil.assertDatesMatch(start, crl.getThisUpdate(), ChronoUnit.HOURS);
+        this.assertDatesMatch(start, crl.getThisUpdate(), ChronoUnit.HOURS);
 
         Date expectedUpdate = Date.from(
             start.toInstant().atZone(ZoneId.systemDefault()).plusDays(deltaDays).toInstant()
@@ -238,7 +255,7 @@ public class JSSPKIUtilityTest {
         // CRLs don't store times with millisecond precision.  The method just ignores any difference
         // between the seconds and millisecond values of the Dates. I also ignore minutes because it can
         // lead to false failures if your test run spans two minutes.
-        TestDateUtil.assertDatesMatch(expectedUpdate, crl.getNextUpdate(), ChronoUnit.HOURS);
+        this.assertDatesMatch(expectedUpdate, crl.getNextUpdate(), ChronoUnit.HOURS);
 
         for (long i = 0L; i < 10L; i++) {
             X509CRLEntry entry = crl.getRevokedCertificate(BigInteger.valueOf(i));

@@ -28,7 +28,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EnvironmentCurator;
@@ -51,7 +50,6 @@ import org.candlepin.policy.js.entitlement.EntitlementRules.Rule;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.DateSourceForTesting;
-import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 
 import com.google.inject.Provider;
@@ -109,8 +107,8 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         consumer = this.createConsumer(owner);
 
-        BufferedReader reader = new BufferedReader(new InputStreamReader(
-            getClass().getResourceAsStream("/rules/test-rules.js")));
+        BufferedReader reader = new BufferedReader(
+            new InputStreamReader(getClass().getResourceAsStream("/rules/test-rules.js")));
         StringBuilder builder = new StringBuilder();
         String line = null;
         while ((line = reader.readLine()) != null) {
@@ -121,7 +119,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         Rules rules = mock(Rules.class);
         when(rules.getRules()).thenReturn(builder.toString());
         when(rulesCurator.getRules()).thenReturn(rules);
-        when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
+        when(rulesCurator.getUpdated()).thenReturn(TestUtil.createDate(2010, 1, 1));
         when(cacheProvider.get()).thenReturn(cache);
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
@@ -130,10 +128,8 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, consumerTypeCurator,
-            mockProductCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator)),
-            mockOwnerCurator, mockOwnerProductCurator, mockProductManager,
-            mockEventSink, mockEventFactory, translator
+            mockProductCurator, new RulesObjectMapper(), mockOwnerCurator, mockOwnerProductCurator,
+            mockProductManager, mockEventSink, mockEventFactory, translator
         );
     }
 
@@ -263,7 +259,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     }
 
     private Date expiryDate(int year, int month, int day) {
-        return TestDateUtil.date(year, month, day);
+        return TestUtil.createDate(year, month, day);
     }
 
     private Pool entitlementPoolWithMembersAndExpiration(Owner theOwner, Product product,

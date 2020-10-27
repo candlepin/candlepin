@@ -14,23 +14,16 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
@@ -44,7 +37,6 @@ import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -56,23 +48,36 @@ import javax.inject.Inject;
  * ActivationKeyResourceTest
  */
 public class ActivationKeyResourceTest extends DatabaseTestFixture {
-    @Inject private ProductCurator productCurator;
-    @Inject private ActivationKeyCurator activationKeyCurator;
+
+    private static int poolid = 0;
+
     @Inject private ServiceLevelValidator serviceLevelValidator;
-    @Inject private I18n i18n;
     @Inject private Injector injector;
 
-    protected ActivationKeyResource activationKeyResource;
-    protected ActivationKeyRules activationKeyRules;
-    private static int poolid = 0;
+    private ActivationKeyResource activationKeyResource;
+    private ActivationKeyRules activationKeyRules;
+
+    private ActivationKeyCurator mockActivationKeyCurator;
+    private PoolManager mockPoolManager;
+
     private Owner owner;
 
     @BeforeEach
     public void setUp() {
         activationKeyResource = injector.getInstance(ActivationKeyResource.class);
         activationKeyRules = injector.getInstance(ActivationKeyRules.class);
-        owner = createOwner();
+
+        this.mockActivationKeyCurator = mock(ActivationKeyCurator.class);
+        this.mockPoolManager = mock(PoolManager.class);
+
+        this.owner = createOwner();
     }
+
+    private ActivationKeyResource buildActivationKeyResource() {
+        return new ActivationKeyResource(this.mockActivationKeyCurator, this.i18n, this.mockPoolManager,
+            this.serviceLevelValidator, this.activationKeyRules, null, this.modelTranslator);
+    }
+
 
     @Test
     public void testCreateReadDelete() {
@@ -139,36 +144,26 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyWithNonMultiPool() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
         p.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
-        PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool"))).thenReturn(p);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p).when(this.mockPoolManager).get(eq("testPool"));
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
-        assertThrows(BadRequestException.class, () ->
-            akr.addPoolToKey("testKey", "testPool", 2L)
-        );
+        ActivationKeyResource akr = this.buildActivationKeyResource();
+        assertThrows(BadRequestException.class, () -> akr.addPoolToKey("testKey", "testPool", 2L));
     }
 
     @Test
     public void testActivationKeyWithNegPoolQuantity() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
         p.setQuantity(10L);
-        PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool"))).thenReturn(p);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p).when(this.mockPoolManager).get(eq("testPool"));
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+        ActivationKeyResource akr = this.buildActivationKeyResource();
         assertThrows(BadRequestException.class, () ->
             akr.addPoolToKey("testKey", "testPool", -3L)
         );
@@ -177,36 +172,28 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyWithLargePoolQuantity() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
         p.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         p.setQuantity(10L);
-        PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool"))).thenReturn(p);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p).when(this.mockPoolManager).get(eq("testPool"));
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
-            serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+        ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
     @Test
     public void testActivationKeyWithUnlimitedPool() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
         p.getProduct().setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         p.setQuantity(-1L);
-        PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool"))).thenReturn(p);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p).when(this.mockPoolManager).get(eq("testPool"));
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
-            serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+        ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool", 15L);
     }
 
@@ -214,57 +201,43 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyWithPersonConsumerType() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
         p.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "person");
         p.setQuantity(1L);
-        PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool"))).thenReturn(p);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p).when(this.mockPoolManager).get(eq("testPool"));
 
-        ActivationKeyResource akr = new ActivationKeyResource(
-            akc, i18n, poolManager, serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
-        assertThrows(BadRequestException.class, () ->
-            akr.addPoolToKey("testKey", "testPool", 1L)
-        );
+        ActivationKeyResource akr = this.buildActivationKeyResource();
+        assertThrows(BadRequestException.class, () -> akr.addPoolToKey("testKey", "testPool", 1L));
     }
 
     @Test
     public void testActivationKeyWithNonPersonConsumerType() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
         p.getProduct().setAttribute(Pool.Attributes.REQUIRES_CONSUMER_TYPE, "candlepin");
-        PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool"))).thenReturn(p);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p).when(this.mockPoolManager).get(eq("testPool"));
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
-            serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+        ActivationKeyResource akr = this.buildActivationKeyResource();
         assertNotNull(akr.addPoolToKey("testKey", "testPool", 1L));
     }
 
     @Test
     public void testActivationKeyWithSameHostReqPools() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
-        PoolManager poolManager = mock(PoolManager.class);
         Pool p1 = genPool();
         p1.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
         Pool p2 = genPool();
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
 
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool1"))).thenReturn(p1);
-        when(poolManager.get(eq("testPool2"))).thenReturn(p2);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p1).when(this.mockPoolManager).get(eq("testPool1"));
+        doReturn(p2).when(this.mockPoolManager).get(eq("testPool2"));
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
-            serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+        ActivationKeyResource akr = this.buildActivationKeyResource();
 
         akr.addPoolToKey("testKey", "testPool1", 1L);
         assertEquals(1, ak.getPools().size());
@@ -278,40 +251,33 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyWithDiffHostReqPools() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
-        PoolManager poolManager = mock(PoolManager.class);
         Pool p1 = genPool();
         p1.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
         Pool p2 = genPool();
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "host2");
-
         ak.addPool(p2, 1L);
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool1"))).thenReturn(p1);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
-            serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p1).when(this.mockPoolManager).get(eq("testPool1"));
+
+        ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool1", 1L);
     }
 
     @Test
     public void testActivationKeyHostReqPoolThenNonHostReq() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
-        PoolManager poolManager = mock(PoolManager.class);
         Pool p1 = genPool();
         p1.setAttribute(Pool.Attributes.REQUIRES_HOST, "host1");
         Pool p2 = genPool();
         p2.setAttribute(Pool.Attributes.REQUIRES_HOST, "");
 
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool1"))).thenReturn(p1);
-        when(poolManager.get(eq("testPool2"))).thenReturn(p2);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p1).when(this.mockPoolManager).get(eq("testPool1"));
+        doReturn(p2).when(this.mockPoolManager).get(eq("testPool2"));
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
-            serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+        ActivationKeyResource akr = this.buildActivationKeyResource();
+
         akr.addPoolToKey("testKey", "testPool1", 1L);
         assertEquals(1, ak.getPools().size());
         ak.addPool(p1, 1L);
@@ -322,16 +288,12 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyWithNullQuantity() {
         ActivationKey ak = genActivationKey();
-        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = genPool();
-        PoolManager poolManager = mock(PoolManager.class);
 
-        when(akc.secureGet(eq("testKey"))).thenReturn(ak);
-        when(poolManager.get(eq("testPool"))).thenReturn(p);
+        doReturn(ak).when(this.mockActivationKeyCurator).secureGet(eq("testKey"));
+        doReturn(p).when(this.mockPoolManager).get(eq("testPool"));
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, poolManager,
-            serviceLevelValidator, activationKeyRules, null,
-            new ProductCachedSerializationModule(productCurator), this.modelTranslator);
+        ActivationKeyResource akr = this.buildActivationKeyResource();
         akr.addPoolToKey("testKey", "testPool", null);
     }
 

@@ -32,9 +32,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
@@ -139,24 +137,24 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void testGetOwnersByActiveProductWithExpiredEntitlements() {
         Owner owner = createOwner();
 
-        Product product = this.createProduct(owner);
-        Product provided = this.createProduct(owner);
+        Product product = TestUtil.createProduct();
+        Product provided = TestUtil.createProduct();
 
-        Set<Product> providedProducts = new HashSet<>();
-        providedProducts.add(provided);
+        product.addProvidedProduct(provided);
+
+        provided = this.createProduct(provided, owner);
+        product = this.createProduct(product, owner);
 
         // Create pool with end date in the past.
-        Pool pool = new Pool(
-            owner,
-            product,
-            providedProducts,
-            Long.valueOf(5),
-            TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2010, 11, 30),
-            "SUB234598S",
-            "ACC123",
-            "ORD222"
-        );
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(5L)
+            .setStartDate(TestUtil.createDate(2009, 11, 30))
+            .setEndDate(TestUtil.createDate(2010, 11, 30))
+            .setContractNumber("SUB234598S")
+            .setAccountNumber("ACC123")
+            .setOrderNumber("ORD222");
 
         poolCurator.create(pool);
 
@@ -233,42 +231,52 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Product prod3o2 = this.createProduct("p3", "p3", owner2);
         Product prod3o3 = this.createProduct("p3", "p3", owner3);
 
-        Product prod4 = this.createProduct("p4", "p4", owner1);
-        Product prod4d = this.createProduct("p4d", "p4d", owner1);
-        Product prod5 = this.createProduct("p5", "p5", owner2);
-        Product prod5d = this.createProduct("p5d", "p5d", owner2);
-        Product prod6 = this.createProduct("p6", "p6", owner3);
-        Product prod6d = this.createProduct("p6d", "p6d", owner3);
+        Product prod4 = TestUtil.createProduct("p4", "p4");
+        Product prod4d = TestUtil.createProduct("p4d", "p4d");
+        Product prod5 = TestUtil.createProduct("p5", "p5");
+        Product prod5d = TestUtil.createProduct("p5d", "p5d");
+        Product prod6 = TestUtil.createProduct("p6", "p6");
+        Product prod6d = TestUtil.createProduct("p6d", "p6d");
 
-        Pool pool1 = new Pool();
-        pool1.setOwner(owner1);
-        pool1.setProduct(prod4);
-        pool1.setDerivedProduct(prod4d);
-        prod4.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o1)));
-        prod4d.setProvidedProducts(new HashSet<>(Arrays.asList(prod2o1)));
-        pool1.setStartDate(TestUtil.createDate(2000, 1, 1));
-        pool1.setEndDate(TestUtil.createDate(3000, 1, 1));
-        pool1.setQuantity(5L);
+        prod4.setDerivedProduct(prod4d);
+        prod4.addProvidedProduct(prod1o1);
+        prod4d.addProvidedProduct(prod2o1);
+        prod4d = this.createProduct(prod4d, owner1);
+        prod4 = this.createProduct(prod4, owner1);
 
-        Pool pool2 = new Pool();
-        pool2.setOwner(owner2);
-        pool2.setProduct(prod5);
-        pool2.setDerivedProduct(prod5d);
-        prod5.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o2, prod2o2)));
-        prod5d.setProvidedProducts(new HashSet<>(Arrays.asList(prod3o2)));
-        pool2.setStartDate(TestUtil.createDate(1000, 1, 1));
-        pool2.setEndDate(TestUtil.createDate(2000, 1, 1));
-        pool2.setQuantity(5L);
+        prod5.setDerivedProduct(prod5d);
+        prod5.addProvidedProduct(prod1o2);
+        prod5.addProvidedProduct(prod2o2);
+        prod5d.addProvidedProduct(prod3o2);
+        prod5d = this.createProduct(prod5d, owner2);
+        prod5 = this.createProduct(prod5, owner2);
 
-        Pool pool3 = new Pool();
-        pool3.setOwner(owner3);
-        pool3.setProduct(prod6);
-        pool3.setDerivedProduct(prod6d);
-        prod6.setProvidedProducts(new HashSet<>(Arrays.asList(prod1o3)));
-        prod6d.setProvidedProducts(new HashSet<>(Arrays.asList(prod3o3)));
-        pool3.setStartDate(new Date());
-        pool3.setEndDate(new Date());
-        pool3.setQuantity(5L);
+        prod6.setDerivedProduct(prod6d);
+        prod6.addProvidedProduct(prod1o3);
+        prod6d.addProvidedProduct(prod3o3);
+        prod6d = this.createProduct(prod6d, owner3);
+        prod6 = this.createProduct(prod6, owner3);
+
+        Pool pool1 = new Pool()
+            .setOwner(owner1)
+            .setProduct(prod4)
+            .setStartDate(TestUtil.createDate(2000, 1, 1))
+            .setEndDate(TestUtil.createDate(3000, 1, 1))
+            .setQuantity(5L);
+
+        Pool pool2 = new Pool()
+            .setOwner(owner2)
+            .setProduct(prod5)
+            .setStartDate(TestUtil.createDate(1000, 1, 1))
+            .setEndDate(TestUtil.createDate(2000, 1, 1))
+            .setQuantity(5L);
+
+        Pool pool3 = new Pool()
+            .setOwner(owner3)
+            .setProduct(prod6)
+            .setStartDate(new Date())
+            .setEndDate(new Date())
+            .setQuantity(5L);
 
         this.poolCurator.create(pool1);
         this.poolCurator.create(pool2);

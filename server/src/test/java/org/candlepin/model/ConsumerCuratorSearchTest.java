@@ -22,7 +22,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -31,7 +30,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -474,29 +472,25 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Product p = TestUtil.createProduct("SKU1", "Product 1");
         productCurator.create(p);
 
-        Pool pool = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            1L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(p)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDate(2010, 1, 1))
+            .setEndDate(TestUtil.createDate(2030, 1, 1))
+            .setContractNumber("CONTRACT_123")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789");
 
-        Pool pool2 = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            1L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool2 = new Pool()
+            .setOwner(owner)
+            .setProduct(p)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDate(2010, 1, 1))
+            .setEndDate(TestUtil.createDate(2030, 1, 1))
+            .setContractNumber("CONTRACT_123")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789");
 
         String source1 = Util.generateDbUUID();
         String source2 = Util.generateDbUUID();
@@ -530,41 +524,36 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer = consumerCurator.create(consumer);
 
-        Product p = TestUtil.createProduct("SKU1", "Product 1");
-        productCurator.create(p);
+        Product product = this.createProduct("SKU1", "Product 1");
 
-        Pool pool = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            1L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_123")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        Pool pool2 = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            1L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_XXX",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool2 = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_XXX")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        poolCurator.create(pool);
+        poolCurator.create(pool1);
         poolCurator.create(pool2);
 
         EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
 
-        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
         entitlementCurator.create(e);
 
         Entitlement e2 = createEntitlement(owner, otherConsumer, pool2, cert);
@@ -597,38 +586,34 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         productCurator.create(p);
         productCurator.create(p2);
 
-        Pool pool = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            1L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(p)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_123")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        Pool pool2 = new Pool(
-            owner,
-            p2,
-            new HashSet<>(),
-            1L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_XXX",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool2 = new Pool()
+            .setOwner(owner)
+            .setProduct(p2)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_XXX")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        poolCurator.create(pool);
+        poolCurator.create(pool1);
         poolCurator.create(pool2);
 
         EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
 
-        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
         entitlementCurator.create(e);
 
         Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
@@ -636,15 +621,16 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         List<String> skus = new ArrayList<>();
         skus.add("SKU1");
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, null, skus, null, null).list();
+        List<Consumer> results = consumerCurator
+            .searchOwnerConsumers(owner, null, null, null, null, null, skus, null, null).list();
         assertEquals(1, results.size());
         assertEquals(consumer, results.get(0));
 
-        skus.clear();
         // MKT_ID should not appear since it is a marketing product
+        skus.clear();
         skus.add("SVC_ID");
-        results = consumerCurator.searchOwnerConsumers(owner, null, null, null, null, null, skus, null, null)
+        results = consumerCurator
+            .searchOwnerConsumers(owner, null, null, null, null, null, skus, null, null)
             .list();
         assertTrue(results.isEmpty());
     }
@@ -657,47 +643,43 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.setAttribute(Product.Attributes.TYPE, "MKT");
+        Product product1 = TestUtil.createProduct("SKU1", "Product 1");
+        product1.setAttribute(Product.Attributes.TYPE, "MKT");
 
-        Product p2 = TestUtil.createProduct("SKU2", "Product 2");
-        p2.setAttribute(Product.Attributes.TYPE, "MKT");
+        Product product2 = TestUtil.createProduct("SKU2", "Product 2");
+        product2.setAttribute(Product.Attributes.TYPE, "MKT");
 
-        productCurator.create(p);
-        productCurator.create(p2);
+        productCurator.create(product1);
+        productCurator.create(product2);
 
-        Pool pool = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            10L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(10L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_123")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        Pool pool2 = new Pool(
-            owner,
-            p2,
-            new HashSet<>(),
-            10L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_XXX",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool2 = new Pool()
+            .setOwner(owner)
+            .setProduct(product2)
+            .setQuantity(10L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_XXX")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        poolCurator.create(pool);
+        poolCurator.create(pool1);
         poolCurator.create(pool2);
 
         EntitlementCertificate cert = createEntitlementCertificate("entkey", "entcert");
 
-        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
         entitlementCurator.create(e);
 
         Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
@@ -740,48 +722,43 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         otherConsumer = consumerCurator.create(otherConsumer);
 
         // Two owners, two different products, but with the same SKU
-        Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.setAttribute(Product.Attributes.TYPE, "MKT");
+        Product product1 = TestUtil.createProduct("SKU1", "Product 1");
+        product1.setAttribute(Product.Attributes.TYPE, "MKT");
 
-        Product p2 = TestUtil.createProduct("SKU1", "Product 1");
-        p2.setAttribute(Product.Attributes.TYPE, "MKT");
+        Product product2 = TestUtil.createProduct("SKU1", "Product 1");
+        product2.setAttribute(Product.Attributes.TYPE, "MKT");
 
-        productCurator.create(p);
-        productCurator.create(p2);
+        productCurator.create(product1);
+        productCurator.create(product2);
 
-        Pool pool = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            10L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(10L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_123")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        Pool pool2 = new Pool(
-            owner2,
-            p2,
-            new HashSet<>(),
-            10L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool2 = new Pool()
+            .setOwner(owner2)
+            .setProduct(product2)
+            .setQuantity(10L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_XXX")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        poolCurator.create(pool);
-
-        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        poolCurator.create(pool1);
         poolCurator.create(pool2);
 
         EntitlementCertificate cert = createEntitlementCertificate("entkey", "entcert");
 
-        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
         entitlementCurator.create(e);
 
         Entitlement e2 = createEntitlement(owner2, otherConsumer, pool2, cert);
@@ -816,43 +793,39 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.setAttribute(Product.Attributes.TYPE, "MKT");
+        Product product = TestUtil.createProduct("SKU1", "Product 1");
+        product.setAttribute(Product.Attributes.TYPE, "MKT");
 
-        productCurator.create(p);
+        productCurator.create(product);
 
-        Pool pool = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            10L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(10L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_123")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        Pool pool2 = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            10L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_XXX",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool2 = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(10L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
+            .setContractNumber("CONTRACT_XXX")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        pool.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        pool2.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-        poolCurator.create(pool);
+        poolCurator.create(pool1);
         poolCurator.create(pool2);
 
         EntitlementCertificate cert = createEntitlementCertificate("entkey", "entcert");
 
-        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
         entitlementCurator.create(e);
 
         Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
@@ -904,51 +877,47 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         productCurator.create(p);
         productCurator.create(p2);
 
-        Pool pool = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            1L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool1 = new Pool()
+            .setOwner(owner)
+            .setProduct(p)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-3, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(3, 0, 0))
+            .setContractNumber("CONTRACT_123")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        Pool pool2 = new Pool(
-            owner,
-            p,
-            new HashSet<>(),
-            1L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_XXX",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool2 = new Pool()
+            .setOwner(owner)
+            .setProduct(p)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-3, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(3, 0, 0))
+            .setContractNumber("CONTRACT_XXX")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
         // Same contract as 1 but different SKU
-        Pool pool3 = new Pool(
-            owner,
-            p2,
-            new HashSet<>(),
-            1L,
-            TestDateUtil.date(2010, 1, 1),
-            TestDateUtil.date(2030, 1, 1),
-            "CONTRACT_123",
-            "ACCOUNT_456",
-            "ORDER_789"
-        );
+        Pool pool3 = new Pool()
+            .setOwner(owner)
+            .setProduct(p2)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-3, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(3, 0, 0))
+            .setContractNumber("CONTRACT_123")
+            .setAccountNumber("ACCOUNT_456")
+            .setOrderNumber("ORDER_789")
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
 
-        for (Pool x : new Pool[] { pool, pool2, pool3 }) {
-            x.setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-            poolCurator.create(x);
-        }
+        this.poolCurator.create(pool1);
+        this.poolCurator.create(pool2);
+        this.poolCurator.create(pool3);
 
         EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
 
-        Entitlement e = createEntitlement(owner, consumer, pool, cert);
+        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
         entitlementCurator.create(e);
 
         Entitlement e2 = createEntitlement(owner, consumer2, pool2, cert);

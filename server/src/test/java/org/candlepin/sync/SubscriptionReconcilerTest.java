@@ -56,7 +56,6 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -135,6 +134,16 @@ public class SubscriptionReconcilerTest {
             product.setMultiplier(dto.getMultiplier());
             product.setAttributes(dto.getAttributes());
 
+            product.setDerivedProduct(convertFromDTO(dto.getDerivedProduct()));
+
+            if (dto.getProvidedProducts() != null) {
+                for (ProductDTO pdata : dto.getProvidedProducts()) {
+                    if (pdata != null) {
+                        product.addProvidedProduct(convertFromDTO(pdata));
+                    }
+                }
+            }
+
             if (dto.getProductContent() != null) {
                 for (ProductContentDTO pcd : dto.getProductContent()) {
                     if (pcd != null) {
@@ -154,38 +163,22 @@ public class SubscriptionReconcilerTest {
     }
 
     public Pool convertFromDTO(SubscriptionDTO sub) {
-        Product product = convertFromDTO(sub.getProduct());
-        Product derivedProduct = convertFromDTO(sub.getDerivedProduct());
-
-        if (sub.getProvidedProducts() != null) {
-            for (ProductDTO pdata : sub.getProvidedProducts()) {
-                if (pdata != null) {
-                    product.addProvidedProduct(convertFromDTO(pdata));
-                }
-            }
-        }
-
-        if (sub.getDerivedProvidedProducts() != null) {
-            for (ProductDTO pdata : sub.getDerivedProvidedProducts()) {
-                if (pdata != null) {
-                    derivedProduct.addProvidedProduct(convertFromDTO(pdata));
-                }
-            }
-        }
-
-        Pool pool = new Pool(this.owner, product, new HashSet<>(), sub.getQuantity(),
-            sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
-            sub.getOrderNumber());
-
-        pool.setDerivedProduct(derivedProduct);
+        Pool pool = new Pool()
+            .setOwner(this.owner)
+            .setProduct(convertFromDTO(sub.getProduct()))
+            .setQuantity(sub.getQuantity())
+            .setStartDate(sub.getStartDate())
+            .setEndDate(sub.getEndDate())
+            .setContractNumber(sub.getContractNumber())
+            .setAccountNumber(sub.getAccountNumber())
+            .setOrderNumber(sub.getOrderNumber())
+            .setUpstreamPoolId(sub.getUpstreamPoolId())
+            .setUpstreamConsumerId(sub.getUpstreamConsumerId())
+            .setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
         if (sub.getId() != null) {
             pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         }
-
-        pool.setUpstreamPoolId(sub.getUpstreamPoolId());
-        pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
-        pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
         return pool;
     }

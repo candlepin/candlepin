@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyCollectionOf;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -45,10 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 
 
@@ -75,7 +71,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
 
-        Product output = this.productManager.createProduct(dto, owner);
+        Product output = this.productManager.createProduct(owner, dto);
 
         assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
     }
@@ -85,12 +81,12 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test-owner", "Test Owner");
 
         ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
-        Product output = this.productManager.createProduct(dto, owner);
+        Product output = this.productManager.createProduct(owner, dto);
 
         assertNotNull(output);
         assertEquals(output, this.ownerProductCurator.getProductById(owner, dto.getId()));
 
-        assertThrows(IllegalStateException.class, () -> this.productManager.createProduct(dto, owner));
+        assertThrows(IllegalStateException.class, () -> this.productManager.createProduct(owner, dto));
     }
 
     @Test
@@ -102,7 +98,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product2 = this.createProduct("p1", "prod1", owner2);
 
         ProductDTO pdto = this.modelTranslator.translate(product1, ProductDTO.class);
-        Product output = this.productManager.createProduct(pdto, owner1);
+        Product output = this.productManager.createProduct(owner1, pdto);
 
         assertEquals(output.getUuid(), product2.getUuid());
         assertEquals(output, product2);
@@ -116,7 +112,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product = this.createProduct("p1", "prod1", owner);
         ProductDTO dto = this.modelTranslator.translate(product, ProductDTO.class);
 
-        Product output = this.productManager.updateProduct(dto, owner, true);
+        Product output = this.productManager.updateProduct(owner, dto, true);
 
         assertEquals(output.getUuid(), product.getUuid());
         assertEquals(output, product);
@@ -131,7 +127,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Product product = this.createProduct("p1", "prod1", owner);
         ProductDTO update = TestUtil.createProductDTO("p1", "new product name");
 
-        Product output = this.productManager.updateProduct(update, owner, regenCerts);
+        Product output = this.productManager.updateProduct(owner, update, regenCerts);
 
         assertNotEquals(output.getUuid(), product.getUuid());
         assertEquals(output.getName(), update.getName());
@@ -146,7 +142,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
             // TODO: Is there a better way to do this? We won't know the exact product instance,
             // we just know that a product should be refreshed as a result of this operation.
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -167,7 +163,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product1, owner2));
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product2, owner2));
 
-        Product output = this.productManager.updateProduct(update, owner1, regenCerts);
+        Product output = this.productManager.updateProduct(owner1, update, regenCerts);
 
         assertEquals(output.getUuid(), product2.getUuid());
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product1, owner1));
@@ -177,7 +173,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner1), eq(product1.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -195,7 +191,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
 
-        Product output = this.productManager.updateProduct(update, owner1, regenCerts);
+        Product output = this.productManager.updateProduct(owner1, update, regenCerts);
 
         assertNotEquals(output.getUuid(), product.getUuid());
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
@@ -205,7 +201,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -221,7 +217,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner));
 
         assertThrows(IllegalStateException.class,
-            () -> this.productManager.updateProduct(update, owner, false));
+            () -> this.productManager.updateProduct(owner, update, false));
     }
 
     @Test
@@ -297,7 +293,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         boolean removed = pdto.removeContent(content.getId());
         assertTrue(removed);
 
-        Product output = this.productManager.updateProduct(pdto, owner, regenCerts);
+        Product output = this.productManager.updateProduct(owner, pdto, regenCerts);
         assertFalse(output.hasContent(content.getId()));
 
         // When we change the content associated with a product, we're making a net change to the
@@ -311,7 +307,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -335,7 +331,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         boolean removed = pdto.removeContent(content.getId());
         assertTrue(removed);
 
-        Product output = this.productManager.updateProduct(pdto, owner1, regenCerts);
+        Product output = this.productManager.updateProduct(owner1, pdto, regenCerts);
 
         assertNotEquals(product, output);
         assertFalse(output.hasContent(content.getId()));
@@ -348,7 +344,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -372,7 +368,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertTrue(removed);
 
         assertThrows(IllegalStateException.class,
-            () -> this.productManager.updateProduct(pdto, owner2, false));
+            () -> this.productManager.updateProduct(owner2, pdto, false));
     }
 
     @Test
@@ -386,7 +382,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
         pdto.addContent(cdto, true);
 
-        Product output = this.productManager.updateProduct(pdto, owner, false);
+        Product output = this.productManager.updateProduct(owner, pdto, false);
 
         assertNotEquals(product, output);
         assertTrue(output.hasContent(content.getId()));
@@ -407,7 +403,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
         pdto.addContent(cdto, true);
 
-        Product output = this.productManager.updateProduct(pdto, owner1, regenCerts);
+        Product output = this.productManager.updateProduct(owner1, pdto, regenCerts);
 
         assertNotEquals(product, output);
         assertFalse(product.hasContent(content.getId()));
@@ -420,7 +416,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -439,7 +435,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
 
-        Product output = this.productManager.createProduct(dto, owner);
+        Product output = this.productManager.createProduct(owner, dto);
 
         assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
         assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
@@ -455,7 +451,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         brandingDTO.setType("OS");
         dto.addBranding(brandingDTO);
 
-        Product output = this.productManager.createProduct(dto, owner);
+        Product output = this.productManager.createProduct(owner, dto);
 
         assertEquals(1, output.getBranding().size());
 
@@ -466,7 +462,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         brandingDTO2.setType("OS");
         pdto.addBranding(brandingDTO2);
 
-        output = this.productManager.updateProduct(pdto, owner, false);
+        output = this.productManager.updateProduct(owner, pdto, false);
         assertEquals(2, output.getBranding().size());
     }
 
@@ -523,142 +519,6 @@ public class ProductManagerTest extends DatabaseTestFixture {
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
 
         assertFalse(ProductManager.isChangedBy(product, pdto));
-    }
-
-    @Test
-    public void testImportProductsCreatesNewProductWithBranding() {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-
-        Product product = TestUtil.createProduct("p1", "prod1");
-        product.setLocked(true);
-
-        product.addBranding(new Branding(product, "eng_prod_id", "Brand Name", "OS"));
-        Map<String, Product> productData = new HashMap<>();
-        productData.put("p1", product);
-
-        assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
-
-        ImportResult<Product> result =
-            this.productManager.importProducts(owner, productData, new HashMap<>());
-
-        Map<String, Product> importedProducts = result.getImportedEntities();
-        Map<String, Product> createdProducts = result.getCreatedEntities();
-        Map<String, Product> updatedProducts = result.getUpdatedEntities();
-
-        assertEquals(1, importedProducts.size());
-        assertEquals(1, createdProducts.size());
-        assertEquals(0, updatedProducts.size());
-        assertEquals(importedProducts.get("p1"),
-            this.ownerProductCurator.getProductById(owner, "p1"));
-        assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
-    }
-
-    @Test
-    public void testImportProductsUpdatesProductWhenAddingBranding() {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-
-        // Create existing product with a single branding in the db
-        Product product = TestUtil.createProduct("p1", "prod1");
-        product.setLocked(true);
-        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
-        this.createProduct(product, owner);
-
-        assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
-
-        // Add a second, new branding
-        Product updatedProduct = (Product) product.clone();
-        updatedProduct.addBranding(new Branding(null, "eng_prod_id_2", "brand_name_2", "OS"));
-
-        Map<String, Product> productData = new HashMap<>();
-        productData.put("p1", updatedProduct);
-
-        ImportResult<Product> result =
-            this.productManager.importProducts(owner, productData, new HashMap<>());
-
-        Map<String, Product> importedProducts = result.getImportedEntities();
-        Map<String, Product> createdProducts = result.getCreatedEntities();
-        Map<String, Product> updatedProducts = result.getUpdatedEntities();
-
-        assertEquals(1, importedProducts.size());
-        assertEquals(0, createdProducts.size());
-        assertEquals(1, updatedProducts.size());
-        assertEquals(updatedProducts.get("p1"),
-            this.ownerProductCurator.getProductById(owner, "p1"));
-        assertEquals(2, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
-    }
-
-    @Test
-    public void testImportProductsUpdatesProductWhenRemovingBranding() {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-
-        // Create existing product with a single branding in the db
-        Product product = TestUtil.createProduct("p1", "prod1");
-        product.setLocked(true);
-        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
-        this.createProduct(product, owner);
-
-        assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
-
-
-        // Remove the branding
-        Product updatedProduct = (Product) product.clone();
-        updatedProduct.getBranding().clear();
-        Map<String, Product> productData = new HashMap<>();
-        productData.put("p1", updatedProduct);
-
-        ImportResult<Product> result =
-            this.productManager.importProducts(owner, productData, new HashMap<>());
-
-        Map<String, Product> importedProducts = result.getImportedEntities();
-        Map<String, Product> createdProducts = result.getCreatedEntities();
-        Map<String, Product> updatedProducts = result.getUpdatedEntities();
-
-        assertEquals(1, importedProducts.size());
-        assertEquals(0, createdProducts.size());
-        assertEquals(1, updatedProducts.size());
-        assertEquals(updatedProducts.get("p1"),
-            this.ownerProductCurator.getProductById(owner, "p1"));
-        assertEquals(0, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
-    }
-
-    @Test
-    public void testImportProductsUpdatesProductWhenUpdatingBranding() {
-        Owner owner = this.createOwner("test-owner", "Test Owner");
-
-        // Create existing product with a single branding in the db
-        Product product = TestUtil.createProduct("p1", "prod1");
-        product.setLocked(true);
-        product.addBranding(new Branding(null, "eng_prod_id_1", "brand_name_1", "OS"));
-        this.createProduct(product, owner);
-
-        assertNotNull(this.ownerProductCurator.getProductById(owner, "p1"));
-
-        // Remove the existing branding and add a similar, but slightly different one.
-        Branding newVersionOfExistingBranding =
-            new Branding(null, "eng_prod_id_1", "Brand New Name!", "OS");
-        Product updatedProduct = (Product) product.clone();
-        updatedProduct.getBranding().clear();
-        updatedProduct.addBranding(newVersionOfExistingBranding);
-
-        Map<String, Product> productData = new HashMap<>();
-        productData.put("p1", updatedProduct);
-
-        ImportResult<Product> result =
-            this.productManager.importProducts(owner, productData, new HashMap<>());
-
-        Map<String, Product> importedProducts = result.getImportedEntities();
-        Map<String, Product> createdProducts = result.getCreatedEntities();
-        Map<String, Product> updatedProducts = result.getUpdatedEntities();
-
-        assertEquals(1, importedProducts.size());
-        assertEquals(0, createdProducts.size());
-        assertEquals(1, updatedProducts.size());
-        assertEquals(updatedProducts.get("p1"),
-            this.ownerProductCurator.getProductById(owner, "p1"));
-        assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1").getBranding().size());
-        assertEquals("Brand New Name!",
-            ((Branding) this.ownerProductCurator.getProductById(owner, "p1")
-            .getBranding().toArray()[0]).getName());
     }
 
     @Test
@@ -749,7 +609,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
         pdto.getProductContent(content.getId()).setEnabled(false);
 
-        Product output = this.productManager.updateProduct(pdto, owner1, false);
+        Product output = this.productManager.updateProduct(owner1, pdto, false);
 
         assertNotEquals(product, output);
         assertTrue(product.hasContent(content.getId()));
@@ -770,12 +630,12 @@ public class ProductManagerTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("test-owner", "Test Owner");
         ProductDTO dto = TestUtil.createProductDTO("p1", "prod1");
         ProductDTO prov1 = TestUtil.createProductDTO("prodID2", "OS");
-        this.productManager.createProduct(prov1, owner);
+        this.productManager.createProduct(owner, prov1);
         dto.addProvidedProduct(prov1);
 
         assertNull(this.ownerProductCurator.getProductById(owner, "p1"));
 
-        Product output = this.productManager.createProduct(dto, owner);
+        Product output = this.productManager.createProduct(owner, dto);
 
         assertEquals(output, this.ownerProductCurator.getProductById(owner, "p1"));
         assertEquals(1, this.ownerProductCurator.getProductById(owner, "p1")
@@ -810,17 +670,17 @@ public class ProductManagerTest extends DatabaseTestFixture {
 
         // Creating actual provided Products
         ProductDTO prov1 = TestUtil.createProductDTO("providedId1", "OS1");
-        this.productManager.createProduct(prov1, owner);
+        this.productManager.createProduct(owner, prov1);
         ProductDTO prov2 = TestUtil.createProductDTO("anotherProvidedProductID", "ProvName");
-        this.productManager.createProduct(prov2, owner);
+        this.productManager.createProduct(owner, prov2);
         dto.addProvidedProduct(prov1);
-        Product output = this.productManager.createProduct(dto, owner);
+        Product output = this.productManager.createProduct(owner, dto);
 
         assertEquals(1, output.getProvidedProducts().size());
 
         ProductDTO pdto = this.modelTranslator.translate(output, ProductDTO.class);
         pdto.addProvidedProduct(prov2);
-        output = this.productManager.updateProduct(pdto, owner, false);
+        output = this.productManager.updateProduct(owner, pdto, false);
 
         assertEquals(2, output.getProvidedProducts().size());
     }

@@ -14,24 +14,29 @@
  */
 package org.candlepin.policy.js;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.rules.v1.ComplianceStatusDTO;
+import org.candlepin.dto.rules.v1.ConsumerDTO;
+import org.candlepin.dto.rules.v1.EntitlementDTO;
+import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -41,22 +46,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
+// TODO: This entire test suite and the base class are no longer needed with the DTOs in place. The whole
+// objective here is testing various JSON filters which will never be run in production since the DTO
+// creation itself is doing the same overall job.
 
 /**
  * RulesObjectMapperTest
  */
 public class RulesObjectMapperTest {
-    private RulesObjectMapper objMapper;
-    private Map<String, Object> context;
-    private Owner owner;
 
-    @Before
+    private Map<String, Object> context;
+
+    private RulesObjectMapper objMapper;
+    private ModelTranslator translator;
+
+
+    @BeforeEach
     public void begin() {
+        ConsumerTypeCurator consumerTypeCurator = mock(ConsumerTypeCurator.class);
+        EnvironmentCurator environmentCurator = mock(EnvironmentCurator.class);
+        OwnerCurator ownerCurator = mock(OwnerCurator.class);
+
         context = new HashMap<>();
-        owner = new Owner("test");
-        ProductCurator productCurator = Mockito.mock(ProductCurator.class);
-        objMapper = new RulesObjectMapper(new ProductCachedSerializationModule(productCurator));
+
+        objMapper = new RulesObjectMapper();
+        translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
     }
 
     @Test
@@ -68,7 +82,8 @@ public class RulesObjectMapperTest {
         cert.setKey("KEY");
         c.setIdCert(cert);
 
-        context.put("consumer", c);
+        context.put("consumer", this.translator.translate(c, ConsumerDTO.class));
+
         String output = objMapper.toJsonString(context);
         assertFalse(output.contains("FILTERMEPLEASE"));
     }
@@ -83,14 +98,15 @@ public class RulesObjectMapperTest {
         c.setIdCert(cert);
         e.setConsumer(c);
 
-        context.put("entitlement", e);
+        context.put("entitlement", this.translator.translate(e, EntitlementDTO.class));
+
         String output = objMapper.toJsonString(context);
         assertFalse(output.contains("consumer"));
     }
 
     @Test
     public void filterEntitlementCert() {
-        List<Entitlement> allEnts = new LinkedList<>();
+        List<EntitlementDTO> allEnts = new LinkedList<>();
 
         Entitlement e = new Entitlement();
         Set<EntitlementCertificate> entCerts = new HashSet<>();
@@ -100,9 +116,10 @@ public class RulesObjectMapperTest {
         entCerts.add(cert);
         e.setCertificates(entCerts);
 
-        allEnts.add(e);
+        allEnts.add(this.translator.translate(e, EntitlementDTO.class));
 
         context.put("entitlements", allEnts);
+
         String output = objMapper.toJsonString(context);
         assertFalse(output.contains("FILTERME"));
     }
@@ -116,16 +133,16 @@ public class RulesObjectMapperTest {
         prod.setAttribute("a", "1");
         p.setAttribute("a", "1");
 
-        context.put("pool", p);
+        context.put("pool", this.translator.translate(p, PoolDTO.class));
 
         String output = objMapper.toJsonString(context);
 
         // Shouldn't see timestamps:
-        assertFalse(output, output.contains("\"created\""));
-        assertFalse(output, output.contains("\"updated\""));
+        assertFalse(output.contains("\"created\""));
+        assertFalse(output.contains("\"updated\""));
 
         // Shouldn't see a productId:
-        assertFalse(output, output.contains("PRODID"));
+        assertFalse(output.contains("PRODID"));
     }
 
     /*
@@ -139,7 +156,7 @@ public class RulesObjectMapperTest {
         String json = Util.readFile(is);
 
         // Just need this to parse without error:
-        ComplianceStatus cs = objMapper.toObject(json, ComplianceStatus.class);
+        ComplianceStatusDTO cs = objMapper.toObject(json, ComplianceStatusDTO.class);
     }
 
     /*
@@ -153,6 +170,6 @@ public class RulesObjectMapperTest {
         String json = Util.readFile(is);
 
         // Just need this to parse without error:
-        ComplianceStatus cs = objMapper.toObject(json, ComplianceStatus.class);
+        ComplianceStatusDTO cs = objMapper.toObject(json, ComplianceStatusDTO.class);
     }
 }

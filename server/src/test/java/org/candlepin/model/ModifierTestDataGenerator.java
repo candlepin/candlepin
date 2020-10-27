@@ -213,19 +213,20 @@ public class ModifierTestDataGenerator {
 
     private Pool createPool(int id, Date startDate, Date endDate, List<Product> provided) {
         Product poolProd = TestUtil.createProduct("M" + id, "MName-" + id);
-        productCurator.create(poolProd);
+        this.mktProducts.add(poolProd);
+        for (Product prov : provided) {
+            poolProd.addProvidedProduct(prov);
+        }
+
+        poolProd = this.productCurator.create(poolProd);
         this.ownerProductCurator.mapProductToOwner(poolProd, owner);
 
-        Pool p = TestUtil.createPool(owner, poolProd);
-        mktProducts.add(poolProd);
-        for (Product prov : provided) {
-            p.addProvidedProduct(prov);
-        }
-        p.setStartDate(startDate);
-        p.setEndDate(endDate);
-        p.setQuantity(1000L);
-        poolCurator.create(p);
-        return p;
+        Pool p = TestUtil.createPool(owner, poolProd)
+            .setStartDate(startDate)
+            .setEndDate(endDate)
+            .setQuantity(1000L);
+
+        return poolCurator.create(p);
     }
 
     private Consumer createConsumer(Owner owner, String name) {

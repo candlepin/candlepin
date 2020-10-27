@@ -105,11 +105,10 @@ public class RefreshWorkerTest {
             this.mockContentCurator, this.mockOwnerContentCurator);
     }
 
-    private SubscriptionInfo mockSubscriptionInfo(String id, ProductInfo pinfo, ProductInfo dpinfo) {
+    private SubscriptionInfo mockSubscriptionInfo(String id, ProductInfo pinfo) {
         SubscriptionInfo sinfo = mock(SubscriptionInfo.class);
         doReturn(id).when(sinfo).getId();
         doReturn(pinfo).when(sinfo).getProduct();
-        doReturn(dpinfo).when(sinfo).getDerivedProduct();
 
         return sinfo;
     }
@@ -155,9 +154,9 @@ public class RefreshWorkerTest {
 
     @Test
     public void testVariadicAddSubscriptions() {
-        SubscriptionInfo sinfo1 = this.mockSubscriptionInfo("sub-1", null, null);
-        SubscriptionInfo sinfo2 = this.mockSubscriptionInfo("sub-2", null, null);
-        SubscriptionInfo sinfo3 = this.mockSubscriptionInfo("sub-3", null, null);
+        SubscriptionInfo sinfo1 = this.mockSubscriptionInfo("sub-1", null);
+        SubscriptionInfo sinfo2 = this.mockSubscriptionInfo("sub-2", null);
+        SubscriptionInfo sinfo3 = this.mockSubscriptionInfo("sub-3", null);
 
         RefreshWorker worker = this.buildRefreshWorker();
 
@@ -188,9 +187,9 @@ public class RefreshWorkerTest {
 
     @Test
     public void testAddSubscriptions() {
-        SubscriptionInfo sinfo1 = this.mockSubscriptionInfo("sub-1", null, null);
-        SubscriptionInfo sinfo2 = this.mockSubscriptionInfo("sub-2", null, null);
-        SubscriptionInfo sinfo3 = this.mockSubscriptionInfo("sub-3", null, null);
+        SubscriptionInfo sinfo1 = this.mockSubscriptionInfo("sub-1", null);
+        SubscriptionInfo sinfo2 = this.mockSubscriptionInfo("sub-2", null);
+        SubscriptionInfo sinfo3 = this.mockSubscriptionInfo("sub-3", null);
 
         RefreshWorker worker = this.buildRefreshWorker();
 
@@ -222,9 +221,9 @@ public class RefreshWorkerTest {
     @Test
     public void testVariadicAddDuplicateSubscriptionUsesMostRecent() {
         String id = "sub_id";
-        SubscriptionInfo sinfo1 = this.mockSubscriptionInfo(id, null, null);
+        SubscriptionInfo sinfo1 = this.mockSubscriptionInfo(id, null);
         doReturn("123").when(sinfo1).getOrderNumber();
-        SubscriptionInfo sinfo2 = this.mockSubscriptionInfo(id, null, null);
+        SubscriptionInfo sinfo2 = this.mockSubscriptionInfo(id, null);
         doReturn("ABC").when(sinfo1).getOrderNumber();
 
         RefreshWorker worker = this.buildRefreshWorker();
@@ -244,7 +243,7 @@ public class RefreshWorkerTest {
 
     @Test
     public void testVariadicAddSubscriptionRequiresNonNullId() {
-        SubscriptionInfo sinfo = this.mockSubscriptionInfo(null, null, null);
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo(null, null);
         RefreshWorker worker = this.buildRefreshWorker();
 
         assertThrows(IllegalArgumentException.class, () -> worker.addSubscriptions(sinfo));
@@ -252,7 +251,7 @@ public class RefreshWorkerTest {
 
     @Test
     public void testVariadicAddSubscriptionRequiresNonEmptyId() {
-        SubscriptionInfo sinfo = this.mockSubscriptionInfo("", null, null);
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo("", null);
         RefreshWorker worker = this.buildRefreshWorker();
 
         assertThrows(IllegalArgumentException.class, () -> worker.addSubscriptions(sinfo));
@@ -261,9 +260,9 @@ public class RefreshWorkerTest {
     @Test
     public void testAddDuplicateSubscriptionUsesMostRecent() {
         String id = "sub_id";
-        SubscriptionInfo sinfo1 = this.mockSubscriptionInfo(id, null, null);
+        SubscriptionInfo sinfo1 = this.mockSubscriptionInfo(id, null);
         doReturn("123").when(sinfo1).getOrderNumber();
-        SubscriptionInfo sinfo2 = this.mockSubscriptionInfo(id, null, null);
+        SubscriptionInfo sinfo2 = this.mockSubscriptionInfo(id, null);
         doReturn("ABC").when(sinfo1).getOrderNumber();
 
         RefreshWorker worker = this.buildRefreshWorker();
@@ -283,7 +282,7 @@ public class RefreshWorkerTest {
 
     @Test
     public void testAddSubscriptionRequiresNonNullId() {
-        SubscriptionInfo sinfo = this.mockSubscriptionInfo(null, null, null);
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo(null, null);
         RefreshWorker worker = this.buildRefreshWorker();
 
         assertThrows(IllegalArgumentException.class, () -> worker.addSubscriptions(Arrays.asList(sinfo)));
@@ -291,7 +290,7 @@ public class RefreshWorkerTest {
 
     @Test
     public void testAddSubscriptionRequiresNonEmptyId() {
-        SubscriptionInfo sinfo = this.mockSubscriptionInfo("", null, null);
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo("", null);
         RefreshWorker worker = this.buildRefreshWorker();
 
         assertThrows(IllegalArgumentException.class, () -> worker.addSubscriptions(Arrays.asList(sinfo)));
@@ -329,7 +328,9 @@ public class RefreshWorkerTest {
         doReturn(Arrays.asList(pinfo3)).when(pinfo1).getProvidedProducts();
         doReturn(Arrays.asList(pinfo4)).when(pinfo2).getProvidedProducts();
 
-        SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", pinfo1, pinfo2);
+        doReturn(pinfo2).when(pinfo1).getDerivedProduct();
+
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", pinfo1);
 
         RefreshWorker worker = this.buildRefreshWorker();
 
@@ -381,7 +382,7 @@ public class RefreshWorkerTest {
     @ParameterizedTest
     @ValueSource(strings = { "true", "false" })
     public void testAddSubscriptionIgnoresNestedNulls(boolean variadic) {
-        SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", null, null);
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", null);
         assertNull(sinfo.getProduct());
         assertNull(sinfo.getDerivedProduct());
 
@@ -1037,7 +1038,9 @@ public class RefreshWorkerTest {
         doReturn(Arrays.asList(pinfo3)).when(pinfo1).getProvidedProducts();
         doReturn(Arrays.asList(pinfo4)).when(pinfo2).getProvidedProducts();
 
-        SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", pinfo1, pinfo2);
+        doReturn(pinfo2).when(pinfo1).getDerivedProduct();
+
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", pinfo1);
 
         RefreshWorker worker = this.buildRefreshWorker();
         worker.addSubscriptions(sinfo);

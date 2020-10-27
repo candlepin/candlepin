@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyCollectionOf;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -41,7 +40,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Arrays;
 
 
 /**
@@ -62,8 +60,8 @@ public class ContentManagerTest extends DatabaseTestFixture {
             this.productCurator);
 
         this.contentManager = new ContentManager(
-            this.contentCurator, this.mockEntCertGenerator, this.ownerContentCurator,
-            this.productCurator, this.productManager, this.modelTranslator);
+            this.productManager, this.contentCurator, this.ownerContentCurator,
+            this.ownerProductCurator);
     }
 
     @Test
@@ -76,7 +74,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         assertNull(this.ownerContentCurator.getContentById(owner, dto.getId()));
 
-        Content output = this.contentManager.createContent(dto, owner);
+        Content output = this.contentManager.createContent(owner, dto);
 
         assertEquals(output, this.ownerContentCurator.getContentById(owner, dto.getId()));
     }
@@ -90,14 +88,14 @@ public class ContentManagerTest extends DatabaseTestFixture {
         dto.setType("test-test");
         dto.setVendor("test-vendor");
 
-        Content output = this.contentManager.createContent(dto, owner);
+        Content output = this.contentManager.createContent(owner, dto);
 
         // Verify the creation worked
         assertNotNull(output);
         assertEquals(output, this.ownerContentCurator.getContentById(owner, dto.getId()));
 
         // This should fail, since it already exists
-        assertThrows(IllegalStateException.class, () -> this.contentManager.createContent(dto, owner));
+        assertThrows(IllegalStateException.class, () -> this.contentManager.createContent(owner, dto));
     }
 
     @Test
@@ -109,7 +107,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         Content content2 = this.createContent("c1", "content-1", owner2);
 
         ContentDTO cdto = this.modelTranslator.translate(content1, ContentDTO.class);
-        Content output = this.contentManager.createContent(cdto, owner1);
+        Content output = this.contentManager.createContent(owner1, cdto);
 
         assertEquals(content2.getUuid(), output.getUuid());
         assertEquals(content2, output);
@@ -127,7 +125,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         this.createProduct(product, owner);
 
         ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
-        Content output = this.contentManager.updateContent(cdto, owner, true);
+        Content output = this.contentManager.updateContent(owner, cdto, true);
 
         assertEquals(output.getUuid(), content.getUuid());
         assertEquals(output, content);
@@ -145,7 +143,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         this.createProduct(product, owner);
         ContentDTO update = TestUtil.createContentDTO("c1", "new content name");
 
-        Content output = this.contentManager.updateContent(update, owner, regenCerts);
+        Content output = this.contentManager.updateContent(owner, update, regenCerts);
 
         assertNotEquals(output.getUuid(), content.getUuid());
         assertEquals(output.getName(), update.getName());
@@ -163,7 +161,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -187,7 +185,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content1, owner2));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content2, owner2));
 
-        Content output = this.contentManager.updateContent(update, owner1, regenCerts);
+        Content output = this.contentManager.updateContent(owner1, update, regenCerts);
 
         assertEquals(content2.getUuid(), output.getUuid());
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content1, owner1));
@@ -197,7 +195,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -218,7 +216,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
 
-        Content output = this.contentManager.updateContent(update, owner1, regenCerts);
+        Content output = this.contentManager.updateContent(owner1, update, regenCerts);
 
         assertNotEquals(output.getUuid(), content.getUuid());
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(output, owner1));
@@ -228,7 +226,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -244,7 +242,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
 
         assertThrows(IllegalStateException.class,
-            () -> this.contentManager.updateContent(update, owner, false));
+            () -> this.contentManager.updateContent(owner, update, false));
     }
 
     @ParameterizedTest
@@ -257,15 +255,11 @@ public class ContentManagerTest extends DatabaseTestFixture {
         this.createProduct(product, owner);
 
         assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner));
+        assertNotNull(content.getUuid());
+        assertNotNull(this.contentCurator.get(content.getUuid()));
 
-        try {
-            this.beginTransaction();
-            this.contentManager.removeContent(owner, content, regenCerts);
-            this.commitTransaction();
-        }
-        catch (RuntimeException e) {
-            this.rollbackTransaction();
-        }
+        this.contentManager.removeContent(owner, content, regenCerts);
+
 
         assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner));
         assertNotNull(this.contentCurator.get(content.getUuid()));
@@ -273,7 +267,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);
@@ -308,7 +302,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
 
         if (regenCerts) {
             verify(this.mockEntCertGenerator, times(1)).regenerateCertificatesOf(
-                eq(Arrays.asList(owner1)), anyCollectionOf(Product.class), anyBoolean());
+                eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
             verifyZeroInteractions(this.mockEntCertGenerator);

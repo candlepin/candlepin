@@ -22,13 +22,14 @@ import static org.junit.Assert.assertTrue;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * Test suite for the ActivationKeyTranslator class for Rules
@@ -54,14 +55,17 @@ public class ActivationKeyTranslatorTest extends
 
         Set<ActivationKeyPool> akpools = new HashSet<>();
         for (int i = 0; i < 3; ++i) {
-            Pool pool = new Pool();
-            pool.setId("test_pool-" + i);
-            Map<String, String> prodAttributes = new HashMap<>();
+            Product mktProduct = new Product()
+                .setId("mkt_product-" + i);
+
+            Pool pool = new Pool()
+                .setId("test_pool-" + i)
+                .setProduct(mktProduct);
+
             for (int j = 0; j < 3; ++j) {
-                pool.setAttribute("attr-key" + j, "attr-value" + j);
-                prodAttributes.put("prod-attr-key" + j, "prod-attr-value" + j);
+                pool.setAttribute("pool_attr-key" + j, "pool_attr-value" + j);
+                mktProduct.setAttribute("prod_attr-key" + j, "prod_attr-value" + j);
             }
-            pool.setProductAttributes(prodAttributes);
 
             ActivationKeyPool akp = new ActivationKeyPool(source, pool, 1L);
 
