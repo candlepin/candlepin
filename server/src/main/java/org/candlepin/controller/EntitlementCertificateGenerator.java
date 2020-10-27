@@ -44,10 +44,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 
@@ -230,6 +229,9 @@ public class EntitlementCertificateGenerator {
             for (Entitlement entitlement : entitlements) {
                 entitlement.setDirty(true);
             }
+
+            // Save everything
+            this.entitlementCurator.saveOrUpdateAll(entitlements, false, false);
         }
     }
 
@@ -395,13 +397,13 @@ public class EntitlementCertificateGenerator {
      */
     @Transactional
     public void regenerateCertificatesOf(Owner owner, String productId, boolean lazy) {
-        List<Pool> pools = this.poolCurator.listAvailableEntitlementPools(
-            null, owner, productId, new Date()
-        );
+        Set<Entitlement> entitlements = this.poolCurator
+            .listAvailableEntitlementPools(null, owner, productId, new Date())
+            .stream()
+            .flatMap(pool -> pool.getEntitlements().stream())
+            .collect(Collectors.toSet());
 
-        for (Pool pool : pools) {
-            this.regenerateCertificatesOf(pool.getEntitlements(), lazy);
-        }
+        this.regenerateCertificatesOf(entitlements, lazy);
     }
 
     /**
@@ -442,30 +444,37 @@ public class EntitlementCertificateGenerator {
     @Transactional
     public void regenerateCertificatesOf(Collection<Owner> owners, Collection<Product> products,
         boolean lazy) {
-        List<Pool> pools = new LinkedList<>();
 
-        Set<String> productIds = new HashSet<>();
-        Date now = new Date();
-
-        for (Product product : products) {
-            productIds.add(product.getId());
+        if (owners == null || owners.isEmpty() || products == null || products.isEmpty()) {
+            return; // Nothing to do
         }
+
+        Set<String> productIds = products.stream()
+            .map(Product::getId)
+            .collect(Collectors.toSet());
 
         // TODO: This is a very expensive operation. Update pool curator with something to let us
         // do this without hitting the DB several times over.
-        for (Owner owner : owners) {
-            if (lazy) {
+        if (lazy) {
+            for (Owner owner : owners) {
                 poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, productIds);
             }
-            else {
-                pools.addAll(
-                    this.poolCurator.listAvailableEntitlementPools(null, owner, productIds, now)
-                );
-            }
         }
+        else {
+            Date now = new Date();
+            Set<Entitlement> entitlements = new HashSet<>();
 
-        for (Pool pool : pools) {
-            this.regenerateCertificatesOf(pool.getEntitlements(), lazy);
+            for (Owner owner : owners) {
+                Collection<Entitlement> poolEntitlements = this.poolCurator
+                    .listAvailableEntitlementPools(null, owner, productIds, now)
+                    .stream()
+                    .flatMap(pool -> pool.getEntitlements().stream())
+                    .collect(Collectors.toList());
+
+                entitlements.addAll(poolEntitlements);
+            }
+
+            this.regenerateCertificatesOf(entitlements, lazy);
         }
     }
 

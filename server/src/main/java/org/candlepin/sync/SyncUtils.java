@@ -17,7 +17,6 @@ package org.candlepin.sync;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.IseException;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -63,7 +62,7 @@ public class SyncUtils {
     }
 
     @Inject
-    public SyncUtils(Configuration config, ProductCachedSerializationModule productCachedModule) {
+    public SyncUtils(Configuration config) {
         this.config = config;
 
         this.mapper = new ObjectMapper();
@@ -84,7 +83,6 @@ public class SyncUtils {
             SimpleBeanPropertyFilter.serializeAllExcept("consumer"));
 
         this.mapper.setFilterProvider(filterProvider);
-        this.mapper.registerModule(productCachedModule);
 
         if (config != null) {
             this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,

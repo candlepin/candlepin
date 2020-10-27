@@ -82,6 +82,15 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
             }
         }
 
+        // Add derived product
+        ProductInfo derived = sourceEntity.getDerivedProduct();
+        if (derived != null) {
+            EntityNode<Product, ProductInfo> child = factory.buildNode(owner, Product.class, derived.getId());
+
+            node.addChildNode(child);
+            child.addParentNode(node);
+        }
+
         // Add content nodes
         Collection<? extends ProductContentInfo> productContent = sourceEntity.getProductContent();
 

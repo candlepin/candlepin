@@ -161,19 +161,28 @@ public class SystemPurposeComplianceRules {
 
             Set<Product> entitlementProducts = new HashSet<>();
 
-            if (entitlementPool.getProduct() != null &&
-                entitlementPool.getProduct().getProvidedProducts() != null) {
-                entitlementProducts.addAll(entitlementPool.getProduct().getProvidedProducts());
-            }
+            // FIXME: This doesn't properly support N-tier, and will fail to get anything below the
+            // first set of children.
+            Product poolProduct = entitlementPool.getProduct();
+            if (poolProduct != null) {
+                entitlementProducts.add(poolProduct);
 
-            if (entitlementPool.getDerivedProduct() != null &&
-                entitlementPool.getDerivedProduct().getProvidedProducts() != null) {
-                entitlementProducts.addAll(entitlementPool.getDerivedProduct().getProvidedProducts());
-            }
+                Collection<Product> provided = poolProduct.getProvidedProducts();
+                if (provided != null) {
+                    entitlementProducts.addAll(provided);
+                }
 
-            entitlementProducts.add(entitlementPool.getProduct());
-            entitlementProducts.add(entitlementPool.getDerivedProduct());
-            entitlementProducts.remove(null);
+                // FIXME: Do we actually want to fetch derived products and derived provided products here?
+                Product poolDerived = poolProduct.getDerivedProduct();
+                if (poolDerived != null) {
+                    entitlementProducts.add(poolDerived);
+
+                    provided = poolDerived.getProvidedProducts();
+                    if (provided != null) {
+                        entitlementProducts.addAll(provided);
+                    }
+                }
+            }
 
             for (Product product : entitlementProducts) {
                 if (StringUtils.isNotEmpty(unsatisfedRole) &&

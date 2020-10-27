@@ -20,7 +20,6 @@ import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.jackson.MultiFilter;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.jackson.DateSerializer;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -56,11 +55,11 @@ import javax.ws.rs.ext.Provider;
 public class JsonProvider extends JacksonJsonProvider {
 
     @Inject
-    public JsonProvider(Configuration config, ProductCachedSerializationModule productCachedModules) {
-        this(config.getBoolean(ConfigProperties.PRETTY_PRINT), productCachedModules);
+    public JsonProvider(Configuration config) {
+        this(config.getBoolean(ConfigProperties.PRETTY_PRINT));
     }
 
-    public JsonProvider(boolean indentJson, ProductCachedSerializationModule productCachedModules) {
+    public JsonProvider(boolean indentJson) {
         // Prefer jackson annotations, but use jaxb if no jackson.
         super(Annotations.JACKSON, Annotations.JAXB);
 
@@ -77,7 +76,6 @@ public class JsonProvider extends JacksonJsonProvider {
         // Ensure our DateSerializer is used for all Date objects
         dateModule.addSerializer(Date.class, new DateSerializer());
         mapper.registerModule(dateModule);
-        mapper.registerModule(productCachedModules);
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         configureHateoasObjectMapper(mapper, indentJson);
         setMapper(mapper);

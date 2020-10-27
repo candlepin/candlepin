@@ -15,17 +15,8 @@
 package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasInclude;
-import org.candlepin.jackson.CandlepinAttributeDeserializer;
-import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.DateSource;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.BatchSize;
@@ -37,7 +28,6 @@ import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -65,9 +55,6 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 
@@ -75,11 +62,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * Represents a pool of products eligible to be consumed (entitled).
  * For every Product there will be a corresponding Pool.
  */
-@XmlRootElement(name = "pool")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Pool.DB_TABLE)
-@JsonFilter("PoolFilter")
 public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named, Comparable<Pool>,
     Eventful, SubscriptionInfo {
 
@@ -235,7 +219,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @OneToOne(mappedBy = "derivedPool", targetEntity = SourceStack.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    @JsonIgnore
     private SourceStack sourceStack;
 
     /**
@@ -261,21 +244,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /*
      * After Jackson version is upgraded:
-     * @JsonProperty(access = Access.WRITE_ONLY)
      */
     @ManyToOne
     @JoinColumn(name = "product_uuid", nullable = false)
     @NotNull
     private Product product;
 
-    /*
-     * After Jackson version is upgraded:
-     * @JsonProperty(access = Access.WRITE_ONLY)
-     */
-    @ManyToOne
-    @JoinColumn(name = "derived_product_uuid")
-    private Product derivedProduct;
-
+    // TODO: REMOVE THESE AND USE THE PROVIDED PRODUCTS ON THE PRODUCT
     @ManyToMany
     @JoinTable(
         name = "cp2_pool_provided_products",
@@ -291,6 +266,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
     @BatchSize(size = 1000)
     private Set<Product> derivedProvidedProducts;
+    // TODO: REMOVE THE ABOVE
 
     @ElementCollection
     @BatchSize(size = 1000)
@@ -299,8 +275,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @Column(name = "value")
     @Cascade({ org.hibernate.annotations.CascadeType.ALL })
     @Fetch(FetchMode.SUBSELECT)
-    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
-    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
     private Map<String, String> attributes;
 
     @OneToMany(mappedBy = "pool")
@@ -327,36 +301,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @NotNull
     private Long exported;
 
-    // Impl note:
-    // These properties are only used as temporary stores to hold information that's only present
-    // in the pool JSON due to the product itself not being serialized with it. These will be
-    // ignored if a product or derived product object is present.
-    @Transient
-    private String importedProductId;
-
-    @Transient
-    private String importedDerivedProductId;
-
-    @Transient
-    private Set<ProvidedProduct> providedProductDtos;
-
-    @Transient
-    private Set<ProvidedProduct> derivedProvidedProductDtos;
-
-    @Transient
-    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
-    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
-    @JsonProperty("productAttributes")
-    private Map<String, String> importedProductAttributes;
-
-    @Transient
-    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
-    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
-    @JsonProperty("derivedProductAttributes")
-    private Map<String, String> importedDerivedProductAttributes;
-
-    // End legacy manifest/pool JSON properties
-
     @Transient
     private Map<String, String> calculatedAttributes;
 
@@ -381,7 +325,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     @OneToOne
     @JoinColumn(name = "cdn_id")
-    @JsonIgnore
     private Cdn cdn;
 
     /**
@@ -399,41 +342,11 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         this.attributes = new HashMap<>();
         this.entitlements = new HashSet<>();
 
-        // TODO:
-        // This set of properties is used entirely to deal with a strange case that occurs during
-        // while using entitlements kicked back from the rules as JSON. Since the JSON for a pool
-        // does not encode the product object itself, we have to temporarily store product
-        // information to return if, and only if, we do not have an authoritative product object.
-        // These values can be set via setters, but will be ignored if a product is present.
-        this.importedProductId = null;
-        this.importedProductAttributes = null;
-        this.importedDerivedProductId = null;
-        this.importedDerivedProductAttributes = null;
-        this.providedProductDtos = null;
-        this.derivedProvidedProductDtos = null;
-
         this.markedForDelete = false;
         this.locked = false;
 
         this.setExported(0L);
         this.setConsumed(0L);
-    }
-
-    public Pool(Owner ownerIn, Product product, Collection<Product> providedProducts,
-        Long quantityIn, Date startDateIn, Date endDateIn, String contractNumber,
-        String accountNumber, String orderNumber) {
-        this();
-
-        this.product = product;
-        this.owner = ownerIn;
-        this.quantity = quantityIn;
-        this.startDate = startDateIn;
-        this.endDate = endDateIn;
-        this.contractNumber = contractNumber;
-        this.accountNumber = accountNumber;
-        this.orderNumber = orderNumber;
-
-        this.setProvidedProducts(providedProducts);
     }
 
     /** {@inheritDoc} */
@@ -445,9 +358,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /**
      * @param id new db id.
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setId(String id) {
+    public Pool setId(String id) {
         this.id = id;
+        return this;
     }
 
     /**
@@ -459,9 +376,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /**
      * @param startDate set the pool active date.
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setStartDate(Date startDate) {
+    public Pool setStartDate(Date startDate) {
         this.startDate = startDate;
+        return this;
     }
 
     /**
@@ -473,9 +394,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /**
      * @param endDate set the pool expiration date.
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setEndDate(Date endDate) {
+    public Pool setEndDate(Date endDate) {
         this.endDate = endDate;
+        return this;
     }
 
     /**
@@ -494,9 +419,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /**
      * @param quantity quantity
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setQuantity(Long quantity) {
+    public Pool setQuantity(Long quantity) {
         this.quantity = quantity;
+        return this;
     }
 
     /**
@@ -508,11 +437,15 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /**
      * @param consumed set the activate uses.
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setConsumed(Long consumed) {
+    public Pool setConsumed(Long consumed) {
         // Even though this is calculated at DB fetch time, we allow
         // setting it for changes in a single transaction
         this.consumed = consumed;
+        return this;
     }
 
     /**
@@ -524,11 +457,15 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /**
      * @param exported set the activate uses.
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setExported(Long exported) {
+    public Pool setExported(Long exported) {
         // Even though this is calculated at DB fetch time, we allow
         // setting it for changes in a single transaction
         this.exported = exported;
+        return this;
     }
 
     /**
@@ -548,24 +485,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /**
      * @param owner changes the owner of the pool.
-     */
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
-
-    /**
-     * The Marketing/Operations product name for the
-     * <code>productId</code>.
      *
-     * @return the productName
+     * @return
+     *  a reference to this pool instance
      */
-    @HateoasInclude
-    public String getProductName() {
-        return (this.getProduct() != null ? this.getProduct().getName() : null);
-    }
-
-    public String getDerivedProductName() {
-        return (this.getDerivedProduct() != null ? this.getDerivedProduct().getName() : null);
+    public Pool setOwner(Owner owner) {
+        this.owner = owner;
+        return this;
     }
 
     /**
@@ -578,28 +504,34 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     /**
-     * Set the contract number.
+     * Sets the contract number for this pool
      *
      * @param contractNumber
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setContractNumber(String contractNumber) {
+    public Pool setContractNumber(String contractNumber) {
         this.contractNumber = contractNumber;
+        return this;
     }
 
     public String getAccountNumber() {
         return accountNumber;
     }
 
-    public void setAccountNumber(String accountNumber) {
+    public Pool setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
+        return this;
     }
 
     public String getOrderNumber() {
         return orderNumber;
     }
 
-    public void setOrderNumber(String orderNumber) {
+    public Pool setOrderNumber(String orderNumber) {
         this.orderNumber = orderNumber;
+        return this;
     }
 
     /**
@@ -626,7 +558,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * @return
      *  the value set for the given attribute, or null if the attribute is not set
      */
-    @JsonIgnore
     public String getAttributeValue(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
@@ -647,51 +578,12 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * @return
      *  true if the attribute is defined for this pool; false otherwise
      */
-    @JsonIgnore
     public boolean hasAttribute(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
         }
 
         return this.attributes.containsKey(key);
-    }
-
-    /**
-     * Checks if the given attribute has been defined on this pool's product. If this pool does not
-     * have a product, any present imported product attributes will be checked instead. If the pool
-     * has neither a product nor any imported product attributes, this method returns false.
-     * <p></p>
-     * The imported product attributes is a legacy feature from when product attributes were copied
-     * from products to any pools using it. The product attributes would then be present on the
-     * pool's JSON, leading to two places for such attributes to exist. As this secondary attribute
-     * store will eventually be dropped, clients/callers should refrain from making use of the
-     * imported product attributes where possible.
-     *
-     * @param key
-     *  The key (name) of the attribute to lookup
-     *
-     * @throws IllegalArgumentException
-     *  if key is null
-     *
-     * @return
-     *  true if the attribute is defined for this pool's product; false otherwise
-     */
-    @JsonIgnore
-    public boolean hasProductAttribute(String key) {
-        if (key == null) {
-            throw new IllegalArgumentException("key is null");
-        }
-
-        Product product = this.getProduct();
-        if (product != null) {
-            return product.hasAttribute(key);
-        }
-
-        if (this.importedProductAttributes != null) {
-            return this.importedProductAttributes.containsKey(key);
-        }
-
-        return false;
     }
 
     /**
@@ -870,7 +762,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * @param dateSource date to compare to.
      * @return true if the pool is considered expired based on the given date.
      */
-    @JsonIgnore
     public boolean isExpired(DateSource dateSource) {
         return getEndDate().before(dateSource.currentDate());
     }
@@ -894,7 +785,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     /**
      * @return True if entitlement pool is unlimited.
      */
-    @JsonIgnore
     public boolean isUnlimited() {
         return this.getQuantity() < 0;
     }
@@ -908,15 +798,18 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /**
      * @param sourceEntitlement source entitlement
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setSourceEntitlement(Entitlement sourceEntitlement) {
+    public Pool setSourceEntitlement(Entitlement sourceEntitlement) {
         this.sourceEntitlement = sourceEntitlement;
+        return this;
     }
 
     /**
      * @return subscription id associated with this pool.
      */
-    @JsonProperty("subscriptionId")
     public String getSubscriptionId() {
         if (this.getSourceSubscription() != null) {
             return this.getSourceSubscription().getSubscriptionId();
@@ -925,18 +818,19 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return null;
     }
 
-    @JsonIgnore
     public SourceStack getSourceStack() {
         return sourceStack;
     }
 
-    public void setSourceStack(SourceStack sourceStack) {
+    public Pool setSourceStack(SourceStack sourceStack) {
         if (sourceStack != null) {
             sourceStack.setDerivedPool(this);
             // Setting source Stack should invalidate source subscription
             this.setSourceSubscription(null);
         }
         this.sourceStack = sourceStack;
+
+        return this;
     }
 
     /**
@@ -948,146 +842,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /**
      * @param activeSubscription TODO
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setActiveSubscription(Boolean activeSubscription) {
+    public Pool setActiveSubscription(Boolean activeSubscription) {
         this.activeSubscription = activeSubscription;
-    }
-
-    public String toString() {
-        return String.format("Pool [id=%s, type=%s, product=%s, productName=%s, quantity=%s]",
-            this.getId(), this.getType(), this.getProductId(), this.getProductName(), this.getQuantity());
-    }
-
-    @JsonIgnore
-    public Set<Product> getProvidedProducts() {
-        return this.providedProducts;
-    }
-
-    public void addProvidedProduct(Product provided) {
-        if (provided != null) {
-            this.providedProducts.add(provided);
-            this.providedProductDtos = null;
-        }
-    }
-
-    public void setProvidedProducts(Collection<Product> providedProducts) {
-        this.providedProductDtos = null;
-
-        if (providedProducts != null) {
-            this.providedProducts = new HashSet<>(providedProducts);
-        }
-        else {
-            this.providedProducts = new HashSet<>();
-        }
-    }
-
-    /*
-     * Always exported as a DTO for API/import backward compatibility.
-     */
-    @JsonProperty("providedProducts")
-    public Set<ProvidedProduct> getProvidedProductDtos() {
-        return providedProductDtos;
-    }
-
-    /*
-     * Used temporarily while importing a manifest.
-     */
-    public void setProvidedProductDtos(Set<ProvidedProduct> dtos) {
-        providedProductDtos = dtos;
-    }
-
-    @JsonIgnore
-    public Set<Product> getDerivedProvidedProducts() {
-        return derivedProvidedProducts;
-    }
-
-    public void addDerivedProvidedProduct(Product provided) {
-        if (provided != null) {
-            this.derivedProvidedProducts.add(provided);
-            this.derivedProvidedProductDtos = null;
-        }
-    }
-
-    public void setDerivedProvidedProducts(Collection<Product> derivedProvidedProducts) {
-        this.derivedProvidedProductDtos = null;
-
-        if (derivedProvidedProducts != null) {
-            this.derivedProvidedProducts = new HashSet<>(derivedProvidedProducts);
-        }
-        else {
-            this.derivedProvidedProducts = new HashSet<>();
-        }
-    }
-
-    /*
-     * Always exported as a DTO for API/import backward compatibility.
-     */
-    @JsonProperty("derivedProvidedProducts")
-    public Set<ProvidedProduct> getDerivedProvidedProductDtos() {
-        return this.derivedProvidedProductDtos;
-    }
-
-    /*
-     * Used temporarily while importing a manifest.
-     */
-    public void setDerivedProvidedProductDtos(Set<ProvidedProduct> dtos) {
-        derivedProvidedProductDtos = dtos;
-    }
-
-    /**
-     * This is a helper method to fill in transient fields in this class.
-     * The transient fields are providedProductDtos, derivedProvidedProductDtos
-     *
-     * The reason we need to fill transient properties is, that various parts of code
-     * that rely on serialization expect Pool object.
-     *
-     * From style point of view, this method could be moved to other class as well
-     * (the ProductManager).
-     *
-     *
-     */
-    public void populateAllTransientProvidedProducts() {
-        // If we've already populated this field, assume it's correctly populated
-        if (this.providedProductDtos == null) {
-            Collection<Product> providedProducts = this.product.getProvidedProducts();
-
-            this.providedProductDtos = new HashSet<>();
-
-            for (Product product : providedProducts) {
-                this.providedProductDtos.add(new ProvidedProduct(product));
-            }
-        }
-
-        // If we've already populated this field, assume it's correctly populated
-        if (this.derivedProvidedProductDtos == null) {
-            Collection<Product> products = this.derivedProduct != null ?
-                this.derivedProduct.getProvidedProducts() : Collections.emptySet();
-
-            this.derivedProvidedProductDtos = new HashSet<>();
-
-            for (Product product : products) {
-                this.derivedProvidedProductDtos.add(new ProvidedProduct(product));
-            }
-        }
-    }
-
-    /**
-     * Return the "top level" product this pool is for.
-     * Note that pools can also provide access to other products.
-     * See getProvidedProductIds().
-     * @return Top level product ID.
-     */
-    @HateoasInclude
-    public String getProductId() {
-        return this.product != null ? this.product.getId() : this.importedProductId;
-    }
-
-    public void setProductId(String productId) {
-        this.importedProductId = productId;
-    }
-
-    public void setDerivedProductId(String productId) {
-        this.importedDerivedProductId = productId;
+        return this;
     }
 
     /**
@@ -1096,7 +857,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * @return
      *  the top-level product for this pool.
      */
-    @JsonIgnore
     public Product getProduct() {
         return this.product;
     }
@@ -1106,18 +866,127 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      *
      * @param product
      *  The Product to assign as the top-level product for this pool.
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    @JsonProperty
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public void setProduct(Product product) {
+    public Pool setProduct(Product product) {
         this.product = product;
+        return this;
+    }
 
-        if (product != null) {
-            this.importedProductId = null;
-            this.importedProductAttributes = null;
-            this.importedDerivedProductId = null;
-            this.importedDerivedProductAttributes = null;
+    /**
+     * Fetches the ID of the product for this pool. If this pool does not yet have a product, or the
+     * product does not yet have an ID, this method returns null.
+     *
+     * @return
+     *  the ID of the product for this pool, or null if the pool does not have a product with a
+     *  defined ID
+     */
+    public String getProductId() {
+        Product product = this.getProduct();
+        return product != null ? product.getId() : null;
+    }
+
+    /**
+     * Fetches the marketing name of the product for this pool. If the pool does not yet have a
+     * product, or the pool does not define a marketing name, this method returns null.
+     *
+     * @return
+     *  the marketing name of the product for this pool, or null if the pool does not have a
+     *  product with a defined marketing name
+     */
+    public String getProductName() {
+        Product product = this.getProduct();
+        return product != null ? product.getName() : null;
+    }
+
+    /**
+     * Retrieves the product attributes for this pool. The product attributes will be identical to
+     * those retrieved from getProduct().getAttributes(), except the set returned by this method is
+     * not modifiable.
+     *
+     * @return
+     *  The attributes associated with the marketing product (SKU) for this pool
+     */
+    public Map<String, String> getProductAttributes() {
+        Product product = this.getProduct();
+        return product != null ? product.getAttributes() : Collections.emptyMap();
+    }
+
+    /**
+     * Checks if the given attribute has been defined on this pool's product. If this pool does not
+     * have a product, If the pool does not have a product, or the product does not have the
+     * specified attribute, this method returns false.
+     *
+     * @param key
+     *  The key (name) of the attribute to lookup
+     *
+     * @throws IllegalArgumentException
+     *  if key is null
+     *
+     * @return
+     *  true if the attribute is defined for this pool's product; false otherwise
+     */
+    public boolean hasProductAttribute(String key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
         }
+
+        return this.getProductAttributes().containsKey(key);
+    }
+
+    /**
+     * Retrieves the derived product of this pool, if one is defined on the product for this pool.
+     * If no derived product is defined on this pool's product, this method returns null.
+     *
+     * @return
+     *  the derived product for this pool, or null if a derived product is not defined on the product
+     */
+    public Product getDerivedProduct() {
+        Product product = this.getProduct();
+        return product != null ? product.getDerivedProduct() : null;
+    }
+
+    /**
+     * Retreives the ID of the derived product of the product of this pool. If any of the objects
+     * along the way are null, or the derived product does not yet have an ID, this method returns
+     * null.
+     *
+     * @return
+     *  the ID of the derived product for this pool, or null if the derived product is not set, or
+     *  does not yet have an ID
+     */
+    public String getDerivedProductId() {
+        Product derived = this.getDerivedProduct();
+        return derived != null ? derived.getId() : null;
+    }
+
+    /**
+     * Retreives the name of the derived product of the product of this pool. If any of the objects
+     * along the way are null, or the derived product does not yet have a name, this method returns
+     * null.
+     *
+     * @return
+     *  the name of the derived product for this pool, or null if the derived product is not set, or
+     *  does not yet have an name
+     */
+    public String getDerivedProductName() {
+        Product derived = this.getDerivedProduct();
+        return derived != null ? derived.getName() : null;
+    }
+
+    /**
+     * Retrieves the derived product attributes for this pool. The derived product attributes will
+     * be identical to those retrieved from getDerivedProduct().getAttributes(), except the map
+     * returned by this method is not modifiable.
+     *
+     * @return
+     *  The attributes associated with the derived product for this pool
+     */
+    public Map<String, String> getDerivedProductAttributes() {
+        Product derived = this.getDerivedProduct();
+        return derived != null ? derived.getAttributes() : Collections.emptyMap();
     }
 
     /**
@@ -1125,7 +994,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      *
      * @return The entitlements.
      */
-    @JsonIgnore
     public Set<Entitlement> getEntitlements() {
         return this.entitlements;
     }
@@ -1134,17 +1002,22 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * Sets the entitlements for this instance.
      *
      * @param entitlements The entitlements.
+     *
+     * @return
+     *  a reference to this pool instance
      */
-    public void setEntitlements(Set<Entitlement> entitlements) {
+    public Pool setEntitlements(Set<Entitlement> entitlements) {
         this.entitlements = entitlements;
+        return this;
     }
 
     public String getRestrictedToUsername() {
         return restrictedToUsername;
     }
 
-    public void setRestrictedToUsername(String restrictedToUsername) {
+    public Pool setRestrictedToUsername(String restrictedToUsername) {
         this.restrictedToUsername = restrictedToUsername;
+        return this;
     }
 
     /**
@@ -1152,7 +1025,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      *
      * @return true if consumed>quantity else false.
      */
-    @JsonIgnore
     public boolean isOverflowing() {
         // Unlimited pools can't be overflowing:
         if (this.quantity == -1) {
@@ -1164,7 +1036,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     /**
      * @return the subscriptionSubKey
      */
-    @JsonProperty("subscriptionSubKey")
     public String getSubscriptionSubKey() {
         if (this.getSourceSubscription() != null) {
             return this.getSourceSubscription().getSubscriptionSubKey();
@@ -1177,117 +1048,14 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return calculatedAttributes;
     }
 
-    public void setCalculatedAttributes(Map<String, String> calculatedAttributes) {
+    public Pool setCalculatedAttributes(Map<String, String> calculatedAttributes) {
         this.calculatedAttributes = calculatedAttributes;
-    }
-
-    @JsonIgnore
-    public Product getDerivedProduct() {
-        return this.derivedProduct;
-    }
-
-    public String getDerivedProductId() {
-        return this.derivedProduct != null ? this.derivedProduct.getId() : this.importedDerivedProductId;
-    }
-
-    /**
-     * Retrieves the product attributes for this pool. The product attributes will be identical to
-     * those retrieved from getProduct().getAttributes(), except the set returned by this method is
-     * not modifiable.
-     *
-     * @return
-     *  The attributes associated with the marketing product (SKU) for this pool
-     */
-    public Map<String, String> getProductAttributes() {
-        if (this.product != null) {
-            return this.product.getAttributes();
-        }
-
-        if (this.importedProductAttributes != null) {
-            return Collections.unmodifiableMap(this.importedProductAttributes);
-        }
-
-        return Collections.emptyMap();
-    }
-
-    /**
-     * Dummy method used to allow us to ignore the productAttributes field during JSON
-     * deserialization. This method does nothing.
-     *
-     * @param attributes
-     *  ignored
-     *
-     * @deprecated
-     *  This method should be removed when we upgrade to Jackson 2.6, as it provides functionality
-     *  for doing this type of filtering without requiring dummy methods.
-     */
-    @Deprecated
-    public void setProductAttributes(Map<String, String> attributes) {
-        if (this.product == null && this.derivedProduct == null) {
-            this.importedProductAttributes = new HashMap<>(attributes);
-        }
-    }
-
-    /**
-     * Retrieves the derived product attributes for this pool. The derived product attributes will
-     * be identical to those retrieved from getDerivedProduct().getAttributes(), except the set
-     * returned by this method is not modifiable.
-     *
-     * @return
-     *  The attributes associated with the derived product for this pool
-     */
-    public Map<String, String> getDerivedProductAttributes() {
-        if (this.derivedProduct != null) {
-            return this.derivedProduct.getAttributes();
-        }
-
-        if (this.importedDerivedProductAttributes != null) {
-            return Collections.unmodifiableMap(this.importedDerivedProductAttributes);
-        }
-
-        return Collections.emptyMap();
-    }
-
-    /**
-     * Dummy method used to allow us to ignore the derivedProductAttributes field during JSON
-     * deserialization. This method does nothing.
-     *
-     * @param attributes
-     *  ignored
-     *
-     * @deprecated
-     *  This method should be removed when we upgrade to Jackson 2.6, as it provides functionality
-     *  for doing this type of filtering without requiring dummy methods.
-     */
-    @Deprecated
-    public void setDerivedProductAttributes(Map<String, String> attributes) {
-        if (this.product == null) {
-            this.importedDerivedProductAttributes = new HashMap<>(attributes);
-        }
-    }
-
-    @JsonIgnore
-    public String getProductAttributeValue(String key) {
-        return this.getProductAttributes().get(key);
-    }
-
-    @JsonProperty
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    public void setDerivedProduct(Product derived) {
-        this.derivedProduct = derived;
-
-        if (derived != null) {
-            this.importedProductId = null;
-            this.importedProductAttributes = null;
-            this.importedDerivedProductId = null;
-            this.importedDerivedProductAttributes = null;
-        }
+        return this;
     }
 
     /*
      * Keeping getSourceStackId to avoid breaking the api
      */
-    @JsonProperty("sourceStackId")
     public String getSourceStackId() {
         if (this.getSourceStack() != null) {
             return this.getSourceStack().getSourceStackId();
@@ -1324,7 +1092,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return PoolType.NORMAL;
     }
 
-    @JsonIgnore
     public PoolComplianceType getComplianceType() {
         Product product = this.getProduct();
 
@@ -1360,7 +1127,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
             this.getProduct().getAttributeValue(Product.Attributes.STACKING_ID) : null);
     }
 
-    @JsonIgnore
     public boolean isUnmappedGuestPool() {
         return "true".equalsIgnoreCase(this.getAttributeValue(Attributes.UNMAPPED_GUESTS_ONLY));
     }
@@ -1369,21 +1135,20 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return "true".equalsIgnoreCase(this.getAttributeValue(Attributes.DEVELOPMENT_POOL));
     }
 
-    @JsonIgnore
     public SourceSubscription getSourceSubscription() {
         return sourceSubscription;
     }
 
-    @JsonIgnore
-    public void setSourceSubscription(SourceSubscription sourceSubscription) {
+    public Pool setSourceSubscription(SourceSubscription sourceSubscription) {
         if (sourceSubscription != null) {
             sourceSubscription.setPool(this);
         }
 
         this.sourceSubscription = sourceSubscription;
+        return this;
     }
 
-    public void setSubscriptionId(String subid) {
+    public Pool setSubscriptionId(String subid) {
         if (sourceSubscription == null && !StringUtils.isBlank(subid)) {
             setSourceSubscription(new SourceSubscription());
         }
@@ -1395,9 +1160,11 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
                 sourceSubscription = null;
             }
         }
+
+        return this;
     }
 
-    public void setSubscriptionSubKey(String subkey) {
+    public Pool setSubscriptionSubKey(String subkey) {
         if (sourceSubscription == null && !StringUtils.isBlank(subkey)) {
             setSourceSubscription(new SourceSubscription());
         }
@@ -1409,6 +1176,8 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
                 sourceSubscription = null;
             }
         }
+
+        return this;
     }
 
     /**
@@ -1416,7 +1185,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * @param quantityToAdjust the quantity to add
      * @return the updated quantity
      */
-    @JsonIgnore
     public long adjustQuantity(long quantityToAdjust) {
         long newCount = getQuantity() + quantityToAdjust;
         if (newCount < 0) {
@@ -1425,7 +1193,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return newCount;
     }
 
-    @JsonIgnore
     public static Long parseQuantity(String quantity) {
         Long q;
         if (quantity.equalsIgnoreCase("unlimited")) {
@@ -1451,18 +1218,17 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     @Override
-    @JsonIgnore
     public String getName() {
         return this.getProductName();
     }
 
-    @JsonIgnore
     public boolean isMarkedForDelete() {
         return this.markedForDelete;
     }
 
-    public void setMarkedForDelete(boolean markedForDelete) {
+    public Pool setMarkedForDelete(boolean markedForDelete) {
         this.markedForDelete = markedForDelete;
+        return this;
     }
 
     @Override
@@ -1481,53 +1247,66 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return upstreamPoolId;
     }
 
-    public void setUpstreamPoolId(String upstreamPoolId) {
+    public Pool setUpstreamPoolId(String upstreamPoolId) {
         this.upstreamPoolId = upstreamPoolId;
+        return this;
     }
 
     public String getUpstreamEntitlementId() {
         return upstreamEntitlementId;
     }
 
-    public void setUpstreamEntitlementId(String upstreamEntitlementId) {
+    public Pool setUpstreamEntitlementId(String upstreamEntitlementId) {
         this.upstreamEntitlementId = upstreamEntitlementId;
+        return this;
     }
 
     public String getUpstreamConsumerId() {
         return upstreamConsumerId;
     }
 
-    public void setUpstreamConsumerId(String upstreamConsumerId) {
+    public Pool setUpstreamConsumerId(String upstreamConsumerId) {
         this.upstreamConsumerId = upstreamConsumerId;
+        return this;
     }
 
     public Cdn getCdn() {
         return cdn;
     }
 
-    public void setCdn(Cdn cdn) {
+    public Pool setCdn(Cdn cdn) {
         this.cdn = cdn;
+        return this;
     }
 
-    @JsonIgnore
     public SubscriptionsCertificate getCertificate() {
         return this.cert;
     }
 
-    public void setCertificate(SubscriptionsCertificate cert) {
+    public Pool setCertificate(SubscriptionsCertificate cert) {
         this.cert = cert;
+        return this;
     }
 
     public boolean isLocked() {
         return this.locked != null && locked;
     }
 
-    public void setLocked(boolean locked) {
+    public Pool setLocked(boolean locked) {
         this.locked = locked;
+        return this;
     }
 
     public boolean isDerived() {
         return "true".equals(this.getAttributeValue(Pool.Attributes.DERIVED_POOL));
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("Pool [id: %s, type: %s, product: %s, productName: %s, quantity: %s]",
+            this.getId(), this.getType(), this.getProductId(), this.getProductName(), this.getQuantity());
+    }
 }

@@ -39,6 +39,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+
+
 /**
  * Entitlements are documents either signed XML or other certificate which
  * control what a particular Consumer can use. There are a number of types

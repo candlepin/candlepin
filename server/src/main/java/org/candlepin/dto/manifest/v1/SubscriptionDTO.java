@@ -56,9 +56,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
     private OwnerDTO owner;
 
     private ProductDTO product;
-    private List<ProductDTO> providedProducts;
-    private ProductDTO derivedProduct;
-    private List<ProductDTO> derivedProvidedProducts;
 
     private Long quantity;
 
@@ -194,46 +191,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
         return this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Collection<ProductDTO> getProvidedProducts() {
-        return this.providedProducts != null ? new ListView<>(this.providedProducts) : null;
-    }
-
-    /**
-     * Sets or clears the products provided by this subscription.
-     *
-     * @param products
-     *  A collection of products to set as the provided products of this subscription, or null to
-     *  indicate no change in provided products
-     *
-     * @return
-     *  a reference to this SubscriptionDTO
-     */
-    public SubscriptionDTO setProvidedProducts(Collection<? extends ProductDTO> products) {
-        if (products != null) {
-            if (this.providedProducts == null) {
-                this.providedProducts = new ArrayList(products.size());
-            }
-
-            this.providedProducts.clear();
-
-            for (ProductDTO product : products) {
-                if (product == null || product.getId() == null || product.getId().isEmpty()) {
-                    throw new IllegalArgumentException("products contains a null or incomplete product");
-                }
-
-                this.providedProducts.add(product);
-            }
-        }
-        else {
-            this.providedProducts = null;
-        }
-
-        return this;
-    }
-
     // TODO: Add other CRUD operations here as need dictates
 
     /**
@@ -241,61 +198,8 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
      */
     @Override
     public ProductDTO getDerivedProduct() {
-        return this.derivedProduct;
-    }
-
-    /**
-     * Sets or clears the product provided by subscriptions derived from this subscription.
-     *
-     * @param product
-     *  The new derived product of this subscription, or null to clear the derived product
-     *
-     * @return
-     *  a reference to this SubscriptionDTO
-     */
-    public SubscriptionDTO setDerivedProduct(ProductDTO product) {
-        this.derivedProduct = product;
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Collection<ProductDTO> getDerivedProvidedProducts() {
-        return this.derivedProvidedProducts != null ? new ListView<>(this.derivedProvidedProducts) : null;
-    }
-
-    /**
-     * Sets or clears the products provided by subscriptions derived from this subscription.
-     *
-     * @param products
-     *  A collection of products to set as the derived provided products of this subscription, or
-     *  null to indicate no change in derived provided products
-     *
-     * @return
-     *  a reference to this SubscriptionDTO
-     */
-    public SubscriptionDTO setDerivedProvidedProducts(Collection<? extends ProductDTO> products) {
-        if (products != null) {
-            if (this.derivedProvidedProducts == null) {
-                this.derivedProvidedProducts = new ArrayList(Math.max(10, products.size()));
-            }
-
-            this.derivedProvidedProducts.clear();
-
-            for (ProductDTO product : products) {
-                if (product == null || product.getId() == null || product.getId().isEmpty()) {
-                    throw new IllegalArgumentException("products contains a null or incomplete product");
-                }
-
-                this.derivedProvidedProducts.add(product);
-            }
-        }
-        else {
-            this.derivedProvidedProducts = null;
-        }
-
-        return this;
+        ProductDTO product = this.getProduct();
+        return product != null ? product.getDerivedProduct() : null;
     }
 
     // TODO: Add other CRUD operations here as need dictates
@@ -642,11 +546,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
             String thisProductId = this.getProduct() != null ? this.getProduct().getId() : null;
             String thatProductId = that.getProduct() != null ? that.getProduct().getId() : null;
 
-            String thisDerivedProductId =
-                this.getDerivedProduct() != null ? this.getDerivedProduct().getId() : null;
-            String thatDerivedProductId =
-                that.getDerivedProduct() != null ? that.getDerivedProduct().getId() : null;
-
             String thisCdnId = this.getCdn() != null ? this.getCdn().getId() : null;
             String thatCdnId = that.getCdn() != null ? that.getCdn().getId() : null;
 
@@ -659,7 +558,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
                 .append(this.getId(), that.getId())
                 .append(thisOwnerId, thatOwnerId)
                 .append(thisProductId, thatProductId)
-                .append(thisDerivedProductId, thatDerivedProductId)
                 .append(this.getQuantity(), that.getQuantity())
                 .append(this.getStartDate(), that.getStartDate())
                 .append(this.getEndDate(), that.getEndDate())
@@ -674,16 +572,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
                 .append(thisCertificateId, thatCertificateId);
 
             boolean equals = builder.isEquals();
-
-            equals = equals &&
-                Util.collectionsAreEqual(this.getProvidedProducts(), that.getProvidedProducts(),
-                    (lhs, rhs) -> (lhs == rhs || (lhs != null && rhs != null &&
-                        lhs.getId() != null && lhs.getId().equals(rhs.getId()))) ? 0 : 1);
-
-            equals = equals &&
-                Util.collectionsAreEqual(this.getDerivedProvidedProducts(), that.getDerivedProvidedProducts(),
-                    (lhs, rhs) -> (lhs == rhs || (lhs != null && rhs != null &&
-                        lhs.getId() != null && lhs.getId().equals(rhs.getId()))) ? 0 : 1);
 
             equals = equals &&
                 Util.collectionsAreEqual(this.getBranding(), that.getBranding(),
@@ -705,8 +593,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
         // concerned with the reference to such an object.
         String thisOwnerId = this.getOwner() != null ? this.getOwner().getId() : null;
         String thisProductId = this.getProduct() != null ? this.getProduct().getId() : null;
-        String thisDerivedProductId =
-            this.getDerivedProduct() != null ? this.getDerivedProduct().getId() : null;
 
         String thisCdnId = this.getCdn() != null ? this.getCdn().getId() : null;
         String thisCertificateId = this.getCertificate() != null ? this.getCertificate().getId() : null;
@@ -714,22 +600,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
         int ppAccumulator = 0;
         int dppAccumulator = 0;
         int bAccumulator = 0;
-
-        Collection<ProductDTO> products = this.getProvidedProducts();
-        if (products != null) {
-            for (ProductDTO product : products) {
-                ppAccumulator = ppAccumulator * 17 +
-                    (product != null && product.getId() != null ? product.getId().hashCode() : 0);
-            }
-        }
-
-        products = this.getDerivedProvidedProducts();
-        if (products != null) {
-            for (ProductDTO product : products) {
-                dppAccumulator = dppAccumulator * 17 +
-                    (product != null && product.getId() != null ? product.getId().hashCode() : 0);
-            }
-        }
 
         Collection<BrandingDTO> branding = this.getBranding();
         if (branding != null) {
@@ -743,7 +613,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
             .append(this.getId())
             .append(thisOwnerId)
             .append(thisProductId)
-            .append(thisDerivedProductId)
             .append(this.getQuantity())
             .append(this.getStartDate())
             .append(this.getEndDate())
@@ -776,12 +645,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
         ProductDTO product = this.getProduct();
         copy.setProduct(product != null ? product.clone() : null);
 
-        ProductDTO derivedProduct = this.getDerivedProduct();
-        copy.setDerivedProduct(derivedProduct != null ? derivedProduct.clone() : null);
-
-        copy.setProvidedProducts(this.getProvidedProducts());
-        copy.setDerivedProvidedProducts(this.getDerivedProvidedProducts());
-
         Date endDate = this.getEndDate();
         copy.setEndDate(endDate != null ? (Date) endDate.clone() : null);
 
@@ -811,11 +674,7 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
 
         this.setId(source.getId());
         this.setOwner(source.getOwner());
-
         this.setProduct(source.getProduct());
-        this.setProvidedProducts(source.getProvidedProducts());
-        this.setDerivedProduct(source.getDerivedProduct());
-        this.setDerivedProvidedProducts(source.getDerivedProvidedProducts());
 
         this.setQuantity(source.getQuantity());
 

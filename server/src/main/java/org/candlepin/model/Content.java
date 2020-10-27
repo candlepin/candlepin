@@ -273,9 +273,13 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      *
      * @param uuid
      *  The object ID to assign to this content.
+     *
+     * @return
+     *  a reference to this content instance
      */
-    public void setUuid(String uuid) {
+    public Content setUuid(String uuid) {
         this.uuid = uuid;
+        return this;
     }
 
     /**
@@ -295,10 +299,14 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      * be confused with the object ID.
      *
      * @param id
-     *  The new content ID for this content.
+     *  The new content ID for this content
+     *
+     * @return
+     *  a reference to this content instance
      */
-    public void setId(String id) {
+    public Content setId(String id) {
         this.id = id;
+        return this;
     }
 
     @Override
@@ -306,8 +314,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return type;
     }
 
-    public void setType(String type) {
+    public Content setType(String type) {
         this.type = type;
+        return this;
     }
 
     @Override
@@ -315,8 +324,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return label;
     }
 
-    public void setLabel(String label) {
+    public Content setLabel(String label) {
         this.label = label;
+        return this;
     }
 
     @Override
@@ -324,8 +334,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return name;
     }
 
-    public void setName(String name) {
+    public Content setName(String name) {
         this.name = name;
+        return this;
     }
 
     @Override
@@ -333,8 +344,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return vendor;
     }
 
-    public void setVendor(String vendor) {
+    public Content setVendor(String vendor) {
         this.vendor = vendor;
+        return this;
     }
 
     @Override
@@ -342,13 +354,14 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return this.contentUrl == null || this.contentUrl.isEmpty() ? null : this.contentUrl;
     }
 
-    public void setContentUrl(String contentUrl) {
+    public Content setContentUrl(String contentUrl) {
         this.contentUrl = contentUrl;
+        return this;
     }
 
     /**
-     * @return Comma separated list of tags this content set requires to be
-     *         enabled.
+     * @return
+     *  a comma-separated list of tags this content set requires to be enabled
      */
     @Override
     public String getRequiredTags() {
@@ -356,11 +369,15 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     /**
-     * @param requiredTags Comma separated list of tags this content set
-     *        requires.
+     * @param requiredTags
+     *  a comma-separated list of tags this content set requires
+     *
+     * @return
+     *  a reference to this content instance
      */
-    public void setRequiredTags(String requiredTags) {
+    public Content setRequiredTags(String requiredTags) {
         this.requiredTags = requiredTags;
+        return this;
     }
 
     /**
@@ -373,9 +390,13 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     /**
      * @param releaseVer the releaseVer to set
+     *
+     * @return
+     *  a reference to this content instance
      */
-    public void setReleaseVersion(String releaseVer) {
+    public Content setReleaseVersion(String releaseVer) {
         this.releaseVer = releaseVer;
+        return this;
     }
 
     @Override
@@ -383,8 +404,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return this.gpgUrl == null || this.gpgUrl.isEmpty() ? null : this.gpgUrl;
     }
 
-    public void setGpgUrl(String gpgUrl) {
+    public Content setGpgUrl(String gpgUrl) {
         this.gpgUrl = gpgUrl;
+        return this;
     }
 
     @Override
@@ -392,8 +414,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return metadataExpire;
     }
 
-    public void setMetadataExpiration(Long metadataExpire) {
+    public Content setMetadataExpiration(Long metadataExpire) {
         this.metadataExpire = metadataExpire;
+        return this;
     }
 
     /**
@@ -479,8 +502,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         return this;
     }
 
-    public void setArches(String arches) {
+    public Content setArches(String arches) {
         this.arches = arches;
+        return this;
     }
 
     @Override

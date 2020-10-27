@@ -39,6 +39,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -141,15 +142,24 @@ public class EntitlementResource {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         verifyExistence(consumer, consumerUuid);
 
-        for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getPool().getProductId().equals(productId)) {
-                return this.translator.translate(e, EntitlementDTO.class);
+        for (Entitlement entitlement : consumer.getEntitlements()) {
+            Pool entitlementPool = entitlement.getPool();
+            if (entitlementPool == null) {
+                continue;
+            }
+
+            Product poolProduct = entitlementPool.getProduct();
+            if (poolProduct == null) {
+                continue;
+            }
+
+            if (productId.equals(poolProduct.getId())) {
+                return this.translator.translate(entitlement, EntitlementDTO.class);
             }
         }
 
-        throw new NotFoundException(i18n.tr(
-            "Unit \"{0}\" has no subscription for product \"{1}\".",
-                consumerUuid, productId));
+        throw new NotFoundException(i18n.tr("Unit \"{0}\" has no subscription for product \"{1}\".",
+            consumerUuid, productId));
     }
 
     @ApiOperation(notes = "Retrieves list of Entitlements", value = "listAllForConsumer")
