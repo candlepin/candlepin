@@ -30,7 +30,6 @@ import org.candlepin.model.Product;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 
 import com.google.inject.AbstractModule;
@@ -70,7 +69,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         product = this.createProduct(owner);
 
         pool = createPool(owner, product, 10L,
-            TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2029, 12, 31));
+            TestUtil.createDate(2010, 1, 1), TestUtil.createDate(2029, 12, 31));
         poolCurator.create(pool);
     }
 
@@ -94,7 +93,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitlementsHaveExpired() {
-        dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
+        dateSource.currentDate(TestUtil.createDate(2030, 1, 13));
         assertThrows(ForbiddenException.class, () -> consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, null, null, null, false, null, null)
         );

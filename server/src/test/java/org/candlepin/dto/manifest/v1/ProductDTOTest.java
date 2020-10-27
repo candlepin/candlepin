@@ -83,6 +83,10 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
             new ProductDTO().setId("pp3").setName("providedProduct3")
         );
 
+        ProductDTO derivedProduct = new ProductDTO()
+            .setId("derived_product")
+            .setName("derived_product");
+
         this.values = new HashMap<>();
         this.values.put("Id", "test_value");
         this.values.put("Uuid", "test_value");
@@ -96,6 +100,7 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
         this.values.put("ProvidedProducts", providedProd);
+        this.values.put("DerivedProduct", derivedProduct);
     }
 
     /**

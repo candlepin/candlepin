@@ -630,7 +630,7 @@ public class EntitlerTest {
         assertEquals("true", created.getAttributeValue(Pool.Attributes.DEVELOPMENT_POOL));
         assertEquals(devSystem.getUuid(), created.getAttributeValue(Pool.Attributes.REQUIRES_CONSUMER));
         assertEquals(p1.getId(), created.getProductId());
-        assertEquals(2, created.getProvidedProducts().size());
+        assertEquals(2, created.getProduct().getProvidedProducts().size());
         assertEquals("Premium", created.getProduct().getAttributeValue(Product.Attributes.SUPPORT_LEVEL));
         assertEquals(1L, created.getQuantity().longValue());
     }

@@ -79,39 +79,31 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         this.owner = this.createOwner();
 
-        product = TestUtil.createProduct();
-        providedProduct = TestUtil.createProduct();
-        productCurator.create(providedProduct);
-        Set<Product> providedProducts = new HashSet<>();
-        providedProducts.add(providedProduct);
+        this.product = TestUtil.createProduct();
+        this.providedProduct = TestUtil.createProduct();
+        this.derivedProduct = TestUtil.createProduct();
+        this.derivedProvidedProduct = TestUtil.createProduct();
 
-        product.setProvidedProducts(providedProducts);
-        productCurator.create(product);
+        this.product.addProvidedProduct(this.providedProduct);
+        this.product.setDerivedProduct(this.derivedProduct);
+        this.derivedProduct.addProvidedProduct(this.derivedProvidedProduct);
 
-        derivedProduct = TestUtil.createProduct();
-        derivedProvidedProduct = TestUtil.createProduct();
-        productCurator.create(derivedProvidedProduct);
+        this.productCurator.create(this.derivedProvidedProduct);
+        this.productCurator.create(this.derivedProduct);
+        this.productCurator.create(this.providedProduct);
+        this.productCurator.create(this.product);
 
-        Set<Product> derivedProvidedProducts = new HashSet<>();
-        derivedProvidedProducts.add(derivedProvidedProduct);
-        derivedProduct.setProvidedProducts(derivedProvidedProducts);
+        this.pool = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(16L)
+            .setStartDate(TestUtil.createDate(2006, 10, 21))
+            .setEndDate(TestUtil.createDate(2020, 1, 1))
+            .setContractNumber("1")
+            .setAccountNumber("2")
+            .setOrderNumber("3");
 
-        productCurator.create(derivedProduct);
-
-        pool = new Pool(
-            owner,
-            product,
-            new HashSet<>(),
-            16L,
-            TestUtil.createDate(2006, 10, 21),
-            TestUtil.createDate(2020, 1, 1),
-            "1",
-            "2",
-            "3"
-        );
-
-        pool.setDerivedProduct(derivedProduct);
-        poolCurator.create(pool);
+        this.poolCurator.create(pool);
     }
 
     @Test
@@ -491,18 +483,10 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void ensureProvidedProductHasSubscription() {
-        assertTrue(productCurator.productHasSubscriptions(owner, providedProduct));
-    }
-
-    @Test
-    public void ensureDerivedProductHasSubscription() {
-        assertTrue(productCurator.productHasSubscriptions(owner, derivedProduct));
-    }
-
-    @Test
-    public void ensureDerivedProvidedProductHasSubscription() {
-        assertTrue(productCurator.productHasSubscriptions(owner, derivedProvidedProduct));
+    public void ensureIndirectProductReferencesDoNotCountAsHavingSubscriptions() {
+        assertFalse(productCurator.productHasSubscriptions(owner, providedProduct));
+        assertFalse(productCurator.productHasSubscriptions(owner, derivedProduct));
+        assertFalse(productCurator.productHasSubscriptions(owner, derivedProvidedProduct));
     }
 
     @Test

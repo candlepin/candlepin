@@ -106,6 +106,7 @@ public class ProductDTOTest extends AbstractDTOTest<ProductDTO> {
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
         this.values.put("ProvidedProducts", providedProd);
+        this.values.put("DerivedProduct", TestUtil.createProductDTO("derived_product", "derived_product"));
     }
 
     /**

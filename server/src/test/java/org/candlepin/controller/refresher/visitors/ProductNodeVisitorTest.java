@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.controller.ProductManager;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.ContentNode;
 import org.candlepin.controller.refresher.nodes.EntityNode;
@@ -58,6 +59,9 @@ import java.util.Map;
 
 /**
  * Test suite for the ProductNodeVisitor class
+ *
+ * TODO: Rewrite these tests. They kinda suck, are hard to follow, and hard to update without
+ * breaking other tests in the process.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -143,7 +147,16 @@ public class ProductNodeVisitorTest {
             .setExistingEntity(existing)
             .setImportedEntity(imported);
 
-        if (imported != null) {
+        if (existing != null) {
+            if (imported != null) {
+                node.setNodeState(NodeState.UPDATED);
+                node.setMergedEntity(imported);
+            }
+            else {
+                node.setNodeState(NodeState.UNCHANGED);
+            }
+        }
+        else if (imported != null) {
             node.setNodeState(NodeState.CREATED);
             node.setMergedEntity(imported);
         }
@@ -161,7 +174,16 @@ public class ProductNodeVisitorTest {
             .setExistingEntity(existing)
             .setImportedEntity(imported);
 
-        if (imported != null) {
+        if (existing != null) {
+            if (imported != null && ProductManager.isChangedBy(existing, imported)) {
+                node.setNodeState(NodeState.UPDATED);
+                node.setMergedEntity(imported);
+            }
+            else {
+                node.setNodeState(NodeState.UNCHANGED);
+            }
+        }
+        else if (imported != null) {
             node.setNodeState(NodeState.CREATED);
             node.setMergedEntity(imported);
         }
@@ -170,7 +192,9 @@ public class ProductNodeVisitorTest {
     }
 
     private static Product buildProvidedProduct(String productId, String productName) {
-        return new Product(productId, productName);
+        return new Product()
+            .setId(productId)
+            .setName(productName);
     }
 
     public static List<Arguments> productDataProvider() {

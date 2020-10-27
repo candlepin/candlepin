@@ -20,7 +20,6 @@ import static org.mockito.Mockito.*;
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -71,13 +70,11 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 
 
@@ -125,8 +122,7 @@ public class InstalledProductStatusCalculatorTest {
         this.provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
 
-        RulesObjectMapper objectMapper =
-            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator));
+        RulesObjectMapper objectMapper = new RulesObjectMapper();
 
         this.complianceRules = new ComplianceRules(provider.get(), this.entCurator,
             new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator, this.consumerTypeCurator,
@@ -802,39 +798,26 @@ public class InstalledProductStatusCalculatorTest {
         assertEquals(range2.getEndDate(), cip.getEndDate());
     }
 
-    private static int lastPoolId = 1;
+    private static int lastPoolId = 0;
     private Entitlement mockEntitlement(Owner owner, Consumer consumer, Product product, DateRange range,
         Product... providedProducts) {
 
-        Set<Product> provided = new HashSet<>();
-        for (Product pp : providedProducts) {
-            provided.add(pp);
-        }
+        product = (Product) product.clone();
+        product.setProvidedProducts(Arrays.asList(providedProducts));
 
-        final Pool p = new Pool(
-            owner,
-            product,
-            provided,
-            new Long(1000),
-            range.getStartDate(),
-            range.getEndDate(),
-            "1000",
-            "1000",
-            "1000"
-        );
+        final Pool p = new Pool()
+            .setId(String.valueOf(++lastPoolId))
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(1000L)
+            .setStartDate(range.getStartDate())
+            .setEndDate(range.getEndDate())
+            .setContractNumber("1000")
+            .setAccountNumber("1000")
+            .setOrderNumber("1000");
 
-        p.setId("" + lastPoolId++);
         Entitlement e = new Entitlement(p, consumer, owner, 1);
-
-        when(poolCurator.provides(p, product.getId())).thenReturn(true);
-
-        for (Product pp : providedProducts) {
-            when(poolCurator.provides(p, pp.getId())).thenReturn(true);
-        }
-
-        Random gen = new Random();
-        int id = gen.nextInt(Integer.MAX_VALUE);
-        e.setId(String.valueOf(id));
+        e.setId(String.valueOf(new Random().nextInt(Integer.MAX_VALUE)));
 
         return e;
     }

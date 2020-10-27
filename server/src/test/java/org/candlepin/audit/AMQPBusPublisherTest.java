@@ -21,8 +21,13 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,10 +39,17 @@ import org.mockito.Mockito;
 import java.io.IOException;
 
 import javax.jms.JMSException;
+
+
+
 /**
  * AMQPBusPublisherTest
  */
 public class AMQPBusPublisherTest {
+    private ConsumerTypeCurator mockConsumerTypeCurator;
+    private EnvironmentCurator mockEnvironmentCurator;
+    private OwnerCurator mockOwnerCurator;
+    private ModelTranslator modelTranslator;
 
     private ObjectMapper mapper;
     private AMQPBusPublisher publisher;
@@ -45,6 +57,13 @@ public class AMQPBusPublisherTest {
 
     @Before
     public void init() {
+        this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
+        this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
+        this.mockOwnerCurator = mock(OwnerCurator.class);
+
+        this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
+            this.mockEnvironmentCurator, this.mockOwnerCurator);
+
         mapper = new ObjectMapper();
         qpid = mock(QpidConnection.class);
         publisher = new AMQPBusPublisher(mapper, qpid);
@@ -61,7 +80,7 @@ public class AMQPBusPublisherTest {
         PrincipalProvider pp = mock(PrincipalProvider.class);
         when(pp.get()).thenReturn(TestUtil.createPrincipal("admin", null, null));
 
-        EventFactory factory = new EventFactory(pp, new ObjectMapper());
+        EventFactory factory = new EventFactory(pp, new ObjectMapper(), this.modelTranslator);
         Consumer c = TestUtil.createConsumer();
         Event e = factory.consumerCreated(c);
 
@@ -77,7 +96,7 @@ public class AMQPBusPublisherTest {
         PrincipalProvider pp = mock(PrincipalProvider.class);
         when(pp.get()).thenReturn(TestUtil.createPrincipal("admin", null, null));
 
-        EventFactory factory = new EventFactory(pp, mapper);
+        EventFactory factory = new EventFactory(pp, mapper, this.modelTranslator);
         Consumer c = TestUtil.createConsumer();
         Event e = factory.consumerCreated(c);
 

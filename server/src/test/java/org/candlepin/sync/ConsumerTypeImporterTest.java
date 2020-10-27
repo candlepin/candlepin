@@ -20,11 +20,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -34,21 +35,22 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+
+
 
 /**
  * ConsumerTypeImporterTest
  */
 public class ConsumerTypeImporterTest {
-    private Configuration config;
+    private ObjectMapper mapper;
 
     @Before
     public void init() {
-        config = new MapConfiguration(new HashMap<String, String>() {
+        Map<String, String> configProps = new HashMap<>();
+        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
-            {
-                put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-            }
-        });
+        this.mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
     }
 
     @Test
@@ -56,9 +58,7 @@ public class ConsumerTypeImporterTest {
         String consumerTypeString = "{\"id\":15, \"label\":\"prosumer\"}";
 
         Reader reader = new StringReader(consumerTypeString);
-
-        ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            TestSyncUtils.getTestSyncUtils(config), reader);
+        ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(this.mapper, reader);
 
         assertEquals("prosumer", consumerType.getLabel());
     }
@@ -68,9 +68,7 @@ public class ConsumerTypeImporterTest {
         String consumerTypeString = "{\"id\":15, \"label\":\"prosumer\"}";
 
         Reader reader = new StringReader(consumerTypeString);
-
-        ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            TestSyncUtils.getTestSyncUtils(config), reader);
+        ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(this.mapper, reader);
 
         assertEquals(null, consumerType.getId());
     }

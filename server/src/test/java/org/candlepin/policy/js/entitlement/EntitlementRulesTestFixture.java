@@ -28,7 +28,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -52,7 +51,6 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.Util;
@@ -125,8 +123,7 @@ public class EntitlementRulesTestFixture {
         Rules rules = new Rules(Util.readFile(is));
 
         when(rulesCurator.getRules()).thenReturn(rules);
-        when(rulesCurator.getUpdated()).thenReturn(
-            TestDateUtil.date(2010, 1, 1));
+        when(rulesCurator.getUpdated()).thenReturn(TestUtil.createDate(2010, 1, 1));
         when(cacheProvider.get()).thenReturn(cache);
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
@@ -140,7 +137,7 @@ public class EntitlementRulesTestFixture {
             consumerCurator,
             consumerTypeCurator,
             productCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)),
+            new RulesObjectMapper(),
             ownerCurator,
             ownerProductCuratorMock,
             productManager,
