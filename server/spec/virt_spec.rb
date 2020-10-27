@@ -13,12 +13,10 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
     skip("candlepin running in standalone mode") if is_hosted?
 
     # Setup two virt host consumers:
-    @host1 = @user.register(random_string('host'), :system, nil,
-      {}, nil, nil, [], [])
+    @host1 = @user.register(random_string('host'), :system, nil, {}, nil, nil, [], [])
     @host1_client = Candlepin.new(nil, nil, @host1['idCert']['cert'], @host1['idCert']['key'])
 
-    @host2 = @user.register(random_string('host'), :system, nil,
-      {}, nil, nil, [], [])
+    @host2 = @user.register(random_string('host'), :system, nil, {}, nil, nil, [], [])
     @host2_client = Candlepin.new(nil, nil, @host2['idCert']['cert'], @host2['idCert']['key'])
 
     pools = @host1_client.list_pools :consumer => @host1['uuid']
@@ -47,15 +45,6 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
   end
 
   it 'should attach host provided pools before other available pools' do
-
-    datacenter_product_1 = create_product(nil, nil, {
-        :attributes => {
-            :virt_limit => "unlimited",
-            :stacking_id => "stackme1",
-            :sockets => "2",
-            'multi-entitlement' => "yes"
-        }
-    })
     derived_product_1 = create_product(nil, nil, {
         :attributes => {
             :cores => 2,
@@ -63,19 +52,32 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
             :sockets=>4
         }
     })
-    datacenter_product_2 = create_product(nil, nil, {
+
+    datacenter_product_1 = create_product(nil, nil, {
+        :derivedProduct => derived_product_1,
         :attributes => {
             :virt_limit => "unlimited",
-            :stacking_id => "stackme2",
+            :stacking_id => "stackme1",
             :sockets => "2",
             'multi-entitlement' => "yes"
         }
     })
+
     derived_product_2 = create_product(nil, nil, {
         :attributes => {
             :cores => 2,
             :stacking_id => "stackme2-derived",
             :sockets => 4
+        }
+    })
+
+    datacenter_product_2 = create_product(nil, nil, {
+        :derivedProduct => derived_product_2,
+        :attributes => {
+            :virt_limit => "unlimited",
+            :stacking_id => "stackme2",
+            :sockets => "2",
+            'multi-entitlement' => "yes"
         }
     })
 
@@ -85,17 +87,20 @@ describe 'Standalone Virt-Limit Subscriptions', :type => :virt do
         },
         :providedProducts => [derived_product_1.id, derived_product_2.id]
     })
+
     # We'd like there to be three subs, two that require a specific host and one that provides both required products
     # in one. These first two are similar to VDC subscriptions, hence the name datacenter.
-    @cp.create_pool(@owner['key'], datacenter_product_1.id, {:quantity => 10, :derived_product_id => derived_product_1['id']})
-    @cp.create_pool(@owner['key'], datacenter_product_2.id, {:quantity => 10, :derived_product_id => derived_product_2['id']})
-    @cp.create_pool(@owner['key'], @both_products.id, {:quantity => 1, :provided_products => [derived_product_1.id, derived_product_2.id]})
+    @cp.create_pool(@owner['key'], datacenter_product_1.id, { :quantity => 10 })
+    @cp.create_pool(@owner['key'], datacenter_product_2.id, { :quantity => 10 })
+    @cp.create_pool(@owner['key'], @both_products.id, { :quantity => 1 })
 
     @cp.refresh_pools(@owner['key'])
 
     @installed_product_list = [
         {'productId' => derived_product_1.id, 'productName' => derived_product_1.name},
-        {'productId' => derived_product_2.id, 'productName' => derived_product_2.name}]
+        {'productId' => derived_product_2.id, 'productName' => derived_product_2.name}
+    ]
+
     @guest2_client.update_consumer({:installedProducts => @installed_product_list})
     @host1_client.consume_product(product=datacenter_product_1.id)
     @host1_client.consume_product(product=datacenter_product_2.id)
