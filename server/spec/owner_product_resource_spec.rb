@@ -9,44 +9,39 @@ describe 'Owner Product Resource' do
     @owner = create_owner random_string('test_owner')
 
     if is_hosted? then
-      @prov_product = create_upstream_product(random_string('pp'))
-      @product = create_upstream_product(random_string('test_prod'), {
-        :provided_products => [@prov_product]
-      })
-
       @derived_prov_product = create_upstream_product(random_string('dpp'))
       @derived_product = create_upstream_product(random_string('dp'), {
         :provided_products => [@derived_prov_product]
       })
 
-      @pool = create_upstream_subscription(random_str('source_sub'), @owner['key'], {
-        :quantity => 10,
-        :contract_number => '222',
-        :product => @product,
+      @prov_product = create_upstream_product(random_string('pp'))
+      @product = create_upstream_product(random_string('test_prod'), {
         :provided_products => [@prov_product],
         :derived_product => @derived_product
       })
 
-      @cp.refresh_pools(@owner['key'])
-    else
-      @prov_product = create_product(random_string('pp'))
-      @product = create_product(random_string('product'), nil, {
-        :providedProducts => [@prov_product.id]
+      @pool = create_upstream_subscription(random_str('source_sub'), @owner['key'], {
+        :quantity => 10,
+        :contract_number => '222',
+        :product => @product
       })
 
+      @cp.refresh_pools(@owner['key'])
+    else
       @derived_prov_product = create_product(random_string('dpp'))
       @derived_product = create_product(random_string('dp'), nil, {
         :providedProducts => [@derived_prov_product.id]
       })
 
+      @prov_product = create_product(random_string('pp'))
+      @product = create_product(random_string('product'), nil, {
+        :derivedProduct => @derived_product,
+        :providedProducts => [@prov_product.id]
+      })
+
       @pool = @cp.create_pool(@owner['key'], @product['id'], {
-        :subscription_id => random_str('source_sub'),
-        :upstream_pool_id => random_str('upstream'),
         :quantity => 10,
-        :contract_number => '222',
-        :provided_products => [@prov_product['id']],
-        :derived_product_id => @derived_product['id'],
-        :derived_provided_products => [@derived_prov_product['id']]
+        :contract_number => '222'
       })
     end
   end

@@ -225,42 +225,51 @@ describe 'Consumer Resource Host/Guest' do
     uuid3 = random_string('system.uuid')
     guests = [{'guestId' => uuid1}, {'guestId' => uuid2}, {'guestId' => uuid3}]
 
-    provided_product = create_product(random_string('product'),
-                                      random_string('product'),
-                                      {:owner => @owner1['key']})
+    provided_product = create_product(random_string('product'), random_string('product'), {
+      :owner => @owner1['key']
+    })
 
-    vip_product = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'VIP',
-                       :virt_limit => "5",
-                       :host_limited => 'true'},
+    vip_product = create_product(random_string('product'), random_string('product'), {
+      :attributes => {
+        :support_level => 'VIP',
+        :virt_limit => "5",
+        :host_limited => 'true'
+      },
       :owner => @owner1['key'],
-      :providedProducts => [provided_product.id]})
+      :providedProducts => [provided_product.id]
+    })
 
-    std_product = create_product(random_string('product'),
-      random_string('product'),
-      {:attributes => {:support_level => 'Standard',
-                       :virt_limit => "5",
-                       :host_limited => 'true'},
+    std_product = create_product(random_string('product'), random_string('product'), {
+      :attributes => {
+        :support_level => 'Standard',
+        :virt_limit => "5",
+        :host_limited => 'true'
+      },
       :owner => @owner1['key'],
-      :providedProducts => [provided_product.id]})
+      :providedProducts => [provided_product.id]
+    })
 
-    create_pool_and_subscription(@owner1['key'], vip_product.id, 10, [provided_product.id],
-				'', '', '', nil, nil, true)
-    create_pool_and_subscription(@owner1['key'], std_product.id, 10, [provided_product.id])
+    @cp.create_pool(@owner1['key'], vip_product['id'], {
+      :quantity => 10,
+      :subscription_id => random_str('source_sub'),
+      :upstream_pool_id => random_str('upstream')
+    })
 
-    installed = [
-        {'productId' => provided_product.id, 'productName' => provided_product.name}]
+    @cp.create_pool(@owner1['key'], std_product['id'], {
+      :quantity => 10,
+      :subscription_id => random_str('source_sub'),
+      :upstream_pool_id => random_str('upstream')
+    })
+
+    installed = [{'productId' => provided_product.id, 'productName' => provided_product.name}]
 
     user_cp = user_client(@owner1, random_string('test-user'))
     host_consumer = user_cp.register(random_string('host'), :system, nil, {}, nil, nil, [], [])
-    host_consumer['serviceLevel'].should == ''
-    guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
-      {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, nil, [], [])
-    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
-      {'virt.uuid' => uuid2, 'virt.is_guest' => 'true'}, nil, nil, [], [])
-    guest_consumer3 = user_cp.register(random_string('guest'), :system, nil,
-      {'virt.uuid' => uuid3, 'virt.is_guest' => 'true'}, nil, nil, [], [])
+    expect(host_consumer['serviceLevel']).to eq('')
+
+    guest_consumer1 = user_cp.register(random_string('guest'), :system, nil, {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, nil, [], [])
+    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil, {'virt.uuid' => uuid2, 'virt.is_guest' => 'true'}, nil, nil, [], [])
+    guest_consumer3 = user_cp.register(random_string('guest'), :system, nil, {'virt.uuid' => uuid3, 'virt.is_guest' => 'true'}, nil, nil, [], [])
 
     host_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
     host_client.update_consumer({:guestIds => guests})
@@ -276,48 +285,50 @@ describe 'Consumer Resource Host/Guest' do
     guest_client1.consume_product()
 
     guest_ents = guest_client1.list_entitlements()
-    guest_ents.size.should == 1
+    expect(guest_ents.size).to eq(1)
     guest_ent = guest_ents[0]
     expect(get_attribute_value(guest_ent.pool['attributes'], 'requires_host')).to eq(host_consumer['uuid'])
 
     host_ents = host_client.list_entitlements()
-    host_ents.size.should == 1
+    expect(host_ents.size).to eq(1)
+
     host_ent = host_ents[0]
     expect(get_attribute_value(host_ent.pool['productAttributes'], 'support_level')).to eq('VIP')
     host_consumer = host_client.get_consumer()
-    host_consumer['serviceLevel'].should == ''
+    expect(host_consumer['serviceLevel']).to eq('')
 
     # second guest grabs the VIP pool because it is already available
     guest_client2.consume_product()
 
     guest_ents = guest_client2.list_entitlements()
-    guest_ents.size.should == 1
+    expect(guest_ents.size).to eq(1)
     guest_ent = guest_ents[0]
     expect(get_attribute_value(guest_ent.pool['attributes'], 'requires_host')).to eq(host_consumer['uuid'])
 
     host_ents = host_client.list_entitlements()
-    host_ents.size.should == 1
+    expect(host_ents.size).to eq(1)
+
     host_ent = host_ents[0]
     expect(get_attribute_value(host_ent.pool['productAttributes'], 'support_level')).to eq('VIP')
 
     host_consumer = host_client.get_consumer()
-    host_consumer['serviceLevel'].should == ''
+    expect(host_consumer['serviceLevel']).to eq('')
 
     # third guest, even though has a Standard SLA, will not attach to the Standard pool
     # instead will attach to the available VIP pool, since we no longer match on SLA.
     guest_client3.consume_product()
 
     guest_ents = guest_client3.list_entitlements()
-    guest_ents.size.should == 1
+    expect(guest_ents.size).to eq(1)
     guest_ent = guest_ents[0]
 
     expect(get_attribute_value(guest_ent.pool['attributes'], 'requires_host')).to eq(host_consumer['uuid'])
     expect(get_attribute_value(guest_ent.pool['productAttributes'], 'support_level')).to eq('VIP')
 
     host_consumer = host_client.get_consumer()
-    host_consumer['serviceLevel'].should == ''
+    expect(host_consumer['serviceLevel']).to eq('')
     host_ents = host_client.list_entitlements()
-    host_ents.size.should == 1
+    expect(host_ents.size).to eq(1)
     host_ent = host_ents[0]
     expect(get_attribute_value(host_ent.pool['productAttributes'], 'support_level')).to eq('VIP')
   end

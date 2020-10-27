@@ -21,44 +21,50 @@ describe 'One Sub Pool Per Stack' do
     @virt_limit_provided_product = create_product()
 
     @virt_limit_product = create_product('vlprod', 'vlprod', {
-        :attributes => {
-            'virt_limit' => 3,
-            'stacking_id' => @stack_id,
-            'multi-entitlement' => 'yes'
-        },
+      :attributes => {
+        'virt_limit' => 3,
+        'stacking_id' => @stack_id,
+        'multi-entitlement' => 'yes'
+      },
       :providedProducts => [@virt_limit_provided_product['id']]
     })
 
     @virt_limit_product2 = create_product('vlprod2', 'vlprod2', {
-        :attributes => {
-            'virt_limit' => 6,
-            'stacking_id' => @stack_id,
-            'multi-entitlement' => 'yes'
-        },
+      :attributes => {
+        'virt_limit' => 6,
+        'stacking_id' => @stack_id,
+        'multi-entitlement' => 'yes'
+      },
       :providedProducts => [@virt_limit_provided_product['id']]
     })
 
     @regular_stacked_provided_product =  create_product()
 
     @regular_stacked_product = create_product('target-id', 'target product', {
-        :attributes => {
-            'stacking_id' => @stack_id,
-            'multi-entitlement' => 'yes',
-            'sockets' => 6
-        },
+      :attributes => {
+        'stacking_id' => @stack_id,
+        'multi-entitlement' => 'yes',
+        'sockets' => 6
+      },
       :providedProducts => [@regular_stacked_provided_product['id']]
     })
 
-
-
     @non_stacked_product = create_product(nil, nil, {
-        :attributes => {
-            'sockets' => '2',
-            'cores' => '4'
-        }
+      :attributes => {
+        'sockets' => '2',
+        'cores' => '4'
+      }
     })
 
     @derived_provided_product = create_product()
+
+    @derived_product = create_product(nil, nil, {
+      :attributes => {
+        :cores => '6',
+        :sockets=>'8'
+      },
+      :providedProducts => [@derived_provided_product['id']]
+    })
 
     @stacked_datacenter_product = create_product(nil, nil, {
       :attributes => {
@@ -67,51 +73,75 @@ describe 'One Sub Pool Per Stack' do
         :sockets => "2",
         'multi-entitlement' => "yes"
       },
+
+      :derivedProduct => @derived_product,
       :providedProducts => [@derived_provided_product['id']]
     })
-
-
-    @derived_product = create_product(nil, nil, {
-      :attributes => {
-          :cores => '6',
-          :sockets=>'8'
-      },
-      :providedProducts => [@derived_provided_product['id']]
-    })
-
 
     # Create a different stackable product but with a different stack id.
     @stack_id2 = "diff-stack-id"
     @stacked_provided_product2 =  create_product()
     @stacked_product_diff_id = create_product(nil, nil, {
-        :attributes => {
-            'stacking_id' => @stack_id2,
-            'multi-entitlement' => 'yes',
-            'sockets' => 6
-        },
+      :attributes => {
+        'stacking_id' => @stack_id2,
+        'multi-entitlement' => 'yes',
+        'sockets' => 6
+      },
       :providedProducts => [@stacked_provided_product2['id']]
     })
 
-    create_pool_and_subscription(@owner['key'],
-      @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333",
-      nil, nil, true)
-    create_pool_and_subscription(@owner['key'],
-      @virt_limit_product.id, 10, [], "456", '', '', nil, @now + 380, true)
-    create_pool_and_subscription(@owner['key'],
-      @virt_limit_product2.id, 10, [], "444", '', '', nil, @now + 380, true)
-    create_pool_and_subscription(@owner['key'],
-      @regular_stacked_product.id, 4, [@regular_stacked_provided_product.id], "789",
-      "","", nil, nil, true)
-    create_pool_and_subscription(@owner['key'],
-      @non_stacked_product.id, 2, [], "234", "", "", nil, nil, true)
-    create_pool_and_subscription(@owner['key'], @stacked_datacenter_product.id,
-      10, [], '222', '', '', nil, nil, true,
-      {
-        :derived_product_id => @derived_product.id,
-        :derived_provided_products => [@derived_provided_product.id]
-      })
-    create_pool_and_subscription(@owner['key'],
-      @stacked_product_diff_id.id, 2, [], "888", '', '', @now - 3, @now + 6)
+    @cp.create_pool(@owner['key'], @virt_limit_product['id'], {
+      :quantity => 10,
+      :contract_number => '123',
+      :account_number => '312',
+      :order_number => '333'
+    })
+
+    @cp.create_pool(@owner['key'], @virt_limit_product['id'], {
+      :quantity => 10,
+      :end_date => @now + 380,
+      :contract_number => '456',
+      :account_number => '',
+      :order_number => ''
+    })
+
+    @cp.create_pool(@owner['key'], @virt_limit_product2['id'], {
+      :quantity => 10,
+      :end_date => @now + 380,
+      :contract_number => '444',
+      :account_number => '',
+      :order_number => ''
+    })
+
+    @cp.create_pool(@owner['key'], @regular_stacked_product['id'], {
+      :quantity => 4,
+      :contract_number => '789',
+      :account_number => '',
+      :order_number => ''
+    })
+
+    @cp.create_pool(@owner['key'], @non_stacked_product['id'], {
+      :quantity => 2,
+      :contract_number => '234',
+      :account_number => '',
+      :order_number => ''
+    })
+
+    @cp.create_pool(@owner['key'], @stacked_datacenter_product['id'], {
+      :quantity => 10,
+      :contract_number => '222',
+      :account_number => '',
+      :order_number => ''
+    })
+
+    @cp.create_pool(@owner['key'], @stacked_product_diff_id['id'], {
+      :quantity => 2,
+      :start_date => @now - 3,
+      :end_date => @now + 6,
+      :contract_number => '888',
+      :account_number => '',
+      :order_number => ''
+    })
 
     # Determine our pools by matching on contract number.
     pools = @user.list_pools :owner => @owner.id
@@ -145,16 +175,13 @@ describe 'One Sub Pool Per Stack' do
 
     # Setup two a guest consumer:
     @guest_uuid = random_string('system.uuid')
-    @guest = @user.register(random_string('guest'), :system, nil,
-      {'virt.uuid' => @guest_uuid, 'virt.is_guest' => 'true'}, nil, nil, [], [])
+    @guest = @user.register(random_string('guest'), :system, nil, {'virt.uuid' => @guest_uuid, 'virt.is_guest' => 'true'}, nil, nil, [], [])
     @guest_client = Candlepin.new(nil, nil, @guest['idCert']['cert'], @guest['idCert']['key'])
 
-    @host = @user.register(random_string('host'), :system, nil,
-      {}, nil, nil, [], [])
+    @host = @user.register(random_string('host'), :system, nil, {}, nil, nil, [], [])
     @host_client = Candlepin.new(nil, nil, @host['idCert']['cert'], @host['idCert']['key'])
 
-    @host2 = @user.register(random_string('host'), :system, nil,
-      {}, nil, nil, [], [])
+    @host2 = @user.register(random_string('host'), :system, nil, {}, nil, nil, [], [])
     @host2_client = Candlepin.new(nil, nil, @host2['idCert']['cert'], @host2['idCert']['key'])
 
     # Link the host and the guest:

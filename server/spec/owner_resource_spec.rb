@@ -434,37 +434,41 @@ describe 'Owner Resource' do
 
   it 'can create custom floating pools' do
     owner = create_owner random_string("owner1")
+
     provided1 = create_product(nil, nil, {:owner => owner['key']})
     provided2 = create_product(nil, nil, {:owner => owner['key']})
-    product = create_product(nil, nil, :owner => owner['key'],
-      :providedProducts => [provided1['id'], provided2['id']])
 
-    derived_provided = create_product(nil, nil, {:owner => owner['key']})
-    derived_product = create_product(nil, nil, :owner => owner['key'],
-      :providedProducts => [derived_provided['id']])
-
-
-
-    @cp.create_pool(owner['key'], product['id'],
-      {
-        :provided_products => [provided1['id'], provided2['id']],
-        :derived_product_id => derived_product['id'],
-        :derived_provided_products => [derived_provided['id']]
+    derived_provided = create_product(nil, nil, {
+      :owner => owner['key']
     })
+
+    derived_product = create_product(nil, nil, {
+      :owner => owner['key'],
+      :providedProducts => [derived_provided['id']]
+    })
+
+    product = create_product(nil, nil, {
+      :owner => owner['key'],
+      :derivedProduct => derived_product,
+      :providedProducts => [provided1['id'], provided2['id']]
+    })
+
+    @cp.create_pool(owner['key'], product['id'])
+
     pools = @cp.list_owner_pools(owner['key'])
     pools.size.should == 1
     pool = pools[0]
-    pool['providedProducts'].size.should == 2
-    pool['derivedProductId'].should == derived_product['id']
-    pool['derivedProvidedProducts'].size.should == 1
+    expect(pool['providedProducts'].size).to eq(2)
+    expect(pool['derivedProductId']).to eq(derived_product['id'])
+    expect(pool['derivedProvidedProducts'].size).to eq(1)
 
     # Refresh should have no effect:
     @cp.refresh_pools(owner['key'])
-    @cp.list_owner_pools(owner['key']).size.should == 1
+    expect(@cp.list_owner_pools(owner['key']).size).to eq(1)
 
     # Satellite will need to be able to clean it up as well:
     @cp.delete_pool(pool['id'])
-    @cp.list_owner_pools(owner['key']).size.should == 0
+    expect(@cp.list_owner_pools(owner['key']).size).to eq(0)
   end
 
   it 'should not double bind when healing an org' do
