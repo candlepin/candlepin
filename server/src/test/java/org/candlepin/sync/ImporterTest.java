@@ -29,9 +29,9 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
+import org.candlepin.dto.manifest.v1.EntitlementDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
@@ -154,9 +154,7 @@ public class ImporterTest {
         this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
             this.mockEnvironmentCurator, this.mockOwnerCurator);
 
-        ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(
-            this.mockProductCurator);
-        this.syncUtils = new SyncUtils(this.config, productCachedModule);
+        this.syncUtils = new SyncUtils(this.config);
         this.mapper = this.syncUtils.getObjectMapper();
         this.mockJsPath = new File(this.tmpFolder, "empty.js").getPath();
 
@@ -712,7 +710,7 @@ public class ImporterTest {
         ent.setPool(pool);
         ent.setQuantity(2);
         File entFile = new File(this.tmpFolder, "entitlement.json");
-        this.mapper.writeValue(entFile, ent);
+        this.mapper.writeValue(entFile, this.modelTranslator.translate(ent, EntitlementDTO.class));
         File entitlements = mock(File.class);
         when(entitlements.listFiles()).thenReturn(new File[]{entFile});
 

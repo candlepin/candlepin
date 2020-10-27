@@ -38,6 +38,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Map;
 
 
 
@@ -54,12 +55,10 @@ public class ConsumerExporterTest {
 
     @Test
     public void testConsumerExport() throws IOException {
-        ObjectMapper mapper = TestSyncUtils
-            .getTestSyncUtils(new MapConfiguration(new HashMap<String, String>() {
-                {
-                    put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-                }
-            }));
+        Map<String, String> configProps = new HashMap<>();
+        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+
+        ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
 
         translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
         ConsumerExporter exporter = new ConsumerExporter(translator);

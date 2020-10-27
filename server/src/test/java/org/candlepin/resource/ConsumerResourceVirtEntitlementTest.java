@@ -106,7 +106,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         limitSub.setProduct(this.modelTranslator.translate(productLimit, ProductDTO.class));
         limitSub.setQuantity(10L);
         limitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
-        limitSub.setEndDate(TestUtil.createFutureDate(1));
+        limitSub.setEndDate(TestUtil.createDateOffset(1, 0, 0));
         limitSub.setLastModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(limitSub);
 
@@ -124,7 +124,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         unlimitSub.setProduct(this.modelTranslator.translate(productUnlimit, ProductDTO.class));
         unlimitSub.setQuantity(10L);
         unlimitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
-        unlimitSub.setEndDate(TestUtil.createFutureDate(1));
+        unlimitSub.setEndDate(TestUtil.createDateOffset(1, 0, 0));
         unlimitSub.setLastModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(unlimitSub);
 

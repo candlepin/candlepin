@@ -37,6 +37,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -51,13 +52,10 @@ public class ProductImporterTest {
 
     @Before
     public void setUp() throws IOException {
-        mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
-            new HashMap<String, String>() {
-                {
-                    put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-                }
-            }
-        ));
+        Map<String, String> configProps = new HashMap<>();
+        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+
+        this.mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
 
         importer = new ProductImporter();
     }

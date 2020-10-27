@@ -28,6 +28,9 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
+
+
 
 /**
  * MetaExporterTest
@@ -36,13 +39,10 @@ public class MetaExporterTest {
 
     @Test
     public void testMetaExporter() throws IOException {
-        ObjectMapper mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
-            new HashMap<String, String>() {
-                {
-                    put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-                }
-            }
-        ));
+        Map<String, String> configProps = new HashMap<>();
+        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+
+        ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
 
         MetaExporter metaEx = new MetaExporter();
         StringWriter writer = new StringWriter();

@@ -27,7 +27,6 @@ import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
@@ -61,8 +60,7 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     public void setup() {
         this.ownerContentResource = new OwnerContentResource(this.contentCurator, this.contentManager,
             this.environmentContentCurator, this.i18n, this.ownerCurator, this.ownerContentCurator,
-            this.poolManager, this.productCurator, new DefaultUniqueIdGenerator(),
-            new ProductCachedSerializationModule(productCurator), this.contentAccessManager,
+            this.poolManager, this.productCurator, new DefaultUniqueIdGenerator(), this.contentAccessManager,
             this.modelTranslator);
     }
 

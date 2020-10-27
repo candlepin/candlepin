@@ -58,9 +58,7 @@ public class OwnerManagerTest {
     @Mock private ImportRecordCurator mockImportRecordCurator;
     @Mock private PermissionBlueprintCurator mockPermissionBlueprintCurator;
     @Mock private OwnerProductCurator mockOwnerProductCurator;
-    @Mock private ProductManager mockProductManager;
     @Mock private OwnerContentCurator mockOwnerContentCurator;
-    @Mock private ContentManager mockContentManager;
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private UeberCertificateCurator mockUeberCertificateCurator;
     @Mock private OwnerServiceAdapter mockOwnerServiceAdapter;
@@ -70,9 +68,9 @@ public class OwnerManagerTest {
         return new OwnerManager(
             this.mockConsumerCurator, this.mockActivationKeyCurator, this.mockEnvironmentCurator,
             this.mockExporterMetadataCurator, this.mockImportRecordCurator,
-            this.mockPermissionBlueprintCurator, this.mockOwnerProductCurator, this.mockProductManager,
-            this.mockOwnerContentCurator, this.mockContentManager, this.mockOwnerCurator,
-            this.mockUeberCertificateCurator, this.mockOwnerServiceAdapter, this.mockEventSink);
+            this.mockPermissionBlueprintCurator, this.mockOwnerProductCurator, this.mockOwnerContentCurator,
+            this.mockOwnerCurator, this.mockUeberCertificateCurator, this.mockOwnerServiceAdapter,
+            this.mockEventSink);
     }
 
     @BeforeEach

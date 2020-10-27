@@ -22,7 +22,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -45,8 +44,8 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Provider;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -91,7 +90,7 @@ public class QuantityRulesTest {
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private EnvironmentCurator environmentCurator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
 
@@ -104,8 +103,7 @@ public class QuantityRulesTest {
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCuratorMock);
-        quantityRules = new QuantityRules(provider.get(), new RulesObjectMapper(
-            new ProductCachedSerializationModule(productCurator)), translator);
+        quantityRules = new QuantityRules(provider.get(), new RulesObjectMapper(), translator);
 
         owner = TestUtil.createOwner();
         product = TestUtil.createProduct();

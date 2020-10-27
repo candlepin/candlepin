@@ -326,6 +326,34 @@ public class PoolManagerTest {
             });
     }
 
+    private void assertPoolsAreEqual(Pool pool1, Pool pool2) {
+        assertEquals(pool1.getAccountNumber(), pool2.getAccountNumber());
+        assertEquals(pool1.getContractNumber(), pool2.getContractNumber());
+        assertEquals(pool1.getOrderNumber(), pool2.getOrderNumber());
+        assertEquals(pool1.getType(), pool2.getType());
+        assertEquals(pool1.getOwner(), pool2.getOwner());
+        assertEquals(pool1.getQuantity(), pool2.getQuantity());
+        assertEquals(pool1.getActiveSubscription(), pool2.getActiveSubscription());
+        assertEquals(pool1.getSourceEntitlement(), pool2.getSourceEntitlement());
+        assertEquals(pool1.getSourceStack(), pool2.getSourceStack());
+        assertEquals(pool1.getSubscriptionId(), pool2.getSubscriptionId());
+        assertEquals(pool1.getSubscriptionSubKey(), pool2.getSubscriptionSubKey());
+        assertEquals(pool1.getStartDate(), pool2.getStartDate());
+        assertEquals(pool1.getEndDate(), pool2.getEndDate());
+        assertEquals(pool1.getProduct(), pool2.getProduct());
+        assertEquals(pool1.getAttributes(), pool2.getAttributes());
+        assertEquals(pool1.getEntitlements(), pool2.getEntitlements());
+        assertEquals(pool1.getConsumed(), pool2.getConsumed());
+        assertEquals(pool1.getExported(), pool2.getExported());
+        assertEquals(pool1.getCalculatedAttributes(), pool2.getCalculatedAttributes());
+        assertEquals(pool1.isMarkedForDelete(), pool2.isMarkedForDelete());
+        assertEquals(pool1.getUpstreamConsumerId(), pool2.getUpstreamConsumerId());
+        assertEquals(pool1.getUpstreamEntitlementId(), pool2.getUpstreamEntitlementId());
+        assertEquals(pool1.getUpstreamPoolId(), pool2.getUpstreamPoolId());
+        assertEquals(pool1.getCertificate(), pool2.getCertificate());
+        assertEquals(pool1.getCdn(), pool2.getCdn());
+    }
+
     @Test
     public void doesntMergeDeletedPools() {
         reset(mockPoolCurator);
@@ -453,7 +481,7 @@ public class PoolManagerTest {
         ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
         verify(this.manager).updatePoolsForMasterPool(eq(expectedModified), argPool.capture(),
             eq(sub.getQuantity()), eq(false), any(Map.class));
-        TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
+        assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
     }
 
     private void mockSubscriptions(Owner owner, Collection<? extends SubscriptionInfo> subscriptions) {
@@ -545,7 +573,7 @@ public class PoolManagerTest {
 
     @Test
     public void productAttributesCopiedOntoPoolWhenCreatingNewPool() {
-        // Why is this test in pool manager? It looks like a pool rules test.
+        // TODO: Why is this test in pool manager? It looks like a pool rules test.
 
         PoolRules pRules = new PoolRules(manager, mockConfig, entitlementCurator,
             mockOwnerProductCurator, mockProductCurator);
@@ -571,11 +599,14 @@ public class PoolManagerTest {
 
     @Test
     public void subProductAttributesCopiedOntoPoolWhenCreatingNewPool() {
+        // TODO: Why is this test in pool manager? It looks like a pool rules test.
+
         Product product = TestUtil.createProduct();
         Product subProduct = TestUtil.createProduct();
+        product.setDerivedProduct(subProduct);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
-        sub.setDerivedProduct(subProduct.toDTO());
+
         String testAttributeKey = "multi-entitlement";
         String expectedAttributeValue = "yes";
         subProduct.setAttribute(testAttributeKey, expectedAttributeValue);
@@ -595,12 +626,14 @@ public class PoolManagerTest {
     }
 
     @Test
-    public void subProductIdCopiedOntoPoolWhenCreatingNewPool() {
+    public void subProductIsCopiedOntoPoolWhenCreatingNewPool() {
+        // TODO: Why is this test in pool manager? It looks like a pool rules test.
+
         Product product = TestUtil.createProduct();
         Product subProduct = TestUtil.createProduct();
+        product.setDerivedProduct(subProduct);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
-        sub.setDerivedProduct(subProduct.toDTO());
 
         this.mockProducts(owner, product, subProduct);
 
@@ -615,14 +648,15 @@ public class PoolManagerTest {
 
     @Test
     public void derivedProvidedProductsCopiedOntoMasterPoolWhenCreatingNewPool() {
+        // TODO: Why is this test in pool manager? It looks like a pool rules test.
+
         Product product = TestUtil.createProduct();
         Product subProduct = TestUtil.createProduct();
         Product subProvidedProduct = TestUtil.createProduct();
-
-        subProduct.setProvidedProducts(Arrays.asList(subProvidedProduct));
+        product.setDerivedProduct(subProduct);
+        subProduct.addProvidedProduct(subProvidedProduct);
 
         Subscription sub = TestUtil.createSubscription(owner, product);
-        sub.setDerivedProduct(subProduct.toDTO());
 
         this.mockProducts(owner, product, subProduct, subProvidedProduct);
 
@@ -632,11 +666,18 @@ public class PoolManagerTest {
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
-        assertEquals(1, resultPool.getDerivedProduct().getProvidedProducts().size());
+        assertNotNull(resultPool);
+
+        Product resultantDerivedProduct = resultPool.getDerivedProduct();
+        assertNotNull(resultantDerivedProduct);
+        assertNotNull(resultantDerivedProduct.getProvidedProducts());
+        assertEquals(1, resultantDerivedProduct.getProvidedProducts().size());
     }
 
     @Test
     public void providedProductsCopiedWhenCreatingPools() {
+        // TODO: Why is this test in pool manager? It looks like a pool rules test.
+
         Product product = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
@@ -661,6 +702,8 @@ public class PoolManagerTest {
 
     @Test
     public void brandingCopiedWhenCreatingPools() {
+        // TODO: Why is this test in pool manager? It looks like a pool rules test.
+
         Product product = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
@@ -890,7 +933,7 @@ public class PoolManagerTest {
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
 
-        TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
+        assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
@@ -934,7 +977,7 @@ public class PoolManagerTest {
 
         this.manager.getRefresher(mockSubAdapter).add(owner).run();
         verify(poolRulesMock).createAndEnrichPools(argPool.capture(), any(List.class));
-        TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
+        assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
     }
 
     /**
@@ -1436,7 +1479,7 @@ public class PoolManagerTest {
         // haven't created them in the first place
         ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
         verify(poolRulesMock).createAndEnrichPools(argPool.capture(), any(List.class));
-        TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
+        assertPoolsAreEqual(TestUtil.copyFromSub(sub), argPool.getValue());
     }
 
     private void mockPoolsList(List<Pool> pools) {
@@ -1661,7 +1704,6 @@ public class PoolManagerTest {
         // TODO: Add other attributes to check here.
 
         Subscription fabricated = manager.fabricateSubscriptionFromPool(pool);
-        pool.populateAllTransientProvidedProducts();
         assertEquals(owner, fabricated.getOwner());
         assertEquals(productDTO, fabricated.getProduct());
         assertEquals(providedDTOs, fabricated.getProvidedProducts());

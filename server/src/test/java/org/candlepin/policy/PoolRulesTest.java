@@ -31,6 +31,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolRules;
@@ -95,6 +96,42 @@ public class PoolRulesTest {
         owner = principal.getOwners().get(0);
     }
 
+    /**
+     * Creates a copy of the input pool
+     *
+     * @param pool
+     *  the pool to clone
+     *
+     * @return
+     *  a deep copy of the input pool
+     */
+    private Pool clonePool(Pool pool) {
+        Pool copy = new Pool()
+            .setOwner(pool.getOwner())
+            .setQuantity(pool.getQuantity())
+            .setStartDate(pool.getStartDate())
+            .setEndDate(pool.getEndDate())
+            .setContractNumber(pool.getContractNumber())
+            .setAccountNumber(pool.getAccountNumber())
+            .setOrderNumber(pool.getOrderNumber());
+
+        Product srcProduct = pool.getProduct();
+        if (srcProduct != null) {
+            copy.setProduct((Product) srcProduct.clone());
+        }
+
+        SourceSubscription srcSourceSub = pool.getSourceSubscription();
+        if (srcSourceSub != null) {
+            SourceSubscription destSourceSub = new SourceSubscription()
+                .setSubscriptionId(srcSourceSub.getSubscriptionId())
+                .setSubscriptionSubKey(srcSourceSub.getSubscriptionSubKey());
+
+            copy.setSourceSubscription(destSourceSub);
+        }
+
+        return copy;
+    }
+
     @Test
     public void hostedVirtLimitBadValueDoesntTraceBack() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
@@ -135,7 +172,7 @@ public class PoolRulesTest {
         p.getProduct().addProvidedProduct(product2);
 
         // Setup a pool with a single (different) provided product:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.getProduct().getProvidedProducts().clear();
         p1.getProduct().addProvidedProduct(product3);
 
@@ -155,7 +192,7 @@ public class PoolRulesTest {
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct());
 
         // Setup a pool with a single (different) provided product:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.getProduct().setName("somethingelse");
 
         List<Pool> existingPools = Arrays.asList(p1);
@@ -175,7 +212,7 @@ public class PoolRulesTest {
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct());
 
         // Setup a pool with a single (different) provided product:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.setEndDate(new Date());
 
         List<Pool> existingPools = Arrays.asList(p1);
@@ -195,7 +232,7 @@ public class PoolRulesTest {
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct());
 
         // Setup a pool with a single (different) provided product:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.setQuantity(2000L);
 
         List<Pool> existingPools = Arrays.asList(p1);
@@ -214,7 +251,7 @@ public class PoolRulesTest {
     public void productBrandingChanged() {
         Pool p = TestUtil.createPool(owner, TestUtil.createProduct());
 
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
 
         // Add some branding to the pool's product and do an update:
         Branding b1 = new Branding(p.getProduct(), "8000", "Awesome OS Branded", "OS");
@@ -246,7 +283,7 @@ public class PoolRulesTest {
         p.setProduct(product);
 
         // Copy the pool with the branding to begin with:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
 
         List<Pool> existingPools = Arrays.asList(p1);
         List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
@@ -262,7 +299,7 @@ public class PoolRulesTest {
         p.setQuantity(10L);
 
         // Setup a pool with a single (different) provided product:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         p1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p1.setQuantity(40L);
@@ -282,23 +319,33 @@ public class PoolRulesTest {
     @Test
     public void updatePoolSubProvidedProductsChanged() {
         // Pool with two provided products:
-        Pool p = TestUtil.createPool(owner, TestUtil.createProduct());
-        Product subProd = TestUtil.createProduct();
-        p.setDerivedProduct(subProd);
+
         Product product1 = TestUtil.createProduct();
         Product product2 = TestUtil.createProduct();
         Product product3 = TestUtil.createProduct();
-        p.getDerivedProduct().addProvidedProduct(product1);
-        p.getDerivedProduct().addProvidedProduct(product2);
+
+        Product subProduct1 = TestUtil.createProduct();
+        subProduct1.addProvidedProduct(product1);
+        subProduct1.addProvidedProduct(product2);
+
+        Product mktProduct1 = TestUtil.createProduct();
+        mktProduct1.setDerivedProduct(subProduct1);
+
+        Pool pool1 = TestUtil.createPool(owner, mktProduct1);
 
         // Setup a pool with a single (different) provided product:
-        Pool p1 = TestUtil.clone(p);
-        p1.getDerivedProduct().getProvidedProducts().clear();
-        p1.getDerivedProduct().addProvidedProduct(product3);
+        Product subProduct2 = TestUtil.createProduct();
+        subProduct2.addProvidedProduct(product3);
 
-        List<Pool> existingPools = Arrays.asList(p1);
-        List<PoolUpdate> updates = this.poolRules.updatePools(p, existingPools, p.getQuantity(),
-            TestUtil.stubChangedProducts(p.getDerivedProduct()));
+        Product mktProduct2 = (Product) mktProduct1.clone();
+        mktProduct2.setDerivedProduct(subProduct2);
+
+        Pool pool2 = this.clonePool(pool1)
+            .setProduct(mktProduct2);
+
+        List<Pool> existingPools = Arrays.asList(pool2);
+        List<PoolUpdate> updates = this.poolRules.updatePools(pool1, existingPools, pool1.getQuantity(),
+            TestUtil.stubChangedProducts(mktProduct1, subProduct1));
 
         assertEquals(1, updates.size());
         assertEquals(2, updates.get(0).getPool().getDerivedProduct().getProvidedProducts().size());
@@ -473,30 +520,32 @@ public class PoolRulesTest {
 
     @Test
     public void standaloneVirtLimitSubCreate() {
-        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
 
-        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
+        doReturn(true).when(configMock).getBoolean(ConfigProperties.STANDALONE);
+        doReturn(true).when(poolManagerMock).isManaged(eq(p));
+
         Product provided1 = TestUtil.createProduct();
         Product provided2 = TestUtil.createProduct();
         Product derivedProd = TestUtil.createProduct();
         Product derivedProvidedProd1 = TestUtil.createProduct();
         Product derivedProvidedProd2 = TestUtil.createProduct();
 
-        when(ownerProdCuratorMock.getProductById(owner, provided1.getId())).thenReturn(provided1);
-        when(ownerProdCuratorMock.getProductById(owner, provided2.getId())).thenReturn(provided2);
-        when(ownerProdCuratorMock.getProductById(owner, derivedProd.getId())).thenReturn(derivedProd);
-        when(ownerProdCuratorMock.getProductById(owner, derivedProvidedProd1.getId()))
-            .thenReturn(derivedProvidedProd1);
-        when(ownerProdCuratorMock.getProductById(owner, derivedProvidedProd2.getId()))
-            .thenReturn(derivedProvidedProd2);
+        doReturn(provided1).when(ownerProdCuratorMock).getProductById(owner, provided1.getId());
+        doReturn(provided2).when(ownerProdCuratorMock).getProductById(owner, provided2.getId());
+        doReturn(derivedProd).when(ownerProdCuratorMock).getProductById(owner, derivedProd.getId());
+        doReturn(derivedProvidedProd1).when(ownerProdCuratorMock)
+            .getProductById(owner, derivedProvidedProd1.getId());
+        doReturn(derivedProvidedProd2).when(ownerProdCuratorMock)
+            .getProductById(owner, derivedProvidedProd2.getId());
 
         p.setId("mockPoolRuleTestID");
         p.getProduct().addProvidedProduct(provided1);
         p.getProduct().addProvidedProduct(provided2);
-        p.setDerivedProduct(derivedProd);
-        p.getDerivedProduct().addProvidedProduct(derivedProvidedProd1);
-        p.getDerivedProduct().addProvidedProduct(derivedProvidedProd2);
+
+        p.getProduct().setDerivedProduct(derivedProd);
+        derivedProd.addProvidedProduct(derivedProvidedProd1);
+        derivedProd.addProvidedProduct(derivedProvidedProd2);
 
         when(productCurator.getPoolProvidedProductsCached(p))
             .thenReturn((Set<Product>) p.getProduct().getProvidedProducts());
@@ -516,8 +565,8 @@ public class PoolRulesTest {
             (Set<Product>) physicalPool.getDerivedProduct().getProvidedProducts());
 
         Pool unmappedVirtPool = pools.get(1);
-        assert ("true".equals(unmappedVirtPool.getAttributeValue(Product.Attributes.VIRT_ONLY)));
-        assert ("true".equals(unmappedVirtPool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY)));
+        assertEquals("true", unmappedVirtPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
+        assertEquals("true", unmappedVirtPool.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY));
 
         // The derived provided products of the sub should be promoted to provided products
         // on the unmappedVirtPool
@@ -593,17 +642,6 @@ public class PoolRulesTest {
     private Subscription createVirtLimitSubWithDerivedProducts(String productId,
         String derivedProductId, int quantity, int virtLimit) {
 
-        Product product = TestUtil.createProduct(productId, productId);
-        product.setAttribute(Product.Attributes.VIRT_LIMIT, Integer.toString(virtLimit));
-        when(ownerProdCuratorMock.getProductById(owner, product.getId()))
-            .thenReturn(product);
-
-        Product derivedProd = TestUtil.createProduct(derivedProductId, derivedProductId);
-        // We'll look for this to make sure it makes it to correct pools:
-        derivedProd.setAttribute(DERIVED_ATTR, "nobodycares");
-        when(ownerProdCuratorMock.getProductById(owner, derivedProd.getId()))
-            .thenReturn(derivedProd);
-
         // Create some provided products:
         Product provided1 = TestUtil.createProduct();
         when(ownerProdCuratorMock.getProductById(owner, provided1.getId()))
@@ -620,12 +658,22 @@ public class PoolRulesTest {
         when(ownerProdCuratorMock.getProductById(owner, derivedProvided2.getId()))
             .thenReturn(derivedProvided2);
 
-        product.setProvidedProducts(Arrays.asList(provided1, provided2));
+        Product derivedProd = TestUtil.createProduct(derivedProductId, derivedProductId);
+        // We'll look for this to make sure it makes it to correct pools:
+        derivedProd.setAttribute(DERIVED_ATTR, "nobodycares");
         derivedProd.setProvidedProducts(Arrays.asList(derivedProvided1, derivedProvided2));
+        when(ownerProdCuratorMock.getProductById(owner, derivedProd.getId()))
+            .thenReturn(derivedProd);
+
+        Product product = TestUtil.createProduct(productId, productId);
+        product.setAttribute(Product.Attributes.VIRT_LIMIT, Integer.toString(virtLimit));
+        product.setDerivedProduct(derivedProd);
+        product.setProvidedProducts(Arrays.asList(provided1, provided2));
+        when(ownerProdCuratorMock.getProductById(owner, product.getId()))
+            .thenReturn(product);
 
         Subscription s = TestUtil.createSubscription(owner, product);
         s.setQuantity(new Long(quantity));
-        s.setDerivedProduct(derivedProd.toDTO());
 
         return s;
     }
@@ -710,7 +758,7 @@ public class PoolRulesTest {
 
         // Now make a pool that would have been created for guests only after a host
         // bound to the parent pool:
-        Pool consumerSpecificPool = TestUtil.clone(p);
+        Pool consumerSpecificPool = this.clonePool(p);
         consumerSpecificPool.setAttribute(Pool.Attributes.REQUIRES_HOST, "FAKEUUID");
         consumerSpecificPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         consumerSpecificPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
@@ -736,7 +784,7 @@ public class PoolRulesTest {
 
         // Now make a pool that would have been created for guests only after a host
         // bound to the parent pool:
-        Pool consumerSpecificPool = TestUtil.clone(p);
+        Pool consumerSpecificPool = this.clonePool(p);
         consumerSpecificPool.setAttribute(Pool.Attributes.REQUIRES_HOST, "FAKEUUID");
         consumerSpecificPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         consumerSpecificPool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
@@ -763,7 +811,7 @@ public class PoolRulesTest {
         p.setQuantity(10L);
 
         // Setup a pool with a single (different) provided product:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         p1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p1.setQuantity(10L);
@@ -783,7 +831,7 @@ public class PoolRulesTest {
         p.setQuantity(10L);
 
         // Setup a pool with a single (different) provided product:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         p1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p1.setQuantity(20L);
@@ -807,7 +855,7 @@ public class PoolRulesTest {
         p.setContractNumber("123");
 
         // Setup a pool with a single (different) provided product:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.setQuantity(2000L);
         p1.setContractNumber("ABC");
 
@@ -828,7 +876,7 @@ public class PoolRulesTest {
         p.setOrderNumber("123");
 
         // Setup a pool with a single (different) order number:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.setQuantity(2000L);
         p1.setOrderNumber("ABC");
 
@@ -849,7 +897,7 @@ public class PoolRulesTest {
         p.setAccountNumber("123");
 
         // Setup a pool with a single (different) account number:
-        Pool p1 = TestUtil.clone(p);
+        Pool p1 = this.clonePool(p);
         p1.setQuantity(2000L);
         p1.setAccountNumber("ABC");
 

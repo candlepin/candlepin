@@ -36,6 +36,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Map;
+
+
 
 /**
  * ConsumerTypeExporterTest
@@ -50,13 +53,10 @@ public class ConsumerTypeExporterTest {
 
     @Test
     public void testConsumerTypeExport() throws IOException {
-        ObjectMapper mapper = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
-            new HashMap<String, String>() {
-                {
-                    put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-                }
-            }
-        ));
+        Map<String, String> configProps = new HashMap<>();
+        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+
+        ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
 
         translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
         ConsumerTypeExporter consumerType = new ConsumerTypeExporter(translator);

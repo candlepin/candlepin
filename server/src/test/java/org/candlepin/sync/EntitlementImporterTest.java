@@ -145,7 +145,10 @@ public class EntitlementImporterTest {
         derivedProvidedProducts.add(new Product(derivedProvided1));
         derivedProduct.setProvidedProducts(derivedProvidedProducts);
 
-        Pool pool = TestUtil.createPool(owner, parentProduct, derivedProduct, 3);
+        parentProduct.setDerivedProduct(derivedProduct);
+
+        Pool pool = TestUtil.createPool(owner, parentProduct)
+            .setQuantity(3L);
 
         Entitlement ent = TestUtil.createEntitlement(owner, consumer, pool, cert);
         ent.setQuantity(3);

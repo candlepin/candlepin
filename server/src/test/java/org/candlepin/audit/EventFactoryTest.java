@@ -22,11 +22,16 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.Principal;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -49,6 +54,11 @@ import java.util.Set;
  */
 
 public class EventFactoryTest {
+    private ConsumerTypeCurator mockConsumerTypeCurator;
+    private EnvironmentCurator mockEnvironmentCurator;
+    private OwnerCurator mockOwnerCurator;
+    private ModelTranslator modelTranslator;
+
     private PrincipalProvider principalProvider;
 
     private EventFactory eventFactory;
@@ -58,7 +68,15 @@ public class EventFactoryTest {
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
         when(principalProvider.get()).thenReturn(principal);
-        eventFactory = new EventFactory(principalProvider, new ObjectMapper());
+
+        this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
+        this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
+        this.mockOwnerCurator = mock(OwnerCurator.class);
+
+        this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
+            this.mockEnvironmentCurator, this.mockOwnerCurator);
+
+        eventFactory = new EventFactory(principalProvider, new ObjectMapper(), this.modelTranslator);
     }
 
     @Test
