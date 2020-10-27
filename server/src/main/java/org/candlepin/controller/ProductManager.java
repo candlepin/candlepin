@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -94,8 +95,7 @@ public class ProductManager {
         ProductInfo derived = pinfo.getDerivedProduct();
         if (derived != null) {
             if (derived.getId() == null || derived.getId().isEmpty()) {
-                // TODO: Make this a custom exception. MalformedChildReferenceException, perhaps?
-                throw new IllegalArgumentException("product reference lacks a valid ID");
+                throw new MalformedEntityReferenceException("product reference lacks a valid ID");
             }
 
             pids.add(derived.getId());
@@ -105,13 +105,13 @@ public class ProductManager {
         if (provided != null) {
             for (ProductInfo pp : provided) {
                 if (pp == null) {
-                    // TODO: Make this a custom exception. MalformedChildReferenceException, perhaps?
-                    throw new IllegalArgumentException("product contains null provided product reference");
+                    throw new MalformedEntityReferenceException(
+                        "product contains null provided product reference");
                 }
 
                 if (pp.getId() == null || pp.getId().isEmpty()) {
-                    // TODO: Make this a custom exception. MalformedChildReferenceException, perhaps?
-                    throw new IllegalArgumentException("product references a product that lacks a valid ID");
+                    throw new MalformedEntityReferenceException(
+                        "product references a product that lacks a valid ID");
                 }
 
                 pids.add(pp.getId());
@@ -124,8 +124,7 @@ public class ProductManager {
 
             pids.removeAll(output.keySet());
             if (!pids.isEmpty()) {
-                // TODO: Make this a custom exception. MalformedChildReferenceException, perhaps?
-                throw new IllegalArgumentException(
+                throw new MalformedEntityReferenceException(
                     "product references one or more non-existent products: " + pids);
             }
         }
@@ -140,6 +139,9 @@ public class ProductManager {
      * Resolves all of the products referenced by the given product info, returning a map that
      * contains all resolved product entities mapped by product ID. If a product reference cannot
      * be resolved, this method throws an exception.
+     *
+     * @param owner
+     *  the owner of the product whose content is being resolved
      *
      * @param pinfo
      *  the product info for which to resolve product references
@@ -160,13 +162,13 @@ public class ProductManager {
                 ContentInfo cinfo = pcinfo != null ? pcinfo.getContent() : null;
 
                 if (cinfo == null) {
-                    // TODO: Make this a custom exception. MalformedChildReferenceException, perhaps?
-                    throw new IllegalArgumentException("product content reference lacks content details");
+                    throw new MalformedEntityReferenceException(
+                        "product content reference lacks content details");
                 }
 
                 if (cinfo.getId() == null || cinfo.getId().isEmpty()) {
-                    // TODO: Make this a custom exception. MalformedChildReferenceException, perhaps?
-                    throw new IllegalArgumentException("content reference lacks a valid ID");
+                    throw new MalformedEntityReferenceException(
+                        "content reference lacks a valid ID");
                 }
 
                 cids.add(cinfo.getId());
@@ -179,8 +181,7 @@ public class ProductManager {
 
             cids.removeAll(output.keySet());
             if (!cids.isEmpty()) {
-                // TODO: Make this a custom exception. MalformedChildReferenceException, perhaps?
-                throw new IllegalArgumentException(
+                throw new MalformedEntityReferenceException(
                     "product references one or more content which do not exist: " + cids);
             }
         }
@@ -662,12 +663,12 @@ public class ProductManager {
         Collection<? extends ProductInfo> updateProvidedProducts = update.getProvidedProducts();
         if (updateProvidedProducts != null) {
             Set<String> entityProvidedPids = entity.getProvidedProducts().stream()
-                .filter(pp -> pp != null)
+                .filter(Objects::nonNull)
                 .map(Product::getId)
                 .collect(Collectors.toSet());
 
             Set<String> updateProvidedPids = updateProvidedProducts.stream()
-                .filter(pp -> pp != null)
+                .filter(Objects::nonNull)
                 .map(ProductInfo::getId)
                 .collect(Collectors.toSet());
 
@@ -688,12 +689,12 @@ public class ProductManager {
             };
 
             Set<String> entityBrandingKeys = entity.getBranding().stream()
-                .filter(brand -> brand != null)
+                .filter(Objects::nonNull)
                 .map(keybuilder)
                 .collect(Collectors.toSet());
 
             Set<String> updateBrandingKeys = updateBranding.stream()
-                .filter(brand -> brand != null)
+                .filter(Objects::nonNull)
                 .map(keybuilder)
                 .collect(Collectors.toSet());
 

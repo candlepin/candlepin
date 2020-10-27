@@ -263,28 +263,27 @@ describe 'Refresh Pools' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)
 
+    derived_eng_product = create_upstream_product(random_string(nil, true))
+    derived_product = create_upstream_product(random_string('derived_prod'), {
+      :attributes => {
+        :cores => 2,
+        :sockets=>4
+      },
+      :providedProducts => [derived_eng_product]
+    })
+
     datacenter_product = create_upstream_product(random_string('dc_prod'), {
       :attributes => {
         :virt_limit => "unlimited",
         :stacking_id => "stackme",
         :sockets => "2",
         'multi-entitlement' => "yes"
-      }
+      },
+      :derivedProduct => derived_product
     })
-
-    derived_eng_product = create_upstream_product(random_string(nil, true))
-    derived_product = create_upstream_product(random_string('derived_prod'), {
-      :attributes => {
-        :cores => 2,
-        :sockets=>4
-      }, :providedProducts => [derived_eng_product]
-    })
-
-    eng_product = create_upstream_product(random_string('eng_prod'))
 
     sub = create_upstream_subscription(random_string('dc_sub'), owner_key, {
       :quantity => 10,
-      :derived_product => derived_product,
       :product => datacenter_product
     })
 
@@ -300,9 +299,8 @@ describe 'Refresh Pools' do
     expect(pools.first).to have_key('derivedProvidedProducts')
     expect(pools.first.derivedProvidedProducts.length).to eq(1)
 
-    update_upstream_subscription(sub.id, {
-        :product => datacenter_product,
-        :derived_product => nil
+    update_upstream_product(datacenter_product.id, {
+        :derivedProduct => nil
     })
 
     @cp.refresh_pools(owner_key)
@@ -1126,6 +1124,15 @@ describe 'Refresh Pools' do
     add_content_to_product_upstream(prov_product.id, content_id2, false)
     add_content_to_product_upstream(der_prov_product.id, content_id3, false)
 
+    der_product = create_upstream_product(random_string(nil, true), {
+      :name => random_string('der_prod', true),
+      :attributes => {
+        :cores => 2,
+        :sockets => 4
+      },
+      :providedProducts => [der_prov_product]
+    })
+
     product = create_upstream_product(random_string(nil, true), {
       :name => random_string('prod', true),
       :attributes => {
@@ -1142,18 +1149,12 @@ describe 'Refresh Pools' do
         :virt_only => 'false',
         :support_level => 'standard',
         :support_type => 'excellent'
-      }, :providedProducts => [prov_product]
+      },
+      :derivedProduct => der_product,
+      :providedProducts => [prov_product]
     })
 
     add_content_to_product_upstream(product.id, content_id1, false)
-
-    der_product = create_upstream_product(random_string(nil, true), {
-      :name => random_string('der_prod', true),
-      :attributes => {
-        :cores => 2,
-        :sockets => 4
-      }, :providedProducts => [der_prov_product]
-    })
 
     sub_id = random_string('test_subscription_1')
     sub = create_upstream_subscription(sub_id, owner_key, {
@@ -1161,8 +1162,7 @@ describe 'Refresh Pools' do
       :contract_number => '12345',
       :account_number => '6789',
       :order_number => 'order1',
-      :product => product,
-      :derived_product => der_product,
+      :product => product
     })
 
     @cp.refresh_pools(owner_key)
@@ -1195,24 +1195,24 @@ describe 'Refresh Pools' do
 
     # verify serial does not change on simple refresh
     @cp.refresh_pools(owner_key, false, false, false)
-    entitlement =  @cp.get_entitlement(entitlement['id'])
-    bonus_entitlement =  @cp.get_entitlement(bonus_entitlement['id'])
+    entitlement = @cp.get_entitlement(entitlement['id'])
+    bonus_entitlement = @cp.get_entitlement(bonus_entitlement['id'])
 
-    concat_serials(entitlement, bonus_entitlement).should == serial_concat
+    expect(concat_serials(entitlement, bonus_entitlement)).to eq(serial_concat)
 
     # Yield to encapsulating test, applying any change it may have made
     sub = yield(owner, sub)
     update_upstream_subscription(sub.id, sub)
 
     # verify serial does not change on content update request that does not regenerate cert
-    entitlement =  @cp.get_entitlement(entitlement['id'])
-    bonus_entitlement =  @cp.get_entitlement(bonus_entitlement['id'])
+    entitlement = @cp.get_entitlement(entitlement['id'])
+    bonus_entitlement = @cp.get_entitlement(bonus_entitlement['id'])
     concat_serials(entitlement, bonus_entitlement).should == serial_concat
 
     # this time when we refresh, serial should change
     @cp.refresh_pools(owner_key, false, false, false)
-    entitlement =  @cp.get_entitlement(entitlement['id'])
-    bonus_entitlement =  @cp.get_entitlement(bonus_entitlement['id'])
+    entitlement = @cp.get_entitlement(entitlement['id'])
+    bonus_entitlement = @cp.get_entitlement(bonus_entitlement['id'])
     concat_serials(entitlement, bonus_entitlement).should_not == serial_concat
     json_body = extract_payload(entitlement['certificates'][0]['cert'])
 

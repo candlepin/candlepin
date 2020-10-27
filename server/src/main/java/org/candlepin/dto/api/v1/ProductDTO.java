@@ -1098,7 +1098,6 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
             .append(this.getAttributes())
             .append(this.getDerivedProduct())
             .append(this.getProvidedProducts())
-            .append(this.getDerivedProduct())
             .append(this.getDependentProductIds())
             .append(this.getBranding())
             .append(this.isLocked())

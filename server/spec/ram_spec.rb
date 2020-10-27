@@ -8,36 +8,40 @@ describe 'RAM Limiting' do
     @owner = create_owner random_string('test_owner')
 
     # Create a product limiting by RAM only.
-    @ram_product = create_product(nil, random_string("Product1"), :attributes =>
-                {:version => '6.4',
-                 :ram => 8,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
+    @ram_product = create_product(nil, random_string("Product1"), :attributes => {
+        :version => '6.4',
+        :ram => 8,
+        :warning_period => 15,
+        :management_enabled => true,
+        :support_level => 'standard',
+        :support_type => 'excellent'
+    })
+
     @ram_pool = create_pool_and_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
 
     # Create a product limiting by RAM and sockets.
-    @ram_and_socket_product = create_product(nil, random_string("Product2"), :attributes =>
-                {:version => '1.2',
-                 :ram => 8,
-                 :sockets => 4,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
-    @ram_socket_pool = create_pool_and_subscription(@owner['key'], @ram_and_socket_product.id, 5,
-                                              [], '18881', '1222')
+    @ram_and_socket_product = create_product(nil, random_string("Product2"), :attributes => {
+        :version => '1.2',
+        :ram => 8,
+        :sockets => 4,
+        :warning_period => 15,
+        :management_enabled => true,
+        :support_level => 'standard',
+        :support_type => 'excellent'
+    })
+    @ram_socket_pool = create_pool_and_subscription(@owner['key'], @ram_and_socket_product.id, 5, [], '18881', '1222')
 
     # Create a stackable RAM product.
-    @stackable_ram_product = create_product(nil, random_string("Product1"), :attributes =>
-                {:version => '1.2',
-                 :ram => 2,
-                 :warning_period => 15,
-                 :support_level => 'standard',
-                 :support_type => 'excellent',
-                 :'multi-entitlement' => 'yes',
-                 :stacking_id => '2421'})
+    @stackable_ram_product = create_product(nil, random_string("Product1"), :attributes => {
+        :version => '1.2',
+        :ram => 2,
+        :warning_period => 15,
+        :support_level => 'standard',
+        :support_type => 'excellent',
+        :'multi-entitlement' => 'yes',
+        :stacking_id => '2421'
+    })
+
     @stackable_ram_pool = create_pool_and_subscription(@owner['key'], @stackable_ram_product.id, 10)
 
     @user = user_client(@owner, random_string('test-user'))

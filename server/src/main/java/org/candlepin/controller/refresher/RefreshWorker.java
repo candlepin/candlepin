@@ -163,9 +163,6 @@ public class RefreshWorker {
 
                 // Add any products attached to this subscription...
                 this.addProducts(subscription.getProduct());
-
-                // Should we still add derivedProduct and the provided/derived provided collections here
-                // for backward compatibility?
             }
         }
 

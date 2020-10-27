@@ -69,30 +69,42 @@ describe 'Product Resource' do
     prod3o2 = create_product("p3", "p3", { :owner => owner2['key'] })
     prod3o3 = create_product("p3", "p3", { :owner => owner3['key'] })
 
-    prod4 = create_product("p4", "p4", { :owner => owner1['key'], :providedProducts => [prod1o1.id] })
-    prod4d = create_product("p4d", "p4d", { :owner => owner1['key'], :providedProducts => [prod2o1.id] })
-    prod5 = create_product("p5", "p5", { :owner => owner2['key'], :providedProducts => [prod1o2.id, prod2o2.id] })
-    prod5d = create_product("p5d", "p5d", { :owner => owner2['key'], :providedProducts => [prod3o2.id] })
-    prod6 = create_product("p6", "p6", { :owner => owner3['key'], :providedProducts => [prod1o3.id] })
-    prod6d = create_product("p6d", "p6d", { :owner => owner3['key'], :providedProducts => [prod3o3.id] })
+    prod4d = create_product("p4d", "p4d", {
+      :owner => owner1['key'],
+      :providedProducts => [prod2o1.id]
+    })
 
-    @cp.create_pool(owner1['key'], "p4", {
-      :derived_product_id         => "p4d",
-      :provided_products          => ["p1"],
-      :derived_provided_products  => ["p2"]
-    });
+    prod4 = create_product("p4", "p4", {
+      :owner => owner1['key'],
+      :derivedProduct => prod4d,
+      :providedProducts => [prod1o1.id]
+    })
 
-    @cp.create_pool(owner2['key'], "p5", {
-      :derived_product_id         => "p5d",
-      :provided_products          => ["p1", "p2"],
-      :derived_provided_products  => ["p3"]
-    });
+    prod5d = create_product("p5d", "p5d", {
+      :owner => owner2['key'],
+      :providedProducts => [prod3o2.id]
+    })
 
-    @cp.create_pool(owner3['key'], "p6", {
-      :derived_product_id         => "p6d",
-      :provided_products          => ["p1"],
-      :derived_provided_products  => ["p3"]
-    });
+    prod5 = create_product("p5", "p5", {
+      :owner => owner2['key'],
+      :derivedProduct => prod5d,
+      :providedProducts => [prod1o2.id, prod2o2.id]
+    })
+
+    prod6d = create_product("p6d", "p6d", {
+      :owner => owner3['key'],
+      :providedProducts => [prod3o3.id]
+    })
+
+    prod6 = create_product("p6", "p6", {
+      :owner => owner3['key'],
+      :derivedProduct => prod6d,
+      :providedProducts => [prod1o3.id]
+    })
+
+    @cp.create_pool(owner1['key'], "p4");
+    @cp.create_pool(owner2['key'], "p5");
+    @cp.create_pool(owner3['key'], "p6");
 
     return [owner1, owner2, owner3]
   end
