@@ -468,7 +468,12 @@ public class ContentAccessManager {
             prefix.append('/').append(URLEncoder.encode(owner.getKey(), charset));
 
             if (environment != null) {
-                prefix.append('/').append(URLEncoder.encode(environment.getName(), charset));
+                for (String part : environment.getName().split("/")) {
+                    if (!part.equals("")) {
+                        prefix.append("/");
+                        prefix.append(URLEncoder.encode(part, charset));
+                    }
+                }
             }
         }
 

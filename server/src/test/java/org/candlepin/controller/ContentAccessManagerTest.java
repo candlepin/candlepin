@@ -643,10 +643,10 @@ public class ContentAccessManagerTest {
         Environment environment = this.mockEnvironment(owner, consumer, content);
 
         owner.setKey("org! #$%&'()*+,/123:;=?@[]\"-.<>\\^_`{|}~£円");
-        environment.setName("test environment #1");
+        environment.setName("test environment #1/foo/bar");
 
         String expectedPrefix = "/org%21+%23%24%25%26%27%28%29*%2B%2C%2F123%3A%3B%3D%3F%40%5B%5D%22" +
-            "-.%3C%3E%5C%5E_%60%7B%7C%7D%7E%C2%A3%E5%86%86/test+environment+%231";
+            "-.%3C%3E%5C%5E_%60%7B%7C%7D%7E%C2%A3%E5%86%86/test+environment+%231/foo/bar";
 
         ContentAccessManager manager = this.createManager();
         manager.getCertificate(consumer);
