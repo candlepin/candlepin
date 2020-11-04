@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.1
+Version: 3.2.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,10 @@ fi
 
 #raw
 %changelog
+* Tue Nov 03 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.2-1
+- 1884761: Exporting content access certs for a consumer (ENT-3127)
+  (prakgupt@redhat.com)
+
 * Wed Oct 21 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.1-1
 - Updated JUnit version from 4.13 to 4.13.1 (crog@redhat.com)
 - Updated JUnit version from 4.12 to 4.13 (vagrant@candlepin.example.com)
