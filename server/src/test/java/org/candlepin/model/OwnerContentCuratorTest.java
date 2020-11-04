@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 
 
 /**
@@ -739,5 +739,53 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         List<Content> contentList4 = this.ownerContentCurator.getContentByVersions(null,
             Collections.<String, Integer>emptyMap()).list();
         assertEquals(0, contentList4.size());
+    }
+
+    @Test
+    public void testGetActiveContentByOwner() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Map<Content, Boolean> expectedContentMap = new HashMap();
+
+        Content c1 = this.createContent(owner);
+        Product product = TestUtil.createProduct();
+        product.addContent(c1, false);
+        this.createProduct(product, owner);
+
+        Content c2 = this.createContent(owner);
+        Product derivedProduct = TestUtil.createProduct();
+        derivedProduct.addContent(c2, false);
+        this.createProduct(derivedProduct, owner);
+        expectedContentMap.put(c2, false);
+
+        Content c3 = this.createContent(owner);
+        Product providedProduct = TestUtil.createProduct();
+        providedProduct.addContent(c3, true);
+        this.createProduct(providedProduct, owner);
+        expectedContentMap.put(c3, true);
+
+        // Adding c1 as enabled
+        Product derivedProvidedProduct = TestUtil.createProduct();
+        derivedProvidedProduct.addContent(c1, true);
+        this.createProduct(derivedProvidedProduct, owner);
+        expectedContentMap.put(c1, true);
+
+        Pool activePoolOne = createPool(owner, product);
+        activePoolOne.setDerivedProduct(derivedProduct);
+        activePoolOne.setDerivedProvidedProducts(Arrays.asList(derivedProvidedProduct));
+        activePoolOne.setProvidedProducts(Arrays.asList(providedProduct));
+
+        // Inactive pool
+        Product productx = TestUtil.createProduct();
+        this.createProduct(productx, owner);
+        this.createPool(owner, productx, 10L, Util.yesterday(), Util.yesterday());
+
+        Map<Content, Boolean> actualResult =
+            this.ownerContentCurator.getActiveContentByOwner(owner.getId());
+
+        assertEquals(actualResult.size(), 3);
+        assertEquals(expectedContentMap, actualResult);
+
+        // Make sure c1 is true in actual result, as enabled content will have precedence.
+        assertEquals(actualResult.get(c1), true);
     }
 }
