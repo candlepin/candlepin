@@ -43,6 +43,7 @@ import org.xnap.commons.i18n.I18n;
 import javax.inject.Inject;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.quartz.JobBuilder.newJob;
 
@@ -118,11 +119,11 @@ public class UndoImportsJob extends UniqueByEntityJob {
         log.info("Deleting all pools originating from manifests for owner/org: {}", displayName);
 
         List<Pool> pools = this.poolManager.listPoolsByOwner(owner).list();
-        for (Pool pool : pools) {
-            if (this.poolManager.isManaged(pool)) {
-                this.poolManager.deletePool(pool);
-            }
-        }
+        this.poolManager.deletePools(
+            pools.stream()
+            .filter(this.poolManager::isManaged)
+            .collect(Collectors.toList())
+        );
 
         // Clear out upstream ID so owner can import from other distributors:
         UpstreamConsumer uc = owner.getUpstreamConsumer();
