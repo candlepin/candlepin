@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.2
+Version: 3.2.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,12 @@ fi
 
 #raw
 %changelog
+* Thu Nov 05 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.3-1
+- 1894035: Fixed encoding of environment name in SCA certificates
+  (crog@redhat.com)
+- ENT-2806: Only add content from active pools on the SCA certificate
+  (prakgupt@redhat.com)
+
 * Tue Nov 03 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.2-1
 - 1884761: Exporting content access certs for a consumer (ENT-3127)
   (prakgupt@redhat.com)
