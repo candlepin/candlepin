@@ -1,19 +1,19 @@
 [org.candlepin-candlepin-parent]
 scmurl=${mead_scm}#${git_ref}
 maven_options=-N ${maven_options}
-packages=java-1.8.0-openjdk-devel
+packages=java-11-openjdk-devel
 
 [org.candlepin-candlepin-common]
 scmurl=${mead_scm}?common#${git_ref}
 buildrequires=org.candlepin-candlepin-parent
-packages=gettext java-1.8.0-openjdk-devel
+packages=gettext java-11-openjdk-devel
 
 [org.candlepin-api]
 scmurl=${mead_scm}?api#${git_ref}
 buildrequires=org.candlepin-candlepin-parent
-packages=java-1.8.0-openjdk-devel
+packages=java-11-openjdk-devel
 
 [org.candlepin-candlepin]
 scmurl=${mead_scm}?server#${git_ref}
 buildrequires=org.candlepin-candlepin-common org.candlepin-api
-packages=java-1.8.0-openjdk-devel
+packages=java-11-openjdk-devel
