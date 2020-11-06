@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.3
+Version: 3.2.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,9 @@ fi
 
 #raw
 %changelog
+* Fri Nov 06 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.4-1
+- Make mead build install Java 11 (nmoumoul@redhat.com)
+
 * Thu Nov 05 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.3-1
 - 1894035: Fixed encoding of environment name in SCA certificates
   (crog@redhat.com)
