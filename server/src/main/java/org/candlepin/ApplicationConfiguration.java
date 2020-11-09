@@ -47,6 +47,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.guice.annotation.EnableGuiceModules;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.xnap.commons.i18n.I18n;
@@ -247,5 +248,8 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
         return jsRunnerRequestCacheFactory;
     }
 
-
+    @Bean
+    public RequestContextListener requestContextListener(){
+        return new RequestContextListener();
+    }
 }
