@@ -112,10 +112,11 @@ def base64_decoder(columns, chain=None):
 
 
 class ModelManager(object):
-    def __init__(self, org_id, archive, db):
+    def __init__(self, org_id, archive, db, ignore_dupes):
         self.org_id = org_id
         self.db = db
         self.archive = archive
+        self.ignore_dupes = ignore_dupes
 
         self._imported = False
         self._exported = False
@@ -160,13 +161,10 @@ class ModelManager(object):
         cursor.close()
 
     def _bulk_insert(self, table, columns, rows, row_hook=None):
-        log.debug('Importing %d rows into table: %s', len(rows), table)
-        pblock = ', '.join(['%s'] * len(columns))
-
         validate_column_names(table, columns)
-        statement = 'INSERT INTO ' + table + ' (' + ', '.join(columns) + ') VALUES (' + pblock + ')'
 
-        # TODO: optimize this so we can do like 10-25 rows at a time, rather than just one
+        log.debug('Importing %d rows into table: %s', len(rows), table)
+        statement = self.db.build_insert_statement(table, columns, self.ignore_dupes)
 
         # try:
         cursor = self.db.cursor()
@@ -219,8 +217,8 @@ class ModelManager(object):
 
 
 class OwnerManager(ModelManager):
-    def __init__(self, org_id, archive, db):
-        super(OwnerManager, self).__init__(org_id, archive, db)
+    def __init__(self, org_id, archive, db, ignore_dupes):
+        super(OwnerManager, self).__init__(org_id, archive, db, ignore_dupes)
 
     def do_export(self):
         if self.exported:
@@ -243,8 +241,8 @@ class OwnerManager(ModelManager):
 
 
 class UeberCertManager(ModelManager):
-    def __init__(self, org_id, archive, db):
-        super(UeberCertManager, self).__init__(org_id, archive, db)
+    def __init__(self, org_id, archive, db, ignore_dupes):
+        super(UeberCertManager, self).__init__(org_id, archive, db, ignore_dupes)
 
     def depends_on(self):
         return [OwnerManager]
@@ -275,8 +273,8 @@ class UeberCertManager(ModelManager):
 
 
 class ContentManager(ModelManager):
-    def __init__(self, org_id, archive, db):
-        super(ContentManager, self).__init__(org_id, archive, db)
+    def __init__(self, org_id, archive, db, ignore_dupes):
+        super(ContentManager, self).__init__(org_id, archive, db, ignore_dupes)
 
     def depends_on(self):
         return [OwnerManager]
@@ -330,8 +328,8 @@ class ContentManager(ModelManager):
 
 
 class ProductManager(ModelManager):
-    def __init__(self, org_id, archive, db):
-        super(ProductManager, self).__init__(org_id, archive, db)
+    def __init__(self, org_id, archive, db, ignore_dupes):
+        super(ProductManager, self).__init__(org_id, archive, db, ignore_dupes)
 
     def depends_on(self):
         return [OwnerManager, ContentManager]
@@ -367,8 +365,8 @@ class ProductManager(ModelManager):
 
 
 class EnvironmentManager(ModelManager):
-    def __init__(self, org_id, archive, db):
-        super(EnvironmentManager, self).__init__(org_id, archive, db)
+    def __init__(self, org_id, archive, db, ignore_dupes):
+        super(EnvironmentManager, self).__init__(org_id, archive, db, ignore_dupes)
 
     def depends_on(self):
         return [OwnerManager, ContentManager]
@@ -398,8 +396,8 @@ class EnvironmentManager(ModelManager):
 
 
 class ConsumerManager(ModelManager):
-    def __init__(self, org_id, archive, db):
-        super(ConsumerManager, self).__init__(org_id, archive, db)
+    def __init__(self, org_id, archive, db, ignore_dupes):
+        super(ConsumerManager, self).__init__(org_id, archive, db, ignore_dupes)
 
     def depends_on(self):
         return [OwnerManager, ContentManager, EnvironmentManager]
@@ -546,8 +544,8 @@ class ConsumerManager(ModelManager):
 
 
 class PoolManager(ModelManager):
-    def __init__(self, org_id, archive, db):
-        super(PoolManager, self).__init__(org_id, archive, db)
+    def __init__(self, org_id, archive, db, ignore_dupes):
+        super(PoolManager, self).__init__(org_id, archive, db, ignore_dupes)
 
     def depends_on(self):
         return [OwnerManager, ProductManager, ConsumerManager]
@@ -699,8 +697,8 @@ class PoolManager(ModelManager):
 
 
 class ActivationKeyManager(ModelManager):
-    def __init__(self, org_id, archive, db):
-        super(ActivationKeyManager, self).__init__(org_id, archive, db)
+    def __init__(self, org_id, archive, db, ignore_dupes):
+        super(ActivationKeyManager, self).__init__(org_id, archive, db, ignore_dupes)
 
     def depends_on(self):
         return [OwnerManager, ProductManager, PoolManager]
@@ -732,10 +730,11 @@ class ActivationKeyManager(ModelManager):
 class OrgMigrator(object):
     workers = [OwnerManager, ProductManager, ContentManager, EnvironmentManager, ConsumerManager, PoolManager, UeberCertManager, ActivationKeyManager]
 
-    def __init__(self, dbconn, archive, org_id):
+    def __init__(self, dbconn, archive, org_id, ignore_dupes):
         self.db = dbconn
         self.archive = archive
         self.org_id = org_id
+        self.ignore_dupes = ignore_dupes
 
         self.exporters = {}
 
@@ -748,7 +747,7 @@ class OrgMigrator(object):
 
     def _get_model_exporter(self, exporter):
         if exporter not in self.exporters:
-            self.exporters[exporter] = exporter(self.org_id, self.archive, self.db)
+            self.exporters[exporter] = exporter(self.org_id, self.archive, self.db, self.ignore_dupes)
 
         return self.exporters[exporter]
 
@@ -758,10 +757,10 @@ class OrgMigrator(object):
 
 
 class OrgExporter(OrgMigrator):
-    def __init__(self, dbconn, archive_file, org_id):
+    def __init__(self, dbconn, archive_file, org_id, ignore_dupes):
         archive = zipfile.ZipFile(archive_file, mode='w', compression=zipfile.ZIP_DEFLATED)
 
-        super(OrgExporter, self).__init__(dbconn, archive, org_id)
+        super(OrgExporter, self).__init__(dbconn, archive, org_id, ignore_dupes)
 
     def execute(self):
         # Impl note:
@@ -785,10 +784,10 @@ class OrgExporter(OrgMigrator):
 
 
 class OrgImporter(OrgMigrator):
-    def __init__(self, dbconn, archive_file):
+    def __init__(self, dbconn, archive_file, org_id, ignore_dupes):
         archive = zipfile.ZipFile(archive_file, 'r')
 
-        super(OrgImporter, self).__init__(dbconn, archive, None)
+        super(OrgImporter, self).__init__(dbconn, archive, org_id, ignore_dupes)
 
     def execute(self):
         return self._import_impl(self.workers)
@@ -822,7 +821,6 @@ class OrgImporter(OrgMigrator):
 
 
 def parse_options():
-    # [--debug] [--dbtype DB_TYPE] [--username USERNAME] [--password PASSWORD] [--host HOST] [--db DATABASE] [--file FILE]
     usage = "usage: %prog ORG"
     parser = OptionParser(usage=usage)
 
@@ -853,6 +851,8 @@ def parse_options():
     parser.add_option("--list", dest="act_list", action="store_true", default=False,
         help="Sets the operating mode to LIST; cannot be used with --import or --export")
 
+    parser.add_option("--ignore_dupes", dest="ignore_dupes", action="store_true", default=False,
+        help="Ignores duplicate entities during import")
 
     (options, args) = parser.parse_args()
 
@@ -897,7 +897,7 @@ def main():
                 log.error("File does not exist or cannot be read: %s", options.file)
                 return
 
-            importer = OrgImporter(db, options.file)
+            importer = OrgImporter(db, options.file, None, options.ignore_dupes)
 
             log.info('Importing data from file: %s', options.file)
             with(db.start_transaction(readonly=False)) as transaction:
@@ -914,7 +914,7 @@ def main():
             if org_id is not None:
                 log.info('Resolved org "%s" to org ID: %s', args[0], org_id)
 
-                exporter = OrgExporter(db, options.file, org_id)
+                exporter = OrgExporter(db, options.file, org_id, False)
 
                 log.info('Exporting data to file: %s', options.file)
                 with(db.start_transaction(readonly=True)) as transaction:
