@@ -166,11 +166,41 @@ describe 'Healing' do
       consumer_cp.consume_product()
     rescue RestClient::BadRequest => e
       exception_thrown = true
-      ex_message = "Ignoring request to auto-attach. It is disabled for org \"#{owner['key']}\" because of the content access mode setting."
+      ex_message = "Ignoring request to auto-attach. It is disabled for org \"#{owner['key']}\"."
       data = JSON.parse(e.response)
       data['displayMessage'].should == ex_message
     end
     exception_thrown.should be true
+  end
+
+  it 'healing should fail when owner is in SCA mode' do
+    skip("candlepin running in standalone mode") if not is_hosted?
+
+    owner = create_owner(random_string("test_owner"), nil, {
+      'contentAccessModeList' => 'org_environment,entitlement',
+      'contentAccessMode' => "org_environment"
+    })
+    owner = @cp.get_owner(owner['key'])
+
+    expect(owner).to_not be_nil
+
+    cp_user = user_client(owner, random_string("testing-user"))
+    consumer = cp_user.register("foofy_test", :system, nil,
+      {'cpu.cpu_socket(s)' => '8'}, nil, owner['key'], [], [])
+    consumer_cp = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+    exception_thrown = false
+
+    begin
+      consumer_cp.consume_product()
+    rescue RestClient::BadRequest => e
+      exception_thrown = true
+      ex_message = "Ignoring request to auto-attach. " +
+        "It is disabled for org \"#{owner['key']}\" because of the content access mode setting."
+      data = JSON.parse(e.response)
+      expect(data['displayMessage']).to eq(ex_message)
+    end
+
+    expect(exception_thrown).to eq(true)
   end
 
 end
