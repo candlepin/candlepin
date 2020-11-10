@@ -2136,9 +2136,16 @@ public class ConsumerResource {
                 entitlements = entitler.bindByProducts(autobindData);
             }
             catch (AutobindDisabledForOwnerException e) {
-                throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\" because of the content access mode setting."
-                    , owner.getKey()));
+                if (owner.isContentAccessEnabled()) {
+                    throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+                        "It is disabled for org \"{0}\" because of the content access mode setting."
+                        , owner.getKey()));
+                }
+                else {
+                    throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+                        "It is disabled for org \"{0}\"."
+                        , owner.getKey()));
+                }
             }
             catch (AutobindHypervisorDisabledException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
