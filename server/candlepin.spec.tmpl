@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.22
+Version: 3.1.23
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,11 @@ fi
 
 #raw
 %changelog
+* Thu Nov 12 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.23-1
+- 1884259: Manifest delete takes 24 hours or more in large environment (60k
+  consumers in owner)  - Switch to a faster implementation of pool deletion.
+  (ojanus@redhat.com)
+
 * Wed Nov 04 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.22-1
 - 1893836: Fixed encoding of environment name in SCA certificates
   (crog@redhat.com)
