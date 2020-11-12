@@ -54,11 +54,13 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
+import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
@@ -83,6 +85,7 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
+import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
@@ -116,6 +119,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -128,6 +132,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -148,7 +153,6 @@ import javax.ws.rs.core.MultivaluedMap;
 public class OwnerResourceTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar Jar Binks";
 
-    @Inject private ContentAccessManager contentAccessManager;
     @Inject private CandlepinPoolManager poolManager;
     @Inject private I18n i18n;
     @Inject private OwnerResource ownerResource;
@@ -178,7 +182,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private EventFactory mockEventFactory;
     private EventAdapter mockEventAdapter;
 
-    private ContentAccessManager mockContentAccessManager;
+    private ContentAccessManager contentAccessManager;
     private ManifestManager mockManifestManager;
     private OwnerManager mockOwnerManager;
     private PoolManager mockPoolManager;
@@ -227,7 +231,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.mockEventFactory = mock(EventFactory.class);
         this.mockEventAdapter = mock(EventAdapter.class);
 
-        this.mockContentAccessManager = mock(ContentAccessManager.class);
+        this.contentAccessManager = mock(ContentAccessManager.class);
         this.mockManifestManager = mock(ManifestManager.class);
         this.mockOwnerManager = mock(OwnerManager.class);
         this.mockPoolManager = mock(PoolManager.class);
@@ -244,7 +248,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private OwnerResource buildOwnerResource() {
         return new OwnerResource(this.mockOwnerCurator, this.mockActivationKeyCurator,
             this.mockConsumerCurator, this.i18n, this.mockEventSink, this.mockEventFactory,
-            this.mockEventAdapter, this.mockContentAccessManager, this.mockManifestManager,
+            this.mockEventAdapter, this.contentAccessManager, this.mockManifestManager,
             this.mockPoolManager, this.mockOwnerManager, this.mockExportCurator, this.mockOwnerInfoCurator,
             this.mockImportRecordCurator, this.mockEntitlementCurator, this.mockUeberCertCurator,
             this.mockUeberCertificateGenerator, this.mockEnvironmentCurator, this.calculatedAttributesUtil,
@@ -2077,4 +2081,59 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         assertThrows(BadRequestException.class, () -> ownerResource.updateOwner(owner.getKey(), changes));
     }
+
+    @Test
+    void shouldThrowWhenOwnerNotFound() {
+        when(mockOwnerCurator.getOwnerContentAccess(anyString()))
+            .thenThrow(OwnerNotFoundException.class);
+
+        OwnerResource resource = this.buildOwnerResource();
+
+        Assertions.assertThrows(NotFoundException.class,
+            () -> resource.getOwnerContentAccess("test_owner_key"));
+    }
+
+    @Test
+    void usesOwnersCAModeWhenAvailable() {
+        String ownerKey = "test-owner-key";
+        String expectedMode = "owner-ca-mode";
+        List<String> expectedModeList = Collections.singletonList(expectedMode);
+        OwnerContentAccess access = new OwnerContentAccess(expectedMode, expectedMode);
+        when(mockOwnerCurator.getOwnerContentAccess(eq(ownerKey)))
+            .thenReturn(access);
+
+        OwnerResource resource = this.buildOwnerResource();
+        ContentAccessDTO contentAccess = resource.getOwnerContentAccess(ownerKey);
+
+        assertEquals(expectedMode, contentAccess.getContentAccessMode());
+        assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
+    }
+
+    @Test
+    void usesDefaultWhenOwnerCANotAvailable() {
+        String expectedMode = ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue();
+        List<String> expectedModeList = Collections.singletonList(expectedMode);
+        when(mockOwnerCurator.getOwnerContentAccess(anyString()))
+            .thenReturn(new OwnerContentAccess(null, null));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ContentAccessDTO contentAccess = resource.getOwnerContentAccess("test_owner_key");
+
+        assertEquals(expectedMode, contentAccess.getContentAccessMode());
+        assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
+    }
+
+
+    @Test
+    void returns404WhenOwnerNotFound() {
+        when(mockOwnerCurator.getOwnerContentAccess(anyString()))
+            .thenThrow(OwnerNotFoundException.class);
+
+        OwnerResource resource = this.buildOwnerResource();
+
+        Assertions.assertThrows(NotFoundException.class,
+            () -> resource.getOwnerContentAccess("test_owner"));
+    }
+
+
 }

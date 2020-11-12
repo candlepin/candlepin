@@ -72,6 +72,13 @@ describe 'Consumer Resource' do
      consumer['idCert'].should_not == id_cert
   end
 
+  it "get consumer content access" do
+    access = @cp.get_consumer_content_access(@consumer1.uuid)
+
+    expect(access['contentAccessModeList']).to eq(%w[org_environment entitlement])
+    expect(access['contentAccessMode']).to eq("entitlement")
+  end
+
   it 'should receive paged data back when requested' do
     id_list = []
     (1..4).each do |i|

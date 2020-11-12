@@ -44,12 +44,14 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.ManifestManager;
+import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
@@ -77,6 +79,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
+import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
@@ -847,6 +850,33 @@ public class OwnerResource {
     public OwnerDTO getOwner(@PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
         return this.translator.translate(owner, OwnerDTO.class);
+    }
+
+    @GET
+    @Path("/{owner_key}/content_access")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(notes = "Retrieves content access of an Owner", value = "getOwnerContentAccess",
+        response = ContentAccessDTO.class)
+    @ApiResponses({ @ApiResponse(code = 404, message = "An owner not found") })
+    public ContentAccessDTO getOwnerContentAccess(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        try {
+            OwnerContentAccess owner = this.ownerCurator.getOwnerContentAccess(ownerKey);
+            String caMode = Util.firstOf(
+                owner.getContentAccessMode(),
+                ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
+            );
+            String caList = Util.firstOf(
+                owner.getContentAccessModeList(),
+                ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
+            );
+            return new ContentAccessDTO()
+                .contentAccessMode(caMode)
+                .contentAccessModeList(Util.toList(caList));
+        }
+        catch (OwnerNotFoundException e) {
+            throw new NotFoundException("Owner was not found!", e);
+        }
     }
 
     /**

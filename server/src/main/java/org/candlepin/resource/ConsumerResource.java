@@ -58,6 +58,7 @@ import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
@@ -76,7 +77,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentAccessCertificate;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DeleteResult;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -228,7 +228,7 @@ public class ConsumerResource {
     private JobManager jobManager;
 
     @Inject
-    @SuppressWarnings({"checkstyle:parameternumber"})
+    @SuppressWarnings({ "checkstyle:parameternumber" })
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         OwnerProductCurator ownerProductCurator,
@@ -252,7 +252,6 @@ public class ConsumerResource {
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
         Configuration config,
-        ContentCurator contentCurator,
         CdnCurator cdnCurator,
         CalculatedAttributesUtil calculatedAttributesUtil,
         ConsumerBindUtil consumerBindUtil,
@@ -409,7 +408,7 @@ public class ConsumerResource {
 
     @ApiOperation(notes = "Retrieves a list of the Consumers", value = "list", response = Consumer.class,
         responseContainer = "list")
-    @ApiResponses({ @ApiResponse(code =  400, message = ""), @ApiResponse(code =  404, message = "") })
+    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "consumers")
@@ -437,7 +436,7 @@ public class ConsumerResource {
             }
         }
 
-        List<ConsumerType> types =  consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
+        List<ConsumerType> types = consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
         CandlepinQuery<Consumer> query = this.consumerCurator.searchOwnerConsumers(
             owner, userName, types, uuids, hypervisorIds, attrFilters,
@@ -526,6 +525,28 @@ public class ConsumerResource {
         }
 
         return this.translator.translate(consumer, ConsumerDTO.class);
+    }
+
+    @ApiOperation(notes = "Retrieves content access of a Consumer", value = "getConsumerContentAccess")
+    @ApiResponses({ @ApiResponse(code = 404, message = "") })
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{consumer_uuid}/content_access")
+    public ContentAccessDTO getContentAccessForConsumer(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
+        String caMode = Util.firstOf(
+            consumer.getContentAccessMode(),
+            consumer.getOwner().getContentAccessMode(),
+            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
+        );
+        String caList = Util.firstOf(
+            consumer.getOwner().getContentAccessModeList(),
+            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
+        );
+        return new ContentAccessDTO()
+            .contentAccessMode(caMode)
+            .contentAccessModeList(Util.toList(caList));
     }
 
     /**
@@ -767,12 +788,12 @@ public class ConsumerResource {
         }
 
         return translator.translate(createConsumerFromDTO(dto,
-                ctype,
-                principal,
-                userName,
-                owner,
-                activationKeys,
-                identityCertCreation),
+            ctype,
+            principal,
+            userName,
+            owner,
+            activationKeys,
+            identityCertCreation),
             ConsumerDTO.class);
     }
 
@@ -950,7 +971,7 @@ public class ConsumerResource {
         }
     }
 
-    private List<ActivationKey>  checkActivationKeys(Principal principal, Owner owner,
+    private List<ActivationKey> checkActivationKeys(Principal principal, Owner owner,
         Set<String> keyStrings) throws BadRequestException {
         List<ActivationKey> keys = new ArrayList<>();
         for (String keyString : keyStrings) {
@@ -998,7 +1019,7 @@ public class ConsumerResource {
             // create
             if ((existing.getCapabilities() == null ||
                 existing.getCapabilities().isEmpty()) &&
-                existing.getFact("distributor_version") !=  null) {
+                existing.getFact("distributor_version") != null) {
                 Set<DistributorVersionCapability> capabilities = distributorVersionCurator.
                     findCapabilitiesByDistVersion(existing.getFact("distributor_version"));
                 if (capabilities != null) {
@@ -1022,7 +1043,7 @@ public class ConsumerResource {
                     change = true;
                 }
             }
-            else if (update.getFact("distributor_version") !=  null) {
+            else if (update.getFact("distributor_version") != null) {
                 DistributorVersion dv = distributorVersionCurator.findByName(
                     update.getFact("distributor_version"));
 
@@ -1731,7 +1752,7 @@ public class ConsumerResource {
     @ApiResponses({
         @ApiResponse(code = 403, message = "Invalid access rights to unregister the Consumer."),
         @ApiResponse(code = 404, message = "Target consumer does not exist."),
-        @ApiResponse(code = 410, message = "Target consumer was already deleted.")})
+        @ApiResponse(code = 410, message = "Target consumer was already deleted.") })
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
@@ -1841,7 +1862,7 @@ public class ConsumerResource {
     public Response getContentAccessBody(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @HeaderParam("If-Modified-Since") @DefaultValue("Thu, 01 Jan 1970 00:00:00 GMT")
-        @DateFormat({"EEE, dd MMM yyyy HH:mm:ss z"}) Date since) {
+        @DateFormat({ "EEE, dd MMM yyyy HH:mm:ss z" }) Date since) {
 
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
@@ -2149,7 +2170,7 @@ public class ConsumerResource {
             }
             catch (AutobindHypervisorDisabledException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting."
+                        "It is disabled for org \"{0}\" because of the hypervisor autobind setting."
                     , owner.getKey()));
             }
         }
@@ -2200,7 +2221,7 @@ public class ConsumerResource {
 
             if (owner.isContentAccessEnabled()) {
                 message = (i18n.tr("Organization \"{0}\" has auto-attach disabled because " +
-                                "of the content access mode setting.", owner.getKey()));
+                    "of the content access mode setting.", owner.getKey()));
 
             }
             else {
@@ -2392,7 +2413,7 @@ public class ConsumerResource {
         List<Entitlement> entitlementsToDelete = entitlementCurator
             .listByConsumerAndPoolId(consumer, poolId);
         if (!entitlementsToDelete.isEmpty()) {
-            for (Entitlement toDelete: entitlementsToDelete) {
+            for (Entitlement toDelete : entitlementsToDelete) {
                 poolManager.revokeEntitlement(toDelete);
             }
         }

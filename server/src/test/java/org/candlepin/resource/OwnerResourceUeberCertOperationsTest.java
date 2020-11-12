@@ -16,8 +16,8 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.async.JobManager;
@@ -89,7 +89,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     public void testUeberCertIsRegeneratedOnNextInvocation() throws Exception {
         UeberCertificateDTO firstCert = or.createUeberCertificate(principal, owner.getKey());
         UeberCertificateDTO secondCert = or.createUeberCertificate(principal, owner.getKey());
-        assertTrue(firstCert.getId() != secondCert.getId());
+        assertNotSame(firstCert.getId(), secondCert.getId());
     }
 
     @Test

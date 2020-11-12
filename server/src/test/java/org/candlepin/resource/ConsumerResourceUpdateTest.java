@@ -14,8 +14,23 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.nullable;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event;
@@ -68,7 +83,6 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.FactValidator;
-import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.util.Providers;
 
@@ -122,7 +136,6 @@ public class ConsumerResourceUpdateTest {
     @Mock private Entitler entitler;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private EnvironmentCurator environmentCurator;
-    @Mock private ServiceLevelValidator serviceLevelValidator;
     @Mock private EventBuilder consumerEventBuilder;
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ConsumerEnricher consumerEnricher;
@@ -154,7 +167,7 @@ public class ConsumerResourceUpdateTest {
             this.userService, poolManager, null, ownerCurator,
             this.activationKeyCurator, this.entitler, this.complianceRules, this.systemPurposeComplianceRules,
             this.deletedConsumerCurator, this.environmentCurator, null,
-            config, null, null, null, this.consumerBindUtil,
+            config, null, null, this.consumerBindUtil,
             null, null, new FactValidator(config, this.i18nProvider),
             null, consumerEnricher, migrationProvider, this.translator, this.jobManager);
 

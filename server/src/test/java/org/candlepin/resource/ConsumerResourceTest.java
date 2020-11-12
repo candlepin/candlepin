@@ -57,6 +57,7 @@ import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
@@ -107,6 +108,7 @@ import com.google.inject.util.Providers;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.hibernate.mapping.Collection;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -126,6 +128,7 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -224,7 +227,6 @@ public class ConsumerResourceTest {
             null,
             null,
             config,
-            null,
             mockCdnCurator,
             null,
             consumerBindUtil,
@@ -396,7 +398,7 @@ public class ConsumerResourceTest {
             mockConsumerCurator, mockConsumerTypeCurator, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, null, null, null, null, null,
             poolManager, null, null, null, null, null, null, null, null, null,
-            this.config, null, null, null, consumerBindUtil,
+            this.config, null, null, consumerBindUtil,
             null, null, this.factValidator, null, consumerEnricher, migrationProvider, translator,
             this.mockJobManager);
 
@@ -408,7 +410,7 @@ public class ConsumerResourceTest {
     private void verifyCertificateSerialNumbers(
         List<CertificateSerialDTO> serials) {
         assertEquals(3, serials.size());
-        assertTrue(serials.get(0).getSerial().equals(BigInteger.ONE));
+        assertEquals(BigInteger.ONE, serials.get(0).getSerial());
     }
 
     private List<EntitlementCertificate> createEntitlementCertificates() {
@@ -861,6 +863,75 @@ public class ConsumerResourceTest {
         assertThrows(OptimisticLockException.class, () ->
             consumerResource.deleteConsumer(consumer.getUuid(), uap)
         );
+    }
+
+
+    @Test
+    void shouldThrowWhenConsumerNotFound() {
+        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+            .thenThrow(NotFoundException.class);
+
+        Assertions.assertThrows(NotFoundException.class,
+            () -> consumerResource.getContentAccessForConsumer("test_uuid"));
+    }
+
+    @Test
+    void usesDefaultWhenNoCAAvailable() {
+        String expectedMode = ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue();
+        List<String> expectedModeList = Collections.singletonList(expectedMode);
+        Consumer consumer = createConsumer(createOwner());
+        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+            .thenReturn(consumer);
+
+        ContentAccessDTO contentAccess = consumerResource
+            .getContentAccessForConsumer("test_consumer_uuid");
+
+        assertEquals(expectedMode, contentAccess.getContentAccessMode());
+        assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
+    }
+
+    @Test
+    void usesConsumersCAModeWhenAvailable() {
+        String expectedMode = "consumer-ca-mode";
+        Consumer consumer = createConsumer(createOwner());
+        consumer.setContentAccessMode(expectedMode);
+        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+            .thenReturn(consumer);
+
+        ContentAccessDTO contentAccess = consumerResource
+            .getContentAccessForConsumer("test-uuid");
+
+        assertEquals(expectedMode, contentAccess.getContentAccessMode());
+    }
+
+    @Test
+    void usesOwnersCAModeWhenConsumersCAModeNotAvailable() {
+        String expectedMode = "owner-ca-mode";
+        Consumer consumer = createConsumer(createOwner());
+        consumer.setContentAccessMode(null);
+        consumer.getOwner().setContentAccessMode(expectedMode);
+        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+            .thenReturn(consumer);
+
+        ContentAccessDTO contentAccess = consumerResource
+            .getContentAccessForConsumer("test-uuid");
+
+        assertEquals(expectedMode, contentAccess.getContentAccessMode());
+    }
+
+    @Test
+    void usesOwnersCAModeListWhenAvailable() {
+        String expectedMode = "owner-ca-mode-list";
+        List<String> expectedModeList = Collections.singletonList(expectedMode);
+        Consumer consumer = createConsumer(createOwner());
+        consumer.getOwner().setContentAccessModeList(expectedMode);
+        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+            .thenReturn(consumer);
+
+        ContentAccessDTO contentAccess = consumerResource
+            .getContentAccessForConsumer("test-uuid");
+
+        assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
     }
 
 }

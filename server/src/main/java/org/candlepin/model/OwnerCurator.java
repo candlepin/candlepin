@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.controller.OwnerContentAccess;
+
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -37,7 +39,8 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Singleton;
-
+import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
 
 
 /**
@@ -46,8 +49,9 @@ import javax.inject.Singleton;
 @Singleton
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
-    @Inject private CandlepinQueryFactory cpQueryFactory;
-    private static Logger log = LoggerFactory.getLogger(OwnerCurator.class);
+    @Inject
+    private CandlepinQueryFactory cpQueryFactory;
+    private static final Logger log = LoggerFactory.getLogger(OwnerCurator.class);
 
     public OwnerCurator() {
         super(Owner.class);
@@ -146,7 +150,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(CPRestrictions.in("key", keys));
 
-        return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     public Owner getByUpstreamUuid(String upstreamUuid) {
@@ -180,7 +184,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class, "o")
             .add(Subqueries.propertyIn("o.key", distinctQuery));
 
-        return this.cpQueryFactory.<Owner>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -228,7 +232,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
                 DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class)
                     .add(CPRestrictions.in("id", ownerIds));
 
-                return this.cpQueryFactory.<Owner>buildQuery(session, criteria);
+                return this.cpQueryFactory.buildQuery(session, criteria);
             }
         }
 
@@ -239,26 +243,41 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return this.getConsumerIds(owner.getId());
     }
 
-    @SuppressWarnings("unchecked")
     public CandlepinQuery<String> getConsumerIds(String ownerId) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
             .add(Restrictions.eq("ownerId", ownerId))
             .setProjection(Property.forName("id"));
 
-        return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     public CandlepinQuery<String> getConsumerUuids(Owner owner) {
         return this.getConsumerUuids(owner.getId());
     }
 
-    @SuppressWarnings("unchecked")
     public CandlepinQuery<String> getConsumerUuids(String ownerId) {
         DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
             .add(Restrictions.eq("ownerId", ownerId))
             .setProjection(Property.forName("uuid"));
 
-        return this.cpQueryFactory.<String>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
-}
 
+    @SuppressWarnings("checkstyle:indentation")
+    public OwnerContentAccess getOwnerContentAccess(String ownerKey) {
+        TypedQuery<OwnerContentAccess> query = entityManager.get().createQuery(
+            "SELECT new org.candlepin.controller.OwnerContentAccess(" +
+                "o.contentAccessMode, o.contentAccessModeList)" +
+                " FROM Owner o WHERE o.key = :ownerKey", OwnerContentAccess.class);
+        log.info("Retrieving content access data to owner: {}.", ownerKey);
+        try {
+            return query
+                .setParameter("ownerKey", ownerKey)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            throw new OwnerNotFoundException(ownerKey, e);
+        }
+    }
+
+}

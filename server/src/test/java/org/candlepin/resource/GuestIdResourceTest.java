@@ -305,7 +305,7 @@ public class GuestIdResourceTest {
         public ConsumerResourceForTesting() {
             super(null, null, null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, consumerEnricher, null, modelTranslator, jobManager);
+                null, null, null, null, consumerEnricher, null, modelTranslator, jobManager);
         }
 
         public void checkForMigration(Consumer host, Consumer guest) {
