@@ -42,6 +42,13 @@ build_lint() {
         buildr lint
     fi
 }
+
+validate_translation() {
+    if [ -f ./gradlew ]; then
+        ./gradlew validate_translation
+    fi
+}
+
 build_unittest() {
     UTCMD=$1
     if [ -f ../gradlew ]; then
@@ -97,6 +104,7 @@ collect_artifacts() {
         buildr.log
         unit_tests.log
         rspec.log
+        translation.log
     )
     # prepend full file path for maximum lazy typers
     for ((i=0; i<${#CANDLEPIN_LOGS[*]}; i++)); do
@@ -186,11 +194,12 @@ OPTIONS:
   -p <project>     subproject to build (defaults to "server")
   -j <version>     use a specific Java version instead of the auto-detected default
   -v               enable verbose/debug output
+  -i               internationalization - validate translation files
 HELP
 }
 
 ARGV=("$@")
-while getopts ":dtqrHulsb:c:p:vj:" opt; do
+while getopts ":dtqrHulsb:c:p:vj:i" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -228,6 +237,7 @@ while getopts ":dtqrHulsb:c:p:vj:" opt; do
         q  ) QPID="1";;
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
+        i  ) TRANSLATE="1";;
         ?  ) usage; exit;;
     esac
 done
@@ -317,6 +327,15 @@ if [ "$LINTER" == "1" ]; then
     cd $CP_HOME
     tee /var/log/candlepin/lint.log < /tmp/teepipe &
     build_lint > /tmp/teepipe 2>&1
+fi
+
+if [ "$TRANSLATE" == "1" ]; then
+    echo "Running validator for translated files..."
+    CLEAN_CP=1
+
+    cd $CP_HOME
+    tee /var/log/candlepin/translation.log < /tmp/teepipe &
+    validate_translation > /tmp/teepipe 2>&1
 fi
 
 # TODO: keep track of return code?
