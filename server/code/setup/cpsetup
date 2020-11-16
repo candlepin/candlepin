@@ -92,6 +92,10 @@ class TomcatSetup(object):
                     TLS_ECDH_anon_WITH_AES_128_CBC_SHA,
                     TLS_ECDH_anon_WITH_AES_256_CBC_SHA"
                truststorePass="%s" />""" % (keystorepwd, keystorepwd)
+        self.main_conf = '/etc/tomcat/tomcat.conf'
+        self.main_comment_pattern = '^#\s*JAVA_HOME.*'
+        self.main_existing_pattern = '^JAVA_HOME.*'
+        self.new_java_home = 'JAVA_HOME="/usr/lib/jvm/jre-11-openjdk"'
 
     def _backup_config(self, conf_dir):
         run_command('cp %s/server.xml %s/server.xml.original' % (conf_dir, conf_dir))
@@ -104,7 +108,16 @@ class TomcatSetup(object):
         regex = re.compile(self.comment_pattern, re.DOTALL)
         return regex.sub(self.https_conn, original, 1)
 
+    def _replace_current_main(self, original):
+        regex = re.compile(self.main_existing_pattern, re.MULTILINE)
+        return regex.sub(self.new_java_home, original, 1)
+
+    def _replace_commented_main(self, original):
+        regex = re.compile(self.main_comment_pattern, re.MULTILINE)
+        return regex.sub(self.new_java_home, original, 1)
+
     def update_config(self):
+        # Edit server.xml
         self._backup_config(self.conf_dir)
         original_file = open(os.path.join(self.conf_dir, 'server.xml'), 'r')
         original = original_file.read()
@@ -114,9 +127,22 @@ class TomcatSetup(object):
         else:
             updated = self._replace_current(original)
         original_file.close()
-        config = open(os.path.join(self.conf_dir, 'server.xml'), 'w')
-        config.write(updated)
-        config.close()
+        with open(os.path.join(self.conf_dir, 'server.xml'), 'w') as config:
+            config.write(updated)
+
+        # Edit tomcat.conf
+        with open(self.main_conf, 'r') as original_main_file:
+            original_main = original_main_file.read()
+
+        if re.search(self.main_existing_pattern, original_main, re.MULTILINE):
+            updated_main = self._replace_current_main(original_main)
+        elif re.search(self.main_comment_pattern, original_main, re.MULTILINE):
+            updated_main = self._replace_commented_main(original_main)
+        else:
+            updated_main = original_main + os.linesep + self.new_java_home
+
+        with open(self.main_conf, 'w') as main_config:
+            main_config.write(updated_main)
 
     def fix_perms(self):
         run_command("chmod g+x /var/log/" + TOMCAT)
