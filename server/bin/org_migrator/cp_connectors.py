@@ -78,6 +78,9 @@ class DBConnector(object):
     def get_type_as_string(self, type_code):
         raise NotImplementedError("Not yet implemented")
 
+    def build_insert_statement(self, table, columns, ignore_duplicates=False):
+        raise NotImplementedError("Not yet implemented")
+
     def close(self):
         if not self.is_closed():
             self.db.close()
@@ -179,6 +182,15 @@ class PSQLConnector(DBConnector):
 
         return None
 
+    def build_insert_statement(self, table, columns, ignore_duplicates=False):
+        pblock = ', '.join(['%s'] * len(columns))
+        statement = 'INSERT INTO ' + table + ' (' + ', '.join(columns) + ') VALUES (' + pblock + ')'
+
+        if ignore_duplicates:
+            statement = statement + ' ON CONFLICT DO NOTHING'
+
+        return statement
+
     def is_closed(self):
         if self.db is not None and self.db.closed == 0:
             return False
@@ -246,6 +258,17 @@ class MySQLConnector(DBConnector):
         from mysql.connector import FieldType
         return FieldType.get_info(type_code)
 
+    def build_insert_statement(self, table, columns, ignore_duplicates=False):
+        pblock = ', '.join(['%s'] * len(columns))
+        statement = ' INTO ' + table + ' (' + ', '.join(columns) + ') VALUES (' + pblock + ')'
+
+        if ignore_duplicates:
+            statement = 'INSERT IGNORE' + statement
+        else:
+            statement = 'INSERT' + statement
+
+        return statement
+
     def is_closed(self):
         if self.db is not None and self.db.is_connected():
             return False
@@ -274,12 +297,13 @@ def get_http_connector(host, username, password, secure):
 
 def get_db_connector(type, host='localhost', port=None, username='candlepin', password='', dbname='candlepin'):
     connectors = {
+        'psql':         PSQLConnector,
         'postgre':      PSQLConnector,
         'postgres':     PSQLConnector,
         'postgresql':   PSQLConnector,
+
         'mariadb':      MySQLConnector,
         'mysql':        MySQLConnector
     }
 
     return connectors[str(type).lower()](host, port, username, password, dbname)
-
