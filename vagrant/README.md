@@ -73,3 +73,28 @@ In order to run the qpid tests a few additional steps must be completed manually
 1. Update the qpid_proton gem: `bundle update qpid_proton` 
 1. Install qpid (from the /vagrant/server directory): `./bin/deploy -qag`
 1. Run the QPID tests: `buildr rspec:qpid` 
+
+## Switching Java version in vagrant box
+
+Candlepin uses Java 11 from version 3.2.0 & onwards. We have an option to switch Java version back & forth for testing older/newer candlepin branches.  
+
+NOTE - By default vagrant box boots up with Java 11.
+
+To switch Java version back & forth we need to manually configure few things.
+
+1. Set Java version (Select Java 8 or Java 11).
+   * `sudo update-alternatives --config java`
+   * `sudo update-alternatives --config javac`
+
+2. Set `JAVA_HOME` in `bashrc`.
+
+3. Manually edit `tomcat.conf` to update these config properties.
+    * Set Java Home
+       * `JAVA_HOME="<PATH>"`
+    * Set JVM Options
+       * For Java 8
+        `JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n`
+       * For Java 11
+        `JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n`
+
+4. Restart Tomcat
