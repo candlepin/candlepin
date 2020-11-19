@@ -29,6 +29,9 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
 import java.io.Serializable;
+import java.util.Objects;
+
+
 
 /**
  * A permission represents an owner to be accessed in some fashion, and a verb which
@@ -50,7 +53,9 @@ public class OwnerPermission implements Permission, Serializable {
     public boolean canAccess(Object target, SubResource subResource, Access requiredAccess) {
         if (target instanceof Owned) {
             // First make sure the owner matches:
-            if (owner.getId().equals(((Owned) target).getOwnerId()) && access.provides(requiredAccess)) {
+            if (Objects.equals(owner.getId(), ((Owned) target).getOwnerId()) &&
+                access.provides(requiredAccess)) {
+
                 return true;
             }
         }

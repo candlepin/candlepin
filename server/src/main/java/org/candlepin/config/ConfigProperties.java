@@ -135,6 +135,11 @@ public class ConfigProperties {
     public static final String OAUTH_AUTHENTICATION = "candlepin.auth.oauth.enable";
     public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enable";
     public static final String KEYCLOAK_AUTHENTICATION = "candlepin.auth.keycloak.enable";
+    public static final String CLOUD_AUTHENTICATION = "candlepin.auth.cloud.enable";
+
+    // JWT configuration
+    public static final String JWT_ISSUER = "candlepin.jwt.issuer";
+    public static final String JWT_TOKEN_TTL = "candlepin.jwt.token_ttl";
 
     /**
      * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
@@ -359,6 +364,9 @@ public class ConfigProperties {
         {
             this.put(CANDLEPIN_URL, "https://localhost");
 
+            this.put(JWT_ISSUER, "Candlepin");
+            this.put(JWT_TOKEN_TTL, "600"); // seconds
+
             this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
             this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
             this.put(CA_CERT_UPSTREAM, "/etc/candlepin/certs/upstream");
@@ -368,7 +376,6 @@ public class ConfigProperties {
             this.put(CPM_PROVIDER, "artemis");
 
             this.put(ACTIVEMQ_ENABLED, "true");
-
             this.put(ACTIVEMQ_EMBEDDED, "true");
 
             // TODO: Delete the above configuration and only use EMBEDDED_BROKER going forward.
@@ -435,6 +442,8 @@ public class ConfigProperties {
             this.put(OAUTH_AUTHENTICATION, "false");
             this.put(KEYCLOAK_AUTHENTICATION, "false");
             this.put(BASIC_AUTHENTICATION, "true");
+            this.put(CLOUD_AUTHENTICATION, "false");
+
             this.put(AUTH_OVER_HTTP, "false");
             // By default, environments should be hidden so clients do not need to
             // submit one when registering.

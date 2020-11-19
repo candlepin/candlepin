@@ -147,9 +147,13 @@ public class User extends AbstractHibernateObject implements UserInfo {
 
     /**
      * @param id the id to set
+     *
+     * @return
+     *  a reference to this User
      */
-    public void setId(String id) {
+    public User setId(String id) {
         this.id = id;
+        return this;
     }
 
     /**
@@ -161,9 +165,13 @@ public class User extends AbstractHibernateObject implements UserInfo {
 
     /**
      * @param username the login to set
+     *
+     * @return
+     *  a reference to this User
      */
-    public void setUsername(String username) {
+    public User setUsername(String username) {
         this.username = username;
+        return this;
     }
 
     /**
@@ -175,17 +183,25 @@ public class User extends AbstractHibernateObject implements UserInfo {
 
     /**
      * Sets the hashed password value.
+     *
+     * @return
+     *  a reference to this User
      */
-    public void setHashedPassword(String hashedPassword) {
+    public User setHashedPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
+        return this;
     }
 
     /**
      * @param password the password to set
+     *
+     * @return
+     *  a reference to this User
      */
     @JsonProperty
-    public void setPassword(String password) {
+    public User setPassword(String password) {
         this.hashedPassword = Util.hash(password);
+        return this;
     }
 
     /**
@@ -243,9 +259,13 @@ public class User extends AbstractHibernateObject implements UserInfo {
 
     /**
      * @param superAdmin if the user should have the SUPER_ADMIN role
+     *
+     * @return
+     *  a reference to this User
      */
-    public void setSuperAdmin(boolean superAdmin) {
+    public User setSuperAdmin(boolean superAdmin) {
         this.superAdmin = superAdmin;
+        return this;
     }
 
     /**
