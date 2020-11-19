@@ -1,7 +1,7 @@
 version: '2'
 services:
   db:
-    image: mariadb:10.2
+    image: ${REGISTRY}/mariadb:10.2
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
