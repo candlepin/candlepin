@@ -278,7 +278,7 @@ fi
 # Check if we need to use Java 11, otherwie auto detect Java version.
 # Candlepin support Java 11 from 3.2.0 & onwards.
 
-CANDLEPIN_BASE_VERSION=$(git describe --abbrev=0 | awk -F"-" '{print $2}')
+CANDLEPIN_BASE_VERSION=$(grep "Version:" server/candlepin.spec.tmpl | awk -F"Version: " '{print $2}')
 JAVA_11_SUPPORTED_VERSION=3.2.0
 
 echo "Base version of candlepin: " $CANDLEPIN_BASE_VERSION
