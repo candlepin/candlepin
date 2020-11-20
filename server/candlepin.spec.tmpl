@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.5
+Version: 3.2.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,16 @@ fi
 
 #raw
 %changelog
+* Fri Nov 20 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.6-1
+- Update rpm spec and cpsetup/cpdb for Java 11 (nmoumoul@redhat.com)
+- Updated organization migration tooling to allow multi-org imports
+  (crog@redhat.com)
+- ENT-2594: Mechanism to determine if SCA can be enabled for a consumer  - Add
+  a new endpoint GET /consumers/{consumer_uuid}/content_access  - Add a new
+  endpoint GET /owners/{owner_key}/content_access (ojanus@redhat.com)
+- 1884410: Fix for misleading exception message in auto-attach (ENT-3128)
+  (prakgupt@redhat.com)
+
 * Fri Nov 06 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.5-1
 - Set Java 11 specific mead target (nmoumoul@redhat.com)
 
