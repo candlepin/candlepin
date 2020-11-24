@@ -93,6 +93,14 @@ pipeline {
                         sh 'python jenkins/check_pr_branch.py $CHANGE_ID'
                     }
                 }
+                stage('validate-translation') {
+                    agent { label 'docker' }
+                    steps {
+                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+                        checkout scm
+                        sh 'sh jenkins/candlepin-validate-text.sh'
+                    }
+                }
             }
         }
     }
