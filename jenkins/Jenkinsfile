@@ -101,6 +101,14 @@ pipeline {
                         sh 'sh jenkins/candlepin-validate-text.sh'
                     }
                 }
+                stage('gettext') {
+                    agent { label 'docker' }
+                    steps {
+                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+                        checkout scm
+                        sh 'sh jenkins/get-text.sh'
+                    }
+                }
             }
         }
     }
