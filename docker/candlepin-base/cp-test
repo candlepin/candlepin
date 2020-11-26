@@ -49,6 +49,29 @@ validate_translation() {
     fi
 }
 
+gettext() {
+    if [ -f ./gradlew ]; then
+        ./gradlew gettext
+    fi
+
+    #Code to commit the updated files
+    CHANGED_FILE=`git diff --name-only HEAD`
+    ADD_COUNT=0
+
+    for file in $(echo $CHANGED_FILE | tr "\n" "\n")
+    do
+      echo "Performing: git add $file."
+      git add $file
+      ((ADD_COUNT++))
+    done
+
+    if [ $ADD_COUNT -gt 0 ]; then
+      echo "Committing and pushing the above mentioned files."
+      git commit -m "keys.pot file is updated"
+      git push
+    fi
+}
+
 build_unittest() {
     UTCMD=$1
     if [ -f ../gradlew ]; then
@@ -195,11 +218,12 @@ OPTIONS:
   -j <version>     use a specific Java version instead of the auto-detected default
   -v               enable verbose/debug output
   -i               internationalization - validate translation files
+  -g               internationalization - gettext to extract strings for translation from source java files
 HELP
 }
 
 ARGV=("$@")
-while getopts ":dtqrHulsb:c:p:vj:i" opt; do
+while getopts ":dtqrHulsb:c:p:vj:i:g" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -238,6 +262,7 @@ while getopts ":dtqrHulsb:c:p:vj:i" opt; do
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
         i  ) TRANSLATE="1";;
+        g  ) EXTRACT_TEXT="1";;
         ?  ) usage; exit;;
     esac
 done
@@ -336,6 +361,15 @@ if [ "$TRANSLATE" == "1" ]; then
     cd $CP_HOME
     tee /var/log/candlepin/translation.log < /tmp/teepipe &
     validate_translation > /tmp/teepipe 2>&1
+fi
+
+if [ "$EXTRACT_TEXT" == "1" ]; then
+    echo "Running gettext to extract strings for translation from source java files..."
+    CLEAN_CP=1
+
+    cd $CP_HOME
+    tee /var/log/candlepin/gettext.log < /tmp/teepipe &
+    gettext > /tmp/teepipe 2>&1
 fi
 
 # TODO: keep track of return code?
