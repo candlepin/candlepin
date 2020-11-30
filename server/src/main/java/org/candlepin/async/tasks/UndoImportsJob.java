@@ -34,7 +34,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,8 +43,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.List;
-
-import javax.inject.Inject;
 
 
 

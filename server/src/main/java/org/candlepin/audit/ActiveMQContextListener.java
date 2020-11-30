@@ -21,7 +21,6 @@ import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Injector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
