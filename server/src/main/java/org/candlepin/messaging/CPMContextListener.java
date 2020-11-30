@@ -14,10 +14,6 @@
  */
 package org.candlepin.messaging;
 
-import com.google.inject.Injector;
-
-
-
 /**
  * The CPMContextListener interface provides a messaging implementation a standardized means of
  * hooking into the startup and shutdown processes of Candlepin. Any background services or

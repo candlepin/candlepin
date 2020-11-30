@@ -17,10 +17,6 @@ package org.candlepin.messaging.impl.noop;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMException;
 
-import com.google.inject.Injector;
-
-import javax.inject.Singleton;
-
 
 
 /**

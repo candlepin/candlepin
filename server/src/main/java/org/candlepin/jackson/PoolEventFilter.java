@@ -20,7 +20,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonStreamContext;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.PropertyWriter;
-import org.springframework.stereotype.Component;
 
 /**
  * PoolEventFilter to show full pool json inside a list of entitlements for events

@@ -18,15 +18,15 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMException;
+import org.candlepin.messaging.CPMSessionFactory;
+
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.spi.core.security.ActiveMQJAASSecurityManager;
-import org.candlepin.messaging.CPMSessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.sql.DataSource;
 import java.io.File;
 
 /**

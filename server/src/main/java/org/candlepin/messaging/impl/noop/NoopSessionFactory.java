@@ -18,9 +18,6 @@ import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionConfig;
 import org.candlepin.messaging.CPMSessionFactory;
-import org.springframework.stereotype.Component;
-
-import javax.inject.Singleton;
 
 
 
