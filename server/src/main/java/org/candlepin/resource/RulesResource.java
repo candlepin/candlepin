@@ -20,9 +20,7 @@ import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.model.CuratorException;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-//import org.candlepin.policy.js.JsRunnerProvider;
-
-import com.google.inject.Inject;
+import org.candlepin.policy.js.JsRunnerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,7 +29,6 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
 import org.apache.commons.codec.binary.Base64;
-import org.candlepin.policy.js.JsRunnerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

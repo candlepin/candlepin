@@ -30,9 +30,6 @@ import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerFactory;
-//import org.candlepin.policy.js.JsRunnerProvider;
-
-import com.google.inject.Inject;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -26,8 +26,6 @@ import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
-import com.google.inject.Inject;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 

@@ -36,8 +36,6 @@ import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.util.GuestMigration;
 
-import com.google.inject.Inject;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;

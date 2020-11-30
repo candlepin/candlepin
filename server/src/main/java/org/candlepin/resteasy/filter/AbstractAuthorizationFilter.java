@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
-import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;

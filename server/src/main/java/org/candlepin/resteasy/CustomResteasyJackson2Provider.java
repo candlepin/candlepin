@@ -1,19 +1,26 @@
-/*
- *  Copyright (c) 2009 - ${YEAR} Red Hat, Inc.
+/**
+ * Copyright (c) 2009 - 2012 Red Hat, Inc.
  *
- *  This software is licensed to you under the GNU General Public License,
- *  version 2 (GPLv2). There is NO WARRANTY for this software, express or
- *  implied, including the implied warranties of MERCHANTABILITY or FITNESS
- *  FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
- *  along with this software; if not, see
- *  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
  *
- *  Red Hat trademarks are not licensed under GPLv2. No permission is
- *  granted to use or replicate Red Hat trademarks that are incorporated
- *  in this software or its documentation.
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
  */
-
 package org.candlepin.resteasy;
+
+import org.candlepin.common.config.Configuration;
+import org.candlepin.common.jackson.DynamicPropertyFilter;
+import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
+import org.candlepin.common.jackson.MultiFilter;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.jackson.DateSerializer;
+import org.candlepin.jackson.ProductCachedSerializationModule;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
@@ -26,26 +33,20 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.jaxrs.cfg.Annotations;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.jackson.DynamicPropertyFilter;
-import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
-import org.candlepin.common.jackson.MultiFilter;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.jackson.DateSerializer;
-import org.candlepin.jackson.ProductCachedSerializationModule;
+
 import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+import java.util.Optional;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.Provider;
-import java.util.Date;
-import java.util.Optional;
 
 @Component
 @Provider

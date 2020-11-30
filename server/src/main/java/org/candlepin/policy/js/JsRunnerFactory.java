@@ -17,12 +17,16 @@ package org.candlepin.policy.js;
 
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.mozilla.javascript.*;
+
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ContextFactory;
+import org.mozilla.javascript.Script;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -144,7 +148,8 @@ public class JsRunnerFactory implements FactoryBean<JsRunner> {
         JsRunnerRequestCache cache = null;
         try {
             cache = cacheProvider.getObject();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
         Date updated = cache.getUpdated();
