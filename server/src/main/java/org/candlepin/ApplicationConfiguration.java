@@ -90,8 +90,7 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
 
     @Bean
     public SpringLiquibase liquibase(
-            DataSource dataSource,
-            @Value("${candlepin.create_database}") boolean createDatabase) {
+        DataSource dataSource, @Value("${candlepin.create_database}") boolean createDatabase) {
         SpringLiquibase liquibase = new SpringLiquibase();
         // Default value of candlepin.create_database is set in properties file, it can be overridden
         // by passing command line arguments
@@ -120,7 +119,7 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
     }
 
     protected org.candlepin.common.config.Configuration readConfiguration(ServletContext context)
-            throws ConfigurationException {
+        throws ConfigurationException {
 
         // Use StandardCharsets.UTF_8 when we move to Java 7
         Charset utf8 = Charset.forName("UTF-8");
@@ -143,7 +142,7 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
 
         // Default to Postgresql if jpa.config.hibernate.dialect is unset
         DatabaseConfigFactory.SupportedDatabase db = determinDatabaseConfiguration(systemConfig.getString
-                ("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
+            ("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
         //log.info("Running under {}", db.getLabel());
         org.candlepin.common.config.Configuration databaseConfig = DatabaseConfigFactory.fetchConfig(db);
 
@@ -156,11 +155,11 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
 
     private DatabaseConfigFactory.SupportedDatabase determinDatabaseConfiguration(String dialect) {
         if (StringUtils.containsIgnoreCase(
-                dialect, DatabaseConfigFactory.SupportedDatabase.MYSQL.getLabel())) {
+            dialect, DatabaseConfigFactory.SupportedDatabase.MYSQL.getLabel())) {
             return DatabaseConfigFactory.SupportedDatabase.MYSQL;
         }
         if (StringUtils
-                .containsIgnoreCase(dialect, DatabaseConfigFactory.SupportedDatabase.MARIADB.getLabel())) {
+            .containsIgnoreCase(dialect, DatabaseConfigFactory.SupportedDatabase.MARIADB.getLabel())) {
             return DatabaseConfigFactory.SupportedDatabase.MARIADB;
         }
         return DatabaseConfigFactory.SupportedDatabase.POSTGRESQL;
@@ -185,7 +184,7 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
          * static content at docs/ and/or token/
          */
         if (config.getBoolean(ConfigProperties.TOKENPAGE_ENABLED) &&
-                config.getBoolean(ConfigProperties.SWAGGER_ENABLED)) {
+            config.getBoolean(ConfigProperties.SWAGGER_ENABLED)) {
             // don't filter docs or token
             regex = "^(?!/docs|/token).*";
         }
@@ -204,16 +203,19 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
     public CPMContextListener cpmContextListener(@Qualifier("provider") String provider) {
         if (ArtemisUtil.PROVIDER.equalsIgnoreCase(provider)) {
             return new ArtemisContextListener();
-        } else {
+        }
+        else {
             return new NoopContextListener();
         }
     }
 
     @Bean
-    public CPMSessionFactory cpmSessionFactory(@Qualifier("provider") String provider, org.candlepin.common.config.Configuration config) {
+    public CPMSessionFactory cpmSessionFactory(@Qualifier("provider") String provider,
+        org.candlepin.common.config.Configuration config) {
         if (ArtemisUtil.PROVIDER.equalsIgnoreCase(provider)) {
             return new ArtemisSessionFactory(config);
-        } else {
+        }
+        else {
             return new NoopSessionFactory();
         }
     }
@@ -228,8 +230,8 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
     //@Scope("request")
     //@Scope(scopeName = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
     public EventSink eventSink(EventFilter eventFilter, EventFactory eventFactory,
-                               ObjectMapper mapper, org.candlepin.common.config.Configuration config, ActiveMQSessionFactory sessionFactory,
-                               CandlepinModeManager modeManager) throws ActiveMQException {
+        ObjectMapper mapper, org.candlepin.common.config.Configuration config,
+        ActiveMQSessionFactory sessionFactory, CandlepinModeManager modeManager) throws ActiveMQException {
         if (config.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED)) {
             return new EventSinkImpl(eventFilter, eventFactory,
                     mapper, config, sessionFactory,
@@ -242,15 +244,17 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
 
     // Only bind the suspend mode filter if configured to do so
     @Bean
-    public CandlepinSuspendModeFilter candlepinSuspendModeFilter(CandlepinModeManager modeManager, ObjectMapper mapper,
-                                                                 org.candlepin.common.config.Configuration config, I18n i18n) {
-        if (config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED))
+    public CandlepinSuspendModeFilter candlepinSuspendModeFilter(CandlepinModeManager modeManager,
+        ObjectMapper mapper, org.candlepin.common.config.Configuration config, I18n i18n) {
+        if (config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
             return new CandlepinSuspendModeFilter(modeManager, mapper, config, i18n);
+        }
         return null;
     }
 
     @Bean
-    public JsRunnerFactory jsRunnerFactory(RulesCurator rulesCurator, JsRunnerRequestCacheFactory cacheProvider) {
+    public JsRunnerFactory jsRunnerFactory(RulesCurator rulesCurator,
+        JsRunnerRequestCacheFactory cacheProvider) {
         JsRunnerFactory jsRunnerFactory = new JsRunnerFactory(rulesCurator, cacheProvider);
         return jsRunnerFactory;
     }
@@ -262,7 +266,7 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
     }
 
     @Bean
-    public RequestContextListener requestContextListener(){
+    public RequestContextListener requestContextListener() {
         return new RequestContextListener();
     }
 }
