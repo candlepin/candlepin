@@ -24,8 +24,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;

@@ -684,7 +684,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @Transactional
     public EntityManager getEntityManager() {
-        if(entityManager != null) {
+        if (entityManager != null) {
             return entityManager;
         }
         else {

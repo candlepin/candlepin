@@ -31,10 +31,11 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.policy.js.*;
+import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.JsonJsContext;
+import org.candlepin.policy.js.RuleExecutionException;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
-
-import com.google.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
