@@ -14,9 +14,6 @@
  */
 package org.candlepin.dto;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-import org.springframework.stereotype.Component;
-
 import java.io.Serializable;
 
 

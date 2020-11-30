@@ -14,12 +14,10 @@
  */
 package org.candlepin.cache;
 
-import com.google.inject.Inject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.cache.CacheManager;
-import javax.inject.Singleton;
 
 /**
  * Wrapper that makes it easier to retrieve various caches in Candlepin
