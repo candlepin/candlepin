@@ -27,6 +27,7 @@ import javax.ws.rs.core.Application;
 public class JaxrsApplication extends Application {
 
     @Override
-    public Set<Class<?>> getClasses() { return super.getClasses(); }
-
+    public Set<Class<?>> getClasses() {
+        return super.getClasses();
+    }
 }

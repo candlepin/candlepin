@@ -14,7 +14,6 @@
  */
 package org.candlepin.async;
 
-import com.google.inject.Inject;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.JobPrincipal;
 import org.candlepin.auth.Principal;
@@ -34,6 +33,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
 
+import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.hibernate.Session;
@@ -58,8 +58,6 @@ import org.quartz.spi.TriggerFiredBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
