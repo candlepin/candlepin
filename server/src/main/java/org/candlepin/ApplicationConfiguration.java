@@ -1,4 +1,4 @@
-/*
+/**
  *  Copyright (c) 2009 - ${YEAR} Red Hat, Inc.
  *
  *  This software is licensed to you under the GNU General Public License,
@@ -16,7 +16,9 @@
 package org.candlepin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import liquibase.integration.spring.SpringLiquibase;
+
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
@@ -54,7 +56,6 @@ import org.xnap.commons.i18n.I18n;
 
 import javax.servlet.ServletContext;
 import javax.sql.DataSource;
-import javax.swing.*;
 import java.io.File;
 import java.nio.charset.Charset;
 
@@ -66,7 +67,7 @@ import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 @EnableAspectJAutoProxy
 @EnableTransactionManagement
 @EnableWebMvc
-@PropertySource({"classpath:application.properties","file:/etc/candlepin/candlepin.conf"})
+@PropertySource({"classpath:application.properties", "file:/etc/candlepin/candlepin.conf"})
 public class ApplicationConfiguration  implements WebMvcConfigurer  {
     @Autowired
     private ServletContext servletContext;
@@ -78,7 +79,9 @@ public class ApplicationConfiguration  implements WebMvcConfigurer  {
     private org.candlepin.common.config.Configuration config;
 
     @Bean
-    public SpringLiquibase liquibase(DataSource dataSource, @Value("${candlepin.create_database}") boolean createDatabase) {
+    public SpringLiquibase liquibase(
+            DataSource dataSource,
+            @Value("${candlepin.create_database}") boolean createDatabase) {
         SpringLiquibase liquibase = new SpringLiquibase();
         // Default value of candlepin.create_database is set in properties file, it can be overridden
         // by passing command line arguments
