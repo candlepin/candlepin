@@ -27,6 +27,11 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 @SuppressWarnings("checkstyle:hideutilityclassconstructor")
 public class BootApplication {
     public static void main(String[] args) {
-        SpringApplication.run(BootApplication.class, args);
+        try {
+            SpringApplication.run(BootApplication.class, args);
+        }
+        catch (Exception e) {
+            System.out.println(e);
+        }
     }
 }
