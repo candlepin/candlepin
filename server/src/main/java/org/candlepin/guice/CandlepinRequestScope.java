@@ -20,7 +20,6 @@ import com.google.inject.Provider;
 import com.google.inject.Scope;
 
 import org.jboss.resteasy.core.ResteasyContext;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
