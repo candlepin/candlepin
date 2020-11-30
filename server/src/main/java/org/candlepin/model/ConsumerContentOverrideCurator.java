@@ -16,8 +16,6 @@ package org.candlepin.model;
 
 import org.springframework.stereotype.Component;
 
-import javax.inject.Singleton;
-
 /**
  * ConsumerContentOverrideCurator
  */

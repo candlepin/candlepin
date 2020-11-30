@@ -666,10 +666,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 //        }
 //        return sessionFactory.getCurrentSession();
         Session session = null;
-        try{
+        try {
             session = getEntityManager().unwrap(Session.class);
             System.out.println("Session object Unwrapped");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println("Session object could not be unwrapped, opening a fresh session");
             session = entityManagerFactory.unwrap(SessionFactory.class).openSession();
         }
@@ -683,10 +684,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @Transactional
     public EntityManager getEntityManager() {
-        if(entityManager != null)
+        if(entityManager != null) {
             return entityManager;
-        else
+        }
+        else {
             return entityManagerFactory.createEntityManager();
+        }
     }
 
     public EntityTransaction getTransaction() {

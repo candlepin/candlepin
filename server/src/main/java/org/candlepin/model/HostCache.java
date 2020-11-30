@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.guice.CandlepinRequestScoped;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;

@@ -18,7 +18,6 @@ import org.candlepin.util.ElementTransformer;
 
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
-import org.springframework.stereotype.Component;
 
 import java.util.Iterator;
 import java.util.LinkedList;

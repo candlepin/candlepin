@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Singleton;
 import javax.persistence.Cache;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;

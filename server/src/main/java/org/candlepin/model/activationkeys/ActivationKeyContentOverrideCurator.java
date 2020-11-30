@@ -15,6 +15,7 @@
 package org.candlepin.model.activationkeys;
 
 import org.candlepin.model.ContentOverrideCurator;
+
 import org.springframework.stereotype.Component;
 
 /**

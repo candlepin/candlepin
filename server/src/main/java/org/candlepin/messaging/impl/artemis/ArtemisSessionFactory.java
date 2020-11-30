@@ -28,20 +28,14 @@ import org.apache.activemq.artemis.core.remoting.CloseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.Objects;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
 
 
 
 /**
  * CPMSessionFactory implementation backed by Artemis
  */
-//@Singleton
-//@Component
 public class ArtemisSessionFactory implements CPMSessionFactory {
     private static Logger log = LoggerFactory.getLogger(ArtemisSessionFactory.class);
 
