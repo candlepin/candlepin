@@ -16,8 +16,6 @@ package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.Principal;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -177,7 +177,7 @@ public class CandlepinContextListener implements ServletContextListener {
                 QpidStatus status = qmf.getStatus();
                 if (status != QpidStatus.CONNECTED) {
                     log.error("Qpid is in status {}. Please fix Qpid configuration " +
-                            "and make sure Qpid is up and running. Candlepin will shutdown now.", status);
+                        "and make sure Qpid is up and running. Candlepin will shutdown now.", status);
                     throw new RuntimeException("Error during Startup: Qpid is in status " + status);
                 }
             }
@@ -295,7 +295,7 @@ public class CandlepinContextListener implements ServletContextListener {
     }
 
     protected org.candlepin.common.config.Configuration readConfiguration(ServletContext context)
-            throws ConfigurationException {
+        throws ConfigurationException {
 
         // Use StandardCharsets.UTF_8 when we move to Java 7
         Charset utf8 = Charset.forName("UTF-8");
@@ -318,7 +318,7 @@ public class CandlepinContextListener implements ServletContextListener {
 
         // Default to Postgresql if jpa.config.hibernate.dialect is unset
         DatabaseConfigFactory.SupportedDatabase db = determinDatabaseConfiguration(systemConfig.getString
-                ("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
+            ("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
         log.info("Running under {}", db.getLabel());
         org.candlepin.common.config.Configuration databaseConfig = DatabaseConfigFactory.fetchConfig(db);
 
@@ -331,11 +331,11 @@ public class CandlepinContextListener implements ServletContextListener {
 
     private DatabaseConfigFactory.SupportedDatabase determinDatabaseConfiguration(String dialect) {
         if (StringUtils.containsIgnoreCase(
-                dialect, DatabaseConfigFactory.SupportedDatabase.MYSQL.getLabel())) {
+            dialect, DatabaseConfigFactory.SupportedDatabase.MYSQL.getLabel())) {
             return DatabaseConfigFactory.SupportedDatabase.MYSQL;
         }
         if (StringUtils
-                .containsIgnoreCase(dialect, DatabaseConfigFactory.SupportedDatabase.MARIADB.getLabel())) {
+            .containsIgnoreCase(dialect, DatabaseConfigFactory.SupportedDatabase.MARIADB.getLabel())) {
             return DatabaseConfigFactory.SupportedDatabase.MARIADB;
         }
         return DatabaseConfigFactory.SupportedDatabase.POSTGRESQL;
