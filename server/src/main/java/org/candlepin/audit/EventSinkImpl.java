@@ -14,13 +14,11 @@
  */
 package org.candlepin.audit;
 
-import com.google.inject.servlet.RequestScoped;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -39,14 +37,9 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.inject.Inject;
 
 
 
