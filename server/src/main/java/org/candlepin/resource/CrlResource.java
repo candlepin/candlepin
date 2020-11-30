@@ -23,11 +23,10 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.CrlFileUtil;
 
-import com.google.inject.Inject;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

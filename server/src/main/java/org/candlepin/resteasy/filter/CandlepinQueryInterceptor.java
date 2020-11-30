@@ -61,8 +61,8 @@ public class CandlepinQueryInterceptor implements ContainerResponseFilter {
     public EntityManager entityManager;
 
     @Autowired
-    public CandlepinQueryInterceptor(
-            final CustomResteasyJackson2Provider jackson2Provider, final Provider<EntityManager> emProvider) {
+    public CandlepinQueryInterceptor(final CustomResteasyJackson2Provider jackson2Provider,
+        final Provider<EntityManager> emProvider) {
         this.jackson2Provider = Objects.requireNonNull(jackson2Provider);
         this.emProvider = Objects.requireNonNull(emProvider);
     }

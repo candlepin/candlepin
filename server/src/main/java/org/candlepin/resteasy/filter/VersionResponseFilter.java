@@ -15,6 +15,7 @@
 package org.candlepin.resteasy.filter;
 
 import org.candlepin.common.util.VersionUtil;
+
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

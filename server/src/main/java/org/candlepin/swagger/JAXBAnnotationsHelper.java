@@ -24,7 +24,6 @@ import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;

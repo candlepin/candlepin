@@ -18,12 +18,10 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.common.util.VersionUtil;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-//import org.candlepin.policy.js.JsRunnerProvider;
-
+import org.candlepin.policy.js.JsRunnerFactory;
 
 import com.google.inject.Inject;
 
-import org.candlepin.policy.js.JsRunnerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

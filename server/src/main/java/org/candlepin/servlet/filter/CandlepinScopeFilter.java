@@ -16,9 +16,6 @@ package org.candlepin.servlet.filter;
 
 import org.candlepin.guice.CandlepinRequestScope;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

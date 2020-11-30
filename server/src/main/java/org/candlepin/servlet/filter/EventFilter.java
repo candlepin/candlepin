@@ -17,10 +17,6 @@ package org.candlepin.servlet.filter;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.filter.TeeHttpServletResponse;
 
-//import com.google.inject.Inject;
-//import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

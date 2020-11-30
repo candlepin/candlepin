@@ -57,7 +57,8 @@ public class CustomResteasyJackson2Provider extends ResteasyJackson2Provider {
     private boolean indentJson;
 
     @Autowired
-    public CustomResteasyJackson2Provider(@Qualifier("springObjectMapper") ObjectMapper mapper, Configuration config, ProductCachedSerializationModule productCachedModules) {
+    public CustomResteasyJackson2Provider(@Qualifier("springObjectMapper") ObjectMapper mapper,
+        Configuration config, ProductCachedSerializationModule productCachedModules) {
 
         // TODO candlepin-spring: Below line of code has been copied from JsonProvider
         // we need to find a way to migrate this fragment to ResteasyJackson2Provider

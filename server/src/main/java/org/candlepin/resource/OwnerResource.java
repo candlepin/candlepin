@@ -959,7 +959,7 @@ public class OwnerResource {
         }
 
         log.info("Created owner: {}", owner);
-            sink.emitOwnerCreated(owner);
+        sink.emitOwnerCreated(owner);
 
         return this.translator.translate(owner, OwnerDTO.class);
     }

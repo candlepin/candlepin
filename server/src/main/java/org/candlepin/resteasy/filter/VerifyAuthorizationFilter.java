@@ -25,8 +25,6 @@ import org.candlepin.model.Persisted;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

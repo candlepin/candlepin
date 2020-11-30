@@ -14,15 +14,11 @@
  */
 package org.candlepin.servlet.filter;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.UnitOfWork;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;

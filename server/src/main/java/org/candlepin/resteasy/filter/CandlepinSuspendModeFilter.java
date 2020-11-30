@@ -21,10 +21,8 @@ import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 
 import javax.ws.rs.container.ContainerRequestContext;

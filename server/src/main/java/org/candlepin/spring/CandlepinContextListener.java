@@ -1,25 +1,29 @@
-/*
- *  Copyright (c) 2009 - ${YEAR} Red Hat, Inc.
+/**
+ * Copyright (c) 2009 - 2012 Red Hat, Inc.
  *
- *  This software is licensed to you under the GNU General Public License,
- *  version 2 (GPLv2). There is NO WARRANTY for this software, express or
- *  implied, including the implied warranties of MERCHANTABILITY or FITNESS
- *  FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
- *  along with this software; if not, see
- *  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
  *
- *  Red Hat trademarks are not licensed under GPLv2. No permission is
- *  granted to use or replicate Red Hat trademarks that are incorporated
- *  in this software or its documentation.
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
  */
-
 package org.candlepin.spring;
 
-import com.google.inject.Stage;
-import io.swagger.converter.ModelConverters;
-import org.apache.commons.lang.StringUtils;
+import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
+import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
+import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
+
 import org.candlepin.async.JobManager;
-import org.candlepin.audit.*;
+import org.candlepin.audit.AMQPBusPublisher;
+import org.candlepin.audit.ActiveMQContextListener;
+import org.candlepin.audit.QpidConnection;
+import org.candlepin.audit.QpidQmf;
+import org.candlepin.audit.QpidStatus;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.EncryptedConfiguration;
 import org.candlepin.common.config.MapConfiguration;
@@ -28,7 +32,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.controller.QpidStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
-import org.candlepin.guice.*;
+import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.pki.impl.JSSProviderLoader;
@@ -36,29 +40,35 @@ import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.util.CrlFileUtil;
 import org.candlepin.util.Util;
+
+import com.google.inject.Stage;
+
+import io.swagger.converter.ModelConverters;
+
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.dialect.PostgreSQL92Dialect;
-import org.jboss.resteasy.springboot.ResteasyAutoConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.*;
-import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.annotation.Profile;
 import org.xnap.commons.i18n.I18nManager;
 
-import javax.cache.CacheManager;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.Set;
 
-import static org.candlepin.config.ConfigProperties.*;
+import javax.cache.CacheManager;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 
 @WebListener
 @Profile("!liquibase-only")
