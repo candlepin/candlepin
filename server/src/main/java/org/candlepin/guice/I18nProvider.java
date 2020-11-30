@@ -14,8 +14,6 @@
  */
 package org.candlepin.guice;
 
-import com.google.inject.name.Named;
-import com.google.inject.servlet.RequestScoped;
 import org.candlepin.common.guice.CommonI18nProvider;
 
 import com.google.inject.Inject;
@@ -24,8 +22,6 @@ import com.google.inject.ProvisionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -34,8 +30,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Singleton;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Context;
 /**
  * I18nProvider
  */

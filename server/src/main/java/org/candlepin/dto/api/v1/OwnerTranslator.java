@@ -18,6 +18,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.UpstreamConsumer;
+
 import org.springframework.stereotype.Component;
 
 

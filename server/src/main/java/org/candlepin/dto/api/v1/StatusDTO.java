@@ -14,7 +14,6 @@
  */
 package org.candlepin.dto.api.v1;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.util.SetView;
 

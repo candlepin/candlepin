@@ -185,7 +185,7 @@ public class CandlepinModule extends AbstractModule {
 
         resources();
 
-        /* TODO (spring-guice): this binding was complaning about Binding points to itself so commented out for now*/
+        /* TODO (spring-guice): check if this is needed */
         //bind(Map.class).to(Map.class);
 
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();

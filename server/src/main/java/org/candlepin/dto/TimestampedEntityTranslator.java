@@ -15,7 +15,6 @@
 package org.candlepin.dto;
 
 import org.candlepin.model.TimestampedEntity;
-import org.springframework.stereotype.Component;
 
 
 /**
