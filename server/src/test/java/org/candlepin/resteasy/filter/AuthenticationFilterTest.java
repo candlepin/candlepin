@@ -14,18 +14,12 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import org.candlepin.auth.AuthProvider;
 import org.candlepin.auth.CandlepinKeycloakRequestAuthenticator;
+import org.candlepin.auth.CloudRegistrationAuth;
 import org.candlepin.auth.KeycloakConfiguration;
 import org.candlepin.auth.KeycloakOIDCFacade;
 import org.candlepin.auth.NoAuthPrincipal;
@@ -130,7 +124,6 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.SSL_AUTHENTICATION, "false");
         config.setProperty(ConfigProperties.BASIC_AUTHENTICATION, "true");
         config.setProperty(ConfigProperties.TRUSTED_AUTHENTICATION, "true");
-        config.setProperty(ConfigProperties.KEYCLOAK_AUTHENTICATION, "true");
 
         when(keycloakAdapterConfiguration.getAdapterConfig()).thenReturn(adapterConfig);
         when(adapterConfig.getAuthServerUrl()).thenReturn("https://example.com/auth");
@@ -140,12 +133,17 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         when(bearerTokenRequestAuthenticator.authenticate(any())).thenReturn(AuthOutcome.AUTHENTICATED);
         when(bearerTokenRequestAuthenticator.getToken()).
             thenReturn(TokenVerifier.create(TESTTOKEN, AccessToken.class).getToken());
+    }
 
+    private AuthenticationFilter buildInterceptor() {
         AnnotationLocator annotationLocator = new AnnotationLocator(injector);
         annotationLocator.init();
-        interceptor = new AuthenticationFilter(config, consumerCurator, deletedConsumerCurator, injector,
-            annotationLocator);
+
+        interceptor = new AuthenticationFilter(this.config, this.consumerCurator, this.deletedConsumerCurator,
+            this.injector, annotationLocator);
         interceptor.setHttpServletRequest(mockHttpServletRequest);
+
+        return interceptor;
     }
 
     void setResourceClass(Class resourceClass) {
@@ -201,6 +199,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         Method method = resourceClass.getMethod("someMethod", String.class);
         mockResourceMethod(method);
 
+        AuthenticationFilter interceptor = this.buildInterceptor();
         assertThrows(BadRequestException.class, () -> interceptor.filter(getContext()));
     }
 
@@ -221,6 +220,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         when(mockHttpServletRequest.isSecure()).thenReturn(false);
         Method method = resourceClass.getMethod("someMethod", String.class);
         mockResourceMethod(method);
+
+        AuthenticationFilter interceptor = this.buildInterceptor();
         assertThrows(NotAuthorizedException.class, () -> interceptor.filter(getContext()));
         // Revert default settings
         config.setProperty(ConfigProperties.AUTH_OVER_HTTP, "false");
@@ -241,6 +242,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         when(mockHttpServletRequest.isSecure()).thenReturn(true);
         Method method = resourceClass.getMethod("someMethod", String.class);
         mockResourceMethod(method);
+
+        AuthenticationFilter interceptor = this.buildInterceptor();
         assertThrows(NotAuthorizedException.class, () -> interceptor.filter(getContext()));
     }
 
@@ -264,6 +267,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
         Method method = resourceClass.getMethod("someMethod", String.class);
         mockResourceMethod(method);
+
+        AuthenticationFilter interceptor = this.buildInterceptor();
         interceptor.filter(getContext());
 
         Principal p = ResteasyContext.getContextData(Principal.class);
@@ -285,6 +290,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         Method method = resourceClass.getMethod("noAuthMethod", String.class);
         mockResourceMethod(method);
 
+        AuthenticationFilter interceptor = this.buildInterceptor();
         interceptor.filter(getContext());
 
         Principal p = ResteasyContext.getContextData(Principal.class);
@@ -311,6 +317,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         when(usa.validateUser(eq("Aladdin"), eq("open sesame"))).thenReturn(true);
         when(usa.findByLogin(eq("Aladdin"))).thenReturn(new User("Aladdin", "open sesame"));
 
+        AuthenticationFilter interceptor = this.buildInterceptor();
         interceptor.filter(getContext());
 
         Principal p = ResteasyContext.getContextData(Principal.class);
@@ -332,6 +339,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         Method method = resourceClass.getMethod("anonMethod", String.class);
         mockResourceMethod(method);
 
+        AuthenticationFilter interceptor = this.buildInterceptor();
         interceptor.filter(getContext());
 
         Principal p = ResteasyContext.getContextData(Principal.class);
@@ -356,6 +364,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         mockResourceMethod(method);
 
         mockReq.header("Authorization", "BASIC QWxhZGRpbjpvcGVuIHNlc2FtZQ==");
+
+        AuthenticationFilter interceptor = this.buildInterceptor();
         interceptor.filter(getContext());
 
         Principal p = ResteasyContext.getContextData(Principal.class);
@@ -366,13 +376,63 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
     @Test
     public void keycloakAuthAuthentication() throws Exception {
+        this.config.setProperty(ConfigProperties.KEYCLOAK_AUTHENTICATION, "true");
+
+        // Attempt to disable all other auth methods
+        this.config.setProperty(ConfigProperties.OAUTH_AUTHENTICATION, "false");
+        this.config.setProperty(ConfigProperties.SSL_AUTHENTICATION, "false");
+        this.config.setProperty(ConfigProperties.BASIC_AUTHENTICATION, "false");
+        this.config.setProperty(ConfigProperties.TRUSTED_AUTHENTICATION, "false");
+        this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "false");
+
         Method method = FakeResource.class.getMethod("someMethod", String.class);
         mockResourceMethod(method);
         mockReq.header("Authorization", "Bearer " + TESTTOKEN);
         keycloakSetup();
+
+        AuthenticationFilter interceptor = this.buildInterceptor();
         interceptor.filter(getContext());
+
         Principal p = ResteasyContext.getContextData(Principal.class);
         assertEquals("qa@redhat.com", p.getName());
+    }
+
+    @Test
+    public void testCloudAuthSupport() throws Exception {
+        this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "true");
+
+        // Attempt to disable all other auth methods
+        this.config.setProperty(ConfigProperties.OAUTH_AUTHENTICATION, "false");
+        this.config.setProperty(ConfigProperties.SSL_AUTHENTICATION, "false");
+        this.config.setProperty(ConfigProperties.BASIC_AUTHENTICATION, "false");
+        this.config.setProperty(ConfigProperties.TRUSTED_AUTHENTICATION, "false");
+        this.config.setProperty(ConfigProperties.KEYCLOAK_AUTHENTICATION, "false");
+
+        Method method = FakeResource.class.getMethod("someMethod", String.class);
+        mockResourceMethod(method);
+
+        Injector mockInjector = mock(Injector.class);
+        AuthProvider mockProvider = mock(AuthProvider.class);
+        Principal mockPrincipal = mock(Principal.class);
+
+        doAnswer(iom -> {
+            Class target = (Class) iom.getArguments()[0];
+            return target == CloudRegistrationAuth.class ? mockProvider : injector.getInstance(target);
+        }).when(mockInjector).getInstance(any(Class.class));
+
+        doReturn(mockProvider).when(mockInjector).getInstance(eq(CloudRegistrationAuth.class));
+        doReturn(mockPrincipal).when(mockProvider).getPrincipal(any(HttpRequest.class));
+
+        AuthenticationFilter interceptor = new AuthenticationFilter(this.config, this.consumerCurator,
+            this.deletedConsumerCurator, mockInjector, this.annotationLocator);
+
+        mockReq.header("Authorization", "Bearer FAKE_CLOUD_AUTH_TOKEN");
+        interceptor.filter(this.getContext());
+
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+
+        verify(mockInjector, times(1)).getInstance(eq(CloudRegistrationAuth.class));
+        assertEquals(mockPrincipal, principal);
     }
 
     /**

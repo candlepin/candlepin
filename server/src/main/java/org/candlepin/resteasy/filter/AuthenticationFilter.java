@@ -16,6 +16,7 @@ package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.AuthProvider;
 import org.candlepin.auth.BasicAuth;
+import org.candlepin.auth.CloudRegistrationAuth;
 import org.candlepin.auth.KeycloakAuth;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.OAuth;
@@ -81,6 +82,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         DeletedConsumerCurator deletedConsumerCurator,
         Injector injector,
         AnnotationLocator annotationLocator) {
+
         this.consumerCurator = consumerCurator;
         this.injector = injector;
         this.config = config;
@@ -101,18 +103,27 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
             providers.add(injector.getInstance(KeycloakAuth.class));
         }
+
+        // Check if the cloud provider/jwt auth should be enabled
+        if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION)) {
+            providers.add(injector.getInstance(CloudRegistrationAuth.class));
+        }
+
         // use oauth
         if (config.getBoolean(ConfigProperties.OAUTH_AUTHENTICATION)) {
             providers.add(injector.getInstance(OAuth.class));
         }
+
         // http basic auth access
         if (config.getBoolean(ConfigProperties.BASIC_AUTHENTICATION)) {
             providers.add(injector.getInstance(BasicAuth.class));
         }
+
         // consumer certificates
         if (config.getBoolean(ConfigProperties.SSL_AUTHENTICATION)) {
             providers.add(injector.getInstance(SSLAuth.class));
         }
+
         // trusted headers
         if (config.getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION)) {
             providers.add(injector.getInstance(TrustedConsumerAuth.class));

@@ -199,9 +199,13 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     /**
      * @param id the id to set
+     *
+     * @return
+     *  a reference to this Owner instnace
      */
-    public void setId(String id) {
+    public Owner setId(String id) {
         this.id = id;
+        return this;
     }
 
     @InfoProperty("key")
@@ -210,8 +214,9 @@ public class Owner extends AbstractHibernateObject<Owner>
         return key;
     }
 
-    public void setKey(String key) {
+    public Owner setKey(String key) {
         this.key = key;
+        return this;
     }
 
     /**
@@ -225,9 +230,13 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     /**
      * @param displayName the name to set
+     *
+     * @return
+     *  a reference to this Owner instnace
      */
-    public void setDisplayName(String displayName) {
+    public Owner setDisplayName(String displayName) {
         this.displayName = displayName;
+        return this;
     }
 
     /**
@@ -239,9 +248,13 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     /**
      * @param contentPrefix the prefix to set
+     *
+     * @return
+     *  a reference to this Owner instnace
      */
-    public void setContentPrefix(String contentPrefix) {
+    public Owner setContentPrefix(String contentPrefix) {
         this.contentPrefix = contentPrefix;
+        return this;
     }
 
     /**
@@ -253,9 +266,13 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     /**
      * @param lastRefreshed the date to set the lastRefreshed value to
+     *
+     * @return
+     *  a reference to this Owner instnace
      */
-    public void setLastRefreshed(Date lastRefreshed) {
+    public Owner setLastRefreshed(Date lastRefreshed) {
         this.lastRefreshed = lastRefreshed;
+        return this;
     }
 
     /**
@@ -268,9 +285,13 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     /**
      * @param consumers the consumers to set
+     *
+     * @return
+     *  a reference to this Owner instnace
      */
-    public void setConsumers(Set<Consumer> consumers) {
+    public Owner setConsumers(Set<Consumer> consumers) {
         this.consumers = consumers;
+        return this;
     }
 
     /**
@@ -283,9 +304,13 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     /**
      * @param entitlementPools the entitlementPools to set
+     *
+     * @return
+     *  a reference to this Owner instnace
      */
-    public void setPools(Set<Pool> entitlementPools) {
+    public Owner setPools(Set<Pool> entitlementPools) {
         this.pools = entitlementPools;
+        return this;
     }
 
     /**
@@ -385,12 +410,17 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     /**
      * @param upstream the upstream consumer to set
+     *
+     * @return
+     *  a reference to this Owner instnace
      */
-    public void setUpstreamConsumer(UpstreamConsumer upstream) {
+    public Owner setUpstreamConsumer(UpstreamConsumer upstream) {
         this.upstreamConsumer = upstream;
         if (upstream != null) {
             upstream.setOwnerId(id);
         }
+
+        return this;
     }
 
     /**
@@ -406,7 +436,7 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * @return the
+     * @return the upstream consumer for this owner
      */
     public UpstreamConsumer getUpstreamConsumer() {
         return upstreamConsumer;
@@ -417,19 +447,21 @@ public class Owner extends AbstractHibernateObject<Owner>
         return "/owners/" + getKey();
     }
 
-    public void setHref(String href) {
+    public Owner setHref(String href) {
         /*
          * No-op, here to aid with updating objects which have nested objects
          * that were originally sent down to the client in HATEOAS form.
          */
+        return this;
     }
 
     public Owner getParentOwner() {
         return parentOwner;
     }
 
-    public void setParentOwner(Owner parentOwner) {
+    public Owner setParentOwner(Owner parentOwner) {
         this.parentOwner = parentOwner;
+        return this;
     }
 
     /**
@@ -454,9 +486,13 @@ public class Owner extends AbstractHibernateObject<Owner>
 
     /**
      * @param activationKeys the activationKeys to set
+     *
+     * @return
+     *  a reference to this Owner instnace
      */
-    public void setActivationKeys(Set<ActivationKey> activationKeys) {
+    public Owner setActivationKeys(Set<ActivationKey> activationKeys) {
         this.activationKeys = activationKeys;
+        return this;
     }
 
     @XmlTransient
@@ -464,28 +500,32 @@ public class Owner extends AbstractHibernateObject<Owner>
         return environments;
     }
 
-    public void setEnvironments(Set<Environment> environments) {
+    public Owner setEnvironments(Set<Environment> environments) {
         this.environments = environments;
+        return this;
     }
 
     public String getDefaultServiceLevel() {
         return defaultServiceLevel;
     }
 
-    public void setDefaultServiceLevel(String defaultServiceLevel) {
+    public Owner setDefaultServiceLevel(String defaultServiceLevel) {
         this.defaultServiceLevel = defaultServiceLevel;
+        return this;
     }
 
     public String getLogLevel() {
         return logLevel;
     }
 
-    public void setLogLevel(String logLevel) {
+    public Owner setLogLevel(String logLevel) {
         this.logLevel = logLevel != null && !logLevel.isEmpty() ? logLevel : null;
+        return this;
     }
 
-    public void setLogLevel(Level logLevel) {
+    public Owner setLogLevel(Level logLevel) {
         this.setLogLevel(logLevel != null ? logLevel.name() : null);
+        return this;
     }
 
     @Override
@@ -505,8 +545,9 @@ public class Owner extends AbstractHibernateObject<Owner>
         return this.autobindDisabled != null ? this.autobindDisabled.booleanValue() : false;
     }
 
-    public void setAutobindDisabled(boolean autobindDisabled) {
+    public Owner setAutobindDisabled(boolean autobindDisabled) {
         this.autobindDisabled = autobindDisabled;
+        return this;
     }
 
     /**
@@ -521,8 +562,9 @@ public class Owner extends AbstractHibernateObject<Owner>
            this.autobindHypervisorDisabled.booleanValue() : false;
     }
 
-    public void setAutobindHypervisorDisabled(boolean autobindHypervisorDisabled) {
+    public Owner setAutobindHypervisorDisabled(boolean autobindHypervisorDisabled) {
         this.autobindHypervisorDisabled = autobindHypervisorDisabled;
+        return this;
     }
 
     /**
