@@ -13,8 +13,10 @@
  *  in this software or its documentation.
  */
 
-import org.gradle.api.Project
+
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
+import org.gradle.api.Project
 
 class GettextExtension {
     String keys_project_dir
@@ -76,6 +78,53 @@ class Gettext implements Plugin<Project> {
                     project.exec {
                         executable "msgmerge"
                         args msgmerge_args
+                        workingDir project.getRootDir()
+                    }
+                }
+            }
+        }
+
+        def validate_translation = project.task('validate_translation') {
+            description = 'Validate translation PO files to check for unescaped single quotes'
+            group = 'verification'
+            doLast {
+                def po_files = new FileNameFinder().getFileNames("${extension.keys_project_dir}/po/", '*.po')
+                // Search for all lines that start with msgstr that contain an unescaped single quote.
+                def regex = ~/^msgstr(.*([^'])'([^']).*)/
+                def failed = false
+                po_files.each {
+                    def line_number = 1
+                    new File(it).eachLine { line ->
+                        def matcher = regex.matcher(line)
+                        while (matcher.find()) {
+                            println(String.format("Found unescaped single quote in %s line %s: %s",it, line_number, matcher.group(1)))
+                            failed = true
+                        }
+                        line_number++
+                    }
+                }
+                if (failed) {
+                    throw new GradleException("failed validating translation files")
+                }
+            }
+        }
+
+        def msgattrib_task = project.task('msgattrib') {
+            description = 'Use msgattrib to remove obsolete strings (that were already removed from the source code & template file) from translation files.'
+            group = 'build'
+            doLast {
+                def po_files = new FileNameFinder().getFileNames("${extension.keys_project_dir}/po/", '*.po')
+                po_files.each {
+                    def msgattrib_args = ['--set-obsolete', '--ignore-file=common/po/keys.pot','-o', it, it]
+                    project.exec {
+                        executable "msgattrib"
+                        args msgattrib_args
+                        workingDir project.getRootDir()
+                    }
+                    msgattrib_args = ['--no-obsolete', '-o', it, it]
+                    project.exec {
+                        executable "msgattrib"
+                        args msgattrib_args
                         workingDir project.getRootDir()
                     }
                 }
