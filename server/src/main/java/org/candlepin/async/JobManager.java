@@ -912,7 +912,18 @@ public class JobManager implements ModeChangeListener {
 
         // Unschedule dead/invalid jobs
         for (JobKey key : unschedule) {
-            this.scheduler.deleteJob(key);
+            List<Trigger> jobTriggers = (List<Trigger>) this.scheduler.getTriggersOfJob(key);
+
+            if (!jobTriggers.isEmpty()) {
+                this.scheduler.unscheduleJobs(jobTriggers
+                    .stream()
+                    .map(Trigger::getKey)
+                    .collect(Collectors.toList()));
+            }
+            else {
+                this.scheduler.deleteJob(key);
+            }
+
             log.info("Removed existing schedule for job: {}", key.getName());
         }
 
