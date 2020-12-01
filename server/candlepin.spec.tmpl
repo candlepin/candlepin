@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.6
+Version: 3.2.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,9 @@ fi
 
 #raw
 %changelog
+* Tue Dec 01 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.7-1
+- Added support for automated cloud registration (crog@redhat.com)
+
 * Fri Nov 20 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.6-1
 - Update rpm spec and cpsetup/cpdb for Java 11 (nmoumoul@redhat.com)
 - Updated organization migration tooling to allow multi-org imports
