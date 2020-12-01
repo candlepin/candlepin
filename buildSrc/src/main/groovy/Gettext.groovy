@@ -108,5 +108,27 @@ class Gettext implements Plugin<Project> {
                 }
             }
         }
+
+        def msgattrib_task = project.task('msgattrib') {
+            description = 'Use msgattrib to remove obsolete strings (that were already removed from the source code & template file) from translation files.'
+            group = 'build'
+            doLast {
+                def po_files = new FileNameFinder().getFileNames("${extension.keys_project_dir}/po/", '*.po')
+                po_files.each {
+                    def msgattrib_args = ['--set-obsolete', '--ignore-file=common/po/keys.pot','-o', it, it]
+                    project.exec {
+                        executable "msgattrib"
+                        args msgattrib_args
+                        workingDir project.getRootDir()
+                    }
+                    msgattrib_args = ['--no-obsolete', '-o', it, it]
+                    project.exec {
+                        executable "msgattrib"
+                        args msgattrib_args
+                        workingDir project.getRootDir()
+                    }
+                }
+            }
+        }
     }
 }
