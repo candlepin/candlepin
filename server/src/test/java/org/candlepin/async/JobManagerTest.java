@@ -75,6 +75,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
+import org.quartz.CronScheduleBuilder;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
@@ -83,6 +84,7 @@ import org.quartz.ListenerManager;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.impl.matchers.GroupMatcher;
 import org.slf4j.MDC;
@@ -1753,11 +1755,20 @@ public class JobManagerTest {
         JobKey jobkey1 = new JobKey("job-1", "test_job_group");
         JobKey jobkey2 = new JobKey("job-2", "test_job_group");
         JobKey jobkey3 = new JobKey("job-3", "test_job_group");
+        JobKey jobkey4 = new JobKey("job-4", "test_job_group");
 
-        doReturn(Util.asSet(jobkey1, jobkey2, jobkey3)).when(this.scheduler)
+        doReturn(Util.asSet(jobkey1, jobkey2, jobkey3, jobkey4)).when(this.scheduler)
             .getJobKeys(any(GroupMatcher.class));
 
         doThrow(new JobPersistenceException("kaboom")).when(this.scheduler).getJobDetail(eq(jobkey2));
+        doThrow(new JobPersistenceException("kaboom")).when(this.scheduler).getJobDetail(eq(jobkey4));
+
+        Trigger dummyTrigger = TriggerBuilder.newTrigger()
+            .withIdentity("fun-job", "cp_async_config")
+            .withSchedule(CronScheduleBuilder.cronSchedule("0 * * ? * *"))
+            .build();
+        doReturn(Arrays.asList(dummyTrigger)).when(this.scheduler).getTriggersOfJob(jobkey2);
+        doReturn(new ArrayList<>()).when(this.scheduler).getTriggersOfJob(jobkey4);
 
         JobManager manager = this.createJobManager();
         manager.initialize();
@@ -1765,7 +1776,11 @@ public class JobManagerTest {
         verify(this.scheduler, times(1)).getJobDetail(eq(jobkey1));
         verify(this.scheduler, times(1)).getJobDetail(eq(jobkey2));
         verify(this.scheduler, times(1)).getJobDetail(eq(jobkey3));
+        verify(this.scheduler, times(1)).getJobDetail(eq(jobkey4));
+        verify(this.scheduler, times(1)).getTriggersOfJob(eq(jobkey2));
+        verify(this.scheduler, times(1))
+            .unscheduleJobs(Arrays.asList(dummyTrigger.getKey()));
+        verify(this.scheduler, times(1)).deleteJob(eq(jobkey4));
 
-        verify(this.scheduler, times(1)).deleteJob(eq(jobkey2));
     }
 }
