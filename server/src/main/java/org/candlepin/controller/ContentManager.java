@@ -127,15 +127,17 @@ public class ContentManager {
         // Check if we have an alternate version we can use instead.
         List<Content> alternateVersions = this.ownerContentCurator.getContentByVersions(
             owner, Collections.<String, Integer>singletonMap(entity.getId(), entity.getEntityVersion()))
-            .list();
+            .get(entity.getId());
 
-        log.debug("Checking {} alternate content versions", alternateVersions.size());
-        for (Content alt : alternateVersions) {
-            if (alt.equals(entity)) {
-                // If we're "creating" a content, we shouldn't have any other object references to
-                // update for this content. Instead, we'll just add the new owner to the content.
-                this.ownerContentCurator.mapContentToOwner(alt, owner);
-                return alt;
+        if (alternateVersions != null) {
+            log.debug("Checking {} alternate content versions", alternateVersions.size());
+            for (Content alt : alternateVersions) {
+                if (alt.equals(entity)) {
+                    // If we're "creating" a content, we shouldn't have any other object references to
+                    // update for this content. Instead, we'll just add the new owner to the content.
+                    this.ownerContentCurator.mapContentToOwner(alt, owner);
+                    return alt;
+                }
             }
         }
 
@@ -232,41 +234,43 @@ public class ContentManager {
         log.debug("Applying content update for org: {}, {}", entity, owner);
         Content updated = this.applyContentChanges((Content) entity.clone(), update);
 
-        List<Content> alternateVersions = this.ownerContentCurator.getContentByVersions(
-            owner, Collections.<String, Integer>singletonMap(updated.getId(), updated.getEntityVersion()))
-            .list();
+        List<Content> alternateVersions = this.ownerContentCurator.getContentByVersions(owner,
+            Collections.<String, Integer>singletonMap(updated.getId(), updated.getEntityVersion()))
+            .get(updated.getId());
 
-        log.debug("Checking {} alternate content versions", alternateVersions.size());
-        for (Content alt : alternateVersions) {
-            if (alt.equals(updated)) {
-                log.debug("Converging product with existing: {} => {}", updated, alt);
+        if (alternateVersions != null) {
+            log.debug("Checking {} alternate content versions", alternateVersions.size());
+            for (Content alt : alternateVersions) {
+                if (alt.equals(updated)) {
+                    log.debug("Converging product with existing: {} => {}", updated, alt);
 
-                // Make sure every product using the old version/entity are updated to use the new one
-                List<Product> affectedProducts = this.productCurator
-                    .getProductsByContent(owner, Arrays.asList(updated.getId()))
-                    .list();
+                    // Make sure every product using the old version/entity are updated to use the new one
+                    List<Product> affectedProducts = this.productCurator
+                        .getProductsByContent(owner, Arrays.asList(updated.getId()))
+                        .list();
 
-                this.ownerContentCurator.updateOwnerContentReferences(owner,
-                    Collections.<String, String>singletonMap(entity.getUuid(), alt.getUuid()));
+                    this.ownerContentCurator.updateOwnerContentReferences(owner,
+                        Collections.<String, String>singletonMap(entity.getUuid(), alt.getUuid()));
 
-                log.debug("Updating {} affected products", affectedProducts.size());
-                ContentDTO cdto = this.modelTranslator.translate(alt, ContentDTO.class);
+                    log.debug("Updating {} affected products", affectedProducts.size());
+                    ContentDTO cdto = this.modelTranslator.translate(alt, ContentDTO.class);
 
-                // TODO: Should we bulk this up like we do in importContent? Probably.
-                for (Product product : affectedProducts) {
-                    log.debug("Updating affected product: {}", product);
-                    ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+                    // TODO: Should we bulk this up like we do in importContent? Probably.
+                    for (Product product : affectedProducts) {
+                        log.debug("Updating affected product: {}", product);
+                        ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
 
-                    ProductContentDTO pcdto = pdto.getProductContent(cdto.getId());
-                    if (pcdto != null) {
-                        pdto.addContent(cdto, pcdto.isEnabled());
+                        ProductContentDTO pcdto = pdto.getProductContent(cdto.getId());
+                        if (pcdto != null) {
+                            pdto.addContent(cdto, pcdto.isEnabled());
 
-                        // Impl note: This should also take care of our entitlement cert regeneration
-                        this.productManager.updateProduct(pdto, owner, regenerateEntitlementCerts);
+                            // Impl note: This should also take care of our entitlement cert regeneration
+                            this.productManager.updateProduct(pdto, owner, regenerateEntitlementCerts);
+                        }
                     }
-                }
 
-                return alt;
+                    return alt;
+                }
             }
         }
 
@@ -373,7 +377,6 @@ public class ContentManager {
 
         Map<String, Integer> contentVersions = new HashMap<>();
         Map<String, Content> sourceContent = new HashMap<>();
-        Map<String, List<Content>> existingVersions = new HashMap<>();
         List<OwnerContent> ownerContentBuffer = new LinkedList<>();
 
         // - Divide imported products into sets of updates and creates
@@ -420,15 +423,8 @@ public class ContentManager {
         }
 
         log.debug("Checking for existing content versions...");
-        for (Content alt : this.ownerContentCurator.getContentByVersions(owner, contentVersions)) {
-            List<Content> alternates = existingVersions.get(alt.getId());
-            if (alternates == null) {
-                alternates = new LinkedList<>();
-                existingVersions.put(alt.getId(), alternates);
-            }
-
-            alternates.add(alt);
-        }
+        Map<String, List<Content>> existingVersions = this.ownerContentCurator
+            .getContentByVersions(owner, contentVersions);
 
         contentVersions.clear();
         contentVersions = null;

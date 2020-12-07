@@ -167,15 +167,10 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
 
         Branding that = (Branding) anObject;
 
-        // We're only interested in ensuring the mapping between the two objects is the same.
-        String thisProductUuid = this.getProduct() != null ? this.getProduct().getUuid() : null;
-        String thatProductUuid = that.getProduct() != null ? that.getProduct().getUuid() : null;
-
         return new EqualsBuilder()
             .append(this.name, that.name)
             .append(this.productId, that.productId)
             .append(this.type, that.type)
-            .append(thisProductUuid, thatProductUuid)
             .isEquals();
     }
 
@@ -185,7 +180,6 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
             .append(this.name)
             .append(this.productId)
             .append(this.type)
-            .append(this.getProduct() != null ? this.getProduct().getUuid() : null)
             .toHashCode();
     }
 
