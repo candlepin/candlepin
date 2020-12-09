@@ -1520,6 +1520,29 @@ public class JobManagerTest {
     }
 
     @Test
+    public void testCleanupJobsDoesNotDeleteWhenAllStatesAreFiltered() {
+        Set<JobState> jobStates = Arrays.stream(JobState.values())
+            .filter(state -> !state.isTerminal())
+            .collect(Collectors.toSet());
+
+        AsyncJobStatusQueryBuilder input = new AsyncJobStatusQueryBuilder()
+            .setJobStates(jobStates);
+
+        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+
+        doThrow(new RuntimeException("this should not happen"))
+            .when(this.jobCurator)
+            .deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+
+        JobManager manager = this.createJobManager();
+        int output = manager.cleanupJobs(input);
+
+        verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        assertEquals(0, output);
+    }
+
+    @Test
     public void testCleanupJobsDefaultsToTerminalStates() {
         ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
             ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
