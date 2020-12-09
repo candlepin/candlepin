@@ -129,6 +129,7 @@ task apiJar(type: Jar) {
     includes = [
         'auth',
         'config',
+        'controller',
         'jackson',
         'model',
         'pki',
