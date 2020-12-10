@@ -180,31 +180,37 @@ usage() {
 usage: cp-test [options]
 
 OPTIONS:
-  -d               deploy a live candlepin
-  -t               populate Candlepin database with test data (implies -d)
-  -r [filter]      run rspec test suite (implies -d); may be filtered by test
-                   suite and name
-  -H               run rspec tests in "hosted" mode (implies -r and -d)
-  -u               run unit test suite N number of times, where N is number
-                   of times u was specifed in the arguments
-  -l               run the linters against the code
-  -s               run a bash shell when done
-  -b <task>        execute the specified buildr task (deprecated)
-  -c <ref>         git reference to checkout
-  -p <project>     subproject to build (defaults to "server")
-  -j <version>     use a specific Java version instead of the auto-detected default
-  -v               enable verbose/debug output
-  -i               internationalization - validate translation files
+  -d                deploy a live candlepin
+  -t                populate Candlepin database with test data (implies -d)
+  -R                populate Candlepin environment with test repositories (implies -t)
+  -r [filter]       run rspec test suite (implies -d); may be filtered by test
+                    suite and name
+  -H                run rspec tests in "hosted" mode (implies -r and -d)
+  -u                run unit test suite N number of times, where N is number
+                    of times u was specifed in the arguments
+  -l                run the linters against the code
+  -s                run a bash shell when done
+  -b <task>         execute the specified buildr task (deprecated)
+  -c <ref>          git reference to checkout
+  -j <version>      use a specific Java version instead of the auto-detected default
+  -v                enable verbose/debug output
+  -i                internationalization - validate translation files
+  -a <arguments>    extra arguments to pass to the Candlepin deploy script (implies -d)
 HELP
 }
 
 ARGV=("$@")
-while getopts ":dtqrHulsb:c:p:vj:i" opt; do
+while getopts ":dtRqrHulsb:c:a:vj:i" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
             DEPLOY="1"
             TESTDATA="1"
+            ;;
+        R  )
+            DEPLOY="1"
+            TESTDATA="1"
+            REPODATA="1"
             ;;
         r  )
             RSPEC="1"
@@ -229,11 +235,13 @@ while getopts ":dtqrHulsb:c:p:vj:i" opt; do
                 OPTIND=$((OPTIND + 1))
             fi
             ;;
+        a  ) EX_ARGS="${EX_ARGS} ${OPTARG}"
+            DEPLOY="1"
+            ;;
         l  ) LINTER="1";;
         s  ) LAUNCHSHELL="1";;
         b  ) BUILDR_TASK="${OPTARG}";;
         c  ) CHECKOUT="${OPTARG}";;
-        p  ) PROJECT="${OPTARG}";;
         q  ) QPID="1";;
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
@@ -244,8 +252,8 @@ done
 
 shift $(($OPTIND - 1))
 
-# Set our project to test
-PROJECT=${PROJECT:-server}
+# Set our project to server -- we no longer have any projects to select, so this is mostly just legacy
+PROJECT=server
 
 # Pass volume with docker run mounted at this location if you'd like to
 # run against your source checkout.
@@ -395,6 +403,10 @@ if [ "$DEPLOY" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -t"
     fi
 
+    if [ "$REPODATA" == "1" ]; then
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -r"
+    fi
+
     if [ "$VERBOSE" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
     fi
@@ -403,6 +415,7 @@ if [ "$DEPLOY" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -q"
     fi
 
+    DEPLOY_FLAGS="${DEPLOY_FLAGS}${EX_ARGS}"
 
     # set up the database from setup-db.sh
     # only runs if function is defined
