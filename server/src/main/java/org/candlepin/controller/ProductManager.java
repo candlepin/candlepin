@@ -122,16 +122,19 @@ public class ProductManager {
         log.debug("Creating new product for org: {}, {}", entity, owner);
 
         // Check if we have an alternate version we can use instead.
-        List<Product> alternateVersions = this.ownerProductCurator.getProductsByVersions(
-            owner, Collections.singletonMap(entity.getId(), entity.getEntityVersion()))
-            .list();
+        List<Product> alternateVersions = this.ownerProductCurator.getProductsByVersions(owner,
+            Collections.singletonMap(entity.getId(), entity.getEntityVersion()))
+            .get(entity.getId());
 
-        for (Product alt : alternateVersions) {
-            if (alt.equals(entity)) {
-                // If we're "creating" a product, we shouldn't have any other object references to
-                // update for this product. Instead, we'll just add the new owner to the product.
-                this.ownerProductCurator.mapProductToOwner(alt, owner);
-                return alt;
+        if (alternateVersions != null) {
+            log.debug("Checking {} alternate product versions", alternateVersions.size());
+            for (Product alt : alternateVersions) {
+                if (alt.equals(entity)) {
+                    // If we're "creating" a product, we shouldn't have any other object references to
+                    // update for this product. Instead, we'll just add the new owner to the product.
+                    this.ownerProductCurator.mapProductToOwner(alt, owner);
+                    return alt;
+                }
             }
         }
 
@@ -203,45 +206,28 @@ public class ProductManager {
         // the caller), we can just point the given orgs to the new product instead of giving them
         // their own version.
         // This is probably going to be a very expensive operation, though.
-        List<Product> alternateVersions = this.ownerProductCurator.getProductsByVersions(
-            owner, Collections.singletonMap(updated.getId(), updated.getEntityVersion()))
-            .list();
+        List<Product> alternateVersions = this.ownerProductCurator.getProductsByVersions(owner,
+            Collections.singletonMap(updated.getId(), updated.getEntityVersion()))
+            .get(updated.getId());
 
-        log.debug("Checking {} alternate product versions", alternateVersions.size());
-        for (Product alt : alternateVersions) {
-            if (alt.equals(updated)) {
-                log.debug("Converging product with existing: {} => {}", updated, alt);
+        if (alternateVersions != null) {
+            log.debug("Checking {} alternate product versions", alternateVersions.size());
+            for (Product alt : alternateVersions) {
+                if (alt.equals(updated)) {
+                    log.debug("Converging product with existing: {} => {}", updated, alt);
 
-                this.ownerProductCurator.updateOwnerProductReferences(owner,
-                    Collections.<String, String>singletonMap(entity.getUuid(), alt.getUuid()));
+                    this.ownerProductCurator.updateOwnerProductReferences(owner,
+                        Collections.<String, String>singletonMap(entity.getUuid(), alt.getUuid()));
 
-                if (regenerateEntitlementCerts) {
-                    this.entitlementCertGenerator.regenerateCertificatesOf(
-                        Arrays.asList(owner), Arrays.asList(alt), true);
+                    if (regenerateEntitlementCerts) {
+                        this.entitlementCertGenerator.regenerateCertificatesOf(
+                            Arrays.asList(owner), Arrays.asList(alt), true);
+                    }
+
+                    return alt;
                 }
-
-                return alt;
             }
         }
-
-        // Temporarily (?) disabled. If we ever move to clustered caching (rather than per-instance
-        // caching, this branch should be re-enabled.
-        /*
-        // No alternate versions with which to converge. Check if we can do an in-place update instead
-        if (this.ownerProductCurator.getOwnerCount(updated) < 2) {
-            log.debug("Applying in-place update to product: {}", updated);
-
-            updated = this.productCurator.merge(this.applyProductChanges(entity, update, owner));
-
-            if (regenerateEntitlementCerts) {
-                this.entitlementCertGenerator.regenerateCertificatesOf(
-                    Arrays.asList(owner), Arrays.asList(updated), true
-                );
-            }
-
-            return updated;
-        }
-        */
 
         // Product is shared by multiple owners; we have to diverge here
         log.debug("Forking product and applying update: {}", updated);
@@ -310,7 +296,6 @@ public class ProductManager {
 
         Map<String, Integer> productVersions = new HashMap<>();
         Map<String, Product> sourceProducts = new HashMap<>();
-        Map<String, List<Product>> existingVersions = new HashMap<>();
         List<OwnerProduct> ownerProductBuffer = new LinkedList<>();
 
         // - Divide imported products into sets of updates and creates
@@ -356,15 +341,8 @@ public class ProductManager {
         }
 
         log.debug("Checking for existing product versions...");
-        for (Product alt : this.ownerProductCurator.getProductsByVersions(owner, productVersions)) {
-            List<Product> alternates = existingVersions.get(alt.getId());
-            if (alternates == null) {
-                alternates = new LinkedList<>();
-                existingVersions.put(alt.getId(), alternates);
-            }
-
-            alternates.add(alt);
-        }
+        Map<String, List<Product>> existingVersions = this.ownerProductCurator
+            .getProductsByVersions(owner, productVersions);
 
         productVersions.clear();
         productVersions = null;

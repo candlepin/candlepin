@@ -18,10 +18,8 @@ import org.candlepin.model.activationkeys.ActivationKey;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -33,11 +31,19 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 
 
@@ -455,12 +461,16 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      *  A mapping of Red Hat product IDs to product versions to fetch
      *
      * @return
-     *  a criteria for fetching products by version
+     *  a mapping of Red Hat product IDs to candidate alternate versions
      */
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Product> getProductsByVersions(Owner owner, Map<String, Integer> productVersions) {
+    public Map<String, List<Product>> getProductsByVersions(Owner owner,
+        Map<String, Integer> productVersions) {
+
+        Map<String, List<Product>> productMap = new HashMap<>();
+
         if (productVersions == null || productVersions.isEmpty()) {
-            return this.cpQueryFactory.<Product>buildQuery();
+            return productMap;
         }
 
         // Impl note:
@@ -473,33 +483,56 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // products, or the products we filter don't have any data in their collections; but we're
         // only using one additional query in those cases, versus (0-2)n in the normal case.
 
-        Disjunction disjunction = Restrictions.disjunction();
-        Criteria uuidCriteria = this.createSecureCriteria("op")
-            .createAlias("op.product", "p")
-            .add(disjunction)
-            .setProjection(Projections.distinct(Projections.property("p.uuid")));
+        Set<String> uuids = new HashSet<>();
 
-        for (Map.Entry<String, Integer> entry : productVersions.entrySet()) {
-            disjunction.add(Restrictions.and(
-                Restrictions.eq("p.id", entry.getKey()),
-                Restrictions.eq("p.entityVersion", entry.getValue())
-            ));
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> query = builder.createQuery(String.class);
+
+        Root<OwnerProduct> root = query.from(OwnerProduct.class);
+        Join<OwnerProduct, Product> product = root.join(OwnerProduct_.product);
+
+        query.select(product.get(Product_.uuid))
+            .orderBy(builder.asc(product.get(Product_.id)), builder.desc(product.get(Product_.created)));
+
+        int blockSize = (this.getQueryParameterLimit() - 1) / 2;
+        for (List<Map.Entry<String, Integer>> block : this.partition(productVersions.entrySet(), blockSize)) {
+            Predicate[] predicates = new Predicate[block.size()];
+            int index = 0;
+
+            for (Map.Entry<String, Integer> entry : block) {
+                predicates[index++] = builder.and(
+                    builder.equal(product.get(Product_.id), entry.getKey()),
+                    builder.equal(product.get(Product_.entityVersion), entry.getValue()));
+            }
+
+            Predicate predicate = builder.or(predicates);
+
+            if (owner != null) {
+                predicate = builder.and(
+                    builder.notEqual(root.get(OwnerProduct_.ownerId), owner.getId()),
+                    predicate);
+            }
+
+            query.where(predicate);
+
+            uuids.addAll(entityManager.createQuery(query)
+                .getResultList());
         }
-
-        if (owner != null) {
-            uuidCriteria.add(Restrictions.not(Restrictions.eq("op.owner", owner)));
-        }
-
-        List<String> uuids = uuidCriteria.list();
 
         if (uuids != null && !uuids.isEmpty()) {
-            DetachedCriteria criteria = this.createSecureDetachedCriteria(Product.class, null)
-                .add(CPRestrictions.in("uuid", uuids));
+            String jpql = "SELECT p FROM Product p WHERE p.uuid IN (:product_uuids)";
+            TypedQuery<Product> pquery = entityManager.createQuery(jpql, Product.class);
 
-            return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
+            for (List<String> block : this.partition(uuids)) {
+                for (Product element : pquery.setParameter("product_uuids", block).getResultList()) {
+                    productMap.computeIfAbsent(element.getId(), k -> new LinkedList<>())
+                        .add(element);
+                }
+            }
         }
 
-        return this.cpQueryFactory.<Product>buildQuery();
+        return productMap;
     }
 
     /**

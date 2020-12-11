@@ -17,10 +17,8 @@ package org.candlepin.model;
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -32,6 +30,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +38,14 @@ import java.util.Set;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+
 
 /**
  * The OwnerContentCurator provides functionality for managing the mapping between owners and
@@ -345,12 +352,16 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      *  A mapping of Red Hat content IDs to content versions to fetch
      *
      * @return
-     *  a criteria for fetching content by version
+     *  a mapping of Red Hat content IDs to candidate alternate versions
      */
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Content> getContentByVersions(Owner owner, Map<String, Integer> contentVersions) {
+    public Map<String, List<Content>> getContentByVersions(Owner owner,
+        Map<String, Integer> contentVersions) {
+
+        Map<String, List<Content>> contentMap = new HashMap<>();
+
         if (contentVersions == null || contentVersions.isEmpty()) {
-            return this.cpQueryFactory.<Content>buildQuery();
+            return contentMap;
         }
 
         // Impl note:
@@ -363,33 +374,52 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         // content we filter don't have any data in their collections; but we're only using one
         // additional query in those cases, versus n additional in the normal case.
 
-        Disjunction disjunction = Restrictions.disjunction();
-        Criteria uuidCriteria = this.createSecureCriteria("oc")
-            .createAlias("oc.content", "c")
-            .add(disjunction)
-            .setProjection(Projections.distinct(Projections.property("c.uuid")));
+        Set<String> uuids = new HashSet<>();
 
-        for (Map.Entry<String, Integer> entry : contentVersions.entrySet()) {
-            disjunction.add(Restrictions.and(
-                Restrictions.eq("c.id", entry.getKey()),
-                Restrictions.eq("c.entityVersion", entry.getValue())
-            ));
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> query = builder.createQuery(String.class);
+
+        Root<OwnerContent> root = query.from(OwnerContent.class);
+        Join<OwnerContent, Content> content = root.join(OwnerContent_.content);
+
+        query.select(content.get(Content_.uuid))
+            .orderBy(builder.asc(content.get(Content_.id)), builder.desc(content.get(Content_.created)));
+
+        int blockSize = (this.getQueryParameterLimit() - 1) / 2;
+        for (List<Map.Entry<String, Integer>> block : this.partition(contentVersions.entrySet(), blockSize)) {
+            Predicate[] predicates = new Predicate[block.size()];
+            int index = 0;
+
+            for (Map.Entry<String, Integer> entry : block) {
+                predicates[index++] = builder.and(
+                    builder.equal(content.get(Content_.id), entry.getKey()),
+                    builder.equal(content.get(Content_.entityVersion), entry.getValue()));
+            }
+
+            Predicate predicate = builder.or(predicates);
+
+            query.where(owner == null ?
+                builder.or(predicates) :
+                builder.and(builder.notEqual(root.get(OwnerContent_.ownerId), owner.getId()), predicate));
+
+            uuids.addAll(entityManager.createQuery(query)
+                .getResultList());
         }
-
-        if (owner != null) {
-            uuidCriteria.add(Restrictions.not(Restrictions.eq("oc.owner", owner)));
-        }
-
-        List<String> uuids = uuidCriteria.list();
 
         if (uuids != null && !uuids.isEmpty()) {
-            DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
-                .add(CPRestrictions.in("uuid", uuids));
+            String jpql = "SELECT c FROM Content c WHERE c.uuid IN (:content_uuids)";
+            TypedQuery<Content> cquery = entityManager.createQuery(jpql, Content.class);
 
-            return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
+            for (List<String> block : this.partition(uuids)) {
+                for (Content element : cquery.setParameter("content_uuids", block).getResultList()) {
+                    contentMap.computeIfAbsent(element.getId(), k -> new LinkedList<>())
+                        .add(element);
+                }
+            }
         }
 
-        return this.cpQueryFactory.<Content>buildQuery();
+        return contentMap;
     }
 
     /**

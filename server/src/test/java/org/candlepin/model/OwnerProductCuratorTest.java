@@ -14,13 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.DatabaseTestFixture;
@@ -33,9 +27,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 
@@ -610,27 +604,30 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Product product3 = this.createProduct("p1", "p1", owner3);
         Product product4 = this.createProduct("p2", "p2", owner2);
 
-        List<Product> productList1 = this.ownerProductCurator.getProductsByVersions(owner1,
-            Collections.<String, Integer>singletonMap(product1.getId(), product1.getEntityVersion())).list();
+        Map<String, List<Product>> productMap1 = this.ownerProductCurator.getProductsByVersions(owner1,
+            Collections.<String, Integer>singletonMap(product1.getId(), product1.getEntityVersion()));
+        Map<String, List<Product>> productMap2 = this.ownerProductCurator.getProductsByVersions(owner2,
+            Collections.<String, Integer>singletonMap(product2.getId(), product2.getEntityVersion()));
 
-        List<Product> productList2 = this.ownerProductCurator.getProductsByVersions(owner2,
-            Collections.<String, Integer>singletonMap(product2.getId(), product2.getEntityVersion())).list();
+        // productMap1 should contain only product2 and product3
+        // productMap2 should contain only product1 and product3
 
-        // productList1 should contain only product2 and product3
-        // productList2 should contain only product1 and product3
+        assertEquals(1, productMap1.size());
+        assertNotNull(productMap1.get("p1"));
+        assertEquals(1, productMap2.size());
+        assertNotNull(productMap2.get("p1"));
 
-        assertEquals(2, productList1.size());
-        assertEquals(2, productList2.size());
+        List<String> uuidList1 = productMap1.values()
+            .stream()
+            .flatMap(List::stream)
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
 
-        List<String> uuidList1 = new LinkedList<>();
-        for (Product product : productList1) {
-            uuidList1.add(product.getUuid());
-        }
-
-        List<String> uuidList2 = new LinkedList<>();
-        for (Product product : productList2) {
-            uuidList2.add(product.getUuid());
-        }
+        List<String> uuidList2 = productMap2.values()
+            .stream()
+            .flatMap(List::stream)
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
 
         assertEquals(Arrays.asList(product2.getUuid(), product3.getUuid()), uuidList1);
         assertEquals(Arrays.asList(product1.getUuid(), product3.getUuid()), uuidList2);
@@ -647,26 +644,29 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Product product3 = this.createProduct("p1", "p1", owner3);
         Product product4 = this.createProduct("p2", "p2", owner2);
 
-        List<Product> productList1 = this.ownerProductCurator.getProductsByVersions(null,
-            Collections.<String, Integer>singletonMap(product1.getId(), product1.getEntityVersion())).list();
+        Map<String, List<Product>> productMap1 = this.ownerProductCurator.getProductsByVersions(null,
+            Collections.<String, Integer>singletonMap(product1.getId(), product1.getEntityVersion()));
+        Map<String, List<Product>> productMap2 = this.ownerProductCurator.getProductsByVersions(null,
+            Collections.<String, Integer>singletonMap(product2.getId(), product2.getEntityVersion()));
 
-        List<Product> productList2 = this.ownerProductCurator.getProductsByVersions(null,
-            Collections.<String, Integer>singletonMap(product2.getId(), product2.getEntityVersion())).list();
+        // Both maps should contain both products 1, 2 and 3
 
-        // Both lists should contain both products1, 2 and 3
+        assertEquals(1, productMap1.size());
+        assertNotNull(productMap1.get("p1"));
+        assertEquals(1, productMap2.size());
+        assertNotNull(productMap2.get("p1"));
 
-        assertEquals(3, productList1.size());
-        assertEquals(3, productList2.size());
+        List<String> uuidList1 = productMap1.values()
+            .stream()
+            .flatMap(List::stream)
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
 
-        List<String> uuidList1 = new LinkedList<>();
-        for (Product product : productList1) {
-            uuidList1.add(product.getUuid());
-        }
-
-        List<String> uuidList2 = new LinkedList<>();
-        for (Product product : productList2) {
-            uuidList2.add(product.getUuid());
-        }
+        List<String> uuidList2 = productMap2.values()
+            .stream()
+            .flatMap(List::stream)
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
 
         // We're counting on .equals not caring about order here
         assertEquals(Arrays.asList(product1.getUuid(), product2.getUuid(), product3.getUuid()), uuidList1);
@@ -694,32 +694,53 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         versions.put(p4.getId(), p4.getEntityVersion());
         versions.put("bad_id", p7.getEntityVersion());
 
-        List<Product> productList1 = this.ownerProductCurator.getProductsByVersions(owner1, versions).list();
-        List<Product> productList2 = this.ownerProductCurator.getProductsByVersions(owner2, versions).list();
-        List<Product> productList3 = this.ownerProductCurator.getProductsByVersions(null, versions).list();
+        Map<String, List<Product>> productMap1 = this.ownerProductCurator
+            .getProductsByVersions(owner1, versions);
+        Map<String, List<Product>> productMap2 = this.ownerProductCurator
+            .getProductsByVersions(owner2, versions);
+        Map<String, List<Product>> productMap3 = this.ownerProductCurator
+            .getProductsByVersions(null, versions);
 
-        // List 1 should contain products 2, 3, 5 and 6
-        // List 2 should contain products 1, 3, 4 and 6
-        // List 3 should contain products 1 through 6
+        // Map 1 should contain products with ids "p1" or "p2" not owned by owner 1: (p2, p3, p5, p6)
+        // Map 2 should contain products with ids "p1" or "p2" not owned by owner 2: (p1, p3, p4, p6)
+        // Map 3 should contain all products with ids "p1" or "p2": (p1, p2, p3, p4, p5, p6)
 
-        assertEquals(4, productList1.size());
-        assertEquals(4, productList2.size());
-        assertEquals(6, productList3.size());
+        assertEquals(2, productMap1.size());
+        assertEquals(2, productMap2.size());
+        assertEquals(2, productMap3.size());
 
-        List<String> uuidList1 = new LinkedList<>();
-        for (Product product : productList1) {
-            uuidList1.add(product.getUuid());
-        }
+        assertNotNull(productMap1.get("p1"));
+        assertEquals(2, productMap1.get("p1").size());
+        assertNotNull(productMap1.get("p2"));
+        assertEquals(2, productMap1.get("p2").size());
 
-        List<String> uuidList2 = new LinkedList<>();
-        for (Product product : productList2) {
-            uuidList2.add(product.getUuid());
-        }
+        assertNotNull(productMap2.get("p1"));
+        assertEquals(2, productMap2.get("p1").size());
+        assertNotNull(productMap2.get("p2"));
+        assertEquals(2, productMap2.get("p2").size());
 
-        List<String> uuidList3 = new LinkedList<>();
-        for (Product product : productList3) {
-            uuidList3.add(product.getUuid());
-        }
+        assertNotNull(productMap3.get("p1"));
+        assertEquals(3, productMap3.get("p1").size());
+        assertNotNull(productMap3.get("p2"));
+        assertEquals(3, productMap3.get("p2").size());
+
+        List<String> uuidList1 = productMap1.values()
+            .stream()
+            .flatMap(List::stream)
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
+
+        List<String> uuidList2 = productMap2.values()
+            .stream()
+            .flatMap(List::stream)
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
+
+        List<String> uuidList3 = productMap3.values()
+            .stream()
+            .flatMap(List::stream)
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
 
         // We're counting on .equals not caring about order here
         assertEquals(Arrays.asList(p2.getUuid(), p3.getUuid(), p5.getUuid(), p6.getUuid()), uuidList1);
@@ -734,18 +755,19 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
     public void testGetProductsByVersionsNoVersionInfo() {
         Owner owner1 = this.createOwner();
 
-        List<Product> productList1 = this.ownerProductCurator.getProductsByVersions(owner1, null).list();
-        assertEquals(0, productList1.size());
+        Map<String, List<Product>> productMap1 = this.ownerProductCurator
+            .getProductsByVersions(owner1, null);
+        assertEquals(0, productMap1.size());
 
-        List<Product> productList2 = this.ownerProductCurator.getProductsByVersions(owner1,
-            Collections.<String, Integer>emptyMap()).list();
-        assertEquals(0, productList2.size());
+        Map<String, List<Product>> productMap2 = this.ownerProductCurator
+            .getProductsByVersions(owner1, Collections.<String, Integer>emptyMap());
+        assertEquals(0, productMap2.size());
 
-        List<Product> productList3 = this.ownerProductCurator.getProductsByVersions(null, null).list();
-        assertEquals(0, productList3.size());
+        Map<String, List<Product>> productMap3 = this.ownerProductCurator.getProductsByVersions(null, null);
+        assertEquals(0, productMap3.size());
 
-        List<Product> productList4 = this.ownerProductCurator.getProductsByVersions(null,
-            Collections.<String, Integer>emptyMap()).list();
-        assertEquals(0, productList4.size());
+        Map<String, List<Product>> productMap4 = this.ownerProductCurator
+            .getProductsByVersions(null, Collections.<String, Integer>emptyMap());
+        assertEquals(0, productMap4.size());
     }
 }
