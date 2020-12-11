@@ -186,6 +186,12 @@
                 <!-- By default, Artemis will page messages when the queue address is full. -->
                 <page-size-bytes>1048576</page-size-bytes>
 
+                <!--
+                    Default the consumer window size to zero so we don't have a single thread grabbing
+                    a ton of job messages and choking out other threads that are waiting for work.
+                -->
+                <default-consumer-window-size>0</default-consumer-window-size>
+
                 <!-- Redelivery config -->
                 <redelivery-delay>30000</redelivery-delay>
                 <max-redelivery-delay>3600000</max-redelivery-delay>
