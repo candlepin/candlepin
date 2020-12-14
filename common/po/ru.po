@@ -11,7 +11,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "X-Generator: Zanata 4.6.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
@@ -81,11 +82,10 @@ msgstr "должно быть больше или равно {0}"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:54
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr ""
-"число выходит за пределы допустимого диапазона (ожидается <{integer} "
-"digits>.<{fraction} digits>)"
+"число выходит за пределы допустимого диапазона (ожидается <{integer} digits>."
+"<{fraction} digits>)"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:57
 msgid "must be in the future"
@@ -372,10 +372,6 @@ msgstr "Ошибка обращения к службе пользователя
 msgid "Unit {0} has been deleted"
 msgstr "{0} удален."
 
-#: server/src/main/java/org/candlepin/auth/KeycloakAuth.java:115
-msgid "Keycloak Authentication failed"
-msgstr ""
-
 #: server/src/main/java/org/candlepin/auth/OAuth.java:117
 #: server/src/main/java/org/candlepin/auth/OAuth.java:153
 msgid "Invalid OAuth unit or secret"
@@ -431,8 +427,7 @@ msgstr "Владелец с ID «{0}» не обнаружен."
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1998
 msgid ""
-"Unmapped guest entitlement expired without establishing a host/guest "
-"mapping."
+"Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
 "Срок действия гостевого полномочия подошел к концу (соответствия между "
 "гостем и хостом не создавались)."
@@ -446,8 +441,8 @@ msgstr ""
 #: server/src/main/java/org/candlepin/controller/Entitler.java:286
 #: server/src/main/java/org/candlepin/controller/Entitler.java:453
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
 msgstr ""
 "Единицы разработчика могут использоваться только на серверах, обслуживаемых "
 "в режиме хостинга, при условии, что организация обладает активными "
@@ -498,8 +493,8 @@ msgstr "В системе нет CDN {0}."
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:907
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
-"Запрос не может быть обработан, так как изменения уже применяются. Повторите"
-" попытку."
+"Запрос не может быть обработан, так как изменения уже применяются. Повторите "
+"попытку."
 
 #: server/src/main/java/org/candlepin/model/ConsumerCurator.java:789
 #, java-format
@@ -572,8 +567,8 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
-"guest subscription. For more information, please see "
-"https://access.redhat.com/solutions/1592573"
+"guest subscription. For more information, please see https://access.redhat."
+"com/solutions/1592573"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
@@ -605,8 +600,7 @@ msgstr "второй параметр должен содержать приор
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:149
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID \"{1}\" "
-"attached."
+"This unit has already had the subscription matching pool ID \"{1}\" attached."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:151
@@ -657,7 +651,8 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
 #, java-format
-msgid "Unit does not support instance based calculation required by pool \"{1}\""
+msgid ""
+"Unit does not support instance based calculation required by pool \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
@@ -688,13 +683,13 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:181
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: "
-"\"{1}\""
+"Pool is restricted to virtual guests in their first day of existence: \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:183
 #, java-format
-msgid "Pool is restricted when it is temporary and begins in the future: \"{1}\""
+msgid ""
+"Pool is restricted when it is temporary and begins in the future: \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
@@ -704,12 +699,14 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:193
 #, java-format
-msgid "This system already has a subscription for the product \"{1}\" attached."
+msgid ""
+"This system already has a subscription for the product \"{1}\" attached."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:195
 #, java-format
-msgid "There are not enough free subscriptions available for the product \"{1}\""
+msgid ""
+"There are not enough free subscriptions available for the product \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
@@ -1149,8 +1146,7 @@ msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
 msgstr ""
-"Число должно быть больше нуля, но меньше максимального значения для "
-"полномочи"
+"Число должно быть больше нуля, но меньше максимального значения для полномочи"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -1163,8 +1159,7 @@ msgstr "Окружение не существует: {0}"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:191
 msgid "No environment specified, or environment lacks owner information"
-msgstr ""
-"Окружение не задано, или в окружении отсутствуют сведения о владельце."
+msgstr "Окружение не задано, или в окружении отсутствуют сведения о владельце."
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:197
 msgid "No content ID specified"
@@ -1454,8 +1449,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1551
 msgid ""
-"The flags add_future and only_future cannot be used with the parameter "
-"after."
+"The flags add_future and only_future cannot be used with the parameter after."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1776
@@ -1474,8 +1468,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1830
 msgid "Cannot update bonus pools, as they are auto generated"
-msgstr ""
-"Не удалось обновить бонус-пулы, так как они генерируются автоматически"
+msgstr "Не удалось обновить бонус-пулы, так как они генерируются автоматически"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1576,8 +1569,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:226
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:243
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:259
-msgid ""
-"Organization-agnostic product write operations are no longer supported."
+msgid "Organization-agnostic product write operations are no longer supported."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:273
@@ -1665,8 +1657,7 @@ msgstr "{0}{1}"
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:130
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
+"None of the subscriptions on the activation key were available for attaching."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:158
@@ -1721,12 +1712,12 @@ msgstr "Не удалось найти {0} с ID {1}"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See knowledge database "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See knowledge database https://access.redhat.com/"
+"knowledge/node/129003 for more information."
 msgstr ""
 "Превышено допустимое число наборов содержимого для сертификата {0}. "
-"Возможно, обновление клиента поможет это исправить. За подробной информацией"
-" обратитесь к статье https://access.redhat.com/knowledge/node/129003"
+"Возможно, обновление клиента поможет это исправить. За подробной информацией "
+"обратитесь к статье https://access.redhat.com/knowledge/node/129003"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
