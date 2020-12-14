@@ -79,8 +79,7 @@ msgstr "必須大於或等於 {0}"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:54
 msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> "
-"expected)"
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
 msgstr "數字值超出範圍（預期的值為 <{integer} digits>.<{fraction} digits>）"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:57
@@ -427,8 +426,7 @@ msgstr "找不到 ID 為 \"{0}\" 的擁有者"
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1998
 msgid ""
-"Unmapped guest entitlement expired without establishing a host/guest "
-"mapping."
+"Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr "未對應的客座端權利已過期，而沒有建立主機 / 客座端對應。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:225
@@ -440,8 +438,8 @@ msgstr ""
 #: server/src/main/java/org/candlepin/controller/Entitler.java:286
 #: server/src/main/java/org/candlepin/controller/Entitler.java:453
 msgid ""
-"Development units may only be used on hosted servers and with orgs that have"
-" active subscriptions."
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
 msgstr "開發單元只能用在主機伺服器上、並擁有啟用中訂閱服務的組織。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:424
@@ -561,8 +559,8 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
 "Guest has not been reported on any host and is using a temporary unmapped "
-"guest subscription. For more information, please see "
-"https://access.redhat.com/solutions/1592573"
+"guest subscription. For more information, please see https://access.redhat."
+"com/solutions/1592573"
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
@@ -594,8 +592,7 @@ msgstr "第二個參數應該要是優先權號碼。"
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:149
 #, java-format
 msgid ""
-"This unit has already had the subscription matching pool ID \"{1}\" "
-"attached."
+"This unit has already had the subscription matching pool ID \"{1}\" attached."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:151
@@ -646,7 +643,8 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
 #, java-format
-msgid "Unit does not support instance based calculation required by pool \"{1}\""
+msgid ""
+"Unit does not support instance based calculation required by pool \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
@@ -677,13 +675,13 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:181
 #, java-format
 msgid ""
-"Pool is restricted to virtual guests in their first day of existence: "
-"\"{1}\""
+"Pool is restricted to virtual guests in their first day of existence: \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:183
 #, java-format
-msgid "Pool is restricted when it is temporary and begins in the future: \"{1}\""
+msgid ""
+"Pool is restricted when it is temporary and begins in the future: \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
@@ -693,12 +691,14 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:193
 #, java-format
-msgid "This system already has a subscription for the product \"{1}\" attached."
+msgid ""
+"This system already has a subscription for the product \"{1}\" attached."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:195
 #, java-format
-msgid "There are not enough free subscriptions available for the product \"{1}\""
+msgid ""
+"There are not enough free subscriptions available for the product \"{1}\""
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
@@ -1436,8 +1436,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1551
 msgid ""
-"The flags add_future and only_future cannot be used with the parameter "
-"after."
+"The flags add_future and only_future cannot be used with the parameter after."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1776
@@ -1556,8 +1555,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:226
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:243
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:259
-msgid ""
-"Organization-agnostic product write operations are no longer supported."
+msgid "Organization-agnostic product write operations are no longer supported."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:273
@@ -1645,8 +1643,7 @@ msgstr "{0}{1}"
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:130
 msgid ""
-"None of the subscriptions on the activation key were available for "
-"attaching."
+"None of the subscriptions on the activation key were available for attaching."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:158
@@ -1701,11 +1698,11 @@ msgstr "找不到 id 為 {1} 的 {0}。"
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See knowledge database "
-"https://access.redhat.com/knowledge/node/129003 for more information."
+"to address this problem. See knowledge database https://access.redhat.com/"
+"knowledge/node/129003 for more information."
 msgstr ""
-"憑證 {0} 擁有過多的內容集。您可使用更新的客戶端來解決此問題。欲取得更多相關資訊，請查看知識庫 "
-"https://access.redhat.com/knowledge/node/129003。"
+"憑證 {0} 擁有過多的內容集。您可使用更新的客戶端來解決此問題。欲取得更多相關資"
+"訊，請查看知識庫 https://access.redhat.com/knowledge/node/129003。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author snowlet
