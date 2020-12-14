@@ -1,0 +1,1884 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Yuri Chornoivan <yurchor@ukr.net>, 2020.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-08-05 14:41+0200\n"
+"PO-Revision-Date: 2020-12-14 12:52+0000\n"
+"Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
+"Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
+"candlepin/master/uk/>\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 4.3.2\n"
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:72
+#: server/src/main/java/org/candlepin/guice/I18nProvider.java:84
+msgid "Bad Request"
+msgstr "Некоректний запит"
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:106
+#, java-format
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr "Помилка під час виконання {0} у {1}.{2}:{3}"
+
+#: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:111
+#, java-format
+msgid "Runtime Error {0}"
+msgstr "Помилка під час виконання {0}"
+
+#: common/src/main/java/org/candlepin/common/resteasy/filter/PageRequestFilter.java:89
+msgid "offset and limit parameters must be positive integers"
+msgstr "параметри зсуву та обмеження мають бути додатними цілими значеннями"
+
+#: common/src/main/java/org/candlepin/common/resteasy/filter/PageRequestFilter.java:106
+msgid "the order parameter must be either \"ascending\" or \"descending\""
+msgstr ""
+"параметр упорядкування (order) повинен мати значення «ascending» або "
+"«descending»"
+
+#: common/src/main/java/org/candlepin/common/resteasy/filter/PageRequestFilter.java:116
+msgid "Expected a positive integer."
+msgstr "Мало бути вказано додатне ціле значення."
+
+#: common/src/main/java/org/candlepin/common/util/JaxRsExceptionResponseBuilder.java:126
+#, java-format
+msgid "Invalid format for query parameter. Expected format: {0}"
+msgstr "Некоректний формат для параметра запиту. Очікуваний формат: {0}"
+
+#: common/src/main/java/org/candlepin/common/util/JaxRsExceptionResponseBuilder.java:137
+#, java-format
+msgid "{0} is not a valid value for {1}"
+msgstr "{0} не є коректним значенням для {1}"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:45
+msgid "must be false"
+msgstr "має бути false"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:47
+msgid "must be true"
+msgstr "має бути true"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:49
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:59
+#, java-format
+msgid "must be less than or equal to {0}"
+msgstr "має бути більшим за {0}"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:51
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:61
+#, java-format
+msgid "must be greater than or equal to {0}"
+msgstr "має не меншим за {0}"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:54
+msgid ""
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+msgstr ""
+"числове значення поза межами припустимого діапазону (мало бути <{integer} "
+"digits>.<{fraction} digits>)"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:57
+msgid "must be in the future"
+msgstr "має бути у майбутньому"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:63
+msgid "may not be null"
+msgstr "не може бути порожнім"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:65
+msgid "must be null"
+msgstr "має бути порожнім"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:67
+msgid "must be in the past"
+msgstr "має бути у минулому"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:69
+msgid "must match \"{regexp}\""
+msgstr "має відповідати «{regexp}»"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:71
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:77
+#, java-format
+msgid "size must be between {0} and {1}"
+msgstr "розмір має належати діапазону від {0} до {1}"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:73
+msgid "invalid credit card number"
+msgstr "некоректний номер кредитної картки"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:75
+msgid "not a well-formed email address"
+msgstr "не є адресою електронної пошти із правильним форматуванням"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:79
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:81
+msgid "may not be empty"
+msgstr "не може бути порожнім"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:83
+msgid "must be between {min} and {max}"
+msgstr "має бути значенням від {min} до {max}"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:85
+msgid "may have unsafe HTML content"
+msgstr "може містити небезпечні дані HTML"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:87
+#, java-format
+msgid "script expression \"{0}\" didn't evaluate to true"
+msgstr "вираз скрипту «{0}» не дає у результаті виконання true"
+
+#: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:90
+msgid "must be a valid URL"
+msgstr "має бути коректною адресою"
+
+#: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
+msgid "Healing attempted against non-existent org key \"{}\""
+msgstr "Спробу виправлення ключа організації «{}», якого немає"
+
+#: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:95
+#, java-format
+msgid "Auto-attach is disabled for owner {0}{1}."
+msgstr "Для власника {0}{1} вимкнено автоматичне долучення."
+
+#: server/src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:189
+#, java-format
+msgid "Subscriptions deleted by {0}"
+msgstr "Передплати вилучено {0}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:111
+#, java-format
+msgid "Unknown event for user {0} and target {1}"
+msgstr "Невідома подія для користувача {0} і призначення {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:123
+#, java-format
+msgid "{0} created new unit {1}"
+msgstr "{0} створено модуль {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:124
+#, java-format
+msgid "{0} modified the unit {1}"
+msgstr "{0} змінено модуль {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#, java-format
+msgid "{0} deleted the unit {1}"
+msgstr "{0} вилучено модуль {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#, java-format
+msgid "{0} created new owner {1}"
+msgstr "{0} створено власника {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
+#, java-format
+msgid "{0} modified the owner {1}"
+msgstr "{0} змінено власника {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
+#, java-format
+msgid "{0} deleted the owner {1}"
+msgstr "{0} вилучено власника {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
+#, java-format
+msgid "{0} attached a subscription for product {1}"
+msgstr "{0} долучено передплату на продукт {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#, java-format
+msgid "{0} modified a subscription for product {1}"
+msgstr "{0} змінено передплату на продукт {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
+#, java-format
+msgid "{0} returned the subscription for {1}"
+msgstr "{0} повернуто передплату на {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
+#, java-format
+msgid "{0} created a pool for product {1}"
+msgstr "{0} створено буфер для продукту {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
+#, java-format
+msgid "{0} modified a pool for product {1}"
+msgstr "{0} змінено буфер для продукту {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
+#, java-format
+msgid "{0} deleted a pool for product {1}"
+msgstr "{0} вилучено буфер для продукту {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#, java-format
+msgid "{0} created an export for unit {1}"
+msgstr "{0} створено експорт для модуля {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#, java-format
+msgid "{0} imported a manifest for owner {1}"
+msgstr "{0} імпортовано маніфест для власника {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#, java-format
+msgid "{0} created new user {1}"
+msgstr "{0} створено запис користувача {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#, java-format
+msgid "{0} modified the user {1}"
+msgstr "{0} змінено запис користувача {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
+#, java-format
+msgid "{0} deleted the user {1}"
+msgstr "{0} вилучено запис користувача {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#, java-format
+msgid "{0} created new role {1}"
+msgstr "{0} створено роль {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#, java-format
+msgid "{0} modified the role {1}"
+msgstr "{0} змінено роль {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#, java-format
+msgid "{0} deleted the role {1}"
+msgstr "{0} вилучено роль {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#, java-format
+msgid "{0} created new subscription for product {1}"
+msgstr "{0} створено запис передплати для продукту {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#, java-format
+msgid "{0} deleted a subscription for product {1}"
+msgstr "{0} вилучено запис передплати для продукту {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#, java-format
+msgid "{0} created the activation key {1}"
+msgstr "{0} створено ключ активації {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#, java-format
+msgid "{0} deleted the activation key {1}"
+msgstr "{0} вилучено ключ активації {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
+#, java-format
+msgid "{0} created the guest id {1}"
+msgstr "{0} створено гостьовий ідентифікатор {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#, java-format
+msgid "{0} deleted the guest id {1}"
+msgstr "{0} вилучено гостьовий ідентифікатор {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
+#, java-format
+msgid "{0} updated the rules in the database to version {1}"
+msgstr "{0} оновлено правила у базі даних до версії {1}"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#, java-format
+msgid "{0} removed the rules from the database"
+msgstr "{0} вилучено правила з бази даних"
+
+#: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
+#, java-format
+msgid "Compliance recalculated for consumer {1}"
+msgstr "Сумісність перевизначено для споживача {1}"
+
+#: server/src/main/java/org/candlepin/auth/BasicAuth.java:74
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:314
+msgid "Invalid Credentials"
+msgstr "Некоректні реєстраційні дані"
+
+#: server/src/main/java/org/candlepin/auth/BasicAuth.java:88
+msgid "Error contacting user service"
+msgstr "Помилка під час спроби встановити зʼєднання зі службою користувачів"
+
+#: server/src/main/java/org/candlepin/auth/ConsumerAuth.java:70
+#: server/src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:142
+#, java-format
+msgid "Unit {0} has been deleted"
+msgstr "Модуль {0} вилучено"
+
+#: server/src/main/java/org/candlepin/auth/KeycloakAuth.java:115
+msgid "Keycloak Authentication failed"
+msgstr "Не вдалося пройти розпізнавання на Keycloak"
+
+#: server/src/main/java/org/candlepin/auth/OAuth.java:117
+#: server/src/main/java/org/candlepin/auth/OAuth.java:153
+msgid "Invalid OAuth unit or secret"
+msgstr "Некоректний модуль або ключ OAuth"
+
+#: server/src/main/java/org/candlepin/auth/OAuth.java:121
+#, java-format
+msgid "OAuth problem encountered. Internal message is: {0}"
+msgstr "Сталася проблема із OAuth. Внутрішнє повідомлення: {0}"
+
+#: server/src/main/java/org/candlepin/auth/OAuth.java:127
+#, java-format
+msgid "OAuth error encountered. Internal message is: {0}"
+msgstr "Сталася помилка із OAuth. Внутрішнє повідомлення: {0}"
+
+#: server/src/main/java/org/candlepin/auth/OAuth.java:159
+msgid "Error getting OAuth unit key"
+msgstr "Помилка отримання ключа OAuth модуля"
+
+#: server/src/main/java/org/candlepin/auth/UserAuth.java:54
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1112
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:133
+#: server/src/main/java/org/candlepin/resource/UserResource.java:111
+#, java-format
+msgid "User not found: {0}"
+msgstr "Не знайдено користувача: {0}"
+
+#: server/src/main/java/org/candlepin/bind/BindContext.java:117
+#, java-format
+msgid "Subscription pool(s) {0} do not exist."
+msgstr "Буферів передплати {0} не існує."
+
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:306
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:56
+msgid "No owner specified, or owner lacks identifying information"
+msgstr ""
+"Власника не вказано або запис власника не містить усіх відомостей для "
+"ідентифікації"
+
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:315
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:64
+#, java-format
+msgid "Unable to find an owner with the key \"{0}\""
+msgstr "Не вдалося знайти власника з ключем «{0}»"
+
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:323
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:72
+#, java-format
+msgid "Unable to find an owner with the ID \"{0}\""
+msgstr "Не вдалося знайти власника з ідентифікатором «{0}»"
+
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1998
+msgid ""
+"Unmapped guest entitlement expired without establishing a host/guest mapping."
+msgstr ""
+"Вичерпано строк дії непривʼязаних реєстраційних даних гостя без встановлення "
+"привʼязки основна система — гостьова система."
+
+#: server/src/main/java/org/candlepin/controller/Entitler.java:225
+#: server/src/main/java/org/candlepin/controller/Entitler.java:230
+#, java-format
+msgid "Auto-attach is disabled for owner \"{0}\"{1}."
+msgstr "Для власника «{0}»{1} вимкнено автоматичне долучення."
+
+#: server/src/main/java/org/candlepin/controller/Entitler.java:286
+#: server/src/main/java/org/candlepin/controller/Entitler.java:453
+msgid ""
+"Development units may only be used on hosted servers and with orgs that have "
+"active subscriptions."
+msgstr ""
+"Модулі у розробці можна використовувати лише на гостьових серверах і з "
+"організаціями, які мають активні передплати."
+
+#: server/src/main/java/org/candlepin/controller/Entitler.java:424
+#, java-format
+msgid "SKU product not available to this development unit: \"{0}\""
+msgstr "Продукт SKU є недоступним для цього модуля у розробці: «{0}»"
+
+#: server/src/main/java/org/candlepin/controller/Entitler.java:430
+#, java-format
+msgid "Installed product not available to this development unit: \"{0}\""
+msgstr "Встановлений продукт є недоступним для цього модуля у розробці: «{0}»"
+
+#: server/src/main/java/org/candlepin/controller/ManifestManager.java:225
+#, java-format
+msgid "The requested manifest file was not found: {0}"
+msgstr "Не знайдено потрібного файла маніфесту: {0}"
+
+#: server/src/main/java/org/candlepin/controller/ManifestManager.java:281
+#, java-format
+msgid "Unable to find specified manifest by id: {0}"
+msgstr "Не вдалося знайти вказаний маніфест за ідентифікатором: {0}"
+
+#: server/src/main/java/org/candlepin/controller/ManifestManager.java:287
+#, java-format
+msgid "Could not validate export against specifed consumer: {0}"
+msgstr "Не вдалося перевірити експортування за вказаним споживачем: {0}"
+
+#: server/src/main/java/org/candlepin/controller/ManifestManager.java:312
+#, java-format
+msgid "Unable to download manifest: {0}"
+msgstr "Не вдалося отримати маніфест: {0}"
+
+#: server/src/main/java/org/candlepin/controller/ManifestManager.java:323
+#, java-format
+msgid ""
+"Unit {0} cannot be exported. A manifest cannot be made for units of type "
+"\"{1}\"."
+msgstr ""
+"Модуль {0} не може бути експортовано. Маніфест не можна створити для модулів "
+"типу «{1}»."
+
+#: server/src/main/java/org/candlepin/controller/ManifestManager.java:329
+#, java-format
+msgid "A CDN with label {0} does not exist on this system."
+msgstr "CDN із міткою {0} не існує у цій системі."
+
+#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:907
+msgid "Request failed due to concurrent modification, please re-try."
+msgstr ""
+"Не вдалося виконати запит через конкуренцію у внесенні змін. Будь ласка, "
+"повторіть спробу."
+
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:789
+#, java-format
+msgid "The system with UUID {0} is a virtual guest. It does not have guests."
+msgstr ""
+"Система із UUID {0} є віртуальною гостьовою системою. У ній немає гостьових "
+"систем."
+
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:1047
+#: server/src/main/java/org/candlepin/model/ConsumerCurator.java:1057
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:171
+#, java-format
+msgid "Unit with ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти модуль із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:426
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:164
+#, java-format
+msgid "Product with ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти продукт із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/model/RulesCurator.java:111
+msgid "No rules file found in the database"
+msgstr "У базі даних не знайдено файла правил"
+
+#: server/src/main/java/org/candlepin/model/UeberCertificateGenerator.java:96
+#, java-format
+msgid "Unable to find an owner with key: {0}"
+msgstr "Не вдалося знайти власника із ключем: {0}"
+
+#: server/src/main/java/org/candlepin/model/UeberCertificateGenerator.java:108
+#, java-format
+msgid "Problem generating ueber cert for owner {0}"
+msgstr "Проблемі зі створенням сертифіката ueber для власника {0}"
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
+msgid "Not supported by a valid subscription."
+msgstr "У коректній передплаті не передбачено підтримки."
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:55
+#, java-format
+msgid "Supports architecture {1} but the system is {2}."
+msgstr ""
+"Передбачено підтримку архітектури {1}, але система належить до архітектури "
+"{2}."
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:57
+#, java-format
+msgid "Only supports {1} of {2} sockets."
+msgstr "Передбачено підтримку лише {1} з {2} сокетів."
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:59
+#, java-format
+msgid "Only supports {1} of {2} cores."
+msgstr "Передбачено підтримку лише {1} з {2} ядер."
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
+#, java-format
+msgid "Only supports {1}GB of {2}GB of RAM."
+msgstr "Передбачено підтримку лише {1} ГБ з {2} ГБ оперативної памʼяті."
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
+#, java-format
+msgid "Only supports {1} of {2} virtual guests."
+msgstr "Передбачено підтримку лише {1} з {2} віртуальних гостьових систем."
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:65
+#, java-format
+msgid "Only supports {1} of {2} vCPUs."
+msgstr "Передбачено підтримку лише {1} з {2} віртуальних процесорів."
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
+msgid ""
+"Guest has not been reported on any host and is using a temporary unmapped "
+"guest subscription. For more information, please see https://access.redhat."
+"com/solutions/1592573"
+msgstr ""
+"Не повідомлено про належність гостьової системи до будь-якої основної "
+"системи. Гостьова система використовує тимчасову непривʼязану передплату "
+"гостьової системи. Щоб дізнатися більше, будь ласка, ознайомтеся із вмістом "
+"сторінки https://access.redhat.com/solutions/1592573"
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
+#, java-format
+msgid "Only supports {1}TB of {2}TB of storage."
+msgstr "Передбачено підтримку {1} ТБ з {2} ТБ сховища даних."
+
+#: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
+#, java-format
+msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
+msgstr "ПРОБЛЕМА З ПОКРИТТЯМ {0}. Передбачено підтримку {1} з {2}"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:269
+#, java-format
+msgid "Subscriptions for {0} expired on: {1}"
+msgstr "Строк дії передплат {0} вичерпано {1}"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:357
+#, java-format
+msgid "\"{0}\" Should contain name, priority and at least one attribute"
+msgstr "«{0}» має містити назву, пріоритетність і принаймні один атрибут"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:371
+msgid "second parameter should be the priority number."
+msgstr "другий параметр має бути числом пріоритетності."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:149
+#, java-format
+msgid ""
+"This unit has already had the subscription matching pool ID \"{1}\" attached."
+msgstr ""
+"До модуля вже долучено передплату, яка відповідає ідентифікатору буфера "
+"«{1}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:151
+#, java-format
+msgid "No subscriptions are available from the pool with ID \"{1}\"."
+msgstr "Немає доступних передплат з буфера з ідентифікатором «{1}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:153
+#, java-format
+msgid "Units of this type are not allowed to attach the pool with ID \"{1}\"."
+msgstr "До модулів цього типу не можна долучати буфери з ідентифікатором «{1}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:155
+#, java-format
+msgid "Multi-entitlement not supported for pool with ID \"{1}\"."
+msgstr ""
+"Підтримки використання декількох реєстраційних даних для буфера з "
+"ідентифікатором «{1}» не передбачено."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:157
+#, java-format
+msgid "Pool \"{1}\" is restricted to guests running on host: \"{4}\"."
+msgstr ""
+"Використання буфера «{1}» обмежено гостьовими системами, які запущено та цій "
+"основній системі: «{4}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
+#, java-format
+msgid "Pool \"{1}\" is restricted to a specific consumer."
+msgstr "Використання буфера «{1}» обмежено вказаним споживачем."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:161
+msgid "Pool not available to subscription management applications."
+msgstr "Буфер є недоступним для програм, які керують передплатами."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:163
+#, java-format
+msgid "Pool is restricted to virtual guests: \"{1}\"."
+msgstr "Використання буфера обмежено віртуальними гостьовими системами: «{1}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:165
+#, java-format
+msgid "Pool is restricted to physical systems: \"{1}\"."
+msgstr "Використання буфера обмежено фізичними системами: «{1}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:167
+#, java-format
+msgid ""
+"Subscription \"{2}\" must be attached using a quantity evenly divisible by "
+"{3}"
+msgstr ""
+"Передплату «{2}» має бути долучено з використанням значення, яке ділиться на "
+"{3} без остачі"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
+#, java-format
+msgid ""
+"Unit does not support instance based calculation required by pool \"{1}\""
+msgstr ""
+"У модулі не передбачено обчислення на основі екземпляра, яке потрібне буферу "
+"«{1}»"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
+#, java-format
+msgid "Unit does not support band calculation required by pool \"{1}\""
+msgstr "У модулі не передбачено обчислення смуг, яке потрібне буферу «{1}»"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:173
+#, java-format
+msgid "Unit does not support core calculation required by pool \"{1}\""
+msgstr "У модулі не передбачено обчислення ядер, яке потрібне буферу «{1}»"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:175
+#, java-format
+msgid "Unit does not support RAM calculation required by pool \"{1}\""
+msgstr ""
+"У модулі не передбачено обчислення оперативної памʼяті, яке потрібне буферу "
+"«{1}»"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:177
+#, java-format
+msgid "Unit does not support derived products data required by pool \"{1}\""
+msgstr ""
+"У модулі не передбачено даних похідних продуктів, які потрібні буферу «{1}»"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:179
+#, java-format
+msgid "Pool is restricted to unmapped virtual guests: \"{1}\""
+msgstr ""
+"Використання буфера обмежено непривʼязаними віртуальними гостьовими "
+"системами: «{1}»"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:181
+#, java-format
+msgid ""
+"Pool is restricted to virtual guests in their first day of existence: \"{1}\""
+msgstr ""
+"Використання буфера обмежено віртуальними гостьовими системами у перший день "
+"їхнього існування: «{1}»"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:183
+#, java-format
+msgid ""
+"Pool is restricted when it is temporary and begins in the future: \"{1}\""
+msgstr ""
+"Використання буфера обмежено, якщо він є тимчасовим і починається у "
+"майбутньому: «{1}»"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
+#, java-format
+msgid "Unable to attach pool with ID \"{1}\".: {0}."
+msgstr "Не вдалося долучити буфер із ідентифікатором «{1}»: {0}."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:193
+#, java-format
+msgid ""
+"This system already has a subscription for the product \"{1}\" attached."
+msgstr "До цієї системи вже долучено передплату для продукту «{1}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:195
+#, java-format
+msgid ""
+"There are not enough free subscriptions available for the product \"{1}\""
+msgstr "Немає достатньої кількості вільних передплат для продукту «{1}»"
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
+#, java-format
+msgid "Units of this type are not allowed for the product \"{1}\"."
+msgstr "Модулі цього типу не можна використовувати для продукту «{1}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:199
+#, java-format
+msgid "Only virtual systems can have subscription \"{1}\" attached."
+msgstr "Долучати передплату «{1}» можна лише до віртуальних систем."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:201
+#, java-format
+msgid "Unable to attach subscription for the product \"{1}\": {0}."
+msgstr "Не вдалося долучити передплату до продукту «{1}»: {0}."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:209
+#, java-format
+msgid ""
+"Insufficient pool quantity available for adjustment to entitlement \"{1}\"."
+msgstr "Недостатня кількість буферів для коригування до реєстрації «{1}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:211
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:213
+#, java-format
+msgid ""
+"Multi-entitlement not supported for pool connected with entitlement \"{1}\"."
+msgstr ""
+"Не передбачено підтримки використання декількох реєстраційних даних для "
+"буфера, який зʼєднано із реєстраційними даними «{1}»."
+
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:215
+#, java-format
+msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
+msgstr ""
+"Не вдалося скоригувати кількість для реєстраційних даних із ідентифікатором "
+"«{1}»: {0}"
+
+#: server/src/main/java/org/candlepin/resource/ActivationKeyContentOverrideResource.java:64
+msgid "activation key ID is null or empty"
+msgstr "ідентифікатор ключа активації є нульовим або порожнім"
+
+#: server/src/main/java/org/candlepin/resource/ActivationKeyContentOverrideResource.java:70
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1540
+#, java-format
+msgid "ActivationKey with id {0} could not be found."
+msgstr "Не вдалося знайти ActivationKey з ідентифікатором {0}."
+
+#: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:114
+msgid "Activation key ID is null or empty"
+msgstr "Ідентифікатор ключа активації є нульовим або порожнім"
+
+#: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:120
+#, java-format
+msgid "Activation key with ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти ключа активації з ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:174
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1273
+#, java-format
+msgid ""
+"The activation key name \"{0}\" must be alphanumeric or include the "
+"characters \"-\" or \"_\""
+msgstr ""
+"Назва ключа активації «{0}» має складатися з латинських літер і цифр або "
+"включати символи «-» або «_»"
+
+#: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:239
+#, java-format
+msgid "Pool ID \"{0}\" has already been registered with this activation key"
+msgstr ""
+"Ідентифікатор буфера «{0}» вже було зареєстровано із цим ключем активації"
+
+#: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:283
+#, java-format
+msgid "Product ID \"{0}\" has already been registered with this activation key"
+msgstr ""
+"Ідентифікатор продукту «{0}» вже було зареєстровано із цим ключем активації"
+
+#: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:337
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:442
+#, java-format
+msgid "Pool with id {0} could not be found."
+msgstr "Не вдалося знайти буфер із ідентифікатором {0}."
+
+#: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:347
+#, java-format
+msgid "Product with id {0} could not be found."
+msgstr "Не вдалося знайти продукт із ідентифікатором {0}."
+
+#: server/src/main/java/org/candlepin/resource/CdnResource.java:104
+#, java-format
+msgid "A CDN with the label {0} already exists"
+msgstr "CDN із міткою {0} вже існує"
+
+#: server/src/main/java/org/candlepin/resource/CdnResource.java:191
+msgid "cdn certificate has null key or cert."
+msgstr "сертифікат cdn має нульовий ключ або сертифікат."
+
+#: server/src/main/java/org/candlepin/resource/CdnResource.java:200
+#, java-format
+msgid "No such content delivery network: {0}"
+msgstr "Немає такої мережі надання даних: {0}"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:428
+msgid "Must specify at least one search criteria."
+msgstr "Має вказувати принаймні один критерій пошуку."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:436
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1182
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:349
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1719
+#, java-format
+msgid "owner with key: {0} was not found."
+msgstr "не знайдено власника із ключем {0}."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:463
+#, java-format
+msgid "Consumer with id {0} could not be found."
+msgstr "Не вдалося знайти споживача із ідентифікатором {0}."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:493
+msgid "No UUIDs provided."
+msgstr "Не надано значень UUID."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:602
+#, java-format
+msgid "Environment \"{0}\" could not be found."
+msgstr "Не вдалося знайти середовища «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:761
+msgid "Unit type must be specified."
+msgstr "Має бути вказано тип модуля."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:766
+#, java-format
+msgid "Invalid unit type: {0}"
+msgstr "Некоректний тип модуля: {0}"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:788
+#: server/src/main/java/org/candlepin/resource/ContentOverrideResource.java:237
+msgid "Insufficient permissions"
+msgstr "Недостатньо прав"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:892
+#, java-format
+msgid "Problem creating unit {0}"
+msgstr "Проблема зі створенням модуля {0}"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:902
+msgid "The consumer cannot be assigned a content access mode."
+msgstr "Зі споживачем не може бути повʼязано режим доступу до даних."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:906
+msgid "The consumer cannot use the supplied content access mode."
+msgstr "Споживач не може використовувати наданий режим доступу до даних."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:914
+msgid "Org required to register with activation keys."
+msgstr "Організацію слід зареєструвати за допомогою ключів активації."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:918
+msgid "Cannot specify username with activation keys."
+msgstr "Не можна вказувати імʼя користувача із ключами активації."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:928
+msgid "A unit type of \"person\" cannot be used with activation keys"
+msgstr "Тип модуля «person» не може бути використано з ключами активації"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:932
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:939
+msgid "System name cannot contain most special characters."
+msgstr ""
+"У назві системи не можна використовувати більшість спеціальних символів."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:948
+msgid "You may not create a manifest consumer via Subscription Manager."
+msgstr ""
+"Не можна створювати споживача маніфесту за допомогою засобу керування "
+"передплатами."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:968
+msgid "None of the activation keys specified exist for this org."
+msgstr "Серед вказаних ключів активації немає ключа для цієї організації."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1060
+msgid "System name cannot begin with # character"
+msgstr "Назва системи не може починатися із символу #"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1093
+#, java-format
+msgid "Activation key \"{0}\" not found for organization \"{1}\"."
+msgstr "Не знайдено ключа активації «{0}» для організації «{1}»."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1118
+#, java-format
+msgid "User \"{0}\" has no roles for organization \"{1}\""
+msgstr "У користувача «{0}» немає ролей для організації «{1}»"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1131
+#, java-format
+msgid "User \"{0}\" has already registered a personal consumer"
+msgstr "Користувача «{0}» вже зареєстровано як особистого споживача"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1154
+msgid "You must specify an organization for new units."
+msgstr "Для нових модулів вам слід вказати організацію."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1164
+#, java-format
+msgid "Organization {0} does not exist."
+msgstr "Запису організації {0} не існує."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1178
+#, java-format
+msgid "{0} is not authorized to register with organization {1}"
+msgstr "{0} не уповноважено на реєстрацію із записом організації {1}"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1284
+#, java-format
+msgid "Problem updating unit {0}"
+msgstr "Проблема зі оновленням модуля {0}"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1366
+msgid "This consumer cannot be assigned a content access mode"
+msgstr "З цим споживачем не може бути повʼязано режим доступу до даних"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1372
+#, java-format
+msgid "This consumer cannot use the supplied content access mode: {0}"
+msgstr ""
+"Цей споживач не може використовувати наданий режим доступу до даних: {0}"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1429
+#, java-format
+msgid "Environment with ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти середовище з ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1442
+#, java-format
+msgid "Environment with name \"{0}\" could not be found."
+msgstr "Не вдалося знайти середовища з назвою «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1522
+#, java-format
+msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
+msgstr ""
+"Проблема із оновленням модуля {0}. Ідентифікатор гіпервізора {1} вже "
+"використано."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1750
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1761
+#, java-format
+msgid "Consumer with UUID {0} was already deleted."
+msgstr "Запис споживача з UUID {0} вже вилучено."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1777
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:313
+#, java-format
+msgid "Cannot unregister {0} {1} because: {2}"
+msgstr "Не вдалося скасувати реєстрацію {0} {1}, оскільки {2}"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1826
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1829
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1866
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1879
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1882
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1983
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1986
+msgid "Cannot retrieve content access certificate"
+msgstr "Не вдалося отримати сертифікат доступу до даних"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1852
+msgid "Content access mode does not allow this request."
+msgstr "Режим доступу до даних не дає змоги виконати цей запит."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1920
+msgid "Unable to create entitlement certificate archive"
+msgstr "Не вдалося створити архів сертифікатів надання ролей"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2008
+msgid "Cannot bind by multiple parameters."
+msgstr "Привʼязування за декількома параметрами неможливе."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2012
+msgid "Cannot specify a quantity when auto-binding."
+msgstr "Не можна вказувати кількість при автопривʼязці."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2139
+#, java-format
+msgid ""
+"Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
+"the content access mode setting."
+msgstr ""
+"Ігноруємо запит щодо автоматичного долучення. Його вимкнено для організації "
+"«{0}» через параметр режиму доступу до даних."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2144
+#, java-format
+msgid ""
+"Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
+"the hypervisor autobind setting."
+msgstr ""
+"Ігноруємо запит щодо автоматичного долучення. Його вимкнено для організації "
+"«{0}» через параметр автоматичної привʼязки гіпервізора."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2195
+#, java-format
+msgid ""
+"Organization \"{0}\" has auto-attach disabled because of the content access "
+"mode setting."
+msgstr ""
+"Для організації «{0}» вимкнено автоматичне долучення через параметр режиму "
+"доступу до даних."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2200
+#, java-format
+msgid "Organization \"{0}\" has auto-attach disabled."
+msgstr "Для організації «{0}» вимкнено автоматичне долучення."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2239
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2349
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:201
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:240
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:259
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:300
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:401
+#, java-format
+msgid "Entitlement with ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти реєстраційні дані із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2372
+#, java-format
+msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
+msgstr ""
+"Не вдалося знайти сертифікат реєстраційних даних із серійним номером «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2394
+#, java-format
+msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
+msgstr ""
+"Немає реєстраційних даних для споживача «{0}» із ідентифікатором буфера «{1}»"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2465
+msgid "Unable to create export archive"
+msgstr "Не вдалося створити архів експортування"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2679
+#, java-format
+msgid "Problem regenerating ID cert for unit {0}"
+msgstr ""
+"Проблема із повторним створенням сертифіката ідентифікатора для модуля {0}"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2723
+#, java-format
+msgid "The system with UUID {0} is not a virtual guest."
+msgstr "Система з UUID {0} не є віртуальною гостьовою системою."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2824
+#, java-format
+msgid "Deletion record for hypervisor \"{0}\" not found."
+msgstr "Не виявлено запису вилучення для гіпервізора «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:121
+#, java-format
+msgid "Unit type with id \"{0}\" could not be found."
+msgstr "Не вдалося знайти типу модуля із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:143
+#, java-format
+msgid "Problem creating unit type: {0}"
+msgstr "Проблема зі створенням типу модуля: {0}"
+
+#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:158
+#, java-format
+msgid "Unit type with label {0} could not be found."
+msgstr "Не вдалося знайти типу модуля із міткою {0}."
+
+#: server/src/main/java/org/candlepin/resource/ConsumerTypeResource.java:174
+#, java-format
+msgid "Unit type with id {0} could not be found."
+msgstr "Не вдалося знайти типу модуля із ідентифікатором {0}."
+
+#: server/src/main/java/org/candlepin/resource/ContentResource.java:101
+#, java-format
+msgid "Content with UUID \"{0}\" could not be found."
+msgstr "Не вдалося знайти дані з UUID «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ContentResource.java:113
+#: server/src/main/java/org/candlepin/resource/ContentResource.java:123
+#: server/src/main/java/org/candlepin/resource/ContentResource.java:133
+#: server/src/main/java/org/candlepin/resource/ContentResource.java:142
+msgid "Organization-agnostic content write operations are not supported."
+msgstr ""
+"Не передбачено підтримки операцій запису даних, які є незалежними від "
+"організацій."
+
+#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:167
+#, java-format
+msgid "A distributor version with name {0} already exists"
+msgstr "Версія поширювача з назвою {0} вже існує"
+
+#: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:199
+#, java-format
+msgid "No such distributor version: {0}"
+msgstr "Немає такої версії поширювача: {0}"
+
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:129
+#, java-format
+msgid "Object with ID \"{0}\" could not found."
+msgstr "Не вдалося знайти обʼєкт із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:151
+#, java-format
+msgid "Unit \"{0}\" has no subscription for product \"{1}\"."
+msgstr "У модуля «{0}» немає передплати для продукту «{1}»."
+
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:227
+msgid "Quantity value must be greater than 0."
+msgstr "Значення кількості має бути більшим за 0."
+
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:280
+#, java-format
+msgid "Unable to find upstream certificate for entitlement: {0}"
+msgstr "Не вдалося знайти сертифікат вищого рівня для реєстраційних даних: {0}"
+
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:353
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:359
+#, java-format
+msgid "Entitlement migration is not permissible for units of type \"{0}\""
+msgstr "Перенесення реєстраційних даних не є дозволеним для модулів типу «{0}»"
+
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:365
+msgid "Source and destination units must belong to the same organization"
+msgstr ""
+"Початковий модуль і модуль призначення мають належати до однієї організації"
+
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:374
+msgid "The entitlement cannot be utilized by the destination unit: "
+msgstr "Реєстраційні дані не може бути використано модулем призначення: "
+
+#: server/src/main/java/org/candlepin/resource/EntitlementResource.java:395
+msgid ""
+"The quantity specified must be greater than zero and less than or equal to "
+"the total for this entitlement"
+msgstr ""
+"Вказана кількість має бути більшою за нуль не більшою за загальну кількість "
+"для цих реєстраційних даних"
+
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:131
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:147
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:380
+#, java-format
+msgid "No such environment: {0}"
+msgstr "Немає такого середовища: {0}"
+
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:191
+msgid "No environment specified, or environment lacks owner information"
+msgstr "Не вказано середовища або у середовищі немає даних щодо власника"
+
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:197
+msgid "No content ID specified"
+msgstr "Не вказано ідентифікатора даних"
+
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:205
+#, java-format
+msgid "Unable to find content with the ID \"{0}\"."
+msgstr "Не вдалося знайти дані із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:249
+#, java-format
+msgid "The content with id {0} has already been promoted in this environment."
+msgstr "Дані із ідентифікатором {0} вже було поширено у цьому середовищі."
+
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:266
+#, java-format
+msgid "Some of the content is already associated with Environment: {0}"
+msgstr "Деякі з даних вже повʼязано із середовищем: {0}"
+
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:309
+#, java-format
+msgid "Content does not exist in environment: {0}"
+msgstr "Даних не існує у середовищі: {0}"
+
+#: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:323
+#, java-format
+msgid "One of the content does not exist in the environment anymore: {0}"
+msgstr "Одна з частин даних більше не існує у середовищі: {0}"
+
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:241
+msgid "Please supply a valid guest id"
+msgstr "Будь ласка, вкажіть коректний ідентифікатор гостьової системи"
+
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:257
+#, java-format
+msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
+msgstr ""
+"Ідентифікатор гостьової системи у json «{0}» не збігається із "
+"ідентифікатором шляху гостьової системи «{1}»"
+
+#: server/src/main/java/org/candlepin/resource/GuestIdResource.java:297
+#, java-format
+msgid "Guest with UUID {0} could not be found."
+msgstr "Не вдалося знайти гостьову систему з UUID {0}."
+
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:165
+msgid "Host to guest mapping was not provided for hypervisor check-in."
+msgstr ""
+"Для реєстрації гіпервізора не надано привʼязки основних систем до гостьових "
+"систем."
+
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:226
+#, java-format
+msgid "Unable to find hypervisor in org \"{0}\""
+msgstr "Не вдалося знайти гіпервізор в організації «{0}»"
+
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:408
+msgid "Host to guest mapping was not provided for hypervisor update."
+msgstr ""
+"Для оновлення гіпервізора не надано привʼязки основних систем до гостьових "
+"систем."
+
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:416
+#: server/src/main/java/org/candlepin/resource/HypervisorResource.java:422
+msgid "Invalid host to guest mapping was provided for hypervisor update."
+msgstr ""
+"Для оновлення гіпервізора надано некоректну привʼязку основних систем до "
+"гостьових систем."
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:168
+msgid "Error setting scheduler status"
+msgstr "Помилка під час спроби встановити стан планувальника"
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:242
+#, java-format
+msgid ""
+"This endpoint does not support returning more than {0} results at a time, "
+"please use paging."
+msgstr ""
+"Для цієї кінцевої точки не передбачено повернення понад {0} одночасно. Будь "
+"ласка, скористайтеся поділом виведених даних на сторінки."
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:272
+#: server/src/main/java/org/candlepin/resource/JobResource.java:300
+msgid "Job ID is null or empty"
+msgstr "Ідентифікатор завдання є нульовим або порожнім"
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:278
+#: server/src/main/java/org/candlepin/resource/JobResource.java:309
+#, java-format
+msgid "No job status found associated with the given job ID: {0}"
+msgstr ""
+"Для наданого ідентифікатора завдання не знайдено повʼязаного стану завдання: "
+"{0}"
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:319
+#, java-format
+msgid ""
+"Job {0} is already in a terminal state or otherwise cannot be canceled at "
+"this time"
+msgstr ""
+"Завдання {0} вже перебуває у стані припинення або не може бути скасоване "
+"зараз через іншу причину"
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:397
+msgid "Job key is null or empty"
+msgstr "Ключ завдання є нульовим або порожнім"
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:405
+#, java-format
+msgid "Job \"{0}\" is not configured for manual scheduling"
+msgstr "Завдання «{0}» не налаштовано на планування вручну"
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:427
+#, java-format
+msgid "An unexpected exception occurred while scheduling job \"{0}\""
+msgstr "Під час планування завдання «{0}» сталося неочікуване виключення"
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:494
+#, java-format
+msgid "Unknown job states: {0}"
+msgstr "Невідомі стани завдання: {0}"
+
+#: server/src/main/java/org/candlepin/resource/JobResource.java:564
+#, java-format
+msgid "Invalid date range; start date occurs after the end date: {0} > {1}"
+msgstr ""
+"Некоректний діапазон дат; дата початку перебуває у майбутньому щодо дати "
+"завершення: {0} > {1}"
+
+#: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:127
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:139
+#, java-format
+msgid "Owner with key \"{0}\" was not found."
+msgstr "Не знайдено власника із ключем «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:154
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:189
+#, java-format
+msgid "Content with ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти дані з ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:216
+#: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:278
+#: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:298
+#, java-format
+msgid "content \"{0}\" is locked"
+msgstr "дані «{0}» заблоковано"
+
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:239
+msgid "Only numeric product IDs are allowed."
+msgstr "Можна використовувати лише числові ідентифікатори продуктів."
+
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:282
+#, java-format
+msgid "Contradictory ids in update request: {0}, {1}"
+msgstr "Суперечливі ідентифікатори у запиті щодо оновлення: {0}, {1}"
+
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:297
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:328
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:398
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:450
+#, java-format
+msgid "product \"{0}\" is locked"
+msgstr "продукт «{0}» заблоковано"
+
+#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:455
+#, java-format
+msgid "Product with ID \"{0}\" cannot be deleted while subscriptions exist."
+msgstr ""
+"Продукт з ідентифікатором «{0}» не може бути вилучено, доки існують записи "
+"передплат."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:290
+msgid "Owner key is null or empty."
+msgstr "Ключ власника є нульовим або порожнім."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:294
+#, java-format
+msgid "Owner with key \"{0}\" was not found"
+msgstr "Не знайдено запису власника із ключем «{0}»"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:320
+msgid "Owner id is null or empty."
+msgstr "Ідентифікатор власника є нульовим або порожнім."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:324
+#, java-format
+msgid "Owner with id \"{0}\" was not found"
+msgstr "Не знайдено запису власника із ідентифікатором «{0}»"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:353
+msgid "Owner lookup failed because id and key were null or empty."
+msgstr ""
+"Не вдалося виконати пошук власника, оскільки ідентифікатор і ключ було "
+"нульовими або порожніми."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:377
+msgid "Entitlement id is null or empty."
+msgstr "Ідентифікатор реєстраційних даних є нульовим або порожнім."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:382
+#, java-format
+msgid "Entitlement with id {0} could not be found."
+msgstr "Не вдалося знайти реєстраційні дані із ідентифікатором {0}."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:408
+msgid "Consumer id is null or empty."
+msgstr "Ідентифікатор споживача є нульовим або порожнім."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:412
+#: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:155
+#, java-format
+msgid "No such unit: {0}"
+msgstr "Немає такого модуля: {0}"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:438
+msgid "Pool id is null or empty."
+msgstr "Ідентифікатор буфера є нульовим або порожнім."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:480
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:94
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:119
+#, java-format
+msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
+msgstr "Не вдалося знайти продукт із ідентифікатором «{0}» для власника «{1}»"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:531
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:210
+#, java-format
+msgid "Unable to find parent owner: {0}"
+msgstr "Не вдалося знайти батьківського власника: {0}"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:886
+msgid "Owners must be created with a valid key"
+msgstr "Записи власників слід створювати із коректним ключем"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:895
+msgid "The default service level cannot be specified during owner creation"
+msgstr ""
+"Під час створення запису власника не можна вказувати типовий рівень служб"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:908
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1004
+msgid ""
+"The owner content access mode and content access mode list cannot be set "
+"directly in standalone mode."
+msgstr ""
+"Не можна безпосередньо встановлювати у автономному режимі режим доступу до "
+"даних власника та список режимів доступу до даних."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:943
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:955
+#, java-format
+msgid "Could not create the Owner: {0}"
+msgstr "Не вдалося створити запис власника: {0}"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1061
+#, java-format
+msgid "Content access mode list contains an unsupported mode: {0}"
+msgstr "У списку режимів доступу до даних міститься непідтримуваний режим: {0}"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1081
+#, java-format
+msgid ""
+"Content access mode is not present in the content access mode list for this "
+"org: {0}"
+msgstr ""
+"Для цієї організації у списку режимі доступу до даних немає режиму доступу "
+"до даних: {0}"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1266
+msgid "Must provide a name for activation key."
+msgstr "Слід надати назву ключа активації."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1285
+#, java-format
+msgid "The activation key name \"{0}\" is already in use for owner {1}"
+msgstr "Ключ активації із назвою «{0}» вже використано для власника {1}"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1373
+#, java-format
+msgid "{0} is not a valid log level"
+msgstr "{0} не є коректним рівнем журналювання"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1520
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:153
+#, java-format
+msgid "Unit: {0} not found"
+msgstr "Модуль {0} не знайдено"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1530
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:227
+#, java-format
+msgid "User {0} cannot access consumer {1}"
+msgstr "Користувач {0} не має доступу до споживача {1}"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1546
+msgid "The flags add_future and only_future cannot be used at the same time."
+msgstr "Не можна одночасно використовувати прапорці add_future і only_future."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1551
+msgid ""
+"The flags add_future and only_future cannot be used with the parameter after."
+msgstr ""
+"Прапорці add_future і only_future не можна використовувати з параметром "
+"«after»."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1776
+msgid "Pool product ID not specified"
+msgstr "Не вказано ідентифікатор буфера продукту"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1816
+#, java-format
+msgid "Unable to find a pool with the ID \"{0}\""
+msgstr "Не вдалося знайти буфер із ідентифікатором «{0}»"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1824
+#, java-format
+msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
+msgstr "Буфер «{0}» не належить вказаному власнику «{1}»"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1830
+msgid "Cannot update bonus pools, as they are auto generated"
+msgstr "Не вдалося оновити бонусні буфери, оскільки їх створено автоматично"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1982
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2056
+msgid "Error reading export archive"
+msgstr "Помилка під час читання архіву експортування"
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2060
+msgid "Error storing uploaded archive for asynchronous processing."
+msgstr ""
+"Помилка під час спроби зберегти вивантажений архів для асинхронної обробки."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2199
+#, java-format
+msgid "uber certificate for owner {0} was not found. Please generate one."
+msgstr ""
+"Не знайдено сертифіката uber для власника {0}. Будь ласка, створіть такий "
+"сертифікат."
+
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2280
+msgid "Unknown conflict to force"
+msgstr "Невідомий конфлікт для примусової обробки"
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:138
+msgid "Cannot filter on both owner and unit"
+msgstr "Не можна фільтрувати одночасно за власником і модулем"
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:141
+msgid "A unit or owner is needed to filter on product"
+msgstr "Для фільтрування продуктів слід вказати модуль або власника"
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:158
+#, java-format
+msgid "User {0} cannot access unit {1}"
+msgstr "У користувача {0} немає доступу до модуля {1}"
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:170
+#, java-format
+msgid "owner: {0}"
+msgstr "власник: {0}"
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:175
+#, java-format
+msgid "User {0} cannot access owner {1}"
+msgstr "У користувача {0} немає доступу до власника {1}"
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:184
+#, java-format
+msgid "User {0} cannot access all pools."
+msgstr "У користувача {0} немає доступу до усіх буферів."
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:223
+#, java-format
+msgid "consumer: {0} not found"
+msgstr "Не знайдено споживача {0}"
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:246
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:278
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:307
+#, java-format
+msgid "Subscription Pool with ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти буфер передплат із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:257
+#, java-format
+msgid "Entitlement Pool with ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти буфер реєстраційних даних із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:261
+msgid "Cannot delete bonus pools, as they are auto generated"
+msgstr "Не вдалося вилучити бонусні буфери, оскільки їх створено автоматично"
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:336
+#, java-format
+msgid "Pool with ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти буфер із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/PoolResource.java:341
+#, java-format
+msgid "A certificate was not found for pool \"{0}\""
+msgstr "Для буфера «{0}» не знайдено сертифіката"
+
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:119
+#, java-format
+msgid "Product with UUID \"{0}\" could not be found."
+msgstr "Не вдалося знайти продукт із UUID «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:167
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:185
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:205
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:226
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:243
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:259
+msgid "Organization-agnostic product write operations are no longer supported."
+msgstr ""
+"Більше не передбачено підтримки операцій запису продуктів, які є незалежними "
+"від організацій."
+
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:273
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:292
+msgid "No product IDs specified"
+msgstr "Не вказано ідентифікаторів продуктів"
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:99
+msgid "role name is null or empty"
+msgstr "назва ролі є нульовою або порожньою"
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:104
+#, java-format
+msgid "Role not found: {0}"
+msgstr "Не знайдено роль: {0}"
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:128
+#: server/src/main/java/org/candlepin/resource/UserResource.java:106
+msgid "username is null or empty"
+msgstr "імʼя користувача є нульовим або порожнім"
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:146
+msgid "role data is null or empty"
+msgstr "дані ролі є нульовими або порожніми"
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:150
+msgid "role name not specified"
+msgstr "не вказано назви ролі"
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:154
+#, java-format
+msgid "Role already exists: {0}"
+msgstr "Запис ролі вже існує: {0}"
+
+#: server/src/main/java/org/candlepin/resource/RoleResource.java:197
+msgid "Access type NONE not supported."
+msgstr "Підтримки типу доступу NONE не передбачено."
+
+#: server/src/main/java/org/candlepin/resource/RulesResource.java:92
+msgid "Error decoding the rules. The text should be base 64 encoded"
+msgstr ""
+"Помилка під час спроби декодування правил. Текст має бути закодовано за "
+"основою 64"
+
+#: server/src/main/java/org/candlepin/resource/RulesResource.java:120
+msgid "couldn''t read rules file"
+msgstr "не вдалося прочитати файл правил"
+
+#: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:145
+msgid "email is required for notification"
+msgstr "для сповіщення слід вказати адресу електронної пошти"
+
+#: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:149
+msgid "email locale is required for notification"
+msgstr "для сповіщення слід вказати локаль електронної пошти"
+
+#: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:182
+#, java-format
+msgid "A subscription with the ID \"{0}\" could not be found."
+msgstr "Не вдалося знайти передплату із ідентифікатором «{0}»."
+
+#: server/src/main/java/org/candlepin/resource/UserResource.java:179
+msgid "user data is null or empty"
+msgstr "дані користувача є нульовими або порожніми"
+
+#: server/src/main/java/org/candlepin/resource/UserResource.java:183
+msgid "Username not specified"
+msgstr "Не вказано імені користувача"
+
+#: server/src/main/java/org/candlepin/resource/UserResource.java:187
+#, java-format
+msgid "User already exists: {0}"
+msgstr "Запис користувача вже існує: {0}"
+
+#: server/src/main/java/org/candlepin/resource/util/CalculatedAttributesUtil.java:56
+#, java-format
+msgid "{0}{1}"
+msgstr "{0}{1}"
+
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:130
+msgid ""
+"None of the subscriptions on the activation key were available for attaching."
+msgstr "Немає доступних для долучення передплат для ключа активації."
+
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:158
+#, java-format
+msgid "Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}"
+msgstr "Не вдалося повʼязати буфер «{0}» у ключі активації «{1}»: {2}"
+
+#: server/src/main/java/org/candlepin/resource/util/ConsumerTypeValidator.java:59
+#, java-format
+msgid "No such unit type(s): {0}"
+msgstr "Немає таких типів модулів: {0}"
+
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:82
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:125
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:130
+msgid "No product specified, or product lacks identifying information"
+msgstr ""
+"Не вказано продукт або у записі продукту немає відомостей щодо ідентифікації"
+
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:109
+#, java-format
+msgid "Unable to find a product with the UUID \"{0}\""
+msgstr "Не вдалося знайти продукт із UUID «{0}»"
+
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:140
+#: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:176
+msgid "No subscription specified"
+msgstr "Не вказано передплати"
+
+#: server/src/main/java/org/candlepin/resteasy/DateFormatter.java:75
+#: server/src/main/java/org/candlepin/resteasy/DateFormatter.java:88
+msgid "Unable to parse date parameter"
+msgstr "Не вдалося обробити параметр дати"
+
+#: server/src/main/java/org/candlepin/resteasy/filter/CandlepinSuspendModeFilter.java:67
+msgid ""
+"Candlepin is in Suspend mode, please check /status resource to get more "
+"details"
+msgstr ""
+"Candlepin перебуває у приспаному режимі. Будь ласка, перевірте ресурс /"
+"status, щоб дізнатися більше"
+
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:270
+msgid "Organization"
+msgstr "Організація"
+
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:272
+#, java-format
+msgid "{0} with id {1} could not be found."
+msgstr "Не вдалося знайти {0} із ідентифікатором {1}."
+
+#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:368
+#, java-format
+msgid ""
+"Too many content sets for certificate {0}. A newer client may be available "
+"to address this problem. See knowledge database https://access.redhat.com/"
+"knowledge/node/129003 for more information."
+msgstr ""
+"Забагато наборів даних для сертифіката {0}. Можливо, існує новіший клієнт, у "
+"якому цю проблему вирішено. Щоб дізнатися більше, ознайомтеся із цією "
+"сторінкою бази даних знань: https://access.redhat.com/knowledge/node/129003 ."
+
+#: server/src/main/java/org/candlepin/service/impl/ImportSubscriptionServiceAdapter.java:103
+msgid "Standalone candlepin does not support redeeming a subscription."
+msgstr ""
+"У автономній версії candlepin не передбачено підтримки відновлення "
+"передплати."
+
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:68
+msgid "No ID for upstream subscription management application."
+msgstr ""
+"Немає ідентифікатора для програми для керування передплатами основної гілки."
+
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:82
+msgid ""
+"This subscription management application has already been imported by "
+"another owner."
+msgstr ""
+"Цю програму для керування передплатами вже було імпортовано іншим власником."
+
+#: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:89
+msgid ""
+"Owner has already imported from another subscription management application."
+msgstr ""
+"Запис власника вже імпортовано з іншої програми для керування передплатами."
+
+#: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:201
+#, java-format
+msgid "Unable to find product with ID: {0}"
+msgstr "Не вдалося знайти продукт із ідентифікатором: {0}"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:194
+msgid "Uploaded manifest file does not exist."
+msgstr "Вивантаженого файла маніфесту не існує."
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:253
+#, java-format
+msgid "{0} file imported successfully."
+msgstr "Файл {0} успішно імпортовано."
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:255
+#, java-format
+msgid "{0} file imported forcibly."
+msgstr "Файл {0} імпортовано у примусовому режимі."
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:259
+msgid "No active subscriptions found in the file."
+msgstr "У файлі не знайдено активних передплат."
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:263
+msgid "One or more inactive subscriptions found in the file."
+msgstr "У файлі знайдено одну або декілька неактивних передплат."
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:324
+msgid "Wrong metadata type"
+msgstr "Помилковий тип метаданих"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:333
+msgid "Invalid owner"
+msgstr "Некоректний запис власника"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:346
+msgid "Import is older than existing data"
+msgstr "Імпортовані дані є старішими за наявні"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:365
+msgid "Import is the same as existing data"
+msgstr "Імпортовані дані збігаються із наявними даними"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:387
+msgid "The archive does not contain the required signature file"
+msgstr "У архіві не міститься потрібного файла підпису"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:404
+msgid "Archive failed signature check"
+msgstr "Архів не пройшошв перевірки підпису"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:419
+msgid "The consumer_export archive has no contents"
+msgstr "У архіві consumer_export не міститься даних"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:440
+msgid "The archive does not contain the required consumer_export.zip file"
+msgstr "У архіві не міститься потрібно файла consumer_export.zip"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:445
+#: server/src/main/java/org/candlepin/sync/Importer.java:449
+msgid "Failed to import archive"
+msgstr "Не вдалося імпортувати архів"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:453
+#: server/src/main/java/org/candlepin/sync/Importer.java:912
+msgid "Unable to extract export archive"
+msgstr "Не вдалося видобути архів експортування"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:458
+msgid "Certificate exception checking archive signature"
+msgstr "Виключення сертифіката під час перевірки підпису архіву"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:484
+msgid "The archive does not contain the required meta.json file"
+msgstr "У архіві не міститься потрібного файла meta.json"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:489
+msgid "The archive does not contain the required consumer_types directory"
+msgstr "У архіві не міститься каталогу consumer_types"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:494
+msgid "The archive does not contain the required consumer.json file"
+msgstr "У архіві не міститься потрібного файла consumer.json"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:500
+msgid "The archive does not contain the required entitlements directory"
+msgstr "У архіві не міститься каталогу entitlements"
+
+#: server/src/main/java/org/candlepin/sync/Importer.java:779
+#, java-format
+msgid "The archive {0} is not a properly compressed file or is empty"
+msgstr "Архів {0} не є належним чином стисненим файлом або є порожнім"
+
+#: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:111
+#, java-format
+msgid "The following content labels are invalid: {0}"
+msgstr "Ці мітки вмісту є некоректними: {0}"
+
+#: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:120
+#, java-format
+msgid "The following content properties cannot be overridden: {0}"
+msgstr "Ці властивості вмісту не може бути перевизначено: {0}"
+
+#: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:129
+#, java-format
+msgid "The following override values are invalid: {0}"
+msgstr "Ці значення перевизначення є некоректними: {0}"
+
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:79
+#, java-format
+msgid "The {0} name \"{1}\" must not exceed {2} characters in length"
+msgstr "Назва {0} «{1}» має бути не довшою за {2} символів"
+
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:86
+#, java-format
+msgid "The value for {0} \"{1}\" must not exceed {2} characters in length"
+msgstr "Значення {0} «{1}» не повинно перевищувати {2} символів у довжину"
+
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:107
+#, java-format
+msgid "The {0} \"{1}\" must be an integer value"
+msgstr "{0} «{1}» має бути цілим значенням"
+
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:126
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:131
+#, java-format
+msgid "The {0} \"{1}\" must be a positive, integer value"
+msgstr "{0} «{1}» має бути додатним цілим значенням"
+
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:150
+#, java-format
+msgid "The {0} \"{1}\" must be a long-integer value"
+msgstr "{0} «{1}» має бути довгим цілим значенням"
+
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:169
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:174
+#, java-format
+msgid "The {0} \"{1}\" must be a positive, long-integer value"
+msgstr "{0} «{1}» має бути додатним довгим цілим значенням"
+
+#: server/src/main/java/org/candlepin/util/PropertyValidator.java:193
+#, java-format
+msgid "The {0} \"{1}\" must be a Boolean value"
+msgstr "{0} «{1}» має бути булевим значенням"
+
+#: server/src/main/java/org/candlepin/util/ServiceLevelValidator.java:72
+#, java-format
+msgid "Service level \"{0}\" is not available to units of organization {1}."
+msgstr "Рівень служби «{0}» є недоступним для модулів організації {1}."
