@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.7
+Version: 3.2.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,20 @@ fi
 
 #raw
 %changelog
+* Mon Dec 14 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.8-1
+- ENT-3317:Drop the cp_job table  - Added a xml file to drop the table  -
+  Removed the `batch-bind-performance.rb` script because it    is no longer
+  useful in latest version. Table `cp_job` used    to check
+  consumer_compliance. Also, the functionality    `consume_pools` does not
+  exists. (sdhome@redhat.com)
+- Set the default consumer window size to zero in broker.xml (crog@redhat.com)
+- 1905199: Fixed bug with state filtering validation during job cleanup
+  (crog@redhat.com)
+- Fixed hash collision resolution bug with branding (crog@redhat.com)
+- Update build.gradle (60450074+jdhrh@users.noreply.github.com)
+- 1884047: Unable to unschedule trigger while deleting job during startup
+  (ENT-3129) (prakgupt@redhat.com)
+
 * Tue Dec 01 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.7-1
 - Added support for automated cloud registration (crog@redhat.com)
 
