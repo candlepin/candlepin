@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
@@ -672,32 +671,39 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         EntityManager entityManager = this.getEntityManager();
         Date now = new Date();
 
-        // Get all the active pools
-        String jpql = "SELECT p.id FROM Pool p " +
-            "WHERE p.owner.id = :owner_id AND p.startDate <= :start_date AND p.endDate >= :end_date";
+        // Store all of the product UUIDs gathered between the various queries we need to do here
+        Set<String> productUuids = new HashSet<>();
 
-        List<String> poolIds = entityManager.createQuery(jpql, String.class)
+        // Get all of the products from active pools for the specified owner
+        String jpql = "SELECT pool.product.uuid FROM Pool pool " +
+            "WHERE pool.owner.id = :owner_id AND pool.startDate <= :start_date AND pool.endDate >= :end_date";
+
+        String sql = "SELECT prod.derived_product_uuid FROM cp2_products prod " +
+            "  WHERE prod.uuid IN (:product_uuids) AND prod.derived_product_uuid IS NOT NULL " +
+            "UNION " +
+            "SELECT prov.provided_product_uuid FROM cp2_product_provided_products prov " +
+            "  WHERE prov.product_uuid IN (:product_uuids)";
+
+        productUuids.addAll(entityManager.createQuery(jpql, String.class)
             .setParameter("owner_id", ownerId)
             .setParameter("start_date", now)
             .setParameter("end_date", now)
-            .getResultList();
-
-        // Use the pool IDs to select all related product UUIDs
-        // Note: we have to start partitioning now to safely handle any number of active pools
-        String sql = "SELECT pool.product_uuid FROM cp_pool pool WHERE pool.id IN (:pool_ids) " +
-            "UNION " +
-            "SELECT pool.derived_product_uuid FROM cp_pool pool WHERE pool.id IN (:pool_ids) " +
-            "UNION " +
-            "SELECT pp.product_uuid FROM cp2_pool_provided_products pp WHERE pp.pool_id IN (:pool_ids) " +
-            "UNION " +
-            "SELECT dpp.product_uuid FROM cp2_pool_derprov_products dpp WHERE dpp.pool_id IN (:pool_ids) ";
+            .getResultList());
 
         Query prodQuery = entityManager.createNativeQuery(sql);
-        Set<String> prodIds = new HashSet<>();
-        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 4);
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 2);
 
-        for (List<String> block : Iterables.partition(poolIds, blockSize)) {
-            prodIds.addAll(prodQuery.setParameter("pool_ids", block).getResultList());
+        // Get all of the derived products and provided products for the products we've found, recursively
+        for (Set<String> lastBlock = productUuids; !lastBlock.isEmpty();) {
+            Set<String> children = new HashSet<>();
+
+            for (List<String> block : this.partition(lastBlock, blockSize)) {
+                children.addAll(prodQuery.setParameter("product_uuids", block)
+                    .getResultList());
+            }
+
+            productUuids.addAll(children);
+            lastBlock = children;
         }
 
         // Use the product UUIDs to select all related enabled content
@@ -707,7 +713,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         Query contentQuery = entityManager.createQuery(jpql);
         HashMap<Content, Boolean> activeContent = new HashMap<>();
 
-        for (List<String> block : this.partition(prodIds)) {
+        for (List<String> block : this.partition(productUuids)) {
             contentQuery.setParameter("product_uuids", block)
                 .getResultList()
                 .forEach(col -> {

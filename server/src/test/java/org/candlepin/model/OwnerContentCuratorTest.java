@@ -785,32 +785,35 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Map<Content, Boolean> expectedContentMap = new HashMap();
 
         Content c1 = this.createContent(owner);
-        Product product = TestUtil.createProduct();
-        product.addContent(c1, false);
-        this.createProduct(product, owner);
-
         Content c2 = this.createContent(owner);
-        Product derivedProduct = TestUtil.createProduct();
-        derivedProduct.addContent(c2, false);
-        this.createProduct(derivedProduct, owner);
-        expectedContentMap.put(c2, false);
-
         Content c3 = this.createContent(owner);
+
         Product providedProduct = TestUtil.createProduct();
         providedProduct.addContent(c3, true);
         this.createProduct(providedProduct, owner);
         expectedContentMap.put(c3, true);
 
-        // Adding c1 as enabled
         Product derivedProvidedProduct = TestUtil.createProduct();
         derivedProvidedProduct.addContent(c1, true);
         this.createProduct(derivedProvidedProduct, owner);
         expectedContentMap.put(c1, true);
 
+        Product derivedProduct = TestUtil.createProduct();
+        derivedProduct.addProvidedProduct(derivedProvidedProduct);
+        derivedProduct.addContent(c2, false);
+        this.createProduct(derivedProduct, owner);
+        expectedContentMap.put(c2, false);
+
+
+        // Build product & pool
+        Product product = TestUtil.createProduct()
+            .setDerivedProduct(derivedProduct);
+
+        product.addContent(c1, false);
+        product.addProvidedProduct(providedProduct);
+
+        this.createProduct(product, owner);
         Pool activePoolOne = createPool(owner, product);
-        activePoolOne.setDerivedProduct(derivedProduct);
-        activePoolOne.setDerivedProvidedProducts(Arrays.asList(derivedProvidedProduct));
-        activePoolOne.setProvidedProducts(Arrays.asList(providedProduct));
 
         // Inactive pool
         Product productx = TestUtil.createProduct();
