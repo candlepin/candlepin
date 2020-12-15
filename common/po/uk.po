@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:51-0500\n"
-"PO-Revision-Date: 2020-12-14 12:52+0000\n"
+"PO-Revision-Date: 2020-12-15 13:36+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/uk/>\n"
@@ -320,6 +320,8 @@ msgstr "Помилка під час спроби встановити зʼєд�
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr ""
+"не вдалося визначити за надавачем хмарних послуг або параметрами облікового "
+"запису організацію"
 
 #: server/src/main/java/org/candlepin/auth/ConsumerAuth.java:70
 #: server/src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:142
@@ -793,6 +795,7 @@ msgstr "Немає такої мережі надання даних: {0}"
 #: server/src/main/java/org/candlepin/resource/CloudRegistrationResource.java:70
 msgid "Cloud registration is not supported by this Candlepin instance"
 msgstr ""
+"У цьому екземплярі Candlepin не передбачено підтримки хмарної реєстрації"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:427
 msgid "Must specify at least one search criteria."
@@ -988,14 +991,11 @@ msgstr ""
 "«{0}» через параметр режиму доступу до даних."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2166
-#, fuzzy, java-format
-#| msgid ""
-#| "Ignoring request to auto-attach. It is disabled for org \"{0}\" because "
-#| "of the content access mode setting."
+#, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 "Ігноруємо запит щодо автоматичного долучення. Його вимкнено для організації "
-"«{0}» через параметр режиму доступу до даних."
+"«{0}»."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2172
 #, java-format
