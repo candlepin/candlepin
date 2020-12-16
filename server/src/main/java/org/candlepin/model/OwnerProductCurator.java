@@ -495,7 +495,12 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         query.select(product.get(Product_.uuid))
             .orderBy(builder.asc(product.get(Product_.id)), builder.desc(product.get(Product_.created)));
 
-        int blockSize = (this.getQueryParameterLimit() - 1) / 2;
+        // Impl note:
+        // We have room to go higher with the block size here, but building this query is so slow that
+        // as the block size goes up, it's actually slower than issuing smaller queries more often.
+        // Also, around a block size of around 5k, Hibernate's query builder starts hitting stack
+        // overflows.
+        int blockSize = 300;
         for (List<Map.Entry<String, Integer>> block : this.partition(productVersions.entrySet(), blockSize)) {
             Predicate[] predicates = new Predicate[block.size()];
             int index = 0;
@@ -508,13 +513,9 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
             Predicate predicate = builder.or(predicates);
 
-            if (owner != null) {
-                predicate = builder.and(
-                    builder.notEqual(root.get(OwnerProduct_.ownerId), owner.getId()),
-                    predicate);
-            }
-
-            query.where(predicate);
+            query.where(owner != null ?
+                builder.and(builder.notEqual(root.get(OwnerProduct_.ownerId), owner.getId()), predicate) :
+                predicate);
 
             uuids.addAll(entityManager.createQuery(query)
                 .getResultList());
