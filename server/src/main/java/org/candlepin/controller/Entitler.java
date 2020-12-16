@@ -396,6 +396,8 @@ public class Entitler {
         Map<String, Product> devProductMap = new HashMap<>();
 
         if (productsByIds != null && !productsByIds.isEmpty()) {
+            log.debug("Received {} dev product definition(s) for sku: {}", productsByIds.size(), sku);
+
             // We're apparently only interested in the first product returned for the given sku
             ProductInfo devProduct = productsByIds.iterator().next();
 
@@ -470,8 +472,8 @@ public class Entitler {
         throws ForbiddenException {
 
         if (!devProducts.foundSku()) {
-            throw new ForbiddenException(i18n.tr("SKU product not available to this " +
-                "development unit: \"{0}\"", expectedSku));
+            throw new ForbiddenException(i18n.tr("SKU product not available to this development unit: " +
+                "\"{0}\"", expectedSku));
         }
     }
 

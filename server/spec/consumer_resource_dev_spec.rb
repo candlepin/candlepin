@@ -6,6 +6,7 @@ require 'rexml/document'
 describe 'Consumer Dev Resource' do
 
   include CandlepinMethods
+  include AttributeHelper
 
   before(:each) do
     skip("candlepin running in standalone mode") if not is_hosted?
@@ -23,21 +24,23 @@ describe 'Consumer Dev Resource' do
       :quantity => 10
     })
 
-    provided_product_1 = create_product("prov_product_1", "provided product 1")
-    provided_product_2 = create_product("prov_product_2", "provided product 2")
+    @provided_product_1 = create_upstream_product("prov_product_1", { :name => "provided product 1" })
+    @provided_product_2 = create_upstream_product("prov_product_2", { :name => "provided product 2" })
 
-    @dev_product_1 = create_product("dev_product_1", "dev product 1", {
-      :attributes => {
-        :expires_after => "60"
-      },
-      :providedProducts => [provided_product_1['id'], provided_product_2['id']]
+    @dev_product_1 = create_upstream_product("dev_product_1", {
+        :name => "dev product 1",
+        :attributes => {
+            :expires_after => "60"
+        },
+        :providedProducts => [@provided_product_1, @provided_product_2]
     })
 
-    @dev_product_2 = create_product("dev_product_2", "dev product 2", {
-      :attributes => {
-        :expires_after => "60"
-      },
-      :providedProducts => [provided_product_1['id'], provided_product_2['id']]
+    @dev_product_2 = create_upstream_product("dev_product_2", {
+        :name => "dev product 2",
+        :attributes => {
+            :expires_after => "60"
+        },
+        :providedProducts => [@provided_product_1, @provided_product_2]
     })
 
     @consumer = consumer_client(@user, @consumername, :system, 'dev_user', facts = {
@@ -45,8 +48,8 @@ describe 'Consumer Dev Resource' do
     })
 
     @consumer.update_consumer({:installedProducts => [
-      {'productId' => provided_product_1['id'], 'productName' => provided_product_1['name']},
-      {'productId' => provided_product_2['id'], 'productName' => provided_product_2['name']}
+      {'productId' => @provided_product_1['id'], 'productName' => @provided_product_1['name']},
+      {'productId' => @provided_product_2['id'], 'productName' => @provided_product_2['name']}
     ]})
   end
 
@@ -72,6 +75,7 @@ describe 'Consumer Dev Resource' do
     unless old_ent_id.nil?
       entitlements[0].id.should_not eq(old_ent_id)
     end
+
     new_pool = entitlements[0].pool
     new_pool.type.should eq("DEVELOPMENT")
     new_pool.productId.should eq(expected_product_id)
@@ -91,7 +95,7 @@ describe 'Consumer Dev Resource' do
     ent_pool.id.should eq(pools[0].pool.id)
   end
 
-it 'should not allow entitlement for consumer past expiration' do
+  it 'should not allow entitlement for consumer past expiration' do
     created_date = '2015-05-09T13:23:55+0000'
     consumer = @user.register(random_string('system'), type=:system, nil, facts = {:dev_sku => @dev_product_1['id']},
       @username, @owner['key'], [], [], nil, [], nil, [], created_date)
@@ -105,6 +109,43 @@ it 'should not allow entitlement for consumer past expiration' do
       message = JSON.parse(e.http_body)['displayMessage']
       message.should start_with(expected_error)
     end
+  end
+
+  it 'should update dev products on refresh' do
+    auto_attach_and_verify_dev_product(@dev_product_1['id'])
+
+    provided_product_3 = create_upstream_product("prov_product_3", { :name => "provided product 3" })
+
+    upstream_dev_product = update_upstream_product("dev_product_1", {
+        :name => "updated dev product 1",
+        :attributes => {
+            :test_attrib => "test_value",
+            :expires_after => "90"
+        },
+        :providedProducts => [@provided_product_1, @provided_product_2, provided_product_3]
+    })
+
+    existing_dev_product = @cp.get_product(@owner['key'], @dev_product_1['id'])
+
+    @cp.refresh_pools(@owner['key'])
+
+    updated_dev_product = @cp.get_product(@owner['key'], @dev_product_1['id'])
+
+    # Verify base state
+    expect(existing_dev_product['id']).to eq(@dev_product_1['id'])
+    expect(existing_dev_product['name']).to eq(@dev_product_1['name'])
+    expect(get_attribute_value(existing_dev_product['attributes'], 'expires_after')).to eq(get_attribute_value(@dev_product_1['attributes'], 'expires_after'))
+    expect(get_attribute_value(existing_dev_product['attributes'], 'test_attrib')).to be_nil
+
+    # Verify updated state
+    expect(updated_dev_product['id']).to eq(@dev_product_1['id'])
+    expect(updated_dev_product['name']).to_not eq(@dev_product_1['name'])
+    expect(get_attribute_value(updated_dev_product['attributes'], 'expires_after')).to_not eq(get_attribute_value(@dev_product_1['attributes'], 'expires_after'))
+    expect(get_attribute_value(updated_dev_product['attributes'], 'test_attrib')).to_not be_nil
+
+    expect(updated_dev_product['name']).to eq(upstream_dev_product['name'])
+    expect(get_attribute_value(updated_dev_product['attributes'], 'expires_after')).to eq(get_attribute_value(upstream_dev_product['attributes'], 'expires_after'))
+    expect(get_attribute_value(updated_dev_product['attributes'], 'test_attrib')).to eq(get_attribute_value(upstream_dev_product['attributes'], 'test_attrib'))
   end
 
 end

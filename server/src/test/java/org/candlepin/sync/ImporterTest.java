@@ -59,6 +59,7 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.impl.JSSProviderLoader;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
 
@@ -659,7 +660,7 @@ public class ImporterTest {
 
         doReturn(mockRefresher)
             .when(this.mockPoolManager)
-            .getRefresher(any(SubscriptionServiceAdapter.class));
+            .getRefresher(any(SubscriptionServiceAdapter.class), any(ProductServiceAdapter.class));
 
         Map<String, File> importFiles = new HashMap<>();
         File ruleDir = mock(File.class);

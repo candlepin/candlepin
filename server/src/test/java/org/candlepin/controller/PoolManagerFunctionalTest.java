@@ -53,6 +53,7 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.impl.ImportProductServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -146,6 +147,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(o.getKey(),
+            Arrays.asList(virtHost, virtHostPlatform, virtGuest, monitoring, provisioning));
 
         SubscriptionDTO sub1 = new SubscriptionDTO();
         sub1.setId(Util.generateDbUUID());
@@ -201,7 +204,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub3);
         subscriptions.add(sub4);
 
-        poolManager.getRefresher(subAdapter).add(o).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
 
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
@@ -366,6 +369,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(o.getKey(),
+            Arrays.asList(modifier));
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setQuantity(5L);
@@ -379,7 +384,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         subscriptions.add(sub);
 
-        poolManager.getRefresher(subAdapter).add(o).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
 
         // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
         // where entitling first to the modifier then to the modifiee causes the modifier's
@@ -416,6 +421,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(o.getKey(),
+            Arrays.asList(product1, product2));
 
         SubscriptionDTO subscription = new SubscriptionDTO();
         subscription.setId(Util.generateDbUUID());
@@ -429,7 +436,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(subscription);
 
         // set up initial pool
-        poolManager.getRefresher(subAdapter).add(o).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
@@ -438,7 +445,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscription.setProduct(this.modelTranslator.translate(product2, ProductDTO.class));
 
         // set up initial pool
-        poolManager.getRefresher(subAdapter).add(o).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
 
         pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());

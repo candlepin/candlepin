@@ -79,6 +79,7 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -123,6 +124,7 @@ public class ConsumerResourceUpdateTest {
 
     @Mock private UserServiceAdapter userService;
     @Mock private IdentityCertServiceAdapter idCertService;
+    @Mock private ProductServiceAdapter productService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private OwnerCurator ownerCurator;
@@ -159,10 +161,10 @@ public class ConsumerResourceUpdateTest {
 
         migrationProvider = Providers.of(testMigration);
         this.translator = new StandardTranslator(this.consumerTypeCurator,
-            this.environmentCurator,
-            this.ownerCurator);
+            this.environmentCurator, this.ownerCurator);
+
         this.resource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, null, this.subscriptionService, null,
+            this.consumerTypeCurator, null, this.subscriptionService, this.productService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null,
             this.userService, poolManager, null, ownerCurator,
             this.activationKeyCurator, this.entitler, this.complianceRules, this.systemPurposeComplianceRules,

@@ -97,6 +97,7 @@ import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -159,6 +160,7 @@ public class ConsumerResourceTest {
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private EntitlementCertServiceAdapter mockEntitlementCertServiceAdapter;
     @Mock private SubscriptionServiceAdapter mockSubscriptionServiceAdapter;
+    @Mock private ProductServiceAdapter mockProductServiceAdapter;
     @Mock private PoolManager mockPoolManager;
     @Mock private EntitlementCurator mockEntitlementCurator;
     @Mock private ComplianceRules mockComplianceRules;
@@ -212,6 +214,7 @@ public class ConsumerResourceTest {
             mockConsumerTypeCurator,
             null,
             mockSubscriptionServiceAdapter,
+            mockProductServiceAdapter,
             mockEntitlementCurator,
             mockIdentityCertServiceAdapter,
             mockEntitlementCertServiceAdapter,
@@ -401,7 +404,7 @@ public class ConsumerResourceTest {
             this.refreshWorkerProvider);
 
         ConsumerResource consumerResource = new ConsumerResource(
-            mockConsumerCurator, mockConsumerTypeCurator, null, null, mockEntitlementCurator, null,
+            mockConsumerCurator, mockConsumerTypeCurator, null, null, null, mockEntitlementCurator, null,
             mockEntitlementCertServiceAdapter, null, null, null, null, null,
             poolManager, null, null, null, null, null, null, null, null, null,
             this.config, null, null, consumerBindUtil,

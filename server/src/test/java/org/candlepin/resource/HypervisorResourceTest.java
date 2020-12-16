@@ -55,6 +55,7 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -97,6 +98,7 @@ import javax.inject.Provider;
 public class HypervisorResourceTest {
     @Mock private UserServiceAdapter userService;
     @Mock private IdentityCertServiceAdapter idCertService;
+    @Mock private ProductServiceAdapter productService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
@@ -145,7 +147,7 @@ public class HypervisorResourceTest {
             this.ownerCurator);
 
         this.consumerResource = new ConsumerResource(this.consumerCurator,
-            this.consumerTypeCurator, null, this.subscriptionService, null,
+            this.consumerTypeCurator, null, this.subscriptionService, this.productService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null,
             this.userService, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules, this.systemPurposeComplianceRules,
