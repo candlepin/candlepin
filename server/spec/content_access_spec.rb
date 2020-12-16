@@ -762,14 +762,24 @@ describe 'Content Access' do
   end
 
   it 'should include content from all products associated with active pool to SCA cert' do
-    mkt_product1 = create_product(random_string('productp1'), random_string('product'),
-        {:owner => @owner['key']})
-    eng_product = create_product(random_string('productp2'), random_string('product'),
-        {:owner => @owner['key']})
-    derived_product = create_product(random_string('productp4'), random_string('product'),
-        {:owner => @owner['key']})
-    dev_eng_product = create_product(random_string('productp3'), random_string('product'),
-        {:owner => @owner['key']})
+    dev_eng_product = create_product(random_string('productp3'), random_string('product'), {
+      :owner => @owner['key']
+    })
+
+    derived_product = create_product(random_string('productp4'), random_string('product'), {
+      :owner => @owner['key'],
+      :providedProducts => [dev_eng_product.id]
+    })
+
+    eng_product = create_product(random_string('productp2'), random_string('product'), {
+      :owner => @owner['key']
+    })
+
+    mkt_product1 = create_product(random_string('productp1'), random_string('product'), {
+      :owner => @owner['key'],
+      :providedProducts => [eng_product.id],
+      :derivedProduct => derived_product
+    })
 
     # Content enabled = true
     content_c1 = @cp.create_content(
@@ -792,13 +802,9 @@ describe 'Content Access' do
         {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
     @cp.add_content_to_product(@owner['key'], dev_eng_product['id'], content_c4['id'], true)
 
-    @cp.create_pool(@owner['key'], mkt_product1['id'],
-        {:quantity => 10, :provided_products => [eng_product['id']],
-        :derived_product_id => derived_product['id'], :derived_provided_products => [dev_eng_product['id']]
-    })
+    @cp.create_pool(@owner['key'], mkt_product1['id'], { :quantity => 10 })
 
-    @consumer = consumer_client(@user, @consumername, type=:system, username=nil,
-        facts= {'system.certificate_version' => '3.3'})
+    @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts={'system.certificate_version' => '3.3'})
     certs = @consumer.list_certificates
 
     expect(certs.length).to eq(1)
@@ -806,6 +812,9 @@ describe 'Content Access' do
     cert = certs[0]['cert']
     json_body = extract_payload(cert)
 
+    expect(json_body['products']).to_not be_nil
+    expect(json_body['products'].length).to eq(1)
+    expect(json_body['products'][0]['content']).to_not be_nil
     expect(json_body['products'][0]['content'].length).to eq(5)
 
     returned_uuids = []

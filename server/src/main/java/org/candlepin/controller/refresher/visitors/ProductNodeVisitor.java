@@ -158,7 +158,6 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     public void pruneNode(EntityNode<Product, ProductInfo> node) {
         Product existingEntity = node.getExistingEntity();
 
-        // We're only going to prune existing entities that are locked
         if (existingEntity != null && this.clearedForDeletion(node)) {
             this.deletedProductUuids.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
                 .add(existingEntity.getUuid());
@@ -168,8 +167,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     }
 
     /**
-     * Checks if a node is an unused root, or is part of a subtree (or subtrees) that are marked for
-     * deletion.
+     * Checks that the entity is no longer present upstream, and is not part of any active subtrees.
      *
      * @param node
      *  the entity node to check
@@ -178,21 +176,26 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
      *  true if the node is cleared for deletion; false otherwise
      */
     private boolean clearedForDeletion(EntityNode<Product, ProductInfo> node) {
-        if (node.getExistingEntity().isLocked()) {
-            if (node.getImportedEntity() == null && node.isRootNode()) {
-                return true;
-            }
-
-            for (EntityNode parent : node.getParentNodes()) {
-                if (parent.getNodeState() != NodeState.DELETED) {
-                    return false;
-                }
-            }
-
-            return true;
+        // We don't delete custom entities, ever.
+        if (!node.getExistingEntity().isLocked()) {
+            return false;
         }
 
-        return false;
+        // If the node is still defined upstream and is part of this refresh, we should keep it
+        // around locally
+        if (node.getImportedEntity() != null) {
+            return false;
+        }
+
+        // Otherwise, if the node is referenced by one or more parent nodes that are not being
+        // deleted themselves, we should keep it.
+        for (EntityNode parent : node.getParentNodes()) {
+            if (parent.getNodeState() != NodeState.DELETED) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

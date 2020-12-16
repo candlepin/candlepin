@@ -70,6 +70,7 @@ import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resteasy.JsonProvider;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.CdnInfo;
 import org.candlepin.service.model.CertificateInfo;
@@ -224,6 +225,7 @@ public class CandlepinPoolManager implements PoolManager {
     @SuppressWarnings("checkstyle:methodlength")
     @Traceable
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter,
+        ProductServiceAdapter prodAdapter,
         @TraceableParam("owner") Owner owner, boolean lazy) {
 
         Date now = new Date();
@@ -252,6 +254,33 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
+        // Check if there are any dev pools (products) that need refreshing
+        List<String> devProdIds = this.ownerProductCurator.getDevProductIds(owner.getId());
+        if (devProdIds != null && !devProdIds.isEmpty()) {
+            log.info("Refreshing {} development products for owner: {}", devProdIds.size(), owner.getKey());
+
+            Collection<? extends ProductInfo> devProducts = prodAdapter
+                .getProductsByIds(owner.getKey(), devProdIds);
+
+            // Dump JSON representing dev products for simulation
+            if (log.isTraceEnabled()) {
+                try {
+                    ObjectMapper mapper = this.jsonProvider
+                        .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+
+                    log.trace("Received {} dev products from upstream:", devProducts.size());
+                    log.trace(mapper.writeValueAsString(devProducts));
+                    log.trace("Finished outputting dev products");
+                }
+                catch (Exception e) {
+                    log.trace("Exception occurred while outputting upstream subscriptions", e);
+                }
+            }
+
+            refresher.addProducts(devProducts);
+        }
+
+        // Execute refresh!
         RefreshResult refreshResult = refresher.execute(owner);
 
         List<EntityState> existingStates = Arrays.asList(
@@ -2434,13 +2463,15 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter) {
-        return this.getRefresher(subAdapter, true);
+    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter) {
+        return this.getRefresher(subAdapter, prodAdapter, true);
     }
 
     @Override
-    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, boolean lazy) {
-        return new Refresher(this, subAdapter, ownerManager, lazy);
+    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter,
+        boolean lazy) {
+
+        return new Refresher(this, subAdapter, prodAdapter, ownerManager, lazy);
     }
 
     @Override

@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.service.impl;
 
 import org.candlepin.common.exceptions.ServiceUnavailableException;

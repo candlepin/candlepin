@@ -118,6 +118,7 @@ import org.candlepin.resteasy.DateFormat;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.UserInfo;
@@ -196,6 +197,7 @@ public class ConsumerResource {
     private ConsumerTypeCurator consumerTypeCurator;
     private OwnerProductCurator ownerProductCurator;
     private SubscriptionServiceAdapter subAdapter;
+    private ProductServiceAdapter prodAdapter;
     private EntitlementCurator entitlementCurator;
     private IdentityCertServiceAdapter identityCertService;
     private EntitlementCertServiceAdapter entCertService;
@@ -233,6 +235,7 @@ public class ConsumerResource {
         ConsumerTypeCurator consumerTypeCurator,
         OwnerProductCurator ownerProductCurator,
         SubscriptionServiceAdapter subAdapter,
+        ProductServiceAdapter prodAdapter,
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter,
@@ -268,6 +271,7 @@ public class ConsumerResource {
         this.consumerTypeCurator = consumerTypeCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.subAdapter = subAdapter;
+        this.prodAdapter = prodAdapter;
         this.entitlementCurator = entitlementCurator;
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
@@ -1253,7 +1257,7 @@ public class ConsumerResource {
 
                 existingOwner = ownerCurator.create(owner);
 
-                poolManager.getRefresher(this.subAdapter)
+                poolManager.getRefresher(this.subAdapter, this.prodAdapter)
                     .add(existingOwner)
                     .run();
             }
