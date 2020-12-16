@@ -106,6 +106,7 @@ import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
+import org.candlepin.service.impl.ImportProductServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
@@ -280,7 +281,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -295,7 +297,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
@@ -316,7 +318,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -337,7 +340,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         pool.getSourceSubscription().setSubscriptionId(sub.getId());
         poolCurator.merge(pool);
 
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         pool = poolCurator.get(pool.getId());
         assertEquals(sub.getId(), pool.getSubscriptionId());
@@ -353,7 +356,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -373,7 +377,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
@@ -384,7 +388,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subscriptions.remove(sub);
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
         assertNull(poolCurator.get(poolId));
     }
 
@@ -396,7 +400,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod, prod2));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -421,7 +426,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subscriptions.add(sub2);
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.listByOwner(owner).list();
         assertEquals(2, pools.size());
@@ -438,7 +443,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -453,7 +459,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
@@ -471,7 +477,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         }
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         assertNull(poolCurator.get(masterId), "Original Master Pool should be gone");
         assertNotNull(poolCurator.get(bonusId), "Bonus Pool should be the same");
@@ -498,7 +504,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -513,7 +520,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
@@ -531,7 +538,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         }
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         assertNull(poolCurator.get(bonusId), "Original bonus pool should be gone");
         assertNotNull(poolCurator.get(masterId), "Master pool should be the same");
@@ -1027,6 +1034,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
 
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
@@ -1056,7 +1065,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createEntitlementWithQ(pool, retrieved, consumer1, e2, "01/01/2010");
         assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
 
-        poolManager.getRefresher(subAdapter).add(retrieved).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(retrieved).run();
         pool = poolCurator.get(pool.getId());
         return pool;
     }
@@ -1224,6 +1233,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
         ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod1, prod2));
 
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
@@ -1249,7 +1260,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subscriptions.add(sub2);
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter).add(owner).run();
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         owner.setDefaultServiceLevel("premium");
         Owner parentOwner1 = ownerCurator.create(new Owner("Paren Owner 1", "parentTest1"));

@@ -14,17 +14,9 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.common.config.Configuration;
@@ -496,7 +488,7 @@ public class PoolRulesTest {
 
         // also add a derived product
         Product derivedProd = TestUtil.createProduct("test_derived_prod", "test_derived_prod");
-        p.setDerivedProduct(derivedProd);
+        p.getProduct().setDerivedProduct(derivedProd);
 
         when(poolManager.isManaged(eq(p))).thenReturn(true);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "4");
@@ -705,14 +697,14 @@ public class PoolRulesTest {
         // We'll look for this to make sure it makes it to correct pools:
         derivedProd.setAttribute(DERIVED_ATTR, "nobodycares");
         derivedProd.setProvidedProducts(Arrays.asList(derivedProvided1, derivedProvided2));
-        when(ownerProdCuratorMock.getProductById(owner, derivedProd.getId()))
+        when(ownerProdCurator.getProductById(owner, derivedProd.getId()))
             .thenReturn(derivedProd);
 
         Product product = TestUtil.createProduct(productId, productId);
         product.setAttribute(Product.Attributes.VIRT_LIMIT, Integer.toString(virtLimit));
         product.setDerivedProduct(derivedProd);
         product.setProvidedProducts(Arrays.asList(provided1, provided2));
-        when(ownerProdCuratorMock.getProductById(owner, product.getId()))
+        when(ownerProdCurator.getProductById(owner, product.getId()))
             .thenReturn(product);
 
         Subscription s = TestUtil.createSubscription(owner, product);
@@ -1013,7 +1005,7 @@ public class PoolRulesTest {
     @Test
     public void bulkUpdateDoesNotDeletesPoolsWithoutStackingEntitlements() {
         Consumer consumer = TestUtil.createConsumer(owner);
-        Set<Consumer> consumers = new HashSet<>(Collections.singletonList(consumer));
+        Set<Consumer> consumers = Collections.singleton(consumer);
         List<Pool> pools = createPools();
         List<Entitlement> stackingEntitlements = createEntitlements(consumer, pools);
         when(entitlementCurator.findByStackIds(eq(null), anyCollection()))
@@ -1027,7 +1019,7 @@ public class PoolRulesTest {
     @Test
     public void bulkUpdateDeletesPoolsWithoutStackingEntitlements() {
         Consumer consumer = TestUtil.createConsumer(owner);
-        Set<Consumer> consumers = new HashSet<>(Collections.singletonList(consumer));
+        Set<Consumer> consumers = Collections.singleton(consumer);
         List<Pool> pools = createPools();
         List<Entitlement> stackingEntitlements = createEntitlements(consumer, pools);
         pools.add(createPool());

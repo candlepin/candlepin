@@ -45,7 +45,9 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.impl.ImportProductServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
 import org.candlepin.sync.file.ManifestFileService;
@@ -84,6 +86,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.persistence.PersistenceException;
+
 
 
 /**
@@ -567,19 +570,23 @@ public class Importer {
         // This also implies there will be no entitlements to import.
         Meta meta = mapper.readValue(metadata, Meta.class);
         List<SubscriptionDTO> importSubs;
+        Set<ProductDTO> productsToImport;
+
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             ProductImporter importer = new ProductImporter();
 
-            Set<ProductDTO> productsToImport = importProducts(
+            productsToImport = this.importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner);
 
-            importSubs = importEntitlements(
+            importSubs = this.importEntitlements(
                 owner, productsToImport, entitlements.listFiles(), consumer.getUuid(), meta);
         }
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
-            importSubs = importEntitlements(owner, new HashSet<>(), new File[] {}, consumer.getUuid(), meta);
+
+            productsToImport = null;
+            importSubs = importEntitlements(owner, new HashSet<>(), new File[]{}, consumer.getUuid(), meta);
         }
 
         final String contentAccessMode = ContentAccessMode
@@ -588,8 +595,9 @@ public class Importer {
 
         // Setup our import subscription adapter with the subscriptions imported:
         SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importSubs);
+        ProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(), productsToImport);
 
-        Refresher refresher = poolManager.getRefresher(subAdapter);
+        Refresher refresher = poolManager.getRefresher(subAdapter, prodAdapter);
         refresher.add(owner);
         refresher.run();
 

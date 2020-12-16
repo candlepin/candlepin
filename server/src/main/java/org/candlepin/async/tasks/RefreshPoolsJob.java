@@ -26,9 +26,12 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
+
+
 
 /**
  * Asynchronous job for refreshing the entitlement pools for specific {@link Owner}.
@@ -44,6 +47,8 @@ public class RefreshPoolsJob implements AsyncJob {
     protected OwnerCurator ownerCurator;
     protected PoolManager poolManager;
     protected SubscriptionServiceAdapter subAdapter;
+    protected ProductServiceAdapter prodAdapter;
+
 
     /**
      * Job configuration object for the refresh pools job
@@ -122,11 +127,12 @@ public class RefreshPoolsJob implements AsyncJob {
 
     @Inject
     public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
-        SubscriptionServiceAdapter subAdapter) {
+        SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter) {
 
         this.ownerCurator = ownerCurator;
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
+        this.prodAdapter = prodAdapter;
     }
 
     /**
@@ -148,7 +154,7 @@ public class RefreshPoolsJob implements AsyncJob {
 
         try {
             // Assume that we verified the request in the resource layer:
-            poolManager.getRefresher(this.subAdapter, lazy)
+            poolManager.getRefresher(this.subAdapter, this.prodAdapter, lazy)
                 .add(owner)
                 .run();
         }

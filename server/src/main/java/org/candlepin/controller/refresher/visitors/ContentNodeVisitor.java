@@ -149,8 +149,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
     }
 
     /**
-     * Checks if a node is an unused root, or is part of a subtree (or subtrees) that are marked for
-     * deletion.
+     * Checks that the entity is no longer present upstream, and is not part of any active subtrees.
      *
      * @param node
      *  the entity node to check
@@ -159,21 +158,26 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
      *  true if the node is cleared for deletion; false otherwise
      */
     private boolean clearedForDeletion(EntityNode<Content, ContentInfo> node) {
-        if (node.getExistingEntity().isLocked()) {
-            if (node.getImportedEntity() == null && node.isRootNode()) {
-                return true;
-            }
-
-            for (EntityNode parent : node.getParentNodes()) {
-                if (parent.getNodeState() != NodeState.DELETED) {
-                    return false;
-                }
-            }
-
-            return true;
+        // We don't delete custom entities, ever.
+        if (!node.getExistingEntity().isLocked()) {
+            return false;
         }
 
-        return false;
+        // If the node is still defined upstream and is part of this refresh, we should keep it
+        // around locally
+        if (node.getImportedEntity() != null) {
+            return false;
+        }
+
+        // Otherwise, if the node is referenced by one or more parent nodes that are not being
+        // deleted themselves, we should keep it.
+        for (EntityNode parent : node.getParentNodes()) {
+            if (parent.getNodeState() != NodeState.DELETED) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.model.Pool.PoolType;
+
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
@@ -411,6 +413,27 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .createQuery(jpql)
             .setParameter("owner_id", owner.getId())
             .executeUpdate();
+    }
+
+    /**
+     * Fetches a list of product IDs currently used by development pools for the specified owner.
+     * If no such pools exist, or the owner has no pools, this method returns an empty list.
+     *
+     * @param ownerId
+     *  the ID of the owner for which to look up development product IDs
+     *
+     * @return
+     *  a list of development product IDs for the given owner
+     */
+    public List<String> getDevProductIds(String ownerId) {
+        String jpql = "SELECT prod.id FROM Pool pool JOIN pool.product prod " +
+            "WHERE pool.owner.id = :owner_id AND pool.type = :pool_type";
+
+        return this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("pool_type", PoolType.DEVELOPMENT)
+            .getResultList();
     }
 
     /**

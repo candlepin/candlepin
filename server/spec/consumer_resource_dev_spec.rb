@@ -111,4 +111,41 @@ describe 'Consumer Dev Resource' do
     end
   end
 
+  it 'should update dev products on refresh' do
+    auto_attach_and_verify_dev_product(@dev_product_1['id'])
+
+    provided_product_3 = create_upstream_product("prov_product_3", { :name => "provided product 3" })
+
+    upstream_dev_product = update_upstream_product("dev_product_1", {
+        :name => "updated dev product 1",
+        :attributes => {
+            :test_attrib => "test_value",
+            :expires_after => "90"
+        },
+        :providedProducts => [@provided_product_1, @provided_product_2, provided_product_3]
+    })
+
+    existing_dev_product = @cp.get_product(@owner['key'], @dev_product_1['id'])
+
+    @cp.refresh_pools(@owner['key'])
+
+    updated_dev_product = @cp.get_product(@owner['key'], @dev_product_1['id'])
+
+    # Verify base state
+    expect(existing_dev_product['id']).to eq(@dev_product_1['id'])
+    expect(existing_dev_product['name']).to eq(@dev_product_1['name'])
+    expect(get_attribute_value(existing_dev_product['attributes'], 'expires_after')).to eq(get_attribute_value(@dev_product_1['attributes'], 'expires_after'))
+    expect(get_attribute_value(existing_dev_product['attributes'], 'test_attrib')).to be_nil
+
+    # Verify updated state
+    expect(updated_dev_product['id']).to eq(@dev_product_1['id'])
+    expect(updated_dev_product['name']).to_not eq(@dev_product_1['name'])
+    expect(get_attribute_value(updated_dev_product['attributes'], 'expires_after')).to_not eq(get_attribute_value(@dev_product_1['attributes'], 'expires_after'))
+    expect(get_attribute_value(updated_dev_product['attributes'], 'test_attrib')).to_not be_nil
+
+    expect(updated_dev_product['name']).to eq(upstream_dev_product['name'])
+    expect(get_attribute_value(updated_dev_product['attributes'], 'expires_after')).to eq(get_attribute_value(upstream_dev_product['attributes'], 'expires_after'))
+    expect(get_attribute_value(updated_dev_product['attributes'], 'test_attrib')).to eq(get_attribute_value(upstream_dev_product['attributes'], 'test_attrib'))
+  end
+
 end

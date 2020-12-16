@@ -22,6 +22,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.TestUtil;
@@ -49,6 +50,7 @@ public class RefresherTest {
 
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
+    private ProductServiceAdapter prodAdapter;
     private OwnerManager ownerManager;
 
     private Refresher refresher;
@@ -57,9 +59,10 @@ public class RefresherTest {
     public void setUp() {
         poolManager = mock(CandlepinPoolManager.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
+        prodAdapter = mock(ProductServiceAdapter.class);
         ownerManager = mock(OwnerManager.class);
 
-        refresher = new Refresher(poolManager, subAdapter, ownerManager, false);
+        refresher = new Refresher(poolManager, subAdapter, prodAdapter, ownerManager, false);
     }
 
     @Test
@@ -70,7 +73,8 @@ public class RefresherTest {
         refresher.add(owner);
         refresher.run();
 
-        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(owner), eq(false));
+        verify(poolManager, times(1))
+            .refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner), eq(false));
     }
 
     @Test
@@ -120,7 +124,8 @@ public class RefresherTest {
         refresher.add(product);
         refresher.run();
 
-        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(owner), eq(false));
+        verify(poolManager, times(1))
+            .refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner), eq(false));
         verify(poolManager, times(0)).updatePoolsForMasterPool(any(List.class),
             any(Pool.class), eq(pool.getQuantity()), eq(false), any(Map.class));
     }

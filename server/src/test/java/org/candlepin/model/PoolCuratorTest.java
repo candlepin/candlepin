@@ -1359,8 +1359,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             product = this.createProduct(product, owner);
 
             // Create derived pool referencing the entitlement just made:
-            Pool derivedPool = new Pool(owner, product, new HashSet<>(), 1L,
-                TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2), "", "", "");
+            Pool derivedPool = new Pool()
+                .setOwner(owner)
+                .setProduct(product)
+                .setQuantity(1L)
+                .setStartDate(TestUtil.createDate(2011, 3, 2))
+                .setEndDate(TestUtil.createDate(2055, 3, 2))
+                .setSourceStack(new SourceStack(consumer, stackId))
+                .setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
+
             derivedPool.setSourceStack(new SourceStack(consumer, stackId));
             derivedPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
 
