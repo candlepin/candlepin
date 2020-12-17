@@ -1898,6 +1898,3 @@ msgstr "{0} «{1}» має бути булевим значенням"
 #, java-format
 msgid "Service level \"{0}\" is not available to units of organization {1}."
 msgstr "Рівень служби «{0}» є недоступним для модулів організації {1}."
-
-#~ msgid "Keycloak Authentication failed"
-#~ msgstr "Не вдалося пройти розпізнавання на Keycloak"
