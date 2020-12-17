@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.9
+Version: 3.2.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,9 @@ fi
 
 #raw
 %changelog
+* Thu Dec 17 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.10-1
+- Fixed a bug with entity lookups by version (crog@redhat.com)
+
 * Tue Dec 15 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.9-1
 - 
 
