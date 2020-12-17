@@ -766,6 +766,20 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetContentByVersionsDoesntFailWithLargeDataSets() {
+        Owner owner = this.createOwner();
+
+        int versionCount = 10000;
+
+        Map<String, Integer> versionMap = new HashMap<>();
+        for (int i = 0; i < versionCount; ++i) {
+            versionMap.put("entity-" + i, i);
+        }
+
+        this.ownerContentCurator.getContentByVersions(owner, versionMap);
+    }
+
+    @Test
     public void testGetActiveContentByOwner() {
         Owner owner = createOwner("test-owner", "owner-test");
         Map<Content, Boolean> expectedContentMap = new HashMap();

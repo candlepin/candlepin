@@ -40,7 +40,7 @@ if [ -f "$INPUT_FILE" ]; then
     grep -Eq '^.*\] TRACE org\.candlepin\.controller\.CandlepinPoolManager - \[\{' $INPUT_FILE
 
     if [ $? -eq 0 ] ; then
-        sed -nE 's/^.*\] TRACE org\.candlepin\.controller\.CandlepinPoolManager - (\[\{.*\}\])$/\1/p' $INPUT_FILE
+        sed -nE 's/^.*\] TRACE org\.candlepin\.controller\.CandlepinPoolManager - (\[\{.*)$/\1/p' $INPUT_FILE
     else
         echo "File does not appear to contain upstream refresh data: $INPUT_FILE"
     fi

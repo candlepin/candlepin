@@ -770,4 +770,18 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             .getProductsByVersions(null, Collections.<String, Integer>emptyMap());
         assertEquals(0, productMap4.size());
     }
+
+    @Test
+    public void testGetProductsByVersionsDoesntFailWithLargeDataSets() {
+        Owner owner = this.createOwner();
+
+        int versionCount = 10000;
+
+        Map<String, Integer> versionMap = new HashMap<>();
+        for (int i = 0; i < versionCount; ++i) {
+            versionMap.put("entity-" + i, i);
+        }
+
+        this.ownerProductCurator.getProductsByVersions(owner, versionMap);
+    }
 }
