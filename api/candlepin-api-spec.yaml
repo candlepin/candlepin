@@ -3405,6 +3405,39 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /owners/{owner_key}/content_access:
+    get:
+      description: Retrieves content access of an Owner
+      tags:
+        - Owner
+      operationId: getOwnerContentAccess
+      security: [ ]
+      parameters:
+        - name: owner_key
+          in: path
+          description: The key of the owner
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns content access of an owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentAccessDTO'
+        404:
+          description: Owner was not found!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner was not found!
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /owners/{owner_key}/entitlements:
     get:
       description: |
@@ -4651,7 +4684,7 @@ paths:
           schema:
             type: string
         - name: enabled
-          in: path
+          in: query
           description: Content enabled flag
           required: true
           schema:
@@ -7126,6 +7159,17 @@ components:
               type: integer
               format: int64
               example: 1467124079
+
+    ContentAccessDTO:
+      description: Represents content access
+      properties:
+        contentAccessMode:
+          type: string
+        contentAccessModeList:
+          type: array
+          items:
+            type: string
+
 
     ContentOverrideDTO:
       description: Represents a content override for an activation key or consumer

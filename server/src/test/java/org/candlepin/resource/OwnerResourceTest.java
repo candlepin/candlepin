@@ -55,6 +55,7 @@ import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ManifestManager;
+import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.ProductManager;
@@ -64,6 +65,7 @@ import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
+import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -99,6 +101,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
+import org.candlepin.model.OwnerNotFoundException;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Pool;
@@ -151,6 +154,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -159,6 +163,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
@@ -2358,6 +2363,59 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .contentAccessModeList(orgEnvMode);
 
         assertThrows(BadRequestException.class, () -> ownerResource.updateOwner(owner.getKey(), changes));
+    }
+
+    @Test
+    void shouldThrowWhenOwnerNotFound() {
+        when(mockOwnerCurator.getOwnerContentAccess(anyString()))
+            .thenThrow(OwnerNotFoundException.class);
+
+        OwnerResource resource = this.buildOwnerResource();
+
+        assertThrows(NotFoundException.class,
+            () -> resource.getOwnerContentAccess("test_owner_key"));
+    }
+
+    @Test
+    void usesOwnersCAModeWhenAvailable() {
+        String ownerKey = "test-owner-key";
+        String expectedMode = "owner-ca-mode";
+        List<String> expectedModeList = Collections.singletonList(expectedMode);
+        OwnerContentAccess access = new OwnerContentAccess(expectedMode, expectedMode);
+        when(mockOwnerCurator.getOwnerContentAccess(eq(ownerKey)))
+             .thenReturn(access);
+
+        OwnerResource resource = this.buildOwnerResource();
+        ContentAccessDTO contentAccess = resource.getOwnerContentAccess(ownerKey);
+
+        assertEquals(expectedMode, contentAccess.getContentAccessMode());
+        assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
+    }
+
+    @Test
+    void usesDefaultWhenOwnerCANotAvailable() {
+        String expectedMode = ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue();
+        List<String> expectedModeList = Collections.singletonList(expectedMode);
+        when(mockOwnerCurator.getOwnerContentAccess(anyString()))
+            .thenReturn(new OwnerContentAccess(null, null));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ContentAccessDTO contentAccess = resource.getOwnerContentAccess("test_owner_key");
+
+        assertEquals(expectedMode, contentAccess.getContentAccessMode());
+        assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
+    }
+
+
+    @Test
+    void returns404WhenOwnerNotFound() {
+        when(mockOwnerCurator.getOwnerContentAccess(anyString()))
+            .thenThrow(OwnerNotFoundException.class);
+
+        OwnerResource resource = this.buildOwnerResource();
+
+        assertThrows(NotFoundException.class,
+            () -> resource.getOwnerContentAccess("test_owner"));
     }
 
     //
