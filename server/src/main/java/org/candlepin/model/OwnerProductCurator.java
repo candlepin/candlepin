@@ -493,14 +493,14 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         Join<OwnerProduct, Product> product = root.join(OwnerProduct_.product);
 
         query.select(product.get(Product_.uuid))
-            .orderBy(builder.asc(product.get(Product_.id)), builder.desc(product.get(Product_.created)));
+            .distinct(true);
 
         // Impl note:
         // We have room to go higher with the block size here, but building this query is so slow that
         // as the block size goes up, it's actually slower than issuing smaller queries more often.
-        // Also, around a block size of around 5k, Hibernate's query builder starts hitting stack
+        // Also, around a block size of around 2.5k, Hibernate's query builder starts hitting stack
         // overflows.
-        int blockSize = 300;
+        int blockSize = 1000;
         for (List<Map.Entry<String, Integer>> block : this.partition(productVersions.entrySet(), blockSize)) {
             Predicate[] predicates = new Predicate[block.size()];
             int index = 0;
