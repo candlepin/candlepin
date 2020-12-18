@@ -15,11 +15,14 @@ OPTIONS:
   -n NAME   Sets the project name for the docker-compose run
   -p        use postgres
   -l        skip docker pull and use local images
+  -d        run containers detached and expose https, http & ssh ports
+              this will also not automatically shut down & remove the
+              containers on the script's exit
 
 USAGE
 }
 
-while getopts ":bc:dmn:opl" opt; do
+while getopts ":c:mn:pld" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
     m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";
@@ -27,6 +30,7 @@ while getopts ":bc:dmn:opl" opt; do
     n) PROJ_NAME="-p $OPTARG";;
     p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;
     l) USE_CACHE="1";;
+    d) DETACHED="1";;
     \?)
       echo "Invalid option: -$OPTARG" >&2
       usage
@@ -50,9 +54,15 @@ if [ "$USE_CACHE" != "1" ]; then
   docker-compose $COMPOSE_ARGS pull
 fi
 
-docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm candlepin $TEST_CMD
-RETVAL=$?
-docker-compose $PROJ_NAME down
+if [ "$DETACHED" == "1" ]; then
+    # Run detached, and don't remove the containers
+    docker-compose $PROJ_NAME $COMPOSE_ARGS run -d --service-ports candlepin $TEST_CMD
+    RETVAL=$?
+else
+    docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm candlepin $TEST_CMD
+    RETVAL=$?
+    docker-compose $PROJ_NAME down
+fi
 echo "return value: $RETVAL"
 cd -
 exit $RETVAL

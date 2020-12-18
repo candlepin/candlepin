@@ -35,6 +35,9 @@ run the `switch-defaults` script.
 
 To run multiple candlepin containers simultaneously, give each invocation of `test` a unique name with the `-n` flag.
 
+You can also use the `-d` option which will containers in detached mode, which will keep them from being removed
+when the test script exits. This will also make them expose ports 8443, 8080 and 22 to the host.
+
 Some useful invocations of the `test` command:
 
 ```sh
@@ -47,6 +50,12 @@ Some useful invocations of the `test` command:
 # run mysql and postgres tests at the same time
 ./test -m -n "my_mysql_tests"
 ./test -p -n "my_postgres_tests"
+
+# run containers detached, expose ports 8443/8080/22 to the host, and don't remove
+# containers when ./test exits. The cp-test -R option will generate test data, content & rpms,
+# and the -s option will make sure the candlepin container will drop into the shell once the
+# data generation is done, to avoid the container shutting down.
+./test -d -c '/usr/bin/cp-test -R -s'
 ```
 
 See `test -h` for more options.
