@@ -260,7 +260,6 @@ public class ConsumerResource implements ConsumersApi {
         EnvironmentCurator environmentCurator,
         DistributorVersionCurator distributorVersionCurator,
         Configuration config,
-        CdnCurator cdnCurator,
         CalculatedAttributesUtil calculatedAttributesUtil,
         ConsumerBindUtil consumerBindUtil,
         ManifestManager manifestManager,

@@ -65,6 +65,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestDateUtil;
@@ -108,6 +109,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Inject private ConsumerResource consumerResource;
     @Inject private IdentityCertServiceAdapter icsa;
     @Inject private CertificateSerialCurator serialCurator;
+    @Inject private ConsumerEnricher consumerEnricher;
     @Inject protected ModelTranslator modelTranslator;
     @Inject protected JobManager jobManager;
 
@@ -602,19 +604,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() throws JobException {
-        GuestMigration testMigration = new GuestMigration(consumerCurator);
-        Provider<GuestMigration> migrationProvider = Providers.of(testMigration);
-
-        ConsumerResource cr = new ConsumerResource(
-            this.consumerCurator, this.consumerTypeCurator, null, null, this.entitlementCurator, null,
-            null, null, null, null, null, null, this.poolManager, null, null, null, null,
-            null, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, mock(ConsumerBindUtil.class),
-            null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator,
-            this.jobManager, this.dtoValidator);
-
-        Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null,
-            null, false, null, null);
+        Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1,
+            null, null, false, null, null);
 
         List<EntitlementDTO> resultList = (List<EntitlementDTO>) rsp.getEntity();
         EntitlementDTO ent = resultList.get(0);

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2020 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -54,9 +54,8 @@ import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
+import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
@@ -407,7 +406,7 @@ public class OwnerResource implements OwnersApi {
 
         if (entitlement == null) {
             throw new NotFoundException(
-                    i18n.tr("Entitlement with id {0} could not be found.", entitlementId));
+                i18n.tr("Entitlement with id {0} could not be found.", entitlementId));
         }
 
         return entitlement;
@@ -506,7 +505,7 @@ public class OwnerResource implements OwnersApi {
         if (product == null) {
             throw new BadRequestException(
                 i18n.tr("Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
-                    productId, owner.getKey()));
+                product, owner.getKey()));
         }
 
         return product;
@@ -837,7 +836,6 @@ public class OwnerResource implements OwnersApi {
     @Override
     @Wrapped(element = "owners")
     public CandlepinQuery<OwnerDTO> listOwners(String keyFilter) {
-
         CandlepinQuery<Owner> query = keyFilter != null ?
             this.ownerCurator.getByKeys(Arrays.asList(keyFilter)) :
             this.ownerCurator.listAll();
@@ -849,6 +847,27 @@ public class OwnerResource implements OwnersApi {
     public OwnerDTO getOwner(@Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
         return this.translator.translate(owner, OwnerDTO.class);
+    }
+
+    @Override
+    public ContentAccessDTO getOwnerContentAccess(@Verify(Owner.class) String ownerKey) {
+        try {
+            OwnerContentAccess owner = this.ownerCurator.getOwnerContentAccess(ownerKey);
+            String caMode = Util.firstOf(
+                owner.getContentAccessMode(),
+                ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
+            );
+            String caList = Util.firstOf(
+                owner.getContentAccessModeList(),
+                ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
+            );
+            return new ContentAccessDTO()
+                .contentAccessMode(caMode)
+                .contentAccessModeList(Util.toList(caList));
+        }
+        catch (OwnerNotFoundException e) {
+            throw new NotFoundException("Owner was not found!", e);
+        }
     }
 
     @Override
@@ -886,7 +905,7 @@ public class OwnerResource implements OwnersApi {
             if (config.getBoolean(ConfigProperties.STANDALONE)) {
                 throw new BadRequestException(
                     i18n.tr("The owner content access mode and content access mode list cannot be set " +
-                        "directly in standalone mode."));
+                    "directly in standalone mode."));
             }
 
             configureContentAccess = true;
@@ -965,7 +984,7 @@ public class OwnerResource implements OwnersApi {
             if (config.getBoolean(ConfigProperties.STANDALONE)) {
                 throw new BadRequestException(
                     i18n.tr("The owner content access mode and content access mode list cannot be set " +
-                        "directly in standalone mode."));
+                    "directly in standalone mode."));
             }
 
             // This kinda doubles up on some work here, but at least we nice, clear error messages
@@ -1025,7 +1044,7 @@ public class OwnerResource implements OwnersApi {
                 }
                 catch (IllegalArgumentException e) {
                     throw new BadRequestException(this.i18n.tr("Content access mode list contains " +
-                        "an unsupported mode: {0}", mode));
+                    "an unsupported mode: {0}", mode));
                 }
             }
         }
@@ -1096,9 +1115,7 @@ public class OwnerResource implements OwnersApi {
     }
 
     @Override
-    public AsyncJobStatusDTO healEntire(
-        @Verify(Owner.class) String ownerKey) {
-
+    public AsyncJobStatusDTO healEntire(@Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
         JobConfig config = HealEntireOrgJob.createJobConfig().setOwner(owner).setEntitleDate(new Date());
 
@@ -1145,7 +1162,6 @@ public class OwnerResource implements OwnersApi {
     @Override
     public ActivationKeyDTO createActivationKey(@Verify(Owner.class) String ownerKey,
         ActivationKeyDTO dto) {
-
         validator.validateConstraints(dto);
         validator.validateCollectionElementsNotNull(dto::getContentOverrides, dto::getPools,
             dto::getProducts);
@@ -1159,7 +1175,7 @@ public class OwnerResource implements OwnersApi {
         if (!keyMatcher.matches()) {
             throw new BadRequestException(
                 i18n.tr("The activation key name \"{0}\" must be alphanumeric or " +
-                    "include the characters \"-\" or \"_\"", dto.getName()));
+                "include the characters \"-\" or \"_\"", dto.getName()));
         }
 
         if (dto.getContentOverrides() != null) {
@@ -1171,7 +1187,7 @@ public class OwnerResource implements OwnersApi {
         if (activationKeyCurator.getByKeyName(owner, dto.getName()) != null) {
             throw new BadRequestException(
                 i18n.tr("The activation key name \"{0}\" is already in use for owner {1}",
-                        dto.getName(), ownerKey));
+                dto.getName(), ownerKey));
         }
 
         serviceLevelValidator.validate(owner.getId(), dto.getServiceLevel());
@@ -1187,10 +1203,7 @@ public class OwnerResource implements OwnersApi {
     }
 
     @Override
-    public EnvironmentDTO createEnv(
-        @Verify(Owner.class) String ownerKey,
-        EnvironmentDTO envDTO) {
-
+    public EnvironmentDTO createEnv(@Verify(Owner.class) String ownerKey, EnvironmentDTO envDTO) {
         Environment env = new Environment();
         NestedOwnerDTO ownerDTO = new NestedOwnerDTO().key(ownerKey);
         envDTO.setOwner(ownerDTO);
@@ -1212,7 +1225,6 @@ public class OwnerResource implements OwnersApi {
 
     @Override
     public OwnerDTO setLogLevel(String ownerKey, String level) {
-
         Owner owner = findOwnerByKey(ownerKey);
 
         Level logLevel = Level.toLevel(level, null);
@@ -1329,7 +1341,7 @@ public class OwnerResource implements OwnersApi {
 
         if (afterDate != null && (addFuture || onlyFuture)) {
             throw new BadRequestException(
-                    i18n.tr("The flags add_future and only_future cannot be used with the parameter after."));
+                i18n.tr("The flags add_future and only_future cannot be used with the parameter after."));
         }
 
         if (afterDate != null) {
@@ -1374,7 +1386,6 @@ public class OwnerResource implements OwnersApi {
     @Override
     public List<SubscriptionDTO> getOwnerSubscriptions(String ownerKey) {
         Owner owner = this.findOwnerByKey(ownerKey);
-
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
 
         for (Pool pool : this.poolManager.listPoolsByOwner(owner).list()) {
@@ -1425,7 +1436,6 @@ public class OwnerResource implements OwnersApi {
 
     @Override
     public PoolDTO createPool(@Verify(Owner.class) String ownerKey, PoolDTO inputPoolDTO) {
-
         log.info("Creating custom pool for owner {}: {}", ownerKey, inputPoolDTO);
 
         this.validator.validateConstraints(inputPoolDTO);
@@ -1491,7 +1501,8 @@ public class OwnerResource implements OwnersApi {
 
         // Verify the pool type is one that allows modifications
         if (currentPool.getType() != PoolType.NORMAL) {
-            throw new BadRequestException(i18n.tr("Cannot update bonus pools, as they are auto generated"));
+            throw new BadRequestException(
+                i18n.tr("Cannot update bonus pools, as they are auto generated"));
         }
 
         Pool newPool = new Pool();
@@ -1631,7 +1642,7 @@ public class OwnerResource implements OwnersApi {
             fileData = getArchiveFromResponse(input);
             String archivePath = fileData.getData().getAbsolutePath();
             log.info("Running async import of archive {} for owner {}", archivePath, owner.getDisplayName());
-            JobConfig config =  manifestManager.importManifestAsync(owner, fileData.getData(),
+            JobConfig config = manifestManager.importManifestAsync(owner, fileData.getData(),
                 fileData.getUploadedFilename(), overrides);
 
             try {
@@ -1639,7 +1650,8 @@ public class OwnerResource implements OwnersApi {
                 return this.translator.translate(job, AsyncJobStatusDTO.class);
             }
             catch (JobException e) {
-                String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                String errmsg =
+                    this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
                     config.getJobKey());
                 log.error(errmsg, e);
                 throw new IseException(errmsg, e);
@@ -1651,7 +1663,8 @@ public class OwnerResource implements OwnersApi {
         }
         catch (ManifestFileServiceException e) {
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
-            throw new IseException(i18n.tr("Error storing uploaded archive for asynchronous processing."), e);
+            throw new
+                IseException(i18n.tr("Error storing uploaded archive for asynchronous processing."), e);
         }
         catch (CandlepinException e) {
             manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
@@ -1664,8 +1677,7 @@ public class OwnerResource implements OwnersApi {
         @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
 
-        return this.translator.translateQuery(
-            this.importRecordCurator.findRecords(owner),
+        return this.translator.translateQuery(this.importRecordCurator.findRecords(owner),
             ImportRecordDTO.class);
     }
 
@@ -1742,7 +1754,7 @@ public class OwnerResource implements OwnersApi {
         UeberCertificate ueberCert = ueberCertCurator.findForOwner(owner);
         if (ueberCert == null) {
             throw new NotFoundException(i18n.tr(
-                "uber certificate for owner {0} was not found. Please generate one.", owner.getKey()));
+            "uber certificate for owner {0} was not found. Please generate one.", owner.getKey()));
         }
 
         return this.translator.translate(ueberCert, UeberCertificateDTO.class);
@@ -1781,7 +1793,7 @@ public class OwnerResource implements OwnersApi {
              * creation date.
              */
             if (overrideConflicts[0].equalsIgnoreCase("true")) {
-                overrideConflicts = new String [] { "MANIFEST_OLD" };
+                overrideConflicts = new String [] {"MANIFEST_OLD"};
             }
             else if (overrideConflicts[0].equalsIgnoreCase("false")) {
                 overrideConflicts = new String [] {};
@@ -2196,11 +2208,8 @@ public class OwnerResource implements OwnersApi {
     }
 
     @Override
-    public CandlepinQuery<ContentDTO> listOwnerContent(
-        @Verify(Owner.class) String ownerKey) {
-
+    public CandlepinQuery<ContentDTO> listOwnerContent(@Verify(Owner.class) String ownerKey) {
         final Owner owner = this.getOwnerByKey(ownerKey);
-
         CandlepinQuery<Content> query = this.ownerContentCurator.getContentByOwner(owner);
         return this.translator.translateQuery(query, ContentDTO.class);
     }
@@ -2295,7 +2304,7 @@ public class OwnerResource implements OwnersApi {
         this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Content existing  = this.fetchContent(owner, contentId);
+        Content existing = this.fetchContent(owner, contentId);
 
         if (existing.isLocked()) {
             throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));

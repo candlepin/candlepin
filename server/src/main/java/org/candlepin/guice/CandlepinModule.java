@@ -119,7 +119,6 @@ import org.candlepin.resource.AdminResource;
 import org.candlepin.resource.CdnResource;
 import org.candlepin.resource.CertificateSerialResource;
 import org.candlepin.resource.CloudRegistrationResource;
-import org.candlepin.resource.ConsumerContentOverrideResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.ConsumerTypeResource;
 import org.candlepin.resource.ContentResource;
