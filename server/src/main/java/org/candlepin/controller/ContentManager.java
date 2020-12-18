@@ -259,14 +259,10 @@ public class ContentManager {
                     for (Product product : affectedProducts) {
                         log.debug("Updating affected product: {}", product);
                         ProductDTO pdto = this.modelTranslator.translate(product, ProductDTO.class);
+                        addContent(pdto, cdto);
 
-                        ProductContentDTO pcdto = pdto.getProductContent(cdto.getId());
-                        if (pcdto != null) {
-                            pdto.addContent(cdto, pcdto.isEnabled());
-
-                            // Impl note: This should also take care of our entitlement cert regeneration
-                            this.productManager.updateProduct(pdto, owner, regenerateEntitlementCerts);
-                        }
+                        // Impl note: This should also take care of our entitlement cert regeneration
+                        this.productManager.updateProduct(pdto, owner, regenerateEntitlementCerts);
                     }
 
                     return alt;

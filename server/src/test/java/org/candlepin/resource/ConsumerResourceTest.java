@@ -59,8 +59,8 @@ import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
+import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.guice.PrincipalProvider;
@@ -927,7 +927,7 @@ public class ConsumerResourceTest {
 
     @Test
     void shouldThrowWhenConsumerNotFound() {
-        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+        when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenThrow(NotFoundException.class);
 
         Assertions.assertThrows(NotFoundException.class,
@@ -939,7 +939,7 @@ public class ConsumerResourceTest {
         String expectedMode = ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue();
         List<String> expectedModeList = Collections.singletonList(expectedMode);
         Consumer consumer = createConsumer(createOwner());
-        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+        when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenReturn(consumer);
 
         ContentAccessDTO contentAccess = consumerResource
@@ -954,7 +954,7 @@ public class ConsumerResourceTest {
         String expectedMode = "consumer-ca-mode";
         Consumer consumer = createConsumer(createOwner());
         consumer.setContentAccessMode(expectedMode);
-        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+        when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenReturn(consumer);
 
         ContentAccessDTO contentAccess = consumerResource
@@ -969,7 +969,7 @@ public class ConsumerResourceTest {
         Consumer consumer = createConsumer(createOwner());
         consumer.setContentAccessMode(null);
         consumer.getOwner().setContentAccessMode(expectedMode);
-        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+        when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenReturn(consumer);
 
         ContentAccessDTO contentAccess = consumerResource
@@ -984,7 +984,7 @@ public class ConsumerResourceTest {
         List<String> expectedModeList = Collections.singletonList(expectedMode);
         Consumer consumer = createConsumer(createOwner());
         consumer.getOwner().setContentAccessModeList(expectedMode);
-        when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
+        when(consumerCurator.verifyAndLookupConsumer(anyString()))
             .thenReturn(consumer);
 
         ContentAccessDTO contentAccess = consumerResource

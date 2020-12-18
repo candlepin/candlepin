@@ -166,7 +166,7 @@ public class DTOValidatorTest {
         dto.list = new ArrayList<>();
         dto.list.add(new Object());
         dto.queue = new PriorityQueue<>();
-        dto.queue.add(new Object());
+        dto.queue.add(new String());
         dto.stack = new Stack<>();
         dto.stack.add(new Object());
 
@@ -184,7 +184,7 @@ public class DTOValidatorTest {
         dto.list = new ArrayList<>();
         dto.list.add(new Object());
         dto.queue = new PriorityQueue<>();
-        dto.queue.add(new Object());
+        dto.queue.add(new String());
         dto.stack = new Stack<>();
         dto.stack.add(null);
 
@@ -226,7 +226,7 @@ public class DTOValidatorTest {
         dto.list = new ArrayList<>();
         dto.list.add(null);
         dto.queue = new PriorityQueue<>();
-        dto.queue.add(new Object());
+        dto.queue.add(new String());
 
         assertThrows(IllegalArgumentException.class, () ->
             validator.validateCollectionElementsNotNull(dto::getSet, dto::getList, dto::getQueue)
