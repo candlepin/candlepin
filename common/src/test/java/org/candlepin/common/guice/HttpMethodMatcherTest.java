@@ -20,6 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -32,34 +35,53 @@ import javax.ws.rs.PUT;
  * HttpMethodMatcherTest
  */
 public class HttpMethodMatcherTest {
-
-    public static class TestResource {
+    interface RestApiInterface {
         @POST
+        void post();
+
+        @GET
+        void get();
+
+        @PUT
+        void put();
+
+        @DELETE
+        void delete();
+
+        @HEAD
+        void head();
+
+        @OPTIONS
+        void options();
+    }
+
+    public static class TestResource implements RestApiInterface {
+        @Override
         public void post() {
 
         }
 
-        @GET
+        @Override
         public void get() {
 
         }
 
-        @PUT
+        @Override
         public void put() {
 
         }
 
-        @DELETE
+        @Override
         public void delete() {
 
         }
 
-        @HEAD
+        @Override
         public void head() {
 
         }
 
-        @OPTIONS
+        @Override
         public void options() {
 
         }
@@ -72,14 +94,16 @@ public class HttpMethodMatcherTest {
     @Test
     public void testMatches() {
         HttpMethodMatcher matcher = new HttpMethodMatcher();
-        Method[] methods = TestResource.class.getDeclaredMethods();
+        List<Method> classDeclaredMethods = Arrays.asList(TestResource.class.getDeclaredMethods());
+        List<String> methodNames = Arrays.asList(RestApiInterface.class.getDeclaredMethods())
+            .stream().map(Method::getName).collect(Collectors.toList());
 
-        for (int i = 0; i < methods.length; i++) {
-            if (methods[i].getAnnotations().length != 0) {
-                assertTrue(matcher.matches(methods[i]));
+        for (Method m : classDeclaredMethods) {
+            if (methodNames.contains(m.getName())) {
+                assertTrue(matcher.matches(m));
             }
             else {
-                assertFalse(matcher.matches(methods[i]));
+                assertFalse(matcher.matches(m));
             }
         }
     }
