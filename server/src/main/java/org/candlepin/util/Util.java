@@ -41,8 +41,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -625,5 +630,22 @@ public class Util {
         }
         return attributes.stream()
             .collect(Collectors.toMap(AttributeDTO::getName, AttributeDTO::getValue));
+    }
+
+    public static OffsetDateTime parseOffsetDateTime(DateTimeFormatter formatter, String value) {
+        TemporalAccessor temporalAccessor = formatter.parseBest(value,
+            OffsetDateTime::from,
+            ZonedDateTime::from,
+            LocalDateTime::from,
+            LocalDate::from);
+        if (temporalAccessor instanceof OffsetDateTime || temporalAccessor instanceof ZonedDateTime) {
+            return OffsetDateTime.from(temporalAccessor);
+        }
+        else if (temporalAccessor instanceof LocalDateTime) {
+            return LocalDateTime.from(temporalAccessor).atOffset(ZoneOffset.UTC);
+        }
+        else {
+            return LocalDate.from(temporalAccessor).atStartOfDay().atOffset(ZoneOffset.UTC);
+        }
     }
 }

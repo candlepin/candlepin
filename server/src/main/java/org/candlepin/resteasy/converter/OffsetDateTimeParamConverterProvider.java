@@ -15,6 +15,7 @@
 package org.candlepin.resteasy.converter;
 
 import org.candlepin.jackson.OffsetDateTimeDeserializer;
+import org.candlepin.util.Util;
 
 import org.jboss.resteasy.spi.util.FindAnnotation;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 
 import javax.validation.constraints.Pattern;
@@ -67,7 +69,7 @@ public class OffsetDateTimeParamConverterProvider implements ParamConverterProvi
 
         @Override
         public OffsetDateTime fromString(String value) {
-            if (value == null) {
+            if (value == null || value.isBlank()) {
                 return null;
             }
             if (NOW.equals(value)) {
@@ -75,9 +77,10 @@ public class OffsetDateTimeParamConverterProvider implements ParamConverterProvi
             }
 
             try {
-                if (this.pattern != null) {
-                    log.debug("Attempting to parse date \"{}\" using pattern {}", value, pattern);
-                    return OffsetDateTime.parse(value, DateTimeFormatter.ofPattern(pattern));
+                if (this.pattern != null && !this.pattern.isBlank()) {
+                    DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern(pattern)
+                        .toFormatter();
+                    return Util.parseOffsetDateTime(formatter, value);
                 }
                 else {
                     return this.offsetDateTimeDeserializer.deserialize(value);

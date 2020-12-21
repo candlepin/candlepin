@@ -271,7 +271,7 @@ public class EnvironmentResource implements EnvironmentsApi {
 
         Environment e = lookupEnvironment(envId);
         consumer.setEnvironment(translator.translate(e, EnvironmentDTO.class));
-        return this.consumerResource.create(consumer, this.principalProvider.get(), userName,
+        return this.consumerResource.createConsumer(consumer, userName,
             e.getOwner().getKey(), activationKeys, true);
     }
 

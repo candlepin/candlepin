@@ -20,10 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.ConsumerPrincipal;
-import org.candlepin.auth.Principal;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.ConsumerResource;
@@ -153,7 +151,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         newConsumer.setUuid(consumer.getUuid());
         newConsumer.putFacts("FACT", "FACT_VALUE");
 
-        consumerResource.updateConsumer(consumer.getUuid(), newConsumer, mock(Principal.class));
+        consumerResource.updateConsumer(consumer.getUuid(), newConsumer);
 
         Consumer lookedUp = consumerCurator.get(consumer.getId());
         Date lookedUpDate = lookedUp.getUpdated();

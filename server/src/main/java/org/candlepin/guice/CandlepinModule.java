@@ -138,7 +138,6 @@ import org.candlepin.resource.UserResource;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.AnnotationLocator;
-import org.candlepin.resteasy.DateFormatter;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.converter.KeyValueParamConverterProvider;
@@ -287,7 +286,6 @@ public class CandlepinModule extends AbstractModule {
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
         bind(AttributeValidator.class);
         bind(FactValidator.class);
-        bind(DateFormatter.class);
         requestStaticInjection(CPRestrictions.class);
 
         bind(SystemPurposeComplianceRules.class);

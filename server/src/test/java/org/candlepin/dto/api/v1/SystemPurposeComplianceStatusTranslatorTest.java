@@ -27,6 +27,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
+import org.candlepin.util.Util;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -120,7 +121,7 @@ public class SystemPurposeComplianceStatusTranslatorTest extends
 
         if (source != null) {
             assertEquals(source.getStatus(), dest.getStatus());
-            assertEquals(source.getDate(), dest.getDate());
+            assertEquals(source.getDate(), Util.toDate(dest.getDate()));
             assertEquals(source.getNonCompliantRole(), dest.getNonCompliantRole());
             assertEquals(source.getNonCompliantUsage(), dest.getNonCompliantUsage());
             assertEquals(source.getNonCompliantSLA(), dest.getNonCompliantSLA());

@@ -36,6 +36,7 @@ import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -47,6 +48,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -396,4 +400,30 @@ public class UtilTest {
         }
     }
 
+    @Test
+    public void testParseOffsetDateTimeFromZonedDateTimePattern() {
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+            .appendPattern("EEE, dd MMM yyyy HH:mm:ss z")
+            .toFormatter();
+        OffsetDateTime actualDate = Util.parseOffsetDateTime(formatter, "Mon, 11 Jan 2021 15:30:05 EST");
+        Assertions.assertEquals("2021-01-11T15:30:05-05:00", actualDate.toString());
+    }
+
+    @Test
+    public void testParseOffsetDateTimeFromLocalDateTimePattern() {
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+            .appendPattern("EEE, dd MMM yyyy HH:mm:ss")
+            .toFormatter();
+        OffsetDateTime actualDate = Util.parseOffsetDateTime(formatter, "Mon, 11 Jan 2021 15:30:05");
+        Assertions.assertEquals("2021-01-11T15:30:05Z", actualDate.toString());
+    }
+
+    @Test
+    public void testParseOffsetDateTimeFromLocalDatePattern() {
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+            .appendPattern("EEE, dd MMM yyyy")
+            .toFormatter();
+        OffsetDateTime actualDate = Util.parseOffsetDateTime(formatter, "Mon, 11 Jan 2021");
+        Assertions.assertEquals("2021-01-11T00:00Z", actualDate.toString());
+    }
 }

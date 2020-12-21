@@ -828,7 +828,7 @@ public class OwnerResource implements OwnersApi {
             );
             String caList = Util.firstOf(
                 owner.getContentAccessModeList(),
-                ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
+                ContentAccessManager.getListDefaultDatabaseValue()
             );
             return new ContentAccessDTO()
                 .contentAccessMode(caMode)

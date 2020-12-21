@@ -322,9 +322,9 @@ public class ConsumerResourceCreationTest {
     }
 
     private ConsumerDTO createConsumer(String consumerName, Principal principal) {
-
+        when(this.principalProvider.get()).thenReturn(principal);
         ConsumerDTO consumer = TestUtil.createConsumerDTO(consumerName, null, null, systemDto);
-        return this.resource.create(consumer, principal, USER, owner.getKey(), null, true);
+        return this.resource.createConsumer(consumer, USER, owner.getKey(), null, true);
     }
 
     @Test
@@ -413,6 +413,7 @@ public class ConsumerResourceCreationTest {
     @Test
     public void authRequired() {
         Principal p = new NoAuthPrincipal();
+        when(this.principalProvider.get()).thenReturn(p);
 
         assertThrows(ForbiddenException.class,
             () -> createConsumer("sys.example.com", p));
@@ -439,7 +440,8 @@ public class ConsumerResourceCreationTest {
         // Should be able to register successfully with as a trusted user principal:
         Principal p = new TrustedUserPrincipal("anyuser");
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
-        resource.create(consumer, p, null, owner.getKey(), null, true);
+        when(this.principalProvider.get()).thenReturn(p);
+        resource.createConsumer(consumer, null, owner.getKey(), null, true);
     }
 
     @Test
@@ -448,7 +450,9 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
-        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
+        when(this.principalProvider.get()).thenReturn(p);
+        resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true);
+
         for (String keyName : keys) {
             verify(activationKeyCurator).getByKeyName(owner, keyName);
         }
@@ -470,8 +474,9 @@ public class ConsumerResourceCreationTest {
 
         // No auth should be required for registering with keys:
         Principal p = new NoAuthPrincipal();
+        when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, ctypeDTO);
-        resource.create(consumer, p, null, owner.getKey(), key.getName(), true);
+        resource.createConsumer(consumer, null, owner.getKey(), key.getName(), true);
     }
 
     @Test
@@ -479,9 +484,10 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
+        when(this.principalProvider.get()).thenReturn(p);
 
         assertThrows(BadRequestException.class,
-            () -> resource.create(consumer, p, null, null, createKeysString(keys), true));
+            () -> resource.createConsumer(consumer, null, null, createKeysString(keys), true));
     }
 
     @Test
@@ -489,9 +495,10 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
+        when(this.principalProvider.get()).thenReturn(p);
 
         assertThrows(BadRequestException.class,
-            () -> resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys), true));
+            () -> resource.createConsumer(consumer, USER, owner.getKey(), createKeysString(keys), true));
     }
 
     @Test
@@ -500,9 +507,10 @@ public class ConsumerResourceCreationTest {
         List<String> keys = new ArrayList<>();
         keys.add("NoSuchKey");
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
+        when(this.principalProvider.get()).thenReturn(p);
 
         assertThrows(BadRequestException.class,
-            () -> resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true));
+            () -> resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true));
     }
 
     @Test
@@ -510,46 +518,52 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         keys.add("NoSuchKey");
+        when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
-        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys), true);
+        resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true);
     }
 
     @Test
     public void registerWithNoInstalledProducts() {
         Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
-        resource.create(consumer, p, USER, owner.getKey(), null, true);
+        resource.createConsumer(consumer, USER, owner.getKey(), null, true);
     }
 
     @Test
     public void registerWithNullReleaseVer() {
         Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
         consumer.setReleaseVer(null);
-        resource.create(consumer, p, USER, owner.getKey(), null, true);
+        resource.createConsumer(consumer, USER, owner.getKey(), null, true);
 
     }
 
     @Test
     public void registerWithEmptyReleaseVer() {
         Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
         consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
-        resource.create(consumer, p, USER, owner.getKey(), null, true);
+        resource.createConsumer(consumer, USER, owner.getKey(), null, true);
     }
 
     @Test
     public void registerWithNoReleaseVer() {
         Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
-        resource.create(consumer, p, USER, owner.getKey(), null, true);
+        resource.createConsumer(consumer, USER, owner.getKey(), null, true);
     }
 
     @Test
     public void setStatusOnCreate() {
         Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumername", null, null, systemDto);
-        resource.create(consumer, p, USER, owner.getKey(), null, true);
+        resource.createConsumer(consumer, USER, owner.getKey(), null, true);
         // Should be called with the consumer, null date (now),
         // no compliantUntil, and not update the consumer record
         verify(complianceRules).getStatus(any(Consumer.class), isNull(), eq(false), eq(false));

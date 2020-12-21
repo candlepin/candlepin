@@ -15,7 +15,7 @@
 package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.CandlepinDTO;
-import org.candlepin.util.DateRange;
+import org.candlepin.dto.api.v1.DateRange;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;

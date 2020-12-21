@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.api.v1.DateRange;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -45,7 +46,6 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
 import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.DateRange;
 import org.candlepin.util.Util;
 
 import com.google.inject.Provider;
@@ -143,8 +143,8 @@ public class InstalledProductStatusCalculatorTest {
         this.consumerEnricher.enrich(consumer);
 
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range.getStartDate(), cip.getStartDate());
-        assertEquals(range.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -168,7 +168,7 @@ public class InstalledProductStatusCalculatorTest {
         Date expectedEnd = new Date(now.getTime() + (24 * 60 * 60 * 1000));
 
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range.getStartDate(), cip.getStartDate());
+        assertEquals(Util.toDate(range.getStartDate()), cip.getStartDate());
         assertEquals(expectedEnd, cip.getEndDate());
     }
 
@@ -192,8 +192,8 @@ public class InstalledProductStatusCalculatorTest {
         this.consumerEnricher.enrich(consumer);
 
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range2.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range2.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -215,8 +215,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range2.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range2.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -301,8 +301,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range2.getStartDate(), cip.getStartDate());
-        assertEquals(range1.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range2.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range1.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -325,8 +325,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range2.getStartDate(), cip.getStartDate());
-        assertEquals(range1.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range2.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range1.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -348,8 +348,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range1.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range1.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -371,8 +371,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range1.getStartDate(), cip.getStartDate());
-        assertEquals(range1.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range1.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range1.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -394,8 +394,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range1.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range1.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -417,8 +417,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range2.getStartDate(), cip.getStartDate());
-        assertEquals(range1.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range2.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range1.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -482,8 +482,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range1.getStartDate(), cip.getStartDate());
-        assertEquals(range1.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range1.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range1.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -508,8 +508,8 @@ public class InstalledProductStatusCalculatorTest {
         this.consumerEnricher.enrich(consumer);
 
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range1.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range1.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -533,8 +533,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range1.getStartDate(), cip.getStartDate());
-        assertEquals(range1.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range1.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range1.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -560,8 +560,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range1.getStartDate(), cip.getStartDate());
-        assertEquals(range1.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range1.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range1.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -588,8 +588,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range2.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range2.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     // Test valid range with a full stack where one stacked entitlement provides the product
@@ -615,8 +615,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range1.getStartDate(), cip.getStartDate());
-        assertEquals(range1.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range1.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range1.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -631,7 +631,7 @@ public class InstalledProductStatusCalculatorTest {
         DateRange range1 = this.rangeRelativeToDate(now, -4, 4);
         DateRange range2 = this.rangeRelativeToDate(now, -2, 10);
         DateRange range3 = this.rangeRelativeToDate(now, -3, -1);
-        DateRange range4 = this.rangeRelativeToDate(range1.getEndDate(), 0, 10);
+        DateRange range4 = this.rangeRelativeToDate(Util.toDate(range1.getEndDate()), 0, 10);
 
         consumer.addEntitlement(
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
@@ -647,8 +647,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range3.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range3.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -661,7 +661,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.setCreated(now);
 
         DateRange range1 = this.rangeRelativeToDate(now, -4, 12);
-        DateRange range2 = this.rangeRelativeToDate(range1.getEndDate(), 5, 6);
+        DateRange range2 = this.rangeRelativeToDate(Util.toDate(range1.getEndDate()), 5, 6);
 
         consumer.addEntitlement(
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
@@ -700,8 +700,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range3.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range3.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -728,8 +728,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range3.getStartDate(), cip.getStartDate());
-        assertEquals(range3.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range3.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range3.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -754,8 +754,8 @@ public class InstalledProductStatusCalculatorTest {
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range2.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range2.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     @Test
@@ -790,8 +790,8 @@ public class InstalledProductStatusCalculatorTest {
         this.consumerEnricher.enrich(consumer);
 
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(range2.getStartDate(), cip.getStartDate());
-        assertEquals(range2.getEndDate(), cip.getEndDate());
+        assertEquals(Util.toDate(range2.getStartDate()), cip.getStartDate());
+        assertEquals(Util.toDate(range2.getEndDate()), cip.getEndDate());
     }
 
     private static int lastPoolId = 0;
@@ -806,8 +806,8 @@ public class InstalledProductStatusCalculatorTest {
             .setOwner(owner)
             .setProduct(product)
             .setQuantity(1000L)
-            .setStartDate(range.getStartDate())
-            .setEndDate(range.getEndDate())
+            .setStartDate(Util.toDate(range.getStartDate()))
+            .setEndDate(Util.toDate(range.getEndDate()))
             .setContractNumber("1000")
             .setAccountNumber("1000")
             .setOrderNumber("1000");
@@ -880,7 +880,10 @@ public class InstalledProductStatusCalculatorTest {
         cal.add(Calendar.MONTH, endMonths);
         Date end = cal.getTime();
 
-        return new DateRange(start, end);
+        DateRange dr = new DateRange();
+        dr.setEndDate(Util.toDateTime(end));
+        dr.setStartDate(Util.toDateTime(start));
+        return dr;
     }
 
     private void mockConsumerEntitlements(Consumer consumer, Collection<Entitlement> entitlements) {
