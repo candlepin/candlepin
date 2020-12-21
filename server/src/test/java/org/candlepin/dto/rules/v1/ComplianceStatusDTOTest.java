@@ -15,7 +15,9 @@
 package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
-import org.candlepin.util.DateRange;
+import org.candlepin.dto.api.v1.DateRange;
+import org.candlepin.util.Util;
+
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -60,13 +62,13 @@ public class ComplianceStatusDTOTest extends AbstractDTOTest<ComplianceStatusDTO
             Calendar sdc = Calendar.getInstance();
             sdc.add(Calendar.HOUR, i);
 
-            range.setStartDate(sdc.getTime());
+            range.setStartDate(Util.toDateTime(sdc.getTime()));
 
             Calendar edc = Calendar.getInstance();
             edc.add(Calendar.HOUR, i);
             edc.add(Calendar.YEAR, 1);
 
-            range.setEndDate(edc.getTime());
+            range.setEndDate(Util.toDateTime(edc.getTime()));
 
             ranges.put("test_prod-" + i, range);
         }

@@ -328,9 +328,6 @@ public class TestingModules {
             bindInterceptor(Matchers.inPackage(Package.getPackage("org.candlepin.resource")),
                 new HttpMethodMatcher(), authMethodInterceptor);
 
-            bindInterceptor(Matchers.subclassesOf(OwnerResource.class),
-                Matchers.any(), authMethodInterceptor);
-
             // temporary
             bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
             bind(PoolRules.class);

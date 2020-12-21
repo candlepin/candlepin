@@ -555,6 +555,649 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /consumers:
+    get:
+      description: Retrieves a list of the Consumers according to search criteria.
+      tags:
+        - Consumer
+      operationId: searchConsumers
+      security: []
+      parameters:
+        - name: username
+          in: query
+          description: Username
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Consumer type
+          schema:
+            type: array
+            uniqueItems: true
+            items:
+              type: string
+        - name: owner
+          in: query
+          description: Owner key
+          schema:
+            type: string
+        - name: uuid
+          in: query
+          description: The UUID of consumers
+          schema:
+            type: array
+            items:
+              type: string
+        - name: hypervisor_id
+          in: query
+          description: Hypervisor IDs
+          schema:
+            type: array
+            items:
+              type: string
+        - name: fact
+          in: query
+          description: The consumer facts
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/KeyValueParamDTO'
+      x-java-response:
+        type: Iterable
+        isContainer: true
+      responses:
+        200:
+          description: List of consumers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsumerDTOArrayElement'
+        400:
+          description: Must specify at least one search criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Must specify at least one search criteria.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner with this key could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner with this key could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: Creates a Consumer.
+        This method is available to everyone, as we have nothing we can reliably verify in the method
+        signature. Instead we have to figure out what owner this consumer is destined for (due to backward
+        compatability with existing clients which do not specify an owner during registration) and then
+        check the access to the specified owner in the method itself.
+      tags:
+        - Consumer
+      operationId: createConsumer
+      security: []
+      parameters:
+        - name: username
+          in: query
+          description: User name
+          schema:
+            type: string
+        - name: owner
+          in: query
+          description: Owner key
+          schema:
+            type: string
+        - name: activation_keys
+          in: query
+          description: Activation key
+          schema:
+            type: string
+        - name: identity_cert_creation
+          in: query
+          description: Boolean flag for identity cert generation.
+          schema:
+            type: boolean
+            default: true
+      requestBody:
+        description: Consumer to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumerDTO'
+      responses:
+        200:
+          description: Consumer successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumerDTO'
+        400:
+          description: One or more constraint validation has failed.
+            | Consumer type must be specified or it is of invalid type.
+            | Organization is not specified or does not exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: One or more constraint validation has failed.
+                  | Consumer type must be specified or it is of invalid type.
+                  | Organization is not specified or does not exists.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Insufficient permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Insufficient permissions.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner with this key could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner with this key could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/compliance:
+    get:
+      description: Retrieves a Compliance Status list for a list of Consumers.
+      tags:
+        - Consumer
+        - Compliance
+      operationId: getComplianceStatusList
+      security: [ ]
+      parameters:
+        - name: uuid
+          in: query
+          description: Consumers UUIDs
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: Returns a map of consumer UUIDs & compliance status
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/ComplianceStatusDTO'
+        400:
+          description: Consumer does not have a defined type ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer does not have a defined type ID.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/exists:
+    post:
+      description: Checks for the existence of a Consumer in bulk. This API return UUIDs of non-existing
+        consumer.
+      tags:
+        - Consumer
+      operationId: consumerExistsBulk
+      security: []
+      requestBody:
+        description: Array of Consumer UUIDs
+        content:
+          application/json:
+            schema:
+              type: array
+              uniqueItems: true
+              items:
+                type: string
+      x-java-response:
+        type: javax.ws.rs.core.Response
+        isContainer: false
+      responses:
+        204:
+          description: Consumers exist for all provided UUIDs
+        400:
+          description: No UUIDs provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: No UUIDs provided
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Non-existing consumer UUIDs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}:
+    get:
+      description: Retrieves a single Consumer
+      tags:
+        - Consumer
+      operationId: getConsumer
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns single consumer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumerDTO'
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: Updates a Consumer
+      tags:
+        - Consumer
+      operationId: updateConsumer
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the Consumer
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Consumer to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumerDTO'
+      responses:
+        200:
+          description: Successful operation
+        400:
+          description: One or more constraint validation has failed. Problem updating consumer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: One or more constraint validation has failed. Problem updating consumer.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: Retrieves a single Consumer & regenerate identity certificates
+      tags:
+        - Consumer
+      operationId: regenerateIdentityCertificates
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns consumer with regenerated Identity certs.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumerDTO'
+        400:
+          description: Consumer type validation failed or Problem regenerating ID cert for this unit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer type validation failed or Problem regenerating ID cert for this unit.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes a Consumer
+      tags:
+        - Consumer
+      operationId: deleteConsumer
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the Consumer
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: A successful operation.
+        403:
+          description: Consumer could not be deleted due to unknown type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer could not be deleted due to unknown type.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        410:
+          description: Consumer with this UUID is already deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID is already deleted.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/accessible_content:
+    get:
+      description: Retrieves the body of the Content Access Certificate for the Consumer
+      tags:
+        - Consumer
+        - Content access
+      operationId: getContentAccessBody
+      security: [ ]
+      x-java-response:
+        type: javax.ws.rs.core.Response
+        isContainer: false
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the consumer
+          required: true
+          schema:
+            type: string
+        - name: If-Modified-Since
+          in: header
+          description: Modified date. Accepted format EEE, dd MMM yyyy HH:mm:ss z
+          schema:
+            type: string
+            format: date-time
+            pattern: EEE, dd MMM yyyy HH:mm:ss z
+      responses:
+        200:
+          description: A successful operation.
+          content:
+            text/plain:
+              schema:
+                type: string
+        304:
+          description: Not modified since date supplied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Not modified since date supplied.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        400:
+          description: Unable to parse modified date. Accepted format "EEE, dd MMM yyyy HH:mm:ss z"
+            | Cannot retrieve content access certificate.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unable to parse modified date. Accepted format "EEE, dd MMM yyyy HH:mm:ss z"
+                  | Cannot retrieve content access certificat.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/certificates:
+    put:
+      description: Regenerates the Entitlement Certificates for a Consumer
+      tags:
+        - Consumer
+        - Certificates
+      operationId: regenerateEntitlementCertificates
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the Consumer
+          required: true
+          schema:
+            type: string
+        - name: entitlement
+          in: query
+          description: Entitlement ID
+          schema:
+            type: string
+        - name: lazy_regen
+          in: query
+          description: Lazy regeneration of entitlement certs
+          schema:
+            type: boolean
+            default: true
+      responses:
+        204:
+          description: Successful operation
+        400:
+          description: Consumer does not have a defined type ID. Invalid consumer type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer does not have a defined type ID. Invalid consumer type.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found Or Entitlement with this ID could not be
+            found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found Or Entitlement with this
+                  ID could not befound.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    get:
+      description: Retrieves a list or a compressed file (depends on accept header) of entitlement
+        certificates for the consumer.
+      tags:
+        - Consumer
+        - Certificates
+      operationId: exportCertificates
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the consumer to retrieve guest
+          required: true
+          schema:
+            type: string
+        - name: serials
+          in: query
+          description: Certificate serials
+          schema:
+            type: string
+      responses:
+        200:
+          description: A successful operation
+          # This endpoint does not really support text/plain, but only application/zip and application/json.
+          # The reason for adding text/plain here is a workaround and it is because only the first schema
+          # type defined is taken into account. In this case Object will be generated as the returned type,
+          # which covers both the List<CertificateDTO> and zip file of the 2 cases we support. This is done
+          # because currently openapi-generator does not support returning multiple schema types for
+          # different accept header values on the same endpoint
+          content:
+            text/plain:
+              schema:
+                type: object
+            application/zip:
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateDTO'
+        400:
+          description: Consumer is null or does not have a defined type ID or Consumer is not associated
+            with a valid type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer is null or does not have a defined type ID or Consumer is
+                  not associated with a valid type.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/compliance:
+    get:
+      description: Retrieves the Compliance Status of a Consumer.
+      tags:
+        - Consumer
+        - Compliance
+      operationId: getComplianceStatus
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+        - name: on_date
+          in: query
+          description: Date to get compliance information for, default is now.
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns the Compliance Status of a Consumer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceStatusDTO'
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/content_access:
+    get:
+      description: Retrieves content access of a Consumer
+      tags:
+        - Consumer
+        - Content access
+      operationId: getContentAccessForConsumer
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns content access of a Consumer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentAccessDTO'
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers/{consumer_uuid}/content_overrides:
     get:
       description: Retrieves list of Content Overrides
@@ -575,7 +1218,7 @@ paths:
         isContainer: true
       responses:
         200:
-          description: List of content overrides of the Consumer
+          description: List of content overrides of the Consumer.
           content:
             application/json:
               schema:
@@ -583,22 +1226,22 @@ paths:
                 items:
                   $ref: '#/components/schemas/ContentOverrideDTO'
         403:
-          description: Insufficient permissions
+          description: Insufficient permissions.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Insufficient permissions
+                displayMessage: Insufficient permissions.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
-          description: Unit with ID "test_id" could not be found.
+          description: Consumer with this UUID could not be found.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Unit with ID "test_id" could not be found.
+                displayMessage: Consumer with this UUID could not be found.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
@@ -640,33 +1283,35 @@ paths:
                   $ref: '#/components/schemas/ContentOverrideDTO'
         400:
           description: |
-            The following content labels are invalid: test_label
-            The following content properties cannot be overridden: test_property
-            The following override values are invalid: test_value
+            The content labels are invalid.
+            The content properties cannot be overridden.
+            The override values are invalid.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: "The following override values are invalid: test_value"
+                displayMessage: The content labels are invalid.
+                  The content properties cannot be overridden.
+                  The override values are invalid.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         403:
-          description: Insufficient permissions
+          description: Insufficient permissions.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Insufficient permissions
+                displayMessage: Insufficient permissions.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
-          description: Unit with ID "test_id" could not be found.
+          description: Consumer with this UUID could not be found.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Unit with ID "test_id" could not be found.
+                displayMessage: Consumer with this UUID could not be found.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
@@ -707,22 +1352,414 @@ paths:
                 items:
                   $ref: '#/components/schemas/ContentOverrideDTO'
         403:
-          description: Insufficient permissions
+          description: Insufficient permissions.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Insufficient permissions
+                displayMessage: Insufficient permissions.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         404:
-          description: Unit with ID "test_id" could not be found.
+          description: Consumer with this UUID could not be found.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Unit with ID "test_id" could not be found.
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/deletionrecord:
+    delete:
+      description: Removes the Deletion Record for a Consumer Allowed for a superadmin.
+        The main use case for this would be if a user accidently deleted a non-RHEL hypervisor,
+        causing it to no longer be auto-detected via virt-who.
+      tags:
+        - Consumer
+      operationId: removeDeletionRecord
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the Consumer
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: A successful operation.
+        404:
+          description: Deletion record for hypervisor is not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Deletion record for hypervisor is not found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/entitlements:
+    get:
+      description: Retrieves a list of Entitlements. This endpoint supports paging with query parameters.
+      tags:
+        - Consumer
+        - Entitlements
+      operationId: listEntitlements
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+        - name: product
+          in: query
+          description: ID of a Product
+          schema:
+            type: string
+        - name: regen
+          in: query
+          description: Boolean flag to regenerate entitlements
+          schema:
+            type: boolean
+            default: true
+        - name: matches
+          in: query
+          description: Match criteria for filtering
+          schema:
+            type: string
+        - name: attribute
+          in: query
+          description: Attribute filters
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/KeyValueParamDTO'
+      responses:
+        200:
+          description: A list of entitlements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EntitlementDTO'
+        400:
+          description: Product with this ID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product with this ID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this  UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this  UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Unbinds all Entitlements for a Consumer. The result contains the total number of
+        entitlements unbound.
+      tags:
+        - Consumer
+        - Entitlements
+      operationId: unbindAll
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the Consumer
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: The total number of revoked entitlements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResult'
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: If a pool ID is specified, we know we're binding to that exact pool. Specifying an
+        entitle date in this case makes no sense and will throw an error. If a list of
+        product IDs are specified, we attempt to auto-bind to subscriptions which will provide those
+        products. An optional date can be specified allowing the consumer to get compliant for some date in
+        the future. If no date is specified we assume the current date. If neither a pool nor an ID is
+        specified, this is a healing request. The path is similar to the bind by products, but in this
+        case we use the installed products on the consumer, and their current compliant status, to
+        determine which product IDs should be requested. The entitle date is used the same as with
+        bind by products. The response will contain a list of Entitlement objects if async is false, or a
+        JobDetail object if async is true
+      tags:
+        - Consumer
+        - Entitlements
+      operationId: bind
+      security: []
+      x-java-response:
+        type: javax.ws.rs.core.Response
+        isContainer: false
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+        - name: pool
+          in: query
+          description: Pool ID
+          schema:
+            type: string
+        - name: product
+          in: query
+          description: Product array
+          schema:
+            type: array
+            items:
+              type: string
+        - name: quantity
+          in: query
+          description: Quantity
+          schema:
+            type: integer
+        - name: email
+          in: query
+          description: Email address
+          schema:
+            type: string
+        - name: email_locale
+          in: query
+          description: Email locale
+          schema:
+            type: string
+        - name: async
+          in: query
+          description: Operation Type async or sync
+          schema:
+            type: boolean
+            default: false
+        - name: entitle_date
+          in: query
+          description: Entitlement date
+          schema:
+            type: string
+        - name: from_pool
+          in: query
+          description: From pool
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: A successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+        400:
+          description: Invalid date, must use ISO 8601 format |
+            Cannot bind by multiple parameters |
+            Cannot specify a quantity when auto-binding. |
+            Ignoring request to auto-attach. It is disabled for org because of the content access
+            mode setting or hypervisor autobind setting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid date, must use ISO 8601 format |
+                  Cannot bind by multiple parameters |
+                  Cannot specify a quantity when auto-binding. |
+                  Ignoring request to auto-attach. It is disabled for org because of the content access
+                  mode setting or hypervisor autobind setting.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/exists:
+    head:
+      description: Checks for the existence of a Consumer.
+      tags:
+        - Consumer
+      operationId: consumerExists
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the Consumer
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Successful Operation.
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/export:
+    get:
+      description: Retrieves a Compressed File representation of a Consumer (manifest).
+      tags:
+        - Consumer
+      operationId: exportData
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the target consumer.
+          required: true
+          schema:
+            type: string
+        - name: cdn_label
+          in: query
+          description: The label of the target CDN.
+          required: false
+          schema:
+            type: string
+        - name: webapp_prefix
+          in: query
+          description: The URL pointing to the manifest's originating web application.
+          required: false
+          schema:
+            type: string
+        - name: api_url
+          in: query
+          description: The URL pointing to the manifest's originating candlepin API.
+          required: false
+          schema:
+            type: string
+        - name: ext
+          in: query
+          description: Key/Value pairs to be passed to the extension adapter when generating a manifest.
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/KeyValueParamDTO'
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: Consumer is null or does not have a defined type ID or Consumer is not associated
+            with a valid type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer is null or does not have a defined type ID or Consumer is
+                  not associated with a valid type
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Unit cannot be exported. | A manifest cannot be made for units this type.
+            | A CDN with this label does not exist on this system.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unit cannot be exported. | A manifest cannot be made for units this type.
+                  | A CDN with this label does not exist on this system.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/guests:
+    get:
+      description: Retrieves a list of Guest Consumers of a Consumer
+      tags:
+        - Consumer
+      operationId: getGuests
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns the list of consumers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsumerDTOArrayElement'
+        400:
+          description: The system with this UUID is a virtual guest. It does not have guests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: The system with this UUID is a virtual guest. It does not have guests.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
@@ -783,11 +1820,474 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /consumers/{consumer_uuid}/host:
+    get:
+      description: Retrieves a Host Consumer of a Consumer
+      tags:
+        - Consumer
+      operationId: getHost
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns Host Consumer of a Consumer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumerDTO'
+        400:
+          description: The system with this UUID is not a virtual guest.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: The system with this UUID is not a virtual guest.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/owner:
+    get:
+      description: Retrieves the Owner associated to a Consumer
+      tags:
+        - Consumer
+        - Owner
+      operationId: getOwnerByConsumerUuid
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OwnerDTO'
+        400:
+          description: OwnerId is null or owner not found for this ID.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: OwnerId is null or owner not found for this ID.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/purpose_compliance:
+    get:
+      description: Retrieves the System Purpose Compliance Status of a Consumer.
+      tags:
+        - Consumer
+        - Compliance
+      operationId: getSystemPurposeComplianceStatus
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+        - name: on_date
+          in: query
+          description: Date to get compliance information for, default is now.
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns the System Purpose Compliance Status of a Consumer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemPurposeComplianceStatusDTO'
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/release:
+    get:
+      description: Retrieves the release of a consumer
+      tags:
+        - Consumer
+      operationId: getRelease
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: Returns the release of a consumer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReleaseVerDTO'
+        404:
+          description: Consumer with this UUID could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/export/async:
+    get:
+      description: Initiates an async generation of a Compressed File representation of a Consumer
+        (manifest). The response will contain the id of the job from which its result data
+        will contain the href to download the generated file.
+      tags:
+        - Consumer
+      operationId: exportDataAsync
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the target consumer.
+          required: true
+          schema:
+            type: string
+        - name: cdn_label
+          in: query
+          description: The lable of the target CDN.
+          required: false
+          schema:
+            type: string
+        - name: webapp_prefix
+          in: query
+          description: The URL pointing to the manifest's originating web application.
+          required: false
+          schema:
+            type: string
+        - name: api_url
+          in: query
+          description: The URL pointing to the manifest's originating candlepin API.
+          required: false
+          schema:
+            type: string
+        - name: ext
+          in: query
+          description: Key/Value pairs to be passed to the extension adapter when generating a manifest.
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/KeyValueParamDTO'
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: Consumer is null or does not have a defined type ID or Consumer is not associated
+            with a valid type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer is null or does not have a defined type ID or Consumer is
+                  not associated with a valid type
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Unit cannot be exported. | A manifest cannot be made for units this type.
+            | A CDN with this label does not exist on this system.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unit cannot be exported. | A manifest cannot be made for units this type.
+                  | A CDN with this label does not exist on this system.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/entitlements/dry-run:
+    get:
+      description: Retrieves a list of Pools and quantities that would be the result of an auto-bind.
+        This is a dry run of an autobind. It allows the client to see what would be the result of an autobind
+        without executing it. It can only do this for the prevously established list of installed products
+        for the consumer If a service level is included in the request, then that level will override the one
+        stored on the consumer. If no service level is included then the existing one will be used.
+        The Response has a list of PoolQuantity objects
+      tags:
+        - Consumer
+        - Entitlement
+      operationId: dryBind
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+        - name: service_level
+          in: query
+          description: Service level
+          schema:
+            type: string
+      responses:
+        200:
+          description: List of pool quantities along with pool.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PoolQuantityDTO'
+        400:
+          description: Either owner ID is null or Owner could not be found.
+            Organization has auto-attach disabled which could be due to content access settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Either owner ID is null or Owner could not be found.
+                  Organization has auto-attach disabled which could be due to content access settings.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/certificates/serials:
+    get:
+      description: Retrieves a list of Certiticate Serials Return the client certificate metadata a for
+        the given consumer. This is a small subset of data clients can use to determine which certificates
+        they need to update/fetch.
+      tags:
+        - Consumer
+        - Certificates
+      operationId: getEntitlementCertificateSerials
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: Consumer UUID
+          schema:
+            type: string
+      responses:
+        200:
+          description: A list of certificate serials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CertificateSerialDTO'
+        400:
+          description: Cannot retrieve content access certificate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Cannot retrieve content access certificate
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/certificates/{serial}:
+    delete:
+      description: Removes an Entitlement from a Consumer By the Certificate Serial
+      tags:
+        - Consumer
+        - Certificates
+      operationId: unbindBySerial
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the Consumer
+          schema:
+            type: string
+        - name: serial
+          in: path
+          description: certificate serial
+          schema:
+            type: integer
+            format: int64
+      responses:
+        204:
+          description: A successful operation.
+        404:
+          description: Consumer with this UUID could not be found or Entitlement Certificate with serial
+            number could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found or Entitlement Certificate with serial
+                  number could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/entitlements/{dbid}:
+    delete:
+      description: Removes an Entitlement from a Consumer By the Entitlement ID
+      tags:
+        - Consumer
+        - Entitlement
+      operationId: unbindByEntitlementId
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the Consumer
+          required: true
+          schema:
+            type: string
+        - name: dbid
+          in: path
+          description: Entitlement ID
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Successful operation
+        404:
+          description: Consumer with this UUId could not be found. OR Entitlement ID could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUId could not be found.
+                  OR Entitlement ID could not be found.
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /consumers/{consumer_uuid}/export/{export_id}:
+    get:
+      description: Downloads an asynchronously generated consumer export file (manifest).
+      tags:
+        - Consumer
+      operationId: downloadExistingExport
+      security: []
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The UUID of the consumer
+          required: true
+          schema:
+            type: string
+        - name: export_id
+          in: path
+          description: export ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        400:
+          description: Could not validate export against specifed consumer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Could not validate export against specifed consumer
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Consumer with this UUID could not be found.
+            | Unable to find specified manifest by this ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Consumer with this UUID could not be found.
+                  | Unable to find specified manifest by this ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers/{consumer_uuid}/guestids/{guest_id}:
     get:
       description: Retrieves a single Guest by its consumer and the guest UUID
       tags:
-        - GuestIds
+        - Consumer
       operationId: getGuestId
       security: []
       parameters:
@@ -940,6 +2440,41 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /consumers/{consumer_uuid}/entitlements/pool/{pool_id}:
+    delete:
+      description: Removes all Entitlements from a Consumer by Pool Id
+      tags:
+        - Consumer
+      operationId: unbindByPool
+      security: [ ]
+      parameters:
+        - name: consumer_uuid
+          in: path
+          description: The ID of the Consumer
+          required: true
+          schema:
+            type: string
+        - name: pool_id
+          in: path
+          description: The ID of the Consumer
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Successful operation
+        404:
+          description: No entitlements found for this consumer & with this pool ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: No entitlements found for this consumer & with this pool ID
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumertypes:
     get:
       description: Retrieves a list of known consumer types
@@ -1087,6 +2622,7 @@ paths:
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
+
   /cdn:
     get:
       description: Retrieves a list of CDN's
@@ -6687,6 +8223,22 @@ components:
         href:
           type: string
 
+    DateRange:
+      description: Represents a range in time, start date to end Date inclusive
+      properties:
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+
+    DeleteResult:
+      description: Represents number of records removed via an unbind.
+      properties:
+        deletedRecords:
+          type: integer
+
     AsyncJobStatusDTO:
       description: DTO representing an async job status
       allOf:
@@ -7199,6 +8751,67 @@ components:
         enabled:
           type: boolean
 
+    ComplianceReasonDTO:
+      description: DTO representing a compliance reason
+      properties:
+        key:
+          type: string
+        message:
+          type: string
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+
+    ComplianceStatusDTO:
+      description: DTO representing compliance status
+      properties:
+        status:
+          type: string
+        compliant:
+          type: boolean
+        date:
+          type: string
+          format: date-time
+        compliantUntil:
+          type: string
+          format: date-time
+        compliantProducts:
+          type: object
+          additionalProperties:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/EntitlementDTO'
+        partiallyCompliantProducts:
+          type: object
+          additionalProperties:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/EntitlementDTO'
+        partialStacks:
+          type: object
+          additionalProperties:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/EntitlementDTO'
+        nonCompliantProducts:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        reasons:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ComplianceReasonDTO'
+        productComplianceDateRanges:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/DateRange'
+
     CdnDTO:
       description: DTO representing a Cdn
       allOf:
@@ -7679,6 +9292,14 @@ components:
             locked:
               type: boolean
 
+    PoolQuantityDTO:
+      description: DTO representing pool quantity & pool.
+      properties:
+        quantity:
+          type: integer
+        pool:
+          $ref: "#/components/schemas/PoolDTO"
+
     ProductContentDTO:
       description: Product content mapping exposed to the API
       required:
@@ -7913,6 +9534,61 @@ components:
             uniqueItems: true
             items:
               type: string
+
+    SystemPurposeComplianceStatusDTO:
+      description: DTO representing system purpose compliance status
+      properties:
+        status:
+          type: string
+        compliant:
+          type: boolean
+        date:
+          type: string
+          format: date-time
+        nonCompliantRole:
+          type: string
+        nonCompliantSLA:
+          type: string
+        nonCompliantUsage:
+          type: string
+        compliantRole:
+          type: object
+          additionalProperties:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/EntitlementDTO'
+        compliantAddOns:
+          type: object
+          additionalProperties:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/EntitlementDTO'
+        compliantSLA:
+          type: object
+          additionalProperties:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/EntitlementDTO'
+        compliantUsage:
+          type: object
+          additionalProperties:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/EntitlementDTO'
+        nonCompliantAddOns:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        reasons:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
 
     UeberCertificateDTO:
       description: Represents an ueber certificate
