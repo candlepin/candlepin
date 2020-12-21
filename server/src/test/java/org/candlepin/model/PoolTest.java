@@ -577,4 +577,20 @@ public class PoolTest extends DatabaseTestFixture {
         assertTrue(output.contains(expectedValue2));
         assertTrue(output.contains(expectedValue3));
     }
+
+    @Test
+    public void testIsDerivedPool() {
+        Pool derivedPool = TestUtil.createPool(owner, prod1, 1000);
+        derivedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+
+        assertTrue(derivedPool.isDerived());
+    }
+
+    @Test
+    public void testIsNotDerivedPool() {
+        Pool derivedPool = TestUtil.createPool(owner, prod1, 1000);
+
+        assertFalse(derivedPool.isDerived());
+    }
+
 }

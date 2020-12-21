@@ -46,7 +46,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 
-
 /**
  * The OwnerProductCurator provides functionality for managing the mapping between owners and
  * products.
@@ -595,15 +594,21 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .list();
 
         if (ids != null && !ids.isEmpty()) {
-            criteria.clear();
-            criteria.put("product_uuid", productUuidMap.keySet());
-            criteria.put("pool_id", ids);
+            int providedProductsUpdated = 0;
+            int derivedProductsUpdated = 0;
+            for (List<String> poolIdBlock : this.partition(ids, getBatchBlockSize())) {
+                Map<String, Object> updateCriteria = new HashMap<>();
+                updateCriteria.put("product_uuid", productUuidMap.keySet());
+                updateCriteria.put("pool_id", poolIdBlock);
 
-            count = this.bulkSQLUpdate("cp2_pool_provided_products", "product_uuid", uuidMap, criteria);
-            log.debug("{} provided products updated", count);
+                providedProductsUpdated += this.bulkSQLUpdate("cp2_pool_provided_products",
+                    "product_uuid", uuidMap, updateCriteria);
 
-            count = this.bulkSQLUpdate("cp2_pool_derprov_products", "product_uuid", uuidMap, criteria);
-            log.debug("{} derived provided products updated", count);
+                derivedProductsUpdated += this.bulkSQLUpdate("cp2_pool_derprov_products", "product_uuid",
+                    uuidMap, updateCriteria);
+            }
+            log.debug("{} provided products updated", providedProductsUpdated);
+            log.debug("{} derived provided products updated", derivedProductsUpdated);
         }
         else {
             log.debug("0 provided products updated");

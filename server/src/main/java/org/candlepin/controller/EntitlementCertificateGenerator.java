@@ -125,6 +125,7 @@ public class EntitlementCertificateGenerator {
         catch (CertificateSizeException cse) {
             throw cse;
         }
+        // Fixme throw custom exception instead of generic RuntimeException
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }

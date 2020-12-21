@@ -96,7 +96,7 @@ public class Refresher {
             Collection<? extends SubscriptionInfo> subs = subAdapter
                 .getSubscriptionsByProductId(product.getId());
 
-            log.debug("Will refresh {} subscriptions in all orgs using product: ",
+            log.debug("Will refresh {} subscriptions in all orgs using product: {}",
                 subs.size(), product.getId());
 
             if (log.isDebugEnabled()) {
@@ -144,8 +144,7 @@ public class Refresher {
              * dirty, they will never get regenerated
              */
             Pool masterPool = poolManager.convertToMasterPool(subscription);
-            poolManager.refreshPoolsForMasterPool(masterPool, true, lazy,
-                Collections.<String, Product>emptyMap());
+            poolManager.refreshPoolsForMasterPool(masterPool, true, lazy, Collections.emptyMap());
         }
 
         for (Owner owner : this.owners.values()) {

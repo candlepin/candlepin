@@ -36,7 +36,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -583,7 +582,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.le("startDate", activeOn))
             .add(Restrictions.ge("endDate", activeOn));
 
-        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -608,7 +607,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 .getResultList();
         }
 
-        return Collections.<Entitlement>emptyList();
+        return Collections.emptyList();
     }
 
     /**
@@ -767,27 +766,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
 
         return count;
-    }
-
-    /**
-     * @deprecated
-     *  This method is a utility method for revokeEntitlements and, as it has no communication with
-     *  the database, does not belong in this curator
-     *
-     * @return a map of consumers to their entitlements
-     */
-    @Deprecated
-    public Map<Consumer, List<Entitlement>> getDistinctConsumers(List<Entitlement> entsToRevoke) {
-        Map<Consumer, List<Entitlement>> result = new HashMap<>();
-        for (Entitlement ent : entsToRevoke) {
-            List<Entitlement> ents = result.get(ent.getConsumer());
-            if (ents == null) {
-                ents = new ArrayList<>();
-                result.put(ent.getConsumer(), ents);
-            }
-            ents.add(ent);
-        }
-        return result;
     }
 
     @Transactional
@@ -971,8 +949,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @param stackId the ID of the stack
      * @return the list of entitlements for the consumer that are in the stack.
      */
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<Entitlement> findByStackId(Consumer consumer, String stackId) {
+    public List<Entitlement> findByStackId(Consumer consumer, String stackId) {
         return findByStackIds(consumer, Arrays.asList(stackId));
     }
 
@@ -984,23 +961,36 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @param stackIds the IDs of the stacks
      * @return the list of entitlements for the consumer that are in the stack.
      */
+    public List<Entitlement> findByStackIds(Consumer consumer, Collection<String> stackIds) {
+        List<Entitlement> result = new ArrayList<>();
+        for (List<String> block: this.partition(stackIds, this.getInBlockSize())) {
+            result.addAll(findByStackIds(consumer, block));
+        }
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<Entitlement> findByStackIds(Consumer consumer, Collection stackIds) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer))
+    private List<Entitlement> findByStackIds(Consumer consumer, List<String> stackIds) {
+        if (stackIds == null || stackIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Criteria criteria = currentSession().createCriteria(Entitlement.class)
             .createAlias("pool", "ent_pool")
             .createAlias("ent_pool.product", "product")
             .createAlias("product.attributes", "attrs")
             .add(Restrictions.eq("attrs.indices", Product.Attributes.STACKING_ID))
-            .add(CPRestrictions.in("attrs.elements", stackIds))
+            .add(Restrictions.in("attrs.elements", stackIds))
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
             .createAlias("ent_pool.sourceStack", "ss", org.hibernate.sql.JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.isNull("ss.id"));
 
-        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
+        if (consumer != null) {
+            criteria.add(Restrictions.eq("consumer", consumer));
+        }
+
+        return (List<Entitlement>) criteria.list();
     }
 
-    @SuppressWarnings("unchecked")
     public CandlepinQuery<Entitlement> findByPoolAttribute(Consumer consumer, String attributeName,
         String value) {
 
@@ -1014,7 +1004,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             criteria.add(Restrictions.eq("consumer", consumer));
         }
 
-        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     public CandlepinQuery<Entitlement> findByPoolAttribute(String attributeName, String value) {
