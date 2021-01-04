@@ -6,7 +6,7 @@
 
 set -ve
 
-export JAVA_VERSION=1.8.0
+export JAVA_VERSION=11
 export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
 
 # Install & configure environment

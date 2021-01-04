@@ -6,8 +6,8 @@ set -e
 
 PACKAGES=(
     tito
-    java
-    java-devel
+    java-11-openjdk
+    java-11-openjdk-devel
     ant
     selinux-policy-doc
     selinux-policy-devel
@@ -26,6 +26,15 @@ cd /candlepin
 ./gradlew --no-daemon clean war
 cd /candlepin/server
 
+export JAVA_VERSION=11
+export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
+
+echo "Overriding tomcat.conf to use Java 11"
+update-alternatives --set java /usr/lib/jvm/java-$JAVA_VERSION-openjdk-$JAVA_VERSION*/bin/java
+sed -i 's/JAVA_HOME=.*/JAVA_HOME="\/usr\/lib\/jvm\/jre-11"/' /etc/tomcat/tomcat.conf
+
 echo "Building candlepin rpm with tito..."
 tito build --test --rpm
+
+echo "Installing candlepin rpm..."
 yum install -y /tmp/tito/noarch/candlepin-${stage_version}-1.noarch.rpm /tmp/tito/noarch/candlepin-selinux-${stage_version}-1.noarch.rpm
