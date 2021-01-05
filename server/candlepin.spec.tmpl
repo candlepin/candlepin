@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.10
+Version: 3.2.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,11 @@ fi
 
 #raw
 %changelog
+* Tue Jan 05 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.11-1
+- Fix date in consumer resource integration test (ojanus@redhat.com)
+- Added missing query modifiers to the entity version lookup queries
+  (crog@redhat.com)
+
 * Thu Dec 17 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.10-1
 - Fixed a bug with entity lookups by version (crog@redhat.com)
 
