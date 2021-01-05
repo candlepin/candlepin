@@ -384,14 +384,14 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         Join<OwnerContent, Content> content = root.join(OwnerContent_.content);
 
         query.select(content.get(Content_.uuid))
-            .orderBy(builder.asc(content.get(Content_.id)), builder.desc(content.get(Content_.created)));
+            .distinct(true);
 
         // Impl note:
         // We have room to go higher with the block size here, but building this query is so slow that
         // as the block size goes up, it's actually slower than issuing smaller queries more often.
-        // Also, around a block size of around 5k, Hibernate's query builder starts hitting stack
+        // Also, around a block size of around 2.5k, Hibernate's query builder starts hitting stack
         // overflows.
-        int blockSize = 300;
+        int blockSize = 1000;
         for (List<Map.Entry<String, Integer>> block : this.partition(contentVersions.entrySet(), blockSize)) {
             Predicate[] predicates = new Predicate[block.size()];
             int index = 0;

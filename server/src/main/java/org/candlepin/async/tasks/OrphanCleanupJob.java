@@ -89,7 +89,7 @@ public class OrphanCleanupJob implements AsyncJob  {
         }
 
         this.productCurator.flush();
-        log.debug("{} orphaned product entities deleted", count);
+        log.debug("{} orphaned content entities deleted", count);
 
         return count;
     }
@@ -105,7 +105,7 @@ public class OrphanCleanupJob implements AsyncJob  {
         }
 
         this.contentCurator.flush();
-        log.debug("{} orphaned content entities deleted", count);
+        log.debug("{} orphaned product entities deleted", count);
 
         return count;
     }
