@@ -1,4 +1,5 @@
-FROM centos:7
+ARG INTERNAL_REGISTRY
+FROM $INTERNAL_REGISTRY/centos:7
 MAINTAINER Nikos Moumoulidis <nmoumoul@redhat.com>
 
 ENV LANG en_US.UTF-8
