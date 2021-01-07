@@ -117,6 +117,9 @@
         <large-messages-directory>/var/lib/candlepin/activemq-artemis/largemsgs</large-messages-directory>
         <paging-directory>/var/lib/candlepin/activemq-artemis/paging</paging-directory>
 
+        <!-- Only block message delivery once the disk is 99% used (1% remaining) -->
+        <max-disk-usage>99</max-disk-usage>
+
         <!-- Use default thread pool max sizes as defined by Artemis. -->
         <!-- Uncomment to customize.                                  -->
         <!-- <thread-pool-max-size>30</thread-pool-max-size> -->
