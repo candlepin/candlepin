@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-05 14:41+0200\n"
+"POT-Creation-Date: 2020-12-14 07:52-0500\n"
 "PO-Revision-Date: 2020-07-14 07:59-0400\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Korean\n"
@@ -150,7 +150,7 @@ msgstr "존재하지 않는 조직 키 \"{}\"을/를 수정하려고 했습니�
 msgid "Auto-attach is disabled for owner {0}{1}."
 msgstr "{0}{1} 소유자의 자동 연결이 비활성화되어 있습니다."
 
-#: server/src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:189
+#: server/src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:190
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "{0}에 의해 서브스크립션이 삭제되었습니다"
@@ -427,7 +427,7 @@ msgstr "키 \"{0}\"로/으로 소유자를 찾을 수 없습니다"
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "ID \"{0}\"로/으로 소유자를 찾을 수 없습니다"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1998
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1999
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
@@ -493,7 +493,7 @@ msgstr ""
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "레이블 {0}인 CDN은 이 시스템에 존재하지 않습니다."
 
-#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:907
+#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:963
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "동시에 변경하여 요청이 실패했습니다. 다시 시도하십시오."
 
@@ -510,7 +510,7 @@ msgstr ""
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr "ID ''{0}''인 장치를 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:426
+#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:490
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:164
 #, java-format
 msgid "Product with ID \"{0}\" could not be found."
@@ -1510,13 +1510,13 @@ msgid "Error storing uploaded archive for asynchronous processing."
 msgstr ""
 "비동기 처리를 위해 업로드된 아카이브를 저장하는 도중 오류가 발생했습니다."
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2199
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2204
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 "소유자 {0}의 uber 인증서를 찾을 수 없습니다. 해당 인증서를 생성해 주십시오."
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2280
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2285
 msgid "Unknown conflict to force"
 msgstr "강제에 대해 알 수 없는 충돌"
 
@@ -1684,12 +1684,12 @@ msgstr "사용자가 이미 존재합니다: {0}"
 msgid "{0}{1}"
 msgstr "{0}{1}"
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:130
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:134
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
 msgstr "연결에 사용할 수 있는 활성 키의 서브스크립션이 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:158
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:163
 #, java-format
 msgid "Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}"
 msgstr "활성키 ''{1}''에서 풀 ''{0}''에 바인딩할 수 없습니다: {2}"
@@ -1730,16 +1730,16 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:270
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:271
 msgid "Organization"
 msgstr "조직"
 
-#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:272
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:273
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "ID {1}을(를) 갖는 {0}을 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:368
+#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:369
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "

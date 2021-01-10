@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-05 14:41+0200\n"
+"POT-Creation-Date: 2020-12-14 07:52-0500\n"
 "PO-Revision-Date: 2020-12-14 12:53+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
@@ -150,7 +150,7 @@ msgstr "Спробу виправлення ключа організації «
 msgid "Auto-attach is disabled for owner {0}{1}."
 msgstr "Для власника {0}{1} вимкнено автоматичне долучення."
 
-#: server/src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:189
+#: server/src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:190
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "Передплати вилучено {0}"
@@ -377,7 +377,7 @@ msgstr "Не вдалося знайти власника з ключем «{0}�
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "Не вдалося знайти власника з ідентифікатором «{0}»"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1998
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1999
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
@@ -443,7 +443,7 @@ msgstr ""
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "CDN із міткою {0} не існує у цій системі."
 
-#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:907
+#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:963
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
 "Не вдалося виконати запит через конкуренцію у внесенні змін. Будь ласка, "
@@ -463,7 +463,7 @@ msgstr ""
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr "Не вдалося знайти модуль із ідентифікатором «{0}»."
 
-#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:426
+#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:490
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:164
 #, java-format
 msgid "Product with ID \"{0}\" could not be found."
@@ -570,7 +570,8 @@ msgstr "Немає доступних передплат з буфера з ід
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:153
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID \"{1}\"."
-msgstr "До модулів цього типу не можна долучати буфери з ідентифікатором «{1}»."
+msgstr ""
+"До модулів цього типу не можна долучати буфери з ідентифікатором «{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:155
 #, java-format
@@ -1480,14 +1481,14 @@ msgid "Error storing uploaded archive for asynchronous processing."
 msgstr ""
 "Помилка під час спроби зберегти вивантажений архів для асинхронної обробки."
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2199
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2204
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 "Не знайдено сертифіката uber для власника {0}. Будь ласка, створіть такий "
 "сертифікат."
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2280
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2285
 msgid "Unknown conflict to force"
 msgstr "Невідомий конфлікт для примусової обробки"
 
@@ -1643,12 +1644,12 @@ msgstr "Запис користувача вже існує: {0}"
 msgid "{0}{1}"
 msgstr "{0}{1}"
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:130
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:134
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
 msgstr "Немає доступних для долучення передплат для ключа активації."
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:158
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:163
 #, java-format
 msgid "Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}"
 msgstr "Не вдалося повʼязати буфер «{0}» у ключі активації «{1}»: {2}"
@@ -1688,16 +1689,16 @@ msgstr ""
 "Candlepin перебуває у приспаному режимі. Будь ласка, перевірте ресурс /"
 "status, щоб дізнатися більше"
 
-#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:270
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:271
 msgid "Organization"
 msgstr "Організація"
 
-#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:272
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:273
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "Не вдалося знайти {0} із ідентифікатором {1}."
 
-#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:368
+#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:369
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "

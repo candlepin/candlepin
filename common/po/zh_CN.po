@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-08-05 14:41+0200\n"
+"POT-Creation-Date: 2020-12-14 07:52-0500\n"
 "PO-Revision-Date: 2020-07-14 08:00-0400\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Chinese (Simplified, China)\n"
@@ -148,7 +148,7 @@ msgstr "尝试针对不存在的组织密钥“ {}”进行修复"
 msgid "Auto-attach is disabled for owner {0}{1}."
 msgstr "所有者 {0}{1} 的自动附加功能已被禁用。"
 
-#: server/src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:189
+#: server/src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:190
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "已被 {0} 删除的订阅"
@@ -425,7 +425,7 @@ msgstr "无法找到使用密钥 \"{0}\" 的所有者"
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "无法找到使用 ID \"{0}\" 的所有者"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1998
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1999
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr "未映射的虚拟机权限尚未建立主机/虚拟机映射就已过期。"
@@ -485,7 +485,7 @@ msgstr "单元 {0} 无法导出。无法为类型单元 ''{1}'' 生成清单。"
 msgid "A CDN with label {0} does not exist on this system."
 msgstr "这个系统中没有标签为 {0} 的 CDN。"
 
-#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:907
+#: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:963
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "由于同时进行修改导致请求失败，请重试。"
 
@@ -501,7 +501,7 @@ msgstr "UUID 为 {0} 的系统是虚拟机。它没有虚拟机。"
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr "无法找到 ID 是 \"{0}\" 的单元。"
 
-#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:426
+#: server/src/main/java/org/candlepin/model/EntitlementCurator.java:490
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:164
 #, java-format
 msgid "Product with ID \"{0}\" could not be found."
@@ -1474,12 +1474,12 @@ msgstr "读取导出归档出错"
 msgid "Error storing uploaded archive for asynchronous processing."
 msgstr "为异步处理保存上传的归档错误。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2199
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2204
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr "没有找到为所有者 {0} 的 uber 证书，请生成一个。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2280
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2285
 msgid "Unknown conflict to force"
 msgstr "未知冲突的强制"
 
@@ -1647,12 +1647,12 @@ msgstr "用户已存在：{0}"
 msgid "{0}{1}"
 msgstr "{0}{1}"
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:130
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:134
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
 msgstr "激活码中没有可用的订阅用来进行附加。"
 
-#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:158
+#: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:163
 #, java-format
 msgid "Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}"
 msgstr "无法在激活码 \"{1}\" 中绑定池 \"{0}\" : {2}"
@@ -1691,16 +1691,16 @@ msgstr "Candlepin 处于挂起模式，请检查 /status 资源来获得详细�
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:270
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:271
 msgid "Organization"
 msgstr "机构"
 
-#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:272
+#: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:273
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "没有找到 id 为 {1} 的 {0}"
 
-#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:368
+#: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:369
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
