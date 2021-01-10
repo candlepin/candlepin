@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-21 11:16-0500\n"
+"POT-Creation-Date: 2020-12-14 07:53-0500\n"
 "PO-Revision-Date: 2019-11-10 11:59+0000\n"
 "Last-Translator: Tony Fu <tfu@redhat.com>\n"
 "Language-Team: Chinese (Simplified, China)\n"
@@ -411,7 +411,7 @@ msgstr "无法找到使用密钥 \"{0}\" 的所有者"
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "无法找到使用 ID \"{0}\" 的所有者"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2022
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2027
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr "未映射的虚拟机权限尚未建立主机/虚拟机映射就已过期。"
@@ -520,7 +520,7 @@ msgstr "为所有者 {0} 生成 ueber 证书出现问题"
 msgid "Auto-attach is disabled for owner {0}{1}."
 msgstr "所有者 {0}{1} 的自动附加功能已被禁用。"
 
-#: server/src/main/java/org/candlepin/pinsetter/tasks/UndoImportsJob.java:141
+#: server/src/main/java/org/candlepin/pinsetter/tasks/UndoImportsJob.java:142
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "已被 {0} 删除的订阅"
@@ -767,7 +767,7 @@ msgstr "激活码 ID 为 null 或是空"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyContentOverrideResource.java:70
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:120
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1480
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1481
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
 msgstr "没有找到 id 为 {0} 的激活码"
@@ -824,7 +824,7 @@ msgstr "必须指定至少一个搜索标准"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:421
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1160
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:322
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1659
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1660
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "无法找到密钥 {0} 的所有者。"
@@ -1380,7 +1380,7 @@ msgstr "激活码名称 ''{0}'' 已被所有者 {1} 使用"
 msgid "{0} is not a valid log level"
 msgstr "{0} 不是有效日志等级"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1460
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1461
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:153
 #, java-format
 msgid "Unit: {0} not found"
@@ -1388,56 +1388,56 @@ msgstr "没有找到单元 {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1470
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1471
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:227
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr "用户 {0} 不能访问客户 {1}"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1486
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1487
 msgid "The flags add_future and only_future cannot be used at the same time."
 msgstr "add_future 标识和 only_future 标识不能同时使用。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1491
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1492
 msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
 msgstr "add_future 标识和 only_future 标识不能和参数 after 一起使用。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1711
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1712
 msgid "Pool product ID not specified"
 msgstr "没有指定池产品 ID"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1751
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1752
 #, java-format
 msgid "Unable to find a pool with the ID \"{0}\""
 msgstr "无法找到 ID 为 \"{0}\" 的池"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1759
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1760
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
 msgstr "池 \"{0}\" 不属于指定的所有者 \"{1}\""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1765
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1766
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr "无法更新加分池，因为加分池是自动生成的。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1916
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1987
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1917
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1988
 msgid "Error reading export archive"
 msgstr "读取导出归档出错"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1991
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1992
 msgid "Error storing uploaded archive for asynchronous processing."
 msgstr "为异步处理保存上传的归档错误。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2127
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2128
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr "没有找到为所有者 {0} 的 uber 证书，请生成一个。"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2208
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2209
 msgid "Unknown conflict to force"
 msgstr "未知冲突的强制"
 
