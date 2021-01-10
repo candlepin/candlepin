@@ -1,12 +1,13 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Lucas Costa Paula Pessoa <lcppcoding@gmail.com>, 2020.
+# Fábio Rodrigues Ribeiro <farribeiro@gmail.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:52-0500\n"
-"PO-Revision-Date: 2020-12-13 17:35+0000\n"
-"Last-Translator: Lucas Costa Paula Pessoa <lcppcoding@gmail.com>\n"
+"PO-Revision-Date: 2021-01-10 18:36+0000\n"
+"Last-Translator: Fábio Rodrigues Ribeiro <farribeiro@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.fedoraproject.org/"
 "projects/candlepin/candlepin-3-1-hotfix/pt_BR/>\n"
 "Language: pt_BR\n"
@@ -14,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Weblate 4.3.2\n"
+"X-Generator: Weblate 4.4\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -378,7 +379,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/auth/OAuth.java:117
 #: server/src/main/java/org/candlepin/auth/OAuth.java:153
 msgid "Invalid OAuth unit or secret"
-msgstr "Unidade OAuth inválida ou secreta "
+msgstr "Unidade OAuth inválida ou secreta"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -416,7 +417,7 @@ msgstr ""
 msgid "No owner specified, or owner lacks identifying information"
 msgstr ""
 "Nenhum proprietário especificado ou faltam informações de identificação do "
-"proprietário "
+"proprietário"
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:315
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:64
@@ -435,7 +436,7 @@ msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
 "A intitulação não mapeada do convidado expirou sem estabelecer um mapeamento "
-"do host/ convidado. "
+"do host/ convidado."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:225
 #: server/src/main/java/org/candlepin/controller/Entitler.java:230
@@ -450,7 +451,7 @@ msgid ""
 "active subscriptions."
 msgstr ""
 "As unidades de desenvolvimento podem somente ser usadas nos servidores com "
-"host e com orgs que possuem subscrições ativas. "
+"host e com orgs que possuem subscrições ativas."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:424
 #, java-format
@@ -784,12 +785,12 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:239
 #, java-format
 msgid "Pool ID \"{0}\" has already been registered with this activation key"
-msgstr "A ID do pool \"{0}\" já foi registrada com esta chave de ativação "
+msgstr "A ID do pool \"{0}\" já foi registrada com esta chave de ativação"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:283
 #, java-format
 msgid "Product ID \"{0}\" has already been registered with this activation key"
-msgstr "A ID do produto \"{0}\" já foi registrada com esta chave de ativação "
+msgstr "A ID do produto \"{0}\" já foi registrada com esta chave de ativação"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:337
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:442
@@ -818,7 +819,7 @@ msgstr "Nenhuma rede de entrega do conteúdo: {0}"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:428
 msgid "Must specify at least one search criteria."
-msgstr "É preciso especificar pelo menos um critério de pesquisa. "
+msgstr "É preciso especificar pelo menos um critério de pesquisa."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1653,7 +1654,7 @@ msgstr "não foi possível ler as regras do arquivo"
 # keys, author rgyorfy
 #: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:145
 msgid "email is required for notification"
-msgstr "é necessário um e-mail  para notificação"
+msgstr "é necessário um e-mail para notificação"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
