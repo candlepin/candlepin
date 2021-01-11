@@ -76,7 +76,7 @@ tag_images() {
 
 echo "Building images..."
 cd $SCRIPT_HOME
-docker-compose -f docker-compose-build.yml build $BUILD_ARGS $IMAGE && tag_images
+docker-compose -f docker-compose-build.yml build --build-arg INTERNAL_REGISTRY=$REGISTRY $BUILD_ARGS $IMAGE && tag_images
 evalrc $? "Build not successful."
 
 if [ $PUSH = true ]; then
