@@ -16,16 +16,19 @@ package org.candlepin.policy;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyListOf;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -186,9 +189,7 @@ public class PoolRulesStackDerivedTest {
         // Initial entitlement from one of the pools:
         stackedEnts.add(createEntFromPool(pool2));
 
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(stackedEnts);
-        when(entCurMock.findByStackId(consumer, STACK)).thenReturn(cqmock);
+        when(entCurMock.findByStackId(consumer, STACK)).thenReturn(stackedEnts);
 
         pool2.setAttribute(Product.Attributes.VIRT_LIMIT, "60");
         pool4.setAttribute(Product.Attributes.VIRT_LIMIT, "80");
@@ -383,8 +384,6 @@ public class PoolRulesStackDerivedTest {
 
     @Test
     public void virtLimitFromFirstVirtLimitEntBatch() {
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-
         stackedEnts.clear();
         Entitlement e1 = createEntFromPool(pool1);
         e1.setQuantity(4);
@@ -395,8 +394,7 @@ public class PoolRulesStackDerivedTest {
         Class<Set<String>> listClass = (Class<Set<String>>) (Class) HashSet.class;
         ArgumentCaptor<Set<String>> arg = ArgumentCaptor.forClass(listClass);
 
-        when(cqmock.list()).thenReturn(stackedEnts);
-        when(entCurMock.findByStackIds(eq(consumer), arg.capture())).thenReturn(cqmock);
+        when(entCurMock.findByStackIds(eq(consumer), arg.capture())).thenReturn(stackedEnts);
 
         List<PoolUpdate> updates = poolRules.updatePoolsFromStack(consumer,
             Arrays.asList(stackDerivedPool, stackDerivedPool2), null, false);

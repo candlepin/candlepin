@@ -1525,11 +1525,15 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     public boolean isLocked() {
-        return this.locked != null && locked.booleanValue();
+        return this.locked != null && locked;
     }
 
     public void setLocked(boolean locked) {
         this.locked = locked;
+    }
+
+    public boolean isDerived() {
+        return "true".equals(this.getAttributeValue(Pool.Attributes.DERIVED_POOL));
     }
 
 }
