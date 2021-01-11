@@ -883,8 +883,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @param stackId the ID of the stack
      * @return the list of entitlements for the consumer that are in the stack.
      */
-    @SuppressWarnings("unchecked")
-    public CandlepinQuery<Entitlement> findByStackId(Consumer consumer, String stackId) {
+    public List<Entitlement> findByStackId(Consumer consumer, String stackId) {
         return findByStackIds(consumer, Arrays.asList(stackId));
     }
 
@@ -896,20 +895,34 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @param stackIds the IDs of the stacks
      * @return the list of entitlements for the consumer that are in the stack.
      */
+    public List<Entitlement> findByStackIds(Consumer consumer, Collection<String> stackIds) {
+        List<Entitlement> result = new ArrayList<>();
+        for (List<String> block: this.partition(stackIds)) {
+            result.addAll(findByStackIds(consumer, block));
+        }
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
-    public CandlepinQuery<Entitlement> findByStackIds(Consumer consumer, Collection stackIds) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
-            .add(Restrictions.eq("consumer", consumer))
+    private List<Entitlement> findByStackIds(Consumer consumer, List<String> stackIds) {
+        if (stackIds == null || stackIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Criteria criteria = currentSession().createCriteria(Entitlement.class)
             .createAlias("pool", "ent_pool")
             .createAlias("ent_pool.product", "product")
             .createAlias("product.attributes", "attrs")
             .add(Restrictions.eq("attrs.indices", Product.Attributes.STACKING_ID))
-            .add(CPRestrictions.in("attrs.elements", stackIds))
+            .add(Restrictions.in("attrs.elements", stackIds))
             .add(Restrictions.isNull("ent_pool.sourceEntitlement"))
             .createAlias("ent_pool.sourceStack", "ss", JoinType.LEFT_OUTER_JOIN)
             .add(Restrictions.isNull("ss.id"));
 
-        return this.cpQueryFactory.<Entitlement>buildQuery(this.currentSession(), criteria);
+        if (consumer != null) {
+            criteria.add(Restrictions.eq("consumer", consumer));
+        }
+
+        return (List<Entitlement>) criteria.list();
     }
 
     @SuppressWarnings("unchecked")

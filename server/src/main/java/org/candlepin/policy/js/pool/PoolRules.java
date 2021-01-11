@@ -46,7 +46,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.util.stream.Collectors;
 
 
 /**
@@ -373,8 +373,7 @@ public class PoolRules {
      */
     public PoolUpdate updatePoolFromStack(Pool pool, Map<String, Product> changedProducts) {
         List<Entitlement> stackedEnts = this.entCurator
-            .findByStackId(pool.getSourceStack().getSourceConsumer(), pool.getSourceStackId())
-            .list();
+            .findByStackId(pool.getSourceStack().getSourceConsumer(), pool.getSourceStackId());
 
         return this.updatePoolFromStackedEntitlements(pool, stackedEnts, changedProducts);
     }
@@ -410,7 +409,7 @@ public class PoolRules {
             sourceStackIds.add(pool.getSourceStackId());
         }
 
-        List<Entitlement> allEntitlements = this.entCurator.findByStackIds(consumer, sourceStackIds).list();
+        List<Entitlement> allEntitlements = this.entCurator.findByStackIds(consumer, sourceStackIds);
         if (CollectionUtils.isNotEmpty(newEntitlements)) {
             allEntitlements.addAll(newEntitlements);
         }
@@ -442,6 +441,87 @@ public class PoolRules {
         }
 
         return result;
+    }
+
+    public void bulkUpdatePoolsFromStack(Set<Consumer> consumers, List<Pool> pools,
+        Collection<String> alreadyDeletedPools, boolean deleteIfNoStackedEnts) {
+
+        log.debug("Bulk updating {} pools for {} consumers.", pools.size(), consumers.size());
+        List<Entitlement> stackingEntitlements = findStackingEntitlementsOf(pools);
+        log.debug("found {} stacking entitlements.", stackingEntitlements.size());
+        List<Entitlement> filteredEntitlements = filterByConsumers(consumers, stackingEntitlements);
+        Map<String, List<Entitlement>> entitlementsByStackingId = groupByStackingId(filteredEntitlements);
+
+        updatePoolsWithStackingEntitlements(pools, entitlementsByStackingId);
+
+        if (deleteIfNoStackedEnts) {
+            List<Pool> poolsToDelete = filterPoolsWithoutStackingEntitlements(pools,
+                entitlementsByStackingId);
+
+            if (!poolsToDelete.isEmpty()) {
+                this.poolManager.deletePools(poolsToDelete, alreadyDeletedPools);
+            }
+        }
+    }
+
+    private List<Entitlement> findStackingEntitlementsOf(List<Pool> pools) {
+        Set<String> sourceStackIds = stackIdsOf(pools);
+        log.debug("Found {} source stacks", sourceStackIds.size());
+        return this.entCurator.findByStackIds(null, sourceStackIds);
+    }
+
+    private Set<String> stackIdsOf(List<Pool> pools) {
+        return pools.stream()
+            .map(Pool::getSourceStackId)
+            .collect(Collectors.toSet());
+    }
+
+    private List<Pool> filterPoolsWithoutStackingEntitlements(
+        List<Pool> pools, Map<String, List<Entitlement>> entitlementsByStackingId) {
+        List<Pool> poolsToDelete = new ArrayList<>();
+        for (Pool pool : pools) {
+            List<Entitlement> entitlements = entitlementsByStackingId.get(pool.getSourceStackId());
+            if (CollectionUtils.isEmpty(entitlements)) {
+                poolsToDelete.add(pool);
+            }
+        }
+        return poolsToDelete;
+    }
+
+    private void updatePoolsWithStackingEntitlements(List<Pool> pools, Map<String,
+        List<Entitlement>> entitlementsByStackingId) {
+        for (Pool pool : pools) {
+            List<Entitlement> entitlements = entitlementsByStackingId.get(pool.getSourceStackId());
+            if (CollectionUtils.isNotEmpty(entitlements)) {
+                this.updatePoolFromStackedEntitlements(pool, entitlements,
+                    Collections.emptyMap());
+            }
+        }
+    }
+
+    private List<Entitlement> filterByConsumers(Set<Consumer> consumers, List<Entitlement> entitlements) {
+        Map<String, List<Entitlement>> entitlementsByConsumerUuid = groupByConsumerUuid(entitlements);
+        List<Entitlement> filteredEntitlements = new ArrayList<>(consumers.size());
+        for (Consumer consumer : consumers) {
+            if (entitlementsByConsumerUuid.containsKey(consumer.getUuid())) {
+                final List<Entitlement> foundEntitlements = entitlementsByConsumerUuid
+                    .get(consumer.getUuid());
+                log.debug("Found {} entitlements for consumer: {}", foundEntitlements.size(),
+                    consumer.getUuid());
+                filteredEntitlements.addAll(foundEntitlements);
+            }
+        }
+        return filteredEntitlements;
+    }
+
+    private Map<String, List<Entitlement>> groupByConsumerUuid(List<Entitlement> entitlements) {
+        return entitlements.stream()
+            .collect(Collectors.groupingBy(e -> e.getConsumer().getUuid()));
+    }
+
+    private Map<String, List<Entitlement>> groupByStackingId(List<Entitlement> entitlements) {
+        return entitlements.stream()
+            .collect(Collectors.groupingBy(entitlement -> entitlement.getPool().getStackId()));
     }
 
     public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, Collection<Entitlement> stackedEnts,

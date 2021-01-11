@@ -519,7 +519,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
         Entitlement created = bind(consumer, pool);
 
-        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId).list();
+        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
         assertEquals(1, results.size());
         assertTrue(results.contains(created));
     }
@@ -542,7 +542,29 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             Entitlement created = bind(consumer, pool);
         }
 
-        List<Entitlement> results = entitlementCurator.findByStackIds(consumer, stackingIds).list();
+        List<Entitlement> results = entitlementCurator.findByStackIds(null, stackingIds);
+        assertEquals(3, results.size());
+    }
+
+    @Test
+    public void findByStackIdsByConsumerTest() {
+        Set<String> stackingIds = new HashSet<>();
+        for (int i = 0; i < 4; i++) {
+            String stackingId = "test_stack_id" + i;
+            if (i > 0) {
+                stackingIds.add(stackingId);
+            }
+
+            Product product = TestUtil.createProduct();
+            product.setAttribute(Product.Attributes.STACKING_ID, stackingId);
+            productCurator.create(product);
+
+            Pool pool = createPool(owner, product, 1L, dateSource.currentDate(), createFutureDate(1));
+            poolCurator.create(pool);
+            Entitlement created = bind(consumer, pool);
+        }
+
+        List<Entitlement> results = entitlementCurator.findByStackIds(consumer, stackingIds);
         assertEquals(3, results.size());
     }
 
@@ -561,7 +583,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             createdEntitlements.add(bind(consumer, pool));
         }
 
-        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId).list();
+        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
         assertEquals(ents, results.size());
         assertTrue(results.containsAll(createdEntitlements) && createdEntitlements.containsAll(results));
     }
@@ -592,7 +614,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             createdEntitlements.add(bind(consumer, pool));
         }
 
-        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId).list();
+        List<Entitlement> results = entitlementCurator.findByStackId(consumer, stackingId);
         assertEquals(1, results.size());
         assertEquals(createdEntitlements.get(4), results.get(0));
     }
