@@ -1,9 +1,19 @@
+library identifier: 'fh-pipeline-library@master', retriever: modernSCM(
+  [$class: 'GitSCMSource',
+   remote: 'https://github.com/candlepin/fh-pipeline-library.git',
+   credentialsId: 'github-api-token-as-username-password'])
+
 pipeline {
     agent { label 'docker' }
     options {
         skipDefaultCheckout true
     }
     stages {
+        stage('Trust') {
+            steps {
+                enforceTrustedApproval("candlepin","rhsm-jenkins-github-app")
+            }
+        }
         stage('Test') {
             parallel {
                 stage('unit') {
