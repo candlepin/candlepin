@@ -110,7 +110,7 @@ ext.libraries = [
         "net.oauth.core:oauth",
         "net.oauth.core:oauth-provider",
     ],
-    collections: "com.google.guava:guava:25.1-jre",
+    collections: "com.google.guava:guava:30.1-jre",
     hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor",
     checkstyle: [
         "com.puppycrawl.tools:checkstyle",
