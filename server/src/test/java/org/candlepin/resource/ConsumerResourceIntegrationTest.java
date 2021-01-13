@@ -170,7 +170,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         pool = createPool(owner, product, 10L,
-            TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
+            TestDateUtil.date(2010, 1, 1), TestUtil.createFutureDate(10));
     }
 
     @AfterEach
