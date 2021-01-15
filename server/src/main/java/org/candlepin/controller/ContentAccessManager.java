@@ -62,6 +62,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -549,7 +550,7 @@ public class ContentAccessManager {
             emptyConsumer, emptyPool, null);
     }
 
-    public boolean hasCertChangedSince(Consumer consumer, Date date) {
+    public boolean hasCertChangedSince(Consumer consumer, OffsetDateTime date) {
         if (date == null) {
             return true;
         }
@@ -560,7 +561,7 @@ public class ContentAccessManager {
 
         return oeca == null ||
             consumer.getContentAccessCert() == null ||
-            oeca.getUpdated().getTime() > date.getTime();
+            oeca.getUpdated().getTime() > Util.toDate(date).getTime();
     }
 
     @Transactional

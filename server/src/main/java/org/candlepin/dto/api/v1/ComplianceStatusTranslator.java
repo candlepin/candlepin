@@ -19,6 +19,7 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.util.Util;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,8 +78,8 @@ public class ComplianceStatusTranslator implements ObjectTranslator<ComplianceSt
         destination.setStatus(source.getStatus());
         destination.setCompliant(source.isCompliant());
 
-        destination.setDate(source.getDate());
-        destination.setCompliantUntil(source.getCompliantUntil());
+        destination.setDate(Util.toDateTime(source.getDate()));
+        destination.setCompliantUntil(Util.toDateTime(source.getCompliantUntil()));
 
         destination.setNonCompliantProducts(source.getNonCompliantProducts());
         destination.setProductComplianceDateRanges(source.getProductComplianceDateRanges());

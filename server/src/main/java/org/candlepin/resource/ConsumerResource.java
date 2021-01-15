@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2020 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -26,6 +26,7 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
+import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
@@ -60,6 +61,7 @@ import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.v1.DeleteResult;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
@@ -67,6 +69,7 @@ import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
+import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
@@ -82,7 +85,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentAccessCertificate;
-import org.candlepin.model.DeleteResult;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersion;
@@ -121,7 +123,6 @@ import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.resteasy.DateFormat;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -136,20 +137,12 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.quartz.JobDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -157,6 +150,9 @@ import org.xnap.commons.i18n.I18n;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -173,27 +169,12 @@ import java.util.regex.Pattern;
 import javax.inject.Provider;
 import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
  * API Gateway for Consumers
  */
-@Path("/consumers")
-@Api(value = "consumers", authorizations = { @Authorization("basic") })
 public class ConsumerResource implements ConsumersApi {
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
 
@@ -523,23 +504,17 @@ public class ConsumerResource implements ConsumersApi {
             sanitized.put(key, value);
             lowerCaseKeys.add(lowerCaseKey);
         }
+
         return sanitized;
     }
 
-    @ApiOperation(notes = "Retrieves a list of the Consumers", value = "list", response = Consumer.class,
-        responseContainer = "list")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @Wrapped(element = "consumers")
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<ConsumerDTOArrayElement> list(@QueryParam("username") String userName,
-        @QueryParam("type") Set<String> typeLabels,
-        @QueryParam("owner") String ownerKey,
-        @QueryParam("uuid") List<String> uuids,
-        @QueryParam("hypervisor_id") List<String> hypervisorIds,
-        @QueryParam("fact") List<KeyValueParamDTO> attrFilters,
-        @Context PageRequest pageRequest) {
+    public CandlepinQuery<ConsumerDTOArrayElement> searchConsumers(String userName, Set<String> typeLabels,
+        String ownerKey, List<String> uuids, List<String> hypervisorIds, List<KeyValueParamDTO> attrFilters) {
+
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
         if (userName == null && (typeLabels == null || typeLabels.isEmpty()) && ownerKey == null &&
             (uuids == null || uuids.isEmpty()) && (hypervisorIds == null || hypervisorIds.isEmpty()) &&
@@ -550,9 +525,9 @@ public class ConsumerResource implements ConsumersApi {
         Owner owner = null;
         if (ownerKey != null) {
             owner = ownerCurator.getByKey(ownerKey);
+
             if (owner == null) {
-                throw new NotFoundException(i18n.tr(
-                    "owner with key: {0} was not found.", ownerKey));
+                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
             }
         }
 
@@ -566,36 +541,15 @@ public class ConsumerResource implements ConsumersApi {
         return this.translator.translateQuery(query, ConsumerDTOArrayElement.class);
     }
 
-    @ApiOperation(
-        notes = "Checks for the existence of a Consumer. This method is used to check if a consumer" +
-        " is available on a particular shard.  There is no need to do a full " +
-        "GET for the consumer for this check.",
-        value = "")
-    @ApiResponses({ @ApiResponse(code = 404, message = "If the consumer doesn't exist or cannot be accessed"),
-        @ApiResponse(code = 204, message = "If the consumer exists and can be accessed") })
-    @HEAD
-    @Produces(MediaType.WILDCARD)
-    @Path("{consumer_uuid}/exists")
-    public void consumerExists(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
+    @Override
+    public void consumerExists(@Verify(Consumer.class) String uuid) {
         if (!consumerCurator.doesConsumerExist(uuid)) {
             throw new NotFoundException(i18n.tr("Consumer with id {0} could not be found.", uuid));
         }
     }
 
-    @ApiOperation(
-        notes = "Checks for the existence of a Consumer in bulk. This API return UUIDs of non-existing" +
-        "consumer",
-        value = "")
-    @ApiResponses({ @ApiResponse(code = 404, message = "Returns all consumer UUIDs that doesn't exist or " +
-        "cannot be accessed"),
-        @ApiResponse(code = 204, message = "If all consumer UUIDs exists and can be accessed"),
-        @ApiResponse(code = 400, message = "When no UUIDs are provided") })
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("exists")
-    public Response consumerExistsBulk(Set<String> consumerUuids) throws BadRequestException {
+    @Override
+    public Response consumerExistsBulk(Set<String> consumerUuids) {
         if (consumerUuids != null && !consumerUuids.isEmpty()) {
             Set<String> existingUuids = consumerCurator.getExistingConsumerUuids(consumerUuids);
             consumerUuids.removeAll(existingUuids);
@@ -613,17 +567,13 @@ public class ConsumerResource implements ConsumersApi {
         }
     }
 
-    @ApiOperation(notes = "Retrieves a single Consumer", value = "getConsumer")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}")
-    public ConsumerDTO getConsumer(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
+    @Override
+    public ConsumerDTO getConsumer(@Verify(Consumer.class) String uuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
 
         if (consumer != null) {
             IdentityCertificate idcert = consumer.getIdCert();
+
             if (idcert != null) {
                 Date expire = idcert.getSerial().getExpiration();
                 int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
@@ -647,13 +597,8 @@ public class ConsumerResource implements ConsumersApi {
         return this.translator.translate(consumer, ConsumerDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves content access of a Consumer", value = "getConsumerContentAccess")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}/content_access")
-    public ContentAccessDTO getContentAccessForConsumer(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
+    @Override
+    public ContentAccessDTO getContentAccessForConsumer(@Verify(Consumer.class) String uuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         String caMode = Util.firstOf(
             consumer.getContentAccessMode(),
@@ -664,6 +609,7 @@ public class ConsumerResource implements ConsumersApi {
             consumer.getOwner().getContentAccessModeList(),
             ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
         );
+
         return new ContentAccessDTO()
             .contentAccessMode(caMode)
             .contentAccessModeList(Util.toList(caList));
@@ -858,33 +804,16 @@ public class ConsumerResource implements ConsumersApi {
         return installedProducts;
     }
 
-    @ApiOperation(notes = "Creates a Consumer. NOTE: Opening this method up " +
-        "to everyone, as we have nothing we can reliably " +
-        "verify in the method signature. Instead we have to " +
-        "figure out what owner this consumer is destined for " +
-        "(due to backward compatability with existing clients " +
-        "which do not specify an owner during registration), " +
-        "and then check the access to the specified owner in " + "the method itself.", value = "create")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 403, message = ""),
-        @ApiResponse(code = 404, message = "") })
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     @SecurityHole(noAuth = true)
     @Transactional
-    public ConsumerDTO create(
-        @ApiParam(name = "consumer", required = true) ConsumerDTO dto,
-        @Context Principal principal,
-        @QueryParam("username") String userName,
-        @QueryParam("owner") String ownerKey,
-        @QueryParam("activation_keys") String activationKeys,
-        @QueryParam("identity_cert_creation") @DefaultValue("true") boolean identityCertCreation)
-        throws BadRequestException {
+    public ConsumerDTO createConsumer(ConsumerDTO dto, String userName, String ownerKey,
+        String activationKeys, Boolean identityCertCreation) {
 
         this.validator.validateConstraints(dto);
         this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
             dto::getGuestIds, dto::getCapabilities);
-
+        Principal principal = this.principalProvider.get();
         // Resolve or create owner if needed
         Owner owner = setupOwner(principal, ownerKey);
 
@@ -896,9 +825,10 @@ public class ConsumerResource implements ConsumersApi {
 
             consumer = consumerCurator.getHypervisor(getFactValue(dto.getFacts(),
                 Consumer.Facts.SYSTEM_UUID), owner);
+
             if (consumer != null) {
                 consumer.setIdCert(generateIdCert(consumer, false));
-                this.updateConsumer(consumer.getUuid(), dto, principal);
+                this.updateConsumer(consumer.getUuid(), dto);
                 return translator.translate(consumer, ConsumerDTO.class);
             }
         }
@@ -908,6 +838,7 @@ public class ConsumerResource implements ConsumersApi {
         }
 
         ConsumerType ctype = this.consumerTypeCurator.getByLabel(dto.getType().getLabel());
+
         if (ctype == null) {
             throw new BadRequestException(i18n.tr("Invalid unit type: {0}", dto.getType().getLabel()));
         }
@@ -1373,23 +1304,15 @@ public class ConsumerResource implements ConsumersApi {
     // While this is a PUT, we are treating it as a PATCH until this operation
     // becomes more prevalent. We only update the portions of the consumer that appear
     // to be set.
-    @ApiOperation(notes = "Updates a Consumer", value = "updateConsumer")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}")
+    @Override
     @Transactional
     @UpdateConsumerCheckIn
-    public void updateConsumer(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
-        @ApiParam(name = "consumer", required = true) ConsumerDTO dto,
-        @Context Principal principal) {
-
+    public void updateConsumer(@Verify(Consumer.class) String uuid, ConsumerDTO dto) {
         this.validator.validateConstraints(dto);
         this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
             dto::getGuestIds, dto::getCapabilities);
 
+        Principal principal = this.principalProvider.get();
         Consumer toUpdate = consumerCurator.verifyAndLookupConsumer(uuid);
         dto.setUuid(uuid);
 
@@ -1862,21 +1785,11 @@ public class ConsumerResource implements ConsumersApi {
         return "true".equalsIgnoreCase(value) || "1".equals(value);
     }
 
-    @ApiOperation(notes = "Removes a Consumer", value = "deleteConsumer")
-    @ApiResponses({
-        @ApiResponse(code = 403, message = "Invalid access rights to unregister the Consumer."),
-        @ApiResponse(code = 404, message = "Target consumer does not exist."),
-        @ApiResponse(code = 410, message = "Target consumer was already deleted.") })
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}")
+    @Override
     @Transactional
-    public void deleteConsumer(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
-        @Context Principal principal) {
-
+    public void deleteConsumer(@Verify(Consumer.class) String uuid) {
         log.debug("Deleting consumer_uuid {}", uuid);
-
+        Principal principal = this.principalProvider.get();
         Consumer toDelete = consumerCurator.findByUuid(uuid);
         // The consumer may have already been deleted if multiple requests come in at the same time.
         // NOTE: The Verify on the Consumer class should handle cases where a 404 should be thrown
@@ -1921,18 +1834,34 @@ public class ConsumerResource implements ConsumersApi {
         sink.queueEvent(event);
     }
 
-    @ApiOperation(notes = "Retrieves a list of Entitlement Certificates for the Consumer",
-        value = "getEntitlementCertificates")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Path("{consumer_uuid}/certificates")
-    @Produces(MediaType.APPLICATION_JSON)
-    @UpdateConsumerCheckIn
-    public List<CertificateDTO> getEntitlementCertificates(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("serials") String serials) {
-
+    /**
+     * Method to get entitlement certificates.
+     * NOTE: Here we explicitly update consumer Check-In.
+     *
+     * @param consumerUuid
+     *  Consumer UUID
+     *
+     * @param serials
+     *  Certificate serial
+     *
+     * @return
+     *  List of DTOs representing certificates
+     */
+    public List<CertificateDTO> getEntitlementCertificates(@Verify(Consumer.class) String consumerUuid,
+        String serials) {
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
+
+        // UpdateConsumerCheckIn
+        // Explicitly updating consumer check-in,
+        // as we merged getEntitlementCertificates & exportCertificates methods due to OpenAPI
+        // constraint which doesn't allow more than one HTTP method key under same URL pattern.
+
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        if (principal instanceof ConsumerPrincipal) {
+            ConsumerPrincipal p = (ConsumerPrincipal) principal;
+            consumerCurator.updateLastCheckin(p.getConsumer());
+        }
+
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
@@ -1967,24 +1896,22 @@ public class ConsumerResource implements ConsumersApi {
         return returnCerts;
     }
 
-    @ApiOperation(notes = "Retrieves the body of the Content Access Certificate for the Consumer",
-        value = "getContentAccessBody", response = String.class)
-    @ApiResponses({ @ApiResponse(code = 404, message = ""), @ApiResponse(code = 304, message = "") })
-    @GET
-    @Path("{consumer_uuid}/accessible_content")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getContentAccessBody(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @HeaderParam("If-Modified-Since") @DefaultValue("Thu, 01 Jan 1970 00:00:00 GMT")
-        @DateFormat({ "EEE, dd MMM yyyy HH:mm:ss z" }) Date since) {
-
+    @Override
+    public Response getContentAccessBody(@Verify(Consumer.class) String consumerUuid, OffsetDateTime since) {
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
         if (!owner.isContentAccessEnabled()) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
+        }
+
+        if (since == null) {
+            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                .appendPattern("EEE, dd MMM yyyy HH:mm:ss z")
+                .toFormatter();
+            since = Util.parseOffsetDateTime(formatter, "Thu, 01 Jan 1970 00:00:00 GMT");
         }
 
         if (!this.contentAccessManager.hasCertChangedSince(consumer, since)) {
@@ -2020,20 +1947,17 @@ public class ConsumerResource implements ConsumersApi {
         return Response.ok(result, MediaType.APPLICATION_JSON).build();
     }
 
-    @ApiOperation(notes = "Retrieves a Compressed File of Entitlement Certificates",
-        value = "exportCertificates")
-    @ApiResponses({ @ApiResponse(code = 500, message = ""), @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces("application/zip")
-    @Path("/{consumer_uuid}/certificates")
-    public File exportCertificates(
-        @Context HttpServletResponse response,
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("serials") String serials) {
+    @Override
+    public Object exportCertificates(@Verify(Consumer.class) String consumerUuid, String serials) {
+        HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
+
+        if (httpRequest.getHttpHeaders().getRequestHeader("accept").contains("application/json")) {
+            return getEntitlementCertificates(consumerUuid, serials);
+        }
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
+        HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         revokeOnGuestMigration(consumer);
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
@@ -2077,25 +2001,13 @@ public class ConsumerResource implements ConsumersApi {
         return keys;
     }
 
-    @ApiOperation(
-        notes = "Retrieves a list of Certiticate Serials Return the " +
-        "client certificate metadata a for the given consumer. This is a small" +
-        " subset of data clients can use to determine which certificates they" +
-        " need to update/fetch.",
-        value = "getEntitlementCertificateSerials")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Path("{consumer_uuid}/certificates/serials")
-    @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "serials")
     @UpdateConsumerCheckIn
     public List<CertificateSerialDTO> getEntitlementCertificateSerials(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-
+        @Verify(Consumer.class) String consumerUuid) {
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
@@ -2147,43 +2059,31 @@ public class ConsumerResource implements ConsumersApi {
 
     }
 
-    @ApiOperation(notes = "If a pool ID is specified, we know we're binding to that exact pool. " +
-        "Specifying an entitle date in this case makes no sense and will throw an " +
-        "error. If a list of product IDs are specified, we attempt to auto-bind to" +
-        " subscriptions which will provide those products. An optional date can be" +
-        " specified allowing the consumer to get compliant for some date in the " +
-        "future. If no date is specified we assume the current date. If neither a " +
-        "pool nor an ID is specified, this is a healing request. The path is similar " +
-        "to the bind by products, but in this case we use the installed products on " +
-        "the consumer, and their current compliant status, to determine which product" +
-        " IDs should be requested. The entitle date is used the same as with bind by " +
-        "products. The response will contain a list of Entitlement objects if async is" +
-        " false, or a JobDetail object if async is true.", value = "Bind Entitlements")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""),
-        @ApiResponse(code = 403, message = "Binds Entitlements"), @ApiResponse(code = 404, message = "") })
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/entitlements")
-    @SuppressWarnings("checkstyle:indentation")
+    @Override
+    @SuppressWarnings({"checkstyle:indentation", "checkstyle:methodlength"})
     public Response bind(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("pool") @Verify(value = Pool.class, nullable = true,
-            subResource = SubResource.ENTITLEMENTS) String poolIdString,
-        @QueryParam("product") String[] productIds,
-        @QueryParam("quantity") Integer quantity,
-        @QueryParam("email") String email,
-        @QueryParam("email_locale") String emailLocale,
-        @QueryParam("async") @DefaultValue("false") boolean async,
-        @QueryParam("entitle_date") String entitleDateStr,
-        @QueryParam("from_pool") List<String> fromPools) throws JobException {
+        @Verify(Consumer.class) String consumerUuid,
+        @Verify(value = Pool.class, nullable = true, subResource = SubResource.ENTITLEMENTS)
+        String poolIdString,
+        List<String> listOfProductIds,
+        Integer quantity,
+        String email,
+        String emailLocale,
+        Boolean async,
+        String entitleDateStr,
+        List<String> fromPools) {
         /* NOTE: This method should NEVER be provided with a POST body.
            While technically that change would be backwards compatible,
            there are older clients which erroneously provide an empty string
            as a post body and hence result in a serialization error.
            ref: BZ: 1502807
          */
+        String[] productIds = null;
 
+        if (listOfProductIds != null) {
+            productIds = new String[listOfProductIds.size()];
+            productIds = listOfProductIds.toArray(productIds);
+        }
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.
         Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
@@ -2246,7 +2146,18 @@ public class ConsumerResource implements ConsumersApi {
             }
 
             // events will be triggered by the job
-            AsyncJobStatus status = jobManager.queueJob(jobConfig);
+            AsyncJobStatus status = null;
+
+            try {
+                status = jobManager.queueJob(jobConfig);
+            }
+            catch (JobException e) {
+                String errmsg = this.i18n.tr("An unexpected exception occurred " +
+                    "while scheduling job \"{0}\"", jobConfig.getJobKey());
+                log.error(errmsg, e);
+                throw new IseException(errmsg, e);
+            }
+
             AsyncJobStatusDTO statusDTO = this.translator.translate(status, AsyncJobStatusDTO.class);
             return Response.status(Response.Status.OK)
                 .type(MediaType.APPLICATION_JSON)
@@ -2307,23 +2218,8 @@ public class ConsumerResource implements ConsumersApi {
             .type(MediaType.APPLICATION_JSON).entity(entitlementDTOs).build();
     }
 
-    @ApiOperation(notes = "Retrieves a list of Pools and quantities that would be the " +
-        "result of an auto-bind. This is a dry run of an autobind. It allows the client " +
-        "to see what would be the result of an autobind without executing it. It can only" +
-        " do this for the prevously established list of installed products for the consumer" +
-        " If a service level is included in the request, then that level will override " +
-        "the one stored on the consumer. If no service level is included then the existing " +
-        "one will be used. The Response has a list of PoolQuantity objects", value = "dryBind")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 403, message = ""),
-        @ApiResponse(code = 404, message = "") })
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/entitlements/dry-run")
-    public List<PoolQuantityDTO> dryBind(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("service_level") String serviceLevel) {
-
+    @Override
+    public List<PoolQuantityDTO> dryBind(@Verify(Consumer.class) String consumerUuid, String serviceLevel) {
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
@@ -2381,24 +2277,12 @@ public class ConsumerResource implements ConsumersApi {
         return entitlement;
     }
 
-    @ApiOperation(notes = "Retrives a list of Entitlements. This endpoint supports paging with query" +
-        " parameters. For more details please visit " +
-        "https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin"
-        , value = "listEntitlements")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/entitlements")
-    public List<EntitlementDTO> listEntitlements(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("product") String productId,
-        @QueryParam("regen") @DefaultValue("true") Boolean regen,
-        @QueryParam("matches") String matches,
-        @QueryParam("attribute") List<KeyValueParamDTO> attrFilters,
-        @Context PageRequest pageRequest) {
+    @Override
+    public List<EntitlementDTO> listEntitlements(@Verify(Consumer.class) String consumerUuid,
+        String productId, Boolean regen, String matches, List<KeyValueParamDTO> attrFilters) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
         if (regen) {
             revokeOnGuestMigration(consumer);
         }
@@ -2431,29 +2315,15 @@ public class ConsumerResource implements ConsumersApi {
         return entitlementDTOs;
     }
 
-    @ApiOperation(notes = "Retrieves the Owner associated to a Consumer", value = "getOwner")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/owner")
-    public OwnerDTO getOwner(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-
+    @Override
+    public OwnerDTO getOwnerByConsumerUuid(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
         return translator.translate(owner, OwnerDTO.class);
     }
 
-    @ApiOperation(
-        notes = "Unbinds all Entitlements for a Consumer Result contains the " +
-        "total number of entitlements unbound.",
-        value = "unbindAll")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/entitlements")
-    public DeleteResult unbindAll(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+    @Override
+    public DeleteResult unbindAll(@Verify(Consumer.class) String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
         // CertificateCurator) to lookup by serialNumber
@@ -2461,7 +2331,9 @@ public class ConsumerResource implements ConsumersApi {
 
         int total = poolManager.revokeAllEntitlements(consumer, true);
         log.debug("Revoked {} entitlements from {}", total, consumerUuid);
-        return new DeleteResult(total);
+        DeleteResult dr = new DeleteResult();
+        dr.setDeletedRecords(total);
+        return dr;
 
         // Need to parse off the value of subscriptionNumberArgs, probably
         // use comma separated see IntergerList in sparklines example in
@@ -2470,18 +2342,11 @@ public class ConsumerResource implements ConsumersApi {
         // entitlement pool)
     }
 
-    @ApiOperation(notes = "Removes an Entitlement from a Consumer By the Entitlement ID", value = "unbind")
-    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
-    @DELETE
-    @Produces(MediaType.WILDCARD)
-    @Path("/{consumer_uuid}/entitlements/{dbid}")
-    public void unbind(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @PathParam("dbid") @Verify(Entitlement.class) String dbid,
-        @Context Principal principal) {
-
+    @Override
+    public void unbindByEntitlementId(@Verify(Consumer.class) String consumerUuid,
+        @Verify(Entitlement.class) String dbid) {
+        Principal principal = this.principalProvider.get();
         consumerCurator.verifyAndLookupConsumer(consumerUuid);
-
         Entitlement toDelete = entitlementCurator.get(dbid);
         if (toDelete != null) {
             poolManager.revokeEntitlement(toDelete);
@@ -2493,16 +2358,8 @@ public class ConsumerResource implements ConsumersApi {
         ));
     }
 
-    @ApiOperation(notes = "Removes an Entitlement from a Consumer By the Certificate Serial",
-        value = "unbindBySerial")
-    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
-    @DELETE
-    @Produces(MediaType.WILDCARD)
-    @Path("/{consumer_uuid}/certificates/{serial}")
-    public void unbindBySerial(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @PathParam("serial") Long serial) {
-
+    @Override
+    public void unbindBySerial(@Verify(Consumer.class) String consumerUuid, Long serial) {
         consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator
             .findByCertificateSerial(serial);
@@ -2516,14 +2373,8 @@ public class ConsumerResource implements ConsumersApi {
             serial.toString())); // prevent serial number formatting.
     }
 
-    @ApiOperation(notes = "Removes all Entitlements from a Consumer. By Pool Id", value = "unbindByPool")
-    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 404, message = "") })
-    @DELETE
-    @Produces(MediaType.WILDCARD)
-    @Path("/{consumer_uuid}/entitlements/pool/{pool_id}")
-    public void unbindByPool(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @PathParam("pool_id") String poolId) {
+    @Override
+    public void unbindByPool(@Verify(Consumer.class) String consumerUuid, String poolId) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         List<Entitlement> entitlementsToDelete = entitlementCurator
             .listByConsumerAndPoolId(consumer, poolId);
@@ -2538,18 +2389,10 @@ public class ConsumerResource implements ConsumersApi {
         }
     }
 
-    @ApiOperation(notes = "Regenerates the Entitlement Certificates for a Consumer",
-        value = "regenerateEntitlementCertificates")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @PUT
-    @Produces(MediaType.WILDCARD)
-    @Consumes(MediaType.WILDCARD)
-    @Path("/{consumer_uuid}/certificates")
+    @Override
     @UpdateConsumerCheckIn
-    public void regenerateEntitlementCertificates(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("entitlement") String entitlementId,
-        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+    public void regenerateEntitlementCertificates(@Verify(Consumer.class) String consumerUuid,
+        String entitlementId, Boolean lazyRegen) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
@@ -2567,7 +2410,6 @@ public class ConsumerResource implements ConsumersApi {
      * Retrieves a compressed file representation of a Consumer (manifest).
      *
      * @deprecated use GET /consumers/:consumer_uuid/export/async
-     * @param response
      * @param consumerUuid
      * @param cdnLabel
      * @param webAppPrefix
@@ -2575,29 +2417,12 @@ public class ConsumerResource implements ConsumersApi {
      * @return the generated file archive.
      */
     @Deprecated
-    @ApiOperation(
-        notes = "Retrieves a Compressed File representation of a Consumer (manifest).",
-        value = "Consumer Export (manifest)",
-        response = File.class)
-    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 500, message = ""),
-        @ApiResponse(code = 404, message = "") })
-    @Produces("application/zip")
-    @GET
-    @Path("{consumer_uuid}/export")
-    public File exportData(
-        @Context HttpServletResponse response,
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("cdn_label") String cdnLabel,
-        @QueryParam("webapp_prefix") String webAppPrefix,
-        @QueryParam("api_url") String apiUrl,
-        @QueryParam("ext")
-        @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
-        required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
-        List<KeyValueParamDTO> extensionArgs) {
-
+    @Override
+    public File exportData(@Verify(Consumer.class) String consumerUuid, String cdnLabel, String webAppPrefix,
+        String apiUrl, List<KeyValueParamDTO> extensionArgs) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
+        HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         try {
             File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
                 getExtensionParamMap(extensionArgs));
@@ -2614,42 +2439,17 @@ public class ConsumerResource implements ConsumersApi {
      * The response will contain the id of the job from which its result data will contain the href to
      * download the generated file.
      *
-     * @param response the response to send back from the server.
      * @param consumerUuid the uuid of the target consumer.
      * @param cdnLabel the CDN label to store in the meta file.
      * @param webAppPrefix the URL pointing to the manifest's originating web application.
      * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
      * @return the details of the async export job that is to be started.
      */
-    @ApiOperation(
-        notes = "Initiates an async generation of a Compressed File representation of a Consumer " +
-        "(manifest). The response will contain the id of the job from which its result data " +
-        " will contain the href to download the generated file.",
-        value = "Async Consumer Export (manifest)",
-        response = JobDetail.class)
-    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 500, message = ""),
-        @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}/export/async")
-    public AsyncJobStatusDTO exportDataAsync(
-        @Context HttpServletResponse response,
-        @PathParam("consumer_uuid") @Verify(Consumer.class)
-        @ApiParam(value = "The UUID of the target consumer", required = true) String consumerUuid,
-        @QueryParam("cdn_label")
-        @ApiParam(value = "The lable of the target CDN", required = false)
-        String cdnLabel,
-        @QueryParam("webapp_prefix")
-        @ApiParam(value = "the URL pointing to the manifest's originating web application", required = false)
-        String webAppPrefix,
-        @QueryParam("api_url")
-        @ApiParam(value = "the URL pointing to the manifest's originating candlepin API", required = false)
-        String apiUrl,
-        @QueryParam("ext")
-        @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
-        required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
-        List<KeyValueParamDTO> extensionArgs) throws JobException {
-
+    @Override
+    public AsyncJobStatusDTO exportDataAsync(@Verify(Consumer.class) String consumerUuid,
+        String cdnLabel, String webAppPrefix, String apiUrl,
+        List<KeyValueParamDTO> extensionArgs) {
+        HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
@@ -2658,7 +2458,18 @@ public class ConsumerResource implements ConsumersApi {
         JobConfig config = manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel,
             webAppPrefix, apiUrl, getExtensionParamMap(extensionArgs));
 
-        AsyncJobStatus job = this.jobManager.queueJob(config);
+        AsyncJobStatus job = null;
+
+        try {
+            job = this.jobManager.queueJob(config);
+        }
+        catch (JobException e) {
+            String errmsg = this.i18n.tr("An unexpected exception occurred " +
+                "while scheduling job \"{0}\"", config.getJobKey());
+            log.error(errmsg, e);
+            throw new IseException(errmsg, e);
+        }
+
         return this.translator.translate(job, AsyncJobStatusDTO.class);
     }
 
@@ -2681,26 +2492,14 @@ public class ConsumerResource implements ConsumersApi {
      * Downloads an asynchronously generated consumer export file (manifest). If the file
      * was successfully downloaded, it will be deleted.
      *
-     * @param response
      * @param consumerUuid the UUID of the target consumer.
      * @param exportId the id of the stored export.
      */
-    @ApiOperation(
-        notes = "Downloads an asynchronously generated consumer export file (manifest).",
-        value = "Async Consumer Export (manifest) Download",
-        response = File.class)
-    @ApiResponses({ @ApiResponse(code = 403, message = ""), @ApiResponse(code = 500, message = ""),
-        @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces("application/zip")
-    @Path("{consumer_uuid}/export/{export_id}")
-    public void downloadExistingExport(
-        @Context HttpServletResponse response,
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @PathParam("export_id") String exportId) {
+    @Override
+    public File downloadExistingExport(@Verify(Consumer.class) String consumerUuid, String exportId) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
+        HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         // *******************************************************************************
         // NOTE: If changing the path or parameters of this end point, be sure to update
         // the HREF generation in ConsumerResource.buildAsyncDownloadManifestHref.
@@ -2721,6 +2520,9 @@ public class ConsumerResource implements ConsumersApi {
         // On successful manifest read, delete the record. The manifest can only be
         // downloaded once and must then be regenerated.
         manifestManager.deleteStoredManifest(exportId);
+
+        // Done intentionally due to OpenAPI constrains on return type.
+        return null;
     }
 
     /**
@@ -2735,7 +2537,7 @@ public class ConsumerResource implements ConsumersApi {
     }
 
     /**
-     * Retrieves a single Consumer
+     * Retrieves a single Consumer & regenerate Identity Certificates
      *
      * @param uuid uuid of the consumer sought.
      * @return a Consumer object
@@ -2743,17 +2545,10 @@ public class ConsumerResource implements ConsumersApi {
      * @httpcode 404
      * @httpcode 200
      */
-    @ApiOperation(notes = "Retrieves a single Consumer", value = "regenerateIdentityCertificates")
-    @ApiResponses({ @ApiResponse(code = 400, message = ""), @ApiResponse(code = 404, message = "") })
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    @Path("{consumer_uuid}")
-    public ConsumerDTO regenerateIdentityCertificates(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
+    @Override
+    public ConsumerDTO regenerateIdentityCertificates(@Verify(Consumer.class) String uuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
         consumer = regenerateIdentityCertificate(consumer);
         return translator.translate(consumer, ConsumerDTO.class);
     }
@@ -2827,13 +2622,8 @@ public class ConsumerResource implements ConsumersApi {
         return idCert;
     }
 
-    @ApiOperation(notes = "Retrieves a list of Guest Consumers of a Consumer", value = "getGuests")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/guests")
-    public List<ConsumerDTOArrayElement> getGuests(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+    @Override
+    public List<ConsumerDTOArrayElement> getGuests(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         List<Consumer> consumers = consumerCurator.getGuests(consumer);
         return translate(consumers);
@@ -2852,14 +2642,9 @@ public class ConsumerResource implements ConsumersApi {
         }
     }
 
-    @ApiOperation(notes = "Retrieves a Host Consumer of a Consumer", value = "getHost")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/host")
-    public ConsumerDTO getHost(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @Context Principal principal) {
+    @Override
+    public ConsumerDTO getHost(@Verify(Consumer.class) String consumerUuid) {
+        Principal principal = this.principalProvider.get();
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         if (consumer.getFact("virt.uuid") == null ||
             consumer.getFact("virt.uuid").trim().equals("")) {
@@ -2870,53 +2655,38 @@ public class ConsumerResource implements ConsumersApi {
         return translator.translate(host, ConsumerDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves the Release of a Consumer", value = "getRelease")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{consumer_uuid}/release")
-    public Release getRelease(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+    @Override
+    public ReleaseVerDTO getRelease(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        ReleaseVerDTO release = new ReleaseVerDTO();
+
         if (consumer.getReleaseVer() != null) {
-            return consumer.getReleaseVer();
+            return release.releaseVer(consumer.getReleaseVer().getReleaseVer());
         }
-        return new Release("");
+        else {
+            release.setReleaseVer("");
+        }
+
+        return release;
     }
 
-    @ApiOperation(notes = "Retireves the Compliance Status of a Consumer.", value = "getComplianceStatus")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}/compliance")
+    @Override
     @Transactional
-    public ComplianceStatusDTO getComplianceStatus(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
-        @ApiParam("Date to get compliance information for, default is now.")
-        @QueryParam("on_date") String onDate) {
-
+    public ComplianceStatusDTO getComplianceStatus(@Verify(Consumer.class) String uuid,
+        String onDate) {
         ComplianceStatus status = null;
-
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-
         Date date = ResourceDateParser.parseDateString(onDate);
         status = this.complianceRules.getStatus(consumer, date);
 
         return this.translator.translate(status, ComplianceStatusDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves the System Purpose Compliance Status of a Consumer.", value =
-        "getSystemPurposeComplianceStatus")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}/purpose_compliance")
+    @Override
     @Transactional
     public SystemPurposeComplianceStatusDTO getSystemPurposeComplianceStatus(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
-        @ApiParam("Date to get compliance information for, default is now.")
-        @QueryParam("on_date") String onDate) {
-
+        @Verify(Consumer.class) String uuid, String onDate) {
         SystemPurposeComplianceStatus status = null;
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         Date date = ResourceDateParser.parseDateString(onDate);
@@ -2926,14 +2696,10 @@ public class ConsumerResource implements ConsumersApi {
         return this.translator.translate(status, SystemPurposeComplianceStatusDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves a Compliance Status list for a list of Consumers",
-        value = "getComplianceStatusList")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/compliance")
+    @Override
     @Transactional
     public Map<String, ComplianceStatusDTO> getComplianceStatusList(
-        @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true) List<String> uuids) {
+        @Verify(value = Consumer.class, nullable = true) List<String> uuids) {
 
         Map<String, ComplianceStatusDTO> results = new HashMap<>();
 
@@ -2951,24 +2717,18 @@ public class ConsumerResource implements ConsumersApi {
         return results;
     }
 
-    @ApiOperation(
-        notes = "Removes the Deletion Record for a Consumer Allowed for a superadmin." +
-        " The main use case for this would be if a user accidently deleted a " +
-        "non-RHEL hypervisor, causing it to no longer be auto-detected via virt-who.",
-        value = "removeDeletionRecord")
-    @ApiResponses({ @ApiResponse(code = 404, message = "") })
-    @DELETE
-    @Path("{consumer_uuid}/deletionrecord")
-    @Produces(MediaType.APPLICATION_JSON)
     @Transactional
-    public void removeDeletionRecord(@PathParam("consumer_uuid") String uuid) {
+    public void removeDeletionRecord(String uuid) {
         DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid(uuid);
         if (dc == null) {
-            throw new NotFoundException(i18n.tr("Deletion record for hypervisor \"{0}\" not found.", uuid));
+            throw new NotFoundException(
+                i18n.tr("Deletion record for hypervisor \"{0}\" not found.", uuid));
         }
 
         deletedConsumerCurator.delete(dc);
     }
+
+
 
     private void addCalculatedAttributes(Entitlement ent) {
         // With no consumer/date, this will not build suggested quantity
@@ -3148,7 +2908,7 @@ public class ConsumerResource implements ConsumersApi {
             guest.getConsumer().getOwnerId());
         if (guestConsumer != null) {
             if ((principal == null) || principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
-                deleteConsumer(guestConsumer.getUuid(), principal);
+                deleteConsumer(guestConsumer.getUuid());
             }
             else {
                 ConsumerType type = this.consumerTypeCurator.get(guestConsumer.getTypeId());

@@ -18,6 +18,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
+import org.candlepin.util.Util;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,7 +79,7 @@ public class SystemPurposeComplianceStatusTranslator implements
         destination.setStatus(source.getStatus());
         destination.setCompliant(source.isCompliant());
 
-        destination.setDate(source.getDate());
+        destination.setDate(Util.toDateTime(source.getDate()));
 
         destination.setNonCompliantRole(source.getNonCompliantRole());
         destination.setNonCompliantAddOns(source.getNonCompliantAddOns());

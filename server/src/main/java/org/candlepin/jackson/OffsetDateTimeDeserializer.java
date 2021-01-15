@@ -14,18 +14,16 @@
  */
 package org.candlepin.jackson;
 
+import org.candlepin.util.Util;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.TemporalAccessor;
 
 /**
  * A deserializer that turns ISO 8601 date strings into OffsetDateTime objects, with optional sections.
@@ -74,18 +72,6 @@ public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime>
     }
 
     public OffsetDateTime deserialize(String value) {
-        TemporalAccessor temporalAccessor = formatter.parseBest(value,
-            OffsetDateTime::from,
-            LocalDateTime::from,
-            LocalDate::from);
-        if (temporalAccessor instanceof OffsetDateTime) {
-            return OffsetDateTime.from(temporalAccessor);
-        }
-        else if (temporalAccessor instanceof LocalDateTime) {
-            return LocalDateTime.from(temporalAccessor).atOffset(ZoneOffset.UTC);
-        }
-        else {
-            return LocalDate.from(temporalAccessor).atStartOfDay().atOffset(ZoneOffset.UTC);
-        }
+        return Util.parseOffsetDateTime(this.formatter, value);
     }
 }
