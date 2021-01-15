@@ -1,6 +1,6 @@
 ## this is just for building the containers, meant to be used with the build-images script
 ---
-version: '2'
+version: '3'
 services:
   candlepin-base:
     build: candlepin-base/

@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 services:
   db:
     # upgrade to 9.6 requires client version 9.4.1211
