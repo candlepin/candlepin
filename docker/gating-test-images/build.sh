@@ -6,7 +6,7 @@
 #   and loading/dumping of test data (temp-cp).
 # - All local images are removed after the push.
 
-REGISTRY=docker-registry.upshift.redhat.com/chainsaw
+REGISTRY=quay.io/candlepin
 
 retry() {
     local -r -i max_attempts="$1"; shift
@@ -41,6 +41,9 @@ rm -f postgres/dump.sql
 
 echo "============ Building temporary base candlepin image ============ "
 # builds base centos image which installs candlepin dependencies & environment
+# TODO Having ARG before FROM is not supported in docker 1.13.1.
+# TODO Revert this change once we update to higher version of docker or to podman
+sed 's,$INTERNAL_REGISTRY,'"${REGISTRY},g" temp-base-cp/Dockerfile.template > temp-base-cp/Dockerfile
 docker build --build-arg INTERNAL_REGISTRY=$REGISTRY --no-cache --tag=temp_base_candlepin temp-base-cp/
 evalrc $? "temp_base_candlepin image build was not successful."
 
@@ -69,6 +72,9 @@ docker swarm leave --force
 
 echo "============ Building postgres image which will automatically load the dump.sql we generated before ============ "
 mv /tmp/cp-docker/dump.sql postgres/
+# TODO Having ARG before FROM is not supported in docker 1.13.1.
+# TODO Revert this change once we update to higher version of docker or to podman
+sed 's,$INTERNAL_REGISTRY,'"${REGISTRY},g" postgres/Dockerfile.template > postgres/Dockerfile
 docker build --no-cache --build-arg INTERNAL_REGISTRY=$REGISTRY --tag=cp_postgres postgres/
 evalrc $? "postgres image build was not successful."
 rm postgres/dump.sql
