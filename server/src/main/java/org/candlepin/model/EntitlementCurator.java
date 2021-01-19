@@ -801,7 +801,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         Join<Entitlement, Pool> pool = entitlement.join(Entitlement_.pool);
         Join<Pool, Product> product = pool.join(Pool_.product);
-        Join<Pool, Product> providedProducts = pool.join(Pool_.providedProducts, JoinType.LEFT);
+        Join<Product, Product> providedProducts = product.join(Product_.providedProducts, JoinType.LEFT);
 
         return cb.and(
             cb.equal(entitlement.get(objectType), object),
