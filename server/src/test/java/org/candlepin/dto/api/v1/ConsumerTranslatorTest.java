@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -173,6 +174,13 @@ public class ConsumerTranslatorTest extends
         }
         consumer.setGuestIds(guestIds);
 
+        Set<ConsumerActivationKey> keys = new HashSet<>();
+        for (int i = 0; i < 5; ++i) {
+            keys.add(new ConsumerActivationKey(consumer,
+                "keyId" + i, "keyName" + i));
+        }
+        consumer.setActivationKeys(keys);
+
         when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
@@ -261,6 +269,20 @@ public class ConsumerTranslatorTest extends
                     assertNull(dest.getCapabilities());
                 }
 
+                if (source.getActivationKeys() != null) {
+                    for (ConsumerActivationKey key : source.getActivationKeys()) {
+                        for (ConsumerActivationKeyDTO keyDTO : dest.getActivationKeys()) {
+
+                            if (key.getActivationKeyId().equals(keyDTO.getActivationKeyId())) {
+                                assertEquals(key.getActivationKeyName(), keyDTO.getActivationKeyName());
+                            }
+                        }
+                    }
+                }
+                else {
+                    assertNull(dest.getActivationKeys());
+                }
+
                 assertEquals(0, dest.getGuestIds().size());
             }
             else {
@@ -273,6 +295,7 @@ public class ConsumerTranslatorTest extends
                 assertNull(dest.getInstalledProducts());
                 assertNull(dest.getCapabilities());
                 assertNull(dest.getGuestIds());
+                assertNull(dest.getActivationKeys());
             }
         }
         else {

@@ -342,4 +342,30 @@ describe 'Consumer Resource Activation Key' do
     }.should raise_exception(RestClient::BadRequest)
   end
 
+  it 'should store activation keys name and ID if consumer is registered via activation keys' do
+    key1 = @cp.create_activation_key(@owner['key'], 'key1')
+    key2 = @cp.create_activation_key(@owner['key'], 'key2')
+    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
+      @owner['key'], ["key1", "key2", "unknown_key"])
+
+    user_client = user_client(@owner, random_string('billy'))
+    consumer_registered_without_ak = user_client.register(random_string('system'),
+      :system, nil, {}, nil, nil, [], [])
+
+    expect(consumer_registered_without_ak.uuid).to_not be_nil
+    expect(consumer_registered_without_ak.activationKeys).to be_empty
+
+    expect(consumer.uuid).to_not be_nil
+    expect(consumer.activationKeys).to_not be_nil
+    expect(consumer.activationKeys.length).to eq(2)
+
+    consumer.activationKeys.each do |key|
+      if key.activationKeyId == key1.id
+        expect(key.activationKeyName).to eq(key1.name)
+      end
+      if key.activationKeyId == key2.id
+        expect(key.activationKeyName).to eq(key2.name)
+      end
+    end
+  end
 end

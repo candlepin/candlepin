@@ -70,6 +70,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -851,6 +852,14 @@ public class ConsumerResource {
         validateContentAccessMode(consumerToCreate, owner);
         // BZ 1618398 Remove validation check on consumer service level
         // consumerBindUtil.validateServiceLevel(owner.getId(), consumerToCreate.getServiceLevel());
+
+        Set<ConsumerActivationKey> aks = new HashSet<>();
+
+        for (ActivationKey key : keys) {
+            aks.add(new ConsumerActivationKey(consumerToCreate, key.getId(), key.getName()));
+        }
+
+        consumerToCreate.setActivationKeys(aks);
 
         try {
             Date createdDate = consumerToCreate.getCreated();
@@ -2861,5 +2870,4 @@ public class ConsumerResource {
             calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null);
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
-
 }

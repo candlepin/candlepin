@@ -18,6 +18,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -161,6 +162,19 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
                     }
                 }
                 dest.setCapabilities(capabilitiesDTO);
+            }
+
+            Set<ConsumerActivationKey> keys = source.getActivationKeys();
+
+            if (keys != null) {
+                Set<ConsumerActivationKeyDTO> keysDTOSet = new HashSet<>();
+
+                for (ConsumerActivationKey key : keys) {
+                    keysDTOSet.add(new ConsumerActivationKeyDTO(key.getActivationKeyId(),
+                        key.getActivationKeyName()));
+                }
+
+                dest.setActivationKeys(keysDTOSet);
             }
 
             // Temporary measure to maintain API compatibility

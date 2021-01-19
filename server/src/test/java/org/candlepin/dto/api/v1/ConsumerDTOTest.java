@@ -91,6 +91,11 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
             addOns.add("Add-On-" + i);
         }
 
+        Set<ConsumerActivationKeyDTO> keys = new HashSet<>();
+        for (int i = 0; i < 5; ++i) {
+            keys.add(new ConsumerActivationKeyDTO("keyId" + i, "keyName" + i));
+        }
+
         this.values = new HashMap<>();
         this.values.put("Id", "test-id");
         this.values.put("Uuid", "test-uuid");
@@ -121,6 +126,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         this.values.put("GuestIds", guestIdDTOS);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
+        this.values.put("ActivationKeys", keys);
 
         GuestIdDTO guestIdDTO = guestIdDTOTest.getPopulatedDTOInstance();
         guestIdDTO.setGuestId("guest-Id-x");

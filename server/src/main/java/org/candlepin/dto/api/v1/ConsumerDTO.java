@@ -87,6 +87,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     protected ConsumerTypeDTO type;
     protected CertificateDTO idCert;
     protected List<GuestIdDTO> guestIds;
+    protected Set<ConsumerActivationKeyDTO> activationKeys;
 
     /**
      * Serialization utility class for wrapping the 'releaseVer' field in a JSON object.
@@ -937,6 +938,27 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
     }
 
     /**
+     * Retrieves the consumer activation keys field of this ConsumerDTO object.
+     *
+     * @return the consumer activation key of the consumer, or null if it has not yet been defined
+     */
+    public Set<ConsumerActivationKeyDTO> getActivationKeys() {
+        return this.activationKeys != null ? new SetView<>(activationKeys) : null;
+    }
+
+    /**
+     * Sets the consumer activation keys used during registration.
+     *
+     * @param activationKeys the activation key data to be set on this ConsumerDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ConsumerDTO setActivationKeys(Set<ConsumerActivationKeyDTO> activationKeys) {
+        this.activationKeys = activationKeys;
+        return this;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -994,7 +1016,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
                 .append(this.getContentAccessMode(), that.getContentAccessMode())
                 .append(this.getType(), that.getType())
                 .append(this.getIdCertificate(), that.getIdCertificate())
-                .append(this.getGuestIds(), that.getGuestIds());
+                .append(this.getGuestIds(), that.getGuestIds())
+                .append(this.getActivationKeys(), that.getActivationKeys());
 
             return builder.isEquals();
         }
@@ -1039,7 +1062,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
             .append(this.getContentAccessMode())
             .append(this.getType())
             .append(this.getIdCertificate())
-            .append(this.getGuestIds());
+            .append(this.getGuestIds())
+            .append(this.getActivationKeys());
 
         return builder.toHashCode();
     }
@@ -1110,6 +1134,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> implements
         this.setContentAccessMode(source.getContentAccessMode());
         this.setType(source.getType());
         this.setIdCertificate(source.getIdCertificate());
+        this.setActivationKeys(source.getActivationKeys());
 
         return this;
     }
