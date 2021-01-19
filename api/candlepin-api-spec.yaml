@@ -555,6 +555,57 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
+  /cloud:
+    post:
+      description: Verifies provided cloud registration data and returns an authentication token. By default the token is valid for 10 minutes
+      tags:
+        - Cloud registration
+      operationId: cloudAuthorize
+      security: [ ]
+      requestBody:
+        description: Cloud registration data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloudRegistrationDTO'
+      responses:
+        200:
+          description: Cloud authorization successful.
+          content:
+            text/plain:
+              schema:
+                type: string
+        400:
+          description: CloudRegistrationInfo is null
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: CloudRegistrationInfo is null
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        401:
+          description: Cloud provider or account details could not be resolved to an organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Cloud provider or account details could not be resolved to an organization
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        501:
+          description: Cloud registration is not supported by this Candlepin instance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Cloud registration is not supported by this Candlepin instance
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
   /consumers:
     get:
       description: Retrieves a list of the Consumers according to search criteria.
@@ -8448,6 +8499,23 @@ components:
         id:
           type: string
         name:
+          type: string
+          minLength: 1
+
+    CloudRegistrationDTO:
+      description: Contains data for performing automatic cloud-based registration.
+      required:
+        - type
+        - metadata
+        - signature
+      properties:
+        type:
+          type: string
+          minLength: 1
+        metadata:
+          type: string
+          minLength: 1
+        signature:
           type: string
           minLength: 1
 

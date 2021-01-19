@@ -14,7 +14,6 @@
  */
 package org.candlepin.auth;
 
-import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
@@ -22,7 +21,6 @@ import static org.mockito.Mockito.any;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.dto.api.v1.CloudRegistrationDTO;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pki.CertificateReader;
@@ -129,7 +127,7 @@ public class CloudRegistrationAuthTest {
     }
 
     private CloudRegistrationInfo buildCloudRegistrationInfo(String type, String metadata, String signature) {
-        return new CloudRegistrationDTO()
+        return new CloudRegistrationData()
             .setType(type)
             .setMetadata(metadata)
             .setSignature(signature);
