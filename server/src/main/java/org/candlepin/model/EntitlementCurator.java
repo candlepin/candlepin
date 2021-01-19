@@ -1106,9 +1106,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         String queryStr = "SELECT DISTINCT e2.id " +
             // Required entitlement
             "FROM cp_entitlement e1 " +
-            "JOIN cp_pool pl1 on pl1.id = e1.pool_id " +
+            "JOIN cp_pool pl1 ON pl1.id = e1.pool_id " +
+            "JOIN cp2_products pp ON pp.uuid = pl1.product_uuid " +
             // Required entitlement => required pool => derived product => provided product
-            "JOIN cp2_product_provided_products ppp1 ON ppp1.product_uuid = pl1.derived_product_uuid " +
+            "JOIN cp2_product_provided_products ppp1 ON ppp1.product_uuid = pp.derived_product_uuid " +
             "JOIN cp2_products p ON p.uuid = ppp1.provided_product_uuid " +
             // Required product => conditional content
             "JOIN cp2_content_modified_products cmp ON cmp.element = p.product_id " +

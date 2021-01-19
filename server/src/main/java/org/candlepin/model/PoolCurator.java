@@ -1852,11 +1852,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         String sql = "SELECT p.id FROM cp_pool p " +
             "LEFT JOIN cp2_owner_products op1 ON op1.owner_id = p.owner_id " +
             "  AND p.product_uuid = op1.product_uuid " +
-            "LEFT JOIN cp2_owner_products op2 ON op2.owner_id = p.owner_id " +
-            "  AND p.derived_product_uuid = op2.product_uuid " +
             "WHERE p.owner_id = :owner_id AND " +
-            "  ((p.product_uuid IS NOT NULL AND op1.product_uuid IS NULL) OR " +
-            "  (p.derived_product_uuid IS NOT NULL AND op2.product_uuid IS NULL))";
+            "  (p.product_uuid IS NOT NULL AND op1.product_uuid IS NULL)";
 
         return this.getEntityManager()
             .createNativeQuery(sql)
