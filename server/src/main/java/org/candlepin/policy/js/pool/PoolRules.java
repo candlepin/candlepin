@@ -677,7 +677,7 @@ public class PoolRules {
          */
         if (existingPool.hasAttribute(Pool.Attributes.DERIVED_POOL) &&
             "true".equalsIgnoreCase(existingPool.getAttributeValue(Pool.Attributes.VIRT_ONLY)) &&
-            (attributes.containsKey(Product.Attributes.VIRT_LIMIT) ||
+            (existingPool.hasAttribute(Product.Attributes.VIRT_LIMIT) ||
             existingPool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT))) {
 
             if (!attributes.containsKey(Product.Attributes.VIRT_LIMIT)) {

@@ -794,6 +794,81 @@ describe 'Refresh Pools' do
     expect(entitlements.length).to eq(1)
   end
 
+  it 'deletes bonus pools when virt_limit attribute removed from master pool' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    content_id = random_string('test_content')
+    content = create_upstream_content(content_id, { :content_url => 'http://www.url.com' })
+
+    product_id = random_string(nil, true)
+    product = create_upstream_product(product_id, {
+        :name => 'test_prod',
+        :attributes => {
+            "virt_limit" => "unlimited",
+            "host_limited" => "true" }
+        })
+
+    add_content_to_product_upstream(product_id, content_id)
+
+    sub_id1 = random_string('test_subscription')
+    create_upstream_subscription(sub_id1, owner_key, product_id, { :quantity => 5 })
+    sub_id2 = random_string('test_subscription')
+    create_upstream_subscription(sub_id2, owner_key, product_id, { :quantity => 5 })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(4) # 2 master pools + 2 bonus pools
+
+    # segregate pools based on type
+    bonus_pools = []
+    master_pools = []
+    pools.each do |pool|
+      if pool.type == "UNMAPPED_GUEST"
+        bonus_pools.push(pool)
+      else
+        master_pools.push(pool)
+      end
+    end
+
+    # Attach one guest to a bonus pool
+    user1 = user_client(owner, random_string('test_user'))
+    guest1_client = consumer_client(user1, random_string('test_consumer'), :system, nil,
+                                    { 'system.certificate_version' => '3.0', 'virt.is_guest' => true})
+
+    entitlements = guest1_client.consume_pool(bonus_pools[0].id, { :quantity => 1 })
+    expect(entitlements.length).to eq(1)
+
+    consumer = @cp.get_consumer(guest1_client.uuid)
+    expect(consumer.entitlementCount).to eq(1)
+
+    expect(bonus_pools[0].quantity).to eq(-1)
+    expect(bonus_pools[1].quantity).to eq(-1)
+    expect(master_pools[0].quantity).to eq(5)
+    expect(master_pools[1].quantity).to eq(5)
+
+    # Verify the entitlement count for the two bonus pools
+    entitlements = @cp.list_pool_entitlements(bonus_pools[0].id)
+    expect(entitlements.length).to eq(1)
+    entitlements = @cp.list_pool_entitlements(bonus_pools[1].id)
+    expect(entitlements.length).to eq(0)
+
+    # Modify the subscription upstream (remove the virt_limit attribute) & do another refresh
+    update_upstream_product(product_id, { :attributes => { "host_limited" => "true" } })
+
+    @cp.refresh_pools(owner_key)
+
+    # Verify that both bonus pools where deleted
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(2)
+    expect(pools[0].type).to eq("NORMAL")
+    expect(pools[1].type).to eq("NORMAL")
+
+    # Check the the entitlement from the deleted bonus pool was revoked
+    consumer = @cp.get_consumer(guest1_client.uuid)
+    expect(consumer.entitlementCount).to eq(0)
+  end
+
   it 'invalidates bonus pool entitlements when master pool quantity is reduced' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)
