@@ -948,7 +948,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @return a boolean
      */
     public boolean checkForCloudProfileFacts(Map<String, String> incomingFacts) {
-
         if (incomingFacts == null) {
             return false;
         }
@@ -958,9 +957,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         }
 
         for (CloudProfileFacts profileFact : CloudProfileFacts.values()) {
-
             if (incomingFacts.containsKey(profileFact.getFact())) {
-
                 if (this.facts == null ||
                     !this.facts.containsKey(profileFact.getFact()) ||
                     !this.facts.get(profileFact.getFact()).equals(incomingFacts.get(profileFact.getFact()))) {

@@ -45,8 +45,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
@@ -250,24 +248,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @NotNull
     private Product product;
 
-    // TODO: REMOVE THESE AND USE THE PROVIDED PRODUCTS ON THE PRODUCT
-    @ManyToMany
-    @JoinTable(
-        name = "cp2_pool_provided_products",
-        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
-    @BatchSize(size = 1000)
-    private Set<Product> providedProducts;
-
-    @ManyToMany
-    @JoinTable(
-        name = "cp2_pool_derprov_products",
-        joinColumns = {@JoinColumn(name = "pool_id", insertable = false, updatable = false)},
-        inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
-    @BatchSize(size = 1000)
-    private Set<Product> derivedProvidedProducts;
-    // TODO: REMOVE THE ABOVE
-
     @ElementCollection
     @BatchSize(size = 1000)
     @CollectionTable(name = "cp_pool_attribute", joinColumns = @JoinColumn(name = "pool_id"))
@@ -337,8 +317,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     public Pool() {
         this.activeSubscription = Boolean.TRUE;
-        this.providedProducts = new HashSet<>();
-        this.derivedProvidedProducts = new HashSet<>();
         this.attributes = new HashMap<>();
         this.entitlements = new HashSet<>();
 
