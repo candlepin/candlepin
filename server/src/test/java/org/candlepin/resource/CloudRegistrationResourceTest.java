@@ -14,8 +14,13 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.CloudRegistrationAuth;
 import org.candlepin.auth.Principal;
@@ -28,6 +33,7 @@ import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
 import org.candlepin.service.model.CloudRegistrationInfo;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +46,6 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Locale;
 
 
-
 /**
  * Test suite for the CloudRegistrationResource class
  */
@@ -50,12 +55,15 @@ public class CloudRegistrationResourceTest {
 
     private I18n i18n;
     private CloudRegistrationAuth mockCloudRegistrationAuth;
+    private Principal principal;
 
 
     @BeforeEach
     public void init() {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         this.mockCloudRegistrationAuth = mock(CloudRegistrationAuth.class);
+        this.principal = this.buildPrincipal();
+        ResteasyContext.pushContext(Principal.class, this.principal);
     }
 
     private CloudRegistrationResource buildResource() {
@@ -74,14 +82,14 @@ public class CloudRegistrationResourceTest {
         Principal principal = this.buildPrincipal();
 
         CloudRegistrationDTO dto = new CloudRegistrationDTO()
-            .setType("test-type")
-            .setMetadata("test-metadata")
-            .setSignature("test-signature");
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature");
 
         doReturn(token).when(this.mockCloudRegistrationAuth)
-            .generateRegistrationToken(eq(principal), eq(dto));
+            .generateRegistrationToken(eq(principal), any(CloudRegistrationInfo.class));
 
-        String output = resource.authorize(dto, principal);
+        String output = resource.cloudAuthorize(dto);
 
         assertEquals(token, output);
     }
@@ -89,37 +97,34 @@ public class CloudRegistrationResourceTest {
     @Test
     public void testAuthorizeFailsGracefullyWhenNotImplemented() {
         CloudRegistrationResource resource = this.buildResource();
-        Principal principal = this.buildPrincipal();
 
         doThrow(new UnsupportedOperationException()).when(this.mockCloudRegistrationAuth)
             .generateRegistrationToken(eq(principal), any(CloudRegistrationInfo.class));
 
         assertThrows(NotImplementedException.class,
-            () -> resource.authorize(new CloudRegistrationDTO(), principal));
+            () -> resource.cloudAuthorize(new CloudRegistrationDTO()));
     }
 
     @Test
     public void testAuthorizeFailsGracefullyWhenAuthenticationFails() {
         CloudRegistrationResource resource = this.buildResource();
-        Principal principal = this.buildPrincipal();
 
         doThrow(new CloudRegistrationAuthorizationException()).when(this.mockCloudRegistrationAuth)
             .generateRegistrationToken(eq(principal), any(CloudRegistrationInfo.class));
 
         assertThrows(NotAuthorizedException.class,
-            () -> resource.authorize(new CloudRegistrationDTO(), principal));
+            () -> resource.cloudAuthorize(new CloudRegistrationDTO()));
     }
 
     @Test
     public void testAuthorizeFailsGracefullyWithMalformedInput() {
         CloudRegistrationResource resource = this.buildResource();
-        Principal principal = this.buildPrincipal();
 
         doThrow(new MalformedCloudRegistrationException()).when(this.mockCloudRegistrationAuth)
             .generateRegistrationToken(eq(principal), any(CloudRegistrationInfo.class));
 
         assertThrows(BadRequestException.class,
-            () -> resource.authorize(new CloudRegistrationDTO(), principal));
+            () -> resource.cloudAuthorize(new CloudRegistrationDTO()));
     }
 
 }

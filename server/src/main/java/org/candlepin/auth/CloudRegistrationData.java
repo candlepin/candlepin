@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2020 Red Hat, Inc.
+ * Copyright (c) 2009 - 2021 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.v1;
+package org.candlepin.auth;
 
 import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.service.model.CloudRegistrationInfo;
@@ -21,11 +21,10 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 
-
 /**
  * The CloudRegistrationDTO contains fields for performing automatic cloud-based registration.
  */
-public class CloudRegistrationDTO extends CandlepinDTO<CloudRegistrationDTO>
+public class CloudRegistrationData extends CandlepinDTO<CloudRegistrationData>
     implements CloudRegistrationInfo {
 
     private String type;
@@ -35,7 +34,7 @@ public class CloudRegistrationDTO extends CandlepinDTO<CloudRegistrationDTO>
     /**
      * Creates a new CloudRegistrationDTO instance with no values set
      */
-    public CloudRegistrationDTO() {
+    public CloudRegistrationData() {
         // Intentionally left empty
     }
 
@@ -46,7 +45,7 @@ public class CloudRegistrationDTO extends CandlepinDTO<CloudRegistrationDTO>
      * @param source
      *  The source entity to copy
      */
-    public CloudRegistrationDTO(CloudRegistrationDTO source) {
+    public CloudRegistrationData(CloudRegistrationData source) {
         this.populate(source);
     }
 
@@ -67,7 +66,7 @@ public class CloudRegistrationDTO extends CandlepinDTO<CloudRegistrationDTO>
      * @return
      *  a reference to this CloudRegistrationDTO
      */
-    public CloudRegistrationDTO setType(String type) {
+    public CloudRegistrationData setType(String type) {
         this.type = type;
         return this;
     }
@@ -89,7 +88,7 @@ public class CloudRegistrationDTO extends CandlepinDTO<CloudRegistrationDTO>
      * @return
      *  a reference to this CloudRegistrationDTO
      */
-    public CloudRegistrationDTO setMetadata(String metadata) {
+    public CloudRegistrationData setMetadata(String metadata) {
         this.metadata = metadata;
         return this;
     }
@@ -111,7 +110,7 @@ public class CloudRegistrationDTO extends CandlepinDTO<CloudRegistrationDTO>
      * @return
      *  a reference to this CloudRegistrationDTO
      */
-    public CloudRegistrationDTO setSignature(String signature) {
+    public CloudRegistrationData setSignature(String signature) {
         this.signature = signature;
         return this;
     }
@@ -134,8 +133,8 @@ public class CloudRegistrationDTO extends CandlepinDTO<CloudRegistrationDTO>
             return true;
         }
 
-        if (obj instanceof CloudRegistrationDTO) {
-            CloudRegistrationDTO that = (CloudRegistrationDTO) obj;
+        if (obj instanceof CloudRegistrationData) {
+            CloudRegistrationData that = (CloudRegistrationData) obj;
 
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getType(), that.getType())
@@ -165,7 +164,7 @@ public class CloudRegistrationDTO extends CandlepinDTO<CloudRegistrationDTO>
      * {@inheritDoc}
      */
     @Override
-    public CloudRegistrationDTO populate(CloudRegistrationDTO source) {
+    public CloudRegistrationData populate(CloudRegistrationData source) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }

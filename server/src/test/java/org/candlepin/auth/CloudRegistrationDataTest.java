@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2020 Red Hat, Inc.
+ * Copyright (c) 2009 - 2021 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -12,24 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.dto.api.v1;
+
+package org.candlepin.auth;
 
 import org.candlepin.dto.AbstractDTOTest;
 
 import java.util.HashMap;
 import java.util.Map;
 
-
-
-/**
- * Test suite for the CloudRegistrationDTO class
- */
-public class CloudRegistrationDTOTest extends AbstractDTOTest<CloudRegistrationDTO> {
+class CloudRegistrationDataTest extends AbstractDTOTest<CloudRegistrationData> {
 
     protected Map<String, Object> values;
 
-    public CloudRegistrationDTOTest() {
-        super(CloudRegistrationDTO.class);
+    public CloudRegistrationDataTest() {
+        super(CloudRegistrationData.class);
 
         this.values = new HashMap<>();
         this.values.put("Type", "test_type");
