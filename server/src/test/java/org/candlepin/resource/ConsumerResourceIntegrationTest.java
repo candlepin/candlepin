@@ -179,11 +179,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetCerts() throws JobException {
-        consumerResource.bind(consumer.getUuid(), pool.getId(),
-            null, 1, null, null, false, null, null);
-        List<CertificateDTO> serials = consumerResource
-            .getEntitlementCertificates(consumer.getUuid(), null);
+    public void testGetCerts() throws JobException, Exception {
+        consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
+        List<CertificateDTO> serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
     }
 

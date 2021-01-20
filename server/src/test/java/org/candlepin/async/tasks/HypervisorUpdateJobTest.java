@@ -14,21 +14,9 @@
  */
 package org.candlepin.async.tasks;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.nullable;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
@@ -503,15 +491,21 @@ public class HypervisorUpdateJobTest {
         when(ownerCurator.getByKey(eq("joe"))).thenReturn(owner);
         when(ownerCurator.findOwnerById(eq("joe"))).thenReturn(owner);
 
+        Date currentDate = new Date();
+
         Consumer hypervisor = new Consumer();
         hypervisor.ensureUUID();
         hypervisor.setName("hypervisor_name");
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
         hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
-        Date currentDate = new Date();
-        hypervisor.setRHCloudProfileModified(currentDate);
         hypervisor.setType(consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true));
+
+        // This must be the last operation in the sequence, or we could run into minor amounts of drift
+        // that fails the test erroneously.
+        hypervisor.setRHCloudProfileModified(currentDate);
+
+        hypervisor = spy(hypervisor);
 
         when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
             nullable(String.class))).thenReturn(hypervisor);
@@ -535,6 +529,10 @@ public class HypervisorUpdateJobTest {
         ArgumentCaptor<Consumer> updateCaptor = ArgumentCaptor.forClass(Consumer.class);
         verify(consumerCurator, times(1)).update(updateCaptor.capture());
         Consumer updated = updateCaptor.getValue();
+
+        assertSame(hypervisor, updated);
+        verify(hypervisor, never()).setRHCloudProfileModified(any(Date.class));
+        verify(hypervisor, never()).updateRHCloudProfileModified();
 
         assertEquals(currentDate, updated.getRHCloudProfileModified());
     }
