@@ -481,7 +481,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
     /**
      * Returns a set of pairs consisting of products which are in use by one or more pools. The
-     * pairs returned by this method provide the product ID mapped to the ID of the pool
+     * pairs returned by this method provide the product UUID mapped to the ID of the pool
      * referencing it.
      *
      * @param productUuids
@@ -490,27 +490,17 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return
      *  a set of product UUIDs representing products which are used by one or more pool
      */
-    public Set<Pair<String, String>> getProductsWithPools(Collection<String> productUuids) {
+    public Set<Pair<String, String>> getPoolsReferencingProducts(Collection<String> productUuids) {
         Set<Pair<String, String>> output = new HashSet<>();
 
         if (productUuids != null && !productUuids.isEmpty()) {
-            // Impl note:
-            // We're using native SQL here as we're needing to use a union to target both fields on
-            // the product in a single query. When derived products move from pool to product, this
-            // query can be rewritten to use JPQL or a JPA criteria query only looking at the base
-            // product field on pool.
-
-            String sql = "SELECT p.product_uuid, p.id FROM cp_pool p " +
-                "WHERE p.product_uuid IN (:product_uuids) " +
-                "UNION " +
-                "SELECT p.derived_product_uuid, p.id FROM cp_pool p " +
-                "WHERE p.derived_product_uuid IN (:product_uuids)";
+            String jpql = "SELECT p.product.uuid, p.id FROM Pool p " +
+                "WHERE p.product.uuid IN (:product_uuids)";
 
             Query query = this.getEntityManager()
-                .createNativeQuery(sql);
+                .createQuery(jpql);
 
-            int blockSize = this.getInBlockSize() / 2;
-            for (List<String> block : Iterables.partition(productUuids, blockSize)) {
+            for (List<String> block : this.partition(productUuids)) {
                 List<Object[]> rows = query.setParameter("product_uuids", block)
                     .getResultList();
 
@@ -524,9 +514,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Returns a set of pairs consisting of products which are in use by one or more pools. The
-     * pairs returned by this method provide the product ID mapped to the ID of the pool
-     * referencing it.
+     * Returns a set of pairs consisting of products currently referencing one or more of the
+     * given products as provided products. The pairs returned by this method provide the product
+     * UUID mapped to the UUID of the product referencing it.
      *
      * @param productUuids
      *  a collection of product UUIDs to check for use
@@ -534,30 +524,23 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return
      *  a set of product UUIDs representing products which are used by one or more pool
      */
-    public Set<Pair<String, String>> getProductsWithPools(String ownerId, Collection<String> productUuids) {
+    public Set<Pair<String, String>> getProductsReferencingProducts(Collection<String> productUuids) {
         Set<Pair<String, String>> output = new HashSet<>();
 
         if (productUuids != null && !productUuids.isEmpty()) {
             // Impl note:
             // We're using native SQL here as we're needing to use a union to target both fields on
-            // the product in a single query. When derived products move from pool to product, this
-            // query can be rewritten to use JPQL or a JPA criteria query only looking at the base
-            // product field on pool.
-
-            String sql = "SELECT p.product_uuid, p.id FROM cp_pool p " +
-                "  WHERE p.product_uuid IN (:product_uuids) " +
-                "  AND p.owner_id = :owner_id " +
+            // the product in a single query.
+            String sql = "SELECT p.derived_product_uuid, p.uuid FROM cp2_products p " +
+                "WHERE p.derived_product_uuid IN (:product_uuids) " +
                 "UNION " +
-                "SELECT p.derived_product_uuid, p.id FROM cp_pool p " +
-                "  WHERE p.derived_product_uuid IN (:product_uuids) " +
-                "  AND p.owner_id = :owner_id";
+                "SELECT pp.provided_product_uuid, pp.product_uuid FROM cp2_product_provided_products pp " +
+                "WHERE pp.provided_product_uuid IN (:product_uuids)";
 
             Query query = this.getEntityManager()
-                .createNativeQuery(sql)
-                .setParameter("owner_id", ownerId);
+                .createNativeQuery(sql);
 
-            int blockSize = this.getInBlockSize() / 2;
-            for (List<String> block : Iterables.partition(productUuids, blockSize)) {
+            for (List<String> block : this.partition(productUuids)) {
                 List<Object[]> rows = query.setParameter("product_uuids", block)
                     .getResultList();
 
@@ -569,7 +552,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
         return output;
     }
-
 
     public CandlepinQuery<Product> getProductsByContent(Owner owner, Collection<String> contentIds) {
         return this.getProductsByContent(owner, contentIds, null);
