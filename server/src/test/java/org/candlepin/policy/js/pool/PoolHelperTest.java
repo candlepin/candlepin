@@ -14,10 +14,10 @@
  */
 package org.candlepin.policy.js.pool;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.anyListOf;
 import static org.mockito.Mockito.eq;
@@ -38,8 +38,8 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ public class PoolHelperTest {
     private Owner owner;
     private ProductCurator productCurator;
 
-    @Before
+    @BeforeEach
     public void init() {
         pm = mock(PoolManager.class);
         psa = mock(ProductServiceAdapter.class);

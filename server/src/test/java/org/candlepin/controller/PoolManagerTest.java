@@ -969,53 +969,6 @@ public class PoolManagerTest {
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Test
-    public void refreshPoolsCleanupPoolThatLostVirtLimit() {
-        List<Subscription> subscriptions = new ArrayList<>();
-        List<Pool> pools = new ArrayList<>();
-
-        Owner owner = getOwner();
-        Product product = TestUtil.createProduct();
-        product.setLocked(true);
-
-        Subscription s = TestUtil.createSubscription(owner, product);
-        s.setId("01923");
-        subscriptions.add(s);
-        Pool p = TestUtil.createPool(product);
-        p.setSourceSubscription(new SourceSubscription(s.getId(), "master"));
-        p.setMarkedForDelete(true);
-        p.setOwner(owner);
-        pools.add(p);
-
-        this.mockSubscriptions(owner, subscriptions);
-
-        mockPoolsList(pools);
-
-        List<PoolUpdate> updates = new LinkedList();
-        PoolUpdate u = new PoolUpdate(p);
-        u.setQuantityChanged(true);
-        u.setOrderChanged(true);
-        updates.add(u);
-        ArgumentCaptor<Pool> argPool = ArgumentCaptor.forClass(Pool.class);
-        when(poolRulesMock.updatePools(argPool.capture(), eq(pools), eq(s.getQuantity()), any(Map.class)))
-            .thenReturn(updates);
-
-        when(mockOwnerCurator.getByKey(owner.getKey())).thenReturn(owner);
-        this.mockProducts(owner, product);
-        this.mockProductImport(owner, product);
-        this.mockContentImport(owner, new Content[] {});
-
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(pools);
-        when(cqmock.iterator()).thenReturn(pools.iterator());
-        when(mockPoolCurator.listByOwnerAndType(eq(owner), any(PoolType.class))).thenReturn(cqmock);
-
-        this.manager.getRefresher(mockSubAdapter).add(owner).run();
-        verify(poolRulesMock).createAndEnrichPools(argPool.capture(), any(List.class));
-        TestUtil.assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
-    }
-
     /**
      * @return
      */

@@ -406,9 +406,41 @@ public class PoolRulesTest {
     }
 
     @Test
-    public void hostedVirtLimitRemoved() {
+    public void hostedVirtLimitRemovedFromSkuWithoutDerivedProduct() {
         when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+        when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
+        p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "4");
+        List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
+        assertEquals(2, pools.size());
+
+        // Now we remove virt_limit on the incoming subscription product and see if
+        // the unlimited pool gets adjusted and flagged for cleanup:
+        p.setProduct(TestUtil.createProduct(p.getProduct().getId(), p.getProduct().getName()));
+        List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
+            TestUtil.stubChangedProducts(p.getProduct()));
+        assertEquals(2, updates.size());
+
+        // Regular pool should be in a sane state:
+        PoolUpdate baseUpdate = updates.get(0);
+        assertEquals(new Long(10), baseUpdate.getPool().getQuantity());
+        assertFalse(baseUpdate.getPool().isMarkedForDelete());
+
+        // Virt bonus pool should have quantity 0 and be flagged for cleanup:
+        PoolUpdate virtUpdate = updates.get(1);
+        assertEquals(new Long(0), virtUpdate.getPool().getQuantity());
+        assertTrue(virtUpdate.getPool().isMarkedForDelete());
+    }
+
+    @Test
+    public void hostedVirtLimitRemovedFromSkuWithDerivedProduct() {
+        when(configMock.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
+        Pool p = createVirtLimitPool("virtLimitProduct", 10, 10);
+
+        // also add a derived product
+        Product derivedProd = TestUtil.createProduct("test_derived_prod", "test_derived_prod");
+        p.setDerivedProduct(derivedProd);
+
         when(poolManagerMock.isManaged(eq(p))).thenReturn(true);
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
