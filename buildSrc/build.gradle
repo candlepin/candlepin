@@ -7,7 +7,7 @@ repositories {
 
 dependencies {
     implementation(gradleApi())
-    implementation("org.openapitools:openapi-generator:4.0.1")
+    implementation("org.openapitools:openapi-generator:5.0.0")
 }
 
 gradlePlugin {
