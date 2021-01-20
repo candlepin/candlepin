@@ -155,4 +155,5 @@
     <include file="db/changelog/20200910161135-purge-stale-quartz-data.xml"/>
     <include file="db/changelog/20201103112757-purge-current-sca-certs.xml"/>
     <include file="db/changelog/20201210043533-drop-cp-job-table.xml"/>
+    <include file="db/changelog/20210118141207-create-consumer-activation-key-table.xml"/>
 </databaseChangeLog>

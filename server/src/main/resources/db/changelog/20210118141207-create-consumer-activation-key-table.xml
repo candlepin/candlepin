@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+
+    <changeSet id="20210118141207-1" author="prakgupt">
+        <comment>Create table for consumer activation key.</comment>
+
+        <createTable tableName="cp2_consumer_activation_key">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="cp2_consumer_activation_key_pkey"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+
+            <column name="activation_key_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="activation_key_name" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="consumer_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="cp2_consumer_activation_key"
+                baseColumnNames="consumer_id"
+                constraintName="cp2_consumer_activation_key_fk1"
+                deferrable="false"
+                initiallyDeferred="false"
+                onDelete="CASCADE"
+                onUpdate="NO ACTION"
+                referencedColumnNames="id"
+                referencedTableName="cp_consumer"
+                referencesUniqueColumn="false" />
+    </changeSet>
+
+</databaseChangeLog>

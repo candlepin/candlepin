@@ -264,6 +264,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Column(name = "rh_cloud_profile_modified")
     private Date rhCloudProfileModified;
 
+    @Basic(fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
+    private Set<ConsumerActivationKey> activationKeys;
+
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
 
@@ -970,5 +974,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         }
 
         return false;
+    }
+
+    public void setActivationKeys(Set<ConsumerActivationKey> activationKeys) {
+        this.activationKeys = activationKeys;
+    }
+
+    public Set<ConsumerActivationKey> getActivationKeys() {
+        return this.activationKeys;
     }
 }
