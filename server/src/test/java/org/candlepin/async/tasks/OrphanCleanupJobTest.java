@@ -23,6 +23,7 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -130,5 +131,71 @@ public class OrphanCleanupJobTest extends DatabaseTestFixture {
             Product product = this.productCurator.get(orphan.getUuid());
             assertNull(product);
         }
+    }
+
+    @Test
+    public void testCleanupDoesNotRemoveOrphansReferencedByPools() throws Exception {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createOrphanedProduct();
+        Product product2 = this.createOrphanedProduct();
+        Product product3 = this.createOrphanedProduct();
+
+        Pool pool1 = this.createPool(owner1, product1);
+        Pool pool2 = this.createPool(owner2, product2);
+
+        // Execute job
+        OrphanCleanupJob job = this.createJobInstance();
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = new JobExecutionContext(status);
+
+        job.execute(context);
+
+        this.ownerCurator.flush();
+        this.ownerCurator.clear();
+
+        // Verify referenced orphans were not removed
+        assertNotNull(this.productCurator.get(product1.getUuid()));
+        assertNotNull(this.productCurator.get(product2.getUuid()));
+
+        // Verify unreferenced orphans were
+        assertNull(this.productCurator.get(product3.getUuid()));
+    }
+
+    @Test
+    public void testCleanupDoesNotRemoveOrphansReferencedByProducts() throws Exception {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createOrphanedProduct();
+        Product product2 = this.createOrphanedProduct();
+        Product product3 = this.createOrphanedProduct();
+
+        Product refProduct1 = TestUtil.createProduct("ref_p1", "ref product 1");
+        refProduct1.addProvidedProduct(product1);
+
+        Product refProduct2 = TestUtil.createProduct("ref_p2", "ref product 2")
+            .setDerivedProduct(product2);
+
+        refProduct1 = this.createProduct(refProduct1, owner1);
+        refProduct2 = this.createProduct(refProduct2, owner2);
+
+        // Execute job
+        OrphanCleanupJob job = this.createJobInstance();
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = new JobExecutionContext(status);
+
+        job.execute(context);
+
+        this.ownerCurator.flush();
+        this.ownerCurator.clear();
+
+        // Verify referenced orphans were not removed
+        assertNotNull(this.productCurator.get(product1.getUuid()));
+        assertNotNull(this.productCurator.get(product2.getUuid()));
+
+        // Verify unreferenced orphans were
+        assertNull(this.productCurator.get(product3.getUuid()));
     }
 }

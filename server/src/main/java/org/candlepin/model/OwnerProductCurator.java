@@ -357,9 +357,11 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     public int mapProductToOwners(Product product, Owner... owners) {
         int count = 0;
 
-        for (Owner owner : owners) {
-            if (this.mapProductToOwner(product, owner)) {
-                ++count;
+        if (owners != null) {
+            for (Owner owner : owners) {
+                if (this.mapProductToOwner(product, owner)) {
+                    ++count;
+                }
             }
         }
 
@@ -370,9 +372,11 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     public int mapOwnerToProducts(Owner owner, Product... products) {
         int count = 0;
 
-        for (Product product : products) {
-            if (this.mapProductToOwner(product, owner)) {
-                ++count;
+        if (products != null) {
+            for (Product product : products) {
+                if (this.mapProductToOwner(product, owner)) {
+                    ++count;
+                }
             }
         }
 

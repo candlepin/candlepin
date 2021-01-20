@@ -101,13 +101,26 @@ public class OrphanCleanupJob implements AsyncJob  {
         List<String> orphanedProductUuids = this.ownerProductCurator.getOrphanedProductUuids();
 
         Set<Pair<String, String>> activePoolProducts = this.productCurator
-            .getProductsWithPools(orphanedProductUuids);
+            .getPoolsReferencingProducts(orphanedProductUuids);
 
         if (activePoolProducts != null && !activePoolProducts.isEmpty()) {
             log.warn("Found {} pools referencing orphaned products:", activePoolProducts.size());
 
             for (Pair<String, String> pair : activePoolProducts) {
-                log.warn("  Pool: {}, Product UUID: {}", pair.getValue(), pair.getKey());
+                log.warn("  Pool: {}, Orphan product UUID: {}", pair.getValue(), pair.getKey());
+                orphanedProductUuids.remove(pair.getKey());
+            }
+        }
+
+        Set<Pair<String, String>> activeProductProducts = this.productCurator
+            .getProductsReferencingProducts(orphanedProductUuids);
+
+        if (activeProductProducts != null && !activeProductProducts.isEmpty()) {
+            log.warn("Found {} products referencing orphaned provided products:",
+                activeProductProducts.size());
+
+            for (Pair<String, String> pair : activeProductProducts) {
+                log.warn("  Product: {}, Orphan product UUID: {}", pair.getValue(), pair.getKey());
                 orphanedProductUuids.remove(pair.getKey());
             }
         }
