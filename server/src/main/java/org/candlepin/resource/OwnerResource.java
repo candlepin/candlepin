@@ -1802,7 +1802,7 @@ public class OwnerResource implements OwnersApi {
     /**
      * A private class that stores data related to a file upload request.
      */
-    private class UploadMetadata {
+    private static class UploadMetadata {
         private File data;
         private String uploadedFilename;
 

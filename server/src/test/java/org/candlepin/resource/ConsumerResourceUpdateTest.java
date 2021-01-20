@@ -41,7 +41,6 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
@@ -154,7 +153,6 @@ public class ConsumerResourceUpdateTest {
     @Mock private EventBuilder consumerEventBuilder;
     @Mock private ConsumerBindUtil consumerBindUtil;
     @Mock private ConsumerEnricher consumerEnricher;
-    @Mock private Principal principal;
     @Mock private JobManager jobManager;
     @Mock private DTOValidator dtoValidator;
     @Mock private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
@@ -823,8 +821,8 @@ public class ConsumerResourceUpdateTest {
         assertEquals(actualCIP.getVersion(), expectedInstalledProduct.getVersion());
         assertEquals(actualCIP.getArch(), expectedInstalledProduct.getArch());
         assertEquals(actualCIP.getStatus(), expectedInstalledProduct.getStatus());
-        assertEquals(actualCIP.getStartDate(), expectedInstalledProduct.getStartDate());
-        assertEquals(actualCIP.getEndDate(), expectedInstalledProduct.getEndDate());
+        assertEquals(Util.toDateTime(actualCIP.getStartDate()), expectedInstalledProduct.getStartDate());
+        assertEquals(Util.toDateTime(actualCIP.getEndDate()), expectedInstalledProduct.getEndDate());
 
         assertEquals(1, existing.getGuestIds().size());
         GuestId actualGID = existing.getGuestIds().iterator().next();

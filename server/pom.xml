@@ -488,7 +488,7 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-engine</artifactId>
-        <version>5.4.2</version>
+        <version>5.7.0</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -643,7 +643,7 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-params</artifactId>
-        <version>5.4.2</version>
+        <version>5.7.0</version>
       </dependency>
       <dependency>
         <groupId>commons-collections</groupId>
@@ -723,7 +723,7 @@
       <dependency>
         <groupId>org.junit.vintage</groupId>
         <artifactId>junit-vintage-engine</artifactId>
-        <version>5.4.2</version>
+        <version>5.7.0</version>
       </dependency>
       <dependency>
         <groupId>javax.persistence</groupId>
@@ -803,7 +803,7 @@
       <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter-api</artifactId>
-        <version>5.4.2</version>
+        <version>5.7.0</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>

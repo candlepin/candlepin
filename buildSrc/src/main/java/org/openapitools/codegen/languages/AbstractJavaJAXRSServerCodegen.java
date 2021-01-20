@@ -210,7 +210,7 @@ public abstract class AbstractJavaJAXRSServerCodegen extends AbstractJavaCodegen
                 if (responses != null) {
                     for (CodegenResponse resp : responses) {
                         if ("0".equals(resp.code)) {
-                            resp.code = "200";
+                            resp.code = "500";
                         }
 
                         if (resp.baseType == null) {

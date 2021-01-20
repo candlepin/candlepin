@@ -43,9 +43,9 @@ import javax.ws.rs.Path;
  * various resources Candlepin exposes. This list will be filtered based on the
  * permissions of the caller.
  */
-public class RootResource implements RootApi {
+public class RootResource implements DefaultApi {
 
-    private static Logger log = LoggerFactory.getLogger(RootResource.class);
+    private static final Logger log = LoggerFactory.getLogger(RootResource.class);
     public static final Map<Object, String> RESOURCE_CLASSES;
     private Configuration config;
     private static List<Link> links = null;

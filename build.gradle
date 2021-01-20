@@ -4,7 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 // vim: set expandtab sts=4 sw=4 ai:
 
 buildscript {
-    ext.openapi_version = '4.0.1'
+    ext.openapi_version = '5.0.0'
     repositories {
         mavenCentral()
     }
@@ -31,7 +31,7 @@ ext.versions = [
     jackson_general: "2.10.5",
     guice     : "4.2.3",
     checkstyle: "8.29",
-    junit5    : "5.4.2"
+    junit5    : "5.7.0"
 ]
 
 ext.libraries = [
@@ -347,8 +347,8 @@ project(":api") {
       configFile = config_file
       outputDir = "$buildDir/generated"
       configOptions = [
-          interfaceOnly: true,
-          generatePom: false,
+          interfaceOnly: 'true',
+          generatePom: 'false',
           dateLibrary: "java8"
       ]
       templateDir = "$rootDir/buildSrc/src/main/resources/templates"

@@ -857,6 +857,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
       responses:
@@ -932,6 +933,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
       responses:
@@ -1190,6 +1192,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
         - name: on_date
@@ -1228,6 +1231,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
       responses:
@@ -1466,6 +1470,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
         - name: product
@@ -1578,6 +1583,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
         - name: pool
@@ -1775,6 +1781,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
       responses:
@@ -1874,6 +1881,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
       responses:
@@ -1916,6 +1924,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
       responses:
@@ -1958,6 +1967,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
         - name: on_date
@@ -1995,6 +2005,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
       responses:
@@ -2108,6 +2119,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
         - name: service_level
@@ -2161,6 +2173,7 @@ paths:
         - name: consumer_uuid
           in: path
           description: Consumer UUID
+          required: true
           schema:
             type: string
       responses:
@@ -2205,11 +2218,13 @@ paths:
         - name: consumer_uuid
           in: path
           description: The UUID of the Consumer
+          required: true
           schema:
             type: string
         - name: serial
           in: path
           description: certificate serial
+          required: true
           schema:
             type: integer
             format: int64
