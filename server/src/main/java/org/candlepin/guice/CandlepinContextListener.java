@@ -223,7 +223,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
             CandlepinCapabilities capabilities = CandlepinCapabilities.getCapabilities();
-            capabilities.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPBILITY);
+            capabilities.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
         }
 
         // Init CRL file
