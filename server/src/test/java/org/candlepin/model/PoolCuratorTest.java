@@ -62,7 +62,6 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 
-
 /**
  * Test suite for the PoolCurator object
  */
@@ -162,7 +161,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testAvailablePoolsDoesNotIncludeUeberPool() throws Exception {
+    public void testAvailablePoolsDoesNotIncludeUeberPool() {
         Owner owner = this.createOwner();
         Product product = this.createProduct(owner);
 
@@ -183,7 +182,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void availablePoolsCanBeFilteredByProductPoolAttribute() throws Exception {
+    public void availablePoolsCanBeFilteredByProductPoolAttribute() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
         Pool pool1 = createPool(owner, product, 100L,
@@ -216,7 +215,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void availablePoolsCanBeFilteredByPoolAttribute() throws Exception {
+    public void availablePoolsCanBeFilteredByPoolAttribute() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
         Pool pool1 = createPool(owner, product, 100L,
@@ -246,7 +245,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void availablePoolsCanBeFilteredByPoolId() throws Exception {
+    public void availablePoolsCanBeFilteredByPoolId() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
         Pool pool1 = createPool(owner, product, 100L,
@@ -285,7 +284,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void availablePoolsCanNotBeFilteredByOverriddenAttribute() throws Exception {
+    public void availablePoolsCanNotBeFilteredByOverriddenAttribute() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
         Product product = TestUtil.createProduct();
@@ -318,8 +317,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void availablePoolsCanBeFilteredByBothPoolAndProductPoolAttribute()
-        throws Exception {
+    public void availablePoolsCanBeFilteredByBothPoolAndProductPoolAttribute() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
         Pool pool1 = createPool(owner, product, 100L,
@@ -354,7 +352,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void availablePoolsCanFilterByEmptyValueAttribute() throws Exception {
+    public void availablePoolsCanFilterByEmptyValueAttribute() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
         Pool pool1 = createPool(owner, product, 100L,
@@ -446,10 +444,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Consumer guestConsumer = createConsumer(owner);
         guestConsumer.setFact("virt.is_guest", "true");
         guestConsumer.setFact("virt.uuid", gid);
-        hostConsumer.addGuestId(new GuestId(gid , guestConsumer));
+        hostConsumer.addGuestId(new GuestId(gid, guestConsumer));
 
         guestConsumer = consumerCurator.merge(guestConsumer);
-        hostConsumer =  consumerCurator.merge(hostConsumer);
+        hostConsumer = consumerCurator.merge(hostConsumer);
 
         product1 = this.createProduct(product1, owner);
 
@@ -460,9 +458,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setAttribute(Pool.Attributes.REQUIRES_HOST, hostConsumer.getUuid().toUpperCase());
         poolCurator.create(pool);
 
-        /**
-         * This pool should not be found!
-         */
+        // This pool should not be found!
         Pool pool2 = createPool(owner, product1, 50L, activeDate, TestUtil.createDate(2005, 3, 2));
         pool2.setAttribute(Pool.Attributes.REQUIRES_HOST, "poolForSomeOtherHost");
         poolCurator.create(pool2);
@@ -481,6 +477,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(1, results.size());
         assertEquals(pool, results.get(0));
     }
+
     /**
      * When filtering pools by product/pool attributes, filters specified with
      * the same attribute name are ORed, and different attributes are ANDed.
@@ -543,7 +540,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         List<Pool> results = page.getPageData();
         assertEquals(2, results.size());
 
-        Pool[] expected = new Pool[]{ pool2, pool3 };
+        Pool[] expected = new Pool[] { pool2, pool3 };
         assertTrue(results.containsAll(Arrays.asList(expected)));
     }
 
@@ -820,7 +817,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testBatchLookupOverconsumedBySubscriptionId() {
         Map<String, Entitlement> subIdMap = new HashMap<>();
         List<Pool> expectedPools = new ArrayList<>();
-        for (Integer i = 0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             Pool pool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
                 TestUtil.createDate(2055, 3, 2));
             poolCurator.create(pool);
@@ -1300,10 +1297,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void getSubPoolsForStackIds() {
-        Set stackIds = new HashSet<String>();
-        for (Integer i = 0; i < 5; i++) {
-            String stackId = "12345" + i.toString();
+    public void getSubPoolsForStackIdsByConsumer() {
+        Set<String> stackIds = new HashSet<>();
+        for (int i = 0; i < 5; i++) {
+            String stackId = "12345" + i;
             stackIds.add(stackId);
             Product product = TestUtil.createProduct();
             product.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
@@ -1320,6 +1317,33 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         }
 
         List<Pool> pools = poolCurator.getSubPoolForStackIds(consumer, stackIds);
+        assertEquals(5, pools.size());
+        for (Pool pool : pools) {
+            assertTrue(pool.getSourceStackId().startsWith("12345"));
+        }
+    }
+
+    @Test
+    void getSubPoolsForStackIds() {
+        Set<String> stackIds = new HashSet<>();
+        for (int i = 0; i < 5; i++) {
+            String stackId = "12345" + i;
+            stackIds.add(stackId);
+            Product product = TestUtil.createProduct();
+            product.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+            product.setAttribute(Product.Attributes.STACKING_ID, stackId);
+            product = this.createProduct(product, owner);
+
+            // Create derived pool referencing the entitlement just made:
+            Pool derivedPool = new Pool(owner, product, new HashSet<>(), 1L,
+                TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2), "", "", "");
+            derivedPool.setSourceStack(new SourceStack(consumer, stackId));
+            derivedPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
+
+            poolCurator.create(derivedPool);
+        }
+
+        List<Pool> pools = poolCurator.getSubPoolForStackIds(null, stackIds);
         assertEquals(5, pools.size());
         for (Pool pool : pools) {
             assertTrue(pool.getSourceStackId().startsWith("12345"));
@@ -1346,13 +1370,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setSourceSubscription(new SourceSubscription(sourcePool.getSubscriptionId(), "derived"));
         poolCurator.create(pool2);
 
-        assertTrue(poolCurator.getBySubscriptionId(owner, sub.getId()).size() == 2);
+        assertEquals(2, poolCurator.getBySubscriptionId(owner, sub.getId()).size());
         poolManager.deletePool(sourcePool);
 
         // because we check for null now, we want to verify the
         // subpool gets deleted when the original pool is deleted.
         Pool gone = poolCurator.get(pool2.getId());
-        assertEquals(gone, null);
+        assertNull(gone);
     }
 
     @Test
@@ -1474,7 +1498,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetPoolsOrderedByProductNameAscending() {
-
         Owner owner1 = this.createOwner();
         this.ownerCurator.create(owner1);
 
@@ -1508,7 +1531,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetPoolsOrderedByProductNameDescending() {
-
         //Checking for Descending
         Owner owner1 = this.createOwner();
         this.ownerCurator.create(owner1);
@@ -1528,7 +1550,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Date activeOn1 = TestUtil.createDate(2019, 2, 2);
 
-        Page<List<Pool>> page1 = poolManager.listAvailableEntitlementPools(null, null,  owner1.getId(),
+        Page<List<Pool>> page1 = poolManager.listAvailableEntitlementPools(null, null, owner1.getId(),
             null, null, activeOn1, false, null, req1, false, false, null);
 
         List<Pool> pools1 = page1.getPageData();
@@ -1718,13 +1740,14 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     private Pool getMasterPoolBySubscriptionId(String subscriptionId) {
-        for (Pool pool: this.poolCurator.getPoolsBySubscriptionId(subscriptionId)) {
+        for (Pool pool : this.poolCurator.getPoolsBySubscriptionId(subscriptionId)) {
             if (pool.getType() == Pool.PoolType.NORMAL) {
                 return pool;
             }
         }
         return null;
     }
+
     @Test
     public void testGetMasterPoolBySubscriptionId() {
         List<Pool> pools = this.setupMasterPoolsTests();
@@ -1735,7 +1758,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         actual = getMasterPoolBySubscriptionId("sub2");
         assertEquals(pools.get(1), actual);
         actual = getMasterPoolBySubscriptionId("sub5");
-        assertEquals(null, actual);
+        assertNull(actual);
     }
 
     @Test
@@ -1782,8 +1805,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testHasAvailablePools()
-        throws Exception {
+    public void testHasAvailablePools() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
 
         Pool pool1 = createPool(owner, product, 100L,
@@ -1794,15 +1816,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testHasAvailablePoolsNoPools()
-        throws Exception {
+    public void testHasAvailablePoolsNoPools() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
         assertFalse(poolCurator.hasActiveEntitlementPools(owner.getId(), activeDate));
     }
 
     @Test
-    public void testHasAvailablePoolsNotCurrent()
-        throws Exception {
+    public void testHasAvailablePoolsNotCurrent() {
         Date activeDate = TestUtil.createDate(2000, 3, 2);
         Date startDate = TestUtil.createDate(2001, 3, 2);
 
@@ -1814,7 +1834,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupDevPoolForConsumer() throws Exception {
+    public void testLookupDevPoolForConsumer() {
         // Make sure that multiple pools exist.
         createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
@@ -1831,7 +1851,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnConsumer() throws Exception {
+    public void testDevPoolForConsumerNotFoundReturnsNullWhenNoMatchOnConsumer() {
         // Make sure that multiple pools exist.
         createPool(owner, product, -1L, TestUtil.createDate(2010, 3, 2),
             TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
@@ -1856,15 +1876,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Entitlement e = new Entitlement(pool, consumer, owner, 5);
         e.setId(Util.generateDbUUID());
         entitlementCurator.create(e);
-        assertEquals(pool.getConsumed().longValue(), 0);
-        assertEquals(pool.getExported().longValue(), 0);
+        assertEquals(0, pool.getConsumed().longValue());
+        assertEquals(0, pool.getExported().longValue());
 
         poolCurator.calculateConsumedForOwnersPools(owner);
         poolCurator.calculateExportedForOwnersPools(owner);
         poolCurator.refresh(pool);
 
-        assertEquals(pool.getConsumed().longValue(), 5);
-        assertEquals(pool.getExported().longValue(), 5);
+        assertEquals(5, pool.getConsumed().longValue());
+        assertEquals(5, pool.getExported().longValue());
     }
 
     @Test
@@ -1878,15 +1898,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Entitlement e = new Entitlement(pool, consumer, owner, 5);
         e.setId(Util.generateDbUUID());
         entitlementCurator.create(e);
-        assertEquals(pool.getConsumed().longValue(), 0);
-        assertEquals(pool.getExported().longValue(), 0);
+        assertEquals(0, pool.getConsumed().longValue());
+        assertEquals(0, pool.getExported().longValue());
 
         poolCurator.calculateConsumedForOwnersPools(owner);
         poolCurator.calculateExportedForOwnersPools(owner);
         poolCurator.refresh(pool);
 
-        assertEquals(pool.getConsumed().longValue(), 5);
-        assertEquals(pool.getExported().longValue(), 0);
+        assertEquals(5, pool.getConsumed().longValue());
+        assertEquals(0, pool.getExported().longValue());
     }
 
     @Test
@@ -2034,7 +2054,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Map<String, Set<String>> expectedPoolProductMap = new HashMap<>();
 
         for (int i : Arrays.asList(0, 2, 4)) {
-            Set productIds = new HashSet<String>();
+            Set<String> productIds = new HashSet<>();
             Pool pool = pools.get(i);
 
             for (int j = productsPerPool * i; j < productsPerPool * i + productsToAttach; ++j) {
@@ -2081,7 +2101,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Map<String, Set<String>> expectedPoolProductMap = new HashMap<>();
 
         for (int i : Arrays.asList(0, 2, 4)) {
-            Set productIds = new HashSet<String>();
+            Set<String> productIds = new HashSet<>();
             Pool pool = pools.get(i);
 
             for (int j = productsPerPool * i; j < productsPerPool * i + productsToAttach; ++j) {
@@ -2129,7 +2149,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Map<String, Set<String>> expectedPoolProductMap = new HashMap<>();
 
         for (int i : Arrays.asList(0, 2, 4)) {
-            Set productIds = new HashSet<String>();
+            Set<String> productIds = new HashSet<>();
             Pool pool = pools.get(i);
 
             for (int j = productsPerPool * i; j < productsPerPool * i + productsToAttach; ++j) {
@@ -2177,7 +2197,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Map<String, Set<String>> expectedPoolProductMap = new HashMap<>();
 
         for (int i : Arrays.asList(0, 2, 4)) {
-            Set productIds = new HashSet<String>();
+            Set<String> productIds = new HashSet<>();
             Pool pool = pools.get(i);
 
             for (int j = productsPerPool * i; j < productsPerPool * i + productsToAttach; ++j) {
@@ -2224,7 +2244,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Map<String, Set<String>> expectedPoolProductMap = new HashMap<>();
 
         for (int i : Arrays.asList(0, 2, 4)) {
-            Set productIds = new HashSet<String>();
+            Set<String> productIds = new HashSet<>();
             Pool pool = pools.get(i);
 
             for (int j = productsPerPool * i; j < productsPerPool * i + productsToAttach; ++j) {
@@ -2532,7 +2552,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(output.get(consumer1.getId()), Util.asSet(pool1.getId()));
         assertEquals(output.get(consumer2.getId()), Util.asSet(pool4.getId()));
 
-        output = this.poolCurator.getConsumerStackDerivedPoolIdMap(Collections.<String>emptyList());
+        output = this.poolCurator.getConsumerStackDerivedPoolIdMap(Collections.emptyList());
 
         assertNotNull(output);
         assertEquals(0, output.size());
@@ -2689,7 +2709,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(1, output.size());
         assertEquals(output, Util.asSet(pool7.getId()));
 
-        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Collections.<String>emptyList());
+        output = this.poolCurator.getUnentitledStackDerivedPoolIds(Collections.emptyList());
 
         assertNotNull(output);
         assertEquals(1, output.size());

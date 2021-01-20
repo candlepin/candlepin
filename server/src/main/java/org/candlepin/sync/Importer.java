@@ -15,7 +15,6 @@
 package org.candlepin.sync;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.PoolManager;
@@ -32,7 +31,6 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ExporterMetadata;
@@ -50,6 +48,7 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.file.ManifestFile;
+import org.candlepin.sync.file.ManifestFileService;
 import org.candlepin.sync.file.ManifestFileServiceException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -79,6 +78,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -90,7 +90,7 @@ import javax.persistence.PersistenceException;
  * Importer
  */
 public class Importer {
-    private static Logger log = LoggerFactory.getLogger(Importer.class);
+    private static final Logger log = LoggerFactory.getLogger(Importer.class);
 
     /**
      * files we use to perform import
@@ -108,6 +108,7 @@ public class Importer {
         CONTENT_DELIVERY_NETWORKS("content_delivery_network");
 
         private String fileName;
+
         ImportFile(String fileName) {
             this.fileName = fileName;
         }
@@ -125,62 +126,57 @@ public class Importer {
         MANIFEST_OLD, MANIFEST_SAME, DISTRIBUTOR_CONFLICT, SIGNATURE_CONFLICT
     }
 
-    private ConsumerTypeCurator consumerTypeCurator;
-    private EntitlementCurator entitlementCurator;
-    private ProductCurator productCurator;
-    private ObjectMapper mapper;
-    private RulesImporter rulesImporter;
-    private OwnerCurator ownerCurator;
-    private ContentCurator contentCurator;
-    private IdentityCertificateCurator idCertCurator;
-    private PoolManager poolManager;
-    private PKIUtility pki;
-    private Configuration config;
-    private ExporterMetadataCurator expMetaCurator;
-    private CertificateSerialCurator csCurator;
-    private CdnCurator cdnCurator;
-    private EventSink sink;
-    private I18n i18n;
-    private DistributorVersionCurator distVerCurator;
-    private SyncUtils syncUtils;
-    private ImportRecordCurator importRecordCurator;
-    private SubscriptionReconciler subscriptionReconciler;
-    private ModelTranslator translator;
-    private ContentAccessManager contentAccessManager;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final EntitlementCurator entitlementCurator;
+    private final ProductCurator productCurator;
+    private final ObjectMapper mapper;
+    private final RulesImporter rulesImporter;
+    private final OwnerCurator ownerCurator;
+    private final IdentityCertificateCurator idCertCurator;
+    private final PoolManager poolManager;
+    private final PKIUtility pki;
+    private final ExporterMetadataCurator expMetaCurator;
+    private final CertificateSerialCurator csCurator;
+    private final CdnCurator cdnCurator;
+    private final EventSink sink;
+    private final I18n i18n;
+    private final DistributorVersionCurator distVerCurator;
+    private final SyncUtils syncUtils;
+    private final ImportRecordCurator importRecordCurator;
+    private final SubscriptionReconciler subscriptionReconciler;
+    private final ModelTranslator translator;
+    private final ContentAccessManager contentAccessManager;
 
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator, IdentityCertificateCurator idCertCurator,
-        ContentCurator contentCurator, PoolManager pm, PKIUtility pki, Configuration config,
-        ExporterMetadataCurator emc, CertificateSerialCurator csc, EventSink sink, I18n i18n,
-        DistributorVersionCurator distVerCurator, CdnCurator cdnCurator, SyncUtils syncUtils,
-        ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler,
-        EntitlementCurator entitlementCurator, ContentAccessManager contentAccessManager,
-        ModelTranslator translator) {
+        PoolManager pm, PKIUtility pki, ExporterMetadataCurator emc, CertificateSerialCurator csc,
+        EventSink sink, I18n i18n, DistributorVersionCurator distVerCurator, CdnCurator cdnCurator,
+        SyncUtils syncUtils, ImportRecordCurator importRecordCurator,
+        SubscriptionReconciler subscriptionReconciler, EntitlementCurator entitlementCurator,
+        ContentAccessManager contentAccessManager, ModelTranslator translator) {
 
-        this.config = config;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.productCurator = productCurator;
-        this.rulesImporter = rulesImporter;
-        this.ownerCurator = ownerCurator;
-        this.idCertCurator = idCertCurator;
-        this.contentCurator = contentCurator;
-        this.poolManager = pm;
-        this.syncUtils = syncUtils;
-        this.mapper = syncUtils.getObjectMapper();
-        this.pki = pki;
-        this.expMetaCurator = emc;
-        this.csCurator = csc;
-        this.sink = sink;
-        this.i18n = i18n;
-        this.distVerCurator = distVerCurator;
-        this.cdnCurator = cdnCurator;
-        this.importRecordCurator = importRecordCurator;
-        this.subscriptionReconciler = subscriptionReconciler;
-        this.entitlementCurator = entitlementCurator;
-        this.translator = translator;
-        this.contentAccessManager = contentAccessManager;
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
+        this.rulesImporter = Objects.requireNonNull(rulesImporter);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.idCertCurator = Objects.requireNonNull(idCertCurator);
+        this.poolManager = Objects.requireNonNull(pm);
+        this.syncUtils = Objects.requireNonNull(syncUtils);
+        this.mapper = Objects.requireNonNull(syncUtils.getObjectMapper());
+        this.pki = Objects.requireNonNull(pki);
+        this.expMetaCurator = Objects.requireNonNull(emc);
+        this.csCurator = Objects.requireNonNull(csc);
+        this.sink = Objects.requireNonNull(sink);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.distVerCurator = Objects.requireNonNull(distVerCurator);
+        this.cdnCurator = Objects.requireNonNull(cdnCurator);
+        this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
+        this.subscriptionReconciler = Objects.requireNonNull(subscriptionReconciler);
+        this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
+        this.translator = Objects.requireNonNull(translator);
+        this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
     }
 
     public ImportRecord loadExport(Owner owner, File archive, ConflictOverrides overrides,
@@ -208,8 +204,7 @@ public class Importer {
     public ImportRecord loadStoredExport(ManifestFile export, Owner owner, ConflictOverrides overrides,
         String uploadedFileName) throws ImporterException {
         try {
-            ImportRecord result = doExport(owner, extractFromService(export), overrides, uploadedFileName);
-            return result;
+            return doExport(owner, extractFromService(export), overrides, uploadedFileName);
         }
         catch (ManifestFileServiceException e) {
             throw new ImporterException("Could not load stored manifest file for async import", e);
@@ -238,7 +233,8 @@ public class Importer {
         record.setFileName(filename);
 
         List<SubscriptionDTO> subscriptions = (List<SubscriptionDTO>) data.get("subscriptions");
-        boolean activeSubscriptionFound = false, expiredSubscriptionFound = false;
+        boolean activeSubscriptionFound = false;
+        boolean expiredSubscriptionFound = false;
         Date currentDate = new Date();
         for (SubscriptionDTO subscription : subscriptions) {
             if (subscription.getEndDate() == null || subscription.getEndDate().after(currentDate)) {
@@ -292,11 +288,12 @@ public class Importer {
 
     // NOTE: Some DBs, such as postgres, require large object streaming to be in a single transaction.
     //       Because of this, we make this method transactional.
+
     /**
      * Pulls the manifest from the {@link ManifestFileService} and unpacks it. The manifest file
      * is deleted as soon as it is extracted.
      *
-     * @param storedFileId the manifest's file ID.
+     * @param export the manifest's file.
      * @return a {@link File} pointing to the unpacked manifest directory.
      * @throws ManifestFileServiceException
      * @throws ImporterException
@@ -438,7 +435,7 @@ public class Importer {
         catch (FileNotFoundException fnfe) {
             log.error("Archive file does not contain consumer_export.zip", fnfe);
             throw new ImportExtractionException(i18n.tr("The archive does not contain " +
-                                           "the required consumer_export.zip file"));
+                "the required consumer_export.zip file"));
         }
         catch (ConstraintViolationException cve) {
             log.error("Failed to import archive", cve);
@@ -470,8 +467,8 @@ public class Importer {
     }
 
     @SuppressWarnings("checkstyle:methodlength")
-    @Transactional(rollbackOn = {IOException.class, ImporterException.class,
-        RuntimeException.class, ImportConflictException.class})
+    @Transactional(rollbackOn = { IOException.class, ImporterException.class,
+        RuntimeException.class, ImportConflictException.class })
     // WARNING: Keep this method public, otherwise @Transactional is ignored:
     public List<SubscriptionDTO> importObjects(Owner owner, Map<String, File> importFiles,
         ConflictOverrides overrides) throws IOException, ImporterException {
@@ -582,14 +579,14 @@ public class Importer {
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
-            importSubs = importEntitlements(owner, new HashSet<>(), new File[]{}, consumer.getUuid(), meta);
+            importSubs = importEntitlements(owner, new HashSet<>(), new File[] {}, consumer.getUuid(), meta);
         }
 
-        // Setup our import subscription adapter with the subscriptions imported:
         final String contentAccessMode = ContentAccessMode
             .resolveModeName(consumer.getContentAccessMode(), true)
             .toDatabaseValue();
 
+        // Setup our import subscription adapter with the subscriptions imported:
         SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importSubs);
 
         Refresher refresher = poolManager.getRefresher(subAdapter);
@@ -603,22 +600,12 @@ public class Importer {
     }
 
     protected void importRules(File rulesFile, File metadata) throws IOException {
-        Reader reader = null;
-
-        try {
-            reader = new FileReader(rulesFile);
+        try (Reader reader = new FileReader(rulesFile)) {
             rulesImporter.importObject(reader);
         }
         catch (FileNotFoundException fnfe) {
             log.warn("Skipping rules import, manifest does not contain rules file: {}",
                 ImportFile.RULES_FILE.fileName());
-
-            return;
-        }
-        finally {
-            if (reader != null) {
-                reader.close();
-            }
         }
     }
 
@@ -627,15 +614,8 @@ public class Importer {
         Set<ConsumerType> consumerTypeObjs = new HashSet<>();
 
         for (File consumerType : consumerTypes) {
-            Reader reader = null;
-            try {
-                reader = new FileReader(consumerType);
+            try (Reader reader = new FileReader(consumerType)) {
                 consumerTypeObjs.add(importer.createObject(mapper, reader));
-            }
-            finally {
-                if (reader != null) {
-                    reader.close();
-                }
             }
         }
 
@@ -663,11 +643,9 @@ public class Importer {
         }
 
         ConsumerImporter importer = new ConsumerImporter(ownerCurator, idCertCurator, i18n, csCurator);
-        Reader reader = null;
         ConsumerDTO consumer = null;
 
-        try {
-            reader = new FileReader(consumerFile);
+        try (Reader reader = new FileReader(consumerFile)) {
             consumer = importer.createObject(mapper, reader);
             // we can not rely on the actual ConsumerType in the ConsumerDto
             // because it could have an id not in our database. We need to
@@ -684,11 +662,6 @@ public class Importer {
             }
 
             importer.store(owner, consumer, forcedConflicts, idcert);
-        }
-        finally {
-            if (reader != null) {
-                reader.close();
-            }
         }
 
         return consumer;
@@ -736,17 +709,10 @@ public class Importer {
 
         List<SubscriptionDTO> subscriptionsToImport = new ArrayList<>();
         for (File entitlement : entitlements) {
-            Reader reader = null;
-            try {
+            try (Reader reader = new FileReader(entitlement)) {
                 log.debug("Import entitlement: {}", entitlement.getName());
-                reader = new FileReader(entitlement);
                 subscriptionsToImport.add(
                     importer.importObject(mapper, reader, owner, productsById, consumerUuid, meta));
-            }
-            finally {
-                if (reader != null) {
-                    reader.close();
-                }
             }
         }
 
@@ -768,10 +734,8 @@ public class Importer {
         log.debug("Extracting archive to: {}", tempDir.getAbsolutePath());
 
         byte[] buf = new byte[1024];
-        ZipInputStream zipinputstream = null;
 
-        try {
-            zipinputstream = new ZipInputStream(exportFileStream);
+        try (ZipInputStream zipinputstream = new ZipInputStream(exportFileStream)) {
             ZipEntry zipentry = zipinputstream.getNextEntry();
 
             if (zipentry == null) {
@@ -790,17 +754,10 @@ public class Importer {
                     new File(tempDir, directory).mkdirs();
                 }
 
-                FileOutputStream fileoutputstream = null;
-                try {
-                    fileoutputstream = new FileOutputStream(new File(tempDir, entryName));
+                try (FileOutputStream fileoutputstream = new FileOutputStream(new File(tempDir, entryName))) {
                     int n;
                     while ((n = zipinputstream.read(buf, 0, 1024)) > -1) {
                         fileoutputstream.write(buf, 0, n);
-                    }
-                }
-                finally {
-                    if (fileoutputstream != null) {
-                        fileoutputstream.close();
                     }
                 }
 
@@ -808,23 +765,14 @@ public class Importer {
                 zipentry = zipinputstream.getNextEntry();
             }
         }
-        finally {
-            if (zipinputstream != null) {
-                zipinputstream.close();
-            }
-        }
 
         return new File(tempDir.getAbsolutePath(), "export");
     }
 
     private byte[] loadSignature(File signatureFile) throws IOException {
-        FileInputStream signature = null;
         // signature is never going to be a huge file, therefore cast is a-okay
         byte[] signatureBytes = new byte[(int) signatureFile.length()];
-
-        try {
-            signature = new FileInputStream(signatureFile);
-
+        try (FileInputStream signature = new FileInputStream(signatureFile)) {
             int offset = 0;
             int numRead = 0;
             while (offset < signatureBytes.length && numRead >= 0) {
@@ -834,16 +782,6 @@ public class Importer {
 
             return signatureBytes;
         }
-        finally {
-            if (signature != null) {
-                try {
-                    signature.close();
-                }
-                catch (IOException e) {
-                    // nothing we can do about this
-                }
-            }
-        }
     }
 
     protected void importDistributorVersions(File[] versionFiles) throws IOException {
@@ -851,15 +789,8 @@ public class Importer {
         Set<DistributorVersionDTO> distVers = new HashSet<>();
 
         for (File verFile : versionFiles) {
-            Reader reader = null;
-            try {
-                reader = new FileReader(verFile);
+            try (Reader reader = new FileReader(verFile)) {
                 distVers.add(importer.createObject(mapper, reader));
-            }
-            finally {
-                if (reader != null) {
-                    reader.close();
-                }
             }
         }
         importer.store(distVers);
@@ -870,15 +801,8 @@ public class Importer {
         Set<CdnDTO> cdns = new HashSet<>();
 
         for (File cdnFile : cdnFiles) {
-            Reader reader = null;
-            try {
-                reader = new FileReader(cdnFile);
+            try (Reader reader = new FileReader(cdnFile)) {
                 cdns.add(importer.createObject(mapper, reader));
-            }
-            finally {
-                if (reader != null) {
-                    reader.close();
-                }
             }
         }
 

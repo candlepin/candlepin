@@ -15,7 +15,6 @@
 package org.candlepin.controller;
 
 import static org.apache.commons.collections.CollectionUtils.containsAny;
-import static org.apache.commons.collections.TransformerUtils.invokerTransformer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -59,7 +58,6 @@ import org.candlepin.util.Util;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
-import org.apache.commons.collections.Transformer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -71,25 +69,26 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.persistence.EntityNotFoundException;
 
 
-
 public class PoolManagerFunctionalTest extends DatabaseTestFixture {
-    public static final String PRODUCT_MONITORING = "monitoring";
-    public static final String PRODUCT_PROVISIONING = "provisioning";
-    public static final String PRODUCT_VIRT_HOST = "virtualization_host";
-    public static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
-    public static final String PRODUCT_VIRT_GUEST = "virt_guest";
+    private static final String PRODUCT_MONITORING = "monitoring";
+    private static final String PRODUCT_PROVISIONING = "provisioning";
+    private static final String PRODUCT_VIRT_HOST = "virtualization_host";
+    private static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
+    private static final String PRODUCT_VIRT_GUEST = "virt_guest";
 
-    @Inject private CandlepinPoolManager poolManager;
+    @Inject
+    private CandlepinPoolManager poolManager;
 
     private Product virtHost;
     private Product virtHostPlatform;
@@ -227,7 +226,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         AutobindData data = AutobindData.create(parentSystem, o).on(new Date())
-            .forProducts(new String [] {monitoring.getId()});
+            .forProducts(new String[] { monitoring.getId() });
         for (int i = 0; i < 5; i++) {
             List<Entitlement> entitlements = poolManager.entitleByProducts(data);
             assertEquals(1, entitlements.size());
@@ -239,7 +238,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testDeletePool() throws Exception {
+    public void testDeletePool() {
         Pool pool = createPool(o, socketLimitedProduct, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
@@ -256,7 +255,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRevocation() throws Exception {
         AutobindData data = AutobindData.create(parentSystem, o).on(new Date())
-            .forProducts(new String [] {monitoring.getId()});
+            .forProducts(new String[] { monitoring.getId() });
         Entitlement e = poolManager.entitleByProducts(data).get(0);
         poolManager.revokeEntitlement(e);
 
@@ -288,17 +287,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
         throws Exception {
         AutobindData data = AutobindData.create(childVirtSystem, o).on(new Date())
-            .forProducts(new String [] {provisioning.getId()});
+            .forProducts(new String[] { provisioning.getId() });
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
 
     @Test
-    public void testFabricateWithBranding()
-        throws Exception {
+    public void testFabricateWithBranding() {
         List<Pool> masterPools = poolManager.getPoolsBySubscriptionId(sub4.getId()).list();
         Pool masterPool = null;
-        for (Pool pool: masterPools) {
+        for (Pool pool : masterPools) {
             if (pool.getType() == Pool.PoolType.NORMAL) {
                 masterPool = pool;
             }
@@ -309,13 +307,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertNotNull(brandingSet);
         assertEquals(2, brandingSet.size());
         ArrayList<Branding> list = new ArrayList<>(brandingSet);
-        list.sort(new Comparator<Branding>() {
-
-            @Override
-            public int compare(Branding o1, Branding o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        list.sort(Comparator.comparing(Branding::getName));
 
         assertEquals("branding1", list.get(0).getName());
         assertEquals("product1", list.get(0).getProductId());
@@ -329,7 +321,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
         throws EntitlementRefusedException {
         AutobindData data = AutobindData.create(childVirtSystem, o).on(new Date())
-            .forProducts(new String [] {provisioning.getId()});
+            .forProducts(new String[] { provisioning.getId() });
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
@@ -381,19 +373,19 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // but it hasn't been saved yet). Since getting the pool ordering right is tricky
         // inside an entitleByProducts call, we do it in two singular calls here.
         AutobindData data = AutobindData.create(parentSystem, o).on(new Date())
-            .forProducts(new String [] {"modifier"});
+            .forProducts(new String[] { "modifier" });
 
         poolManager.entitleByProducts(data);
 
         try {
             data = AutobindData.create(parentSystem, o).on(new Date())
-                .forProducts(new String [] {PRODUCT_VIRT_HOST});
+                .forProducts(new String[] { PRODUCT_VIRT_HOST });
 
             poolManager.entitleByProducts(data);
         }
         catch (EntityNotFoundException e) {
             throw e;
-           // fail("Hibernate failed to properly save entitlement certs!");
+            // fail("Hibernate failed to properly save entitlement certs!");
         }
 
         // If we get here, no exception was raised, so we're happy!
@@ -512,7 +504,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testListForConsumerExcludesWarnings() {
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(
-            parentSystem, null, parentSystem.getOwnerId(), (String) null, null, null, true,
+            parentSystem, null, parentSystem.getOwnerId(), null, null, null, true,
             new PoolFilterBuilder(), new PageRequest(), false, false, null);
         assertEquals(4, results.getPageData().size());
 
@@ -523,7 +515,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         parentSystem.setFact("cpu.cpu_socket(s)", "4");
 
         results = poolManager.listAvailableEntitlementPools(parentSystem, null,
-            parentSystem.getOwnerId(), (String) null, null, null, false,
+            parentSystem.getOwnerId(), null, null, null, false,
             new PoolFilterBuilder(), new PageRequest(), false, false, null);
 
         // Pool in error should not be included. Should have the same number of
@@ -542,7 +534,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             childVirtSystem, null, o.getId(), virtGuest.getId(), null, null, true,
             new PoolFilterBuilder(), new PageRequest(), false, false, null);
         int newbornPools = results.getPageData().size();
-        childVirtSystem.setCreated(TestUtil.createDate(2000, 01, 01));
+        childVirtSystem.setCreated(TestUtil.createDate(2000, 1, 1));
         consumerCurator.update(childVirtSystem);
 
         results = poolManager.listAvailableEntitlementPools(
@@ -552,9 +544,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(newbornPools - 1, results.getPageData().size());
     }
 
-    /**
-     *
-     */
     private void regenerateECAndAssertNotSameCertificates() {
         Set<EntitlementCertificate> oldsIds =
             collectEntitlementCertIds(this.childVirtSystem);
@@ -563,32 +552,25 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             .queueEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =
             collectEntitlementCertIds(this.childVirtSystem);
-        assertFalse(containsAny(transform(oldsIds, invokerTransformer("getId")),
-            transform(newIds, invokerTransformer("getId"))));
         assertFalse(containsAny(
-            transform(oldsIds, invokerTransformer("getKey")),
-            transform(newIds, invokerTransformer("getKey"))));
+            transform(oldsIds, EntitlementCertificate::getId),
+            transform(newIds, EntitlementCertificate::getId)));
         assertFalse(containsAny(
-            transform(oldsIds, invokerTransformer("getCert")),
-            transform(newIds, invokerTransformer("getCert"))));
+            transform(oldsIds, EntitlementCertificate::getKey),
+            transform(newIds, EntitlementCertificate::getKey)));
+        assertFalse(containsAny(
+            transform(oldsIds, EntitlementCertificate::getCert),
+            transform(newIds, EntitlementCertificate::getCert)));
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> Set<T> transform(Set<?> set, Transformer t) {
-        Set<T> result = new HashSet<>();
-        for (Iterator iterator = set.iterator(); iterator.hasNext();) {
-            result.add((T) t.transform(iterator.next()));
-        }
-        return result;
+    private static <T, R> Set<R> transform(Set<T> set, Function<T, R> t) {
+        return set.stream().map(t).collect(Collectors.toSet());
     }
 
-    private Set<EntitlementCertificate> collectEntitlementCertIds(
-        Consumer consumer) {
+    private Set<EntitlementCertificate> collectEntitlementCertIds(Consumer consumer) {
         Set<EntitlementCertificate> ids = new HashSet<>();
         for (Entitlement entitlement : consumer.getEntitlements()) {
-            for (EntitlementCertificate ec : entitlement.getCertificates()) {
-                ids.add(ec);
-            }
+            ids.addAll(entitlement.getCertificates());
         }
         return ids;
     }
@@ -632,8 +614,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(2, results.getPageData().size());
 
         results = poolManager.listAvailableEntitlementPools(nonDevSystem, null,
-                owner.getId(), null, null, null, true, new PoolFilterBuilder(), new PageRequest(),
-                false, false, null);
+            owner.getId(), null, null, null, true, new PoolFilterBuilder(), new PageRequest(),
+            false, false, null);
         assertEquals(1, results.getPageData().size());
         Pool found2 = results.getPageData().get(0);
         assertEquals(pool2, found2);
@@ -711,7 +693,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testBatchBindError() throws EntitlementRefusedException {
+    public void testBatchBindError() {
         Owner owner = createOwner();
         Product p = TestUtil.createProduct("test-product", "Test Product");
         p.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
@@ -927,7 +909,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRevocationRevokesEntitlementCertSerial() throws Exception {
         AutobindData data = AutobindData.create(parentSystem, o).on(new Date())
-            .forProducts(new String [] {monitoring.getId()});
+            .forProducts(new String[] { monitoring.getId() });
         Entitlement e = poolManager.entitleByProducts(data).get(0);
         CertificateSerial serial = e.getCertificates().iterator().next().getSerial();
         poolManager.revokeEntitlement(e);

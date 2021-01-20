@@ -22,7 +22,6 @@ import org.candlepin.model.activationkeys.ActivationKeyPool;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
@@ -59,12 +58,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
 import javax.inject.Singleton;
 import javax.persistence.TypedQuery;
-
 
 
 /**
@@ -76,18 +75,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /** The recommended number of expired pools to fetch in a single call to listExpiredPools */
     public static final int EXPIRED_POOL_BLOCK_SIZE = 1000;
 
-    private static Logger log = LoggerFactory.getLogger(PoolCurator.class);
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-
-    @Inject
-    protected Injector injector;
+    private static final Logger log = LoggerFactory.getLogger(PoolCurator.class);
+    private final ConsumerCurator consumerCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
 
     @Inject
     public PoolCurator(ConsumerCurator consumerCurator, ConsumerTypeCurator consumerTypeCurator) {
         super(Pool.class);
-        this.consumerCurator = consumerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
     }
 
     /**
@@ -117,7 +113,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .add(Restrictions.ge("endDate", activeOn));
         }
 
-        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     @Transactional
@@ -126,7 +122,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("type", type));
 
-        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -139,7 +135,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("sourceEntitlement", e));
 
-        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -377,11 +373,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 log.warn("Attempting to filter entitlement pools by owner and a consumer belonging to a " +
                     "different owner: {}, {}", ownerId, consumer);
 
-                Page<List<Pool>> output = new Page<>();
-                output.setPageData(Collections.<Pool>emptyList());
-                output.setMaxRecords(0);
-
-                return output;
+                return emptyPage();
             }
 
             // We'll set the owner restriction later
@@ -584,10 +576,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return this.listByCriteria(criteria, pageRequest, postFilter);
         }
 
-        Page<List<Pool>> output = new Page<>();
-        output.setPageData(Collections.<Pool>emptyList());
-        output.setMaxRecords(0);
+        return emptyPage();
+    }
 
+    private Page<List<Pool>> emptyPage() {
+        Page<List<Pool>> output = new Page<>();
+        output.setPageData(Collections.emptyList());
+        output.setMaxRecords(0);
         return output;
     }
 
@@ -1132,15 +1127,29 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param stackIds
      * @return Derived pools which exist for the given consumer and stack ids
      */
-    @SuppressWarnings("checkstyle:indentation")
-    public List<Pool> getSubPoolForStackIds(Consumer consumer, Collection stackIds) {
+    public List<Pool> getSubPoolForStackIds(Consumer consumer, Collection<String> stackIds) {
+        List<Pool> result = new ArrayList<>();
+        for (List<String> block: this.partition(stackIds, this.getInBlockSize())) {
+            result.addAll(getSubPoolForStackIds(consumer, block));
+        }
+        return result;
+    }
+
+    @SuppressWarnings({"unchecked", "checkstyle:indentation"})
+    private List<Pool> getSubPoolForStackIds(Consumer consumer, List<String> stackIds) {
+        if (stackIds == null || stackIds.isEmpty()) {
+            return Collections.emptyList();
+        }
         Criteria getPools = createSecureCriteria()
             .createAlias("sourceStack", "ss")
-            .add(Restrictions.eq("ss.sourceConsumer", consumer))
             .add(Restrictions.and(
                 Restrictions.isNotNull("ss.sourceStackId"),
                 CPRestrictions.in("ss.sourceStackId", stackIds))
             );
+
+        if (consumer != null) {
+            getPools.add(Restrictions.eq("ss.sourceConsumer", consumer));
+        }
 
         return (List<Pool>) getPools.list();
     }
@@ -1308,10 +1317,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .add(CPRestrictions.in("id", ids))
                 .addOrder(Order.asc("id"));
 
-            return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+            return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
         }
 
-        return this.cpQueryFactory.<Pool>buildQuery();
+        return this.cpQueryFactory.buildQuery();
     }
 
     @SuppressWarnings("unchecked")
@@ -1329,11 +1338,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     .add(CPRestrictions.in("id", ids))
                     .addOrder(Order.asc("id"));
 
-                return this.cpQueryFactory.<Pool>buildQuery(session, criteria);
+                return this.cpQueryFactory.buildQuery(session, criteria);
             }
         }
 
-        return this.cpQueryFactory.<Pool>buildQuery();
+        return this.cpQueryFactory.buildQuery();
     }
 
     @SuppressWarnings("unchecked")
@@ -1357,7 +1366,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .createAlias("sourceSubscription", "srcsub")
             .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"));
 
-        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -1375,7 +1384,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"));
 
-        return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     /**
@@ -1401,7 +1410,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"))
                 .add(Restrictions.not(CPRestrictions.in("srcsub.subscriptionId", excludedSubIds)));
 
-            return this.cpQueryFactory.<Pool>buildQuery(this.currentSession(), criteria);
+            return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
         }
         else {
             return this.getMasterPoolsForOwner(owner);

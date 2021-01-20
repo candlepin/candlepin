@@ -1212,7 +1212,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
             return Collections.unmodifiableMap(this.importedProductAttributes);
         }
 
-        return Collections.<String, String>emptyMap();
+        return Collections.emptyMap();
     }
 
     /**
@@ -1250,7 +1250,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
             return Collections.unmodifiableMap(this.importedDerivedProductAttributes);
         }
 
-        return Collections.<String, String>emptyMap();
+        return Collections.emptyMap();
     }
 
     /**
@@ -1357,8 +1357,8 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     public boolean isStacked() {
-        return (this.getProduct() != null ?
-            this.getProduct().hasAttribute(Product.Attributes.STACKING_ID) : false);
+        return this.getProduct() != null &&
+            this.getProduct().hasAttribute(Product.Attributes.STACKING_ID);
     }
 
     public String getStackId() {
@@ -1525,11 +1525,15 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     public boolean isLocked() {
-        return this.locked != null && locked.booleanValue();
+        return this.locked != null && locked;
     }
 
     public void setLocked(boolean locked) {
         this.locked = locked;
+    }
+
+    public boolean isDerived() {
+        return "true".equals(this.getAttributeValue(Pool.Attributes.DERIVED_POOL));
     }
 
 }

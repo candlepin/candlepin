@@ -182,8 +182,8 @@ public class ImporterTest {
 
     private Importer buildImporter() {
         return new Importer(this.mockConsumerTypeCurator, this.mockProductCurator, this.mockRulesImporter,
-            this.mockOwnerCurator, this.mockIdentityCertCurator, this.mockContentCurator,
-            this.mockPoolManager, this.mockPKIUtility, this.config, this.mockExporterMetadataCurator,
+            this.mockOwnerCurator, this.mockIdentityCertCurator,
+            this.mockPoolManager, this.mockPKIUtility, this.mockExporterMetadataCurator,
             this.mockCertSerialCurator, this.mockEventSink, this.i18n, this.mockDistributorVersionCurator,
             this.mockCdnCurator, this.syncUtils, this.mockImportRecordCurator,
             this.mockSubscriptionReconciler, this.mockEntitlementCurator, this.mockContentAccessManager,
