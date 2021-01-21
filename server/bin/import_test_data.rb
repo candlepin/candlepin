@@ -182,7 +182,7 @@ def create_product(cp, owner, product)
   product_content = product['content'] || []
   dependent_products = product['dependencies'] || []
   relies_on = product['relies_on'] || []
-  derived_product_id = product['derived_product_id']
+  derived_product = { :id => product['derived_product_id'] } if product['derived_product_id']
 
   # To create branding information for marketing product
   if !provided_products.empty? && product['name'].include?('OS') && type == 'MKT'
@@ -208,7 +208,8 @@ def create_product(cp, owner, product)
     :dependentProductIds => dependent_products,
     :relies_on => relies_on,
     :branding => branding,
-    :providedProducts => provided_products
+    :providedProducts => provided_products,
+    :derivedProduct => derived_product
   })
 
   print "product name: #{name} version: #{version} arch: #{arch} type: #{type}\n"
@@ -252,7 +253,8 @@ def create_eng_product(cp, owner, product)
         create_content(cp, owner, product, content)
       end
     end
-    # Modify IDs of content in product_content to mach ids used in create_content
+
+    # Modify IDs of content in product_content to match ids used in create_content
     prod_id = product['id'].to_s
     mod_prod_content = product_content.map {|content_id, enabled| [prod_id + content_id.to_s, enabled]}
     cp.add_all_content_to_product(owner['name'], product_ret['id'], mod_prod_content)
@@ -272,16 +274,7 @@ def create_mkt_product_and_pools(cp, owner, product)
     small_quantity = large_quantity = product['quantity']
   end
 
-  params = {}
-  params[:derived_product_id] = product['derived_product_id']
-
-  params[:start_date] =  Date.today
-  params[:end_date] =  params[:start_date] + 365
-
   # Create a SMALL and a LARGE with the slightly similar begin/end dates.
-
-  params[:branding] = []
-
   contract_number = 0
   account_number = '12331131231'
   order_number = 'order-8675309'
@@ -289,57 +282,42 @@ def create_mkt_product_and_pools(cp, owner, product)
   end_date =  start_date + 365
 
   @sourceSubId += 1
-  params[:subscription_id] = "#{@sourceSubId}"
 
-  pool = create_pool_and_subscription(
-    owner['name'],
-    product_ret['id'],
-    small_quantity,
-    [],
-    contract_number,
-    account_number,
-    order_number,
-    start_date,
-    end_date,
-    true,
-    params
-  )
+  pool = cp.create_pool(owner['name'], product_ret['id'], {
+    :quantity => small_quantity,
+    :contract_number => contract_number,
+    :account_number => account_number,
+    :order_number => order_number,
+    :start_date => start_date,
+    :end_date => end_date,
+    :subscription_id => "#{@sourceSubId}"
+  })
 
   contract_number += 1
   @sourceSubId += 1
-  params[:subscription_id] = "#{@sourceSubId}"
 
-  pool = create_pool_and_subscription(
-    owner['name'],
-    product_ret['id'],
-    large_quantity,
-    [],
-    contract_number,
-    account_number,
-    order_number,
-    start_date,
-    end_date,
-    true,
-    params
-  )
-
-  @sourceSubId += 1
-  params[:subscription_id] = "#{@sourceSubId}"
+  pool = cp.create_pool(owner['name'], product_ret['id'], {
+    :quantity => large_quantity,
+    :contract_number => contract_number,
+    :account_number => account_number,
+    :order_number => order_number,
+    :start_date => start_date,
+    :end_date => end_date,
+    :subscription_id => "#{@sourceSubId}"
+  })
 
   # Create a pool for the future:
-  pool = create_pool_and_subscription(
-    owner['name'],
-    product_ret['id'],
-    15,
-    [],
-    contract_number,
-    account_number,
-    order_number,
-    end_date - 10,
-    start_date + 365,
-    true,
-    params
-  )
+  @sourceSubId += 1
+
+  pool = cp.create_pool(owner['name'], product_ret['id'], {
+    :quantity => 15,
+    :contract_number => contract_number,
+    :account_number => account_number,
+    :order_number => order_number,
+    :start_date => start_date + 365,
+    :end_date => end_date - 10,
+    :subscription_id => "#{@sourceSubId}"
+  })
 
 end
 
@@ -348,6 +326,14 @@ eng_products = []
 mkt_products = []
 
 $data['owners'].each do |owner|
+    $data['products'].each do |product|
+        if product['type'] == 'MKT'
+            mkt_products << [owner, product]
+        else
+            eng_products << [owner, product]
+        end
+    end
+
     if owner.has_key?('products')
         owner['products'].each do |product|
             if product['type'] == 'MKT'
@@ -357,17 +343,9 @@ $data['owners'].each do |owner|
             end
         end
     end
-
-    $data['products'].each do |product|
-        if product['type'] == 'MKT'
-            mkt_products << [owner, product]
-        else
-            eng_products << [owner, product]
-        end
-    end
 end
 
-print "\ncreating eng products\n"
+print "\ncreating engineering products\n"
 thread_pool = ThreadPool.new(6)
 eng_products.each do |eng_product|
     thread_pool.schedule(eng_product[0], eng_product[1]) do |owner, product|
@@ -376,7 +354,7 @@ eng_products.each do |eng_product|
 end
 thread_pool.shutdown
 
-print "\ncreating mkt products and pools\n"
+print "\ncreating marketing products and pools\n"
 thread_pool = ThreadPool.new(6)
 mkt_products.each do |mkt_product|
     thread_pool.schedule(mkt_product[0], mkt_product[1]) do |owner, product|

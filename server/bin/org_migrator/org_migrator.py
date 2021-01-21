@@ -344,6 +344,7 @@ class ProductManager(ModelManager):
         self._export_query('cp2_product_content.json', 'cp2_product_content', 'SELECT pc.* FROM cp2_product_content pc JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid WHERE op.owner_id = %s', (self.org_id,))
         self._export_query('cp2_owner_products.json', 'cp2_owner_products', 'SELECT * FROM cp2_owner_products WHERE owner_id=%s', (self.org_id,))
         self._export_query('cp2_product_branding.json', 'cp2_product_branding', 'SELECT pb.* FROM cp2_product_branding pb JOIN cp2_owner_products op ON op.product_uuid = pb.product_uuid WHERE op.owner_id = %s', (self.org_id,))
+        self._export_query('cp2_product_provided_products.json', 'cp2_product_provided_products', 'SELECT ppp.* FROM cp2_product_provided_products ppp JOIN cp2_owner_products op ON op.product_uuid = ppp.product_uuid WHERE op.owner_id = %s', (self.org_id,))
 
         self._exported = True
         return True
@@ -358,6 +359,7 @@ class ProductManager(ModelManager):
         result = result and self._import_json('cp2_product_content.json', boolean_converter(['enabled']))
         result = result and self._import_json('cp2_owner_products.json')
         result = result and self._import_json('cp2_product_branding.json')
+        result = result and self._import_json('cp2_product_provided_products.json')
 
         self._imported = result
         return result
@@ -648,8 +650,6 @@ class PoolManager(ModelManager):
 
         self._export_query('cp_pool_attribute.json', 'cp_pool_attribute', 'SELECT pa.* FROM cp_pool_attribute pa JOIN cp_pool p ON p.id = pa.pool_id WHERE p.owner_id=%s', (self.org_id,))
         self._export_query('cp_pool_source_stack.json', 'cp_pool_source_stack', 'SELECT pss.* FROM cp_pool_source_stack pss JOIN cp_pool p ON p.id = pss.derivedpool_id WHERE p.owner_id=%s', (self.org_id,))
-        self._export_query('cp2_pool_provided_products.json', 'cp2_pool_provided_products', 'SELECT ppp.* FROM cp2_pool_provided_products ppp JOIN cp_pool p ON p.id = ppp.pool_id WHERE p.owner_id=%s', (self.org_id,))
-        self._export_query('cp2_pool_derprov_products.json', 'cp2_pool_derprov_products', 'SELECT pdpp.* FROM cp2_pool_derprov_products pdpp JOIN cp_pool p ON p.id = pdpp.pool_id WHERE p.owner_id=%s', (self.org_id,))
         self._export_query('cp2_pool_source_sub.json', 'cp2_pool_source_sub', 'SELECT pss.* FROM cp2_pool_source_sub pss JOIN cp_pool p ON p.id = pss.pool_id WHERE p.owner_id=%s', (self.org_id,))
         self._export_query('cp_product_pool_attribute.json', 'cp_product_pool_attribute', 'SELECT ppa.* FROM cp_product_pool_attribute ppa JOIN cp_pool p ON p.id = ppa.pool_id WHERE p.owner_id=%s', (self.org_id,))
 
@@ -684,8 +684,6 @@ class PoolManager(ModelManager):
 
         result = result and self._import_json('cp_pool_attribute.json')
         result = result and self._import_json('cp_pool_source_stack.json')
-        result = result and self._import_json('cp2_pool_provided_products.json')
-        result = result and self._import_json('cp2_pool_derprov_products.json')
         result = result and self._import_json('cp2_pool_source_sub.json')
         result = result and self._import_json('cp_product_pool_attribute.json')
         result = result and self._import_json('cp_cert_serial-ent.json', boolean_converter(['collected', 'revoked']))
