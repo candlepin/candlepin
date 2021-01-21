@@ -555,7 +555,7 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /cloud:
+  /cloud/authorize:
     post:
       description: Verifies provided cloud registration data and returns an authentication token. By default the token is valid for 10 minutes
       tags:
