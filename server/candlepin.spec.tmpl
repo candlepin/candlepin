@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.23
+Version: 3.1.24
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,14 @@ fi
 
 #raw
 %changelog
+* Thu Jan 21 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.24-1
+- ENT-3286: Manifest delete takes 24 hours or more in large environment (60k
+  consumers in owner)  - Fix too many params issue in manifest import  -
+  Refactor updatePoolsFromStack to avoid calling deletePools n times
+  (ojanus@redhat.com)
+- Fix date in consumer resource integration test (ojanus@redhat.com)
+- Increased the Artemis disk usage limit (crog@redhat.com)
+
 * Thu Nov 12 2020 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.23-1
 - 1884259: Manifest delete takes 24 hours or more in large environment (60k
   consumers in owner)  - Switch to a faster implementation of pool deletion.
