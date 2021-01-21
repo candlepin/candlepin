@@ -290,31 +290,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testFabricateWithBranding() {
-        List<Pool> masterPools = poolManager.getPoolsBySubscriptionId(sub4.getId()).list();
-        Pool masterPool = null;
-        for (Pool pool : masterPools) {
-            if (pool.getType() == Pool.PoolType.NORMAL) {
-                masterPool = pool;
-            }
-        }
-        Collection<Branding> brandingSet =
-            poolManager.fabricateSubscriptionFromPool(masterPool).getProduct().getBranding();
-
-        assertNotNull(brandingSet);
-        assertEquals(2, brandingSet.size());
-        ArrayList<Branding> list = new ArrayList<>(brandingSet);
-        list.sort(Comparator.comparing(Branding::getName));
-
-        assertEquals("branding1", list.get(0).getName());
-        assertEquals("product1", list.get(0).getProductId());
-        assertEquals("type1", list.get(0).getType());
-        assertEquals("branding2", list.get(1).getName());
-        assertEquals("product2", list.get(1).getProductId());
-        assertEquals("type2", list.get(1).getType());
-    }
-
-    @Test
     public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
         throws EntitlementRefusedException {
         AutobindData data = AutobindData.create(childVirtSystem, o).on(new Date())

@@ -62,7 +62,6 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.KeyValueParamDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
@@ -403,17 +402,13 @@ public class ConsumerResourceTest {
         when(e.getPool()).thenReturn(p);
         when(p.getSubscriptionId()).thenReturn("4444");
 
+        doThrow(RuntimeException.class).when(this.poolManager)
+            .regenerateCertificatesOf(any(Entitlement.class), anyBoolean());
         when(entitlementCurator.get(eq("9999"))).thenReturn(e);
         when(subscriptionServiceAdapter.getSubscription(eq("4444"))).thenReturn(s);
         when(entitlementCertServiceAdapter.generateEntitlementCert(
             any(Entitlement.class), any(Product.class)))
             .thenThrow(new IOException());
-
-        CandlepinPoolManager poolManager = new CandlepinPoolManager(
-            null, null, null, this.config, null, null, entitlementCurator,
-            consumerCurator, consumerTypeCurator, null, null, null, null, null,
-            activationKeyRules, null, null, null, null, null, null, null, null, null, null
-        );
 
         ConsumerResource consumerResource = new ConsumerResource(
             this.consumerCurator,
@@ -426,7 +421,7 @@ public class ConsumerResourceTest {
             this.sink,
             this.eventFactory,
             this.userServiceAdapter,
-            poolManager,
+            this.poolManager,
             this.consumerRules,
             this.ownerCurator,
             this.activationKeyCurator,

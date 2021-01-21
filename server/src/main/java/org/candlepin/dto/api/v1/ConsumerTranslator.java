@@ -93,6 +93,7 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("checkstyle:methodlength")
     public ConsumerDTO populate(ModelTranslator translator, Consumer source, ConsumerDTO dest) {
 
         if (source == null) {

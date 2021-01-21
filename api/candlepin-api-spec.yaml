@@ -8599,6 +8599,19 @@ components:
                   $ref: '#/components/schemas/GuestIdDTO'
               href:
                 type: string
+              activationKeys:
+                type: array
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/ConsumerActivationKeyDTO'
+
+    ConsumerActivationKeyDTO:
+      description: Represent activation keys used by consumer in registration
+      properties:
+        activationKeyName:
+          type: string
+        activationKeyId:
+          type: string
 
     ConsumerDTOArrayElement:
       description: Represents a reduced view of a consumer (excluding data like facts and identify certificate)
