@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-21 11:16-0500\n"
+"POT-Creation-Date: 2020-12-14 07:53-0500\n"
 "PO-Revision-Date: 2016-03-02 04:38-0500\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Telugu <kde-i18n-doc@kde.org>\n"
@@ -416,7 +416,7 @@ msgstr ""
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2022
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2027
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
@@ -525,7 +525,7 @@ msgstr "యజమాని {0} కొరకు ueber cert జనియింప�
 msgid "Auto-attach is disabled for owner {0}{1}."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/pinsetter/tasks/UndoImportsJob.java:141
+#: server/src/main/java/org/candlepin/pinsetter/tasks/UndoImportsJob.java:142
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "{0} చేత సబ్‌స్క్రిప్షన్లు తొలగించబడెను"
@@ -776,7 +776,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyContentOverrideResource.java:70
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:120
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1480
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1481
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
 msgstr "ఐడి {0} తో క్రియాశీలకీ కనుగొనలేక పోయింది."
@@ -833,7 +833,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:421
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1160
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:322
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1659
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1660
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "కీ: {0}తో యజమాని కనుగొనబడలేదు."
@@ -1390,7 +1390,7 @@ msgstr ""
 msgid "{0} is not a valid log level"
 msgstr "{0} చెల్లునటువంటి లాగ్ స్థాయి కాదు"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1460
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1461
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:153
 #, java-format
 msgid "Unit: {0} not found"
@@ -1398,56 +1398,56 @@ msgstr "యూనిట్: {0} కనబడలేదు"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1470
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1471
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:227
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr "వాడుకరి {0} వినియోగదారి {1} ను యాక్సెస్ చేయలేదు"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1486
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1487
 msgid "The flags add_future and only_future cannot be used at the same time."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1491
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1492
 msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1711
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1712
 msgid "Pool product ID not specified"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1751
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1752
 #, java-format
 msgid "Unable to find a pool with the ID \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1759
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1760
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1765
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1766
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1916
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1987
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1917
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1988
 msgid "Error reading export archive"
 msgstr "ఎగుమతి ఆర్కైవ్‌ను చదువుటలో దోషము"
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1991
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1992
 msgid "Error storing uploaded archive for asynchronous processing."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2127
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2128
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2208
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2209
 msgid "Unknown conflict to force"
 msgstr "వత్తిడి చేయుటకు తెలియని విభేదం"
 
