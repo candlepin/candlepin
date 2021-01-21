@@ -624,7 +624,7 @@ public class CandlepinPoolManager implements PoolManager {
         return entitlementsToRegen;
     }
 
-    Set<Pool> revokeEntitlementsFromOverflowingPools(List<Pool> pools) {
+    private Set<Pool> revokeEntitlementsFromOverflowingPools(List<Pool> pools) {
         Collection<Pool> overflowing = pools.stream()
             .filter(Pool::isOverflowing)
             .collect(Collectors.toList());
@@ -639,10 +639,7 @@ public class CandlepinPoolManager implements PoolManager {
         overflowing = poolCurator.lock(overflowing);
 
         List<Entitlement> overFlowingEnts = this.poolCurator.retrieveOrderedEntitlementsOf(overflowing);
-        Map<String, List<Entitlement>> entMap = new HashMap<>();
-        for (Entitlement entitlement : overFlowingEnts) {
-            entMap.computeIfAbsent(entitlement.getPool().getId(), k -> new ArrayList<>()).add(entitlement);
-        }
+        Map<String, List<Entitlement>> entMap = groupByPoolId(overFlowingEnts);
 
         for (Pool pool : overflowing) {
             // we then start revoking the existing entitlements
@@ -665,6 +662,11 @@ public class CandlepinPoolManager implements PoolManager {
 
         // revoke the entitlements amassed above
         return revokeEntitlements(entitlementsToRevoke);
+    }
+
+    private Map<String, List<Entitlement>> groupByPoolId(Collection<Entitlement> entitlements) {
+        return entitlements.stream()
+            .collect(Collectors.groupingBy(entitlement -> entitlement.getPool().getId()));
     }
 
     /**
@@ -1893,6 +1895,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         log.debug("Adjusting consumed quantities on pools");
+        Set<Consumer> consumersToUpdate = new HashSet<>();
         List<Pool> poolsToSave = new ArrayList<>();
         Set<String> entIdsToRevoke = new HashSet<>();
         for (Entitlement ent : entsToRevoke) {
@@ -1919,10 +1922,11 @@ public class CandlepinPoolManager implements PoolManager {
             }
 
             consumer.setEntitlementCount(consumer.getEntitlementCount() - entQuantity);
-            consumerCurator.update(consumer);
+            consumersToUpdate.add(consumer);
             poolsToSave.add(pool);
         }
 
+        consumerCurator.bulkUpdate(consumersToUpdate, false);
         poolCurator.updateAll(poolsToSave, false, false);
 
         /*
@@ -1946,10 +1950,7 @@ public class CandlepinPoolManager implements PoolManager {
         entitlementCurator.flush();
         log.info("All deletes flushed successfully");
 
-        Map<Consumer, List<Entitlement>> consumerSortedEntitlements = entitlementCurator
-            .getDistinctConsumers(entsToRevoke);
-
-        filterAndUpdateStackingEntitlements(consumerSortedEntitlements, alreadyDeletedPools);
+        updateStackingEntitlements(entsToRevoke, alreadyDeletedPools);
 
         // post unbind actions
         for (Entitlement ent : entsToRevoke) {
@@ -1963,6 +1964,8 @@ public class CandlepinPoolManager implements PoolManager {
             return poolsToDelete;
         }
 
+        Map<Consumer, List<Entitlement>> consumerSortedEntitlements = entitlementCurator
+            .getDistinctConsumers(entsToRevoke);
         log.info("Recomputing status for {} consumers.", consumerSortedEntitlements.size());
         int i = 1;
         for (Consumer consumer : consumerSortedEntitlements.keySet()) {
@@ -2081,6 +2084,45 @@ public class CandlepinPoolManager implements PoolManager {
                 poolRules.updatePoolsFromStack(entry.getKey(), subPools, null, alreadyDeletedPools, true);
             }
         }
+    }
+
+
+    /**
+     * Filter the given entitlements so that this method returns only
+     * the entitlements that are part of some stack. Then update them
+     * accordingly
+     *
+     * @param entsToRevoke
+     * @param alreadyDeletedPools pools to skip deletion as they have already been deleted
+     * @return Entitlements that are stacked
+     */
+    private void updateStackingEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools) {
+        Map<Consumer, List<Entitlement>> stackingEntsByConsumer = stackingEntitlementsOf(entsToRevoke);
+        log.debug("Found stacking entitlements for {} consumers", stackingEntsByConsumer.size());
+        Set<String> allStackingIds = stackIdsOf(stackingEntsByConsumer.values());
+        List<Pool> pools = poolCurator.getSubPoolForStackIds(null, allStackingIds);
+        poolRules.bulkUpdatePoolsFromStack(stackingEntsByConsumer.keySet(), pools, alreadyDeletedPools, true);
+    }
+
+    private Map<Consumer, List<Entitlement>> stackingEntitlementsOf(List<Entitlement> entitlements) {
+        return entitlements.stream()
+            .filter(entitlement -> !entitlement.getPool().isDerived())
+            .filter(entitlement -> entitlement.getPool().isStacked())
+            .collect(Collectors.groupingBy(Entitlement::getConsumer));
+    }
+
+    private Set<String> stackIdsOf(Collection<List<Entitlement>> entitlementsPerConsumer) {
+        return entitlementsPerConsumer.stream()
+            .map(this::stackIdsOf)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
+    }
+
+    private Set<String> stackIdsOf(List<Entitlement> entitlements) {
+        return entitlements.stream()
+            .map(Entitlement::getPool)
+            .map(Pool::getStackId)
+            .collect(Collectors.toSet());
     }
 
     @Override
