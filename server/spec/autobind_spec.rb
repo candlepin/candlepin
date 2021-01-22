@@ -682,4 +682,56 @@ describe 'Autobind On Owner' do
     entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
     entitlements.size.should == 1
   end
+
+  it 'should be not specified with consumer on auto attach when SLA of current entitlement is layered exempt' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Standard'},
+                               :owner => owner_key})
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Layered',
+                                               :support_level_exempt => 'true'},
+                               :owner => owner_key})
+
+    @cp.create_pool(owner_key, product1.id)
+    @cp.create_pool(owner_key, product2.id)
+
+    installed = [
+        {'productId' => product1.id, 'productName' => product1['name']},
+        {'productId' => product2.id, 'productName' => product2['name']}]
+
+    consumer = @cp.register(
+        random_string('system'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, 'Layered')
+
+    @cp.consume_product(product2['id'], {:uuid => consumer.uuid})
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    expect(status['status']).to eq('not specified')
+
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+
+
+    entitlements.each do |ent|
+      @cp.unbind_entitlement(ent.id, {:uuid => consumer.uuid})
+    end
+
+    # Trying to bind the product without SLA exempt and consumer with Layered SLA
+    # Then system purpose status should be not specified
+
+    product3 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Standard',
+                                               :support_level_exempt => 'false'},
+                               :owner => owner_key})
+
+    @cp.create_pool(owner_key, product3.id)
+
+    @cp.consume_product(product3['id'], {:uuid => consumer.uuid})
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    expect(status['status']).to eq('not specified')
+  end
+
 end
