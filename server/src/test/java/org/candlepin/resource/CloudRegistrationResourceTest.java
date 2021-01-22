@@ -29,6 +29,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.common.exceptions.NotImplementedException;
 import org.candlepin.dto.api.v1.CloudRegistrationDTO;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
 import org.candlepin.service.model.CloudRegistrationInfo;
@@ -56,18 +57,20 @@ public class CloudRegistrationResourceTest {
     private I18n i18n;
     private CloudRegistrationAuth mockCloudRegistrationAuth;
     private Principal principal;
+    private DTOValidator mockValidator;
 
 
     @BeforeEach
     public void init() {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         this.mockCloudRegistrationAuth = mock(CloudRegistrationAuth.class);
+        this.mockValidator = mock(DTOValidator.class);
         this.principal = this.buildPrincipal();
         ResteasyContext.pushContext(Principal.class, this.principal);
     }
 
     private CloudRegistrationResource buildResource() {
-        return new CloudRegistrationResource(this.i18n, this.mockCloudRegistrationAuth);
+        return new CloudRegistrationResource(this.i18n, this.mockCloudRegistrationAuth, this.mockValidator);
     }
 
     private Principal buildPrincipal() {

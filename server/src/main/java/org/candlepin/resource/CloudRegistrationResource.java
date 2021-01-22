@@ -22,6 +22,7 @@ import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.common.exceptions.NotImplementedException;
 import org.candlepin.dto.api.v1.CloudRegistrationDTO;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
 
@@ -39,11 +40,15 @@ import java.util.Objects;
 public class CloudRegistrationResource implements CloudApi {
     private final CloudRegistrationAuth cloudRegistrationAuth;
     private final I18n i18n;
+    private final DTOValidator validator;
 
     @Inject
-    public CloudRegistrationResource(I18n i18n, CloudRegistrationAuth cloudRegistrationAuth) {
+    public CloudRegistrationResource(I18n i18n, CloudRegistrationAuth cloudRegistrationAuth,
+        DTOValidator validator) {
+
         this.i18n = Objects.requireNonNull(i18n);
         this.cloudRegistrationAuth = Objects.requireNonNull(cloudRegistrationAuth);
+        this.validator = Objects.requireNonNull(validator);
     }
 
     @Override
@@ -53,6 +58,7 @@ public class CloudRegistrationResource implements CloudApi {
         if (cloudRegistrationDTO == null) {
             throw new BadRequestException(this.i18n.tr("No cloud registration information provided"));
         }
+        this.validator.validateConstraints(cloudRegistrationDTO);
 
         Principal principal = ResteasyContext.getContextData(Principal.class);
         CloudRegistrationData registrationData = getCloudRegistrationData(cloudRegistrationDTO);
