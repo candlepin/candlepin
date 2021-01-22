@@ -29,6 +29,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.test.TestUtil;
 
@@ -59,6 +60,7 @@ public class SystemPurposeComplianceRulesTest {
     @Mock private EventSink eventSink;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
+    @Mock private PoolCurator poolCurator;
 
     @Before
     public void setUp() {
@@ -67,7 +69,7 @@ public class SystemPurposeComplianceRulesTest {
         I18n i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);
         complianceRules = new SystemPurposeComplianceRules(eventSink, consumerCurator, consumerTypeCurator,
-                i18n);
+                i18n, poolCurator);
         owner = new Owner("test");
         owner.setId(TestUtil.randomString());
     }
