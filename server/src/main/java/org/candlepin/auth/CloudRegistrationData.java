@@ -14,7 +14,6 @@
  */
 package org.candlepin.auth;
 
-import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.service.model.CloudRegistrationInfo;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -22,10 +21,9 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 
 /**
- * The CloudRegistrationDTO contains fields for performing automatic cloud-based registration.
+ * The CloudRegistrationData contains fields for performing automatic cloud-based registration.
  */
-public class CloudRegistrationData extends CandlepinDTO<CloudRegistrationData>
-    implements CloudRegistrationInfo {
+public class CloudRegistrationData implements CloudRegistrationInfo {
 
     private String type;
     private String metadata;
@@ -36,17 +34,6 @@ public class CloudRegistrationData extends CandlepinDTO<CloudRegistrationData>
      */
     public CloudRegistrationData() {
         // Intentionally left empty
-    }
-
-    /**
-     * Initializes a new CloudRegistrationDTO instance which is a shallow copy of the provided
-     * source entity.
-     *
-     * @param source
-     *  The source entity to copy
-     */
-    public CloudRegistrationData(CloudRegistrationData source) {
-        this.populate(source);
     }
 
     /**
@@ -159,21 +146,4 @@ public class CloudRegistrationData extends CandlepinDTO<CloudRegistrationData>
 
         return builder.toHashCode();
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CloudRegistrationData populate(CloudRegistrationData source) {
-        if (source == null) {
-            throw new IllegalArgumentException("source is null");
-        }
-
-        this.setType(source.getType());
-        this.setMetadata(source.getMetadata());
-        this.setSignature(source.getSignature());
-
-        return this;
-    }
-
 }
