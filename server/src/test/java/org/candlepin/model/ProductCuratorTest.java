@@ -15,7 +15,7 @@
 package org.candlepin.model;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -33,6 +33,8 @@ import org.candlepin.util.PropertyValidationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -641,5 +644,143 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(ise.getMessage(),
             "Product contains a Branding with a null product id, name or type.",
             "The exception should have a different message.");
+    }
+
+    @Test
+    public void testGetPoolsReferencingProducts() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProduct("p1", "product_1");
+        Product product2 = this.createProduct("p2", "product_2", owner1);
+        Product product3 = this.createProduct("p3", "product_3", owner2);
+
+        Pool pool1 = this.createPool(owner1, product1);
+        Pool pool2 = this.createPool(owner1, product2);
+        Pool pool3 = this.createPool(owner2, product3);
+
+        Set<Pair<String, String>> output = this.productCurator.getPoolsReferencingProducts(
+            Arrays.asList(product1.getUuid(), product2.getUuid()));
+
+        assertNotNull(output);
+        assertEquals(2, output.size());
+        assertThat(output, containsInAnyOrder(
+            new ImmutablePair<String, String>(product1.getUuid(), pool1.getId()),
+            new ImmutablePair<String, String>(product2.getUuid(), pool2.getId())));
+    }
+
+    @Test
+    public void testGetPoolsReferencingProductsWithNoMatch() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProduct("p1", "product_1");
+        Product product2 = this.createProduct("p2", "product_2", owner1);
+        Product product3 = this.createProduct("p3", "product_3", owner2);
+
+        Pool pool1 = this.createPool(owner1, product1);
+        Pool pool2 = this.createPool(owner1, product2);
+        Pool pool3 = this.createPool(owner2, product3);
+
+        Set<Pair<String, String>> output = this.productCurator.getPoolsReferencingProducts(
+            Arrays.asList("bad uuid", "another bad uuid"));
+
+        assertNotNull(output);
+        assertEquals(0, output.size());
+    }
+
+    @Test
+    public void testGetPoolsReferencingProductsWithEmptyInput() {
+        Set<Pair<String, String>> output = this.productCurator.getPoolsReferencingProducts(
+            Collections.emptyList());
+
+        assertNotNull(output);
+        assertEquals(0, output.size());
+    }
+
+    @Test
+    public void testGetPoolsReferencingProductsWithNullInput() {
+        Set<Pair<String, String>> output = this.productCurator.getPoolsReferencingProducts(null);
+
+        assertNotNull(output);
+        assertEquals(0, output.size());
+    }
+
+    @Test
+    public void testGetProductsReferencingProducts() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProduct("p1", "product_1");
+        Product product2 = this.createProduct("p2", "product_2", owner1);
+        Product product3 = this.createProduct("p3", "product_3", owner2);
+        Product product4 = this.createProduct("p4", "product_4", owner2);
+
+        Product refProduct1 = TestUtil.createProduct("ref_p1", "ref product 1");
+        refProduct1.addProvidedProduct(product1);
+        Product refProduct2 = TestUtil.createProduct("ref_p2", "ref product 2")
+            .setDerivedProduct(product2);
+        Product refProduct3 = TestUtil.createProduct("ref_p3", "ref product 3")
+            .setDerivedProduct(product4);
+        refProduct3.addProvidedProduct(product3);
+
+        refProduct1 = this.createProduct(refProduct1, owner1);
+        refProduct2 = this.createProduct(refProduct2, owner1);
+        refProduct3 = this.createProduct(refProduct3, owner2);
+
+        Set<Pair<String, String>> output = this.productCurator.getProductsReferencingProducts(
+            Arrays.asList(product1.getUuid(), product2.getUuid()));
+
+        assertNotNull(output);
+        assertEquals(2, output.size());
+        assertThat(output, containsInAnyOrder(
+            new ImmutablePair<String, String>(product1.getUuid(), refProduct1.getUuid()),
+            new ImmutablePair<String, String>(product2.getUuid(), refProduct2.getUuid())));
+    }
+
+    @Test
+    public void testGetProductsReferencingProductsWithNoMatch() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProduct("p1", "product_1");
+        Product product2 = this.createProduct("p2", "product_2", owner1);
+        Product product3 = this.createProduct("p3", "product_3", owner2);
+        Product product4 = this.createProduct("p4", "product_4", owner2);
+
+        Product refProduct1 = TestUtil.createProduct("ref_p1", "ref product 1");
+        refProduct1.addProvidedProduct(product1);
+        Product refProduct2 = TestUtil.createProduct("ref_p2", "ref product 2")
+            .setDerivedProduct(product2);
+        Product refProduct3 = TestUtil.createProduct("ref_p3", "ref product 3")
+            .setDerivedProduct(product4);
+        refProduct3.addProvidedProduct(product3);
+
+        refProduct1 = this.createProduct(refProduct1, owner1);
+        refProduct2 = this.createProduct(refProduct2, owner1);
+        refProduct3 = this.createProduct(refProduct3, owner2);
+
+        Set<Pair<String, String>> output = this.productCurator.getProductsReferencingProducts(
+            Arrays.asList("bad uuid", "another bad uuid"));
+
+        assertNotNull(output);
+        assertEquals(0, output.size());
+    }
+
+    @Test
+    public void testGetProductsReferencingProductsWithEmptyInput() {
+        Set<Pair<String, String>> output = this.productCurator.getProductsReferencingProducts(
+            Collections.emptyList());
+
+        assertNotNull(output);
+        assertEquals(0, output.size());
+    }
+
+    @Test
+    public void testGetProductsReferencingProductsWithNullInput() {
+        Set<Pair<String, String>> output = this.productCurator.getProductsReferencingProducts(null);
+
+        assertNotNull(output);
+        assertEquals(0, output.size());
     }
 }
