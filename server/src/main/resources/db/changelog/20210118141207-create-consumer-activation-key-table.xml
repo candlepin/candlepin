@@ -10,10 +10,10 @@
     <changeSet id="20210118141207-1" author="prakgupt">
         <comment>Create table for consumer activation key.</comment>
 
-        <createTable tableName="cp2_consumer_activation_key">
+        <createTable tableName="cp_consumer_activation_key">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true"
-                    primaryKeyName="cp2_consumer_activation_key_pkey"/>
+                    primaryKeyName="cp_consumer_activation_key_pkey"/>
             </column>
             <column name="created" type="${timestamp.type}"/>
             <column name="updated" type="${timestamp.type}"/>
@@ -22,7 +22,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="activation_key_name" type="VARCHAR(32)">
+            <column name="activation_key_name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
 
@@ -32,9 +32,9 @@
         </createTable>
 
         <addForeignKeyConstraint
-                baseTableName="cp2_consumer_activation_key"
+                baseTableName="cp_consumer_activation_key"
                 baseColumnNames="consumer_id"
-                constraintName="cp2_consumer_activation_key_fk1"
+                constraintName="cp_consumer_activation_key_fk1"
                 deferrable="false"
                 initiallyDeferred="false"
                 onDelete="CASCADE"
