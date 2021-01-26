@@ -34,7 +34,7 @@ import javax.validation.constraints.NotNull;
 public class ConsumerActivationKey extends AbstractHibernateObject<ConsumerActivationKey> {
 
     /** Name of the table backing this object in the database */
-    public static final String DB_TABLE = "cp2_consumer_activation_key";
+    public static final String DB_TABLE = "cp_consumer_activation_key";
 
     @Id
     @GeneratedValue(generator = "system-uuid")
