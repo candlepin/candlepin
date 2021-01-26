@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.11
+Version: 3.2.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,25 @@ fi
 
 #raw
 %changelog
+* Tue Jan 26 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.12-1
+- 1920158: ERROR: value too long for type character varying(32)  - Rename table
+  cp2_consumer_activation_key to cp_consumer_activation_key  - Update
+  activation_key_name to VARCHAR(255)  - Update foreign and primary key
+  references (ojanus@redhat.com)
+- Fixed a bug with Content equality checks for fields with empty strings
+  (crog@redhat.com)
+- ENT-2725: Update system purpose status to NOT consider Layered SLA
+  (sdhome@redhat.com)
+- 1895853: Remove unsupported "insights_auto_register" from capabilities
+  (ojanus@redhat.com)
+-  ENT-3286: Manifest delete takes 24 hours or more in large environment (60k
+  consumers in owner) (ojanus@redhat.com)
+- Delete sub pool when virt_limit removed (nmoumoul@redhat.com)
+- ENT-2348: Changes to show activation key name & ID when   consumer has been
+  registered via activation key (prakgupt@redhat.com)
+- Upgrade Guava to version 30 (nmoumoul@redhat.com)
+- 1898605: Increased the Artemis disk usage limit (crog@redhat.com)
+
 * Tue Jan 05 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.11-1
 - Fix date in consumer resource integration test (ojanus@redhat.com)
 - Added missing query modifiers to the entity version lookup queries
