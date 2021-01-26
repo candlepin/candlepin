@@ -17,6 +17,7 @@ package org.candlepin.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.test.DatabaseTestFixture;
@@ -26,6 +27,7 @@ import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.Method;
@@ -101,22 +103,20 @@ public class ContentTest extends DatabaseTestFixture {
         assertEquals(newName, content.getName());
     }
 
-    protected static Stream<Object[]> getValuesForEqualityAndReplication() {
+    protected static Stream<Arguments> getValuesForEqualityAndReplication() {
         return Stream.of(
-            new Object[] { "Id", "test_value", "alt_value" },
-            new Object[] { "Type", "test_value", "alt_value" },
-            new Object[] { "Label", "test_value", "alt_value" },
-            new Object[] { "Name", "test_value", "alt_value" },
-            new Object[] { "Vendor", "test_value", "alt_value" },
-            new Object[] { "ContentUrl", "test_value", "alt_value" },
-            new Object[] { "RequiredTags", "test_value", "alt_value" },
-            new Object[] { "ReleaseVersion", "test_value", "alt_value" },
-            new Object[] { "GpgUrl", "test_value", "alt_value" },
-            new Object[] { "MetadataExpiration", 1234L, 5678L },
-            new Object[] { "ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5", "6") },
-            new Object[] { "Arches", "test_value", "alt_value" }
-            // new Object[] { "Locked", Boolean.TRUE, Boolean.FALSE }
-        );
+            Arguments.of("Id", "test_value", "alt_value"),
+            Arguments.of("Type", "test_value", "alt_value"),
+            Arguments.of("Label", "test_value", "alt_value"),
+            Arguments.of("Name", "test_value", "alt_value"),
+            Arguments.of("Vendor", "test_value", "alt_value"),
+            Arguments.of("ContentUrl", "test_value", "alt_value"),
+            Arguments.of("RequiredTags", "test_value", "alt_value"),
+            Arguments.of("ReleaseVersion", "test_value", "alt_value"),
+            Arguments.of("GpgUrl", "test_value", "alt_value"),
+            Arguments.of("MetadataExpiration", 1234L, 5678L),
+            Arguments.of("ModifiedProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5", "6")),
+            Arguments.of("Arches", "test_value", "alt_value"));
     }
 
     protected Method[] getAccessorAndMutator(String methodSuffix, Class mutatorInputClass)
@@ -162,7 +162,7 @@ public class ContentTest extends DatabaseTestFixture {
         assertTrue(rhs.equals(lhs));
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("getValuesForEqualityAndReplication")
     public void testEquality(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
@@ -198,7 +198,7 @@ public class ContentTest extends DatabaseTestFixture {
         assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("getValuesForEqualityAndReplication")
     public void testEntityVersion(String valueName, Object value1, Object value2) throws Exception {
         Method[] methods = this.getAccessorAndMutator(valueName, value1.getClass());
@@ -218,5 +218,51 @@ public class ContentTest extends DatabaseTestFixture {
 
         assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
         assertNotEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
+    }
+
+    protected static Stream<Arguments> getValueNamesForNullConversion() {
+        return Stream.of(
+            Arguments.of("ContentUrl"),
+            Arguments.of("RequiredTags"),
+            Arguments.of("ReleaseVersion"),
+            Arguments.of("GpgUrl"),
+            Arguments.of("Arches"));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("getValueNamesForNullConversion")
+    public void testEmptyToNullConversion(String valueName) throws Exception {
+        Method[] methods = this.getAccessorAndMutator(valueName, String.class);
+        Method accessor = methods[0];
+        Method mutator = methods[1];
+
+        Content content = new Content();
+
+        assertNull(accessor.invoke(content));
+        mutator.invoke(content, "");
+        assertNull(accessor.invoke(content));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("getValueNamesForNullConversion")
+    public void testEmptyToNullConversionMaintainsEquality(String valueName) throws Exception {
+        Method[] methods = this.getAccessorAndMutator(valueName, String.class);
+        Method accessor = methods[0];
+        Method mutator = methods[1];
+
+        Content lhs = new Content();
+        Content rhs = new Content();
+
+        assertEquals(lhs, rhs);
+        assertEquals(lhs.hashCode(), rhs.hashCode());
+        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
+
+        // Put an empty value in the rhs and verify that the conversion to null maintains
+        // equality with the unmodified lhs (which should default to nulls)
+        mutator.invoke(rhs, "");
+
+        assertEquals(lhs, rhs);
+        assertEquals(lhs.hashCode(), rhs.hashCode());
+        assertEquals(lhs.getEntityVersion(), rhs.getEntityVersion());
     }
 }
