@@ -69,8 +69,8 @@ public class StatusResource {
      * The current git release
      */
     private String release = "Unknown";
-    private boolean standalone = true;
-    private boolean keycloakEnabled = true;
+    private boolean standalone;
+    private boolean keycloakEnabled;
     private RulesCurator rulesCurator;
     private JsRunnerProvider jsProvider;
     private CandlepinCache candlepinCache;
@@ -92,11 +92,12 @@ public class StatusResource {
         version = map.get("version");
         release = map.get("release");
 
-        if (config != null && !config.getBoolean(ConfigProperties.STANDALONE)) {
-            this.standalone = false;
+        if (config != null) {
+            this.standalone = config.getBoolean(ConfigProperties.STANDALONE);
+            this.keycloakEnabled = config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION);
         }
-
-        if (config == null || !config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
+        else {
+            this.standalone = true;
             this.keycloakEnabled = false;
         }
     }

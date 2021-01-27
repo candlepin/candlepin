@@ -63,6 +63,10 @@ public class CloudRegistrationResource {
     public String authorize(CloudRegistrationDTO cloudRegDTO,
         @Context Principal principal) {
 
+        if (cloudRegDTO == null) {
+            throw new BadRequestException(this.i18n.tr("No cloud registration information provided"));
+        }
+
         try {
             return this.cloudRegistrationAuth.generateRegistrationToken(principal, cloudRegDTO);
         }

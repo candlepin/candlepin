@@ -34,6 +34,8 @@ public class CandlepinCapabilities extends HashSet<String> {
 
     public static final String KEYCLOAK_AUTH_CAPABILITY = "keycloak_auth";
 
+    public static final String CLOUD_REGISTRATION_CAPABILITY = "cloud_registration";
+
     private static CandlepinCapabilities capabilities;
 
 

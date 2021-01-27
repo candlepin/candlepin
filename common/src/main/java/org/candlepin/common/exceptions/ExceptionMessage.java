@@ -75,6 +75,9 @@ public class ExceptionMessage implements Serializable {
     }
 
     public String toString() {
-        return displayMessage;
+        // This needs to always return a string. If we don't have a display message, we should return
+        // an empty string instead.
+        String displayMessage = this.getDisplayMessage();
+        return displayMessage != null ? displayMessage : "";
     }
 }
