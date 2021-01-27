@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20210127105630-1a" author="crog" dbms="postgresql">
+        <comment>
+            Migrates definition of derived product from pool to product
+        </comment>
+
+        <sql>
+            UPDATE cp2_products prod SET derived_product_uuid = pool.derived_product_uuid
+            FROM cp_pool pool
+            WHERE pool.product_uuid = prod.uuid
+        </sql>
+    </changeSet>
+
+    <changeSet id="20210127105630-1b" author="crog" dbms="mysql">
+        <comment>
+            Migrates definition of derived product from pool to product
+        </comment>
+
+        <sql>
+            UPDATE cp2_products prod JOIN cp_pool pool ON pool.product_uuid = prod.uuid
+            SET prod.derived_product_uuid = pool.derived_product_uuid
+        </sql>
+    </changeSet>
+
+    <changeSet id="20210127105630-2" author="crog">
+        <comment>
+            Migrates provided products and derived provided products from pools to products
+        </comment>
+
+        <sql>
+            INSERT INTO cp2_product_provided_products
+                SELECT DISTINCT pool.product_uuid AS product_uuid, ppp.product_uuid AS provided_product_uuid
+                    FROM cp2_pool_provided_products ppp
+                    JOIN cp_pool pool ON pool.id = ppp.pool_id
+                UNION
+                SELECT DISTINCT pool.derived_product_uuid AS product_uuid, dpp.product_uuid AS provided_product_uuid
+                    FROM cp2_pool_derprov_products dpp
+                    JOIN cp_pool pool ON pool.id = dpp.pool_id
+        </sql>
+    </changeSet>
+</databaseChangeLog>
