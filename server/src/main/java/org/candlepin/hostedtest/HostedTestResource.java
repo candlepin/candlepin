@@ -19,6 +19,7 @@ import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.dto.ContentData;
@@ -27,6 +28,7 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.ContentInfo;
+import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -53,17 +55,15 @@ import javax.ws.rs.core.MediaType;
 
 
 /**
- * The SubscriptionResource class is used to provide an
- * in-memory upstream source for subscriptions when candlepin is run in hosted
- * mode, while it is built with candlepin, it is not packaged in candlepin.war,
- * as the only purpose of this class is to support spec tests.
+ * The HostedTestResource class provides an endpoint for managing the upstream data stored by the
+ * backing HostedTestDataStore class
  */
 @SuppressSwaggerCheck
 @Path("/hostedtest")
-public class HostedTestSubscriptionResource {
+public class HostedTestResource {
 
     @Inject
-    private HostedTestSubscriptionServiceAdapter adapter;
+    private HostedTestDataStore datastore;
 
     @Inject
     private UniqueIdGenerator idGenerator;
@@ -111,21 +111,21 @@ public class HostedTestSubscriptionResource {
 
         // Create content...
         for (ContentData content : cmap.values()) {
-            if (this.adapter.getContent(content.getId()) != null) {
-                this.adapter.updateContent(content.getId(), content);
+            if (this.datastore.getContent(content.getId()) != null) {
+                this.datastore.updateContent(content.getId(), content);
             }
             else {
-                this.adapter.createContent(content);
+                this.datastore.createContent(content);
             }
         }
 
         // Create products...
         for (ProductData product : pmap.values()) {
-            if (this.adapter.getProduct(product.getId()) != null) {
-                this.adapter.updateProduct(product.getId(), product);
+            if (this.datastore.getProduct(product.getId()) != null) {
+                this.datastore.updateProduct(product.getId(), product);
             }
             else {
-                this.adapter.createProduct(product);
+                this.datastore.createProduct(product);
             }
         }
     }
@@ -174,6 +174,35 @@ public class HostedTestSubscriptionResource {
 
 
     /**
+     * Creates a new owner from the subscription JSON provided. Any UUID
+     * provided in the JSON will be ignored when creating the new subscription.
+     *
+     * @param owner
+     *  An OwnerDTO object built from the JSON provided in the request
+     *
+     * @return
+     *  The newly created Subscription object
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/owners")
+    public OwnerInfo createOwner(OwnerDTO owner) {
+        if (this.datastore.getOwner(owner.getKey()) != null) {
+            throw new ConflictException("owner already exists: " + owner.getKey());
+        }
+
+        // Create owner object...
+        OwnerInfo ownerInfo = this.datastore.createOwner(owner);
+
+        return ownerInfo;
+    }
+
+    // TODO: Add remaining owner CRUD operations as needed
+
+
+
+    /**
      * Creates a new subscription from the subscription JSON provided. Any UUID
      * provided in the JSON will be ignored when creating the new subscription.
      *
@@ -193,7 +222,7 @@ public class HostedTestSubscriptionResource {
             subscription.setId(this.idGenerator.generateId());
         }
 
-        if (this.adapter.getSubscription(subscription.getId()) != null) {
+        if (this.datastore.getSubscription(subscription.getId()) != null) {
             throw new ConflictException("subscription already exists: " + subscription.getId());
         }
 
@@ -201,7 +230,7 @@ public class HostedTestSubscriptionResource {
         this.createSubscriptionObjects(subscription);
 
         // Create subscription object...
-        SubscriptionInfo sinfo = this.adapter.createSubscription(subscription);
+        SubscriptionInfo sinfo = this.datastore.createSubscription(subscription);
 
         return sinfo;
     }
@@ -216,7 +245,7 @@ public class HostedTestSubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
     public Collection<? extends SubscriptionInfo> listSubscriptions() {
-        return this.adapter.getSubscriptions();
+        return this.datastore.listSubscriptions();
     }
 
     /**
@@ -233,7 +262,7 @@ public class HostedTestSubscriptionResource {
     @Path("/subscriptions/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public SubscriptionInfo getSubscription(@PathParam("subscription_id") String subscriptionId) {
-        return adapter.getSubscription(subscriptionId);
+        return this.datastore.getSubscription(subscriptionId);
     }
 
     /**
@@ -259,7 +288,7 @@ public class HostedTestSubscriptionResource {
             throw new BadRequestException("no subscription data provided");
         }
 
-        if (this.adapter.getSubscription(subscriptionId) == null) {
+        if (this.datastore.getSubscription(subscriptionId) == null) {
             throw new NotFoundException("subscription does not yet exist: " + subscriptionId);
         }
 
@@ -267,7 +296,7 @@ public class HostedTestSubscriptionResource {
         this.createSubscriptionObjects(subscription);
 
         // Update subscription
-        return this.adapter.updateSubscription(subscriptionId, subscription);
+        return this.datastore.updateSubscription(subscriptionId, subscription);
     }
 
     /**
@@ -283,7 +312,7 @@ public class HostedTestSubscriptionResource {
     @Path("/subscriptions/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public boolean deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
-        return adapter.deleteSubscription(subscriptionId) != null;
+        return this.datastore.deleteSubscription(subscriptionId) != null;
     }
 
     /**
@@ -292,7 +321,7 @@ public class HostedTestSubscriptionResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public void clearData() {
-        this.adapter.clearData();
+        this.datastore.clearData();
     }
 
     @POST
@@ -304,14 +333,14 @@ public class HostedTestSubscriptionResource {
         @PathParam("product_id") String productId,
         Map<String, Boolean> contentMap) {
 
-        ProductInfo pinfo = this.adapter.getProduct(productId);
+        ProductInfo pinfo = this.datastore.getProduct(productId);
 
         if (pinfo == null) {
             throw new NotFoundException("product not found: " + productId);
         }
 
         for (String contentId : contentMap.keySet()) {
-            if (this.adapter.getContent(contentId) == null) {
+            if (this.datastore.getContent(contentId) == null) {
                 throw new NotFoundException("content not found: " + contentId);
             }
         }
@@ -323,7 +352,7 @@ public class HostedTestSubscriptionResource {
                 entry.getValue() :
                 ProductContent.DEFAULT_ENABLED_STATE;
 
-            this.adapter.addContentToProduct(productId, contentId, enabled);
+            this.datastore.addContentToProduct(productId, contentId, enabled);
         }
 
         return pinfo;
@@ -351,17 +380,17 @@ public class HostedTestSubscriptionResource {
     public ProductInfo removeContentFromProduct(@PathParam("product_id") String productId,
         Collection<String> contentIds) {
 
-        if (this.adapter.getProduct(productId) == null) {
+        if (this.datastore.getProduct(productId) == null) {
             throw new NotFoundException("product not found: " + productId);
         }
 
         if (contentIds != null) {
             for (String contentId : contentIds) {
-                this.adapter.removeContentFromProduct(productId, contentId);
+                this.datastore.removeContentFromProduct(productId, contentId);
             }
         }
 
-        return this.adapter.getProduct(productId);
+        return this.datastore.getProduct(productId);
     }
 
     @DELETE
@@ -378,7 +407,7 @@ public class HostedTestSubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Collection<? extends ProductInfo> listProducts() {
-        return this.adapter.listProducts();
+        return this.datastore.listProducts();
     }
 
     @GET
@@ -386,7 +415,7 @@ public class HostedTestSubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public ProductInfo getProduct(@PathParam("product_id") String productId) {
-        ProductInfo pinfo = this.adapter.getProduct(productId);
+        ProductInfo pinfo = this.datastore.getProduct(productId);
 
         if (pinfo == null) {
             throw new NotFoundException("product does not exist: " + productId);
@@ -409,11 +438,11 @@ public class HostedTestSubscriptionResource {
             throw new BadRequestException("product lacks a product ID: " + product);
         }
 
-        if (this.adapter.getProduct(product.getId()) != null) {
+        if (this.datastore.getProduct(product.getId()) != null) {
             throw new ConflictException("product already exists: " + product.getId());
         }
 
-        return this.adapter.createProduct(product);
+        return this.datastore.createProduct(product);
     }
 
     @PUT
@@ -429,18 +458,18 @@ public class HostedTestSubscriptionResource {
             throw new BadRequestException("product update is null");
         }
 
-        if (this.adapter.getProduct(productId) == null) {
+        if (this.datastore.getProduct(productId) == null) {
             throw new NotFoundException("product does not yet exist: " + productId);
         }
 
-        return this.adapter.updateProduct(productId, update);
+        return this.datastore.updateProduct(productId, update);
     }
 
     @DELETE
     @Path("/products/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public boolean deleteProduct(@PathParam("product_id") String productId) {
-        return adapter.deleteProduct(productId) != null;
+        return this.datastore.deleteProduct(productId) != null;
     }
 
 
@@ -449,7 +478,7 @@ public class HostedTestSubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public Collection<? extends ContentInfo> listContent() {
-        return this.adapter.listContent();
+        return this.datastore.listContent();
     }
 
     @GET
@@ -457,7 +486,7 @@ public class HostedTestSubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Transactional
     public ContentInfo getContent(@PathParam("content_id") String contentId) {
-        ContentInfo cinfo = this.adapter.getContent(contentId);
+        ContentInfo cinfo = this.datastore.getContent(contentId);
 
         if (cinfo == null) {
             throw new NotFoundException("content does not exist: " + contentId);
@@ -480,11 +509,11 @@ public class HostedTestSubscriptionResource {
             throw new BadRequestException("content lacks a content ID: " + content);
         }
 
-        if (this.adapter.getContent(content.getId()) != null) {
+        if (this.datastore.getContent(content.getId()) != null) {
             throw new ConflictException("content already exists: " + content.getId());
         }
 
-        return this.adapter.createContent(content);
+        return this.datastore.createContent(content);
     }
 
     @PUT
@@ -500,18 +529,18 @@ public class HostedTestSubscriptionResource {
             throw new BadRequestException("content update is null");
         }
 
-        if (this.adapter.getContent(contentId) == null) {
+        if (this.datastore.getContent(contentId) == null) {
             throw new NotFoundException("content does not yet exist: " + contentId);
         }
 
-        return this.adapter.updateContent(contentId, update);
+        return this.datastore.updateContent(contentId, update);
     }
 
     @DELETE
     @Path("/content/{content_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public boolean deleteContent(@PathParam("content_id") String contentId) {
-        return adapter.deleteContent(contentId) != null;
+        return this.datastore.deleteContent(contentId) != null;
     }
 
 }

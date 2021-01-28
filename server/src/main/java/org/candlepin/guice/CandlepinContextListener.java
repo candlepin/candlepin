@@ -221,9 +221,15 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         ModelConverters.getInstance()
             .addConverter(injector.getInstance(CandlepinSwaggerModelConverter.class));
 
+        // Update our capabilities with configurable features
+        CandlepinCapabilities capabilities = CandlepinCapabilities.getCapabilities();
+
         if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
-            CandlepinCapabilities capabilities = CandlepinCapabilities.getCapabilities();
             capabilities.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
+        }
+
+        if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION)) {
+            capabilities.add(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
         }
 
         // Init CRL file

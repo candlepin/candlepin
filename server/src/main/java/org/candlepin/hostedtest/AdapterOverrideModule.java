@@ -14,6 +14,8 @@
  */
 package org.candlepin.hostedtest;
 
+import org.candlepin.service.CloudRegistrationAdapter;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.AbstractModule;
@@ -32,10 +34,15 @@ public class AdapterOverrideModule extends AbstractModule {
      */
     @Override
     protected void configure() {
+        bind(HostedTestResource.class);
+        bind(HostedTestDataStore.class).asEagerSingleton();
 
         bind(SubscriptionServiceAdapter.class).to(HostedTestSubscriptionServiceAdapter.class)
-                .asEagerSingleton();
-        bind(HostedTestSubscriptionResource.class);
+            .asEagerSingleton();
+        bind(ProductServiceAdapter.class).to(HostedTestProductServiceAdapter.class)
+            .asEagerSingleton();
+        bind(CloudRegistrationAdapter.class).to(HostedTestCloudRegistrationAdapter.class)
+            .asEagerSingleton();
     }
 
 }

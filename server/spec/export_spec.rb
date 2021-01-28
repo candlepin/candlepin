@@ -157,20 +157,25 @@ describe 'Export', :serial => true do
       files = Dir["#{prod_dir}/*.json"].find_all.collect {|file| file}
       files.length.should == @exporter.products.length
 
-      expected_certs = 0
-      @exporter.products.each do |name, product|
-        File.exists?(File.join(prod_dir, "#{product.id}.json")).should be true
-        # Count numeric ids
-        if !!(product.id =~ /^[-+]?[0-9]+$/)
-          expected_certs += 1
-        end
-      end
+      # If we're not running in hosted mode, verify the certs exist
+      # In hosted mode, the adapters do not return or generate certs
+      if !is_hosted?
+        expected_certs = 0
 
-      # Only one product cert should get created as only products with
-      # a numeric ID (real products) have certs created on export.
-      certs = Dir["#{prod_dir}/*.pem"].find_all.collect {|file| file}
-      certs.length.should == expected_certs
-      File.exists?(File.join(prod_dir, "#{@exporter.products[:derived_provided_prod].id}.pem")).should be true
+        @exporter.products.each do |name, product|
+          File.exists?(File.join(prod_dir, "#{product.id}.json")).should be true
+          # Count numeric ids
+          if !!(product.id =~ /^[-+]?[0-9]+$/)
+            expected_certs += 1
+          end
+        end
+
+        # Only one product cert should get created as only products with
+        # a numeric ID (real products) have certs created on export.
+        certs = Dir["#{prod_dir}/*.pem"].find_all.collect {|file| file}
+        expect(certs.length).to eq(expected_certs)
+        expect(File.exists?(File.join(prod_dir, "#{@exporter.products[:derived_provided_prod].id}.pem"))).to eq(true)
+      end
     end
 
     it 'should allow manifest creation with read only user' do

@@ -285,7 +285,13 @@ module HostedTest
   end
 
 
+  def create_upstream_owner(owner_key)
+    owner = {
+      :key => owner_key
+    }
 
+    @cp.post('hostedtest/owners', {}, owner)
+  end
 
   def create_upstream_subscription(subscription_id, owner_key, product_id, params = {})
     start_date = params.delete(:start_date) || Date.today
