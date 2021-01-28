@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.12
+Version: 3.2.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,10 @@ fi
 
 #raw
 %changelog
+* Thu Jan 28 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.13-1
+- 1920582: Added additional validation for cloud registration data
+  (crog@redhat.com)
+
 * Tue Jan 26 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.12-1
 - 1920158: ERROR: value too long for type character varying(32)  - Rename table
   cp2_consumer_activation_key to cp_consumer_activation_key  - Update
