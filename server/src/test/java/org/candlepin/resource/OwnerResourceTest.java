@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -23,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -1020,6 +1023,31 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         key.setReleaseVersion(TestUtil.getStringOfSize(256));
 
         assertThrows(BadRequestException.class, () -> resource.createActivationKey(owner.getKey(), key));
+    }
+
+    @Test
+    public void testCreateActivationKeyWithPoolsFailsInSCAMode() {
+        Owner owner = new Owner()
+            .setKey("test-org")
+            .setContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+
+        Pool pool = new Pool();
+        pool.setId("test-pool");
+
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(owner.getKey());
+        doReturn(pool).when(this.mockPoolManager).get(pool.getId());
+
+        OwnerResource resource = this.buildOwnerResource();
+
+        ActivationKey key = new ActivationKey("test-key", owner);
+        key.addPool(pool, 1L);
+
+        ActivationKeyDTO input = this.modelTranslator.translate(key, ActivationKeyDTO.class);
+
+        BadRequestException exception = assertThrows(BadRequestException.class,
+            () -> resource.createActivationKey(owner.getKey(), input));
+
+        assertThat(exception.getMessage(), containsString("simple content access"));
     }
 
     private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2) throws ParseException {

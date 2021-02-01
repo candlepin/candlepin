@@ -12,10 +12,11 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.controller;
 
 import java.util.Objects;
+
+
 
 public class OwnerContentAccess {
 
@@ -55,9 +56,7 @@ public class OwnerContentAccess {
 
     @Override
     public String toString() {
-        return "OwnerContentAccess{" +
-            "contentAccessMode='" + contentAccessMode + '\'' +
-            ", contentAccessModeList='" + contentAccessModeList + '\'' +
-            '}';
+        return String.format("OwnerContentAccess [contentAccessMode: '%s', contentAccessModeList: '%s']",
+            this.getContentAccessMode(), this.getContentAccessModeList());
     }
 }

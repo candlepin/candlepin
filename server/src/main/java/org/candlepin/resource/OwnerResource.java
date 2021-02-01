@@ -1035,8 +1035,8 @@ public class OwnerResource {
                         "directly in standalone mode."));
             }
 
-            // This kinda doubles up on some work here, but at least we nice, clear error messages
-            // rather than spooky ISEs.
+            // This kinda doubles up on some work here, but at least we output nice, clear error
+            // messages rather than spooky ISEs.
             this.validateContentAccessModeChanges(owner, contentAccessModeList, contentAccessMode);
             updateContentAccess = true;
         }
@@ -1314,6 +1314,16 @@ public class OwnerResource {
             throw new BadRequestException(
                 i18n.tr("The activation key name \"{0}\" is already in use for owner {1}",
                         dto.getName(), ownerKey));
+        }
+
+        // If we're running in SCA mode, don't allow creating keys with pools, as we want to signal
+        // how pointless this is.
+        if (owner.isContentAccessEnabled()) {
+            Set<ActivationKeyDTO.ActivationKeyPoolDTO> pools = dto.getPools();
+            if (pools != null && pools.size() > 0) {
+                throw new BadRequestException(i18n.tr("Activation keys cannot be created with pools while" +
+                    "the org is operating in simple content access mode"));
+            }
         }
 
         serviceLevelValidator.validate(owner.getId(), dto.getServiceLevel());

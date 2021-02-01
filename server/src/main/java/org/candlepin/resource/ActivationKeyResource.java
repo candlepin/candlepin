@@ -226,6 +226,15 @@ public class ActivationKeyResource {
         @QueryParam("quantity") Long quantity) {
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
+
+        // If we're running in SCA mode, don't allow adding (more) pools to the keys, as we want
+        // to signal how pointless this is.
+        Owner owner = key.getOwner();
+        if (owner != null && owner.isContentAccessEnabled()) {
+            throw new BadRequestException(i18n.tr("Pools cannot be added to activation keys while" +
+                "the org is operating in simple content access mode"));
+        }
+
         Pool pool = findPool(poolId);
 
         String message = activationKeyRules.validatePoolForActivationKey(key, pool, quantity);

@@ -610,7 +610,7 @@ public class Owner extends AbstractHibernateObject<Owner>
      */
     @XmlTransient
     public boolean isContentAccessEnabled() {
-        return ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue().equals(this.getContentAccessMode());
+        return ContentAccessMode.ORG_ENVIRONMENT.matches(this.getContentAccessMode());
     }
 
 }
