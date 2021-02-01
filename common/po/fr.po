@@ -1,19 +1,21 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # corina roe <croe@redhat.com>, 2019. #zanata
+# Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:53-0500\n"
-"PO-Revision-Date: 2019-11-14 02:04+0000\n"
-"Last-Translator: Ondřej Januš <ojanus@redhat.com>\n"
-"Language-Team: French\n"
+"PO-Revision-Date: 2021-01-30 16:40+0000\n"
+"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"Language-Team: French <https://translate.fedoraproject.org/projects/"
+"candlepin/candlepin-2-9-hotfix/fr/>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1)\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 4.4.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -738,7 +740,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:178
 #, java-format
 msgid "Pool is restricted to unmapped virtual guests: \"{1}\""
-msgstr "Accès au pool limité aux invités virtuels non mappés : « {1} »."
+msgstr "Accès au pool limité aux invités virtuels non mappés : « {1} »"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:180
 #, java-format
@@ -860,7 +862,7 @@ msgstr "Le produit avec l’ID {0} est introuvable."
 #: server/src/main/java/org/candlepin/resource/CdnResource.java:104
 #, java-format
 msgid "A CDN with the label {0} already exists"
-msgstr "Un CDN ayant comme étiquette {0} existe déjà."
+msgstr "Un CDN ayant comme étiquette {0} existe déjà"
 
 #: server/src/main/java/org/candlepin/resource/CdnResource.java:191
 msgid "cdn certificate has null key or cert."
@@ -1083,7 +1085,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2108
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
-msgstr "Organization \"{0}\" - auto-attach désactivé"
+msgstr "Organization \"{0}\" - auto-attach désactivé."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2147
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2257
@@ -1241,7 +1243,7 @@ msgstr "Aucun ID de contenu spécifié"
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:202
 #, java-format
 msgid "Unable to find content with the ID \"{0}\"."
-msgstr "Impossible de trouver un contenu avec l’ID \"{0}\""
+msgstr "Impossible de trouver un contenu avec l’ID \"{0}\"."
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:246
 #, java-format
@@ -1379,7 +1381,7 @@ msgstr "La clé du propriétaire est nul ou vide."
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:297
 #, java-format
 msgid "Owner with key \"{0}\" was not found"
-msgstr "Impossible de trouver le propriétaire avec la clé \"{0}\"."
+msgstr "Impossible de trouver le propriétaire avec la clé \"{0}\""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:323
 msgid "Owner id is null or empty."
@@ -1388,7 +1390,7 @@ msgstr "L’id du propriétaire est nul ou vide."
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:327
 #, java-format
 msgid "Owner with id \"{0}\" was not found"
-msgstr "Impossible de trouver le propriétaire avec l’id \"{0}\"."
+msgstr "Impossible de trouver le propriétaire avec l’id \"{0}\""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:356
 msgid "Owner lookup failed because id and key were null or empty."
@@ -1514,7 +1516,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1712
 msgid "Pool product ID not specified"
-msgstr "Id Pool produits non spécifié."
+msgstr "Id Pool produits non spécifié"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1752
 #, java-format
@@ -1622,7 +1624,7 @@ msgstr "Impossible de trouver le pool ayant pour ID \"{0}\"."
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:341
 #, java-format
 msgid "A certificate was not found for pool \"{0}\""
-msgstr "Un certificat pour le pool \"{0}\" n’a pas pu être trouvé."
+msgstr "Un certificat pour le pool \"{0}\" n’a pas pu être trouvé"
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:112
 #, java-format
@@ -1643,7 +1645,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:266
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:284
 msgid "No product IDs specified"
-msgstr "Aucun ID de produit spécifié."
+msgstr "Aucun ID de produit spécifié"
 
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:99
 msgid "role name is null or empty"
