@@ -1,13 +1,13 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
-# Ludek Janda <ljanda@redhat.com>, 2020. #zanata
+# Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
 # Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-01-31 02:01-0500\n"
-"PO-Revision-Date: 2021-01-30 16:40+0000\n"
-"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"PO-Revision-Date: 2021-02-02 10:40+0000\n"
+"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/zh_CN/>\n"
 "Language: zh_CN\n"
@@ -143,7 +143,7 @@ msgstr "必须是有效 URL"
 
 #: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
-msgstr "尝试针对不存在的组织密钥 “{}” 进行修复"
+msgstr "尝试针对不存在的组织密钥“ {}”进行修复"
 
 #: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:95
 #, java-format
@@ -705,7 +705,7 @@ msgstr "这个系统已附加了一个产品 ''{1}'' 的订阅。"
 #, java-format
 msgid ""
 "There are not enough free subscriptions available for the product \"{1}\""
-msgstr "没有足够的可用订阅供产品 ''{1}'' 使用"
+msgstr "没有足够的可用订阅供产品 ''{1}'' 使用。"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
 #, java-format
@@ -1013,13 +1013,9 @@ msgstr ""
 "忽略自动附加的请求。 因为内容访问模式的设置 ，组织“ {0}”禁用了这个功能。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2175
-#, fuzzy, java-format
-#| msgid ""
-#| "Ignoring request to auto-attach. It is disabled for org \"{0}\" because "
-#| "of the content access mode setting."
+#, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr ""
-"忽略自动附加的请求。 因为内容访问模式的设置 ，组织“ {0}”禁用了这个功能。"
+msgstr "忽略自动附加请求。对于org \"{0}\" 它是禁用的。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2181
 #, java-format

@@ -1,5 +1,5 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
-# Ludek Janda <ljanda@redhat.com>, 2020. #zanata
+# Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2020. #zanata
 # Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-01-31 02:01-0500\n"
-"PO-Revision-Date: 2021-01-30 16:40+0000\n"
-"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"PO-Revision-Date: 2021-02-02 10:40+0000\n"
+"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/master/fr/>\n"
 "Language: fr\n"
@@ -1086,10 +1086,7 @@ msgstr ""
 "attach désactivée à cause de la configuration de mode d'accès au contenu."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2175
-#, fuzzy, java-format
-#| msgid ""
-#| "Ignoring request to auto-attach. It is disabled for org \"{0}\" because "
-#| "of the content access mode setting."
+#, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 "Requête auto-attach ignorée. L'organisation \"{0}\" a déjà la fonction auto-"
@@ -1384,7 +1381,8 @@ msgstr "La tâche \"{0}\" n''est pas configurée pour une programmation manuelle
 #: server/src/main/java/org/candlepin/resource/JobResource.java:427
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
-msgstr "Exception inattendue lors de la programmation de la tâche \"{0}\""
+msgstr ""
+"Exception inattendue \"{0}\" lors de la programmation de la tâche \"{0}\""
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:494
 #, java-format

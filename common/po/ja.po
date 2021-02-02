@@ -1,14 +1,14 @@
 # Keiko Moriguchi <kemorigu@redhat.com>, 2019. #zanata
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
-# Ludek Janda <ljanda@redhat.com>, 2020. #zanata
+# Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
 # Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-01-31 02:01-0500\n"
-"PO-Revision-Date: 2021-01-30 16:40+0000\n"
-"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"PO-Revision-Date: 2021-02-02 10:40+0000\n"
+"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Japanese <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ja/>\n"
 "Language: ja\n"
@@ -1044,14 +1044,9 @@ msgstr ""
 "り、組織 \"{0}\" に対して無効となっています。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2175
-#, fuzzy, java-format
-#| msgid ""
-#| "Ignoring request to auto-attach. It is disabled for org \"{0}\" because "
-#| "of the content access mode setting."
+#, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr ""
-"自動割り当ての要求を無視します。これは、コンテンツアクセスモードの設定によ"
-"り、組織 \"{0}\" に対して無効となっています。"
+msgstr "自動添付のリクエストを無視します。これは、組織 \"{0}\" に対して無効となっています。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2181
 #, java-format
