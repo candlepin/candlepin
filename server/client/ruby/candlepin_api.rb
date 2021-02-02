@@ -1721,6 +1721,21 @@ class Candlepin
     return JSON.parse(response.body) unless response.body.empty?
   end
 
+  def get_response(uri, content_type='application/json')
+    # escape and build uri
+    euri = URI.escape(uri)
+
+    # execute
+    puts ("GET #{euri}") if @verbose
+    if content_type.nil?
+      response = get_client(euri, Net::HTTP::Get, :get)[euri].get :content_type => 'application/json'
+    else
+      response = get_client(euri, Net::HTTP::Get, :get)[euri].get :content_type => content_type
+    end
+
+    return (response.body)
+  end
+
 
 
   protected
