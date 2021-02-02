@@ -1,20 +1,22 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2020. #zanata
+# Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-17 02:00-0500\n"
-"PO-Revision-Date: 2020-08-05 08:08-0400\n"
-"Last-Translator: Nikos Moumoulidis <nmoumoul@redhat.com>\n"
-"Language-Team: French\n"
+"PO-Revision-Date: 2021-01-30 16:40+0000\n"
+"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"Language-Team: French <https://translate.fedoraproject.org/projects/"
+"candlepin/master/fr/>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1)\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 4.4.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -371,6 +373,8 @@ msgstr "Erreur lors du contact au service utilisateur"
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr ""
+"les détails fournisseur ou compte-cloud n'ont pas pu être résolus pour une "
+"organisation"
 
 #: server/src/main/java/org/candlepin/auth/ConsumerAuth.java:70
 #: server/src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:142
@@ -858,6 +862,7 @@ msgstr "Pas de tel réseau de livraison de contenu : {0}"
 #: server/src/main/java/org/candlepin/resource/CloudRegistrationResource.java:70
 msgid "Cloud registration is not supported by this Candlepin instance"
 msgstr ""
+"L'abonnement Cloud n'est pas pris en charge par cette instance Candlepin"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:427
 msgid "Must specify at least one search criteria."
@@ -1339,6 +1344,8 @@ msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
 msgstr ""
+"Ce point de terminaison ne permet pas de renvoyer plus de résultats que {0} "
+"à la fois, veuillez utiliser la pagination."
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:272
 #: server/src/main/java/org/candlepin/resource/JobResource.java:300
@@ -1373,8 +1380,7 @@ msgstr "La tâche \"{0}\" n''est pas configurée pour une programmation manuelle
 #: server/src/main/java/org/candlepin/resource/JobResource.java:427
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
-msgstr ""
-"Exception inattendue \"{0}\" lors de la programmation de la tâche \"{0}\""
+msgstr "Exception inattendue lors de la programmation de la tâche \"{0}\""
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:494
 #, java-format
