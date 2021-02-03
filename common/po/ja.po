@@ -1,13 +1,14 @@
 # Keiko Moriguchi <kemorigu@redhat.com>, 2019. #zanata
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Sundeep Anand <suanand@redhat.com>, 2021.
+# Ludek Janda <ljanda@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:53-0500\n"
-"PO-Revision-Date: 2021-01-30 16:40+0000\n"
-"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"PO-Revision-Date: 2021-02-03 10:40+0000\n"
+"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Japanese <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-2-9-hotfix/ja/>\n"
 "Language: ja\n"
@@ -539,22 +540,22 @@ msgstr "{0} によって削除されたサブスクリプション"
 msgid ""
 "Cannot add pools that are restricted to unit type \"person\" to activation "
 "keys."
-msgstr ""
+msgstr "単位のタイプ \"person\" に制限されているプールをアクティベーションキーに追加することはできません。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:87
 #, java-format
 msgid "Multi-entitlement not supported for pool \"{0}\""
-msgstr ""
+msgstr "プール \"{0}\" は、マルチエンタイトルメントには対応していません"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
-msgstr ""
+msgstr "エラー: マルチエンタイトルメント製品サブスクリプションを持つプールのみが、1 より大きい量のアクティベーション キーに追加できます。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:95
 msgid "The quantity must be greater than 0"
-msgstr ""
+msgstr "量は 0 よりも大きくなければなりません"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
@@ -1028,7 +1029,7 @@ msgstr "自動バインド時に数量を指定できません。"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2053
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr ""
+msgstr "自動添付のリクエストを無視します。これは、組織 \"{0}\" に対して無効となっています。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2103
 #, java-format
@@ -1266,7 +1267,7 @@ msgstr "{0} のスケジュール中にエラー: {1}"
 #: server/src/main/java/org/candlepin/resource/JobResource.java:248
 #, java-format
 msgid "Not a permissible job: {0}. Only {1} are permissible"
-msgstr "ジョブ {0} は許可されません。{1} だけが許可されます。"
+msgstr "ジョブ {0} は許可されません。{1} だけが許可されます"
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:279
 msgid "job already canceled"

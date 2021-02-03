@@ -1,13 +1,14 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Tony Fu <tfu@redhat.com>, 2019. #zanata
 # Sundeep Anand <suanand@redhat.com>, 2021.
+# Ludek Janda <ljanda@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:53-0500\n"
-"PO-Revision-Date: 2021-01-30 16:40+0000\n"
-"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"PO-Revision-Date: 2021-02-03 10:40+0000\n"
+"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/candlepin/candlepin-2-9-hotfix/zh_CN/>\n"
 "Language: zh_CN\n"
@@ -531,22 +532,22 @@ msgstr "已被 {0} 删除的订阅"
 msgid ""
 "Cannot add pools that are restricted to unit type \"person\" to activation "
 "keys."
-msgstr ""
+msgstr "不能将单位类型被限制为\"个人\"的池添加到激活码中。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:87
 #, java-format
 msgid "Multi-entitlement not supported for pool \"{0}\""
-msgstr ""
+msgstr "池 ''{0}'' 不支持多个权利"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
-msgstr ""
+msgstr "错误：只有拥有多个权利产品订阅的池才能被添加到数量大于 1 的激活码中。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:95
 msgid "The quantity must be greater than 0"
-msgstr ""
+msgstr "数量必须大于 0"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
@@ -570,7 +571,7 @@ msgstr "只支持 {2} 个内核中的 {1} 个。"
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Only supports {1}GB of {2}GB of RAM."
-msgstr "只支持 {2}GB 内存中的 {1}GB。"
+msgstr "只支持 {2} GB 内存中的 {1} GB。"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
 #, java-format
@@ -914,7 +915,7 @@ msgstr "系统名称不能以 # 字符开头"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1078
 #, java-format
 msgid "Activation key \"{0}\" not found for organization \"{1}\"."
-msgstr "未找到机构 ''{1}'' 的激活密钥 ''{0}''。"
+msgstr "未找到机构 ''{1}'' 的激活码 ''{0}''。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1103
 #, java-format
@@ -1002,7 +1003,7 @@ msgstr "在自动绑定时无法指定数量。"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2053
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr ""
+msgstr "忽略自动附加请求。对于org \"{0}\" 它是禁用的。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2103
 #, java-format
@@ -1652,7 +1653,7 @@ msgstr "机构"
 #: server/src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:231
 #, java-format
 msgid "{0} with id {1} could not be found."
-msgstr "没有找到 id 为 {1} 的 {0}"
+msgstr "没有找到 id 为 {1} 的 {0}。"
 
 #: server/src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:369
 #, java-format
