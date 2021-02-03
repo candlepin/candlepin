@@ -1,13 +1,14 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # corina roe <croe@redhat.com>, 2019. #zanata
 # Sundeep Anand <suanand@redhat.com>, 2021.
+# Ludek Janda <ljanda@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:53-0500\n"
-"PO-Revision-Date: 2021-01-30 16:40+0000\n"
-"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"PO-Revision-Date: 2021-02-03 10:40+0000\n"
+"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-2-9-hotfix/fr/>\n"
 "Language: fr\n"
@@ -555,21 +556,28 @@ msgid ""
 "Cannot add pools that are restricted to unit type \"person\" to activation "
 "keys."
 msgstr ""
+"Ne peut pas ajouter aux clés d'activation les pools qui sont limités au type "
+"d'unité \"person\"."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:87
 #, java-format
 msgid "Multi-entitlement not supported for pool \"{0}\""
 msgstr ""
+"Droits d’accès multiples non pris en charge pour le pool ayant comme ID « {0}"
+" »"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
+"Erreur : Seuls les pools avec des abonnements à des produits à droits "
+"multiples peuvent être ajoutés à la clé d'activation avec une quantité "
+"supérieure à un."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:95
 msgid "The quantity must be greater than 0"
-msgstr ""
+msgstr "La quantité doit être supérieure à 0"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
@@ -1072,6 +1080,8 @@ msgstr "Impossible de spécifier une quantité lors de la liaison automatique."
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
+"Requête auto-attach ignorée. L'organisation \"{0}\" a déjà la fonction auto-"
+"attach désactivée."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2103
 #, java-format
