@@ -1,19 +1,21 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata
+# Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:52-0500\n"
-"PO-Revision-Date: 2020-07-14 08:00-0400\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
-"Language-Team: Chinese (Simplified, China)\n"
+"PO-Revision-Date: 2021-01-30 16:40+0000\n"
+"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
+"projects/candlepin/candlepin-3-1-hotfix/zh_CN/>\n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 4.4.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -27,7 +29,7 @@ msgstr "错误请求"
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:106
 #, java-format
 msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr "{1}.{2}:{3} 中的运行时错误 {0}"
+msgstr "运行时错误 {0} 于 {1}.{2}:{3}"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:111
 #, java-format
@@ -141,7 +143,7 @@ msgstr "必须是有效 URL"
 
 #: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
-msgstr "尝试针对不存在的组织密钥“ {}”进行修复"
+msgstr "尝试针对不存在的组织密钥 “{}” 进行修复"
 
 #: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:95
 #, java-format
@@ -702,7 +704,7 @@ msgstr "这个系统已附加了一个产品 ''{1}'' 的订阅。"
 #, java-format
 msgid ""
 "There are not enough free subscriptions available for the product \"{1}\""
-msgstr "没有足够的可用订阅供产品 ''{1}'' 使用。"
+msgstr "没有足够的可用订阅供产品 ''{1}'' 使用"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
 #, java-format
@@ -1230,7 +1232,7 @@ msgstr "设置调度程序状态出错"
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
-msgstr ""
+msgstr "此端点不支持一次返回多于 {0} 个结果，请使用分页。"
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:272
 #: server/src/main/java/org/candlepin/resource/JobResource.java:300
