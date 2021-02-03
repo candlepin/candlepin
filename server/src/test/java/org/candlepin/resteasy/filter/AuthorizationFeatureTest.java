@@ -15,7 +15,6 @@
 package org.candlepin.resteasy.filter;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -110,8 +109,6 @@ public class AuthorizationFeatureTest {
         AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
         this.authorizationFeature = new AuthorizationFeature(
             verifyFilter, superAdminFilter, securityHoleFilter, annotationLocator);
-
-        doReturn(FakeResource.class).when(resourceInfo).getResourceClass();
     }
 
     @Test

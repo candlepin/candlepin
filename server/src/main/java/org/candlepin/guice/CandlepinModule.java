@@ -75,7 +75,6 @@ import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.resteasy.filter.DynamicJsonFilter;
 import org.candlepin.common.resteasy.filter.LinkHeaderResponseFilter;
 import org.candlepin.common.resteasy.filter.PageRequestFilter;
-import org.candlepin.common.util.VersionUtil;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -155,7 +154,6 @@ import org.candlepin.resteasy.filter.VersionResponseFilter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.service.impl.HypervisorUpdateAction;
-import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.sync.ConsumerExporter;
 import org.candlepin.sync.ConsumerTypeExporter;
 import org.candlepin.sync.Exporter;
@@ -191,10 +189,6 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
-
-import io.swagger.jaxrs.config.BeanConfig;
-import io.swagger.jaxrs.listing.ApiListingResource;
-import io.swagger.jaxrs.listing.SwaggerSerializers;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
@@ -346,7 +340,6 @@ public class CandlepinModule extends AbstractModule {
         configureActiveMQComponents();
         configureAsyncJobs();
         configureExporter();
-        configureSwagger();
         configureBindFactories();
     }
 
@@ -451,29 +444,6 @@ public class CandlepinModule extends AbstractModule {
         bind(ConsumerTypeExporter.class);
         bind(ConsumerExporter.class);
         bind(RulesExporter.class);
-    }
-
-    private void configureSwagger() {
-        if (!config.getBoolean(ConfigProperties.SWAGGER_ENABLED, true)) {
-            return;
-        }
-
-        /*
-         * Using this binding, the swagger.(json|xml) will be available
-         * for an authenticated user at context: URL/candlepin/swagger.json
-         */
-        bind(ApiListingResource.class);
-        bind(SwaggerSerializers.class);
-
-        bind(CandlepinSwaggerModelConverter.class);
-
-        BeanConfig beanConfig = new BeanConfig();
-        beanConfig.setSchemes(new String[] { "https" });
-        beanConfig.setBasePath("/candlepin");
-        beanConfig.setResourcePackage("org.candlepin.resource");
-        beanConfig.setVersion(VersionUtil.getVersionString());
-        beanConfig.setTitle("Candlepin");
-        beanConfig.setScan(true);
     }
 
     private void configureActiveMQComponents() {

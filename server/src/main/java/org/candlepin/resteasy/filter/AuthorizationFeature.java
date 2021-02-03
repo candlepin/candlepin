@@ -18,8 +18,6 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.resteasy.AnnotationLocator;
 
-import io.swagger.jaxrs.listing.ApiListingResource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,10 +68,6 @@ public class AuthorizationFeature implements DynamicFeature {
         String name = method.getDeclaringClass().getName() + "." + method.getName();
         if (securityHole != null) {
             log.debug("Not registering authorization filter on {}", name);
-            context.register(securityHoleFilter);
-        }
-        else if (resourceInfo.getResourceClass().equals(ApiListingResource.class)) {
-            log.debug("Not registering authorization filter for Swagger: {}", name);
             context.register(securityHoleFilter);
         }
         else if (isSuperAdminOnly(method)) {

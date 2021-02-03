@@ -420,6 +420,45 @@ project(":api") {
                                     }
                                 }
                             }
+                            plugin {
+                                groupId 'org.apache.maven.plugins'
+                                artifactId 'maven-resources-plugin'
+                                version '3.1.0'
+                                executions {
+                                    execution {
+                                        phase 'install'
+                                        goals {
+                                            goal 'copy-resources'
+                                        }
+                                        configuration {
+                                            outputDirectory '../server/src/main/webapp/docs/'
+                                            resources {
+                                                resource {
+                                                    directory '${basedir}'
+                                                    includes {
+                                                        include 'candlepin-api-spec.yaml'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            plugin {
+                                groupId 'org.apache.maven.plugins'
+                                artifactId 'maven-clean-plugin'
+                                version '3.1.0'
+                                configuration {
+                                    filesets {
+                                        fileset {
+                                            directory '../server/src/main/webapp/docs/'
+                                            includes {
+                                                include 'candlepin-api-spec.yaml'
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -434,6 +473,10 @@ project(":api") {
         from api_spec_path
         rename { String fileName ->
             api_spec_path.endsWith(fileName) ? 'openapi.yaml' : fileName  // rename yaml to openapi.yaml
+        }
+        copy {
+            from "${projectDir}/candlepin-api-spec.yaml"
+            into "${rootDir}/server/src/main/webapp/docs/"
         }
     }
 
@@ -508,4 +551,8 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
 
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
+}
+
+clean.doFirst {
+    delete "${rootDir}/server/src/main/webapp/docs/candlepin-api-spec.yaml"
 }
