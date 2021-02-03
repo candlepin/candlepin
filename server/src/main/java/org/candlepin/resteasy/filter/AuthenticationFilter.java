@@ -36,8 +36,6 @@ import org.candlepin.resteasy.AnnotationLocator;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import io.swagger.jaxrs.listing.ApiListingResource;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
@@ -144,10 +142,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         Principal principal = null;
 
         if (hole != null && hole.anon()) {
-            principal = new NoAuthPrincipal();
-        }
-        else if (resourceInfo.getResourceClass().equals(ApiListingResource.class)) {
-            log.debug("Swagger API request made; no principal required.");
             principal = new NoAuthPrincipal();
         }
         else {

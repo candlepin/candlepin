@@ -1,9 +1,8 @@
-
 openapi: 3.0.2
 info:
   title: Candlepin
   description: Candlepin is a subscription management server written in Java. It helps with management of software subscriptions.
-  version: 3.0.0-draft
+  version: 3.2.13
 
 servers:
   - url: /candlepin
@@ -16,7 +15,7 @@ paths:
     get:
       description: Retrieves a list of links corresponding to Root resources
       tags:
-        - root
+        - Root
       operationId: getRootResources
       security: []  # this resource doesn't require auth
       responses:
@@ -203,7 +202,6 @@ paths:
       description: Retrieves list of Content Overrides
       tags:
         - Activation Key
-        - Content Override
       operationId: listActivationKeyContentOverrides
       security: []
       parameters:
@@ -250,7 +248,6 @@ paths:
       description: Adds or Updates a list of Content Overrides
       tags:
         - Activation Key
-        - Content Override
       operationId: addActivationKeyContentOverrides
       security: []
       parameters:
@@ -306,7 +303,6 @@ paths:
       description: Deletes a list of Content Overrides
       tags:
         - Activation Key
-        - Content Override
       operationId: deleteActivationKeyContentOverrides
       security: []
       parameters:
@@ -559,7 +555,7 @@ paths:
     post:
       description: Verifies provided cloud registration data and returns an authentication token. By default the token is valid for 10 minutes
       tags:
-        - Cloud registration
+        - Cloud Registration
       operationId: cloudAuthorize
       security: [ ]
       requestBody:
@@ -771,7 +767,6 @@ paths:
       description: Retrieves a Compliance Status list for a list of Consumers.
       tags:
         - Consumer
-        - Compliance
       operationId: getComplianceStatusList
       security: [ ]
       parameters:
@@ -1006,7 +1001,6 @@ paths:
       description: Retrieves the body of the Content Access Certificate for the Consumer
       tags:
         - Consumer
-        - Content access
       operationId: getContentAccessBody
       security: [ ]
       x-java-response:
@@ -1070,7 +1064,6 @@ paths:
       description: Regenerates the Entitlement Certificates for a Consumer
       tags:
         - Consumer
-        - Certificates
       operationId: regenerateEntitlementCertificates
       security: [ ]
       parameters:
@@ -1122,7 +1115,6 @@ paths:
         certificates for the consumer.
       tags:
         - Consumer
-        - Certificates
       operationId: exportCertificates
       security: [ ]
       parameters:
@@ -1185,7 +1177,6 @@ paths:
       description: Retrieves the Compliance Status of a Consumer.
       tags:
         - Consumer
-        - Compliance
       operationId: getComplianceStatus
       security: [ ]
       parameters:
@@ -1224,7 +1215,6 @@ paths:
       description: Retrieves content access of a Consumer
       tags:
         - Consumer
-        - Content access
       operationId: getContentAccessForConsumer
       security: [ ]
       parameters:
@@ -1258,7 +1248,6 @@ paths:
       description: Retrieves list of Content Overrides
       tags:
         - Consumer
-        - Content Override
       operationId: listConsumerContentOverrides
       security: []
       parameters:
@@ -1305,7 +1294,6 @@ paths:
       description: Adds or Updates a list of Content Overrides
       tags:
         - Consumer
-        - Content Override
       operationId: addConsumerContentOverrides
       security: []
       parameters:
@@ -1375,7 +1363,6 @@ paths:
       description: Deletes a list of Content Overrides
       tags:
         - Consumer
-        - Content Override
       operationId: deleteConsumerContentOverrides
       security: []
       parameters:
@@ -1463,7 +1450,6 @@ paths:
       description: Retrieves a list of Entitlements. This endpoint supports paging with query parameters.
       tags:
         - Consumer
-        - Entitlements
       operationId: listEntitlements
       security: [ ]
       parameters:
@@ -1531,7 +1517,6 @@ paths:
         entitlements unbound.
       tags:
         - Consumer
-        - Entitlements
       operationId: unbindAll
       security: [ ]
       parameters:
@@ -1573,7 +1558,6 @@ paths:
         JobDetail object if async is true
       tags:
         - Consumer
-        - Entitlements
       operationId: bind
       security: []
       x-java-response:
@@ -1925,7 +1909,6 @@ paths:
       description: Retrieves the Owner associated to a Consumer
       tags:
         - Consumer
-        - Owner
       operationId: getOwnerByConsumerUuid
       security: [ ]
       parameters:
@@ -1968,7 +1951,6 @@ paths:
       description: Retrieves the System Purpose Compliance Status of a Consumer.
       tags:
         - Consumer
-        - Compliance
       operationId: getSystemPurposeComplianceStatus
       security: [ ]
       parameters:
@@ -2128,7 +2110,6 @@ paths:
         The Response has a list of PoolQuantity objects
       tags:
         - Consumer
-        - Entitlement
       operationId: dryBind
       security: [ ]
       parameters:
@@ -2182,7 +2163,6 @@ paths:
         they need to update/fetch.
       tags:
         - Consumer
-        - Certificates
       operationId: getEntitlementCertificateSerials
       security: [ ]
       parameters:
@@ -2227,7 +2207,6 @@ paths:
       description: Removes an Entitlement from a Consumer By the Certificate Serial
       tags:
         - Consumer
-        - Certificates
       operationId: unbindBySerial
       security: []
       parameters:
@@ -2266,7 +2245,6 @@ paths:
       description: Removes an Entitlement from a Consumer By the Entitlement ID
       tags:
         - Consumer
-        - Entitlement
       operationId: unbindByEntitlementId
       security: [ ]
       parameters:
@@ -2353,7 +2331,7 @@ paths:
     get:
       description: Retrieves a single Guest by its consumer and the guest UUID
       tags:
-        - Consumer
+        - GuestIds
       operationId: getGuestId
       security: []
       parameters:
@@ -2545,8 +2523,7 @@ paths:
     get:
       description: Retrieves a list of known consumer types
       tags:
-          - Consumer
-          - ConsumerType
+          - Consumer Type
       operationId: getConsumerTypes
       x-java-response:
         type: Iterable
@@ -2567,8 +2544,7 @@ paths:
     post:
       description: Creates a new consumer type
       tags:
-        - Consumer
-        - ConsumerType
+        - Consumer Type
       operationId: createConsumerType
       security: []
       requestBody:
@@ -2591,8 +2567,7 @@ paths:
     get:
       description: Retrieves a specific consumer type
       tags:
-          - Consumer
-          - ConsumerType
+          - Consumer Type
       operationId: getConsumerType
       security: []
       parameters:
@@ -2624,8 +2599,7 @@ paths:
     put:
       description: Updates an existing consumer type
       tags:
-        - Consumer
-        - ConsumerType
+        - Consumer Type
       operationId: updateConsumerType
       security: []
       parameters:
@@ -2663,8 +2637,7 @@ paths:
     delete:
       description: Deletes an existing consumer type
       tags:
-          - Consumer
-          - ConsumerType
+          - Consumer Type
       operationId: deleteConsumerType
       security: []
       parameters:
@@ -2926,7 +2899,6 @@ paths:
       description: Retrieves a list of deleted consumers by deletion date or all. List returned is the deleted Consumers.
       tags:
         - Consumer
-        - DeletedConsumer
       operationId: listByDate
       parameters:
         - in: query
@@ -3257,7 +3229,6 @@ paths:
       operationId: promoteContent
       tags:
         - Environment
-        - Content
       parameters:
         - name: env_id
           in: path
@@ -3313,7 +3284,6 @@ paths:
       operationId: demoteContent
       tags:
         - Environment
-        - Content
       parameters:
         - name: env_id
           in: path
@@ -3516,7 +3486,6 @@ paths:
       description: Retrieves a Subscription Certificate
       operationId: getUpstreamCert
       tags:
-        - Certificates
         - Entitlements
       parameters:
         - name: dbid
@@ -3579,7 +3548,6 @@ paths:
       description: Regenerates the Entitlement Certificates for a Product
       operationId: regenerateEntitlementCertificatesForProduct
       tags:
-        - Certificates
         - Entitlements
       parameters:
         - name: product_id
@@ -3784,7 +3752,7 @@ paths:
   /hypervisors/{owner}/heartbeat:
     put:
       tags:
-        - hypervisors
+        - Hypervisors
       description: Updates last check in date of all consumers of the given reporterId.
       operationId: hypervisorHeartbeatUpdate
       security: []
@@ -4668,7 +4636,7 @@ paths:
     put:
       description: Updates a Content
       tags:
-        - Content
+        - Owner Content
       operationId: updateContent
       security: []
       parameters:
@@ -4794,7 +4762,6 @@ paths:
       description: Retrieves a list of Consumers for the Owner
       tags:
         - Owner
-        - Consumer
       operationId: listConsumers
       x-java-response:
         type: Iterable
@@ -4897,7 +4864,6 @@ paths:
       description: Retrieves a count of consumers for the owner
       tags:
         - Owner
-        - Consumer
       operationId: countConsumers
       parameters:
         - name: owner_key
@@ -4969,7 +4935,6 @@ paths:
       description: Retrieves an aggregate of the system purpose settings of the owner's consumers
       tags:
         - Owner
-        - Consumer
       operationId: getConsumersSyspurpose
       security: []
       parameters:
@@ -5048,7 +5013,6 @@ paths:
         https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin
       tags:
         - Owner
-        - Entitlements
       operationId: ownerEntitlements
       parameters:
         - name: owner_key
@@ -5103,7 +5067,6 @@ paths:
         in the owned by the owner will be up to date.
       tags:
         - Owner
-        - Entitlements
       operationId: healEntire
       parameters:
         - name: owner_key
@@ -5136,7 +5099,7 @@ paths:
     get:
       description: Retrieves a list of environment for an owner
       tags:
-        - Owner Environment
+        - Owner
       operationId: listEnvironments
       x-java-response:
         type: Iterable
@@ -5178,7 +5141,7 @@ paths:
     post:
       description: Creates an environment for the owner
       tags:
-        - Owner Environment
+        - Owner
       operationId: createEnv
       security: []
       parameters:
@@ -5219,7 +5182,6 @@ paths:
       description: Retrieves a list of hypervisors for an owner
       tags:
         - Owner
-        - Hypervisors
       operationId: getHypervisors
       security: []
       x-java-response:
@@ -5263,7 +5225,7 @@ paths:
     get:
       description: Retrieves a list of import records for an owner
       tags:
-        - Owner Import
+        - Owner
       operationId: getImports
       security: []
       x-java-response:
@@ -5311,7 +5273,7 @@ paths:
         assigned to the distributor who generated the manifest.
         Note: This endpoint is deprecated. Please use /owners/{owner_key}/imports/async
       tags:
-        - Owner Import
+        - Owner
       operationId: importManifest
       deprecated: true
       security: []
@@ -5402,7 +5364,7 @@ paths:
         information which is global to the candlepin server. This import data is *not*
         undone, we assume that updates to this data can be safely kept.
       tags:
-        - Owner Import
+        - Owner
       operationId: undoImports
       parameters:
         - name: owner_key
@@ -5438,8 +5400,7 @@ paths:
         This will bring in any products, content, and subscriptions that were
         assigned to the distributor who generated the manifest.
       tags:
-        - Owner Import
-        - Async
+        - Owner
       operationId: importManifestAsync
       security: []
       requestBody:
@@ -5548,7 +5509,7 @@ paths:
     put:
       description: Sets the log level for an owner
       tags:
-        - Owner log
+        - Owner
       operationId: setLogLevel
       security: []
       parameters:
@@ -5608,7 +5569,7 @@ paths:
     delete:
       description: Remove the log level of an owner
       tags:
-        - Owner log
+        - Owner
       operationId: deleteLogLevel
       parameters:
         - name: owner_key
@@ -5640,7 +5601,7 @@ paths:
         supports paging with query parameters. For more details please visit
         https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin
       tags:
-        - Owner Pool
+        - Owner
       operationId: listPools
       x-java-response:
         type: Iterable
@@ -5799,7 +5760,7 @@ paths:
         upstream subscription, and are most commonly used for custom content delivery
         in Satellite. Also helps in on-site deployment testing
       tags:
-        - Owner Pool
+        - Owner
       operationId: createPool
       security: []
       parameters:
@@ -5856,7 +5817,7 @@ paths:
         Updates a pool for an Owner. assumes this is a normal pool, and
         errors out otherwise cause we cannot create master pools from bonus pools
       tags:
-        - Owner Pool
+        - Owner
       operationId: updatePool
       security: []
       parameters:
@@ -6578,7 +6539,7 @@ paths:
     get:
       description: Retrieves a list of subscriptions for an owner
       tags:
-        - Owner Subscription
+        - Owner
       operationId: getOwnerSubscriptions
       security: []
       x-java-response:
@@ -6630,7 +6591,7 @@ paths:
         subscriptions and products are sourced from adapters. Calling this in
         an on-site deployment is just a no-op.
       tags:
-        - Owner Subscription
+        - Owner
       operationId: refreshPools
       security: []
       parameters:
@@ -6718,7 +6679,6 @@ paths:
       description: Retrieves the Ueber Entitlement Certificate
       tags:
         - Owner
-        - Ueber certificate
       operationId: getUeberCertificate
       parameters:
         - name: owner_key
@@ -6757,7 +6717,6 @@ paths:
         already exists, it will be regenerated.
       tags:
         - Owner
-        - Ueber certificate
       operationId: createUeberCertificate
       security: []
       parameters:
@@ -6800,7 +6759,6 @@ paths:
       description: Retrieves a list of upstream consumers for an owner
       tags:
         - Owner
-        - Upstream Consumers
       operationId: getUpstreamConsumers
       security: []
       x-java-response:
@@ -6880,7 +6838,6 @@ paths:
     get:
       description: Retrieves a Certificate for a Product
       tags:
-        - Certificates
         - Products
       operationId: getProductCertificate
       parameters:
@@ -7092,7 +7049,6 @@ paths:
       description: Retrieve a CDN for a Pool
       tags:
         - Pools
-        - CDN
       operationId: getPoolCdn
       parameters:
         - in: path
@@ -7199,7 +7155,6 @@ paths:
         or as PEM (when Content-Type is text/plain)
       tags:
         - Pools
-        - Certificates
       operationId: getSubCert
       parameters:
         - in: path
@@ -7234,7 +7189,6 @@ paths:
     get:
       description: Retrieves a list of Owners by Product
       tags:
-        - Owners
         - Products
       operationId: getProductOwners
       parameters:
@@ -7275,9 +7229,7 @@ paths:
     put:
       description: Refreshes Pools by Product
       tags:
-        - Pools
         - Products
-        - Refresh
       operationId: refreshPoolsForProducts
       parameters:
         - in: query
@@ -8157,7 +8109,6 @@ paths:
     get:
       description: Retrieves a list of Roles by User
       tags:
-        - Roles
         - Users
       operationId: getUserRoles
       parameters:
@@ -8205,7 +8156,6 @@ paths:
     get:
       description: Retrieve a list of owners the user can register systems to
       tags:
-        - Owners
         - Users
       operationId: listUserOwners
       parameters:
