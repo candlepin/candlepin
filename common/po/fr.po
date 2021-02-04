@@ -563,8 +563,8 @@ msgstr ""
 #, java-format
 msgid "Multi-entitlement not supported for pool \"{0}\""
 msgstr ""
-"Droits d’accès multiples non pris en charge pour le pool ayant comme ID « {0}"
-" »"
+"Droits d’accès multiples non pris en charge pour le pool ayant comme ID "
+"« {0} »"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid ""

@@ -486,7 +486,8 @@ msgstr "ラベルが {0} の CDN はこのシステムには存在しません�
 msgid ""
 "Candlepin is in Suspend mode, please check /status resource to get more "
 "details"
-msgstr "Candlepin はサスペンドモードです。詳細は、/status リソースを確認してください"
+msgstr ""
+"Candlepin はサスペンドモードです。詳細は、/status リソースを確認してください"
 
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:837
 msgid "Request failed due to concurrent modification, please re-try."
@@ -540,7 +541,9 @@ msgstr "{0} によって削除されたサブスクリプション"
 msgid ""
 "Cannot add pools that are restricted to unit type \"person\" to activation "
 "keys."
-msgstr "単位のタイプ \"person\" に制限されているプールをアクティベーションキーに追加することはできません。"
+msgstr ""
+"単位のタイプ \"person\" に制限されているプールをアクティベーションキーに追加"
+"することはできません。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:87
 #, java-format
@@ -551,7 +554,9 @@ msgstr "プール \"{0}\" は、マルチエンタイトルメントには対応
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
-msgstr "エラー: マルチエンタイトルメント製品サブスクリプションを持つプールのみが、1 より大きい量のアクティベーション キーに追加できます。"
+msgstr ""
+"エラー: マルチエンタイトルメント製品サブスクリプションを持つプールのみが、1 "
+"より大きい量のアクティベーション キーに追加できます。"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:95
 msgid "The quantity must be greater than 0"
@@ -597,8 +602,9 @@ msgid ""
 "guest subscription. For more information, please see https://access.redhat."
 "com/solutions/1592573"
 msgstr ""
-"ゲストがいずれのホストでも報告されていないため、マッピングのない一時的なゲストサブスクリプションを使用しています。詳細は https://access."
-"redhat.com/solutions/1592573 を参照してください"
+"ゲストがいずれのホストでも報告されていないため、マッピングのない一時的なゲス"
+"トサブスクリプションを使用しています。詳細は https://access.redhat.com/"
+"solutions/1592573 を参照してください"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
@@ -1029,7 +1035,9 @@ msgstr "自動バインド時に数量を指定できません。"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2053
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr "自動添付のリクエストを無視します。これは、組織 \"{0}\" に対して無効となっています。"
+msgstr ""
+"自動添付のリクエストを無視します。これは、組織 \"{0}\" に対して無効となってい"
+"ます。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2103
 #, java-format
@@ -1169,7 +1177,9 @@ msgstr "エンタイトルメントは、宛先ユニットが使用すること
 msgid ""
 "The quantity specified must be greater than zero and less than or equal to "
 "the total for this entitlement"
-msgstr "指定された数量は、ゼロより大きいか、またはこのエンタイトルメントの合計より小さいかまたは等しくなければなりません"
+msgstr ""
+"指定された数量は、ゼロより大きいか、またはこのエンタイトルメントの合計より小"
+"さいかまたは等しくなければなりません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author noriko
