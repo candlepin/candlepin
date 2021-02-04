@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-01-31 02:01-0500\n"
+"POT-Creation-Date: 2021-02-04 02:01-0500\n"
 "PO-Revision-Date: 2021-02-03 13:20+0000\n"
 "Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
@@ -1270,7 +1270,9 @@ msgstr "오류 설정 스케줄러 상태"
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
-msgstr "이 끝점은 한 번에 {0}개를 초과하는 결과 반환을 지원하지 않습니다. 페이징을 사용하십시오."
+msgstr ""
+"이 끝점은 한 번에 {0}개를 초과하는 결과 반환을 지원하지 않습니다. 페이징을 사"
+"용하십시오."
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:272
 #: server/src/main/java/org/candlepin/resource/JobResource.java:300
@@ -1739,7 +1741,9 @@ msgstr "데이터 매개 변수를 구문 분석할 수 없습니다"
 msgid ""
 "Candlepin is in Suspend mode, please check /status resource to get more "
 "details"
-msgstr "Candlepin이 일시 중지 모드입니다. 보다 자세한 내용은 /status 리소스를 확인하십시오"
+msgstr ""
+"Candlepin이 일시 중지 모드입니다. 보다 자세한 내용은 /status 리소스를 확인하"
+"십시오"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1759,8 +1763,9 @@ msgid ""
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
 msgstr ""
-"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 문제를 처리할 수 있습니다. 자세한 내용은 지식 "
-"데이터베이스(https://access.redhat.com/knowledge/node/129003)를 참조하십시오."
+"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 "
+"이 문제를 처리할 수 있습니다. 자세한 내용은 지식 데이터베이스(https://access."
+"redhat.com/knowledge/node/129003)를 참조하십시오."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
