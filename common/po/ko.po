@@ -1,19 +1,20 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
-# Ludek Janda <ljanda@redhat.com>, 2020. #zanata
+# Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-01-31 02:01-0500\n"
-"PO-Revision-Date: 2020-07-14 07:59-0400\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
-"Language-Team: Korean\n"
+"PO-Revision-Date: 2021-02-03 13:20+0000\n"
+"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
+"Language-Team: Korean <https://translate.fedoraproject.org/projects/"
+"candlepin/master/ko/>\n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0\n"
-"X-Generator: Zanata 4.6.2\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 4.4.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -367,7 +368,7 @@ msgstr "사용자 서비스 문의 중 오류 발생"
 #: server/src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:258
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
-msgstr ""
+msgstr "조직에 대한 클라우드 공급자 또는 계정 세부 정보를 확인할 수 없습니다"
 
 #: server/src/main/java/org/candlepin/auth/ConsumerAuth.java:70
 #: server/src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:142
@@ -580,7 +581,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {1}TB of {2}TB of storage."
-msgstr " {2}TB 스토리지 중 {1}TB 만 지원합니다."
+msgstr "{2}TB 스토리지 중 {1}TB만 지원합니다."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
 #, java-format
@@ -613,7 +614,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:151
 #, java-format
 msgid "No subscriptions are available from the pool with ID \"{1}\"."
-msgstr " 풀 ID ''{1}''에서 사용 가능한 서브스크립션이 없습니다."
+msgstr "풀 ID ''{1}''에서 사용 가능한 서브스크립션이 없습니다."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:153
 #, java-format
@@ -682,7 +683,7 @@ msgstr "장치/유닛은 풀 ''{1}''에 필요한 RAM 계산을 지원하지 않
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:177
 #, java-format
 msgid "Unit does not support derived products data required by pool \"{1}\""
-msgstr "장치/유닛은 풀 ''{1}''에 필요한 변형 제품 데이터를 지원하지 않습니다."
+msgstr "장치/유닛은 풀 ''{1}''에 필요한 변형 제품 데이터를 지원하지 않습니다"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:179
 #, java-format
@@ -824,7 +825,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/CloudRegistrationResource.java:74
 msgid "Cloud registration is not supported by this Candlepin instance"
-msgstr ""
+msgstr "이 Candlepin 인스턴스는 클라우드 등록을 지원하지 않습니다"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:428
 msgid "Must specify at least one search criteria."
@@ -1032,14 +1033,9 @@ msgstr ""
 "해 비활성화되어 있습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2175
-#, fuzzy, java-format
-#| msgid ""
-#| "Ignoring request to auto-attach. It is disabled for org \"{0}\" because "
-#| "of the content access mode setting."
+#, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr ""
-"자동 첨부 요청을 무시합니다. 콘텐츠 액세스 모드 설정으로 인해 {0}\" 조직에 대"
-"해 비활성화되어 있습니다."
+msgstr "자동 첨부 요청을 무시합니다. \"{0}\" 조직에 대해 비활성화되었습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2181
 #, java-format
@@ -1274,7 +1270,7 @@ msgstr "오류 설정 스케줄러 상태"
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
-msgstr ""
+msgstr "이 끝점은 한 번에 {0}개를 초과하는 결과 반환을 지원하지 않습니다. 페이징을 사용하십시오."
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:272
 #: server/src/main/java/org/candlepin/resource/JobResource.java:300
@@ -1743,9 +1739,7 @@ msgstr "데이터 매개 변수를 구문 분석할 수 없습니다"
 msgid ""
 "Candlepin is in Suspend mode, please check /status resource to get more "
 "details"
-msgstr ""
-"Candlepin은 일시 중지 모드입니다.  보다 자세한 내용은 /status 리소스를 확인하"
-"십시오"
+msgstr "Candlepin이 일시 중지 모드입니다. 보다 자세한 내용은 /status 리소스를 확인하십시오"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1765,9 +1759,8 @@ msgid ""
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
 msgstr ""
-"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 "
-"이 문제를 처리할 수 있습니다. 자세한 내용은 지식 데이터베이스에서 참조하십시"
-"오. (https://access.redhat.com/knowledge/node/129003)"
+"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 문제를 처리할 수 있습니다. 자세한 내용은 지식 "
+"데이터베이스(https://access.redhat.com/knowledge/node/129003)를 참조하십시오."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1947,7 +1940,7 @@ msgstr "{0} \"{1}\"은/는 양의 정수(Long) 값이어야 합니다"
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:193
 #, java-format
 msgid "The {0} \"{1}\" must be a Boolean value"
-msgstr " {0} \"{1}\"은/는 부울 값이어야 합니다"
+msgstr "{0} \"{1}\"은/는 부울 값이어야 합니다"
 
 #: server/src/main/java/org/candlepin/util/ServiceLevelValidator.java:72
 #, java-format
