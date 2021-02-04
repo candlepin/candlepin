@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-12-14 07:52-0500\n"
+"POT-Creation-Date: 2021-02-04 02:02-0500\n"
 "PO-Revision-Date: 2019-10-04 08:49-0400\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: German (Germany)\n"
@@ -428,7 +428,7 @@ msgstr "Besitzer mit dem Schlüssel \"{0}\" konnte nicht gefunden werden"
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "Besitzer mit der ID \"{0}\" konnte nicht gefunden werden"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1999
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2002
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
