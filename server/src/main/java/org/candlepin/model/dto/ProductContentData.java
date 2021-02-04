@@ -18,8 +18,6 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ProductContent;
 import org.candlepin.service.model.ProductContentInfo;
 
-import io.swagger.annotations.ApiModel;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -43,7 +41,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * }
  * </pre>
  */
-@ApiModel(parent = CandlepinDTO.class)
 @XmlRootElement
 public class ProductContentData implements Cloneable, Serializable, ProductContentInfo {
     public static final long serialVersionUID = 1L;

@@ -17,7 +17,6 @@ package org.candlepin.hostedtest;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -58,7 +57,6 @@ import javax.ws.rs.core.MediaType;
  * The HostedTestResource class provides an endpoint for managing the upstream data stored by the
  * backing HostedTestDataStore class
  */
-@SuppressSwaggerCheck
 @Path("/hostedtest")
 public class HostedTestResource {
 

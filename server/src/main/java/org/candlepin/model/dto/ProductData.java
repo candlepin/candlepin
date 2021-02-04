@@ -27,9 +27,6 @@ import org.candlepin.util.SetView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -64,21 +61,16 @@ import javax.xml.bind.annotation.XmlTransient;
  * }
  * </pre>
  */
-@ApiModel(parent = CandlepinDTO.class, description = "Product information for a given sku or product")
 @XmlRootElement
 public class ProductData extends CandlepinDTO implements ProductInfo {
     public static final long serialVersionUID = 1L;
 
-    @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")
     protected String uuid;
 
-    @ApiModelProperty(required = true, example = "5051")
     protected String id;
 
-    @ApiModelProperty(example = "Admin OS Developer Bits")
     protected String name;
 
-    @ApiModelProperty(example = "1")
     protected Long multiplier;
 
     @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
@@ -95,10 +87,8 @@ public class ProductData extends CandlepinDTO implements ProductInfo {
 
     protected Set<Branding> branding;
 
-    @ApiModelProperty(example = "/products/ff808081554a3e4101554a3e9033005d")
     protected String href;
 
-    @ApiModelProperty(hidden = true)
     protected Boolean locked;
 
     /**

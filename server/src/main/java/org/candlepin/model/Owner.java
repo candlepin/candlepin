@@ -25,8 +25,6 @@ import org.candlepin.util.Util;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.swagger.annotations.ApiModelProperty;
-
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -83,7 +81,6 @@ public class Owner extends AbstractHibernateObject<Owner>
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
-    @ApiModelProperty(readOnly = true)
     private String id;
 
     @Column(name = "account", nullable = false, unique = true)
@@ -101,7 +98,6 @@ public class Owner extends AbstractHibernateObject<Owner>
     @Size(max = 255)
     private String contentPrefix;
 
-    @ApiModelProperty(readOnly = true)
     @Column(name = "last_refreshed")
     private Date lastRefreshed;
 
