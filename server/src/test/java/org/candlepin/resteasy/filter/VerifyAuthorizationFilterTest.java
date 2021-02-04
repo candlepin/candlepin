@@ -22,7 +22,6 @@ import org.candlepin.auth.SSLAuth;
 import org.candlepin.auth.Verify;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.model.Consumer;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -196,7 +195,6 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
      * FakeResource simply to create a Method object to pass down into
      * the interceptor.
      */
-    @SuppressSwaggerCheck
     @Path("fake")
     public static class FakeResource {
         @POST
@@ -209,7 +207,6 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     /**
      * FakeGeneratedApi helps test that our filter works on spec-first APIs.
      */
-    @SuppressSwaggerCheck
     @Path("fake")
     public interface FakeApi {
         @Path("/{uuid}")

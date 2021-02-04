@@ -20,9 +20,6 @@ import org.candlepin.util.SetView;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -58,51 +55,36 @@ import javax.xml.bind.annotation.XmlTransient;
  * }
  * </pre>
  */
-@ApiModel(parent = CandlepinDTO.class)
 @XmlRootElement
 public class ContentData extends CandlepinDTO implements ContentInfo {
     public static final long serialVersionUID = 1L;
 
-    @ApiModelProperty(example = "ff808081554a3e4101554a3e9033005d")
     protected String uuid;
 
-    @ApiModelProperty(required = true, example = "5001")
     protected String id;
 
-    @ApiModelProperty(example = "yum")
     protected String type;
 
-    @ApiModelProperty(example = "content_label")
     protected String label;
 
-    @ApiModelProperty(example = "content_name")
     protected String name;
 
-    @ApiModelProperty(example = "example-vendor")
     protected String vendor;
 
-    @ApiModelProperty(example = "/admin/foo/example/path")
     protected String contentUrl;
 
-    @ApiModelProperty(example = "TAG1,TAG2")
     protected String requiredTags;
 
-    @ApiModelProperty(example = "1.2.3")
     protected String releaseVer;
 
-    @ApiModelProperty(example = "/admin/foo/example/gpg/path")
     protected String gpgUrl;
 
-    @ApiModelProperty(example = "1467124079")
     protected Long metadataExpire;
 
-    @ApiModelProperty(example = "[5051,5052,5053]")
     protected Set<String> modifiedProductIds;
 
-    @ApiModelProperty(example = "x86_64")
     protected String arches;
 
-    @ApiModelProperty(hidden = true)
     protected Boolean locked;
 
     /**
