@@ -1276,7 +1276,8 @@ msgstr "スケジューラー状態の設定でエラー"
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
-msgstr "このエンドポイントは、一度に{0} 件以上の結果を返すことに対応していません。"
+msgstr ""
+"このエンドポイントは、一度に{0} 件以上の結果を返すことに対応していません。"
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:272
 #: server/src/main/java/org/candlepin/resource/JobResource.java:300
