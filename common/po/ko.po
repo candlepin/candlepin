@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-12-14 07:52-0500\n"
+"POT-Creation-Date: 2021-02-04 02:02-0500\n"
 "PO-Revision-Date: 2020-07-14 07:59-0400\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Korean\n"
@@ -427,7 +427,7 @@ msgstr "키 \"{0}\"로/으로 소유자를 찾을 수 없습니다"
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "ID \"{0}\"로/으로 소유자를 찾을 수 없습니다"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1999
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2002
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
