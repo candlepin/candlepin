@@ -1,14 +1,14 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
-# Nikos Moumoulidis <nmoumoul@redhat.com>, 2020. #zanata
+# Nikos Moumoulidis <nmoumoul@redhat.com>, 2020. #zanata, 2021.
 # Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-01-31 02:01-0500\n"
-"PO-Revision-Date: 2021-02-02 10:40+0000\n"
-"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
+"POT-Creation-Date: 2021-02-04 02:01-0500\n"
+"PO-Revision-Date: 2021-02-04 09:49+0000\n"
+"Last-Translator: Nikos Moumoulidis <nmoumoul@redhat.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/master/fr/>\n"
 "Language: fr\n"
@@ -1090,7 +1090,7 @@ msgstr ""
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 "Requête auto-attach ignorée. L'organisation \"{0}\" a déjà la fonction auto-"
-"attach désactivée à cause de la configuration de mode d'accès au contenu."
+"attach désactivée."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2181
 #, java-format
