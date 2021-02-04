@@ -78,4 +78,17 @@ describe 'Response JSON Filtering' do
       consumer["owner"]["id"].should_not == nil
     end
   end
+
+  it 'should get valid response on invalid content types' do
+    lambda {
+      @cp.get_response("/consumers/#{@consumer1.uuid}", 'application|json')
+    }.should raise_exception(RestClient::BadRequest)
+
+    response = @cp.get_response("/consumers/#{@consumer1.uuid}",'application/json')
+    expect(response.code).to eq(200)
+
+    lambda {
+      @cp.get_response("/consumers/#{@consumer1.uuid}", 'application-json')
+    }.should raise_exception(RestClient::BadRequest)
+  end
 end

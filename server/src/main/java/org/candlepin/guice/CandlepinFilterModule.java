@@ -17,6 +17,7 @@ package org.candlepin.guice;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.servlet.filter.CandlepinContentTypeFilter;
 import org.candlepin.servlet.filter.CandlepinPersistFilter;
 import org.candlepin.servlet.filter.CandlepinScopeFilter;
 import org.candlepin.servlet.filter.EventFilter;
@@ -62,6 +63,7 @@ public class CandlepinFilterModule extends ServletModule {
             // don't filter token
             regex = "^(?!/token).*";
         }
+        filterRegex(regex).through(CandlepinContentTypeFilter.class);
         filterRegex(regex).through(CandlepinScopeFilter.class);
         filterRegex(regex).through(CandlepinPersistFilter.class);
         filterRegex(regex).through(LoggingFilter.class, loggingFilterConfig);
