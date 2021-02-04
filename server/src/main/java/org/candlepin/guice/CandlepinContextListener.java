@@ -36,7 +36,6 @@ import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
-import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.util.CrlFileUtil;
 import org.candlepin.util.Util;
 
@@ -46,8 +45,6 @@ import com.google.inject.Module;
 import com.google.inject.Stage;
 import com.google.inject.persist.PersistService;
 import com.google.inject.util.Modules;
-
-import io.swagger.converter.ModelConverters;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
@@ -219,10 +216,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         this.jobManager.start();
 
         loggerListener = injector.getInstance(LoggerContextListener.class);
-
-        // Custom ModelConverter to handle our specific serialization requirements
-        ModelConverters.getInstance()
-            .addConverter(injector.getInstance(CandlepinSwaggerModelConverter.class));
 
         if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
             CandlepinCapabilities capabilities = CandlepinCapabilities.getCapabilities();

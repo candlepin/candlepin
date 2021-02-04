@@ -70,6 +70,43 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <phase>install</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>../server/src/main/webapp/docs/</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}</directory>
+                  <includes>
+                    <include>candlepin-api-spec.yaml</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>../server/src/main/webapp/docs/</directory>
+              <includes>
+                <include>candlepin-api-spec.yaml</include>
+              </includes>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <dependencyManagement>
