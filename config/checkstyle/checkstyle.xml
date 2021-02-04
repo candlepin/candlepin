@@ -342,13 +342,6 @@
         SL, SLIST, SL_ASSIGN, SR, SR_ASSIGN, STAR, STAR_ASSIGN,
         TYPE_EXTENSION_AND"/>
     </module>
-
-    <!--
-       #######################################################################
-       Resource swagger annotations
-       #######################################################################
-    -->
-    <module name="org.candlepin.checks.ResourceSwaggerCheck"/>
   </module>
 </module>
 

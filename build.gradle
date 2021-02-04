@@ -57,9 +57,6 @@ ext.libraries = [
         "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
     ],
     swagger: [
-        "io.swagger:swagger-jaxrs",
-        "io.swagger:swagger-core",
-        "io.swagger:swagger-models",
         "io.swagger:swagger-annotations",
 
         "org.reflections:reflections:0.9.10",
@@ -228,7 +225,6 @@ allprojects {
                 entry "artemis-stomp-protocol"
             }
             dependencySet(group: "io.swagger", version: "1.5.7") {
-                entry "swagger-jaxrs"
                 entry "swagger-annotations"
             }
             dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson") {
@@ -507,7 +503,6 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
 
     dependencies {
         checkstyle libraries.checkstyle
-        checkstyle project(":checks")
     }
 
     test {

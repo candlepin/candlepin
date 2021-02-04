@@ -17,7 +17,6 @@ package org.candlepin.hostedtest;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ConflictException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.util.SuppressSwaggerCheck;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.ProductContent;
@@ -59,7 +58,6 @@ import javax.ws.rs.core.MediaType;
  * mode, while it is built with candlepin, it is not packaged in candlepin.war,
  * as the only purpose of this class is to support spec tests.
  */
-@SuppressSwaggerCheck
 @Path("/hostedtest")
 public class HostedTestSubscriptionResource {
 

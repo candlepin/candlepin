@@ -20,9 +20,6 @@ import org.candlepin.util.Util;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.HashSet;
@@ -55,45 +52,6 @@ import javax.xml.bind.annotation.XmlTransient;
 public class User extends AbstractHibernateObject implements UserInfo {
 
     /**
-     * This class only exists so that Swagger can generate a separate model.  Users are not
-     * symmetrical when serialized versus deserialized (e.g. the plaintext password is never deserialized);
-     * accordingly, Swagger requires two separate models. The UserCreationRequest class below is to allow
-     * swagger-codegen to generate a model object that will allow us to set the password on a request.
-     *
-     * See https://github.com/swagger-api/swagger-core/issues/1214
-     */
-    @ApiModel("UserCreationRequest")
-    public static final class UserCreationRequest {
-        @ApiModelProperty(required = true) private String username;
-        @ApiModelProperty(required = true) private String password;
-        @ApiModelProperty private boolean superAdmin;
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-
-        public boolean isSuperAdmin() {
-            return superAdmin;
-        }
-
-        public void setSuperAdmin(boolean superAdmin) {
-            this.superAdmin = superAdmin;
-        }
-    }
-
-    /**
      * Name of the table backing this object in the database
      */
     public static final String DB_TABLE = "cp_user";
@@ -103,7 +61,6 @@ public class User extends AbstractHibernateObject implements UserInfo {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     @NotNull
-    @ApiModelProperty(readOnly = true)
     private String id;
 
     @ManyToMany(targetEntity = Role.class, mappedBy = "users")
@@ -114,7 +71,6 @@ public class User extends AbstractHibernateObject implements UserInfo {
     @NotNull
     private String username;
 
-    @ApiModelProperty(readOnly = true)
     @Size(max = 255)
     private String hashedPassword;
 
