@@ -1046,7 +1046,9 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2175
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
-msgstr "自動添付のリクエストを無視します。これは、組織 \"{0}\" に対して無効となっています。"
+msgstr ""
+"自動添付のリクエストを無視します。これは、組織 \"{0}\" に対して無効となってい"
+"ます。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2181
 #, java-format
