@@ -78,12 +78,14 @@ runs `my test name` in the `my_file_name_spec.rb` file
   the nature of the changeset.  Be sure to quote the task name to prevent the
   shell from interpreting the spaces.
 
-## Swagger
+## OpenApi / Swagger
 
-* `buildr swagger` connects to a Candlepin deployment defined in `buildfile`
-  and downloads the `swagger.json` file.  It then sends this JSON file to
-  swagger-codegen to automatically generate client bindings.  The task can
-  be subdivided with `buildr swagger:json` and `buildr swagger:client`.
+* We use an `openapi-generator` plugin that generates our REST API along with
+  JAX-RS and swagger annotations based on the spec at `api/candlepin-api-spec.yaml`,
+  which is OpenApi Specification 3.0 standard. That yaml file is rendered by
+  Swagger UI at `https://<server_ip>:8443/candlepin/docs`, or it can be retrieved
+  in a raw format from
+  `https://<server_ip>:8443/candlepin/docs/candlepin-api-spec.yaml`.
 
 ## JSS
 
