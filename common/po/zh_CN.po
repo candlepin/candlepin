@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-04 02:01-0500\n"
+"POT-Creation-Date: 2021-02-07 02:01-0500\n"
 "PO-Revision-Date: 2021-02-02 10:40+0000\n"
 "Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
@@ -1731,6 +1731,11 @@ msgstr ""
 #: server/src/main/java/org/candlepin/service/impl/ImportSubscriptionServiceAdapter.java:103
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr "独立的 candlepin 不支持兑换订阅。"
+
+#: server/src/main/java/org/candlepin/servlet/filter/CandlepinContentTypeFilter.java:63
+#, java-format
+msgid "Invalid Content-Type {0}"
+msgstr ""
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:68
 msgid "No ID for upstream subscription management application."
