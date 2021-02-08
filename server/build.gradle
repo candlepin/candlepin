@@ -84,6 +84,11 @@ war {
         include "LICENSE"
         into("META-INF")
     }
+
+    from("../api") {
+        include "candlepin-api-spec.yaml"
+        into("docs")
+    }
 }
 
 task rspec(type: Rspec)

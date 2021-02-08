@@ -468,10 +468,6 @@ project(":api") {
         rename { String fileName ->
             api_spec_path.endsWith(fileName) ? 'openapi.yaml' : fileName  // rename yaml to openapi.yaml
         }
-        copy {
-            from "${projectDir}/candlepin-api-spec.yaml"
-            into "${rootDir}/server/src/main/webapp/docs/"
-        }
     }
 
     dependencies {
