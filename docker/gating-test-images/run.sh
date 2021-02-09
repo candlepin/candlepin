@@ -6,7 +6,7 @@
 # The postgresql container has a sql dump with the required test data and imports them
 # on startup.
 
-REGISTRY=docker-registry.upshift.redhat.com/chainsaw
+REGISTRY=quay.io/candlepin
 
 retry() {
     local -r -i max_attempts="$1"; shift
