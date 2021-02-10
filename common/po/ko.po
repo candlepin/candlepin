@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-02-07 02:01-0500\n"
-"PO-Revision-Date: 2021-02-03 13:20+0000\n"
+"PO-Revision-Date: 2021-02-09 09:40+0000\n"
 "Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -821,7 +821,7 @@ msgstr "이러한 컨텐츠 전송 네트워크가 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/resource/CloudRegistrationResource.java:67
 msgid "No cloud registration information provided"
-msgstr ""
+msgstr "클라우드 등록 정보가 제공되지 않음"
 
 #: server/src/main/java/org/candlepin/resource/CloudRegistrationResource.java:74
 msgid "Cloud registration is not supported by this Candlepin instance"
