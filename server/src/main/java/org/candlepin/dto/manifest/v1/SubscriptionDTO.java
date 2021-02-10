@@ -197,17 +197,6 @@ public class SubscriptionDTO extends CandlepinDTO<SubscriptionDTO> implements Su
      * {@inheritDoc}
      */
     @Override
-    public ProductDTO getDerivedProduct() {
-        ProductDTO product = this.getProduct();
-        return product != null ? product.getDerivedProduct() : null;
-    }
-
-    // TODO: Add other CRUD operations here as need dictates
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Long getQuantity() {
         return quantity;
     }

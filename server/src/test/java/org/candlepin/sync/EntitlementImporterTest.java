@@ -188,7 +188,7 @@ public class EntitlementImporterTest {
         assertEquals(providedProducts.size(), parentProduct.getProvidedProducts().size());
         assertEquals(provided1.getId(), parentProduct.getProvidedProducts().iterator().next().getId());
 
-        assertEquals(derivedProduct.getId(), sub.getDerivedProduct().getId());
+        assertEquals(derivedProduct.getId(), sub.getProduct().getDerivedProduct().getId());
         assertEquals(1, derivedProduct.getProvidedProducts().size());
         assertEquals(derivedProvided1.getId(),
             derivedProduct.getProvidedProducts().iterator().next().getId());

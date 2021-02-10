@@ -26,7 +26,7 @@ import org.candlepin.service.model.SubscriptionInfo;
 
 
 /**
- * The PoolNodeBuilder is a NodeBuilder implementation responsible for building product nodes.
+ * The PoolNodeBuilder is a NodeBuilder implementation responsible for building pool nodes.
  */
 public class PoolNodeBuilder implements NodeBuilder<Pool, SubscriptionInfo> {
 
@@ -66,35 +66,16 @@ public class PoolNodeBuilder implements NodeBuilder<Pool, SubscriptionInfo> {
         // Figure out our source entity from which we'll derive children nodes
         SubscriptionInfo sourceEntity = importedEntity != null ? importedEntity : existingEntity;
 
-        // Add children: product and provided product
-        this.addChildProductNode(factory, node, owner, sourceEntity.getProduct());
-        this.addChildProductNode(factory, node, owner, sourceEntity.getDerivedProduct());
-
-        return node;
-    }
-
-    /**
-     * Adds a child product node to the parent node. If the product is null, no product node will be
-     * created or added.
-     *
-     * @param factory
-     *  the node factory to use to create the child node
-     *
-     * @param parent
-     *  the parent node to receive the created child node
-     *
-     * @param product
-     *  the product for which to build and add the child node
-     */
-    private void addChildProductNode(NodeFactory factory, EntityNode parent, Owner owner,
-        ProductInfo product) {
-
+        // Add product node
+        ProductInfo product = sourceEntity.getProduct();
         if (product != null) {
             EntityNode child = factory.buildNode(owner, Product.class, product.getId());
 
-            parent.addChildNode(child);
-            child.addParentNode(parent);
+            node.addChildNode(child);
+            child.addParentNode(node);
         }
+
+        return node;
     }
 
 }

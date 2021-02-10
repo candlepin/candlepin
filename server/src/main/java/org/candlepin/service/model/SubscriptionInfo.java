@@ -55,19 +55,6 @@ public interface SubscriptionInfo extends ServiceAdapterModel {
     ProductInfo getProduct();
 
     /**
-     * Fetches the derived marketing product (SKU) provided to guests of hosts consuming this
-     * subscription. If the derived product has not been set, this method returns null.
-     * <p></p>
-     * <strong>Note:</strong> Due to the nature of this field, null is always treated as
-     * "no value" rather than "no change."
-     *
-     * @return
-     *  The derived marketing product for this subscription, or null if the derived product has not
-     *  been set
-     */
-    ProductInfo getDerivedProduct();
-
-    /**
      * Fetches the quantity of this subscription. If the quantity has not yet been set, this method
      * returns null.
      *
