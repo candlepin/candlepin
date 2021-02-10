@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.13
+Version: 4.0.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,52 @@ fi
 
 #raw
 %changelog
+* Wed Feb 10 2021 Nikos Moumoulidis <nmoumoul@redhat.com> 4.0.0-1
+- 1919458: invalid Content-Type yields 500 (sdhome@redhat.com)
+- Updated migration for product hierarchy changes (crog@redhat.com)
+- Add tests to verify n-tier product versioning (crog@redhat.com)
+- Updated tooling to use new tables and APIs for children products
+  (crog@redhat.com)
+- Updated the OrphanCleanupJob to be aware of product to product references
+  (crog@redhat.com)
+- Updated queries to remove references to removed pool attributes
+  (crog@redhat.com)
+- Removed Pool.providedProducts and Pool.derivedProvidedProducts
+  (crog@redhat.com)
+- Added support for updating development pools and products during refresh
+  (crog@redhat.com)
+- Updated new curator methods to support the new product model
+  (crog@redhat.com)
+- Updated spec tests to support moving derived products from pool to product
+  (crog@redhat.com)
+- Updated unit tests to support moving derived products from pool to product
+  (crog@redhat.com)
+- Moved derived product from pool to product (crog@redhat.com)
+- RefreshWorker now prunes "unused" entities during refresh (crog@redhat.com)
+- Removed unnecessary code and added missing refresh tests (crog@redhat.com)
+- Added the RefreshWorker framework and refactored the refresh process
+  (crog@redhat.com)
+- Updated refresh flow to support provided products on products
+  (prakgupt@redhat.com)
+- ENT-1686: Change the way Dev Pools are created (sonalidhome@gmail.com)
+- Fetch provided products from pool.product (abhiskum@redhat.com)
+- ENT-1829: Update how PoolDTO is populated with model changes
+  (sonalidhome@gmail.com)
+- ENT-1831, ENT-1830: update pool response and manifest export flow
+  (abhiskum@redhat.com)
+- ENT-1834: Update rspec test data generation flow (sonalidhome@gmail.com)
+- ENT-1911: added method to get provided product from productInfo interface.
+  (prakgupt@redhat.com)
+- Updated ProductDTO to store provided and derived provided products
+  (prakgupt@redhat.com)
+- ENT-1833: Migration to populate data from old tables to new tables
+  (sonalidhome@gmail.com)
+- ENT-1826: Updated product model to hold provided & derived provided products
+  (prakgupt@redhat.com)
+- Removed cp2_derproduct_derprov_products table (sonalidhome@gmail.com)
+- Added new tables for mapping products to provided products
+  (sonalidhome@gmail.com)
+
 * Thu Jan 28 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.13-1
 - 1920582: Added additional validation for cloud registration data
   (crog@redhat.com)
