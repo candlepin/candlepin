@@ -434,31 +434,41 @@ describe 'Owner Resource' do
 
   it 'can create custom floating pools' do
     owner = create_owner random_string("owner1")
-    prod = create_product(nil, nil, {:owner => owner['key']})
+
     provided1 = create_product(nil, nil, {:owner => owner['key']})
     provided2 = create_product(nil, nil, {:owner => owner['key']})
-    provided3 = create_product(nil, nil, {:owner => owner['key']})
-    provided4 = create_product(nil, nil, {:owner => owner['key']})
-    @cp.create_pool(owner['key'], prod['id'],
-      {
-        :provided_products => [provided1['id'], provided2['id']],
-        :derived_product_id => provided3['id'],
-        :derived_provided_products => [provided4['id']]
+
+    derived_provided = create_product(nil, nil, {
+      :owner => owner['key']
     })
+
+    derived_product = create_product(nil, nil, {
+      :owner => owner['key'],
+      :providedProducts => [derived_provided['id']]
+    })
+
+    product = create_product(nil, nil, {
+      :owner => owner['key'],
+      :derivedProduct => derived_product,
+      :providedProducts => [provided1['id'], provided2['id']]
+    })
+
+    @cp.create_pool(owner['key'], product['id'])
+
     pools = @cp.list_owner_pools(owner['key'])
     pools.size.should == 1
     pool = pools[0]
-    pool['providedProducts'].size.should == 2
-    pool['derivedProductId'].should == provided3['id']
-    pool['derivedProvidedProducts'].size.should == 1
+    expect(pool['providedProducts'].size).to eq(2)
+    expect(pool['derivedProductId']).to eq(derived_product['id'])
+    expect(pool['derivedProvidedProducts'].size).to eq(1)
 
     # Refresh should have no effect:
     @cp.refresh_pools(owner['key'])
-    @cp.list_owner_pools(owner['key']).size.should == 1
+    expect(@cp.list_owner_pools(owner['key']).size).to eq(1)
 
     # Satellite will need to be able to clean it up as well:
     @cp.delete_pool(pool['id'])
-    @cp.list_owner_pools(owner['key']).size.should == 0
+    expect(@cp.list_owner_pools(owner['key']).size).to eq(0)
   end
 
   it 'should not double bind when healing an org' do
@@ -775,16 +785,17 @@ describe 'Owner Resource Pool Filter Tests' do
     consumer = owner_client.register('somesystem')
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
-    product = create_product(
-      random_string("test_id"),
-      random_string("test_name"),
-      {:owner => owner['key']}
-    )
-
     target_prod_name = random_string("product1")
     provided_product = create_product(random_string("prod1"), target_prod_name, {:owner => owner['key']})
     provided_product2 = create_product(random_string("prod2"), random_string("product2"), {:owner => owner['key']})
     provided_product3 = create_product(random_string("prod3"), random_string("product3"), {:owner => owner['key']})
+
+    product = create_product(
+      random_string("test_id"),
+      random_string("test_name"),
+      :owner => owner['key'], :providedProducts => [ provided_product.id, provided_product2.id,
+        provided_product3.id ]
+    )
 
     create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id, provided_product2.id, provided_product3.id])
 

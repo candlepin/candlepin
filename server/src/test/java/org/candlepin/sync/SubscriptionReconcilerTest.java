@@ -25,7 +25,6 @@ import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -135,6 +134,16 @@ public class SubscriptionReconcilerTest {
             product.setMultiplier(dto.getMultiplier());
             product.setAttributes(dto.getAttributes());
 
+            product.setDerivedProduct(convertFromDTO(dto.getDerivedProduct()));
+
+            if (dto.getProvidedProducts() != null) {
+                for (ProductDTO pdata : dto.getProvidedProducts()) {
+                    if (pdata != null) {
+                        product.addProvidedProduct(convertFromDTO(pdata));
+                    }
+                }
+            }
+
             if (dto.getProductContent() != null) {
                 for (ProductContentDTO pcd : dto.getProductContent()) {
                     if (pcd != null) {
@@ -154,41 +163,22 @@ public class SubscriptionReconcilerTest {
     }
 
     public Pool convertFromDTO(SubscriptionDTO sub) {
-        Product product = convertFromDTO(sub.getProduct());
-        Product derivedProduct = convertFromDTO(sub.getDerivedProduct());
-
-        List<Product> providedProducts = new LinkedList<>();
-        if (sub.getProvidedProducts() != null) {
-            for (ProductDTO pdata : sub.getProvidedProducts()) {
-                if (pdata != null) {
-                    providedProducts.add(convertFromDTO(pdata));
-                }
-            }
-        }
-
-        List<Product> derivedProvidedProducts = new LinkedList<>();
-        if (sub.getDerivedProvidedProducts() != null) {
-            for (ProductDTO pdata : sub.getDerivedProvidedProducts()) {
-                if (pdata != null) {
-                    derivedProvidedProducts.add(convertFromDTO(pdata));
-                }
-            }
-        }
-
-        Pool pool = new Pool(this.owner, product, providedProducts, sub.getQuantity(),
-            sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
-            sub.getOrderNumber());
-
-        pool.setDerivedProduct(derivedProduct);
-        pool.setDerivedProvidedProducts(derivedProvidedProducts);
+        Pool pool = new Pool()
+            .setOwner(this.owner)
+            .setProduct(convertFromDTO(sub.getProduct()))
+            .setQuantity(sub.getQuantity())
+            .setStartDate(sub.getStartDate())
+            .setEndDate(sub.getEndDate())
+            .setContractNumber(sub.getContractNumber())
+            .setAccountNumber(sub.getAccountNumber())
+            .setOrderNumber(sub.getOrderNumber())
+            .setUpstreamPoolId(sub.getUpstreamPoolId())
+            .setUpstreamConsumerId(sub.getUpstreamConsumerId())
+            .setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
         if (sub.getId() != null) {
             pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
         }
-
-        pool.setUpstreamPoolId(sub.getUpstreamPoolId());
-        pool.setUpstreamConsumerId(sub.getUpstreamConsumerId());
-        pool.setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
         return pool;
     }
@@ -209,13 +199,7 @@ public class SubscriptionReconcilerTest {
         }
 
         // Mock these pools as the return value for the owner:
-        CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
-
-        doReturn(pools).when(cqmock).list();
-        doReturn(pools.iterator()).when(cqmock).iterator();
-
-        doReturn(cqmock).when(this.poolCurator).listByOwnerAndType(eq(owner), eq(PoolType.NORMAL));
-
+        doReturn(pools).when(poolCurator).listByOwnerAndTypes(eq(owner.getId()), eq(PoolType.NORMAL));
         return pools;
     }
 

@@ -21,14 +21,15 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.Refresher;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;
 
 import java.util.Objects;
+
 
 
 /**
@@ -46,16 +47,20 @@ public class RefreshPoolsForProductJob implements AsyncJob {
     private final PoolManager poolManager;
     private final ProductCurator productCurator;
     private final SubscriptionServiceAdapter subAdapter;
+    private final ProductServiceAdapter prodAdapter;
+
 
     @Inject
     public RefreshPoolsForProductJob(
         final ProductCurator productCurator,
         final PoolManager poolManager,
-        final SubscriptionServiceAdapter subAdapter) {
+        final SubscriptionServiceAdapter subAdapter,
+        final ProductServiceAdapter prodAdapter) {
 
         this.poolManager = Objects.requireNonNull(poolManager);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.subAdapter = Objects.requireNonNull(subAdapter);
+        this.prodAdapter = Objects.requireNonNull(prodAdapter);
     }
 
     @Override
@@ -69,10 +74,9 @@ public class RefreshPoolsForProductJob implements AsyncJob {
         final Product product = this.productCurator.get(productUuid);
 
         if (product != null) {
-            Refresher refresher = poolManager.getRefresher(this.subAdapter, lazy);
-
-            refresher.add(product);
-            refresher.run();
+            poolManager.getRefresher(this.subAdapter, this.prodAdapter, lazy)
+                .add(product)
+                .run();
 
             result.append("Pools refreshed for product: ")
                 .append(productUuid)

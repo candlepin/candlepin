@@ -764,39 +764,8 @@ public class OwnerResource {
             }
         }
 
-        if (dto.getProvidedProducts() != null) {
-            if (dto.getProvidedProducts().isEmpty()) {
-                entity.setProvidedProducts(Collections.emptySet());
-            }
-            else {
-                Set<Product> products = new HashSet<>();
-                for (PoolDTO.ProvidedProductDTO providedProductDTO : dto.getProvidedProducts()) {
-                    if (providedProductDTO != null) {
-                        Product newProd = findProduct(entity.getOwner(), providedProductDTO.getProductId());
-                        products.add(newProd);
-                    }
-                }
-                entity.setProvidedProducts(products);
-            }
-        }
-
-        if (dto.getDerivedProvidedProducts() != null) {
-            if (dto.getDerivedProvidedProducts().isEmpty()) {
-                entity.setDerivedProvidedProducts(Collections.emptySet());
-            }
-            else {
-                Set<Product> derivedProducts = new HashSet<>();
-                for (PoolDTO.ProvidedProductDTO derivedProvidedProductDTO :
-                    dto.getDerivedProvidedProducts()) {
-                    if (derivedProvidedProductDTO != null) {
-                        Product newDerivedProd =
-                            findProduct(entity.getOwner(), derivedProvidedProductDTO.getProductId());
-                        derivedProducts.add(newDerivedProd);
-                    }
-                }
-                entity.setDerivedProvidedProducts(derivedProducts);
-            }
-        }
+        // Impl note: derived product, provided products, and derived provided products are no longer
+        // imported from the DTO.
     }
 
     /**
@@ -1808,10 +1777,6 @@ public class OwnerResource {
 
         pool.setProduct(findProduct(pool.getOwner(), inputPoolDTO.getProductId()));
 
-        if (inputPoolDTO.getDerivedProductId() != null) {
-            pool.setDerivedProduct(findProduct(pool.getOwner(), inputPoolDTO.getDerivedProductId()));
-        }
-
         if (inputPoolDTO.getSourceEntitlement() != null) {
             pool.setSourceEntitlement(findEntitlement(inputPoolDTO.getSourceEntitlement().getId()));
         }
@@ -1871,7 +1836,6 @@ public class OwnerResource {
          * wants to update it , we need to ensure Products are set appropriately.
          */
         newPool.setProduct(currentPool.getProduct());
-        newPool.setDerivedProduct(currentPool.getDerivedProduct());
 
         // Forcefully set fields we don't allow the client to change.
         newPool.setSourceSubscription(currentPool.getSourceSubscription());
@@ -1899,14 +1863,6 @@ public class OwnerResource {
 
         if (newPoolDTO.getAttributes() == null) {
             newPool.setAttributes(currentPool.getAttributes());
-        }
-
-        if (newPoolDTO.getProvidedProducts() == null) {
-            newPool.setProvidedProducts(currentPool.getProvidedProducts());
-        }
-
-        if (newPoolDTO.getDerivedProvidedProducts() == null) {
-            newPool.setDerivedProvidedProducts(currentPool.getDerivedProvidedProducts());
         }
 
         // Apply changes to the pool and its derived pools

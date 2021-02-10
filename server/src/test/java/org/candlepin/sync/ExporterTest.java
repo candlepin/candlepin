@@ -34,7 +34,6 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -162,8 +161,7 @@ public class ExporterTest {
         cdnc = mock(CdnCurator.class);
         cdne = new CdnExporter(translator);
         pc = mock(ProductCurator.class);
-        ProductCachedSerializationModule productCachedModule = new ProductCachedSerializationModule(pc);
-        su = new SyncUtils(config, productCachedModule);
+        su = new SyncUtils(config);
         exportExtensionAdapter = mock(ExportExtensionAdapter.class);
         contentAccessManager = mock(ContentAccessManager.class);
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
@@ -191,7 +189,6 @@ public class ExporterTest {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
-        Pool pool = mock(Pool.class);
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
         IdentityCertificate idcert = new IdentityCertificate();
@@ -225,26 +222,19 @@ public class ExporterTest {
         subProvidedProduct.setUpdated(new Date());
         subProvidedProduct.setAttributes(Collections.<String, String>emptyMap());
 
+        prod1.addProvidedProduct(prod);
+        prod1.setDerivedProduct(subProduct);
+        subProduct.addProvidedProduct(subProvidedProduct);
+
         ProductCertificate pcert = new ProductCertificate();
         pcert.setKey("euh0876puhapodifbvj094");
         pcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
         pcert.setCreated(new Date());
         pcert.setUpdated(new Date());
 
-        Set<Product> ppset = new HashSet<>();
-        ppset.add(prod);
-
-        Set<Product> sppSet = new HashSet<>();
-        sppSet.add(subProvidedProduct);
-
-        when(pool.getId()).thenReturn("MockedPoolId");
-        when(pool.getProvidedProducts()).thenReturn(ppset);
-        when(pc.getPoolProvidedProductsCached(pool)).thenReturn(ppset);
-        when(pool.getProduct()).thenReturn(prod1);
-
-        when(pool.getDerivedProvidedProducts()).thenReturn(sppSet);
-        when(pc.getPoolDerivedProvidedProductsCached(pool)).thenReturn(sppSet);
-        when(pool.getDerivedProduct()).thenReturn(subProduct);
+        Pool pool = TestUtil.createPool(owner)
+            .setId("MockedPoolId")
+            .setProduct(prod1);
 
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
@@ -287,12 +277,10 @@ public class ExporterTest {
 
         // VERIFY
         assertNotNull(export);
-        verifyContent(export, "export/products/12345.pem",
-            new VerifyProductCert("12345.pem"));
+        verifyContent(export, "export/products/12345.pem", new VerifyProductCert("12345.pem"));
         assertFalse(verifyHasEntry(export, "export/products/MKT-prod.pem"));
 
-        verifyContent(export, "export/products/332211.pem",
-            new VerifyProductCert("332211.pem"));
+        verifyContent(export, "export/products/332211.pem", new VerifyProductCert("332211.pem"));
         assertFalse(verifyHasEntry(export, "export/products/MKT-sub-prod.pem"));
 
         FileUtils.deleteDirectory(export.getParentFile());
@@ -778,14 +766,13 @@ public class ExporterTest {
             }
             os.flush();
             os.close();
-            ObjectMapper om = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
-                new HashMap<String, String>() {
-                    {
-                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-                    }
-                }
-            ));
-            Meta m = om.readValue(new FileInputStream("/tmp/meta.json"), Meta.class);
+
+            Map<String, String> configProps = new HashMap<>();
+            configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+
+            ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+
+            Meta m = mapper.readValue(new FileInputStream("/tmp/meta.json"), Meta.class);
 
             Map<String, String> vmap = VersionUtil.getVersionMap();
 
@@ -873,16 +860,13 @@ public class ExporterTest {
             os.flush();
             os.close();
 
-            ObjectMapper om = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
-                new HashMap<String, String>() {
-                    {
-                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-                    }
-                }
-            ));
 
-            ConsumerDTO c = om.readValue(
-                new FileInputStream("/tmp/" + filename), ConsumerDTO.class);
+            Map<String, String> configProps = new HashMap<>();
+            configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+
+            ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+
+            ConsumerDTO c = mapper.readValue(new FileInputStream("/tmp/" + filename), ConsumerDTO.class);
 
             assertEquals("localhost:8443/apiurl", c.getUrlApi());
             assertEquals("localhost:8443/weburl", c.getUrlWeb());
@@ -911,14 +895,13 @@ public class ExporterTest {
             }
             os.flush();
             os.close();
-            ObjectMapper om = TestSyncUtils.getTestSyncUtils(new MapConfiguration(
-                new HashMap<String, String>() {
-                    {
-                        put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-                    }
-                }
-            ));
-            DistributorVersion dv = om.readValue(
+
+            Map<String, String> configProps = new HashMap<>();
+            configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+
+            ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+
+            DistributorVersion dv = mapper.readValue(
                 new FileInputStream("/tmp/" + filename),
                 DistributorVersion.class);
             assertNotNull(dv);

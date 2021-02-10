@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2021 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -20,10 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.candlepin.common.jackson.DynamicPropertyFilter;
-import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -31,43 +28,23 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Inject;
+import javax.persistence.PersistenceException;
 
 
 
 public class PoolTest extends DatabaseTestFixture {
-
-    public static final String POOL_JSON_BASE = "{\"id\": \"5\", \"owner\": {}, \"activeSubscription\": tr" +
-        "ue, \"subscriptionId\": \"3\", \"subscriptionSubKey\": null, \"sourceStackId\": null, \"sourceCon" +
-        "sumer\": {\"id\": \"5\", \"uuid\": \"\", \"name\": \"10023\", \"username\": null, \"entitlementSt" +
-        "atus\": \"valid\", \"serviceLevel\": \"\", \"releaseVer\": {\"releaseVer\": null }, \"type\": {\"" +
-        "id\": \"1004\", \"label\": \"hypervisor\", \"manifest\": false }, \"owner\": {}, \"environment\":" +
-        " {\"owner\": {}, \"name\": \"Library\", \"description\": null, \"id\": \"2\", \"environmentConten" +
-        "t\": [{\"id\": \"023947982374\", \"contentId\": \"166\", \"enabled\": null }, {\"id\": \"11\", \"" +
-        "contentId\": \"168\", \"enabled\": null }, {\"id\": \"192837123\", \"contentId\": \"867\", \"enab" +
-        "led\": null } ] }, \"entitlementCount\": 1, \"facts\": {}, \"lastCheckin\": 1381236857266, \"inst" +
-        "alledProducts\": [], \"canActivate\": false, \"guestIds\": [], \"capabilities\": [], \"autoheal\"" +
-        ": true, \"href\": \"\\/consumers\\/4\"}, \"quantity\": -1, \"startDate\": 1377057600000, \"endDat" +
-        "e\": 1471751999000, \"productId\": \"MYSKU\", \"providedProducts\": [], \"restrictedToUsername\":" +
-        " null, \"contractNumber\": \"2\", \"accountNumber\": \"1\", \"orderNumber\": null, \"consumed\": " +
-        "1, \"exported\": 0, \"productName\": \"Awesome OS Enterprise Server\", \"calculatedAttributes\": " +
-        "null, \"type\": \"ENTITLEMENT_DERIVED\", \"href\": \"\\/pools\\/5\", \"stacked\": false, \"stackI" +
-        "d\": null, \"product_list\": []";
 
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
@@ -76,8 +53,6 @@ public class PoolTest extends DatabaseTestFixture {
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private CandlepinPoolManager poolManager;
-
-    private ObjectMapper mapper;
 
     private Pool pool;
     private Product prod1;
@@ -88,14 +63,6 @@ public class PoolTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void createObjects() {
-        this.mapper = new ObjectMapper();
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider = filterProvider.addFilter("PoolFilter", new PoolEventFilter());
-        filterProvider = filterProvider.addFilter("OwnerFilter", new HateoasBeanPropertyFilter());
-        filterProvider.setDefaultFilter(new DynamicPropertyFilter());
-        this.mapper.setFilters(filterProvider);
-        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
         beginTransaction();
 
         try {
@@ -105,10 +72,9 @@ public class PoolTest extends DatabaseTestFixture {
             prod1 = this.createProduct(owner);
             prod2 = this.createProduct(owner);
 
-            Set<Product> providedProducts = new HashSet<>();
-            providedProducts.add(prod2);
+            prod1.setProvidedProducts(Arrays.asList(prod2));
 
-            pool = TestUtil.createPool(owner, prod1, providedProducts, 1000);
+            pool = TestUtil.createPool(owner, prod1, 1000);
             subscription = TestUtil.createSubscription(owner, prod1);
             subscription.setId(Util.generateDbUUID());
 
@@ -135,25 +101,6 @@ public class PoolTest extends DatabaseTestFixture {
         assertNotNull(lookedUp);
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
         assertEquals(prod1.getId(), lookedUp.getProductId());
-    }
-
-    @Test
-    public void testCreateWithDerivedProvidedProducts() {
-        Product derivedProd = this.createProduct(owner);
-
-        Pool p = TestUtil.createPool(owner, prod1, new HashSet<>(), 1000);
-        p.addProvidedProduct(prod2);
-        Set<Product> derivedProducts = new HashSet<>();
-        derivedProducts.add(derivedProd);
-
-        p.setDerivedProvidedProducts(derivedProducts);
-        poolCurator.create(p);
-
-        Pool lookedUp = this.getEntityManager().find(Pool.class, p.getId());
-        assertEquals(1, lookedUp.getProvidedProducts().size());
-        assertEquals(prod2.getId(), lookedUp.getProvidedProducts().iterator().next().getId());
-        assertEquals(1, lookedUp.getDerivedProvidedProducts().size());
-        assertEquals(derivedProd.getId(), lookedUp.getDerivedProvidedProducts().iterator().next().getId());
     }
 
     @Test
@@ -253,13 +200,14 @@ public class PoolTest extends DatabaseTestFixture {
 
     @Test
     public void testLookupPoolsProvidingProduct() {
-        Product parentProduct = this.createProduct("1", "product-1", owner);
+
         Product childProduct = this.createProduct("2", "product-2", owner);
 
-        Set<Product> providedProducts = new HashSet<>();
-        providedProducts.add(childProduct);
+        Product parentProduct = TestUtil.createProduct("1", "product-1");
+        parentProduct.setProvidedProducts(Arrays.asList(childProduct));
 
-        Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
+        parentProduct = this.createProduct(parentProduct, owner);
+        Pool pool = TestUtil.createPool(owner, parentProduct, 5);
         poolCurator.create(pool);
 
 
@@ -325,29 +273,23 @@ public class PoolTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void providedProductCleanup() {
-        Product parentProduct = this.createProduct("1", "product-1", owner);
-        Product childProduct1 = this.createProduct("child1", "child1", owner);
-        Product childProduct2 = this.createProduct("child2", "child2", owner);
-        Product childProduct3 = this.createProduct("child3", "child3", owner);
+    public void testProvidedProductImmutability() {
+        Product parentProduct = TestUtil.createProduct("1", "product-1");
         Product providedProduct = this.createProduct("provided", "Child 1", owner);
+        parentProduct.setProvidedProducts(Arrays.asList(providedProduct));
 
-        Set<Product> providedProducts = new HashSet<>();
-        providedProducts.add(providedProduct);
+        Product childProduct1 = this.createProduct("child1", "child1", owner);
 
-        Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
+        parentProduct = this.createProduct(parentProduct, owner);
+        Pool pool = TestUtil.createPool(owner, parentProduct, 5);
         poolCurator.create(pool);
         pool = poolCurator.get(pool.getId());
-        assertEquals(1, pool.getProvidedProducts().size());
+        assertEquals(1, pool.getProduct().getProvidedProducts().size());
 
-        // Clear the set and create a new one:
-        pool.getProvidedProducts().clear();
-        pool.addProvidedProduct(childProduct2);
-        pool.addProvidedProduct(childProduct3);
-        poolCurator.merge(pool);
-
-        pool = poolCurator.get(pool.getId());
-        assertEquals(2, pool.getProvidedProducts().size());
+        // provided products are immutable set.
+        pool.getProduct().addProvidedProduct(childProduct1);
+        Pool finalPool = pool;
+        Assertions.assertThrows(PersistenceException.class, () ->poolCurator.merge(finalPool));
     }
 
     // sunny test - real rules not invoked here. Can only be sure the counts are recorded.
@@ -461,124 +403,6 @@ public class PoolTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testDeserializePoolAttributesJsonV1() throws Exception {
-        String attributes = "\"attributes\": [" +
-            "    {" +
-            "        \"name\" : \"attrib-1\"," +
-            "        \"value\" : \"value-1\"," +
-            "        \"entityVersion\" : 1498458083," +
-            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
-            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
-            "    }," +
-            "    {" +
-            "        \"name\" : \"attrib-2\"," +
-            "        \"value\" : \"value-2\"," +
-            "        \"entityVersion\" : 1498458083," +
-            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
-            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
-            "    }," +
-            "    {" +
-            "        \"name\" : 3," +
-            "        \"value\" : 3," +
-            "        \"entityVersion\" : 1498458083," +
-            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
-            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
-            "    }" +
-            "]," +
-            "\"productAttributes\": [" +
-            "    {" +
-            "        \"name\" : \"prod_attrib-1\"," +
-            "        \"value\" : \"prod_value-1\"," +
-            "        \"entityVersion\" : 1498458083," +
-            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
-            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
-            "    }," +
-            "    {" +
-            "        \"name\" : \"prod_attrib-2\"," +
-            "        \"value\" : \"prod_value-2\"," +
-            "        \"entityVersion\" : 1498458083," +
-            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
-            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
-            "    }," +
-            "    {" +
-            "        \"name\" : 3," +
-            "        \"value\" : 3," +
-            "        \"entityVersion\" : 1498458083," +
-            "        \"created\" : \"2016-09-07T15:08:13+0000\"," +
-            "        \"updated\" : \"2016-09-07T15:08:13+0000\"" +
-            "    }" +
-            "]";
-
-        Map<String, String> expectedAttrib = new HashMap<>();
-        expectedAttrib.put("attrib-1", "value-1");
-        expectedAttrib.put("attrib-2", "value-2");
-        expectedAttrib.put("3", "3");
-
-        Map<String, String> expectedProdAttrib = new HashMap<>();
-        expectedProdAttrib.put("prod_attrib-1", "prod_value-1");
-        expectedProdAttrib.put("prod_attrib-2", "prod_value-2");
-        expectedProdAttrib.put("3", "3");
-
-        Pool pool = this.mapper.readValue(POOL_JSON_BASE + "," + attributes + "}", Pool.class);
-
-        assertEquals(expectedAttrib, pool.getAttributes());
-        assertEquals(expectedProdAttrib, pool.getProductAttributes());
-    }
-
-    @Test
-    public void testDeserializePoolAttributesJsonV2() throws Exception {
-        String attributes = "\"attributes\": {" +
-            "    \"attrib-1\": \"value-1\"," +
-            "    \"attrib-2\": \"value-2\"," +
-            "    \"attrib-3\": 3" +
-            "}," +
-            "\"productAttributes\": {" +
-            "    \"prod_attrib-1\": \"prod_value-1\"," +
-            "    \"prod_attrib-2\": \"prod_value-2\"," +
-            "    \"prod_attrib-3\": 3" +
-            "}";
-
-        Map<String, String> expectedAttrib = new HashMap<>();
-        expectedAttrib.put("attrib-1", "value-1");
-        expectedAttrib.put("attrib-2", "value-2");
-        expectedAttrib.put("attrib-3", "3");
-
-        Map<String, String> expectedProdAttrib = new HashMap<>();
-        expectedProdAttrib.put("prod_attrib-1", "prod_value-1");
-        expectedProdAttrib.put("prod_attrib-2", "prod_value-2");
-        expectedProdAttrib.put("prod_attrib-3", "3");
-
-        Pool pool = this.mapper.readValue(POOL_JSON_BASE + "," + attributes + "}", Pool.class);
-
-        assertEquals(expectedAttrib, pool.getAttributes());
-        assertEquals(expectedProdAttrib, pool.getProductAttributes());
-    }
-
-    @Test
-    public void testSerializePoolAttributes() throws Exception {
-        String expectedHeader = "\"attributes\":[{";
-        String expectedValue1 = "\"name\":\"attrib-1\",\"value\":\"value-1\"";
-        String expectedValue2 = "\"name\":\"attrib-2\",\"value\":\"value-2\"";
-        String expectedValue3 = "\"name\":\"attrib-3\",\"value\":\"3\"";
-
-        Map<String, String> attributes = new HashMap<>();
-        attributes.put("attrib-1", "value-1");
-        attributes.put("attrib-2", "value-2");
-        attributes.put("attrib-3", "3");
-
-        this.pool.setAttributes(attributes);
-
-        String output = this.mapper.writeValueAsString(pool);
-
-        // Since the attributes are stored as a map, we can't guarantee any specific printed order.
-        // To deal with this, we separate the value and each header, then verify them individually.
-        assertTrue(output.contains(expectedHeader));
-        assertTrue(output.contains(expectedValue1));
-        assertTrue(output.contains(expectedValue2));
-        assertTrue(output.contains(expectedValue3));
-    }
-
-    @Test
     public void testIsDerivedPool() {
         Pool derivedPool = TestUtil.createPool(owner, prod1, 1000);
         derivedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
@@ -592,5 +416,4 @@ public class PoolTest extends DatabaseTestFixture {
 
         assertFalse(derivedPool.isDerived());
     }
-
 }

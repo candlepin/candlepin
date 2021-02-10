@@ -26,11 +26,15 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.test.TestUtil;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+
 
 /**
  * Test suite for the ProductTranslator (manifest import/export) class
@@ -63,15 +67,10 @@ public class ProductTranslatorTest extends
         attributes.put("attrib_2", "attrib_value_2");
         attributes.put("attrib_3", "attrib_value_3");
 
-        Collection<String> depProdIds = new LinkedList<>();
-        depProdIds.add("dep_prod_1");
-        depProdIds.add("dep_prod_2");
-        depProdIds.add("dep_prod_3");
-
         source.setId("test_id");
         source.setName("test_name");
         source.setAttributes(attributes);
-        source.setDependentProductIds(depProdIds);
+        source.setDependentProductIds(Arrays.asList("dep_prod-1", "dep_prod-2", "dep_prod-3"));
         source.setUuid("test_uuid");
         source.setMultiplier(3L);
 
@@ -83,7 +82,42 @@ public class ProductTranslatorTest extends
         IntStream.rangeClosed(1, 3)
             .forEach(i -> source.addBranding(TestUtil.createProductBranding(source)));
 
+        source.setDerivedProduct(this.generateChildProduct(0));
+
+        Collection<Product> provided = Arrays.asList(
+            this.generateChildProduct(1),
+            this.generateChildProduct(2),
+            this.generateChildProduct(3));
+
+        source.setProvidedProducts(provided);
+
         return source;
+    }
+
+    private Product generateChildProduct(int number) {
+        Product child = new Product()
+            .setId("child-" + number)
+            .setName("child_name-" + number)
+            .setUuid("test_uuid-" + number)
+            .setMultiplier(5L)
+            .setDependentProductIds(Arrays.asList("child_dep_prod-1", "child_dep_prod-2"));
+
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("child_attrib-1", "child_attrib_value-1");
+        attributes.put("child_attrib-2", "child_attrib_value-2");
+        attributes.put("child_attrib-3", "child_attrib_value-3");
+
+        child.setAttributes(attributes);
+
+        for (int i = 0; i < 3; ++i) {
+            Content content = TestUtil.createContent("child_content-" + i);
+            child.addContent(content, true);
+        }
+
+        IntStream.rangeClosed(1, 3)
+            .forEach(i -> child.addBranding(TestUtil.createProductBranding(child)));
+
+        return child;
     }
 
     @Override
@@ -101,6 +135,32 @@ public class ProductTranslatorTest extends
             assertEquals(source.getName(), dto.getName());
             assertEquals(source.getAttributes(), dto.getAttributes());
             assertEquals(source.getDependentProductIds(), dto.getDependentProductIds());
+
+            if (source.getDerivedProduct() != null) {
+                this.verifyOutput(source.getDerivedProduct(), dto.getDerivedProduct(), childrenGenerated);
+            }
+            else {
+                assertNull(dto.getDerivedProduct());
+            }
+
+            if (source.getProvidedProducts() != null) {
+                assertNotNull(dto.getProvidedProducts());
+
+                Map<String, Product> srcProvidedMap = source.getProvidedProducts().stream()
+                    .collect(Collectors.toMap(Product::getId, Function.identity()));
+
+                Map<String, ProductDTO> destProvidedMap = dto.getProvidedProducts().stream()
+                    .collect(Collectors.toMap(ProductDTO::getId, Function.identity()));
+
+                assertEquals(srcProvidedMap.keySet(), destProvidedMap.keySet());
+
+                for (String id : srcProvidedMap.keySet()) {
+                    this.verifyOutput(srcProvidedMap.get(id), destProvidedMap.get(id), childrenGenerated);
+                }
+            }
+            else {
+                assertNull(dto.getProvidedProducts());
+            }
 
             assertNotNull(dto.getProductContent());
 

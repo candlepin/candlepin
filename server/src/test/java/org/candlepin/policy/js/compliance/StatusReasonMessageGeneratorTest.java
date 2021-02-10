@@ -195,17 +195,16 @@ public class StatusReasonMessageGeneratorTest {
     }
 
     private Entitlement mockEntitlement(Consumer consumer, Product product) {
-        Pool p = new Pool(
-            owner,
-            product,
-            null,
-            new Long(1000),
-            TestUtil.createDate(2000, 1, 1),
-            TestUtil.createDate(2050, 1, 1),
-            "1000",
-            "1000",
-            "1000"
-        );
+        Pool p = new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(1000L)
+            .setStartDate(TestUtil.createDate(2000, 1, 1))
+            .setEndDate(TestUtil.createDate(2050, 1, 1))
+            .setContractNumber("1000")
+            .setAccountNumber("1000")
+            .setOrderNumber("1000");
+
         Entitlement e = new Entitlement(p, consumer, owner, 1);
         return e;
     }

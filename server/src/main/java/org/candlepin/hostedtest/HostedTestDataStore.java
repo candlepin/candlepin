@@ -155,18 +155,17 @@ public class HostedTestDataStore {
             throw new IllegalStateException("subscription already exists: " + sinfo.getId());
         }
 
+        if (sinfo.getProduct() == null) {
+            throw new IllegalArgumentException("subscription lacks a product: " + sinfo);
+        }
+
         // TODO: Add any other subscription validation we want here
 
         Subscription sdata = new Subscription();
 
         sdata.setId(sinfo.getId());
         sdata.setOwner(this.resolveOwner(sinfo.getOwner()));
-
         sdata.setProduct(this.resolveProduct(sinfo.getProduct()));
-        sdata.setProvidedProducts(this.resolveProducts(sinfo.getProvidedProducts()));
-        sdata.setDerivedProduct(this.resolveProduct(sinfo.getDerivedProduct()));
-        sdata.setDerivedProvidedProducts(this.resolveProducts(sinfo.getDerivedProvidedProducts()));
-
         sdata.setQuantity(sinfo.getQuantity());
         sdata.setStartDate(sinfo.getStartDate());
         sdata.setEndDate(sinfo.getEndDate());
@@ -174,7 +173,6 @@ public class HostedTestDataStore {
         sdata.setContractNumber(sinfo.getContractNumber());
         sdata.setAccountNumber(sinfo.getAccountNumber());
         sdata.setOrderNumber(sinfo.getOrderNumber());
-
         sdata.setUpstreamPoolId(sinfo.getUpstreamPoolId());
         sdata.setUpstreamEntitlementId(sinfo.getUpstreamEntitlementId());
         sdata.setUpstreamConsumerId(sinfo.getUpstreamConsumerId());
@@ -187,7 +185,6 @@ public class HostedTestDataStore {
 
         return sdata;
     }
-
 
     public SubscriptionInfo updateSubscription(String subscriptionId, SubscriptionInfo sinfo) {
         if (subscriptionId == null) {
@@ -208,25 +205,7 @@ public class HostedTestDataStore {
 
         // Do product resolution here
         ProductData product = this.resolveProduct(sinfo.getProduct());
-        Collection<ProductData> providedProducts = this.resolveProducts(sinfo.getProvidedProducts());
-
-        ProductData dProduct = this.resolveProduct(sinfo.getDerivedProduct());
-        Collection<ProductData> dpProvidedProducts = this.resolveProducts(sinfo.getDerivedProvidedProducts());
-
-        // If they all resolved, set the products
-        if (product != null) {
-            sdata.setProduct(product);
-        }
-
-        if (providedProducts != null) {
-            sdata.setProvidedProducts(providedProducts);
-        }
-
-        sdata.setDerivedProduct(dProduct);
-
-        if (dpProvidedProducts != null) {
-            sdata.setDerivedProvidedProducts(dpProvidedProducts);
-        }
+        sdata.setProduct(product);
 
         // Set the other "safe" properties here...
         if (sinfo.getOwner() != null) {
@@ -336,13 +315,19 @@ public class HostedTestDataStore {
         pdata.setCreated(new Date());
         pdata.setUpdated(new Date());
         pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
+        pdata.setProvidedProducts(this.resolveProducts(pinfo.getProvidedProducts()));
+        pdata.setDerivedProduct(this.resolveProduct(pinfo.getDerivedProduct()));
 
         // Create our mappings...
         this.productMap.put(pdata.getId(), pdata);
+        this.productProductMap.put(pdata.getId(), new HashSet<>());
         this.productSubscriptionMap.put(pdata.getId(), new HashSet<>());
 
         // Update content=>product mappings
         this.updateProductContentMappings(pdata);
+
+        // Update product=>product mappings
+        this.updateProductProductMappings(pdata);
 
         return pdata;
     }
@@ -362,10 +347,14 @@ public class HostedTestDataStore {
             throw new IllegalStateException("product does not exist: " + productId);
         }
 
-        // Apply updates...
-        // Don't allow changing the ID
-
+        // Perform child reference resolutions before making changes to our data
+        Collection<Branding> branding = this.resolveBranding(pinfo.getBranding());
+        Collection<ProductData> providedProducts = this.resolveProducts(pinfo.getProvidedProducts());
         Collection<ProductContentData> pcdata = this.resolveProductContent(pinfo.getProductContent());
+        ProductData derivedProduct = this.resolveProduct(pinfo.getDerivedProduct());
+
+        // Apply updates...
+        // Note: Don't allow changing the ID
         if (pcdata != null) {
             pdata.setProductContent(pcdata);
         }
@@ -386,12 +375,23 @@ public class HostedTestDataStore {
             pdata.setDependentProductIds(pinfo.getDependentProductIds());
         }
 
-        if (pinfo.getBranding() != null) {
-            pdata.setBranding(this.resolveBranding(pinfo.getBranding()));
+        if (branding != null) {
+            pdata.setBranding(branding);
         }
 
-        // Update product=>content mappings
+        if (providedProducts != null) {
+            pdata.setProvidedProducts(providedProducts);
+        }
+
+        // Impl note: the derived product is always updated, since we have to treat null as a "no ref"
+        // value rather than a "no change" value for this field.
+        pdata.setDerivedProduct(derivedProduct);
+
+        // Update content=>product mappings
         this.updateProductContentMappings(pdata);
+
+        // Update product=>product mappings
+        this.updateProductProductMappings(pdata);
 
         pdata.setUpdated(new Date());
 
@@ -414,11 +414,20 @@ public class HostedTestDataStore {
                 "Product is still referenced by one or more subscriptions: " + productId);
         }
 
+        if (this.productProductMap.containsKey(productId) &&
+            !this.productProductMap.get(productId).isEmpty()) {
+
+            throw new IllegalStateException(
+                "Product is still referenced by one or more parent products: " + productId);
+        }
+
         ProductData pdata = this.productMap.remove(productId);
 
         // Update our mappings...
-        // Impl note: no need to update the subscriptions since we know none are using this product.
+        // Impl note: no need to update the subscription or products since we know none are using this
+        // product.
         this.productSubscriptionMap.remove(productId);
+        this.productProductMap.remove(productId);
 
         // Update content=>product mappings to no longer reference this product
         for (Set<String> pids : this.contentProductMap.values()) {
@@ -439,6 +448,8 @@ public class HostedTestDataStore {
 
         return this.productMap.get(productId);
     }
+
+
     public ContentInfo createContent(ContentInfo cinfo) {
         if (cinfo == null) {
             throw new IllegalArgumentException("cinfo is null");
@@ -666,6 +677,55 @@ public class HostedTestDataStore {
             }
             else {
                 sids.remove(sdata.getId());
+            }
+        }
+    }
+
+    protected void updateProductProductMappings(ProductInfo pinfo) {
+        if (pinfo == null) {
+            throw new IllegalArgumentException("pinfo is null");
+        }
+
+        if (StringUtils.isBlank(pinfo.getId())) {
+            throw new IllegalArgumentException("product lacks identifying information: " + pinfo);
+        }
+
+        // Get a list of products the base product references
+        Set<String> pids = new HashSet<>();
+
+        if (pinfo.getDerivedProduct() != null) {
+            pids.add(pinfo.getDerivedProduct().getId());
+        }
+
+        if (pinfo.getProvidedProducts() != null) {
+            for (ProductInfo provided : pinfo.getProvidedProducts()) {
+                pids.add(provided.getId());
+            }
+        }
+
+        // Sanity check: Make sure every cid we're refrencing is one we're tracking. This shouldn't
+        // ever fail, but if it does, something very bad has happened.
+        for (String pid : pids) {
+            if (!this.productMap.containsKey(pid)) {
+                throw new IllegalStateException("unknown/unexpected product id: " + pid);
+            }
+
+            if (!this.productProductMap.containsKey(pid)) {
+                throw new IllegalStateException("product=>product map lacks table for product: " + pid);
+            }
+        }
+
+        // Step through our mapped products and either add the subscription or remove it depending
+        // on if the product ID exists in our compiled map
+        for (Map.Entry<String, Set<String>> entry : this.productSubscriptionMap.entrySet()) {
+            String pid = entry.getKey();
+            Set<String> mpids = entry.getValue();
+
+            if (pids.contains(pid)) {
+                mpids.add(pinfo.getId());
+            }
+            else {
+                mpids.remove(pinfo.getId());
             }
         }
     }

@@ -23,6 +23,8 @@ import org.candlepin.model.ProductContent;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 
 
@@ -59,8 +61,8 @@ public class ProductTranslator extends TimestampedEntityTranslator<Product, Prod
      * {@inheritDoc}
      */
     @Override
-    public ProductDTO populate(ModelTranslator modelTranslator, Product source, ProductDTO destination) {
-        destination = super.populate(modelTranslator, source, destination);
+    public ProductDTO populate(ModelTranslator translator, Product source, ProductDTO destination) {
+        destination = super.populate(translator, source, destination);
 
         destination.setUuid(source.getUuid());
         destination.setMultiplier(source.getMultiplier());
@@ -69,17 +71,37 @@ public class ProductTranslator extends TimestampedEntityTranslator<Product, Prod
         destination.setAttributes(source.getAttributes());
         destination.setDependentProductIds(source.getDependentProductIds());
 
-        if (modelTranslator != null) {
+        // Translate children products (recursive op)
+        Product srcDerived = source.getDerivedProduct();
+        destination.setDerivedProduct(srcDerived != null ? this.translate(translator, srcDerived) : null);
+
+        Collection<Product> srcProvided = source.getProvidedProducts();
+        Set<ProductDTO> destProvided = Collections.emptySet();
+
+        if (srcProvided != null) {
+            destProvided = new HashSet<>();
+
+            for (Product provided : srcProvided) {
+                if (provided != null) {
+                    destProvided.add(this.translate(translator, provided));
+                }
+            }
+        }
+
+        destination.setProvidedProducts(destProvided);
+
+        // Translate other children
+        if (translator != null) {
             Collection<ProductContent> productContent = source.getProductContent();
             destination.setProductContent(Collections.emptyList());
 
             if (productContent != null) {
-                ObjectTranslator<Content, ContentDTO> contentTranslator = modelTranslator
+                ObjectTranslator<Content, ContentDTO> contentTranslator = translator
                     .findTranslatorByClass(Content.class, ContentDTO.class);
 
                 for (ProductContent pc : productContent) {
                     if (pc != null) {
-                        ContentDTO dto = contentTranslator.translate(modelTranslator, pc.getContent());
+                        ContentDTO dto = contentTranslator.translate(translator, pc.getContent());
 
                         if (dto != null) {
                             destination.addContent(dto, pc.isEnabled());

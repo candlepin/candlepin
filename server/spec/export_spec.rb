@@ -105,8 +105,7 @@ describe 'Export', :serial => true do
     end
 
     it 'exports regenerated entitlement certificates' do
-      entitlement_certs_dir = File.join(@cp_export.export_dir,
-        'entitlement_certificates')
+      entitlement_certs_dir = File.join(@cp_export.export_dir, 'entitlement_certificates')
 
       exported_entitlement_certs = files_in_dir(entitlement_certs_dir)
 

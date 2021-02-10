@@ -27,7 +27,7 @@ import java.util.Map;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface ProductInfo {
+public interface ProductInfo extends ServiceAdapterModel {
 
     /**
      * Fetches the Red Hat ID of this product. If the ID has not yet been set, this method returns
@@ -54,6 +54,26 @@ public interface ProductInfo {
      *  the multiplier for this product, or null if the multiplier has not been set
      */
     Long getMultiplier();
+
+    /**
+     * Fetches the derived product of this product. If the derived product has not yet been set, or
+     * this product does not have a derived product, this method returns null.
+     *
+     * @return
+     *  the derived product of this product, or null if this product does not have a derived product
+     */
+    ProductInfo getDerivedProduct();
+
+    /**
+     * Fetches a collection of engineering products of this product. If the provided
+     * products have not yet been set, this method returns null. If this product does not
+     * provide any engineering products, this method returns an empty collection.
+     *
+     * @return
+     *  A collection of engineering products provided by this Product, or null if the provided
+     *  products have not been set.
+     */
+    Collection<? extends ProductInfo> getProvidedProducts();
 
     /**
      * Fetches a collection of IDs of products dependent on this product. If the dependent products
@@ -126,4 +146,5 @@ public interface ProductInfo {
      *  the last update date for this product, or null if the last update date has not been set
      */
     Date getUpdated();
+
 }

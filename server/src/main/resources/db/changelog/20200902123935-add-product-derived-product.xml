@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20200902123935-1" author="crog">
+        <comment>
+            Adds the derived_product_uuid column for moving dervied products from pool to product
+        </comment>
+
+        <addColumn tableName="cp2_products">
+            <column name="derived_product_uuid" type="varchar(32)" beforeColumn="locked"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20200902123935-2" author="crog">
+        <comment>
+            Adds the foreign key constraint for the new derived_product_uuid column
+        </comment>
+
+        <addForeignKeyConstraint
+            baseTableName="cp2_products"
+            baseColumnNames="derived_product_uuid"
+            constraintName="cp2_products_fk1"
+            onDelete="NO ACTION"
+            onUpdate="NO ACTION"
+            referencedColumnNames="uuid"
+            referencedTableName="cp2_products"/>
+    </changeSet>
+</databaseChangeLog>
+

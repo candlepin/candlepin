@@ -14,18 +14,12 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.CandlepinAttributeDeserializer;
-import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.ListView;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -61,6 +55,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.PrePersist;
@@ -68,10 +65,6 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -81,8 +74,6 @@ import javax.xml.bind.annotation.XmlTransient;
  * descriptive meta data that might limit the Product i.e. 4 cores per server
  * with 4 guests.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Immutable
 @Table(name = Product.DB_TABLE)
@@ -212,8 +203,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Column(name = "value")
     @Cascade({CascadeType.DELETE, CascadeType.PERSIST})
     @Fetch(FetchMode.SUBSELECT)
-    @JsonSerialize(using = CandlepinLegacyAttributeSerializer.class)
-    @JsonDeserialize(using = CandlepinAttributeDeserializer.class)
     @Immutable
     @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private Map<String, String> attributes;
@@ -241,11 +230,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<String> dependentProductIds;
 
-    @XmlTransient
     @Column(name = "entity_version")
     private Integer entityVersion;
 
-    @XmlTransient
     @Column
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private boolean locked;
@@ -257,11 +244,26 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Immutable
     private Set<Branding> branding;
 
+    @ManyToMany
+    @JoinTable(
+        name = "cp2_product_provided_products",
+        joinColumns = {@JoinColumn(name = "product_uuid", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "provided_product_uuid")})
+    @BatchSize(size = 1000)
+    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+    @Immutable
+    private Set<Product> providedProducts;
+
+    @ManyToOne
+    @JoinColumn(name = "derived_product_uuid", nullable = true)
+    private Product derivedProduct;
+
     public Product() {
         this.attributes = new HashMap<>();
         this.productContent = new LinkedList<>();
         this.dependentProductIds = new HashSet<>();
         this.branding = new HashSet<>();
+        this.providedProducts = new HashSet<>();
     }
 
     /**
@@ -338,6 +340,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setLocked(source.isLocked());
 
         this.setBranding(source.getBranding());
+        this.setProvidedProducts(source.getProvidedProducts());
     }
 
     /**
@@ -384,6 +387,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setUpdated(source.getUpdated() != null ? (Date) source.getUpdated().clone() : null);
 
         this.setBranding(source.getBranding());
+        this.setProvidedProducts(source.getProvidedProducts());
 
         return this;
     }
@@ -431,7 +435,18 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .map(brand -> new Branding(copy, brand.getProductId(), brand.getName(), brand.getType()))
             .collect(Collectors.toSet()));
 
+        copy.providedProducts = new HashSet<>();
+        copy.setProvidedProducts(this.providedProducts.stream()
+            .map(provProduct -> (Product) provProduct.clone())
+            .collect(Collectors.toSet()));
+
         return copy;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void updateEntityVersion() {
+        this.entityVersion = this.getEntityVersion();
     }
 
     /**
@@ -443,7 +458,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     public ProductData toDTO() {
         return new ProductData(this);
     }
-
 
     /**
      * Retrieves this product's object/database UUID. While the product ID may exist multiple times
@@ -463,9 +477,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *
      * @param uuid
      *  The object ID to assign to this product.
+     *
+     * @return
+     *  a reference to this product instance
      */
-    public void setUuid(String uuid) {
+    public Product setUuid(String uuid) {
         this.uuid = uuid;
+        return this;
     }
 
     /**
@@ -485,9 +503,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *
      * @param productId
      *  The new product ID for this product.
+     *
+     * @return
+     *  a reference to this product instance
      */
-    public void setId(String productId) {
+    public Product setId(String productId) {
         this.id = productId;
+        return this;
     }
 
     /**
@@ -501,9 +523,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * sets the product name.
      *
      * @param name name of the product
+     *
+     * @return
+     *  a reference to this product instance
      */
-    public void setName(String name) {
+    public Product setName(String name) {
         this.name = name;
+        return this;
     }
 
     /**
@@ -515,14 +541,19 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     /**
      * @param multiplier the multiplier to set
+     *
+     * @return
+     *  a reference to this product instance
      */
-    public void setMultiplier(Long multiplier) {
+    public Product setMultiplier(Long multiplier) {
         if (multiplier == null) {
             this.multiplier = 1L;
         }
         else {
             this.multiplier = Math.max(1L, multiplier);
         }
+
+        return this;
     }
 
     /**
@@ -549,7 +580,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  the value set for the given attribute, or null if the attribute is not set
      */
-    @XmlTransient
     public String getAttributeValue(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
@@ -570,7 +600,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  true if the attribute is defined for this product; false otherwise
      */
-    @XmlTransient
     public boolean hasAttribute(String key) {
         if (key == null) {
             throw new IllegalArgumentException("key is null");
@@ -753,7 +782,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return this.branding.removeAll(remove);
     }
 
-    @XmlTransient
     public List<String> getSkuEnabledContentIds() {
         List<String> skus = new LinkedList<>();
 
@@ -770,7 +798,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return skus;
     }
 
-    @XmlTransient
     public List<String> getSkuDisabledContentIds() {
         List<String> skus = new LinkedList<>();
 
@@ -1146,14 +1173,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return String.format("Product [uuid: %s, id: %s, name: %s]", this.uuid, this.id, this.name);
     }
 
-    @XmlTransient
-    @JsonIgnore
     public Product setLocked(boolean locked) {
         this.locked = locked;
         return this;
     }
 
-    @XmlTransient
     public boolean isLocked() {
         return this.locked;
     }
@@ -1181,6 +1205,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 .append(this.name, that.name)
                 .append(this.multiplier, that.multiplier)
                 .append(this.attributes, that.attributes)
+                .append(this.derivedProduct, that.derivedProduct)
                 .isEquals();
 
             // Check our collections.
@@ -1196,6 +1221,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // Compare branding collections
             equals = equals && Util.collectionsAreEqual(this.branding, that.branding,
                 (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
+
+            // Compare provided product
+            equals = equals && Util.collectionsAreEqual(this.providedProducts, that.providedProducts,
+                (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
+
         }
 
         return equals;
@@ -1217,6 +1247,25 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  a version hash for this entity
      */
     public int getEntityVersion() {
+        return this.getEntityVersion(false);
+    }
+
+    /**
+     * Fetches the entity version, using the last-calcualted cache if available
+     *
+     * @param useCache
+     *  whether or not to returned the cached entity version, if available
+     *
+     * @return
+     *  a version hash for this entity
+     */
+    public int getEntityVersion(boolean useCache) {
+        if (useCache && this.entityVersion != null) {
+            // It would be super nice if we just cleared entityVersion on any setter, and then
+            // always returned it if it were available.
+            return this.entityVersion;
+        }
+
         // This must always be a subset of equals
         HashCodeBuilder builder = new HashCodeBuilder(37, 7)
             .append(this.id)
@@ -1224,12 +1273,25 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .append(this.multiplier)
             .append(this.attributes);
 
+        if (this.derivedProduct != null) {
+            builder.append(this.derivedProduct.getEntityVersion());
+        }
+
         // Impl note:
         // Stepping through the collections here is as painful as it looks, but Hibernate, once
         // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
         // manually step through these and add the elements to ensure the hash code is
         // generated properly.
         int accumulator;
+
+        if (!this.providedProducts.isEmpty()) {
+            accumulator = 0;
+            for (Product product : this.providedProducts) {
+                accumulator += (product != null ? product.getEntityVersion() : 0);
+            }
+
+            builder.append(accumulator);
+        }
 
         if (!this.dependentProductIds.isEmpty()) {
             accumulator = 0;
@@ -1261,12 +1323,64 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         return builder.toHashCode();
     }
 
-    // TODO: Maybe remove these isChangedBy methods and move them to the translation bits?
-
-    @PrePersist
-    @PreUpdate
-    public void updateEntityVersion() {
-        this.entityVersion = this.getEntityVersion();
+    /**
+     * Retrieves a collection of provided product for this product.
+     *
+     * @return returns the provided product of this product.
+     */
+    public Collection<Product> getProvidedProducts() {
+        return new SetView<>(this.providedProducts);
     }
 
+    /**
+     * Method to set provided products.
+     *
+     * @param providedProducts A collection of provided products.
+     * @return A reference to this product.
+     */
+    public Product setProvidedProducts(Collection<Product> providedProducts) {
+        this.providedProducts = providedProducts != null ? new HashSet<>(providedProducts) : new HashSet<>();
+        return this;
+    }
+
+    /**
+     * Adds the specified provided product as one of the provided product of this product. If the provided
+     * product is already there, it will not be added again.
+     *
+     * @param providedProduct
+     *  A provided product that needs to added as one of the provided product
+     *  of this product.
+     *
+     * @return
+     *  boolean value if provided product is added or not.
+     */
+    public boolean addProvidedProduct(Product providedProduct) {
+        return providedProduct != null && this.providedProducts.add(providedProduct);
+    }
+
+    /**
+     * Fetches the derived product of this product instance. If this product does not have a derived
+     * product, this method returns null.
+     *
+     * @return
+     *  this product's derived product, or null if it does not have a derived product
+     */
+    public Product getDerivedProduct() {
+        return this.derivedProduct;
+    }
+
+    /**
+     * Sets the derived product for this product. If the given derived product is null, any existing
+     * derived product will be cleared.
+     *
+     * @param derivedProduct
+     *  the derived product to set for this product, or null to clear any set derived product
+     *
+     * @return
+     *  a reference to this product
+     */
+    public Product setDerivedProduct(Product derivedProduct) {
+        this.derivedProduct = derivedProduct;
+        return this;
+    }
 }

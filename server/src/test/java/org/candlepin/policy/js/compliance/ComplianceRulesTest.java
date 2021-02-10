@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.jackson.ProductCachedSerializationModule;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -126,8 +125,7 @@ public class ComplianceRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
-            eventSink, consumerCurator, consumerTypeCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
+            eventSink, consumerCurator, consumerTypeCurator, new RulesObjectMapper(), translator);
 
         owner = new Owner("test");
         owner.setId(TestUtil.randomString());
@@ -150,8 +148,7 @@ public class ComplianceRulesTest {
     public void additivePropertiesCanStillDeserialize() {
         JsRunner mockRunner = mock(JsRunner.class);
         compliance = new ComplianceRules(mockRunner, entCurator, new StatusReasonMessageGenerator(i18n),
-            eventSink, consumerCurator, consumerTypeCurator,
-            new RulesObjectMapper(new ProductCachedSerializationModule(productCurator)), translator);
+            eventSink, consumerCurator, consumerTypeCurator, new RulesObjectMapper(), translator);
 
         when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
             any(JsContext.class))).thenReturn("{\"unknown\": \"thing\"}");
@@ -201,23 +198,22 @@ public class ComplianceRulesTest {
             ppset.add(pp);
         }
 
-        Pool pool = new Pool(
-            owner,
-            product,
-            ppset,
-            new Long(1000),
-            start,
-            end,
-            "1000",
-            "1000",
-            "1000"
-        );
+        product.setProvidedProducts(ppset);
 
-        pool.setId("pool_" + TestUtil.randomInt());
+        Pool pool = new Pool()
+            .setId("pool-" + TestUtil.randomInt())
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(1000L)
+            .setStartDate(start)
+            .setEndDate(end)
+            .setContractNumber("1000")
+            .setAccountNumber("1000")
+            .setOrderNumber("1000");
+
         pool.setUpdated(new Date());
         pool.setCreated(new Date());
-        when(productCurator.getPoolProvidedProductsCached(pool.getId()))
-            .thenReturn(pool.getProvidedProducts());
+
         Entitlement e = new Entitlement(pool, consumer, owner, 1);
         e.setId("ent_" + TestUtil.randomInt());
         e.setUpdated(new Date());

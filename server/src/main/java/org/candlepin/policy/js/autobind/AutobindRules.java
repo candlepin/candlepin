@@ -109,7 +109,7 @@ public class AutobindRules {
         }
 
         if (log.isDebugEnabled()) {
-            logProducts("Selecting best entitlement pool for products: {}" +
+            logProducts("Selecting best entitlement pool for products: {} " +
                 "and consumer installed products: {}", productIds, consumer, true);
 
             if (poolsBeforeContentFilter != pools.size()) {
@@ -240,7 +240,7 @@ public class AutobindRules {
                 // Check each provided product, if *any* have too much content, we must
                 // skip the pool:
 
-                for (Product product : productCurator.getPoolProvidedProductsCached(p.getId())) {
+                for (Product product : p.getProduct().getProvidedProducts()) {
                     if (product.getProductContent().size() > X509ExtensionUtil.V1_CONTENT_LIMIT) {
                         contentOk = false;
                         break;

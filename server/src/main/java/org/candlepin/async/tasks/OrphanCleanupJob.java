@@ -22,14 +22,17 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProductCurator;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Set;
 
 import javax.persistence.LockModeType;
 
@@ -95,16 +98,34 @@ public class OrphanCleanupJob implements AsyncJob  {
     }
 
     private int deleteOrphanedProducts() {
-        int count = 0;
-        CandlepinQuery<Product> productQuery = this.ownerProductCurator.getOrphanedProducts()
-            .setLockMode(LockModeType.PESSIMISTIC_WRITE);
+        List<String> orphanedProductUuids = this.ownerProductCurator.getOrphanedProductUuids();
 
-        for (Product product : productQuery) {
-            this.productCurator.delete(product);
-            ++count;
+        Set<Pair<String, String>> activePoolProducts = this.productCurator
+            .getPoolsReferencingProducts(orphanedProductUuids);
+
+        if (activePoolProducts != null && !activePoolProducts.isEmpty()) {
+            log.warn("Found {} pools referencing orphaned products:", activePoolProducts.size());
+
+            for (Pair<String, String> pair : activePoolProducts) {
+                log.warn("  Pool: {}, Orphan product UUID: {}", pair.getValue(), pair.getKey());
+                orphanedProductUuids.remove(pair.getKey());
+            }
         }
 
-        this.contentCurator.flush();
+        Set<Pair<String, String>> activeProductProducts = this.productCurator
+            .getProductsReferencingProducts(orphanedProductUuids);
+
+        if (activeProductProducts != null && !activeProductProducts.isEmpty()) {
+            log.warn("Found {} products referencing orphaned provided products:",
+                activeProductProducts.size());
+
+            for (Pair<String, String> pair : activeProductProducts) {
+                log.warn("  Product: {}, Orphan product UUID: {}", pair.getValue(), pair.getKey());
+                orphanedProductUuids.remove(pair.getKey());
+            }
+        }
+
+        int count = this.productCurator.bulkDeleteByUuids(orphanedProductUuids);
         log.debug("{} orphaned product entities deleted", count);
 
         return count;

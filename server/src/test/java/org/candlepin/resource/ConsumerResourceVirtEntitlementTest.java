@@ -32,6 +32,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
@@ -59,6 +60,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     @Inject private ConsumerResource consumerResource;
     @Inject private PoolManager poolManager;
     @Inject private SubscriptionServiceAdapter subAdapter;
+    @Inject private ProductServiceAdapter prodAdapter;
 
     private ConsumerType manifestType;
     private ConsumerType systemType;
@@ -106,7 +108,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         limitSub.setProduct(this.modelTranslator.translate(productLimit, ProductDTO.class));
         limitSub.setQuantity(10L);
         limitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
-        limitSub.setEndDate(TestUtil.createFutureDate(1));
+        limitSub.setEndDate(TestUtil.createDateOffset(1, 0, 0));
         limitSub.setLastModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(limitSub);
 
@@ -124,7 +126,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         unlimitSub.setProduct(this.modelTranslator.translate(productUnlimit, ProductDTO.class));
         unlimitSub.setQuantity(10L);
         unlimitSub.setStartDate(TestUtil.createDate(2010, 1, 1));
-        unlimitSub.setEndDate(TestUtil.createFutureDate(1));
+        unlimitSub.setEndDate(TestUtil.createDateOffset(1, 0, 0));
         unlimitSub.setLastModified(TestUtil.createDate(2000, 1, 1));
         subscriptions.add(unlimitSub);
 
@@ -212,7 +214,11 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                 p = poolManager.get(p.getId());
                 assertEquals(20L, p.getConsumed());
                 assertEquals(-1L, p.getQuantity());
-                poolManager.getRefresher(subAdapter).add(owner).run();
+
+                poolManager.getRefresher(this.subAdapter, this.prodAdapter)
+                    .add(owner)
+                    .run();
+
                 // double check after pools refresh
                 assertEquals(20L, p.getConsumed());
                 assertEquals(-1L, p.getQuantity());

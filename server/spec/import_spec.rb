@@ -459,7 +459,6 @@ describe 'Import Test Group:', :serial => true do
       pool = @cp.list_pools(:owner => @import_owner.id,
         :product => @cp_export.products[:product3].id)[0]
       pool.should_not be_nil
-
       pool["derivedProductId"].should == @cp_export.products[:derived_product].id
       pool["derivedProvidedProducts"].length.should == 1
       pool["derivedProvidedProducts"][0]["productId"].should == @cp_export.products[:derived_provided_prod].id

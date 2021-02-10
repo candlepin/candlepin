@@ -27,6 +27,7 @@ import org.candlepin.controller.Refresher;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 
@@ -43,11 +44,12 @@ public class RefreshPoolsJobTest {
 
     @Mock protected OwnerCurator ownerCurator;
     @Mock protected PoolManager poolManager;
+    @Mock protected ProductServiceAdapter prodAdapter;
     @Mock protected SubscriptionServiceAdapter subAdapter;
     @Mock protected Refresher refresher;
 
     private RefreshPoolsJob buildRefreshPoolsJob() {
-        return new RefreshPoolsJob(this.ownerCurator, this.poolManager, this.subAdapter);
+        return new RefreshPoolsJob(this.ownerCurator, this.poolManager, this.subAdapter, this.prodAdapter);
     }
 
     private Owner createTestOwner(String key, String logLevel) {
@@ -125,7 +127,7 @@ public class RefreshPoolsJobTest {
         doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
 
         doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
-        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(true));
+        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(prodAdapter), eq(true));
         doReturn(refresher).when(refresher).add(eq(owner));
 
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
@@ -153,7 +155,7 @@ public class RefreshPoolsJobTest {
         doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
 
         doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
-        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(false));
+        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(prodAdapter), eq(false));
         doReturn(refresher).when(refresher).add(eq(owner));
         doThrow(new RuntimeException("something went wrong with refresh")).when(refresher).run();
 

@@ -88,6 +88,20 @@ public class ProductTest {
             new Branding(null, "eng_prod_id_6", "eng_prod_name_6", "OS")
         ).collect(Collectors.toSet());
 
+        Set<Product> providedP1 = Util.asSet(
+            new Product("ak1", "providedProduct1", "varient1", "version1",
+            "arch1" , "type1"),
+            new Product("ak2", "providedProduct2", "varient2", "version2",
+            "arch2", "type2")
+        );
+
+        Set<Product> providedP2 = Util.asSet(
+            new Product("ak3", "providedProduct3", "varient3", "version3",
+            "arch3" , "type3"),
+            new Product("ak4", "providedProduct4", "varient4", "version4",
+            "arch4" , "type4")
+        );
+
         return Stream.of(
             new Object[] { "Id", "test_value", "alt_value" },
             new Object[] { "Name", "test_value", "alt_value" },
@@ -95,7 +109,8 @@ public class ProductTest {
             new Object[] { "Attributes", attributes1, attributes2 },
             new Object[] { "ProductContent", productContent1, productContent2 },
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
-            new Object[] { "Branding", brandings1, brandings2 }
+            new Object[] { "Branding", brandings1, brandings2 },
+            new Object[] { "ProvidedProducts", providedP1, providedP2 }
         );
     }
 

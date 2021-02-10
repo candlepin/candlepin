@@ -479,4 +479,58 @@ describe 'Product Versioning' do
     end
   end
 
+  def ntier_versioning_test(&updater)
+    owner = create_owner("test_owner")
+
+    parent_product = nil
+    prev_uuids = {}
+    uuids = {}
+
+    (1..10).each do |i|
+      pid = "tier#{i}_prod-#{rand(100000)}"
+      product = @cp.create_product(owner['key'], pid, pid)
+      uuids[product['id']] = product['uuid']
+
+      if parent_product != nil
+        parent_product = updater.call(owner, parent_product, product)
+
+        prev_uuids.each do |pid, prev_uuid|
+          updated_product = @cp.get_product(owner['key'], pid)
+          uuids[updated_product['id']] = updated_product['uuid']
+        end
+      end
+
+      # We expect the size of the uuids collection to grow by 1 every iteration
+      expect(uuids.length).to eq(prev_uuids.length + 1)
+
+      # Verify that the uuids are changing every iteration (indicating the version has been recalculated)
+      prev_uuids.each do |pid, prev_uuid|
+        uuid = uuids[pid]
+
+        expect(uuid).to_not be_nil
+        expect(uuid).to_not eq(prev_uuid)
+      end
+
+      parent_product = product
+      prev_uuids = uuids
+      uuids = {}
+    end
+  end
+
+  it 'should support n-tier product versioning for provided products' do
+    ntier_versioning_test do |owner, parent_product, product|
+      @cp.update_product(owner['key'], parent_product['id'], {
+        :providedProducts => [product['id']]
+      })
+    end
+  end
+
+  it 'should support n-tier product versioning for derived products' do
+    ntier_versioning_test do |owner, parent_product, product|
+      @cp.update_product(owner['key'], parent_product['id'], {
+        :derivedProduct => product
+      })
+    end
+  end
+
 end

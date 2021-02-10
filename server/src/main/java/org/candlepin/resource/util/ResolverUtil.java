@@ -28,7 +28,6 @@ import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
-import java.util.HashSet;
 
 /**
  * Convinience util for resolving owners, products, pools & subscriptions
@@ -146,15 +145,6 @@ public class ResolverUtil {
 
         // Ensure the specified product(s) exists for the given owner
         this.validateProductData(subscription.getProduct(), owner, false);
-        this.validateProductData(subscription.getDerivedProduct(), owner, true);
-
-        for (ProductData product : subscription.getProvidedProducts()) {
-            this.validateProductData(product, owner, true);
-        }
-
-        for (ProductData product : subscription.getDerivedProvidedProducts()) {
-            this.validateProductData(product, owner, true);
-        }
 
         // TODO: Do we need to resolve Branding objects?
 
@@ -182,26 +172,7 @@ public class ResolverUtil {
 
         subscription.setProduct(
             new ProductData(this.resolveProduct(owner, subscription.getProduct().getId())));
-        if (subscription.getDerivedProduct() != null) {
-            ProductData p = new ProductData(
-                this.resolveProduct(owner, subscription.getDerivedProduct().getId()));
-            subscription.setDerivedProduct(p);
-        }
 
-        HashSet<ProductData> providedProducts = new HashSet<>();
-        for (ProductData product : subscription.getProvidedProducts()) {
-            if (product != null) {
-                providedProducts.add(new ProductData(this.resolveProduct(owner, product.getId())));
-            }
-        }
-        subscription.setProvidedProducts(providedProducts);
-        HashSet<ProductData> derivedProvidedProducts = new HashSet<>();
-        for (ProductData product : subscription.getDerivedProvidedProducts()) {
-            if (product != null) {
-                derivedProvidedProducts.add(new ProductData(this.resolveProduct(owner, product.getId())));
-            }
-        }
-        subscription.setDerivedProvidedProducts(derivedProvidedProducts);
         // TODO: Do we need to resolve Branding objects?
 
         return subscription;

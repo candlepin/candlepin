@@ -23,7 +23,7 @@ package org.candlepin.service.model;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface CertificateInfo {
+public interface CertificateInfo extends ServiceAdapterModel {
 
     /**
      * Fetches the serial of this certificate. If the serial has not been set, this method returns

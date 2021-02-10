@@ -17,15 +17,18 @@ describe 'Derived Products' do
     @eng_product_2 = create_product(nil, "eng_product_2")
     @modified_product = create_product()
 
-    @eng_product_content = create_content({:gpg_url => 'gpg_url',
-                                         :content_url => '/content/dist/rhel/$releasever/$basearch/os',
-                                         :metadata_expire => 6400})
+    @eng_product_content = create_content({
+      :gpg_url => 'gpg_url',
+      :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+      :metadata_expire => 6400
+    })
 
-
-    @product_modifier_content = create_content({:gpg_url => 'gpg_url',
-                                         :content_url => '/this/modifies/product',
-                                         :metadata_expire => 6400,
-                                         :modified_products => [@modified_product["id"]]})
+    @product_modifier_content = create_content({
+      :gpg_url => 'gpg_url',
+      :content_url => '/this/modifies/product',
+      :metadata_expire => 6400,
+      :modified_products => [@modified_product["id"]]
+    })
 
     @cp.add_content_to_product(@owner['key'], @eng_product.id, @eng_product_content.id, true)
     @cp.add_content_to_product(@owner['key'], @eng_product_2.id, @product_modifier_content.id, true)
@@ -35,16 +38,38 @@ describe 'Derived Products' do
     # For linking the host and the guest:
     @uuid = random_string('system.uuid')
 
-    @physical_sys = @user.register(random_string('host'), :system, nil,
-      {"cpu.cpu_socket(s)" => 8}, nil, nil, [], [], nil)
+    @physical_sys = @user.register(random_string('host'), :system, nil, {"cpu.cpu_socket(s)" => 8}, nil, nil, [], [], nil)
     @physical_client = Candlepin.new(nil, nil, @physical_sys['idCert']['cert'], @physical_sys['idCert']['key'])
-    @physical_client.update_consumer({:facts => {"system.certificate_version" => "3.2"},
-                                           :guestIds => [{'guestId' => @uuid}]})
+    @physical_client.update_consumer({
+      :facts => {"system.certificate_version" => "3.2"},
+      :guestIds => [{'guestId' => @uuid}]
+    })
 
-    @guest1 = @user.register(random_string('guest'), :system, nil,
-      {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil,
-      [], installed_prods)
+    @guest1 = @user.register(random_string('guest'), :system, nil, {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil, [], installed_prods)
     @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key'])
+
+    @derived_product = create_product(nil, "derived product 1", {
+      :attributes => {
+          :cores => 2,
+          :sockets => 4
+      },
+      :providedProducts => [@eng_product['id']]
+    })
+
+    @derived_product_2 = create_product(nil, "derived product 2", {
+      :attributes => {
+          :cores => 2
+      },
+      :providedProducts => [@modified_product.id]
+    })
+
+    @derived_product_3 = create_product(nil, "derived product 3", {
+      :attributes => {
+        :cores => 2
+      },
+      :providedProducts => [@eng_product_2.id, @modified_product.id]
+    })
+
     # create subscription with sub-pool data:
     @datacenter_product = create_product(nil, "datacenter product", {
       :attributes => {
@@ -53,49 +78,27 @@ describe 'Derived Products' do
         :sockets => "2",
         'host_limited' => "true",
         'multi-entitlement' => "yes"
-      }
+      },
+
+      :derivedProduct => @derived_product
     })
 
     @datacenter_product_2 = create_product(nil, "datacenter product 2", {
       :attributes => {
         :virt_limit => "unlimited",
         'host_limited' => "true"
-      }
+      },
+
+      :derivedProduct => @derived_product_3
     })
 
-    @derived_product = create_product(nil, "derived product 1", {
-      :attributes => {
-          :cores => 2,
-          :sockets => 4
-      }
-    })
+    @main_pool = @cp.create_pool(@owner['key'], @datacenter_product['id'], { :quantity => 10 })
+    @cp.create_pool(@owner['key'], @datacenter_product_2['id'], { :quantity => 10 })
 
-    @derived_product_2 = create_product(nil, "derived product 2", {
-      :attributes => {
-          :cores => 2
-      }
-    })
+    @pools = @cp.list_owner_pools(@owner['key'], { :product => @datacenter_product['id'] })
+    expect(@pools.size).to eq(1)
 
-    @main_pool = create_pool_and_subscription(@owner['key'], @datacenter_product.id,
-      10, [], '', '', '', nil, nil, false,
-      {
-        :derived_product_id => @derived_product['id'],
-        :derived_provided_products => [@eng_product['id']]
-      })
-
-    create_pool_and_subscription(@owner['key'], @datacenter_product_2.id,
-      10, [], '', '', '', nil, nil, false,
-      {
-        :derived_product_id => @derived_product_2['id'],
-        :derived_provided_products => [@eng_product_2['id'], @modified_product['id']]
-      })
-
-    @pools = @cp.list_pools :owner => @owner.id, \
-      :product => @datacenter_product.id
-    @pools.size.should == 1
-
-    @distributor = @user.register(random_string('host'), :candlepin, nil,
-      {}, nil, nil, [], [], nil)
+    @distributor = @user.register(random_string('host'), :candlepin, nil, {}, nil, nil, [], [], nil)
     @distributor_client = Candlepin.new(nil, nil, @distributor['idCert']['cert'], @distributor['idCert']['key'])
   end
 
@@ -111,7 +114,8 @@ describe 'Derived Products' do
         :sockets => "2",
         :host_limited => "true",
         'multi-entitlement' => "yes"
-      }
+      },
+      :providedProducts => [@eng_product.id]
     })
     create_pool_and_subscription(@owner['key'], instance_product.id, 10, [@eng_product['id']])
 
@@ -227,9 +231,7 @@ describe 'Derived Products' do
     # Content for modified product is only included if it provides the modified product
     # through derived provided products, provided products, or through another entitlement.
     dist_name = random_string("CP Distributor")
-    create_distributor_version(dist_name,
-      "Subscription Asset Manager",
-      ["cert_v3", "derived_product"])
+    create_distributor_version(dist_name, "Subscription Asset Manager", ["cert_v3", "derived_product"])
 
     @distributor_client.update_consumer({:facts => {'distributor_version' => dist_name}})
 
@@ -260,7 +262,6 @@ describe 'Derived Products' do
   end
 
   it 'distributor entitlement cert does not include modifier content when base entitlement is deleted' do
-
     setup_data = setup_modifier_test()
     vdc_pool_ent = setup_data[:vdc_pool_ent]
 
@@ -273,7 +274,6 @@ describe 'Derived Products' do
   end
 
   it 'distributor entitlement cert does not include modifier content when base pool is deleted' do
-
     setup_data = setup_modifier_test()
     vdc_pool = setup_data[:vdc_pool]
 
@@ -300,23 +300,6 @@ describe 'Derived Products' do
   it 'regenerates entitlements when updating derived content' do
     skip("candlepin running in standalone mode") if not is_hosted?
 
-    # Create a subscription with an upstream product with a derived product that provides content
-    datacenter_product = create_upstream_product(random_string('dc_prod'), {
-        :attributes => {
-            :virt_limit => "unlimited",
-            :stacking_id => "stackme",
-            :sockets => "2",
-            'multi-entitlement' => "yes"
-        }
-    })
-    derived_product = create_upstream_product(random_string('derived_prod'), {
-        :attributes => {
-            :cores => 2,
-            :sockets=>4
-        }
-    })
-
-    derived_eng_product = create_upstream_product(random_string(nil, true))
     derived_content = create_upstream_content("twentyTwo", {
         :type => "yum",
         :label => "teardropsOnMyGuitar",
@@ -324,12 +307,32 @@ describe 'Derived Products' do
         :vendor => "fifteen",
         :releaseVer => nil
     })
+
+    derived_eng_product = create_upstream_product(random_string(nil, true))
     add_content_to_product_upstream(derived_eng_product.id, derived_content.id)
 
-    sub = create_upstream_subscription(random_string('dc_sub'), @owner_key, datacenter_product.id, {
+    derived_product = create_upstream_product(random_string('derived_prod'), {
+        :attributes => {
+            :cores => 2,
+            :sockets=>4
+        },
+        :providedProducts => [derived_eng_product]
+    })
+
+    # Create a subscription with an upstream product with a derived product that provides content
+    datacenter_product = create_upstream_product(random_string('dc_prod'), {
+        :attributes => {
+            :virt_limit => "unlimited",
+            :stacking_id => "stackme",
+            :sockets => "2",
+            'multi-entitlement' => "yes"
+        },
+        :derived_product => derived_product
+    })
+
+    sub = create_upstream_subscription(random_string('dc_sub'), @owner_key, {
         :quantity => 10,
-        :derived_product => derived_product,
-        :derived_provided_products => [derived_eng_product]
+        :product => datacenter_product
     })
 
     @cp.refresh_pools(@owner_key)
@@ -407,25 +410,25 @@ describe 'Derived Products' do
     # Content for modified product is only included if it provides the modified product
     # through derived provided products, provided products, or through another entitlement.
     dist_name = random_string("CP Distributor")
-    create_distributor_version(dist_name,
-                               "Subscription Asset Manager",
-                               ["cert_v3", "derived_product"])
+    create_distributor_version(dist_name, "Subscription Asset Manager", ["cert_v3", "derived_product"])
 
     @distributor_client.update_consumer({:facts => {'distributor_version' => dist_name}})
 
     # Create a VDC style subscription that has a derived provided product matching @eng_product_2's
     # modifying content set requirement (@modified_product).
-    vdc_product = create_product(nil, "base")
-    vdc_pool = create_pool_and_subscription(@owner['key'], vdc_product.id,
-                                            10, [], '', '', '', nil, nil, false,
-                                            {
-                                                :derived_product_id => @derived_product_2['id'],
-                                                :derived_provided_products => [@modified_product['id']]
-                                            })
+    vdc_product = create_product(nil, "base", {
+      :derivedProduct => @derived_product_2,
+      :providedProducts => [@modified_product['id']]
+    })
+
+    vdc_pool = @cp.create_pool(@owner['key'], vdc_product['id'], { :quantity => 10 })
 
     # Create a subscription that has a product that has content that has modifier definitions (@eng_product_2)
-    modifier_ent_product = create_product(nil, "modifier")
-    modifier_pool = create_pool_and_subscription(@owner['key'], modifier_ent_product.id, 10, [@eng_product_2['id']])
+    modifier_ent_product = create_product(nil, "modifier", {
+      :providedProducts => [@eng_product_2['id']]
+    })
+
+    modifier_pool = @cp.create_pool(@owner['key'], modifier_ent_product['id'], { :quantity => 10 })
 
     # Grab an entitlement from the VDC style subscription.
     vdc_pool_ent = @distributor_client.consume_pool vdc_pool['id']
@@ -450,18 +453,19 @@ describe 'Derived Products' do
   def verify_modifier_content(entitlement, content_should_exist)
     json_body = extract_payload(entitlement['certificates'][0]['cert'])
     products = json_body['products']
-    products.size.should == 2
+    expect(products.size).to eq(2)
 
     found = false;
     products.each do |cert_product|
-      if cert_product['id'] == @eng_product_2.id
+      if cert_product['id'] == @eng_product_2['id']
         content_sets = cert_product['content']
         if content_should_exist
           found = true;
-          content_sets.size.should == 1
-          content_sets[0]['id'].should == @product_modifier_content.id
+
+          expect(content_sets.size).to eq(1)
+          expect(content_sets[0]['id']).to eq(@product_modifier_content['id'])
         else
-          content_sets.size.should == 0
+          expect(content_sets.size).to eq(0)
         end
       end
     end

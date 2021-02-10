@@ -14,19 +14,16 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.jackson.ProductCachedSerializationModule;
+import org.candlepin.dto.rules.v1.ComplianceStatusDTO;
+import org.candlepin.dto.rules.v1.ConsumerDTO;
+import org.candlepin.dto.rules.v1.PoolDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -52,7 +49,6 @@ import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
@@ -69,7 +65,6 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,6 +72,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * AutobindRulesTest
@@ -113,11 +110,12 @@ public class AutobindRulesTest {
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
 
-        when(rulesCurator.getRules()).thenReturn(rules);
-        when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
-        when(cacheProvider.get()).thenReturn(cache);
+        doReturn(rules).when(this.rulesCurator).getRules();
+        doReturn(TestUtil.createDate(2010, 1, 1)).when(this.rulesCurator).getUpdated();
+        doReturn(cache).when(this.cacheProvider).get();
+
         jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
-        mapper =  new RulesObjectMapper(new ProductCachedSerializationModule(mockProductCurator));
+        mapper =  new RulesObjectMapper();
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
         autobindRules = new AutobindRules(jsRules, mockProductCurator, consumerTypeCurator, mockOwnerCurator,
@@ -132,9 +130,9 @@ public class AutobindRulesTest {
 
         consumer = new Consumer("test consumer", "test user", owner, ctype);
 
-        when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
-        when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
-        when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+        doReturn(ctype).when(this.consumerTypeCurator).get(eq(ctype.getId()));
+        doReturn(ctype).when(this.consumerTypeCurator).getByLabel(eq(ctype.getLabel()));
+        doReturn(ctype).when(this.consumerTypeCurator).getConsumerType(eq(consumer));
 
         compliance = new ComplianceStatus();
         activeGuestAttrs = new HashMap<>();
@@ -146,11 +144,10 @@ public class AutobindRulesTest {
     @Test
     public void testFindBestWithSingleProductSinglePoolReturnsProvidedPool() {
         Product product = TestUtil.createProduct(productId, "A test product");
-        Pool pool = TestUtil.createPool(owner, product);
-        pool.setId("DEAD-BEEF");
+        Pool pool = TestUtil.createPool(owner, product)
+            .setId("DEAD-BEEF");
 
-        List<Pool> pools = new LinkedList<>();
-        pools.add(pool);
+        List<Pool> pools = Arrays.asList(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<>(),
@@ -161,22 +158,25 @@ public class AutobindRulesTest {
 
     @Test
     public void singleProductSinglePoolShouldFindBestWithCorrectQuantity() {
-        final Product product = TestUtil.createProduct(productId, "A test product");
+        Product product = TestUtil.createProduct(productId, "A test product");
         product.setAttribute("stacking_id", productId);
         product.setAttribute("multi-entitlement", "yes");
         product.setAttribute("cores", "2");
-        final Pool pool = TestUtil.createPool(owner, product, 20);
-        pool.setId("DEAD-BEEF");
-        final List<Pool> pools = new LinkedList<>();
-        pools.add(pool);
+
+        Pool pool = new Pool()
+            .setId("DEAD-BEEF")
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(20L);
+
+        List<Pool> pools = Arrays.asList(pool);
 
         consumer.setFact("virt.is_guest", "true");
         consumer.setFact("cpu.cpu_socket(s)", "12");
         consumer.setFact("cpu.core(s)_per_socket", "1");
 
         final List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
-            false);
+            new String[]{ productId }, pools, compliance, null, new HashSet<>(), false);
 
         assertEquals(1, bestPools.size());
         assertEquals(6, bestPools.get(0).getQuantity().intValue());
@@ -186,19 +186,16 @@ public class AutobindRulesTest {
     public void testSelectBestPoolsFiltersTooMuchContent() {
         Pool pool = createV3OnlyPool();
 
-        List<Pool> pools = new LinkedList<>();
-        pools.add(pool);
+        List<Pool> pools = Arrays.asList(pool);
 
-        List<PoolQuantity> poolQs = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
-            false);
+        List<PoolQuantity> poolQs = autobindRules.selectBestPools(consumer, new String[]{ productId }, pools,
+            compliance, null, new HashSet<>(), false);
         assertEquals(0, poolQs.size());
 
         // Try again with explicitly setting the consumer to cert v1:
         consumer.setFact("system.certificate_version", "1.0");
-        poolQs = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
-            false);
+        poolQs = autobindRules.selectBestPools(consumer, new String[]{ productId }, pools, compliance, null,
+            new HashSet<>(), false);
         assertEquals(0, poolQs.size());
     }
 
@@ -211,8 +208,7 @@ public class AutobindRulesTest {
     public void testSelectBestPoolsDoesntFilterTooMuchContentForHypervisor() {
         Pool pool = createV3OnlyPool();
 
-        List<Pool> pools = new LinkedList<>();
-        pools.add(pool);
+        List<Pool> pools = Arrays.asList(pool);
 
         // Create a hypervisor consumer which does *not* have a certificate version fact.
         // This replicates the real world scenario for virt-who created hypervisors.
@@ -222,12 +218,12 @@ public class AutobindRulesTest {
 
         consumer = new Consumer("test consumer", "test user", owner, ctype);
 
-        when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
-        when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
-        when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+        doReturn(ctype).when(this.consumerTypeCurator).get(eq(ctype.getId()));
+        doReturn(ctype).when(this.consumerTypeCurator).getByLabel(eq(ctype.getLabel()));
+        doReturn(ctype).when(this.consumerTypeCurator).getConsumerType(eq(consumer));
 
-        List<PoolQuantity> results = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<>(), false);
+        List<PoolQuantity> results = autobindRules.selectBestPools(consumer, new String[]{ productId },
+            pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, results.size());
     }
 
@@ -235,14 +231,12 @@ public class AutobindRulesTest {
     public void testSelectBestPoolsLotsOfContentV3Client() {
         Pool pool = createV3OnlyPool();
 
-        List<Pool> pools = new LinkedList<>();
-        pools.add(pool);
+        List<Pool> pools = Arrays.asList(pool);
 
         // Shouldn't throw an exception as we do for certv1 clients.
         consumer.setFact("system.certificate_version", "3.5");
-        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<>(),
-            false);
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer, new String[]{ productId },
+            pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, bestPools.size());
     }
 
@@ -267,12 +261,10 @@ public class AutobindRulesTest {
             engProduct.addContent(content, true);
         }
 
-        Pool pool = TestUtil.createPool(owner, mktProduct);
-        pool.setId("DEAD-BEEFX");
+        mktProduct.addProvidedProduct(engProduct);
 
-        pool.addProvidedProduct(engProduct);
-        when(mockProductCurator.getPoolProvidedProductsCached(pool.getId()))
-            .thenReturn(Collections.singleton(engProduct));
+        Pool pool = TestUtil.createPool(owner, mktProduct)
+            .setId("DEAD-BEEFX");
 
         return pool;
     }
@@ -284,11 +276,10 @@ public class AutobindRulesTest {
         Product product = TestUtil.createProduct(productId, "A test product");
         product.setAttribute(Product.Attributes.SOCKETS, "4");
 
-        Pool pool = TestUtil.createPool(owner, product);
-        pool.setId("DEAD-BEEF");
+        Pool pool = TestUtil.createPool(owner, product)
+            .setId("DEAD-BEEF");
 
-        List<Pool> pools = new LinkedList<>();
-        pools.add(pool);
+        List<Pool> pools = Arrays.asList(pool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<>(),
@@ -314,17 +305,23 @@ public class AutobindRulesTest {
         sku1.setAttribute(Product.Attributes.CORES, "6");
         sku1.setAttribute(Product.Attributes.RAM, "2");
         sku1.setAttribute(Product.Attributes.SOCKETS, "2");
+        sku1.addProvidedProduct(provided);
 
-        Pool pool1 = createPool("DEAD-BEEF1", owner, sku1, provided);
+        Pool pool1 = TestUtil.createPool(owner, sku1)
+            .setId("DEAD-BEEF1");
 
         //only enforce cores on pool 2:
         Product sku2 = mockStackingProduct("prod2", "Test Stack product", "1", "1");
         sku2.setAttribute(Product.Attributes.CORES, "6");
         sku2.setAttribute(Product.Attributes.RAM, null);
         sku2.setAttribute(Product.Attributes.SOCKETS, null);
+        sku2.addProvidedProduct(provided);
 
-        Pool pool2 = createPool("DEAD-BEEF2", owner, sku2, provided);
-        Pool pool3 = createPool("DEAD-BEEF3", owner, sku1, provided);
+        Pool pool2 = TestUtil.createPool(owner, sku2)
+            .setId("DEAD-BEEF2");
+
+        Pool pool3 = TestUtil.createPool(owner, sku1)
+            .setId("DEAD-BEEF3");
 
         List<Pool> pools = new LinkedList<>();
         pools.add(pool1);
@@ -357,22 +354,24 @@ public class AutobindRulesTest {
         sku1.setAttribute(Product.Attributes.CORES, "6");
         sku1.setAttribute(Product.Attributes.RAM, "2");
         sku1.setAttribute(Product.Attributes.SOCKETS, "2");
+        sku1.addProvidedProduct(provided);
 
-        Pool pool1 = createPool("DEAD-BEEF1", owner, sku1, provided);
-        pool1.setAttribute(Product.Attributes.VIRT_ONLY, "true");
+        Pool pool1 = TestUtil.createPool(owner, sku1)
+            .setId("DEAD-BEEF1")
+            .setAttribute(Product.Attributes.VIRT_ONLY, "true"); // Should this be on the product?
 
         //only enforce cores on pool 2:
         Product sku2 = mockStackingProduct("prod2", "Test Stack product", "1", "1");
         sku2.setAttribute(Product.Attributes.CORES, "6");
+        sku2.addProvidedProduct(provided);
 
-        Pool pool2 = createPool("DEAD-BEEF2", owner, sku2, provided);
+        Pool pool2 = TestUtil.createPool(owner, sku2)
+            .setId("DEAD-BEEF2");
 
-        Pool pool3 = createPool("DEAD-BEEF3", owner, sku1, provided);
+        Pool pool3 = TestUtil.createPool(owner, sku1)
+            .setId("DEAD-BEEF3");
 
-        List<Pool> pools = new LinkedList<>();
-        pools.add(pool1);
-        pools.add(pool2);
-        pools.add(pool3);
+        List<Pool> pools = Arrays.asList(pool1, pool2, pool3);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ provided.getId() }, pools, compliance, null, new HashSet<>(), false);
@@ -381,24 +380,6 @@ public class AutobindRulesTest {
         //higher quantity from this pool, as it is virt_only
         assertTrue(bestPools.contains(new PoolQuantity(pool1, 5)));
         assertTrue(bestPools.contains(new PoolQuantity(pool3, 3)));
-    }
-
-    /**
-     * Creates a Pool and makes sure that Product curator can retrieve
-     * the provided products for the pool
-     * @param poolId
-     * @param owner
-     * @param sku
-     * @param provided
-     * @return
-     */
-    private Pool createPool(String poolId, Owner owner, Product sku, Product provided) {
-        Pool pool = TestUtil.createPool(owner, sku);
-        pool.setId(poolId);
-        pool.addProvidedProduct(provided);
-        when(mockProductCurator.getPoolProvidedProductsCached(poolId))
-            .thenReturn(Collections.singleton(provided));
-        return pool;
     }
 
     /*
@@ -429,10 +410,7 @@ public class AutobindRulesTest {
         Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
         noSLAPool.setId("pool-1");
 
-        List<Pool> pools = new LinkedList<>();
-        pools.add(noSLAPool);
-        pools.add(slaPremiumPool);
-        pools.add(slaStandardPool);
+        List<Pool> pools = Arrays.asList(noSLAPool, slaPremiumPool, slaStandardPool);
 
         consumer.setServiceLevel("Premium");
 
@@ -632,20 +610,21 @@ public class AutobindRulesTest {
         // pool1 provides both the requiredMktProduct and the requiredEngProduct we want.
         Product requiredMktProduct = new Product();
         requiredMktProduct.setId("requiredMktProduct");
+        requiredMktProduct.addProvidedProduct(requiredEngProduct);
 
-        Pool pool1 = TestUtil.createPool(owner, requiredMktProduct);
-        pool1.setId("pool1");
-        pool1.setQuantity(1L);
-        pool1.addProvidedProduct(requiredEngProduct);
+        Pool pool1 = TestUtil.createPool(owner, requiredMktProduct)
+            .setId("pool1")
+            .setQuantity(1L);
 
         // pool2 requires only the requiredEngProduct we want.
         Product nonRequiredMktProduct = new Product();
         nonRequiredMktProduct.setId("nonRequiredMktProduct");
+        nonRequiredMktProduct.addProvidedProduct(requiredEngProduct);
 
-        Pool pool2 = TestUtil.createPool(owner, nonRequiredMktProduct);
-        pool2.setId("pool2");
-        pool2.setQuantity(1L);
-        pool2.addProvidedProduct(requiredEngProduct);
+        Pool pool2 = TestUtil.createPool(owner, nonRequiredMktProduct)
+            .setId("pool2")
+            .setQuantity(1L);
+
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -708,7 +687,6 @@ public class AutobindRulesTest {
         addons.add("RHEL EUS");
         consumer.setAddOns(addons);
 
-
         // Consumer satisfied syspurpose attributes:
         Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Server",
             null, null, null);
@@ -720,39 +698,41 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prod1 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, "Production");
-        Pool p1 = TestUtil.createPool(owner, prod1);
-        p1.setId("p1");
-        p1.addProvidedProduct(product69);
+        prod1.addProvidedProduct(product69);
+
+        Pool p1 = TestUtil.createPool(owner, prod1)
+            .setId("p1");
 
         Product prod2 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
-        Pool p2 = TestUtil.createPool(owner, prod2);
-        p2.setId("p2");
+        Pool p2 = TestUtil.createPool(owner, prod2)
+            .setId("p2");
 
         Product prod3 = createSysPurposeProduct(null, "JBoss", "RHEL EUS", null, null);
-        Pool p3 = TestUtil.createPool(owner, prod3);
-        p3.setId("p3");
-        p3.addProvidedProduct(product82);
+        prod3.addProvidedProduct(product82);
+
+        Pool p3 = TestUtil.createPool(owner, prod3)
+            .setId("p3");
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", p1);
+        args.put("pool", this.translator.translate(p1, PoolDTO.class));
         Double p1Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", p2);
+        args.put("pool", this.translator.translate(p2, PoolDTO.class));
         Double p2Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", p3);
+        args.put("pool", this.translator.translate(p3, PoolDTO.class));
         Double p3Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool p2 should have a higher priority than pool p1.",
-            p2Priority > p1Priority);
+        // Pool p2 should have a higher priority than pool p1
+        assertTrue(p2Priority > p1Priority);
 
-        assertTrue("Pool p1 should have a higher priority than pool p3.",
-            p1Priority > p3Priority);
+        // Pool p1 should have a higher priority than pool p3
+        assertTrue(p1Priority > p3Priority);
     }
 
     @Test
@@ -772,39 +752,42 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prod1 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, "Production");
-        Pool p1 = TestUtil.createPool(owner, prod1);
-        p1.setId("p1");
-        p1.addProvidedProduct(product69);
+        prod1.addProvidedProduct(product69);
+
+        Pool p1 = TestUtil.createPool(owner, prod1)
+            .setId("p1");
 
         Product prod2 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
-        Pool p2 = TestUtil.createPool(owner, prod2);
-        p2.setId("p2");
+        Pool p2 = TestUtil.createPool(owner, prod2)
+            .setId("p2");
 
         Product prod3 = createSysPurposeProduct(null, "JBoss", "RHEL EUS", null, null);
-        Pool p3 = TestUtil.createPool(owner, prod3);
-        p3.setId("p3");
-        p3.addProvidedProduct(product82);
+        prod3.addProvidedProduct(product82);
+
+        Pool p3 = TestUtil.createPool(owner, prod3)
+            .setId("p3");
+
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", p1);
+        args.put("pool", this.translator.translate(p1, PoolDTO.class));
         Double p1Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", p2);
+        args.put("pool", this.translator.translate(p2, PoolDTO.class));
         Double p2Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", p3);
+        args.put("pool", this.translator.translate(p3, PoolDTO.class));
         Double p3Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool p1 should have a higher priority than pool p2.",
-            p1Priority > p2Priority);
+        // Pool p1 should have a higher priority than pool p2
+        assertTrue(p1Priority > p2Priority);
 
-        assertTrue("Pool p2 should have a higher priority than pool p3.",
-            p2Priority > p3Priority);
+        // Pool p2 should have a higher priority than pool p3
+        assertTrue(p2Priority > p3Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -824,31 +807,33 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
-        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
-        RH00009.setId("RH00009");
-        RH00009.addProvidedProduct(product69);
+        prodRH00009.addProvidedProduct(product69);
+
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
+            .setId("RH00009");
 
         Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
-        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
-        MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
-        MCT1650.addProvidedProduct(product89);
-        MCT1650.addProvidedProduct(product100);
+        prodMCT1650.addProvidedProduct(product69);
+        prodMCT1650.addProvidedProduct(product89);
+        prodMCT1650.addProvidedProduct(product100);
+
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650)
+            .setId("MCT1650");
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT1650);
+        args.put("pool", this.translator.translate(MCT1650, PoolDTO.class));
         Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool MCT1650 should have a higher priority than pool RH00009.",
-            MCT1650Priority > RH00009Priority);
+        // Pool MCT1650 should have a higher priority than pool RH00009
+        assertTrue(MCT1650Priority > RH00009Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -868,31 +853,33 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
-        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
-        RH00009.setId("RH00009");
-        RH00009.addProvidedProduct(product69);
+        prodRH00009.addProvidedProduct(product69);
+
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
+            .setId("RH00009");
 
         Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
-        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
-        MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
-        MCT1650.addProvidedProduct(product89);
-        MCT1650.addProvidedProduct(product100);
+        prodMCT1650.addProvidedProduct(product69);
+        prodMCT1650.addProvidedProduct(product89);
+        prodMCT1650.addProvidedProduct(product100);
+
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650)
+            .setId("MCT1650");
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT1650);
+        args.put("pool", this.translator.translate(MCT1650, PoolDTO.class));
         Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00009 should have a higher priority than pool MCT1650.",
-            RH00009Priority > MCT1650Priority);
+        // Pool RH00009 should have a higher priority than pool MCT1650
+        assertTrue(RH00009Priority > MCT1650Priority);
     }
 
     /*
@@ -919,17 +906,17 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, null, "Smart Management", null, "good-usage");
+        prodRH00009.addProvidedProduct(product69);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
-        RH00009.addProvidedProduct(product69);
         RH00009.setQuantity(0L); // No quantity available
 
         Product prodMCT1650 = createSysPurposeProduct(null, null, null, null, "bad-usage");
+        prodMCT1650.addProvidedProduct(product69);
+        prodMCT1650.addProvidedProduct(product89);
+        prodMCT1650.addProvidedProduct(product100);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
-        MCT1650.addProvidedProduct(product89);
-        MCT1650.addProvidedProduct(product100);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -961,42 +948,45 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
-        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
-        RH00009.setId("RH00009");
-        RH00009.addProvidedProduct(product69);
+        prodRH00009.addProvidedProduct(product69);
+
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
+            .setId("RH00009");
 
         Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
-        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
-        MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
-        MCT1650.addProvidedProduct(product89);
-        MCT1650.addProvidedProduct(product100);
+        prodMCT1650.addProvidedProduct(product69);
+        prodMCT1650.addProvidedProduct(product89);
+        prodMCT1650.addProvidedProduct(product100);
+
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650)
+            .setId("MCT1650");
 
         Product prodMCT0352 = createSysPurposeProduct(null, "RHEL Workstation", null, null, null);
-        Pool MCT0352 = TestUtil.createPool(owner, prodMCT0352);
-        MCT0352.setId("MCT0352");
-        MCT0352.addProvidedProduct(product69);
+        prodMCT0352.addProvidedProduct(product69);
+
+        Pool MCT0352 = TestUtil.createPool(owner, prodMCT0352)
+            .setId("MCT0352");
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT1650);
+        args.put("pool", this.translator.translate(MCT1650, PoolDTO.class));
         Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT0352);
+        args.put("pool", this.translator.translate(MCT0352, PoolDTO.class));
         Double MCT0352Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool MCT0352 should have a higher priority than pool RH00009.",
-            MCT0352Priority > RH00009Priority);
+        // Pool MCT0352 should have a higher priority than pool RH00009
+        assertTrue(MCT0352Priority > RH00009Priority);
 
-        assertTrue("Pool RH00009 should have equal priority with pool MCT1650.",
-            RH00009Priority.equals(MCT1650Priority));
+        // Pool RH00009 should have equal priority with pool MCT1650
+        assertTrue(RH00009Priority.equals(MCT1650Priority));
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1033,23 +1023,23 @@ public class AutobindRulesTest {
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT1650);
+        args.put("pool", this.translator.translate(MCT1650, PoolDTO.class));
         Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH00030);
+        args.put("pool", this.translator.translate(RH00030, PoolDTO.class));
         Double RH00030Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00030 should have a higher priority than pool RH00009.",
-            RH00030Priority > RH00009Priority);
+        // Pool RH00030 should have a higher priority than pool RH00009
+        assertTrue(RH00030Priority > RH00009Priority);
 
-        assertTrue("Pool RH00009 should have a higher priority than pool MCT1650.",
-            RH00009Priority > MCT1650Priority);
+        // Pool RH00009 should have a higher priority than pool MCT1650
+        assertTrue(RH00009Priority > MCT1650Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1087,27 +1077,27 @@ public class AutobindRulesTest {
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT1963);
+        args.put("pool", this.translator.translate(MCT1963, PoolDTO.class));
         Double MCT1963Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH00030);
+        args.put("pool", this.translator.translate(RH00030, PoolDTO.class));
         Double RH00030Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00030 should have a higher priority than pool RH00009.",
-            RH00030Priority > RH00009Priority);
+        // Pool RH00030 should have a higher priority than pool RH00009
+        assertTrue(RH00030Priority > RH00009Priority);
 
-        assertTrue("Pool MCT1963 should have a higher priority than pool RH00009.",
-            MCT1963Priority > RH00009Priority);
+        // Pool MCT1963 should have a higher priority than pool RH00009
+        assertTrue(MCT1963Priority > RH00009Priority);
 
-        // Check that both pools would have the same priority.
-        assertTrue("Pool MCT1963 should have equal priority with pool MCT1650.",
-            MCT1963Priority.equals(RH00030Priority));
+        // Check that both pools would have the same priority
+        // Pool MCT1963 should have equal priority with pool MCT1650
+        assertTrue(MCT1963Priority.equals(RH00030Priority));
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1145,23 +1135,23 @@ public class AutobindRulesTest {
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH00741);
+        args.put("pool", this.translator.translate(RH00741, PoolDTO.class));
         Double RH00741Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH00030);
+        args.put("pool", this.translator.translate(RH00030, PoolDTO.class));
         Double RH00030Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00030 should have a higher priority than pool RH00741.",
-            RH00030Priority > RH00741Priority);
+        // Pool RH00030 should have a higher priority than pool RH00741
+        assertTrue(RH00030Priority > RH00741Priority);
 
-        assertTrue("Pool RH00741 should have a higher priority than pool RH00009.",
-            RH00741Priority > RH00009Priority);
+        // Pool RH00741 should have a higher priority than pool RH00009
+        assertTrue(RH00741Priority > RH00009Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1198,23 +1188,23 @@ public class AutobindRulesTest {
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT0352);
+        args.put("pool", this.translator.translate(MCT0352, PoolDTO.class));
         Double MCT0352Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH00030);
+        args.put("pool", this.translator.translate(RH00030, PoolDTO.class));
         Double RH00030Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00030 should have a higher priority than pool MCT0352.",
-            RH00030Priority > MCT0352Priority);
+        // Pool RH00030 should have a higher priority than pool MCT0352
+        assertTrue(RH00030Priority > MCT0352Priority);
 
-        assertTrue("Pool MCT0352 should have a higher priority than pool RH00009.",
-            MCT0352Priority > RH00009Priority);
+        // Pool MCT0352 should have a higher priority than pool RH00009
+        assertTrue(MCT0352Priority > RH00009Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1241,17 +1231,17 @@ public class AutobindRulesTest {
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH00008);
+        args.put("pool", this.translator.translate(RH00008, PoolDTO.class));
         Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00008 should have a higher priority than pool RH00009.",
-            RH00008Priority > RH00009Priority);
+        // Pool RH00008 should have a higher priority than pool RH00009
+        assertTrue(RH00008Priority > RH00009Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1277,17 +1267,17 @@ public class AutobindRulesTest {
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH00008);
+        args.put("pool", this.translator.translate(RH00008, PoolDTO.class));
         Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00008 should have a higher priority than pool RH00009.",
-            RH00008Priority > RH00009Priority);
+        // Pool RH00008 should have a higher priority than pool RH00009
+        assertTrue(RH00008Priority > RH00009Priority);
     }
 
     /*
@@ -1320,17 +1310,17 @@ public class AutobindRulesTest {
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", I_RH00009);
+        args.put("pool", this.translator.translate(I_RH00009, PoolDTO.class));
         Double I_RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00009 should have a higher priority than pool I_RH00009.",
-            RH00009Priority > I_RH00009Priority);
+        // Pool RH00009 should have a higher priority than pool I_RH00009
+        assertTrue(RH00009Priority > I_RH00009Priority);
     }
 
     /*
@@ -1364,23 +1354,23 @@ public class AutobindRulesTest {
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH00008);
+        args.put("pool", this.translator.translate(RH00008, PoolDTO.class));
         Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT1650);
+        args.put("pool", this.translator.translate(MCT1650, PoolDTO.class));
         Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00008 should have a higher priority than pool RH00009.",
-            RH00008Priority > RH00009Priority);
+        // Pool RH00008 should have a higher priority than pool RH00009
+        assertTrue(RH00008Priority > RH00009Priority);
 
-        assertTrue("Pool RH00009 should have a higher priority than pool MCT1650.",
-            RH00009Priority > MCT1650Priority);
+        // Pool RH00009 should have a higher priority than pool MCT1650
+        assertTrue(RH00009Priority > MCT1650Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1412,23 +1402,23 @@ public class AutobindRulesTest {
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", I_RH00009);
+        args.put("pool", this.translator.translate(I_RH00009, PoolDTO.class));
         Double I_RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT1650);
+        args.put("pool", this.translator.translate(MCT1650, PoolDTO.class));
         Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool MCT1650 should have a higher priority than pool I_RH00009.",
-            MCT1650Priority > I_RH00009Priority);
+        // Pool MCT1650 should have a higher priority than pool I_RH00009
+        assertTrue(MCT1650Priority > I_RH00009Priority);
 
-        assertTrue("Pool I_RH00009 should have a higher priority than pool RH00009.",
-            I_RH00009Priority > RH00009Priority);
+        // Pool I_RH00009 should have a higher priority than pool RH00009
+        assertTrue(I_RH00009Priority > RH00009Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1443,38 +1433,39 @@ public class AutobindRulesTest {
         consumer.setRole("RHEL Server");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
-        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
-        RH00009.setId("RH00009");
-        RH00009.addProvidedProduct(product69);
+        prodRH00009.addProvidedProduct(product69);
+
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
+            .setId("RH00009");
 
         Product prodMCT_HA = createSysPurposeProduct(null, "RHEL High Availability", null,
             "Premium", "Production");
-        Pool MCT_HA = TestUtil.createPool(owner, prodMCT_HA);
-        MCT_HA.setId("MCT_HA");
-        MCT_HA.addProvidedProduct(product69);
+        prodMCT_HA.addProvidedProduct(product69);
+
+        Pool MCT_HA = TestUtil.createPool(owner, prodMCT_HA)
+            .setId("MCT_HA");
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", MCT_HA);
+        args.put("pool", this.translator.translate(MCT_HA, PoolDTO.class));
         Double MCT_HAPriority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00009 should have a higher priority than pool MCT_HA.",
-            RH00009Priority > MCT_HAPriority);
+        // Pool RH00009 should have a higher priority than pool MCT_HA
+        assertTrue(RH00009Priority > MCT_HAPriority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1492,37 +1483,38 @@ public class AutobindRulesTest {
         Set<String> addons = new HashSet<>();
         addons.add("RHEL EUS");
         consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
         Product prodRH0000W = createSysPurposeProduct(null, "RHEL Workstation", null, "Standard", null);
-        Pool RH0000W = TestUtil.createPool(owner, prodRH0000W);
-        RH0000W.setId("RH0000W");
-        RH0000W.addProvidedProduct(product69);
+        prodRH0000W.addProvidedProduct(product69);
+
+        Pool RH0000W = TestUtil.createPool(owner, prodRH0000W)
+            .setId("RH0000W");
 
         Product prodRH0000D = createSysPurposeProduct(null, "RHEL Desktop", null, null, "Development");
-        Pool RH0000D = TestUtil.createPool(owner, prodRH0000D);
-        RH0000D.setId("RH0000D");
-        RH0000D.addProvidedProduct(product69);
+        prodRH0000D.addProvidedProduct(product69);
+
+        Pool RH0000D = TestUtil.createPool(owner, prodRH0000D)
+            .setId("RH0000D");
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH0000W);
+        args.put("pool", this.translator.translate(RH0000W, PoolDTO.class));
         Double RH0000WPriority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH0000D);
+        args.put("pool", this.translator.translate(RH0000D, PoolDTO.class));
         Double RH0000DPriority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH0000W should have a higher priority than pool RH0000D.",
-            RH0000WPriority > RH0000DPriority);
+        // Pool RH0000W should have a higher priority than pool RH0000D
+        assertTrue(RH0000WPriority > RH0000DPriority);
     }
 
     /*
@@ -1544,38 +1536,39 @@ public class AutobindRulesTest {
         Set<String> addons = new HashSet<>();
         addons.add("Smart Management");
         consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, "Standard", "Development");
-        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
-        RH00009.setId("RH00009");
-        RH00009.addProvidedProduct(product69);
+        prodRH00009.addProvidedProduct(product69);
+
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
+            .setId("RH00009");
 
         Product prodRH00008 = createSysPurposeProduct(null, "RHEL for HPC Compute Node", "Smart Management",
             "Premium", "Production");
-        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
-        RH00008.setId("RH00008");
-        RH00008.addProvidedProduct(product69);
+        prodRH00008.addProvidedProduct(product69);
+
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008)
+            .setId("RH00008");
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", RH00009);
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
         Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        args.put("pool", RH00008);
+        args.put("pool", this.translator.translate(RH00008, PoolDTO.class));
         Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("Pool RH00009 should have a higher priority than pool RH00008.",
-            RH00009Priority > RH00008Priority);
+        // Pool RH00009 should have a higher priority than pool RH00008
+        assertTrue(RH00009Priority > RH00008Priority);
     }
 
     /*
@@ -1599,8 +1592,7 @@ public class AutobindRulesTest {
         Set<String> addons = new HashSet<>();
         addons.add("Smart Management");
         consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1608,21 +1600,22 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prod = createSysPurposeProduct(null, "mismatched_role", "mismatched_addon",
             "mismatched_sla", "mismatched_usage");
-        Pool pool = TestUtil.createPool(owner, prod);
-        pool.setId("pool_id");
-        pool.addProvidedProduct(mismatched_product);
+        prod.addProvidedProduct(mismatched_product);
+
+        Pool pool = TestUtil.createPool(owner, prod)
+            .setId("pool_id");
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("log", log, false);
-        args.put("consumer", consumer);
-        args.put("compliance", compliance);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
 
-        args.put("pool", pool);
+        args.put("pool", this.translator.translate(pool, PoolDTO.class));
         Double poolPriority = jsRules.invokeMethod("get_pool_priority_test", args);
 
-        assertTrue("A pool should never have a negative priority, even with all attributes mismatched.",
-            poolPriority >= 0);
+        // A pool should never have a negative priority, even with all attributes mismatched.
+        assertTrue(poolPriority >= 0);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1637,23 +1630,24 @@ public class AutobindRulesTest {
         consumer.setRole("RHEL Server");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
-        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
-        RH00009.setId("RH00009");
-        RH00009.addProvidedProduct(product69);
+        prodRH00009.addProvidedProduct(product69);
+
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
+            .setId("RH00009");
 
         Product prodMCT_HA = createSysPurposeProduct(null, "RHEL High Availability", null,
             "Premium", "Production");
-        Pool MCT_HA = TestUtil.createPool(owner, prodMCT_HA);
-        MCT_HA.setId("MCT_HA");
-        MCT_HA.addProvidedProduct(product69);
+        prodMCT_HA.addProvidedProduct(product69);
+
+        Pool MCT_HA = TestUtil.createPool(owner, prodMCT_HA)
+            .setId("MCT_HA");
 
         List<Pool> pools = new ArrayList<>();
         pools.add(RH00009);
@@ -1688,9 +1682,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "provided_role", null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1726,9 +1720,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1761,9 +1755,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "Random Role,RHEL Server", null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1800,9 +1794,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1840,9 +1834,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1877,9 +1871,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1914,9 +1908,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -1951,9 +1945,9 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "Smart Role,Other Role", null,
             null, null);
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
@@ -2001,12 +1995,12 @@ public class AutobindRulesTest {
         // but not the role the consumer has.
         Product prodMCT80 = createSysPurposeProduct(null, null, null,
             null, null);
+        prodMCT80.addProvidedProduct(product69);
         prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "bob");
         prodMCT80.setAttribute("multi-entitlement", "yes");
         Pool MCT80 = TestUtil.createPool(owner, prodMCT80);
         MCT80.setId("MCT80");
         MCT80.setQuantity(1L);
-        MCT80.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2058,10 +2052,10 @@ public class AutobindRulesTest {
             null, null);
         prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "bob");
         prodMCT80.setAttribute("multi-entitlement", "yes");
+        prodMCT80.addProvidedProduct(product69);
         Pool MCT80 = TestUtil.createPool(owner, prodMCT80);
         MCT80.setId("MCT80");
         MCT80.setQuantity(1L);
-        MCT80.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2345,10 +2339,10 @@ public class AutobindRulesTest {
         // This pool provides the consumer's installed product, but does not provide his specified role.
         Product prodWithInstalledProductOnly = createSysPurposeProduct(null, null, null,
             null, null);
+        prodWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
         Pool poolWithInstalledProductOnly = TestUtil.createPool(owner, prodWithInstalledProductOnly);
         poolWithInstalledProductOnly.setId("poolWithInstalledProductOnly");
         poolWithInstalledProductOnly.setQuantity(1L);
-        poolWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
 
         // This pool does not provide the consumer's installed product, but provides his specified role.
         Product prodWithRoleOnly = createSysPurposeProduct(null, "Smart Role,Other Role", null,
@@ -2426,46 +2420,46 @@ public class AutobindRulesTest {
         // This pool provides the consumer's installed product, but does not provide his specified role.
         Product prodWithInstalledProductOnly = createSysPurposeProduct(null, null, null,
             null, null);
+        prodWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
         Pool poolWithInstalledProductOnly = TestUtil.createPool(owner, prodWithInstalledProductOnly);
         poolWithInstalledProductOnly.setId("poolWithInstalledProductOnly");
         poolWithInstalledProductOnly.setQuantity(1L);
-        poolWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
 
         // This pool does not provide the consumer's installed product, but provides his specified role
         // and another non-specified installed product.
         Product prodWithRoleOnly = createSysPurposeProduct(null, "Smart Role,Other Role", null,
             null, null);
+        prodWithRoleOnly.addProvidedProduct(product100);
         Pool poolWithRoleOnly = TestUtil.createPool(owner, prodWithRoleOnly);
         poolWithRoleOnly.setId("poolWithRoleOnly");
         poolWithRoleOnly.setQuantity(1L);
-        poolWithRoleOnly.addProvidedProduct(product100);
 
         // This pool does not provide the consumer's installed product, but provides his specified addon
         // and another non-specified installed product.
         Product prodWithAddonOnly = createSysPurposeProduct(null, null, "Smart Addon,Other Addon",
             null, null);
+        prodWithAddonOnly.addProvidedProduct(product100);
         Pool poolWithAddonOnly = TestUtil.createPool(owner, prodWithAddonOnly);
         poolWithAddonOnly.setId("poolWithAddonOnly");
         poolWithAddonOnly.setQuantity(1L);
-        poolWithAddonOnly.addProvidedProduct(product100);
 
         // This pool does not provide the consumer's installed product, but provides his specified usage
         // and another non-specified installed product.
         Product prodWithUsageOnly = createSysPurposeProduct(null, null, null,
             null, "Other Usage");
+        prodWithUsageOnly.addProvidedProduct(product100);
         Pool poolWithUsageOnly = TestUtil.createPool(owner, prodWithUsageOnly);
         poolWithUsageOnly.setId("poolWithUsageOnly");
         poolWithUsageOnly.setQuantity(1L);
-        poolWithUsageOnly.addProvidedProduct(product100);
 
         // This pool does not provide the consumer's installed product, but provides his specified usage
         // and another non-specified installed product.
         Product prodWithSLAOnly = createSysPurposeProduct(null, null, null,
             "Other SLA", null);
+        prodWithSLAOnly.addProvidedProduct(product100);
         Pool poolWithSLAOnly = TestUtil.createPool(owner, prodWithSLAOnly);
         poolWithSLAOnly.setId("poolWithSLAOnly");
         poolWithSLAOnly.setQuantity(1L);
-        poolWithSLAOnly.addProvidedProduct(product100);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(poolWithInstalledProductOnly);
@@ -2511,16 +2505,16 @@ public class AutobindRulesTest {
         prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
         prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2561,16 +2555,16 @@ public class AutobindRulesTest {
         prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
         prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
+        genericPool.getProduct().addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2608,19 +2602,19 @@ public class AutobindRulesTest {
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "random_role", "myaddon",
             "random_sla", "random_usage");
+        prodMCT1650.addProvidedProduct(product69);
         prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
         prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2648,8 +2642,7 @@ public class AutobindRulesTest {
         consumer.setServiceLevel("mysla");
         consumer.setFact("memory.memtotal", "9980456");
         consumer.setFact("virt.is_guest", "True");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2659,20 +2652,20 @@ public class AutobindRulesTest {
             "mysla", "random_usage");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
         prodMCT1650.setAttribute(Product.Attributes.VCPU, "32");
-        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
-        MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
-        MCT1650.setQuantity(1L);
+        prodMCT1650.addProvidedProduct(product69);
+
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650)
+            .setId("MCT1650")
+            .setQuantity(1L);
 
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
-        Pool genericPool = TestUtil.createPool(owner, genericProduct);
-        genericPool.setId("genericPool");
-        genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
+        genericProduct.addProvidedProduct(product69);
 
-        List<Pool> pools = new ArrayList<>();
-        pools.add(MCT1650);
-        pools.add(genericPool);
+        Pool genericPool = TestUtil.createPool(owner, genericProduct)
+            .setId("genericPool")
+            .setQuantity(1L);
+
+        List<Pool> pools = Arrays.asList(MCT1650, genericPool);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
@@ -2709,18 +2702,18 @@ public class AutobindRulesTest {
         // but it will get a 'match score' for having the usage that the consumer has specified.
         Product prodMCT1650 = createSysPurposeProduct(null, "another_role", null,
             null, "myusage");
+        prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
-        MCT1650.addProvidedProduct(product69);
         MCT1650.setQuantity(1L);
 
         // This pool will get a 'null rule' score for not having a role specified, just as the consumer
         // does not have a role specified.
         Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
-        genericPool.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(MCT1650);
@@ -2745,31 +2738,30 @@ public class AutobindRulesTest {
 
         // Consumer specified syspurpose attributes:
         consumer.setRole("RHEL Server");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Create two identical candidate stackable pools that both provide
         // the product and role that the consumer has set.
-        Product prod1 = createSysPurposeProduct(null, "RHEL Server,random_role", null,
-            null, null);
+        Product prod1 = createSysPurposeProduct(null, "RHEL Server,random_role", null, null, null);
+        prod1.addProvidedProduct(product69);
         prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod1.setAttribute("multi-entitlement", "yes");
-        Pool pool1 = TestUtil.createPool(owner, prod1);
-        pool1.setId("pool1");
-        pool1.setQuantity(100L);
-        pool1.addProvidedProduct(product69);
 
-        Product prod2 = createSysPurposeProduct(null, "RHEL Server,random_role", null,
-            null, null);
+        Pool pool1 = TestUtil.createPool(owner, prod1)
+            .setId("pool1")
+            .setQuantity(100L);
+
+        Product prod2 = createSysPurposeProduct(null, "RHEL Server,random_role", null, null, null);
+        prod2.addProvidedProduct(product69);
         prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod2.setAttribute("multi-entitlement", "yes");
-        Pool pool2 = TestUtil.createPool(owner, prod2);
-        pool2.setId("pool2");
-        pool2.setQuantity(100L);
-        pool2.addProvidedProduct(product69);
+
+        Pool pool2 = TestUtil.createPool(owner, prod2)
+            .setId("pool2")
+            .setQuantity(100L);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -2778,9 +2770,8 @@ public class AutobindRulesTest {
             new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
 
         // Only one of the pools should have been attached.
-        assertEquals("Only one pool should have been attached.", 1, bestPools.size());
-        assertEquals("The attached pool should have consumed quantity of 1.",
-            1, (int) bestPools.get(0).getQuantity());
+        assertEquals(1, bestPools.size());
+        assertEquals(1, (int) bestPools.get(0).getQuantity());
     }
 
     /*
@@ -2798,31 +2789,30 @@ public class AutobindRulesTest {
         addons.add("my_addon1");
         addons.add("my_addon2");
         consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Create two identical candidate stackable pools that both provide
         // the product and addons that the consumer has set.
-        Product prod1 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role",
-            null, null);
+        Product prod1 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role", null, null);
+        prod1.addProvidedProduct(product69);
         prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod1.setAttribute("multi-entitlement", "yes");
-        Pool pool1 = TestUtil.createPool(owner, prod1);
-        pool1.setId("pool1");
-        pool1.setQuantity(100L);
-        pool1.addProvidedProduct(product69);
 
-        Product prod2 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role",
-            null, null);
+        Pool pool1 = TestUtil.createPool(owner, prod1)
+            .setId("pool1")
+            .setQuantity(100L);
+
+        Product prod2 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role", null, null);
+        prod2.addProvidedProduct(product69);
         prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod2.setAttribute("multi-entitlement", "yes");
-        Pool pool2 = TestUtil.createPool(owner, prod2);
-        pool2.setId("pool2");
-        pool2.setQuantity(100L);
-        pool2.addProvidedProduct(product69);
+
+        Pool pool2 = TestUtil.createPool(owner, prod2)
+            .setId("pool2")
+            .setQuantity(100L);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -2831,9 +2821,8 @@ public class AutobindRulesTest {
             new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
 
         // Only one of the pools should have been attached.
-        assertEquals("Only one pool should have been attached.", 1, bestPools.size());
-        assertEquals("The attached pool should have consumed quantity of 1.",
-            1, (int) bestPools.get(0).getQuantity());
+        assertEquals(1, bestPools.size());
+        assertEquals(1, (int) bestPools.get(0).getQuantity());
     }
 
     /*
@@ -2877,7 +2866,7 @@ public class AutobindRulesTest {
             new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
 
         // Only one of the pools should have been attached.
-        assertEquals("Only one pool should have been attached.", 1, bestPools.size());
+        assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
     }
 
@@ -2919,7 +2908,7 @@ public class AutobindRulesTest {
             new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
 
         // Only one of the pools should have been attached.
-        assertEquals("Only one pool should have been attached.", 1, bestPools.size());
+        assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
     }
 
@@ -2948,16 +2937,16 @@ public class AutobindRulesTest {
 
         Product prod1 = createSysPurposeProduct(null, "mismatched_role", "mismatched_addon",
             "mismatched_sla", "Production");
+        prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
-        pool1.addProvidedProduct(product69);
         pool1.setQuantity(1L);
 
         Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(1L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -2995,16 +2984,16 @@ public class AutobindRulesTest {
 
         Product prod1 = createSysPurposeProduct(null, "mismatched_role", "mismatched_addon",
             "Premium", "mismatched_usage");
+        prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
-        pool1.addProvidedProduct(product69);
         pool1.setQuantity(1L);
 
         Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(1L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -3042,16 +3031,16 @@ public class AutobindRulesTest {
 
         Product prod1 = createSysPurposeProduct(null, "mismatched_role", "my_addon",
             "mismatched_sla", "mismatched_usage");
+        prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
-        pool1.addProvidedProduct(product69);
         pool1.setQuantity(1L);
 
         Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(1L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -3089,16 +3078,16 @@ public class AutobindRulesTest {
 
         Product prod1 = createSysPurposeProduct(null, "RHEL Workstation", "mismatched_addon",
             "mismatched_sla", "mismatched_usage");
+        prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
-        pool1.addProvidedProduct(product69);
         pool1.setQuantity(1L);
 
         Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
         pool2.setQuantity(1L);
-        pool2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
@@ -3219,14 +3208,14 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prod1 = createSysPurposeProduct(null, null, null, null, "RandomUsage");
+        prod1.addProvidedProduct(product69);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
-        p1.addProvidedProduct(product69);
 
         Product prod2 = createSysPurposeProduct(null, null, null, "RandomSLA", "Development");
+        prod2.addProvidedProduct(product69);
         Pool p2 = TestUtil.createPool(owner, prod2);
         p2.setId("p2");
-        p2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(p1);
@@ -3261,14 +3250,14 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prod1 = createSysPurposeProduct(null, null, null, "RandomSLA", null);
+        prod1.addProvidedProduct(product69);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
-        p1.addProvidedProduct(product69);
 
         Product prod2 = createSysPurposeProduct(null, null, null, "Premium", "RandomUsage");
+        prod2.addProvidedProduct(product69);
         Pool p2 = TestUtil.createPool(owner, prod2);
         p2.setId("p2");
-        p2.addProvidedProduct(product69);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(p1);
@@ -3366,13 +3355,14 @@ public class AutobindRulesTest {
             "2");
         Product product3 = mockProduct(productId3, "Test Provided product");
 
+        product1.addProvidedProduct(product3);
+        product2.addProvidedProduct(product3);
+
         Pool pool1 = mockPool(product1);
         pool1.setId("DEAD-BEEF");
-        pool1.addProvidedProduct(product3);
 
         Pool pool2 = mockPool(product2);
         pool2.setId("DEAD-BEEF2");
-        pool2.addProvidedProduct(product3);
 
         List<Pool> pools = new LinkedList<>();
         //pools.add(pool1);
@@ -3464,24 +3454,26 @@ public class AutobindRulesTest {
     }
 
     private List<Pool> createDerivedPool(String derivedEngPid) {
+        Set<Product> derivedProvided = new HashSet<>();
+        derivedProvided.add(TestUtil.createProduct(derivedEngPid, derivedEngPid));
+
+        Product derivedProduct = TestUtil.createProduct("derivedProd", "A derived test product");
+        derivedProduct.setAttribute(Product.Attributes.STACKING_ID, "1");
+        derivedProduct.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+        derivedProduct.setProvidedProducts(derivedProvided);
+
         Product product = TestUtil.createProduct(productId, "A test product");
         product.setUuid("FAKE_DB_ID");
         product.setAttribute(Product.Attributes.STACKING_ID, "1");
         product.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         product.setAttribute(Product.Attributes.SOCKETS, "2");
+        product.setDerivedProduct(derivedProduct);
 
-        Set<Product> derivedProvided = new HashSet<>();
-        derivedProvided.add(TestUtil.createProduct(derivedEngPid, derivedEngPid));
-
-        Product derivedProduct = TestUtil.createProduct("derivedProd", "A derived test product");
-        product.setAttribute(Product.Attributes.STACKING_ID, "1");
-        product.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
-
-        Pool pool = TestUtil.createPool(
-            owner, product, new HashSet<>(), derivedProduct, derivedProvided, 100
-        );
-
-        pool.setId("DEAD-BEEF-DER");
+        Pool pool = new Pool()
+            .setId("DEAD-BEEF-DER")
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(100L);
 
         when(mockProductCurator.getPoolDerivedProvidedProductsCached(pool.getId()))
             .thenReturn(derivedProvided);

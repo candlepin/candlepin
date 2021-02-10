@@ -153,11 +153,16 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
     private Set<Product> getDerivedProductsForDistributor(Pool pool, Consumer consumer) {
         Set<Product> derivedProducts = new HashSet<>();
-        boolean derived = pool.hasAttribute(Pool.Attributes.DERIVED_POOL);
-        if (!derived && this.isManifestDistributor(consumer) && pool.getDerivedProduct() != null) {
-            derivedProducts.add(pool.getDerivedProduct());
-            derivedProducts.addAll(productCurator.getPoolDerivedProvidedProductsCached(pool));
+
+        if (!pool.hasAttribute(Pool.Attributes.DERIVED_POOL) && this.isManifestDistributor(consumer)) {
+            Product derivedProduct = pool.getDerivedProduct();
+
+            if (derivedProduct != null) {
+                derivedProducts.add(derivedProduct);
+                derivedProducts.addAll(derivedProduct.getProvidedProducts());
+            }
         }
+
         return derivedProducts;
     }
 
@@ -462,7 +467,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 ent.getQuantity(),
                 ent.getId());
 
-            Set<Product> products = new HashSet<>(productCurator.getPoolProvidedProductsCached(pool));
+            Set<Product> products = new HashSet<>(pool.getProduct().getProvidedProducts());
 
             // If creating a certificate for a distributor, we need
             // to add any derived products as well so that their content

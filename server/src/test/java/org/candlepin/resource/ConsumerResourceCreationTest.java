@@ -67,6 +67,7 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -118,6 +119,7 @@ public class ConsumerResourceCreationTest {
 
     @Mock protected UserServiceAdapter userService;
     @Mock protected IdentityCertServiceAdapter idCertService;
+    @Mock protected ProductServiceAdapter productService;
     @Mock protected SubscriptionServiceAdapter subscriptionService;
     @Mock protected ConsumerCurator consumerCurator;
     @Mock protected ConsumerTypeCurator consumerTypeCurator;
@@ -163,11 +165,12 @@ public class ConsumerResourceCreationTest {
         this.config = initConfig();
         this.resource = new ConsumerResource(
             this.consumerCurator, this.consumerTypeCurator, null, this.subscriptionService,
-            null, this.idCertService, null, this.i18n, this.sink, null, null, this.userService, null,
-            null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
-            this.systemPurposeComplianceRules, this.deletedConsumerCurator, null, null, this.config,
-            null, null, this.consumerBindUtil, null, null, new FactValidator(this.config, this.i18nProvider),
-            null, consumerEnricher, migrationProvider, modelTranslator, jobManager);
+            this.productService, null, this.idCertService, null, this.i18n, this.sink, null, null,
+            this.userService, null, null, this.ownerCurator, this.activationKeyCurator, null,
+            this.complianceRules, this.systemPurposeComplianceRules, this.deletedConsumerCurator, null, null,
+            this.config, null, null, this.consumerBindUtil, null, null,
+            new FactValidator(this.config, this.i18nProvider), null, consumerEnricher, migrationProvider,
+            modelTranslator, jobManager);
 
         this.system = this.initConsumerType();
         this.mockConsumerType(this.system);

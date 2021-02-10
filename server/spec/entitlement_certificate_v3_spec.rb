@@ -47,43 +47,48 @@ describe 'Entitlement Certificate V3' do
   before(:each) do
     @owner = create_owner random_string('test_owner')
 
-    @product = create_product(nil, nil, :attributes =>
-                {:version => '6.4',
-                 :arch => 'i386, x86_64',
-                 :sockets => 4,
-                 :cores => 8,
-                 :ram => 16,
-                 :usage => 'Disaster Recovery',
-                 :roles => 'Red Hat Enterprise Linux Server, Red Hat Enterprise Linux Workstation',
-                 :addons => 'my_server_addon, my_workstation_addon',
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :stacking_id => '8888',
-                 :virt_only => 'false',
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
+    @product = create_product(nil, random_string('test_product_1-'), :attributes => {
+      :version => '6.4',
+      :arch => 'i386, x86_64',
+      :sockets => 4,
+      :cores => 8,
+      :ram => 16,
+      :usage => 'Disaster Recovery',
+      :roles => 'Red Hat Enterprise Linux Server, Red Hat Enterprise Linux Workstation',
+      :addons => 'my_server_addon, my_workstation_addon',
+      :warning_period => 15,
+      :management_enabled => true,
+      :stacking_id => '8888',
+      :virt_only => 'false',
+      :support_level => 'standard',
+      :support_type => 'excellent'
+    })
 
-    @product_30 = create_product(nil, nil, :attributes =>
-                {:version => '6.4',
-                 :arch => 'i386, x86_64',
-                 :sockets => 4,
-                 :warning_period => 15,
-                 :management_enabled => true,
-                 :virt_only => 'false',
-                 :support_level => 'standard',
-                 :support_type => 'excellent',})
+    @product_30 = create_product(nil, random_string('test_product_2-'), :attributes => {
+      :version => '6.4',
+      :arch => 'i386, x86_64',
+      :sockets => 4,
+      :warning_period => 15,
+      :management_enabled => true,
+      :virt_only => 'false',
+      :support_level => 'standard',
+      :support_type => 'excellent'
+    })
 
-    @content = create_content({:gpg_url => 'gpg_url',
-                               :content_url => '/content/dist/rhel/$releasever/$basearch/os',
-                               :metadata_expire => 6400,
-                               :required_tags => 'TAG1,TAG2',})
+    @content = create_content({
+      :gpg_url => 'gpg_url',
+      :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+      :metadata_expire => 6400,
+      :required_tags => 'TAG1,TAG2'
+    })
 
-    @arch_content = create_content({:gpg_url => 'gpg_url',
-                                    :content_url => '/content/dist/rhel/arch/specific/$releasever/$basearch/os',
-                                    :metadata_expire => 6400,
-                                    :arches => "i386,x86_64",
-                                    :required_tags => 'TAG1,TAG2',})
-
+    @arch_content = create_content({
+      :gpg_url => 'gpg_url',
+      :content_url => '/content/dist/rhel/arch/specific/$releasever/$basearch/os',
+      :metadata_expire => 6400,
+      :arches => "i386,x86_64",
+      :required_tags => 'TAG1,TAG2'
+    })
 
     @cp.add_content_to_product(@owner['key'], @product.id, @content.id, false)
     @cp.add_content_to_product(@owner['key'], @product.id, @arch_content.id, false)
@@ -106,18 +111,21 @@ describe 'Entitlement Certificate V3' do
 
     @user = user_client(@owner, random_string('billy'))
 
-    @system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.4',
-                 'uname.machine' => 'i386'})
+    @system = consumer_client(@user, random_string('system1'), :system, nil, {
+      'system.certificate_version' => '3.4',
+      'uname.machine' => 'i386'
+    })
   end
 
   it 'generated a version 3.4 certificate when requesting a 3.0 certificate' do
     # NOTE: This test covers the case where the system supports 3.0 certs, but
     # the server is creating 3.4 certs, and the product contains attributes
     # supported by 3.0.
-    v3_system = consumer_client(@user, random_string('v3system'), :system, nil,
-                                  {'system.certificate_version' => '3.0',
-                                   'uname.machine' => 'i386'})
+    v3_system = consumer_client(@user, random_string('v3system'), :system, nil, {
+      'system.certificate_version' => '3.0',
+      'uname.machine' => 'i386'
+    })
+
     v3_system.consume_product(@product_30.id)
     value = extension_from_cert(v3_system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
     value.should == "3.4"
@@ -204,13 +212,15 @@ describe 'Entitlement Certificate V3' do
   end
 
   it 'verify branding info is correct in json blob' do
-    eng_product = create_product("111", "engineering_product_name")
+
     branding = [{:productId => "111", :type => 'Some Type', :name => 'Super Branded Name'}]
 
     if is_hosted?
-      mkt_product = create_upstream_product('555', { :branding => branding })
+      eng_product = create_upstream_product("111", { :name => 'engineering_product_name' })
+      mkt_product = create_upstream_product('555', { :branding => branding, :providedProducts => [eng_product] })
     else
-      mkt_product = create_product("555", "marketing_product_name", :branding => branding)
+      eng_product = create_product("111", "engineering_product_name")
+      mkt_product = create_product("555", "marketing_product_name", :branding => branding, :providedProducts => [eng_product.id])
     end
     expect(mkt_product.branding.size).to eq(1)
 

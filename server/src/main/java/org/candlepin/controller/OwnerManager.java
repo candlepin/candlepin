@@ -65,9 +65,7 @@ public class OwnerManager {
     private ImportRecordCurator importRecordCurator;
     private PermissionBlueprintCurator permissionCurator;
     private OwnerProductCurator ownerProductCurator;
-    private ProductManager productManager;
     private OwnerContentCurator ownerContentCurator;
-    private ContentManager contentManager;
     private OwnerCurator ownerCurator;
     private UeberCertificateCurator uberCertificateCurator;
     private OwnerServiceAdapter ownerServiceAdapter;
@@ -81,9 +79,7 @@ public class OwnerManager {
         ImportRecordCurator importRecordCurator,
         PermissionBlueprintCurator permissionCurator,
         OwnerProductCurator ownerProductCurator,
-        ProductManager productManager,
         OwnerContentCurator ownerContentCurator,
-        ContentManager contentManager,
         OwnerCurator ownerCurator,
         UeberCertificateCurator uberCertificateCurator,
         OwnerServiceAdapter ownerServiceAdapter,
@@ -96,9 +92,7 @@ public class OwnerManager {
         this.importRecordCurator = importRecordCurator;
         this.permissionCurator = permissionCurator;
         this.ownerProductCurator = ownerProductCurator;
-        this.productManager = productManager;
         this.ownerContentCurator = ownerContentCurator;
-        this.contentManager = contentManager;
         this.ownerCurator = ownerCurator;
         this.uberCertificateCurator = uberCertificateCurator;
         this.ownerServiceAdapter = ownerServiceAdapter;
@@ -172,10 +166,10 @@ public class OwnerManager {
         }
 
         log.info("Deleting all products...");
-        this.productManager.removeAllProducts(owner);
+        this.removeAllProductsForOwner(owner);
 
         log.info("Deleting all content...");
-        this.contentManager.removeAllContent(owner, false);
+        this.removeAllContentForOwner(owner);
 
         log.info("Deleting owner: {}", owner);
         ownerCurator.delete(owner);
@@ -186,5 +180,27 @@ public class OwnerManager {
     public Owner updateRefreshDate(Owner owner) {
         owner.setLastRefreshed(new Date());
         return ownerCurator.merge(owner);
+    }
+
+    /**
+     * Removes all known products for the given owner
+     *
+     * @param owner
+     *  the owner for which to remove all products
+     */
+    private void removeAllProductsForOwner(Owner owner) {
+        Collection<String> productUuids = this.ownerProductCurator.getProductUuidsByOwner(owner);
+        this.ownerProductCurator.removeOwnerProductReferences(owner, productUuids);
+    }
+
+    /**
+     * Removes all known content for the given owner
+     *
+     * @param owner
+     *  the owner for which to remove all content
+     */
+    private void removeAllContentForOwner(Owner owner) {
+        Collection<String> contentUuids = this.ownerContentCurator.getContentUuidsByOwner(owner);
+        this.ownerContentCurator.removeOwnerContentReferences(owner, contentUuids);
     }
 }

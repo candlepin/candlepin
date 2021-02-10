@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.candlepin.test.TestDateUtil;
+import org.candlepin.test.TestUtil;
 
 import org.junit.Test;
 
@@ -33,8 +33,8 @@ public class DateRangeTest {
 
     @Test
     public void getters() {
-        Date start = TestDateUtil.date(2012, 5, 22);
-        Date end = TestDateUtil.date(2012, 7, 4);
+        Date start = TestUtil.createDate(2012, 5, 22);
+        Date end = TestUtil.createDate(2012, 7, 4);
         DateRange range = new DateRange(start, end);
 
         assertEquals(start, range.getStartDate());
@@ -43,18 +43,18 @@ public class DateRangeTest {
 
     @Test
     public void contains() {
-        DateRange range = new DateRange(TestDateUtil.date(2001, 7, 5), TestDateUtil.date(2010, 7, 4));
+        DateRange range = new DateRange(TestUtil.createDate(2001, 7, 5), TestUtil.createDate(2010, 7, 4));
 
-        assertTrue(range.contains(TestDateUtil.date(2005, 6, 9)));
-        assertFalse(range.contains(TestDateUtil.date(1971, 7, 19)));
-        assertFalse(range.contains(TestDateUtil.date(2012, 4, 19)));
-        assertTrue(range.contains(TestDateUtil.date(2001, 7, 5)));
-        assertTrue(range.contains(TestDateUtil.date(2010, 7, 4)));
+        assertTrue(range.contains(TestUtil.createDate(2005, 6, 9)));
+        assertFalse(range.contains(TestUtil.createDate(1971, 7, 19)));
+        assertFalse(range.contains(TestUtil.createDate(2012, 4, 19)));
+        assertTrue(range.contains(TestUtil.createDate(2001, 7, 5)));
+        assertTrue(range.contains(TestUtil.createDate(2010, 7, 4)));
     }
 
     @Test
     public void string() {
-        DateRange range = new DateRange(TestDateUtil.date(2012, 5, 22), TestDateUtil.date(2013, 7, 4));
+        DateRange range = new DateRange(TestUtil.createDate(2012, 5, 22), TestUtil.createDate(2013, 7, 4));
 
         String result = range.toString();
 

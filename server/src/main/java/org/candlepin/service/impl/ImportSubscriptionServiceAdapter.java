@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.service.impl;
 
 import org.candlepin.common.exceptions.ServiceUnavailableException;
@@ -80,15 +79,23 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
 
         if (productId != null) {
             for (SubscriptionDTO sub : this.subscriptions) {
-                if (productId.equals(sub.getProduct().getId())) {
+                ProductDTO product = sub.getProduct();
+                if (product == null) {
+                    continue;
+                }
+
+                if (productId.equals(product.getId())) {
                     subs.add(sub);
                     continue;
                 }
 
-                for (ProductDTO p : sub.getProvidedProducts()) {
-                    if (productId.equals(p.getId())) {
-                        subs.add(sub);
-                        break;
+                Collection<ProductDTO> providedProducts = product.getProvidedProducts();
+                if (providedProducts != null) {
+                    for (ProductDTO provided : providedProducts) {
+                        if (provided != null && productId.equals(provided.getId())) {
+                            subs.add(sub);
+                            break;
+                        }
                     }
                 }
             }
@@ -100,7 +107,7 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
     @Override
     public void activateSubscription(ConsumerInfo consumer, String email, String emailLocale) {
         throw new ServiceUnavailableException(
-                i18n.tr("Standalone candlepin does not support redeeming a subscription."));
+            i18n.tr("Standalone candlepin does not support redeeming a subscription."));
     }
 
     @Override

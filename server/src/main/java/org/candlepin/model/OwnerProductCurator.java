@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.Pool.PoolType;
 
 import com.google.inject.persist.Transactional;
 
@@ -23,7 +23,6 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +37,7 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -357,9 +357,11 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     public int mapProductToOwners(Product product, Owner... owners) {
         int count = 0;
 
-        for (Owner owner : owners) {
-            if (this.mapProductToOwner(product, owner)) {
-                ++count;
+        if (owners != null) {
+            for (Owner owner : owners) {
+                if (this.mapProductToOwner(product, owner)) {
+                    ++count;
+                }
             }
         }
 
@@ -370,9 +372,11 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     public int mapOwnerToProducts(Owner owner, Product... products) {
         int count = 0;
 
-        for (Product product : products) {
-            if (this.mapProductToOwner(product, owner)) {
-                ++count;
+        if (products != null) {
+            for (Product product : products) {
+                if (this.mapProductToOwner(product, owner)) {
+                    ++count;
+                }
             }
         }
 
@@ -416,6 +420,27 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     /**
+     * Fetches a list of product IDs currently used by development pools for the specified owner.
+     * If no such pools exist, or the owner has no pools, this method returns an empty list.
+     *
+     * @param ownerId
+     *  the ID of the owner for which to look up development product IDs
+     *
+     * @return
+     *  a list of development product IDs for the given owner
+     */
+    public List<String> getDevProductIds(String ownerId) {
+        String jpql = "SELECT prod.id FROM Pool pool JOIN pool.product prod " +
+            "WHERE pool.owner.id = :owner_id AND pool.type = :pool_type";
+
+        return this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("pool_type", PoolType.DEVELOPMENT)
+            .getResultList();
+    }
+
+    /**
      * Builds a query which can be used to fetch the current collection of orphaned products. Due
      * to the nature of this request, it is highly advised that this query be run within a
      * transaction, with a pessimistic lock mode set.
@@ -428,13 +453,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // we need to start from product and do a left join back to owner products, we have to use
         // a native query instead of any of the ORM query languages
 
-        String sql = "SELECT p.uuid " +
-            "FROM cp2_products p LEFT JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
-            "WHERE op.owner_id IS NULL";
-
-        List<String> uuids = this.getEntityManager()
-            .createNativeQuery(sql)
-            .getResultList();
+        List<String> uuids = this.getOrphanedProductUuids();
 
         if (uuids != null && !uuids.isEmpty()) {
             DetachedCriteria criteria = DetachedCriteria.forClass(Product.class)
@@ -445,6 +464,136 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         }
 
         return this.cpQueryFactory.<Product>buildQuery();
+    }
+
+    /**
+     * Fetches a list of product UUIDs representing products which are no longer used by any owner.
+     * If no such products exist, this method returns an empty list.
+     *
+     * @return
+     *  a list of UUIDs of products no longer used by any organization
+     */
+    public List<String> getOrphanedProductUuids() {
+        String sql = "SELECT p.uuid " +
+            "FROM cp2_products p LEFT JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
+            "WHERE op.owner_id IS NULL";
+
+        return this.getEntityManager()
+            .createNativeQuery(sql)
+            .getResultList();
+    }
+
+    /**
+     * Fetches a list of products within the given organization which directly reference the
+     * specified product. Indirect references, such as a product which has a derived product that
+     * provides the specified product, are not included in the collection returned by this method.
+     *
+     * @param ownerId
+     *  the ID of the owner/organization in which to search for referencing products
+     *
+     * @param productUuid
+     *  the UUID of the product for which to fetch product references
+     *
+     * @return
+     *  a collection of products directly referencing the specified product
+     */
+    public List<Product> getProductsReferencingProduct(String ownerId, String productUuid) {
+        String jpql = "SELECT prod FROM OwnerProduct op " +
+            "JOIN op.product prod " +
+            "LEFT JOIN prod.providedProducts providedProd " +
+            "WHERE op.owner.id = :owner_id " +
+            "  AND (prod.derivedProduct.uuid = :product_uuid " +
+            "   OR providedProd.uuid = :product_uuid)";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("product_uuid", productUuid)
+            .getResultList();
+    }
+
+    /**
+     * Fetches a list of products within the given organization which directly reference the
+     * specified content. Indirect references, such as a product which has a derived product that
+     * provides the specified content, are not included in the collection returned by this method.
+     *
+     * @param ownerId
+     *  the ID of the owner/organization in which to search for referencing products
+     *
+     * @param contentUuid
+     *  the UUID of the content for which to fetch product references
+     *
+     * @return
+     *  a collection of products directly referencing the specified content
+     */
+    public List<Product> getProductsReferencingContent(String ownerId, String contentUuid) {
+        String jpql = "SELECT prod FROM OwnerProduct op " +
+            "JOIN op.product prod " +
+            "JOIN prod.productContent pc " +
+            "JOIN pc.content content " +
+            "WHERE op.owner.id = :owner_id " +
+            "  AND content.uuid = :content_uuid";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("content_uuid", contentUuid)
+            .getResultList();
+    }
+
+    /**
+     * Retrieves a map containing all known versions of the products specified by IDs, for all orgs
+     * <em>except</em> the org specified. If no products are found for the specified IDs in other
+     * orgs, this method returns an empty map.
+     *
+     * @param owner
+     *  The owner to exclude from the product lookup. If this value is null, no owner-filtering
+     *  will be performed.
+     *
+     * @param productIds
+     *  A collection of productIds for which to fetch all known versions
+     *
+     * @return
+     *  A map containing all known versions of the given products, mapped by Red Hat ID
+     */
+    public Map<String, Set<Product>> getVersionedProductsById(Owner owner, Collection<String> productIds) {
+        Map<String, Set<Product>> result = new HashMap<>();
+
+        if (productIds != null && !productIds.isEmpty()) {
+            String jpql;
+
+            if (owner != null) {
+                jpql = "SELECT p FROM OwnerProduct op JOIN op.product p " +
+                    "WHERE op.owner.id != :owner_id AND p.id IN (:pids)";
+            }
+            else {
+                jpql = "SELECT p FROM Product p WHERE p.id IN (:pids)";
+            }
+
+            TypedQuery<Product> query = this.getEntityManager().createQuery(jpql, Product.class);
+
+            if (owner != null) {
+                query.setParameter("owner_id", owner.getId());
+            }
+
+            for (Collection<String> block : this.partition(productIds)) {
+                List<Product> fetched = query.setParameter("pids", block)
+                    .getResultList();
+
+                for (Product entity : fetched) {
+                    Set<Product> idSet = result.get(entity.getId());
+
+                    if (idSet == null) {
+                        idSet = new HashSet<>();
+                        result.put(entity.getId(), idSet);
+                    }
+
+                    idSet.add(entity);
+                }
+            }
+        }
+
+        return result;
     }
 
     /**
@@ -537,7 +686,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
     /**
      * Updates the product references currently pointing to the original product to instead point to
-     * the updated product for the specified owners.
+     * the updated product for the specified owners. This method does not update references which
+     * would normally affect product versioning, such as references from other products.
      * <p/></p>
      * <strong>Warning:</strong> Hibernate does not gracefully handle situations where the data
      * backing an entity changes via direct SQL or other outside influence. While, logically, a
@@ -566,6 +716,9 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             return;
         }
 
+        // Should we step through the UUID map and verify that it doesn't try to map anything weird,
+        // (like a UUID to itself), or define multiple remappings?
+
         Session session = this.currentSession();
 
         Map<String, Object> criteria = new HashMap<>();
@@ -578,46 +731,16 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         log.debug("{} owner-product relations updated", count);
 
-        // pool provided and derived products
+        // pool->product
         count = this.bulkSQLUpdate(Pool.DB_TABLE, "product_uuid", uuidMap, criteria);
-
-        criteria.remove("product_uuid");
-        criteria.put("derived_product_uuid", productUuidMap.keySet());
-
-        count += this.bulkSQLUpdate(Pool.DB_TABLE, "derived_product_uuid", uuidMap, criteria);
 
         log.debug("{} pools updated", count);
 
-        // pool provided products
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_pool WHERE owner_id = :ownerId")
-            .setParameter("ownerId", owner.getId())
-            .list();
-
-        if (ids != null && !ids.isEmpty()) {
-            int providedProductsUpdated = 0;
-            int derivedProductsUpdated = 0;
-            for (List<String> poolIdBlock : this.partition(ids, getBatchBlockSize())) {
-                Map<String, Object> updateCriteria = new HashMap<>();
-                updateCriteria.put("product_uuid", productUuidMap.keySet());
-                updateCriteria.put("pool_id", poolIdBlock);
-
-                providedProductsUpdated += this.bulkSQLUpdate("cp2_pool_provided_products",
-                    "product_uuid", uuidMap, updateCriteria);
-
-                derivedProductsUpdated += this.bulkSQLUpdate("cp2_pool_derprov_products", "product_uuid",
-                    uuidMap, updateCriteria);
-            }
-            log.debug("{} provided products updated", providedProductsUpdated);
-            log.debug("{} derived provided products updated", derivedProductsUpdated);
-        }
-        else {
-            log.debug("0 provided products updated");
-            log.debug("0 derived provided products updated");
-        }
-
 
         // Activation key products
-        ids = session.createSQLQuery("SELECT id FROM cp_activation_key WHERE owner_id = :ownerId")
+        String sql = "SELECT id FROM cp_activation_key WHERE owner_id = :ownerId";
+
+        List<String> ids = session.createSQLQuery(sql)
             .setParameter("ownerId", owner.getId())
             .list();
 
@@ -640,8 +763,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
     /**
      * Removes the product references currently pointing to the specified product for the given
-     * owners. This method cannot be used to remove references to products which are still mapped
-     * to pools. Attempting to do so will result in an IllegalStateException.
+     * owners.
      * <p/></p>
      * <strong>Warning:</strong> Hibernate does not gracefully handle situations where the data
      * backing an entity changes via direct SQL or other outside influence. While, logically, a
@@ -675,58 +797,44 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // the pool tables here.
 
         if (productUuids != null && !productUuids.isEmpty()) {
+            EntityManager entityManager = this.getEntityManager();
             log.info("Removing owner-product references for owner: {}, {}", owner, productUuids);
 
-            Session session = this.currentSession();
+            for (List<String> block : this.partition(productUuids)) {
+                // Owner-product relations
+                String jpql = "DELETE FROM OwnerProduct op " +
+                    "WHERE op.owner.id = :owner_id AND op.product.uuid IN (:product_uuids)";
 
-            // Ensure we aren't trying to remove product references for products still used by
-            // pools for this owner
-            Long poolCount = (Long) session.createCriteria(Pool.class)
-                .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
-                .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
-                .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.or(
-                    CPRestrictions.in("product.uuid", productUuids),
-                    CPRestrictions.in("derivedProduct.uuid", productUuids),
-                    CPRestrictions.in("providedProd.uuid", productUuids),
-                    CPRestrictions.in("derivedProvidedProd.uuid", productUuids)))
-                .setProjection(Projections.count("id"))
-                .uniqueResult();
+                int count = entityManager.createQuery(jpql)
+                    .setParameter("owner_id", owner.getId())
+                    .setParameter("product_uuids", block)
+                    .executeUpdate();
 
-            if (poolCount != null && poolCount.longValue() > 0) {
-                throw new IllegalStateException(
-                    "One or more products are currently used by one or more pools");
-            }
+                log.info("{} owner-product relations removed", count);
 
-            // Owner products ////////////////////////////////
-            Map<String, Object> criteria = new HashMap<>();
-            criteria.put("product_uuid", productUuids);
-            criteria.put("owner_id", owner.getId());
+                // Activation Key Products
+                jpql = "SELECT ak.id FROM ActivationKey ak WHERE ak.owner.id = :owner_id";
 
-            int count = this.bulkSQLDelete(OwnerProduct.DB_TABLE, criteria);
-            log.info("{} owner-product relations removed", count);
+                List<String> akIds = entityManager.createQuery(jpql, String.class)
+                    .setParameter("owner_id", owner.getId())
+                    .getResultList();
 
-            // Impl note:
-            // Even though there's a valid argument to be made here to do so, we do not unlink
-            // content from a product. This may cause headaches in the future when a product object
-            // is unlinked from an owner, but one or more of its contents are not.
+                count = 0;
+                if (akIds != null && !akIds.isEmpty()) {
+                    String sql = "DELETE FROM cp2_activation_key_products akp " +
+                        "WHERE akp.key_id IN (:ak_ids) " +
+                        "AND akp.product_uuid IN (:product_uuids)";
 
-            // Activation key products ///////////////////////
-            String sql = "SELECT id FROM " + ActivationKey.DB_TABLE + " WHERE owner_id = :ownerId";
-            List<String> ids = session.createSQLQuery(sql)
-                .setParameter("ownerId", owner.getId())
-                .list();
+                    Query query = entityManager.createNativeQuery(sql)
+                        .setParameter("product_uuids", block);
 
-            if (ids != null && !ids.isEmpty()) {
-                criteria.clear();
-                criteria.put("key_id", ids);
-                criteria.put("product_uuid", productUuids);
+                    for (List<String> akBlock : this.partition(akIds)) {
+                        count += query.setParameter("ak_ids", akBlock)
+                            .executeUpdate();
+                    }
+                }
 
-                count = this.bulkSQLDelete("cp2_activation_key_products", criteria);
-                log.info("{} activation key products removed", count);
-            }
-            else {
-                log.info("0 activation key products removed");
+                log.info("{} activation key product(s) removed", count);
             }
         }
     }

@@ -17,6 +17,7 @@ package org.candlepin.controller;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.SubscriptionInfo;
@@ -40,6 +41,7 @@ public class Refresher {
 
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
+    private ProductServiceAdapter prodAdapter;
     private OwnerManager ownerManager;
     private boolean lazy;
     private static Logger log = LoggerFactory.getLogger(Refresher.class);
@@ -48,10 +50,11 @@ public class Refresher {
     private Set<Product> products = new HashSet<>();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
-        OwnerManager ownerManager, boolean lazy) {
+        ProductServiceAdapter prodAdapter, OwnerManager ownerManager, boolean lazy) {
 
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
+        this.prodAdapter = prodAdapter;
         this.ownerManager = ownerManager;
         this.lazy = lazy;
     }
@@ -148,7 +151,7 @@ public class Refresher {
         }
 
         for (Owner owner : this.owners.values()) {
-            poolManager.refreshPoolsWithRegeneration(this.subAdapter, owner, this.lazy);
+            poolManager.refreshPoolsWithRegeneration(this.subAdapter, this.prodAdapter, owner, this.lazy);
             poolManager.recalculatePoolQuantitiesForOwner(owner);
             ownerManager.updateRefreshDate(owner);
         }

@@ -21,13 +21,14 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.refresher.RefreshResult;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
+import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
@@ -43,7 +44,6 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductInfo;
 
 import com.google.common.collect.Iterables;
@@ -65,6 +65,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.inject.Provider;
+
+
 
 /**
  * entitler
@@ -88,6 +92,7 @@ public class Entitler {
     private PoolManager poolManager;
     private ProductManager productManager;
     private ProductServiceAdapter productAdapter;
+    private Provider<RefreshWorker> refreshWorkerProvider;
 
     @Inject
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
@@ -95,7 +100,7 @@ public class Entitler {
         EntitlementCurator entitlementCurator, Configuration config,
         OwnerCurator ownerCurator, PoolCurator poolCurator,
         ProductManager productManager, ProductServiceAdapter productAdapter, ContentManager contentManager,
-        ConsumerTypeCurator ctc) {
+        ConsumerTypeCurator ctc, Provider<RefreshWorker> refreshWorkerProvider) {
 
         this.poolManager = pm;
         this.i18n = i18n;
@@ -111,6 +116,7 @@ public class Entitler {
         this.productAdapter = productAdapter;
         this.contentManager = contentManager;
         this.consumerTypeCurator = ctc;
+        this.refreshWorkerProvider = refreshWorkerProvider;
     }
 
     public List<Entitlement> bindByPoolQuantity(Consumer consumer, String poolId, Integer quantity) {
@@ -349,12 +355,19 @@ public class Entitler {
      * @return the newly created developer pool (note: not yet persisted)
      */
     protected Pool assembleDevPool(Consumer consumer, Owner owner, String sku) {
-        DeveloperProducts devProducts = getDeveloperPoolProducts(consumer, owner, sku);
+        DeveloperProducts devProducts = getDeveloperPoolProducts(owner, sku);
         Product skuProduct = devProducts.getSku();
         Date startDate = consumer.getCreated();
         Date endDate = getEndDate(skuProduct, startDate);
-        Pool pool = new Pool(owner, skuProduct, devProducts.getProvided(), 1L, startDate,
-            endDate, "", "", "");
+
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(skuProduct)
+            .setQuantity(1L)
+            .setStartDate(startDate)
+            .setEndDate(endDate);
+
+        // FIXME: We may need to do something explicit with the provided products!
 
         log.info("Created development pool with SKU {}", skuProduct.getId());
         pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
@@ -362,74 +375,105 @@ public class Entitler {
         return pool;
     }
 
-    private DeveloperProducts getDeveloperPoolProducts(Consumer consumer, Owner owner, String sku) {
-        DeveloperProducts devProducts = getDevProductMap(consumer, owner, sku);
-        verifyDevProducts(consumer, sku, devProducts);
+    private DeveloperProducts getDeveloperPoolProducts(Owner owner, String sku) {
+        DeveloperProducts devProducts = getDevProductMap(owner, sku);
+        verifyDevProducts(sku, devProducts);
         return devProducts;
     }
 
     /**
-     * Looks up all Products matching the specified SKU and the consumer's
-     * installed products.
+     * Looks up all Products and their provided products
+     * matching the specified SKU.
      *
-     * @param consumer the consumer to pull the installed product id list from.
      * @param sku the product id of the SKU.
      * @return a {@link DeveloperProducts} object that contains the Product objects
      *         from the adapter.
      */
-    private DeveloperProducts getDevProductMap(Consumer consumer, Owner owner, String sku) {
-        List<String> devProductIds = new ArrayList<>();
-        devProductIds.add(sku);
-        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            devProductIds.add(ip.getProductId());
+    private DeveloperProducts getDevProductMap(Owner owner, String sku) {
+        Collection<? extends ProductInfo> productsByIds = this.productAdapter
+            .getProductsByIds(owner.getKey(), Arrays.asList(sku));
+
+        Map<String, Product> devProductMap = new HashMap<>();
+
+        if (productsByIds != null && !productsByIds.isEmpty()) {
+            log.debug("Received {} dev product definition(s) for sku: {}", productsByIds.size(), sku);
+
+            // We're apparently only interested in the first product returned for the given sku
+            ProductInfo devProduct = productsByIds.iterator().next();
+
+            // Collect the dev product IDs from the potential tree of products we received
+            List<String> devProductIds = new ArrayList<>();
+            this.collectDevProductIds(devProductIds, devProduct);
+
+            // Do a refresh so we're all up to date here
+            log.debug("Importing products for dev pool resolution...");
+
+            RefreshWorker refresher = this.refreshWorkerProvider.get()
+                .addProducts(this.productAdapter.getProductsByIds(owner.getKey(), devProductIds));
+
+            RefreshResult refreshResult = refresher.execute(owner);
+
+            // Step through the items we refreshed and add the resulting products to our map
+            List<EntityState> states = Arrays.asList(
+                EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
+
+            for (String pid : devProductIds) {
+                Product product = refreshResult.getEntity(Product.class, pid, states);
+
+                if (product != null) {
+                    devProductMap.put(product.getId(), product);
+                }
+            }
         }
 
-        log.debug("Importing products for dev pool resolution...");
-        ImportedEntityCompiler compiler = new ImportedEntityCompiler();
-
-        compiler.addProducts(this.productAdapter.getProductsByIds(owner.getKey(), devProductIds));
-
-        Map<String, ? extends ProductInfo> productMap = compiler.getProducts();
-        Map<String, ? extends ContentInfo> contentMap = compiler.getContent();
-
-        log.debug("Importing {} content...", contentMap.size());
-
-        Map<String, Content> importedContent = this.contentManager
-            .importContent(owner, contentMap, productMap.keySet())
-            .getImportedEntities();
-
-        log.debug("Importing {} product(s)...", productMap.size());
-        Map<String, Product> importedProducts = this.productManager
-            .importProducts(owner, productMap, importedContent)
-            .getImportedEntities();
-
-        log.debug("Resolved {} dev product(s) for sku: {}", productMap.size(), sku);
-        return new DeveloperProducts(sku, importedProducts);
+        log.debug("Resolved {} dev product(s) for sku: {}", devProductMap.size(), sku);
+        return new DeveloperProducts(sku, devProductMap);
     }
 
     /**
-     * Verifies that the expected developer SKU product was found and logs any
-     * consumer installed products that were not found by the adapter.
+     * Recursively collects product IDs from the specified developer product, or any of its provided
+     * products, storing them in the given collection.
      *
-     * @param consumer the consumer who's installed products are to be checked.
+     * @param accumulator
+     *  a collection in which to store the collected developer product IDs
+     *
+     * @param devProduct
+     *  a developer product from which to fetch product IDs
+     */
+    private void collectDevProductIds(Collection<String> accumulator, ProductInfo devProduct) {
+        if (devProduct != null) {
+            String pid = devProduct.getId();
+
+            if (pid == null || pid.isEmpty()) {
+                log.debug("Received a dev product with a null or empty ID: {}", devProduct);
+                throw new IllegalStateException("Received a dev product with a null or empty ID");
+            }
+
+            accumulator.add(pid);
+
+            Collection<? extends ProductInfo> providedProducts = devProduct.getProvidedProducts();
+            if (providedProducts != null) {
+                for (ProductInfo provided : providedProducts) {
+                    this.collectDevProductIds(accumulator, provided);
+                }
+            }
+        }
+    }
+
+    /**
+     * Verifies that the expected developer SKU product was found.
+     *
      * @param expectedSku the product id of the developer sku that must be found
      *                    in order to build the development pool.
      * @param devProducts all products retrieved from the adapter that are validated.
      * @throws ForbiddenException thrown if the sku was not found by the adapter.
      */
-    protected void verifyDevProducts(Consumer consumer, String expectedSku, DeveloperProducts devProducts)
+    protected void verifyDevProducts(String expectedSku, DeveloperProducts devProducts)
         throws ForbiddenException {
 
         if (!devProducts.foundSku()) {
-            throw new ForbiddenException(i18n.tr("SKU product not available to this " +
-                "development unit: \"{0}\"", expectedSku));
-        }
-
-        for (ConsumerInstalledProduct ip : consumer.getInstalledProducts()) {
-            if (!devProducts.containsProduct(ip.getProductId())) {
-                log.warn(i18n.tr("Installed product not available to this " +
-                    "development unit: \"{0}\"", ip.getProductId()));
-            }
+            throw new ForbiddenException(i18n.tr("SKU product not available to this development unit: " +
+                "\"{0}\"", expectedSku));
         }
     }
 

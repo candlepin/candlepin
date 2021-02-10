@@ -21,12 +21,12 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,7 +126,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      */
     public Set<String> getPoolProvidedProductUuids(String poolId) {
         TypedQuery<String> query = getEntityManager().createQuery(
-            "SELECT product.uuid FROM Pool p INNER JOIN p.providedProducts product where p.id = :poolid",
+            "SELECT product.uuid FROM Pool p INNER JOIN p.product.providedProducts product " +
+            "where p.id = :poolid",
             String.class);
         query.setParameter("poolid", poolId);
         return new HashSet<>(query.getResultList());
@@ -139,11 +140,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return Set of UUIDs
      */
     public Set<String> getDerivedPoolProvidedProductUuids(String poolId) {
-        TypedQuery<String> query = getEntityManager().createQuery(
-            "SELECT product.uuid FROM Pool p INNER JOIN p.derivedProvidedProducts product " +
-            "WHERE p.id = :poolid",
-            String.class);
-        query.setParameter("poolid", poolId);
+        String hql = "SELECT dpp.uuid " +
+            "FROM Pool pool " +
+            "JOIN pool.product.derivedProduct.providedProducts dpp " +
+            "WHERE pool.id = :poolid";
+
+        TypedQuery<String> query = getEntityManager()
+            .createQuery(hql, String.class)
+            .setParameter("poolid", poolId);
+
         return new HashSet<>(query.getResultList());
     }
 
@@ -250,9 +255,14 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             }
 
             String ppSql =
-                "SELECT pool_id, product_uuid FROM cp2_pool_provided_products WHERE pool_id IN (:poolIds)";
+                "SELECT po.id, pp.provided_product_uuid FROM cp2_product_provided_products pp " +
+                "JOIN cp_pool po on po.product_uuid = pp.product_uuid " +
+                "WHERE po.id IN (:poolIds)";
+
             String dpSql =
-                "SELECT pool_id, product_uuid FROM cp2_pool_derprov_products WHERE pool_id IN (:poolIds)";
+                "SELECT po.id, pp.provided_product_uuid FROM cp2_product_provided_products pp " +
+                "JOIN cp_pool po on po.derived_product_uuid = pp.product_uuid " +
+                "WHERE po.id IN (:poolIds)";
 
             Query ppUuidQuery = entityManager.createNativeQuery(ppSql);
             Query dpUuidQuery = entityManager.createNativeQuery(dpSql);
@@ -300,8 +310,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                     derivedProvidedProducts.add(allProducts.get(uuid));
                 }
 
-                pool.setProvidedProducts(providedProducts);
-                pool.setDerivedProvidedProducts(derivedProvidedProducts);
+                pool.getProduct().setProvidedProducts(providedProducts);
+
+                if (pool.getDerivedProduct() != null) {
+                    pool.getDerivedProduct().setProvidedProducts(derivedProvidedProducts);
+                }
             }
         }
 
@@ -386,7 +399,34 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Checks if any of the provided product is linked to one or more pools for the given owner.
+     * Performs a bulk deletion of products specified by the given collection of product UUIDs.
+     *
+     * @param productUuids
+     *  the UUIDs of the products to delete
+     *
+     * @return
+     *  the number of products deleted as a result of this operation
+     */
+    public int bulkDeleteByUuids(Collection<String> productUuids) {
+        int count = 0;
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            Query query = this.getEntityManager()
+                .createQuery("DELETE Product p WHERE p.uuid IN (:product_uuids)");
+
+            for (List<String> block : this.partition(productUuids)) {
+                count += query.setParameter("product_uuids", block)
+                    .executeUpdate();
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * Checks if the specified product is referenced by any subscriptions as its marketing product.
+     * Indirect references to products, such as provided products and derived products, are not
+     * considered by this method.
      *
      * @param owner
      *  The owner to use for finding pools/subscriptions
@@ -395,20 +435,122 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  The product to check for subscriptions
      *
      * @return
-     *  true if the product is linked to one or more subscriptions; false otherwise.
+     *  true if the product is referenced by one or more pools; false otherwise
      */
     public boolean productHasSubscriptions(Owner owner, Product product) {
-        return ((Long) currentSession().createCriteria(Pool.class)
-            .createAlias("providedProducts", "providedProd", JoinType.LEFT_OUTER_JOIN)
-            .createAlias("derivedProvidedProducts", "derivedProvidedProd", JoinType.LEFT_OUTER_JOIN)
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.or(
-                Restrictions.eq("product.uuid", product.getUuid()),
-                Restrictions.eq("derivedProduct.uuid", product.getUuid()),
-                Restrictions.eq("providedProd.uuid", product.getUuid()),
-                Restrictions.eq("derivedProvidedProd.uuid", product.getUuid())))
-            .setProjection(Projections.count("id"))
-            .uniqueResult()) > 0;
+        String jpql = "SELECT count(pool) FROM Pool pool " +
+            "WHERE pool.owner.id = :owner_id " +
+            "  AND pool.product.uuid = :product_uuid";
+
+        TypedQuery<Long> query = this.getEntityManager()
+            .createQuery(jpql, Long.class)
+            .setParameter("owner_id", owner.getId())
+            .setParameter("product_uuid", product.getUuid());
+
+        return query.getSingleResult() != 0;
+    }
+
+    /**
+     * Checks if the specified product is referenced by any other products as a derived or provided
+     * product.
+     *
+     * @param owner
+     *  the owner of the product to check
+     *
+     * @param product
+     *  the product to check for parent products
+     *
+     * @return
+     *  true if the product is referenced by one or more other products; false otherwise
+     */
+    public boolean productHasParentProducts(Owner owner, Product product) {
+        String jpql = "SELECT count(product) FROM OwnerProduct op " +
+            "JOIN op.product product " +
+            "LEFT JOIN product.providedProducts pp " +
+            "WHERE op.owner.id = :owner_id " +
+            "  AND (product.derivedProduct.uuid = :product_uuid " +
+            "   OR pp.uuid = :product_uuid)";
+
+        TypedQuery<Long> query = this.getEntityManager()
+            .createQuery(jpql, Long.class)
+            .setParameter("owner_id", owner.getId())
+            .setParameter("product_uuid", product.getUuid());
+
+        return query.getSingleResult() != 0;
+    }
+
+    /**
+     * Returns a set of pairs consisting of products which are in use by one or more pools. The
+     * pairs returned by this method provide the product UUID mapped to the ID of the pool
+     * referencing it.
+     *
+     * @param productUuids
+     *  a collection of product UUIDs to check for use
+     *
+     * @return
+     *  a set of product UUIDs representing products which are used by one or more pool
+     */
+    public Set<Pair<String, String>> getPoolsReferencingProducts(Collection<String> productUuids) {
+        Set<Pair<String, String>> output = new HashSet<>();
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            String jpql = "SELECT p.product.uuid, p.id FROM Pool p " +
+                "WHERE p.product.uuid IN (:product_uuids)";
+
+            Query query = this.getEntityManager()
+                .createQuery(jpql);
+
+            for (List<String> block : this.partition(productUuids)) {
+                List<Object[]> rows = query.setParameter("product_uuids", block)
+                    .getResultList();
+
+                for (Object[] row : rows) {
+                    output.add(Pair.of((String) row[0], (String) row[1]));
+                }
+            }
+        }
+
+        return output;
+    }
+
+    /**
+     * Returns a set of pairs consisting of products currently referencing one or more of the
+     * given products as provided products. The pairs returned by this method provide the product
+     * UUID mapped to the UUID of the product referencing it.
+     *
+     * @param productUuids
+     *  a collection of product UUIDs to check for use
+     *
+     * @return
+     *  a set of product UUIDs representing products which are used by one or more pool
+     */
+    public Set<Pair<String, String>> getProductsReferencingProducts(Collection<String> productUuids) {
+        Set<Pair<String, String>> output = new HashSet<>();
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            // Impl note:
+            // We're using native SQL here as we're needing to use a union to target both fields on
+            // the product in a single query.
+            String sql = "SELECT p.derived_product_uuid, p.uuid FROM cp2_products p " +
+                "WHERE p.derived_product_uuid IN (:product_uuids) " +
+                "UNION " +
+                "SELECT pp.provided_product_uuid, pp.product_uuid FROM cp2_product_provided_products pp " +
+                "WHERE pp.provided_product_uuid IN (:product_uuids)";
+
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql);
+
+            for (List<String> block : this.partition(productUuids)) {
+                List<Object[]> rows = query.setParameter("product_uuids", block)
+                    .getResultList();
+
+                for (Object[] row : rows) {
+                    output.add(Pair.of((String) row[0], (String) row[1]));
+                }
+            }
+        }
+
+        return output;
     }
 
     public CandlepinQuery<Product> getProductsByContent(Owner owner, Collection<String> contentIds) {

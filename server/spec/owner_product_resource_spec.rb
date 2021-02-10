@@ -7,17 +7,43 @@ describe 'Owner Product Resource' do
 
   before do
     @owner = create_owner random_string('test_owner')
-    @product = create_product random_string('product')
-    @prov_product = create_product random_string('provided_product')
-    @derived_product = create_product random_string('derived_product')
-    @derived_prov_product = create_product random_string('derived_provided_product')
 
-    create_pool_and_subscription(@owner['key'], @product.id,
-      10, [@prov_product.id], '222', '', '', nil, nil, false,
-      {
-        :derived_product_id => @derived_product.id,
-        :derived_provided_products => [@derived_prov_product.id]
+    if is_hosted? then
+      @derived_prov_product = create_upstream_product(random_string('dpp'))
+      @derived_product = create_upstream_product(random_string('dp'), {
+        :provided_products => [@derived_prov_product]
       })
+
+      @prov_product = create_upstream_product(random_string('pp'))
+      @product = create_upstream_product(random_string('test_prod'), {
+        :provided_products => [@prov_product],
+        :derived_product => @derived_product
+      })
+
+      @pool = create_upstream_subscription(random_str('source_sub'), @owner['key'], {
+        :quantity => 10,
+        :contract_number => '222',
+        :product => @product
+      })
+
+      @cp.refresh_pools(@owner['key'])
+    else
+      @derived_prov_product = create_product(random_string('dpp'))
+      @derived_product = create_product(random_string('dp'), nil, {
+        :providedProducts => [@derived_prov_product.id]
+      })
+
+      @prov_product = create_product(random_string('pp'))
+      @product = create_product(random_string('product'), nil, {
+        :derivedProduct => @derived_product,
+        :providedProducts => [@prov_product.id]
+      })
+
+      @pool = @cp.create_pool(@owner['key'], @product['id'], {
+        :quantity => 10,
+        :contract_number => '222'
+      })
+    end
   end
 
   it 'should fail when fetching non-existing products' do
@@ -102,43 +128,17 @@ describe 'Owner Product Resource' do
 
   it 'retrieves the owners of an active product' do
     owner = create_owner(random_string('owner'), nil)
-    product = create_product(random_string("test_id"), random_string("test_name"), {:owner => owner['key']})
     provided_product = create_product(nil, nil, {:owner => owner['key']})
-    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
+    product = create_product(random_string("test_id"), random_string("test_name"),
+                             {:owner => owner['key'], :providedProducts => [provided_product.id]})
+    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id],
+      nil, nil, nil, nil, nil, false)
     user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system6')
     system.consume_product(product.id)
     product_owners = @cp.get_product_owners([provided_product.id])
     product_owners.length.should eq(1)
     product_owners[0]['key'].should == owner['key']
-  end
-
-  it 'refreshes pools for owner on subscription creation' do
-    owner = create_owner(random_string('owner'))
-    owner2 = create_owner(random_string('owner2'))
-
-    owner_client = user_client(owner, random_string('testuser'))
-    owner2_client = user_client(owner2, random_string('testuser'))
-
-    product = create_product(
-      random_string("test_id"),
-      random_string("test_name"),
-      {:owner => owner['key']}
-    )
-
-    provided_product = create_product(nil, nil, {:owner => owner['key']})
-
-    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id])
-
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.length.should eq(1)
-
-    pool = owner_client.list_pools(:owner => owner.id)
-    pool.length.should eq(1)
-    pool[0]['owner']['key'].should == owner['key']
-
-    pool = owner2_client.list_pools(:owner => owner2.id)
-    pool.length.should eq(0)
   end
 
   def setupOrgProductsAndPools()
@@ -417,5 +417,67 @@ describe 'Owner Product Resource' do
     # A new product version should have been created during an update of branding
     expect(updated_prod_uuid).not_to eq(original_prod_uuid)
   end
+
+  it "should able to create product with provided product" do
+    owner = create_owner random_string('some-owner')
+    provided_product_id1 = "provided_product_id_1"
+    provided_product_id2 = "provided_product_id_2"
+    product_name = "test_product"
+
+    p1 = create_product(provided_product_id1, random_string("provided1"),  :owner => owner['key'])
+    p2 = create_product(provided_product_id2, random_string("provided2"),  :owner => owner['key'])
+
+    prod = create_product(product_name, product_name, :owner => owner['key'],
+      :providedProducts => [ "provided_product_id_1", "provided_product_id_2" ])
+
+    product = @cp.get_product(owner['key'], prod['id'])
+
+    expect(product.providedProducts.find { |item| item['id'] == 'provided_product_id_2' })
+      .to_not be_nil
+    expect(product.providedProducts.find { |item| item['id'] == 'provided_product_id_1' })
+      .to_not be_nil
+  end
+
+  it "should able to update product with provided products" do
+    owner = create_owner random_string('some-owner')
+    provided_product_id = "provided_product_id"
+    product_name = "test_product"
+
+    create_product(provided_product_id, random_string("provided"),  :owner => owner['key'])
+    create_product(product_name, product_name, :owner => owner['key'])
+
+    prod = @cp.update_product(owner['key'], product_name, :providedProducts => [ "provided_product_id" ])
+
+    expect(prod.providedProducts[0].id).to eq('provided_product_id')
+  end
+
+  it 'should create new product version when updating provided product' do
+    owner = create_owner random_string('some-owner')
+    name = random_string("product-")
+    provided_product_id = "provided_product_id"
+    new_provided_product_id = "new_provided_product_id"
+
+    create_product(provided_product_id, random_string("provided"),  :owner => owner['key'])
+    prod = create_product(name, name, :owner => owner['key'], :providedProducts => [ "provided_product_id" ])
+
+    prod.providedProducts.size.should == 1
+
+    prod = @cp.get_product(owner['key'], prod['id'])
+    prod.providedProducts.size.should == 1
+    original_prod_uuid = prod.uuid
+
+    create_product(new_provided_product_id, random_string("provided"),  :owner => owner['key'])
+    updated_prod = @cp.update_product(owner['key'], prod['id'],
+      :providedProducts => ["new_provided_product_id" ])
+
+    updated_prod.providedProducts.size.should == 1
+    updated_prod_uuid = updated_prod.uuid
+
+    expect(updated_prod.providedProducts[0].id).to eq('new_provided_product_id')
+
+    # A new product version should have been created during an update of provided product
+    expect(updated_prod_uuid).not_to eq(original_prod_uuid)
+  end
+
 end
 

@@ -193,13 +193,17 @@ public class EntitlementCertificateGeneratorTest {
         Product pprod2 = TestUtil.createProduct();
         Product pprod3 = TestUtil.createProduct();
 
+        prod1.setProvidedProducts(Collections.singleton(pprod1));
+        prod2.setProvidedProducts(Collections.singleton(pprod2));
+        prod3.setProvidedProducts(Collections.singleton(pprod3));
+
         prod1.addContent(c1, true);
         pprod2.addContent(c2, true);
         prod3.addContent(c3, true);
 
-        Pool pool1 = createPool(owner, prod1, Collections.singleton(pprod1), 1);
-        Pool pool2 = createPool(owner, prod2, Collections.singleton(pprod2), 1);
-        Pool pool3 = createPool(owner, prod3, Collections.singleton(pprod3), 1);
+        Pool pool1 = createPool(owner, prod1, 1);
+        Pool pool2 = createPool(owner, prod2, 1);
+        Pool pool3 = createPool(owner, prod3, 1);
 
         Consumer consumer = TestUtil.createConsumer(owner);
 
@@ -219,13 +223,13 @@ public class EntitlementCertificateGeneratorTest {
      * This method creates pool for testing without in-memory database. The provided
      * products are 'cached' in mocked product curator
      */
-    private Pool createPool(Owner owner, Product prod, Set<Product> providedProd, int q) {
-        Pool p = TestUtil.createPool(owner, prod, providedProd, q);
+    private Pool createPool(Owner owner, Product prod, int q) {
+        Pool p = TestUtil.createPool(owner, prod, q);
 
         p.setId("" + lastPoolId++);
         System.out.println("Caching providedProducts for Pool:" + p.getId());
         when(mockProductCurator.getPoolProvidedProductsCached(p.getId())).
-            thenReturn(providedProd);
+            thenReturn((Set<Product>) p.getProduct().getProvidedProducts());
         return p;
     }
 

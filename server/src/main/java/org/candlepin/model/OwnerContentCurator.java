@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
@@ -340,6 +339,61 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
+     * Retrieves a map containing all known versions of the content specified by IDs, for all orgs
+     * <em>except</em> the org specified. If no content is found for the specified IDs in other
+     * orgs, this method returns an empty map.
+     *
+     * @param owner
+     *  The owner to exclude from the content lookup. If this value is null, no owner-filtering
+     *  will be performed.
+     *
+     * @param contentIds
+     *  A collection of content IDs for which to fetch all known versions
+     *
+     * @return
+     *  A map containing all known versions of the given content, mapped by Red Hat ID
+     */
+    public Map<String, Set<Content>> getVersionedContentById(Owner owner, Collection<String> contentIds) {
+        Map<String, Set<Content>> result = new HashMap<>();
+
+        if (contentIds != null && !contentIds.isEmpty()) {
+            String jpql;
+
+            if (owner != null) {
+                jpql = "SELECT c FROM OwnerContent oc JOIN oc.content c " +
+                    "WHERE oc.owner.id != :owner_id AND c.id IN (:cids)";
+            }
+            else {
+                jpql = "SELECT c FROM Content c WHERE c.id IN (:cids)";
+            }
+
+            TypedQuery<Content> query = this.getEntityManager().createQuery(jpql, Content.class);
+
+            if (owner != null) {
+                query.setParameter("owner_id", owner.getId());
+            }
+
+            for (Collection<String> block : this.partition(contentIds)) {
+                List<Content> fetched = query.setParameter("cids", block)
+                    .getResultList();
+
+                for (Content entity : fetched) {
+                    Set<Content> idSet = result.get(entity.getId());
+
+                    if (idSet == null) {
+                        idSet = new HashSet<>();
+                        result.put(entity.getId(), idSet);
+                    }
+
+                    idSet.add(entity);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Retrieves a criteria which can be used to fetch a list of content with the specified Red Hat
      * content ID and entity version belonging to owners other than the owner provided. If no
      * content were found matching the given criteria, this method returns an empty list.
@@ -459,6 +513,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return this.cpQueryFactory.<Content>buildQuery();
     }
 
+
     /**
      * Updates the content references currently pointing to the original content to instead point to
      * the updated content for the specified owners.
@@ -494,35 +549,42 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         Session session = this.currentSession();
 
-        Map<String, Object> criteria = new HashMap<>();
-        Map<Object, Object> uuidMap = Map.class.cast(contentUuidMap);
-        criteria.put("content_uuid", contentUuidMap.keySet());
-        criteria.put("owner_id", owner.getId());
+        // FIXME: remove usage of bulkSQLUpdate. While it's a clever use of an SQL CASE to avoid
+        // a ton of individual update statements, it still runs over the parameter limit in some
+        // circumstances and the job could be better done with a temporary table and a couple
+        // join-updates.
 
-        // Owner content
-        int count = this.bulkSQLUpdate(OwnerContent.DB_TABLE, "content_uuid", uuidMap, criteria);
-        log.info("{} owner-content relations updated", count);
+        for (Map<String, String> block : this.partitionMap(contentUuidMap)) {
+            Map<String, Object> criteria = new HashMap<>();
+            Map<Object, Object> uuidMap = Map.class.cast(block);
+            criteria.put("content_uuid", block.keySet());
+            criteria.put("owner_id", owner.getId());
 
-        // Impl note:
-        // We're not managing product-content references, since versioning changes require us to
-        // handle that with more explicit logic. Instead, we rely on the content manager using
-        // the product manager to fork/update products when a related content entity changes.
+            // owner content
+            int count = this.bulkSQLUpdate(OwnerContent.DB_TABLE, "content_uuid", uuidMap, criteria);
+            log.info("{} owner-content relations updated", count);
 
-        // environment content
-        List<String> ids = session.createSQLQuery("SELECT id FROM cp_environment WHERE owner_id = :ownerId")
-            .setParameter("ownerId", owner.getId())
-            .list();
+            // environment content
+            String jpql = "SELECT e.id FROM Environment e WHERE e.owner.id = :owner_id";
 
-        if (ids != null && !ids.isEmpty()) {
-            criteria.clear();
-            criteria.put("environment_id", ids);
-            criteria.put("content_uuid", contentUuidMap.keySet());
+            List<String> envIds = this.getEntityManager()
+                .createQuery(jpql, String.class)
+                .setParameter("owner_id", owner.getId())
+                .getResultList();
 
-            count = this.bulkSQLUpdate(EnvironmentContent.DB_TABLE, "content_uuid", uuidMap, criteria);
+            count = 0;
+            if (envIds != null && !envIds.isEmpty()) {
+                for (List<String> envBlock : this.partition(envIds)) {
+                    criteria.clear();
+                    criteria.put("environment_id", envBlock);
+                    criteria.put("content_uuid", block.keySet());
+
+                    count += this.bulkSQLUpdate(EnvironmentContent.DB_TABLE, "content_uuid", uuidMap,
+                        criteria);
+                }
+            }
+
             log.info("{} environment-content relations updated", count);
-        }
-        else {
-            log.info("0 environment-content relations updated");
         }
     }
 
@@ -547,44 +609,47 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      */
     @Transactional
     public void removeOwnerContentReferences(Owner owner, Collection<String> contentUuids) {
-        // Impl note:
-        // As is the case in updateOwnerContentReferences, HQL's bulk delete doesn't allow us to
-        // touch anything that even looks like a join. As such, we have to do this in vanilla SQL.
-
         if (contentUuids != null && !contentUuids.isEmpty()) {
-            log.info("Removing owner-content references for owner: {}, {}", owner, contentUuids);
+            EntityManager entityManager = this.getEntityManager();
 
-            Session session = this.currentSession();
+            for (List<String> block : this.partition(contentUuids)) {
+                log.info("Removing owner-content references for owner: {}, {}", owner, block);
 
-            // Owner content
-            Map<String, Object> criteria = new HashMap<>();
-            criteria.put("owner_id", owner.getId());
-            criteria.put("content_uuid", contentUuids);
+                // owner content
+                String jpql = "DELETE FROM OwnerContent oc " +
+                    "WHERE oc.ownerId = :owner_id " +
+                    "AND oc.contentUuid IN (:content_uuids)";
 
-            int count = this.bulkSQLDelete(OwnerContent.DB_TABLE, criteria);
-            log.info("{} owner-content relations removed", count);
+                int count = entityManager.createQuery(jpql)
+                    .setParameter("owner_id", owner.getId())
+                    .setParameter("content_uuids", block)
+                    .executeUpdate();
 
-            // Impl note:
-            // We're not managing product-content references, since versioning changes require us to
-            // handle that with more explicit logic. Instead, we rely on the content manager using
-            // the product manager to fork/update products when a related content entity changes.
+                log.info("{} owner-content relations removed", count);
 
-            // environment content
-            String sql = "SELECT id FROM " + Environment.DB_TABLE + " WHERE owner_id = :ownerId";
-            List<String> ids = session.createSQLQuery(sql)
-                .setParameter("ownerId", owner.getId())
-                .list();
+                // environment content
+                jpql = "SELECT e.id FROM Environment e WHERE e.owner.id = :owner_id";
 
-            if (ids != null && !ids.isEmpty()) {
-                criteria.clear();
-                criteria.put("environment_id", ids);
-                criteria.put("content_uuid", contentUuids);
+                List<String> envIds = entityManager.createQuery(jpql, String.class)
+                    .setParameter("owner_id", owner.getId())
+                    .getResultList();
 
-                count = this.bulkSQLDelete(EnvironmentContent.DB_TABLE, criteria);
-                log.info("{} environment-content relations updated", count);
-            }
-            else {
-                log.info("0 environment-content relations updated");
+                count = 0;
+                if (envIds != null && !envIds.isEmpty()) {
+                    jpql = "DELETE FROM EnvironmentContent ec " +
+                        "WHERE ec.environment.id IN (:environment_ids) " +
+                        "AND ec.content.uuid IN (:content_uuids)";
+
+                    Query query = entityManager.createQuery(jpql)
+                        .setParameter("content_uuids", block);
+
+                    for (List<String> envBlock : this.partition(envIds)) {
+                        count += query.setParameter("environment_ids", envBlock)
+                            .executeUpdate();
+                    }
+                }
+
+                log.info("{} environment-content relations removed", count);
             }
         }
     }
@@ -606,32 +671,39 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         EntityManager entityManager = this.getEntityManager();
         Date now = new Date();
 
-        // Get all the active pools
-        String jpql = "SELECT p.id FROM Pool p " +
-            "WHERE p.owner.id = :owner_id AND p.startDate <= :start_date AND p.endDate >= :end_date";
+        // Store all of the product UUIDs gathered between the various queries we need to do here
+        Set<String> productUuids = new HashSet<>();
 
-        List<String> poolIds = entityManager.createQuery(jpql, String.class)
+        // Get all of the products from active pools for the specified owner
+        String jpql = "SELECT pool.product.uuid FROM Pool pool " +
+            "WHERE pool.owner.id = :owner_id AND pool.startDate <= :start_date AND pool.endDate >= :end_date";
+
+        String sql = "SELECT prod.derived_product_uuid FROM cp2_products prod " +
+            "  WHERE prod.uuid IN (:product_uuids) AND prod.derived_product_uuid IS NOT NULL " +
+            "UNION " +
+            "SELECT prov.provided_product_uuid FROM cp2_product_provided_products prov " +
+            "  WHERE prov.product_uuid IN (:product_uuids)";
+
+        productUuids.addAll(entityManager.createQuery(jpql, String.class)
             .setParameter("owner_id", ownerId)
             .setParameter("start_date", now)
             .setParameter("end_date", now)
-            .getResultList();
-
-        // Use the pool IDs to select all related product UUIDs
-        // Note: we have to start partitioning now to safely handle any number of active pools
-        String sql = "SELECT pool.product_uuid FROM cp_pool pool WHERE pool.id IN (:pool_ids) " +
-            "UNION " +
-            "SELECT pool.derived_product_uuid FROM cp_pool pool WHERE pool.id IN (:pool_ids) " +
-            "UNION " +
-            "SELECT pp.product_uuid FROM cp2_pool_provided_products pp WHERE pp.pool_id IN (:pool_ids) " +
-            "UNION " +
-            "SELECT dpp.product_uuid FROM cp2_pool_derprov_products dpp WHERE dpp.pool_id IN (:pool_ids) ";
+            .getResultList());
 
         Query prodQuery = entityManager.createNativeQuery(sql);
-        Set<String> prodIds = new HashSet<>();
-        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 4);
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 2);
 
-        for (List<String> block : Iterables.partition(poolIds, blockSize)) {
-            prodIds.addAll(prodQuery.setParameter("pool_ids", block).getResultList());
+        // Get all of the derived products and provided products for the products we've found, recursively
+        for (Set<String> lastBlock = productUuids; !lastBlock.isEmpty();) {
+            Set<String> children = new HashSet<>();
+
+            for (List<String> block : this.partition(lastBlock, blockSize)) {
+                children.addAll(prodQuery.setParameter("product_uuids", block)
+                    .getResultList());
+            }
+
+            productUuids.addAll(children);
+            lastBlock = children;
         }
 
         // Use the product UUIDs to select all related enabled content
@@ -641,7 +713,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         Query contentQuery = entityManager.createQuery(jpql);
         HashMap<Content, Boolean> activeContent = new HashMap<>();
 
-        for (List<String> block : this.partition(prodIds)) {
+        for (List<String> block : this.partition(productUuids)) {
             contentQuery.setParameter("product_uuids", block)
                 .getResultList()
                 .forEach(col -> {

@@ -26,7 +26,7 @@ import java.util.Date;
  * Data which is not set or does not change should be represented by null values. To explicitly
  * clear a value, an empty string or non-null "empty" value should be used instead.
  */
-public interface ContentInfo {
+public interface ContentInfo extends ServiceAdapterModel {
 
     /**
      * Fetches the Red Hat ID of this content. If the ID has not yet been set, this method returns

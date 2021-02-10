@@ -41,9 +41,7 @@ import org.xnap.commons.i18n.I18n;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 
 
@@ -164,33 +162,31 @@ public class EntitlementImporter {
         // Product
         ProductDTO productDTO = this.findProduct(productsById, upstreamPoolDTO.getProductId());
         subscription.setProduct(productDTO);
+
         if (upstreamPoolDTO.getBranding() != null) {
             productDTO.setBranding(upstreamPoolDTO.getBranding());
         }
 
-        // Provided products
-        Set<ProductDTO> providedProducts = new HashSet<>();
         for (ProvidedProductDTO pp : upstreamPoolDTO.getProvidedProducts()) {
-            productDTO = this.findProduct(productsById, pp.getProductId());
-            providedProducts.add(productDTO);
-        }
-        subscription.setProvidedProducts(providedProducts);
-        log.debug("Subscription has {} provided products.", providedProducts.size());
+            ProductDTO providedDTO = this.findProduct(productsById, pp.getProductId());
 
-        // Derived product
+            if (providedDTO != null) {
+                productDTO.addProvidedProduct(providedDTO);
+            }
+        }
+
         if (upstreamPoolDTO.getDerivedProductId() != null) {
-            productDTO = this.findProduct(productsById, upstreamPoolDTO.getDerivedProductId());
-            subscription.setDerivedProduct(productDTO);
-        }
+            ProductDTO derivedDTO = this.findProduct(productsById, upstreamPoolDTO.getDerivedProductId());
+            productDTO.setDerivedProduct(derivedDTO);
 
-        // Derived provided products
-        Set<ProductDTO> derivedProvidedProducts = new HashSet<>();
-        for (ProvidedProductDTO pp : upstreamPoolDTO.getDerivedProvidedProducts()) {
-            productDTO = this.findProduct(productsById, pp.getProductId());
-            derivedProvidedProducts.add(productDTO);
+            for (ProvidedProductDTO pp : upstreamPoolDTO.getDerivedProvidedProducts()) {
+                ProductDTO providedDTO = this.findProduct(productsById, pp.getProductId());
+
+                if (providedDTO != null) {
+                    derivedDTO.addProvidedProduct(providedDTO);
+                }
+            }
         }
-        subscription.setDerivedProvidedProducts(derivedProvidedProducts);
-        log.debug("Subscription has {} derived provided products.", derivedProvidedProducts.size());
     }
 
     private ProductDTO findProduct(Map<String, ProductDTO> productsById, String productId)

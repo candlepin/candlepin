@@ -21,7 +21,6 @@ import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -36,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -79,11 +77,10 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         // Intentionally left empty
     }
 
-    public Subscription(Owner ownerIn, ProductData productIn, Set<ProductData> providedProducts,
-        Long maxMembersIn, Date startDateIn, Date endDateIn, Date modified) {
+    public Subscription(Owner ownerIn, ProductData productIn, Long maxMembersIn, Date startDateIn,
+        Date endDateIn, Date modified) {
         this.owner = ownerIn;
         this.product = productIn;
-        this.providedProducts = providedProducts;
         this.quantity = maxMembersIn;
         this.startDate = startDateIn;
         this.endDate = endDateIn;
@@ -116,12 +113,12 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
      * @throws IllegalArgumentException
      *  if pool is null
      */
-    public Subscription(Pool source, ProductCurator productCurator) {
+    public Subscription(Pool source) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
 
-        this.populate(source, productCurator);
+        this.populate(source);
     }
 
     public String toString() {
@@ -183,6 +180,21 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
      */
     public void setProduct(ProductData product) {
         this.product = product;
+    }
+
+    public Collection<ProductData> getProvidedProducts() {
+        ProductData product = this.getProduct();
+        return product != null ? product.getProvidedProducts() : null;
+    }
+
+    public ProductData getDerivedProduct() {
+        ProductData product = this.getProduct();
+        return product != null ? product.getDerivedProduct() : null;
+    }
+
+    public Collection<ProductData> getDerivedProvidedProducts() {
+        ProductData derived = this.getDerivedProduct();
+        return derived != null ? derived.getProvidedProducts() : null;
     }
 
     /**
@@ -295,42 +307,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         return orderNumber;
     }
 
-    /**
-     * Check if this pool provides the given product ID.
-     * @param desiredProductId
-     * @return true if subscription provides product
-     */
-    public boolean provides(String desiredProductId) {
-        if (desiredProductId == null) {
-            throw new IllegalArgumentException("desiredProductId is null");
-        }
-
-        // Direct match?
-        if (desiredProductId.equals(this.product.getUuid())) {
-            return true;
-        }
-
-        // Check provided products:
-        for (ProductData pd : providedProducts) {
-            if (desiredProductId.equals(pd.getUuid())) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public Set<ProductData> getProvidedProducts() {
-        return providedProducts;
-    }
-
-    public void setProvidedProducts(Collection<ProductData> providedProducts) {
-        this.providedProducts.clear();
-
-        if (providedProducts != null) {
-            this.providedProducts.addAll(providedProducts);
-        }
-    }
 
     public void setUpstreamPoolId(String upstreamPoolId) {
         this.upstreamPoolId = upstreamPoolId;
@@ -364,26 +340,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         cert = c;
     }
 
-    public ProductData getDerivedProduct() {
-        return derivedProduct;
-    }
-
-    public void setDerivedProduct(ProductData subProduct) {
-        this.derivedProduct = subProduct;
-    }
-
-    public Set<ProductData> getDerivedProvidedProducts() {
-        return derivedProvidedProducts;
-    }
-
-    public void setDerivedProvidedProducts(Collection<ProductData> subProvidedProducts) {
-        this.derivedProvidedProducts.clear();
-
-        if (subProvidedProducts != null) {
-            this.derivedProvidedProducts.addAll(subProvidedProducts);
-        }
-    }
-
     public Cdn getCdn() {
         return cdn;
     }
@@ -393,7 +349,8 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     }
 
     public boolean isStacked() {
-        return !StringUtils.isBlank(this.product.getAttributeValue(Product.Attributes.STACKING_ID));
+        return this.product != null &&
+            !StringUtils.isBlank(this.product.getAttributeValue(Product.Attributes.STACKING_ID));
     }
 
     public String getStackId() {
@@ -486,7 +443,6 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         Subscription copy = (Subscription) super.clone();
 
         copy.product = this.product != null ? (ProductData) this.product.clone() : null;
-        copy.derivedProduct = this.derivedProduct != null ? (ProductData) this.derivedProduct.clone() : null;
         copy.startDate = this.startDate != null ? (Date) this.startDate.clone() : null;
         copy.endDate = this.endDate != null ? (Date) this.endDate.clone() : null;
         copy.modified = this.modified != null ? (Date) this.modified.clone() : null;
@@ -539,13 +495,10 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setContractNumber(source.getContractNumber());
         this.setAccountNumber(source.getAccountNumber());
         this.setOrderNumber(source.getOrderNumber());
-        this.setProvidedProducts(source.getProvidedProducts());
         this.setUpstreamPoolId(source.getUpstreamPoolId());
         this.setUpstreamEntitlementId(source.getUpstreamEntitlementId());
         this.setUpstreamConsumerId(source.getUpstreamConsumerId());
         this.setCertificate(source.getCertificate());
-        this.setDerivedProduct(source.getDerivedProduct());
-        this.setDerivedProvidedProducts(source.getDerivedProvidedProducts());
         this.setCdn(source.getCdn());
 
         return this;
@@ -566,7 +519,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
      * @return
      *  a reference to this DTO
      */
-    public Subscription populate(Pool source, ProductCurator productCurator) {
+    public Subscription populate(Pool source) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
@@ -593,42 +546,12 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.setQuantityFromPool(source);
 
         // Map actual products into product data
-        this.setProduct(source.getProduct() != null ? new ProductData(source.getProduct()) : null);
-        this.setDerivedProduct(
-            source.getDerivedProduct() != null ? new ProductData(source.getDerivedProduct()) : null
-        );
-
-        // Will work only if source is stored in the database and linked to provided products there!
-        Collection<Product> products = productCurator.getPoolProvidedProductsCached(source);
-        if (products != null) {
-            Collection<ProductData> pdata = new LinkedList<>();
-
-            for (Product product : products) {
-                pdata.add(product.toDTO());
-            }
-
-            this.setProvidedProducts(pdata);
-        }
-        else {
-            this.setProvidedProducts(null);
-        }
-
-        products = productCurator.getPoolDerivedProvidedProductsCached(source);
-        if (products != null) {
-            Collection<ProductData> pdata = new LinkedList<>();
-
-            for (Product product : products) {
-                pdata.add(product.toDTO());
-            }
-
-            this.setDerivedProvidedProducts(pdata);
-        }
-        else {
-            this.setDerivedProvidedProducts(null);
-        }
+        Product srcProduct = source.getProduct();
+        this.setProduct(srcProduct != null ? new ProductData(source.getProduct()) : null);
 
         return this;
     }
+
 
     private void setQuantityFromPool(Pool pool) {
         Product product = pool.getProduct();

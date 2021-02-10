@@ -21,9 +21,11 @@ describe 'SKU Level Enable Override' do
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
-    product = create_product(nil, nil,  {:attributes => { :content_override_enabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content1['id'], false)
+    product = create_product(nil, nil,  {:attributes => { :content_override_enabled => @content_list },
+      :providedProducts => [providedProduct.id]})
+
     pool = create_pool_and_subscription(@owner['key'], product['id'], 10, [providedProduct.id])
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
@@ -46,9 +48,11 @@ describe 'SKU Level Enable Override' do
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
-    product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content2['id'], true)
+    product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list },
+      :providedProducts => [providedProduct.id]})
+
     pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
@@ -69,15 +73,16 @@ describe 'SKU Level Enable Override' do
     env = @org_admin.create_environment(@owner['key'], random_string('testenv'),
       "My Test Env 1", "For test systems only.")
     consumer = @org_admin.register(random_string('consumer'), :system, nil,
-        {'system.certificate_version' => '3.2'},
-        nil, nil, [], [], env['id'])
+      {'system.certificate_version' => '3.2'},
+      nil, nil, [], [], env['id'])
     consumer['environment'].should_not be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
-
-    product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content3['id'], false)
+    product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list },
+      :providedProducts => [providedProduct.id]})
+
     pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
 
     # Override enabled to true:
@@ -109,9 +114,11 @@ describe 'SKU Level Enable Override' do
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
-    product = create_product(nil, nil,  {:attributes => { :content_override_enabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content1['id'], false)
+    product = create_product(nil, nil,  {:attributes => { :content_override_enabled => @content_list },
+      :providedProducts => [providedProduct.id]})
+
     pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
@@ -126,9 +133,11 @@ describe 'SKU Level Enable Override' do
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
-    product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content2['id'], true)
+    product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list },
+      :providedProducts => [providedProduct.id]})
+
     pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
@@ -147,9 +156,10 @@ describe 'SKU Level Enable Override' do
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
-    product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list }})
     providedProduct = create_product
     @cp.add_content_to_product(@owner['key'], providedProduct['id'], @content3['id'], false)
+    product = create_product(nil, nil,  {:attributes => { :content_override_disabled => @content_list },
+      :providedProducts => [providedProduct.id]})
     pool = create_pool_and_subscription(@owner['key'], product.id, 10, [providedProduct.id])
     # Override enabled to true:
     job = @org_admin.promote_content(env['id'],
@@ -165,4 +175,5 @@ describe 'SKU Level Enable Override' do
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
     extensions_hash["1.3.6.1.4.1.2312.9.2.#{@content3['id']}.1.8"].should == '..1'
   end
+
 end
