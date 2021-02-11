@@ -460,13 +460,6 @@ msgid "SKU product not available to this development unit: \"{0}\""
 msgstr ""
 "Produto SKU não disponível para essa unidade de desenvolvimento: \"{0}\""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:430
-#, java-format
-msgid "Installed product not available to this development unit: \"{0}\""
-msgstr ""
-"Produto instalado não disponível para essa unidade de desenvolvimento: "
-"\"{0}\""
-
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:225
 #, fuzzy, java-format
 msgid "The requested manifest file was not found: {0}"
@@ -1354,11 +1347,6 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:450
 #, java-format
 msgid "product \"{0}\" is locked"
-msgstr ""
-
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:455
-#, java-format
-msgid "Product with ID \"{0}\" cannot be deleted while subscriptions exist."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:293

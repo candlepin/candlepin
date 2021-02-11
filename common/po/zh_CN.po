@@ -451,11 +451,6 @@ msgstr "开发单元只能用于托管的服务器且有活跃订阅的机构。
 msgid "SKU product not available to this development unit: \"{0}\""
 msgstr "SKU 产品不适用于这个部署单元：\"{0}\""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:430
-#, java-format
-msgid "Installed product not available to this development unit: \"{0}\""
-msgstr "安装的产品不适用于这个部署单元：\"{0}\""
-
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:225
 #, java-format
 msgid "The requested manifest file was not found: {0}"
@@ -1325,11 +1320,6 @@ msgstr "更新请求中包括相互排斥的 ID：{0}、{1}"
 #, java-format
 msgid "product \"{0}\" is locked"
 msgstr "产品 \"{0}\" 已被锁定"
-
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:455
-#, java-format
-msgid "Product with ID \"{0}\" cannot be deleted while subscriptions exist."
-msgstr "当订阅存在时无法删除 ID 为 ''{0}'' 的产品。"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:293
 msgid "Owner key is null or empty."

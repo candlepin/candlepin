@@ -456,11 +456,6 @@ msgstr ""
 msgid "SKU product not available to this development unit: \"{0}\""
 msgstr "SKU 제품은 이 개발 장치에서 사용할 수 없습니다: ''{0}''"
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:430
-#, java-format
-msgid "Installed product not available to this development unit: \"{0}\""
-msgstr "설치된 제품을 이 개발 장치에서 사용할 수 없습니다: ''{0}''"
-
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:225
 #, java-format
 msgid "The requested manifest file was not found: {0}"
@@ -1355,11 +1350,6 @@ msgstr "업데이트 요청 ID가 일치하지 않습니다: {0}, {1}"
 #, java-format
 msgid "product \"{0}\" is locked"
 msgstr "제품 \"{0}\"이/가 잠겨있습니다"
-
-#: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:455
-#, java-format
-msgid "Product with ID \"{0}\" cannot be deleted while subscriptions exist."
-msgstr "서브스크립션이 존재하는 동안 ID ''{0}''인 제품을 삭제할 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:293
 msgid "Owner key is null or empty."
