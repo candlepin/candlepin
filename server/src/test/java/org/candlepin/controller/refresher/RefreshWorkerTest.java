@@ -384,7 +384,6 @@ public class RefreshWorkerTest {
     public void testAddSubscriptionIgnoresNestedNulls(boolean variadic) {
         SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", null);
         assertNull(sinfo.getProduct());
-        assertNull(sinfo.getDerivedProduct());
 
         RefreshWorker worker = this.buildRefreshWorker();
 

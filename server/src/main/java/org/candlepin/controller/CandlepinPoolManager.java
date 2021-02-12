@@ -998,31 +998,21 @@ public class CandlepinPoolManager implements PoolManager {
                 sub.getOwner());
         }
 
-        // Gather the product IDs referenced by this subscription...
-        Set<ProductInfo> productData = new HashSet<>();
-        Set<String> productIds = new HashSet<>();
-        Map<String, Product> productMap = new HashMap<>();
-
-        productData.add(sub.getProduct());
-        productData.add(sub.getDerivedProduct());
-
-        for (ProductInfo pdata : productData) {
-            if (pdata != null) {
-                if (pdata.getId() == null || pdata.getId().isEmpty()) {
-                    throw new IllegalStateException("Subscription references an incomplete product: " +
-                        pdata);
-                }
-
-                productIds.add(pdata.getId());
-            }
+        // Resolve the subscription's product...
+        ProductInfo pinfo = sub.getProduct();
+        if (pinfo == null) {
+            throw new IllegalStateException("Subscription lacks a product: " + sub);
         }
 
-        // Build the product map from the product IDs we pulled off the subscription...
-        for (Product product : this.ownerProductCurator.getProductsByIds(owner, productIds)) {
-            productMap.put(product.getId(), product);
+        String pid = pinfo.getId();
+        if (pid == null || pid.isEmpty()) {
+            throw new IllegalStateException("Subscription references an incomplete product: " + pinfo);
         }
 
-        return this.convertToMasterPoolImpl(sub, owner, productMap);
+        Product product = this.ownerProductCurator.getProductById(owner, pid);
+
+        // Do the actual conversion work & return the result
+        return this.convertToMasterPoolImpl(sub, owner, Collections.singletonMap(pid, product));
     }
 
     // TODO:
