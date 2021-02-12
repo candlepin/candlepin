@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-02-11 02:01-0500\n"
-"PO-Revision-Date: 2021-02-08 07:40+0000\n"
+"PO-Revision-Date: 2021-02-12 07:40+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/uk/>\n"
@@ -1331,12 +1331,16 @@ msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more "
 "subscriptions"
 msgstr ""
+"Продукт «{0}» не можна вилучати, якщо на нього посилається одна або декілька "
+"передплат"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:458
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more products"
 msgstr ""
+"Продукт «{0}» не можна вилучати, якщо на нього посилається один або декілька "
+"продуктів"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:293
 msgid "Owner key is null or empty."
