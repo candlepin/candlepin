@@ -35,25 +35,32 @@ describe 'Import', :serial => true do
   end
 
   it 'can retrieve subscripton certificate from derived pool entitlement' do
-    stacked_datacenter_product = create_product(nil, nil, {
-      :attributes => {
-        :virt_limit => "unlimited",
-        :stacking_id => 'mixed-stack',
-        :sockets => "2",
-        'multi-entitlement' => "yes"
-      }
-    })
+
     derived_product = create_product(nil, nil, {
       :attributes => {
           :cores => '6',
           :sockets=>'8'
       }
     })
-    datacenter_pool = create_pool_and_subscription(@owner['key'], stacked_datacenter_product.id,
-      10, [], '222', '', '', nil, nil, false,
-      {
-        :derived_product_id => derived_product.id
-      })
+
+    stacked_datacenter_product = create_product(nil, nil, {
+        :attributes => {
+            :virt_limit => "unlimited",
+            :stacking_id => 'mixed-stack',
+            :sockets => "2",
+            'multi-entitlement' => "yes"
+        },
+        :derivedProduct => derived_product
+    })
+
+    datacenter_pool = @cp.create_pool(@owner['key'], stacked_datacenter_product['id'], {
+        :quantity => 10,
+        :contract_number => '222',
+        :account_number => '',
+        :order_number => ''
+    })
+
+
     pool = @cp.list_owner_pools(@owner['key'], {:product => stacked_datacenter_product.id})[0]
 
     # create the distributor consumer
