@@ -6,7 +6,7 @@
 #   and loading/dumping of test data (temp-cp).
 # - All local images are removed after the push.
 
-REGISTRY=docker-registry.upshift.redhat.com/chainsaw
+REGISTRY=quay.io/candlepin
 
 retry() {
     local -r -i max_attempts="$1"; shift
