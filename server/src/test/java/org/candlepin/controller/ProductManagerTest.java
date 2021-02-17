@@ -54,14 +54,16 @@ import java.util.Date;
 public class ProductManagerTest extends DatabaseTestFixture {
 
     private EntitlementCertificateGenerator mockEntCertGenerator;
+    private ContentAccessManager mockContentAccessManager;
     private ProductManager productManager;
 
     @BeforeEach
     public void setup() throws Exception {
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
+        this.mockContentAccessManager = mock(ContentAccessManager.class);
 
-        this.productManager = new ProductManager(this.mockEntCertGenerator, this.ownerContentCurator,
-            this.ownerProductCurator, this.productCurator);
+        this.productManager = new ProductManager(this.mockContentAccessManager, this.mockEntCertGenerator,
+            this.ownerContentCurator, this.ownerProductCurator, this.productCurator);
     }
 
     @Test

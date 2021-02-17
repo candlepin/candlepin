@@ -52,6 +52,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.function.Predicate;
+
+
 
 /**
  * Genuinely random utilities.
@@ -539,15 +542,52 @@ public class Util {
     }
 
     /**
-     * Returns the first non-null non-empty value from the given array
-
-     * @param values values to be searched
-     * @return first non-null non-empty value or null
+     * Returns the first non-null value in the provided values. If all of the provided values are
+     * null, or no values are provided, this method returns null.
+     *
+     * @param values
+     *  the values to examine
+     *
+     * @return
+     *  the first non-null value of the values provided, or null if no such value is provided
      */
-    public static String firstOf(String... values) {
-        for (String value : values) {
-            if (value != null && !value.isEmpty()) {
-                return value;
+    public static <T> T firstOf(T... values) {
+        if (values != null) {
+            for (T value : values) {
+                if (value != null) {
+                    return value;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the first value from the given values which is validated by the provided predicate.
+     * If none of the provided values are validated, or no values are provided, this method returns
+     * null.
+     *
+     * @param predicate
+     *  the predicate to use to find a value
+     *
+     * @param values
+     *  the values to examine
+     *
+     * @return
+     *  the first value which is validated by the provided predicate, or null if no such value is
+     *  provided
+     */
+    public static <T> T firstOf(Predicate<T> predicate, T... values) {
+        if (predicate == null) {
+            throw new IllegalArgumentException("predicate is null");
+        }
+
+        if (values != null) {
+            for (T value : values) {
+                if (predicate.test(value)) {
+                    return value;
+                }
             }
         }
 

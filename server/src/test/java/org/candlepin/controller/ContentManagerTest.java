@@ -48,18 +48,20 @@ import org.junit.jupiter.params.provider.ValueSource;
 public class ContentManagerTest extends DatabaseTestFixture {
 
     private ContentManager contentManager;
+    private ContentAccessManager mockContentAccessManager;
     private EntitlementCertificateGenerator mockEntCertGenerator;
     private ProductManager productManager;
 
     @BeforeEach
     public void setup() throws Exception {
+        this.mockContentAccessManager = mock(ContentAccessManager.class);
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
 
-        this.productManager = new ProductManager(
+        this.productManager = new ProductManager(this.mockContentAccessManager,
             this.mockEntCertGenerator, this.ownerContentCurator, this.ownerProductCurator,
             this.productCurator);
 
-        this.contentManager = new ContentManager(
+        this.contentManager = new ContentManager(this.mockContentAccessManager,
             this.productManager, this.contentCurator, this.ownerContentCurator,
             this.ownerProductCurator);
     }

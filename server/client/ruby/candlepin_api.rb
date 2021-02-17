@@ -1137,7 +1137,6 @@ class Candlepin
 
   def create_pool(owner_key, product_id, params={})
     quantity = params[:quantity] || 1
-    provided_products = params[:provided_products] || []
 
     start_date = params[:start_date] || DateTime.now
     end_date = params[:end_date] || start_date + 365
@@ -1146,8 +1145,7 @@ class Candlepin
       'startDate' => start_date,
       'endDate'   => end_date,
       'quantity'  =>  quantity,
-      'productId' => product_id,
-      'providedProducts' => provided_products.collect { |pid| {'productId' => pid} }
+      'productId' => product_id
     }
 
     if params[:branding]
@@ -1166,8 +1164,8 @@ class Candlepin
       pool['orderNumber'] = params[:order_number]
     end
 
-    if params[:derived_product_id]
-      pool['derivedProductId'] = params[:derived_product_id]
+    if params[:upstream_pool_id]
+      pool['upstreamPoolId'] = params[:upstream_pool_id]
     end
 
     if params[:source_subscription]
@@ -1179,14 +1177,6 @@ class Candlepin
     elsif params[:subscriptionId] || params[:subscriptionSubKey]
       pool['subscriptionId'] = params[:subscriptionId] || "sub_id-#{rand(9)}#{rand(9)}#{rand(9)}"
       pool['subscriptionSubKey'] = params[:subscriptionSubKey] || 'master'
-    end
-
-    if params[:derived_provided_products]
-      pool['derivedProvidedProducts'] = params[:derived_provided_products].collect { |pid| {'productId' => pid} }
-    end
-
-    if params[:upstream_pool_id]
-      pool['upstreamPoolId'] = params[:upstream_pool_id]
     end
 
     return post("/owners/#{owner_key}/pools", {}, pool)

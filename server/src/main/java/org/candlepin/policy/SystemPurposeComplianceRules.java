@@ -113,7 +113,7 @@ public class SystemPurposeComplianceRules {
             return status;
         }
 
-        if (consumer.getOwner() != null && consumer.getOwner().isContentAccessEnabled()) {
+        if (consumer.getOwner() != null && consumer.getOwner().isUsingSimpleContentAccess()) {
             status.setDisabled(true);
             applyStatus(consumer, status, updateConsumer);
             return status;

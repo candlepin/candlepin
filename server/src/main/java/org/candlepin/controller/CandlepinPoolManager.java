@@ -282,10 +282,15 @@ public class CandlepinPoolManager implements PoolManager {
         List<EntityState> existingStates = Arrays.asList(
             EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
 
+        List<EntityState> mutatedStates = Arrays.asList(
+            EntityState.CREATED, EntityState.UPDATED, EntityState.DELETED);
+
         Map<String, Product> existingProducts = refreshResult.getEntities(Product.class, existingStates);
         Map<String, Product> updatedProducts = refreshResult.getEntities(Product.class, EntityState.UPDATED);
 
         // TODO: Move everything below this line to the refresher
+        boolean poolsModified = false;
+
         log.debug("Refreshing {} pool(s)...", subscriptionMap.size());
         for (Iterator<? extends SubscriptionInfo> si = subscriptionMap.values().iterator(); si.hasNext();) {
             SubscriptionInfo sub = si.next();
@@ -301,6 +306,7 @@ public class CandlepinPoolManager implements PoolManager {
             Pool pool = this.convertToMasterPoolImpl(sub, owner, existingProducts);
             pool.setLocked(true);
             this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts);
+            poolsModified = true;
         }
 
         // delete pools whose subscription disappeared:
@@ -310,6 +316,7 @@ public class CandlepinPoolManager implements PoolManager {
         for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subscriptionMap.keySet())) {
             if (this.isManaged(pool)) {
                 poolsToDelete.add(pool);
+                poolsModified = true;
             }
         }
 
@@ -327,6 +334,29 @@ public class CandlepinPoolManager implements PoolManager {
             log.error("One or more pools references a product which no longer belongs to its " +
                 "organization: {}", pids);
             throw new IllegalStateException("One or more pools was left in an undefined state: " + pids);
+        }
+
+        // If we've updated or deleted a pool and we have product/content changes, our content view has
+        // likely changed.
+        //
+        // Impl note:
+        // We're abusing some facts about how this whole process works *at the time of writing* to make
+        // a fairly accurate guess as to whether or not the content view changed. That is:
+        //
+        // - We only receive product and content info from subscriptions provided upstream
+        // - We only call refreshPoolsForMasterPool or deletePools based on matches with the
+        //   received subscriptions
+        //
+        // By checking both of these, we can estimate that if we have changed products/content AND
+        // have refreshed or deleted a pool, we likely have a content view update. Note that this
+        // does fall apart in a handful of cases (deletion of an expired pool + modification of that
+        // pool's product/content), but barring a major refactor of this code to make the evaluation
+        // on a per-pool basis, there's not a whole lot more we can do here.
+        if (poolsModified && refreshResult.hasEntity(Product.class, mutatedStates)) {
+            // TODO: Should we also mark any existing SCA certs as dirty/revoked here?
+
+            owner.setLastContentUpdate(now);
+            this.ownerCurator.merge(owner);
         }
 
         log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),

@@ -15,7 +15,6 @@
 package org.candlepin.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.audit.EventSink;
@@ -23,6 +22,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -32,6 +32,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -67,17 +68,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.mockito.stubbing.Answer;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyPair;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * Test suite for the ContentAccessManager class
@@ -138,9 +144,11 @@ public class ContentAccessManagerTest {
         // FIXME: This mess of mocks is why we should not be using mocks in this way. We should be
         // using a test database framework and our actual curators and objects.
 
-        doAnswer(returnsFirstArg()).when(this.mockOwnerCurator).merge(any(Owner.class));
-        doAnswer(returnsFirstArg()).when(this.mockConsumerCurator).merge(any(Consumer.class));
-        doAnswer(returnsFirstArg()).when(this.mockOwnerEnvContentAccessCurator)
+        doAnswer(new PersistSimulator()).when(this.mockOwnerCurator).merge(any(Owner.class));
+        doAnswer(new PersistSimulator()).when(this.mockConsumerCurator).merge(any(Consumer.class));
+        doAnswer(new PersistSimulator()).when(this.mockContentAccessCertCurator)
+            .create(any(ContentAccessCertificate.class));
+        doAnswer(new PersistSimulator()).when(this.mockOwnerEnvContentAccessCurator)
             .saveOrUpdate(any(OwnerEnvContentAccess.class));
         doReturn(this.testingKeyPair).when(this.mockKeyPairCurator).getConsumerKeyPair(any(Consumer.class));
 
@@ -155,6 +163,23 @@ public class ContentAccessManagerTest {
         }).when(this.mockCertSerialCurator).create(any(CertificateSerial.class));
     }
 
+    public static class PersistSimulator<T extends AbstractHibernateObject> implements Answer<T> {
+        public T answer(InvocationOnMock iom) {
+            T obj = iom.getArgument(0);
+
+            if (obj != null) {
+                Date now = new Date();
+
+                if (obj.getCreated() == null) {
+                    obj.setCreated(now);
+                }
+
+                obj.setUpdated(now);
+            }
+
+            return obj;
+        }
+    }
 
     private ContentAccessManager createManager() {
         return new ContentAccessManager(

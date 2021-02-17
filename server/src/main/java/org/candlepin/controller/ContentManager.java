@@ -49,16 +49,19 @@ import java.util.Objects;
 public class ContentManager {
     private static final Logger log = LoggerFactory.getLogger(ContentManager.class);
 
-    private ProductManager productManager;
+    private final ContentAccessManager contentAccessManager;
+    private final ProductManager productManager;
 
-    private ContentCurator contentCurator;
-    private OwnerContentCurator ownerContentCurator;
-    private OwnerProductCurator ownerProductCurator;
+    private final ContentCurator contentCurator;
+    private final OwnerContentCurator ownerContentCurator;
+    private final OwnerProductCurator ownerProductCurator;
 
     @Inject
-    public ContentManager(ProductManager productManager, ContentCurator contentCurator,
-        OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator) {
+    public ContentManager(ContentAccessManager contentAccessManager, ProductManager productManager,
+        ContentCurator contentCurator, OwnerContentCurator ownerContentCurator,
+        OwnerProductCurator ownerProductCurator) {
 
+        this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
         this.productManager = Objects.requireNonNull(productManager);
 
         this.contentCurator = Objects.requireNonNull(contentCurator);
@@ -164,6 +167,9 @@ public class ContentManager {
         entity = this.contentCurator.create(entity);
         this.ownerContentCurator.mapContentToOwner(entity, owner);
 
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+
         return entity;
     }
 
@@ -268,6 +274,9 @@ public class ContentManager {
             }
         }
 
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+
         return updated;
     }
 
@@ -350,6 +359,9 @@ public class ContentManager {
                 this.productManager.updateProduct(owner, update, regenCerts);
             }
         }
+
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return entity;
     }
