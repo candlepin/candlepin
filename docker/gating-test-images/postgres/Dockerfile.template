@@ -1,6 +1,6 @@
 # upgrade to 9.6 requires client version 9.4.1211
 # https://stackoverflow.com/questions/38427585/postgresql-error-column-am-amcanorder-doesnt-exist
-FROM postgres:9.5.9
+FROM $INTERNAL_REGISTRY/postgres:9.5.9
 
 MAINTAINER Nikos Moumoulidis <nmoumoul@redhat.com>
 

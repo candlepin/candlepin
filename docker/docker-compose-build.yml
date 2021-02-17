@@ -1,13 +1,10 @@
 ## this is just for building the containers, meant to be used with the build-images script
 ---
-version: '2'
+version: '3'
 services:
   candlepin-base:
     build: candlepin-base/
     image: ${REGISTRY}/candlepin-base
-  candlepin-rhel7:
-    build: candlepin-rhel7/
-    image: ${REGISTRY}/candlepin-rhel7
 networks:
   default:
     driver: bridge
