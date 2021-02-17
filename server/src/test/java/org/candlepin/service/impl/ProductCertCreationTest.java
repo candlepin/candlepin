@@ -15,7 +15,7 @@
 package org.candlepin.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.Owner;
@@ -76,12 +76,17 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Product product = TestUtil.createProduct("thin", "Not Much Here");
 
-        assertThrows(IllegalArgumentException.class, () -> createCert(owner, product));
+        CertificateInfo cert = this.createCert(owner, product);
+
+        // Marketing products, or products that don't have a numeric ID (i.e. non-engineering
+        // products), will not have certificates.
+        assertNull(cert);
     }
 
     private CertificateInfo createDummyCert() {
         Owner owner = TestUtil.createOwner("Example-Corporation");
         Product product = this.createProduct("50", "Test Product", "Standard", "1", "x86_64", "Base");
+
         return createCert(owner, product);
     }
 

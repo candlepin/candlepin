@@ -66,26 +66,36 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
     }
 
     /**
-     * Gets the certificate that defines the given product, creating one if necessary.
+     * Gets the certificate that defines the given product, creating one if necessary. If the
+     * product is not one that has certificates, this method returns null. If a certificate does
+     * not yet exist and cannot be created, this method throws an exception.
      *
      * @param product
-     * @return the stored or created {@link ProductCertificate}
+     *  the product for which to fetch the certificate
+     *
+     * @return
+     *  the stored or created {@link ProductCertificate}, or null if the product cannot have
+     *  certificates
      */
     public ProductCertificate getCertForProduct(Product product) {
         log.debug("Retrieving cert for product: {}", product);
         ProductCertificate cert = this.findForProduct(product);
 
         if (cert == null) {
-            // TODO: Do something better with these exceptions!
             try {
                 cert = this.createCertForProduct(product);
                 this.create(cert);
             }
-            catch (GeneralSecurityException e) {
-                log.error("Error creating product certificate!", e);
+            catch (IllegalArgumentException e) {
+                // This occurs if the product is not an engineering product, fails the cert
+                // encoding (as marketing products have non-numeric IDs), and fails out with
+                // an IAE.
+                log.warn("Attempted to create a product certificate for a non-engineering product: {}",
+                    product);
             }
-            catch (IOException e) {
+            catch (Exception e) {
                 log.error("Error creating product certificate!", e);
+                throw new RuntimeException("Unable to generate product certificate", e);
             }
         }
 
@@ -99,7 +109,6 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
         KeyPair keyPair = this.pki.generateNewKeyPair();
         Set<X509ExtensionWrapper> extensions = this.extensionUtil.productExtensions(product);
 
-        // TODO: Should this use the RH product ID, or the object's UUID?
         BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();
 
         Calendar future = Calendar.getInstance();

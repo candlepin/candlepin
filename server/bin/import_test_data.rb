@@ -53,7 +53,7 @@ def create_owner(cp, new_owner)
   displayName = new_owner['displayName']
 
   print "owner: #{owner_name}\n"
-  print "\t displayName: #{displayName}\n"
+  print "    displayName: #{displayName}\n"
 
   owner = cp.create_owner(owner_name, new_owner)
 
@@ -77,8 +77,8 @@ def create_user(cp, new_user)
   user_super = new_user['superadmin'] || false
 
   print "user: #{user_name}\n"
-  print "\t password: #{user_pass}\n"
-  print "\t super_user: #{user_super}\n"
+  print "    password: #{user_pass}\n"
+  print "    super_user: #{user_super}\n"
 
   cp.create_user(user_name, user_pass, user_super)
 end
@@ -105,14 +105,14 @@ def create_role(cp, new_role)
       perm['owner'] = { :key => perm['owner'] }
     end
 
-    print "\t owner: #{perm['owner']['key']}\n"
-    print "\t access: #{perm['access']}\n"
+    print "    owner: #{perm['owner']['key']}\n"
+    print "    access: #{perm['access']}\n"
   end
 
   role = cp.create_role(role_name, perms)
 
   users.each do |user|
-    print "\t user: #{user['username']}\n"
+    print "    user: #{user['username']}\n"
     cp.add_role_user(role['name'], user['username'])
   end
 end
@@ -125,7 +125,7 @@ thread_pool.shutdown
 
 
 def create_content(cp, owner, product, content)
-  print "\t content: #{owner['name']}/#{content['name']}/#{product['id']}\n"
+  print "    content: #{owner['name']}/#{content['name']}/#{product['id']}\n"
 
   params = {}
   modified_products = content['modified_products'] || []
@@ -212,7 +212,7 @@ def create_product(cp, owner, product)
     :derivedProduct => derived_product
   })
 
-  print "product name: #{name} version: #{version} arch: #{arch} type: #{type}\n"
+  print "product name: #{name} version: #{version} arch: #{arch} type: #{type}; owner: #{owner['name']}\n"
   return product_ret
 end
 
@@ -242,9 +242,25 @@ def create_eng_product(cp, owner, product)
   product_content = product['content'] || []
 
   # Generate a product id cert in generated_certs for each engineering product
-  product_cert = cp.get_product_cert(owner['name'], product_ret['id'])
-  cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
-  cert_file.puts(product_cert['cert'])
+  attempts = 3
+  product_cert = nil
+
+  (0..attempts).each do |i|
+    begin
+      # This can fail with an ISE, which is bad but we should just retry a couple times
+      product_cert = cp.get_product_cert(owner['name'], product_ret['id'])
+      break
+    rescue RestClient::InternalServerError => e
+      sleep(0.5)
+    end
+  end
+
+  if product_cert
+    cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
+    cert_file.puts(product_cert['cert'])
+  else
+    raise "Unable to fetch product certificate for product: #{product['id']}"
+  end
 
   if not product_content.empty?
     product_content.each do |content_id, enabled|
@@ -322,43 +338,82 @@ def create_mkt_product_and_pools(cp, owner, product)
 end
 
 
-eng_products = []
-mkt_products = []
+
+owner_products = {}
+owner_product_refs = {}
 
 $data['owners'].each do |owner|
-    $data['products'].each do |product|
-        if product['type'] == 'MKT'
-            mkt_products << [owner, product]
-        else
-            eng_products << [owner, product]
+    product_map = {}
+    product_refs = {}
+
+    owner_products[owner] = product_map
+    owner_product_refs[owner] = product_refs
+
+    def catalog_product(product_map, product_refs, product)
+        product_map[product['id']] = product
+
+        refs = []
+        product_refs[product['id']] = refs
+
+        if product.has_key?('provided_products')
+            refs.concat(product['provided_products'])
         end
+
+        if product.has_key?('derived_product_id')
+            refs << product['derived_product_id']
+        end
+    end
+
+    $data['products'].each do |product|
+        catalog_product(product_map, product_refs, product)
     end
 
     if owner.has_key?('products')
         owner['products'].each do |product|
-            if product['type'] == 'MKT'
-                mkt_products << [owner, product]
-            else
-                eng_products << [owner, product]
-            end
+            catalog_product(product_map, product_refs, product)
         end
     end
 end
 
-print "\ncreating engineering products\n"
-thread_pool = ThreadPool.new(6)
-eng_products.each do |eng_product|
-    thread_pool.schedule(eng_product[0], eng_product[1]) do |owner, product|
-      create_eng_product(cp, owner, product)
-    end
-end
-thread_pool.shutdown
+print "\nCreating products...\n"
+thread_pool = ThreadPool.new(5)
 
-print "\ncreating marketing products and pools\n"
-thread_pool = ThreadPool.new(6)
-mkt_products.each do |mkt_product|
-    thread_pool.schedule(mkt_product[0], mkt_product[1]) do |owner, product|
-      create_mkt_product_and_pools(cp, owner, product)
+owner_products.each do |owner, product_map|
+    product_refs = owner_product_refs[owner]
+
+    def build_product(cp, owner, product_refs, product_map, created_pids, product)
+        pid = product['id']
+
+        # Check if we've already created this product
+        if created_pids.include?(pid)
+            return
+        end
+
+        # Create any references first
+        if product_refs.has_key?(pid) && !product_refs[pid].empty?
+            product_refs[pid].each do |child_pid|
+                build_product(cp, owner, product_refs, product_map, created_pids, product_map[child_pid])
+            end
+        end
+
+        # Create the product
+        if product['type'] == 'MKT'
+            create_mkt_product_and_pools(cp, owner, product)
+        else
+            create_eng_product(cp, owner, product)
+        end
+
+        # Add its ID to the list of created PIDs
+        created_pids << pid
+    end
+
+    # Actual per-thread block
+    thread_pool.schedule(owner, product_map, product_refs) do |owner, product_map, product_refs|
+        created_pids = []
+
+        product_map.each do |pid, product|
+            build_product(cp, owner, product_refs, product_map, created_pids, product)
+        end
     end
 end
 thread_pool.shutdown
