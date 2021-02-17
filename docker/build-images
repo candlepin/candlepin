@@ -76,6 +76,9 @@ tag_images() {
 
 echo "Building images..."
 cd $SCRIPT_HOME
+# TODO Having ARG before FROM is not supported in docker 1.13.1.
+# TODO Revert this change once we update to higher version of docker or to podman
+sed 's,$INTERNAL_REGISTRY,'"${REGISTRY},g" candlepin-base/Dockerfile.template > candlepin-base/Dockerfile
 docker-compose -f docker-compose-build.yml build $BUILD_ARGS $IMAGE && tag_images
 evalrc $? "Build not successful."
 

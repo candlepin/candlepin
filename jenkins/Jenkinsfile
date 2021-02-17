@@ -8,6 +8,9 @@ pipeline {
     options {
         skipDefaultCheckout true
     }
+    environment {
+        CANDLEPIN_QUAY_BOT = credentials("candlepin-quay-bot")
+    }
     stages {
         stage('Trust') {
             steps {
@@ -22,7 +25,9 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/unit-tests.sh'
+                        sh 'docker logout quay.io'
                     }
                 }
                 stage('checkstyle') {
@@ -30,7 +35,9 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/lint.sh'
+                        sh 'docker logout quay.io'
                     }
                 }
                 stage('rspec-postgresql') {
@@ -42,7 +49,9 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
+                        sh 'docker logout quay.io'
                     }
                 }
                 stage('rspec-mysql') {
@@ -54,7 +63,9 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
+                        sh 'docker logout quay.io'
                     }
                 }
                 stage('rspec-postgres-hosted') {
@@ -66,7 +77,9 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
+                        sh 'docker logout quay.io'
                     }
                 }
                 stage('rspec-mysql-hosted') {
@@ -78,7 +91,9 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
+                        sh 'docker logout quay.io'
                     }
                 }
                 stage('rspec-qpid') {
@@ -90,7 +105,9 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
+                        sh 'docker logout quay.io'
                     }
                 }
                 stage('bugzilla-reference') {
@@ -100,7 +117,9 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'python jenkins/check_pr_branch.py $CHANGE_ID'
+                        sh 'docker logout quay.io'
                     }
                 }
                 stage('validate-translation') {
@@ -108,7 +127,9 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/candlepin-validate-text.sh'
+                        sh 'docker logout quay.io'
                     }
                 }
             }
