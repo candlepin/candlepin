@@ -27,7 +27,8 @@ plugins {
 }
 
 ext.versions = [
-    jackson   : "2.10.1",
+    jackson_databind: "2.10.5.1",
+    jackson_general: "2.10.5",
     guice     : "4.1.0",
     checkstyle: "8.29",
     junit5    : "5.4.2"
@@ -222,25 +223,27 @@ allprojects {
                 entry "swagger-jaxrs"
                 entry "swagger-annotations"
             }
-            dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson") {
-                entry "jackson-annotations"
-                entry "jackson-core"
+            dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson_databind") {
                 entry "jackson-databind"
             }
-            dependencySet(group: "com.fasterxml.jackson.dataformat", version: "$versions.jackson") {
+            dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson_general") {
+                entry "jackson-core"
+                entry "jackson-annotations"
+            }
+            dependencySet(group: "com.fasterxml.jackson.dataformat", version: "$versions.jackson_general") {
                 entry "jackson-dataformat-yaml"
                 entry "jackson-dataformat-xml"
             }
-            dependencySet(group: "com.fasterxml.jackson.datatype", version: "$versions.jackson") {
+            dependencySet(group: "com.fasterxml.jackson.datatype", version: "$versions.jackson_general") {
                 entry "jackson-datatype-hibernate5"
                 entry "jackson-datatype-jdk8"
                 //entry "jackson-datatype-jsr310"
             }
-            dependencySet(group: "com.fasterxml.jackson.jaxrs", version: "$versions.jackson") {
+            dependencySet(group: "com.fasterxml.jackson.jaxrs", version: "$versions.jackson_general") {
                 entry "jackson-jaxrs-base"
                 entry "jackson-jaxrs-json-provider"
             }
-            dependencySet(group: "com.fasterxml.jackson.module", version: "$versions.jackson") {
+            dependencySet(group: "com.fasterxml.jackson.module", version: "$versions.jackson_general") {
                 entry "jackson-module-jsonSchema"
                 entry "jackson-module-jaxb-annotations"
             }
