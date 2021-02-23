@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:53-0500\n"
-"PO-Revision-Date: 2021-01-22 20:36+0000\n"
+"PO-Revision-Date: 2021-02-22 19:40+0000\n"
 "Last-Translator: Igor Gorbounov <igor.gorbounov@gmail.com>\n"
 "Language-Team: Russian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-2-9-hotfix/ru/>\n"
@@ -436,39 +436,38 @@ msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
 msgstr ""
-"Единицы разработчика могут использоваться только на серверах, обслуживаемых "
-"в режиме хостинга, при условии, что организация обладает активными "
-"подписками."
+"Модули в разработке могут использоваться только на серверах, обслуживаемых в "
+"режиме хостинга, при условии, что организация обладает активными подписками."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:400
 #, java-format
 msgid "SKU product not available to this development unit: \"{0}\""
-msgstr ""
+msgstr "Продукт SKU недоступен для этого модуля в разработке: «{0}»"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:406
 #, java-format
 msgid "Installed product not available to this development unit: \"{0}\""
-msgstr ""
+msgstr "Установленный продукт недоступен для этого модуля в разработке: «{0}»"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:211
 #, java-format
 msgid "The requested manifest file was not found: {0}"
-msgstr ""
+msgstr "Запрошенный файл манифеста не найден: {0}"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:267
 #, java-format
 msgid "Unable to find specified manifest by id: {0}"
-msgstr ""
+msgstr "Не удается найти заданный манифест по идентификатору: {0}"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:273
 #, java-format
 msgid "Could not validate export against specifed consumer: {0}"
-msgstr ""
+msgstr "Не удалось подтвердить экспорт для указанного потребителя: {0}"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:298
 #, java-format
 msgid "Unable to download manifest: {0}"
-msgstr ""
+msgstr "Не удалось загрузить манифест: {0}"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:309
 #, java-format
@@ -476,6 +475,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "\"{1}\"."
 msgstr ""
+"Модуль {0} не удается экспортировать. Манифест нельзя создать для модулей "
+"типа «{1}»."
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:315
 #, java-format
@@ -488,6 +489,8 @@ msgid ""
 "Candlepin is in Suspend mode, please check /status resource to get more "
 "details"
 msgstr ""
+"Candlepin находится в режиме ожидания, для получения дополнительных сведений "
+"проверьте ресурс /status"
 
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:837
 msgid "Request failed due to concurrent modification, please re-try."
@@ -505,13 +508,13 @@ msgstr "Система с UUID {0} является виртуальным го�
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:168
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
-msgstr ""
+msgstr "Модуль с идентификатором «{0}» не удалось найти."
 
 #: server/src/main/java/org/candlepin/model/EntitlementCurator.java:426
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:158
 #, java-format
 msgid "Product with ID \"{0}\" could not be found."
-msgstr ""
+msgstr "Продукт с идентификатором «{0}» не удалось найти."
 
 #: server/src/main/java/org/candlepin/model/RulesCurator.java:111
 msgid "No rules file found in the database"
@@ -520,7 +523,7 @@ msgstr "Файл правил в базе данных не найден"
 #: server/src/main/java/org/candlepin/model/UeberCertificateGenerator.java:96
 #, java-format
 msgid "Unable to find an owner with key: {0}"
-msgstr ""
+msgstr "Не удалось найти владельца с ключом: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -532,7 +535,7 @@ msgstr "Не удалось создать сертификат для влад�
 #: server/src/main/java/org/candlepin/pinsetter/tasks/HealEntireOrgJob.java:79
 #, java-format
 msgid "Auto-attach is disabled for owner {0}{1}."
-msgstr ""
+msgstr "Автоматическое прикрепление отключено для владельца {0}{1}."
 
 #: server/src/main/java/org/candlepin/pinsetter/tasks/UndoImportsJob.java:142
 #, java-format
@@ -544,21 +547,25 @@ msgid ""
 "Cannot add pools that are restricted to unit type \"person\" to activation "
 "keys."
 msgstr ""
+"Нельзя добавить буферы, ограниченные типом модуля «person», к ключам "
+"активации."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:87
 #, java-format
 msgid "Multi-entitlement not supported for pool \"{0}\""
-msgstr ""
+msgstr "Множественные права доступа не поддерживаются для буфера «{0}»"
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:90
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
+"Ошибка: только буферы с подписками на продукты с множественными правами "
+"доступа могут быть добавлены к ключу активации в количестве больше одного."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:95
 msgid "The quantity must be greater than 0"
-msgstr ""
+msgstr "Количество должно быть больше 0"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
@@ -567,32 +574,32 @@ msgstr "Не поддерживается действительными под�
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:55
 #, java-format
 msgid "Supports architecture {1} but the system is {2}."
-msgstr ""
+msgstr "Поддерживает архитектуру {1}, но система - {2}."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:57
 #, java-format
 msgid "Only supports {1} of {2} sockets."
-msgstr ""
+msgstr "Поддерживает только {1} из {2} сокетов."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:59
 #, java-format
 msgid "Only supports {1} of {2} cores."
-msgstr ""
+msgstr "Поддерживает только {1} из {2} ядер."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:61
 #, java-format
 msgid "Only supports {1}GB of {2}GB of RAM."
-msgstr ""
+msgstr "Поддерживает только {1}ГБ из {2}ГБ ОЗУ."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:63
 #, java-format
 msgid "Only supports {1} of {2} virtual guests."
-msgstr ""
+msgstr "Поддерживает только {1} из {2} виртуальных гостевых систем."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:65
 #, java-format
 msgid "Only supports {1} of {2} vCPUs."
-msgstr ""
+msgstr "Поддерживает только {1} из {2} vCPU."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
@@ -600,16 +607,19 @@ msgid ""
 "guest subscription. For more information, please see https://access.redhat."
 "com/solutions/1592573"
 msgstr ""
+"Гостевая система не зарегистрирована ни на одной основной системе и "
+"использует временную непривязанную подписку для гостевых систем. "
+"Дополнительные сведения см. https://access.redhat.com/solutions/1592573"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
 msgid "Only supports {1}TB of {2}TB of storage."
-msgstr ""
+msgstr "Поддерживает только {1}ТБ из {2}ТБ хранилища."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
 #, java-format
 msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
-msgstr ""
+msgstr "{0} ПРОБЛЕМА ПОКРЫТИЯ.  Поддерживает {1} из {2}"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:269
 #, java-format
@@ -619,7 +629,7 @@ msgstr "Срок действия подписок для {0} истек {1}"
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:357
 #, java-format
 msgid "\"{0}\" Should contain name, priority and at least one attribute"
-msgstr ""
+msgstr "«{0}» должен содержать имя, приоритетность и хотя бы один атрибут"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -632,31 +642,39 @@ msgstr "второй параметр должен содержать приор
 msgid ""
 "This unit has already had the subscription matching pool ID \"{1}\" attached."
 msgstr ""
+"К этому модулю уже присоединен идентификатор буфера «{1}» , соответствующий "
+"подписке."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:150
 #, java-format
 msgid "No subscriptions are available from the pool with ID \"{1}\"."
-msgstr ""
+msgstr "Нет подписок от буфера с идентификатором «{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:152
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID \"{1}\"."
 msgstr ""
+"К модулям этого типа не разрешается присоединять буфер с идентификатором "
+"«{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:154
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID \"{1}\"."
 msgstr ""
+"Множественные права доступа не поддерживаются для буфера с идентификатором "
+"«{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:156
 #, java-format
 msgid "Pool \"{1}\" is restricted to guests running on host: \"{4}\"."
 msgstr ""
+"Буфер «{1}» предназначен только для гостевых систем, работающих на основной "
+"системе: «{4}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:158
 #, java-format
 msgid "Pool \"{1}\" is restricted to a specific consumer."
-msgstr ""
+msgstr "Использование буфера «{1}» ограничено указанным потребителем."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:160
 msgid "Pool not available to subscription management applications."
@@ -665,12 +683,12 @@ msgstr "Пул недоступен программам управления п
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:162
 #, java-format
 msgid "Pool is restricted to virtual guests: \"{1}\"."
-msgstr ""
+msgstr "Использование буфера ограничено виртуальными системами: «{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:164
 #, java-format
 msgid "Pool is restricted to physical systems: \"{1}\"."
-msgstr ""
+msgstr "Использование буфера ограничено физическими системами: «{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:166
 #, java-format
@@ -678,54 +696,64 @@ msgid ""
 "Subscription \"{2}\" must be attached using a quantity evenly divisible by "
 "{3}"
 msgstr ""
+"Подписка «{2}» должна присоединяться с использованием значения, делящегося "
+"на {3} без остатка"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:168
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool \"{1}\""
 msgstr ""
+"Модуль не поддерживает расчет на основе экземпляра, требуемый буфером «{1}»"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:170
 #, java-format
 msgid "Unit does not support band calculation required by pool \"{1}\""
-msgstr ""
+msgstr "Модуль не поддерживает расчет диапазона, требуемый буфером «{1]»"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:172
 #, java-format
 msgid "Unit does not support core calculation required by pool \"{1}\""
-msgstr ""
+msgstr "Модуль не поддерживает расчет ядер, требуемый буфером «{1]»"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:174
 #, java-format
 msgid "Unit does not support RAM calculation required by pool \"{1}\""
 msgstr ""
+"Модуль не поддерживает расчет оперативной памяти, требуемый буфером «{1]»"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:176
 #, java-format
 msgid "Unit does not support derived products data required by pool \"{1}\""
 msgstr ""
+"Модуль не поддерживает данные производных продуктов, требуемые буфером «{1}»"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:178
 #, java-format
 msgid "Pool is restricted to unmapped virtual guests: \"{1}\""
 msgstr ""
+"Использование буфера ограничено виртуальными системами без привязки: «{1}»"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:180
 #, java-format
 msgid ""
 "Pool is restricted to virtual guests in their first day of existence: \"{1}\""
 msgstr ""
+"Применение буфера ограничено виртуальными гостевыми системами в первый день "
+"их существования: «{1}»"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:182
 #, java-format
 msgid ""
 "Pool is restricted when it is temporary and begins in the future: \"{1}\""
 msgstr ""
+"Использование буфера ограничено, если он временный и начинается в будущем: "
+"«{1}»"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:184
 #, java-format
 msgid "Unable to attach pool with ID \"{1}\".: {0}."
-msgstr ""
+msgstr "Не удалось присоединить буфер с идентификатором «{1}».: {0}."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:192
 #, java-format
