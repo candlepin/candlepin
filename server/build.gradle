@@ -63,7 +63,6 @@ ext {
         jdbc_url = "jdbc:postgresql://${db_host}/${db_name}"
     }
 
-    amqp_enabled = "true".equals(project.findProperty("qpid"))
     external_broker = "true".equals(project.findProperty("external_broker"))
     hostedtest = "true".equals(project.findProperty("hostedtest"))
     async_scheduler_enabled = !project.findProperty("async_scheduler_enabled") ||
@@ -173,8 +172,7 @@ dependencies {
     implementation "ldapjdk:ldapjdk"
     implementation "org.quartz-scheduler:quartz"
     implementation libraries.artemis
-    // AMQP drivers for talking to QPID
-    implementation libraries.amqp
+
     // Javascript engine
     implementation "org.mozilla:rhino"
     compile libraries.keycloak

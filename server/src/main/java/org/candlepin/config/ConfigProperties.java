@@ -161,29 +161,6 @@ public class ConfigProperties {
     public static final String ACTIVEMQ_JAAS_CERTIFICATE_LOGIN_NAME =
         "candlepin.messaging.activemq.embedded.jaas_certificate_login_name";
 
-    // AMQP stuff
-    public static final String AMQP_INTEGRATION_ENABLED = "candlepin.amqp.enable";
-    public static final String AMQP_CONNECT_STRING = "candlepin.amqp.connect";
-    public static final String AMQP_KEYSTORE = "candlepin.amqp.keystore";
-    public static final String AMQP_KEYSTORE_PASSWORD = "candlepin.amqp.keystore_password";
-    public static final String AMQP_TRUSTSTORE = "candlepin.amqp.truststore";
-    public static final String AMQP_TRUSTSTORE_PASSWORD = "candlepin.amqp.truststore_password";
-    public static final String AMQP_CONNECTION_RETRY_ATTEMPTS = "gutterball.amqp.connection.retry_attempts";
-    public static final String AMQP_CONNECTION_RETRY_INTERVAL = "gutterball.amqp.connection.retry_interval";
-
-    /**
-     * Timeout that is used for QpidQmf while receiving messages. It shouldn't be necessary
-     * to modify this unless the environment and Qpid Broker is so heavily utilized, that
-     * reception takes longer.
-     */
-    public static final String QPID_QMF_RECEIVE_TIMEOUT = "candlepin.amqp.qmf.receive_timeout";
-
-    /**
-     * Period to wait between attempts to reconnect to Qpid.
-     */
-    public static final String QPID_MODE_TRANSITIONER_DELAY = "candlepin.amqp.suspend.transitioner_delay";
-
-
     // Quartz configurations
     public static final String QUARTZ_CLUSTERED_MODE = "org.quartz.jobStore.isClustered";
 
@@ -392,19 +369,6 @@ public class ConfigProperties {
             this.put(ACTIVEMQ_SERVER_CONFIG_PATH, "");
             this.put(ACTIVEMQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
             this.put(ACTIVEMQ_CONNECTION_MONITOR_INTERVAL, "5000"); // milliseconds
-
-            // AMQP (Qpid) configuration used by events
-            this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
-            this.put(AMQP_CONNECT_STRING, "tcp://localhost:5671?ssl='true'&ssl_cert_alias='candlepin'");
-            this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/candlepin.jks");
-            this.put(AMQP_KEYSTORE_PASSWORD, "password");
-            this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/candlepin.truststore");
-            this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
-            this.put(QPID_QMF_RECEIVE_TIMEOUT, "5000");
-            this.put(QPID_MODE_TRANSITIONER_DELAY, "10");
-
-            this.put(AMQP_CONNECTION_RETRY_INTERVAL, "10"); // Every 10 seconds
-            this.put(AMQP_CONNECTION_RETRY_ATTEMPTS, "1"); // Try for 10 seconds (1*10s)
 
             this.put(AUDIT_LISTENERS,
                 "org.candlepin.audit.LoggingListener," +

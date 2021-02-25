@@ -62,11 +62,6 @@ public class ActivationListener implements EventListener {
         }
     }
 
-    @Override
-    public boolean requiresQpid() {
-        return false;
-    }
-
     private void logError(Event e) {
         log.debug("Invalid JSON for pool : " + e.getEntityId());
     }

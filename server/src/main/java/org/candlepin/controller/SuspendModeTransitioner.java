@@ -15,7 +15,6 @@
 package org.candlepin.controller;
 
 import org.candlepin.audit.ActiveMQStatus;
-import org.candlepin.audit.QpidStatus;
 import org.candlepin.controller.mode.CandlepinModeManager;
 
 import com.google.inject.Inject;
@@ -33,16 +32,15 @@ import java.util.Objects;
 
 /**
  * Logic to transition Candlepin between different modes (SUSPEND, NORMAL) based
- * on what the current status of ActiveMQ/Qpid brokers. This class is notified of state
- * changes by listening for events from the QpidStatusMonitor and the ActiveMQStatusMonitor.
+ * on what the current status of ActiveMQ broker. This class is notified of state
+ * changes by listening for events from the ActiveMQStatusMonitor.
  *
  * Using this class, clients can attempt to transition to appropriate mode. The
  * attempt may be no-op if no transition is required.
  */
-public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStatusListener {
+public class SuspendModeTransitioner implements ActiveMQStatusListener {
     private static Logger log = LoggerFactory.getLogger(SuspendModeTransitioner.class);
 
-    private static final String REASON_CLASS_QPID = "QPID";
     private static final String REASON_CLASS_ACTIVEMQ = "ACTIVEMQ";
 
     private CandlepinModeManager modeManager;
@@ -50,50 +48,6 @@ public class SuspendModeTransitioner implements QpidStatusListener, ActiveMQStat
     @Inject
     public SuspendModeTransitioner(CandlepinModeManager modeManager) {
         this.modeManager = Objects.requireNonNull(modeManager);
-    }
-
-    private void resolveReasons(String reasonClass, Object... reasons) {
-        for (Object reason : reasons) {
-            this.modeManager.resolveSuspendReason(reasonClass, reason.toString());
-        }
-    }
-
-    /**
-     * Called each time the QpidStatusMonitor checks for a Qpid status update,
-     * and based on this change, updates the candlepin mode.
-     *
-     * @param oldStatus the status of Qpid on the previous update.
-     * @param newStatus the current status of Qpid.
-     */
-    @Override
-    public void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus) {
-        if (oldStatus.equals(newStatus)) {
-            // nothing to do
-            return;
-        }
-
-        switch (newStatus) {
-            case CONNECTED:
-                this.modeManager.resolveSuspendReasonClass(REASON_CLASS_QPID);
-                break;
-
-            case DOWN:
-                this.modeManager.suspendOperations(REASON_CLASS_QPID, newStatus.toString());
-                this.resolveReasons(REASON_CLASS_QPID, QpidStatus.FLOW_STOPPED, QpidStatus.MISSING_EXCHANGE,
-                    QpidStatus.MISSING_BINDING);
-                break;
-
-            case FLOW_STOPPED:
-            case MISSING_EXCHANGE:
-            case MISSING_BINDING:
-                this.modeManager.suspendOperations(REASON_CLASS_QPID, newStatus.toString());
-                this.resolveReasons(REASON_CLASS_QPID, QpidStatus.DOWN);
-                break;
-
-            default:
-                String msg = String.format("Unknown or unexpected Qpid status received: %s", newStatus);
-                throw new IllegalStateException(msg);
-        }
     }
 
     /**

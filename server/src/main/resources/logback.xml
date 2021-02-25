@@ -90,12 +90,6 @@
         <appender-ref ref="AUDITLOG" />
     </logger>
 
-    <!-- With each attempt to connect Qpid, we get a warning message:
-          Exception received while trying to verify hostname
-         We decide to silence this in logs because it shouldn't have any significance to
-         our usage of Qpid -->
-    <logger name="org.apache.qpid.transport.network.security.ssl.SSLUtil" level="ERROR"/>
-
     <!-- Silence the hibernate deprecation warnings -->
     <logger name="org.hibernate.orm.deprecation" level="DEBUG" additivity="false"/>
 

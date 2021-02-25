@@ -14,7 +14,6 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
@@ -144,81 +143,6 @@ public class ArtemisMessageSourceTest {
         verify(session).close();
     }
 
-    @Test
-    public void eventSourceDoesNothingWhenQpidStatusDoesntChange() throws Exception {
-        ClientSession session = mock(ClientSession.class);
-        when(clientSessionFactory.createSession()).thenReturn(session);
-        when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
-
-        ArtemisMessageSource messageSource =
-            createEventSourceStubbedWithFactoryCreation(createQpidReceiver());
-        messageSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.DOWN);
-
-        // Start was called only during setup.
-        verify(session, times(1)).start();
-        verify(session, never()).stop();
-    }
-
-    @Test
-    public void eventSourceClosesEventReceiverClientConsumerWhenQpidGoesDown() throws Exception {
-        ClientSession session = mock(ClientSession.class);
-        when(clientSessionFactory.createSession()).thenReturn(session);
-
-        ClientConsumer consumer = mock(ClientConsumer.class);
-        when(session.createConsumer(any(String.class))).thenReturn(consumer);
-
-        ArtemisMessageSource messageSource =
-            createEventSourceStubbedWithFactoryCreation(createQpidReceiver());
-        messageSource.onStatusUpdate(QpidStatus.CONNECTED, QpidStatus.DOWN);
-
-        // Start was called only on construction
-        verify(session, times(1)).start();
-        verify(consumer).close();
-        verify(session, never()).stop();
-    }
-
-    @Test
-    public void eventSourceCreatesNewEventReceiverClientSessionWhenQpidComesUp() throws Exception {
-        ClientSession session = mock(ClientSession.class);
-        when(clientSessionFactory.createSession()).thenReturn(session);
-
-        // Initially created before qpid goes down.
-        ClientConsumer consumer1 = mock(ClientConsumer.class);
-        when(consumer1.isClosed()).thenReturn(true);
-
-        // Created when qpid comes back up.
-        ClientConsumer consumer2 = mock(ClientConsumer.class);
-        when(session.createConsumer(any(String.class))).thenReturn(consumer1, consumer2);
-
-        QpidEventMessageReceiver receiver = createQpidReceiver();
-
-        ArtemisMessageSource messageSource = createEventSourceStubbedWithFactoryCreation(receiver);
-        messageSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);
-
-        // Start was called only during setup.
-        verify(session, times(1)).start();
-        verify(session, never()).stop();
-        verify(session, times(2)).createConsumer(any(String.class));
-    }
-
-    @Test
-    public void eventSourceDoesNothingWithEventReceiverClientSessionWhenListenerDoesntRequireQpid()
-        throws Exception {
-        ClientSession session = mock(ClientSession.class);
-        when(clientSessionFactory.createSession()).thenReturn(session);
-        when(session.createConsumer(any(String.class))).thenReturn(mock(ClientConsumer.class));
-
-        DefaultEventMessageReceiver receiver = new DefaultEventMessageReceiver(mock(EventListener.class),
-            sessionFactory, mock(ObjectMapper.class));
-
-        ArtemisMessageSource messageSource = createEventSourceStubbedWithFactoryCreation(receiver);
-        messageSource.onStatusUpdate(QpidStatus.DOWN, QpidStatus.CONNECTED);
-
-        // Start was called only during setup.
-        verify(session, times(1)).start();
-        verify(session, never()).stop();
-    }
-
     /**
      * Creates a new ArtemisMessageSource with a mocked ClientSessionFactory.
      *
@@ -240,12 +164,6 @@ public class ArtemisMessageSourceTest {
 
     private ActiveMQSessionFactory createConnection() {
         return new TestingActiveMQSessionFactory(clientSessionFactory, null);
-    }
-
-    private QpidEventMessageReceiver createQpidReceiver() {
-        EventListener listener = mock(EventListener.class);
-        when(listener.requiresQpid()).thenReturn(true);
-        return new QpidEventMessageReceiver(listener, this.sessionFactory, mock(ObjectMapper.class));
     }
 
 }

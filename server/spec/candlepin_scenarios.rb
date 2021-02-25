@@ -4,12 +4,6 @@ require 'hostedtest_api'
 require 'pp'
 require 'zip'
 
-begin
-  require 'qpid_proton'
-rescue LoadError
-  # This is okay
-end
-
 module CandlepinMethods
 
   include HostedTest
@@ -797,74 +791,5 @@ class AsyncStandardExporter < StandardExporter
 
     result = status["resultData"]
     client.download_consumer_export(result["exportedConsumer"], result["exportId"], dest_dir)
-  end
-end
-
-# We assume existence of queue allmsg that is bound to event exchange
-class CandlepinQpid
-  def initialize(address, cert, key)
-    @address = address
-    @qpid_crt = cert
-    @qpid_key = key
-  end
-
-  def no_keys?
-    !File.file?(@qpid_crt) or !File.file?(@qpid_key)
-  end
-
-  def stop
-    `if which supervisorctl > /dev/null 2>&1; then sudo supervisorctl stop qpidd; else sudo systemctl stop qpidd; fi`
-  end
-
-  def start
-    `if which supervisorctl > /dev/null 2>&1; then sudo supervisorctl start qpidd; else sudo systemctl start qpidd; fi`
-  end
-
-  #Create non-durable queue and bind it to an exchange
-  def create_queue(qname, exchange, args = '')
-    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@qpid_crt} --ssl-key #{@qpid_key} add queue #{qname} #{args}`
-    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@qpid_crt} --ssl-key #{@qpid_key} bind #{exchange} #{qname} "#"`
-  end
-
-  #Force removes the queue
-  def delete_queue(qname)
-    `sudo qpid-config -b amqps://localhost:5671 --ssl-certificate #{@qpid_crt} --ssl-key #{@qpid_key} del queue #{qname} --force`
-  end
-
-  def receive(messages = -1, blocking = true, timeout = 90)
-    if (no_keys?)
-      raise "One or more Qpid keys were not found"
-    end
-
-    messenger = Qpid::Proton::Messenger::Messenger.new
-
-    messenger.certificate = @qpid_crt
-    messenger.private_key = @qpid_key
-    messenger.blocking = blocking
-    messenger.timeout = (timeout * 1000).to_i
-
-    messenger.start
-    messenger.subscribe(@address)
-
-    msgs = []
-    received = 0
-
-    loop do
-      messenger.receive(messages)
-
-      while messenger.incoming.nonzero?
-        msg = Qpid::Proton::Message.new
-        messenger.get(msg)
-        msgs << msg
-
-        received += 1
-      end
-
-      break if received >= messages
-    end
-
-    messenger.stop
-
-    return msgs
   end
 end

@@ -50,10 +50,4 @@ public class LoggingListener implements EventListener {
             e.getOwnerId(),
             e.getEventData());
     }
-
-    @Override
-    public boolean requiresQpid() {
-        return false;
-    }
-
 }

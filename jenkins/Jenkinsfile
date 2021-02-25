@@ -96,20 +96,6 @@ pipeline {
                         sh 'docker logout quay.io'
                     }
                 }
-                stage('rspec-qpid') {
-                    agent { label 'docker' }
-                    environment {
-                        CANDLEPIN_DATABASE = 'postgresql'
-                        CP_TEST_ARGS = '-q -r qpid_spec'
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
-                        sh 'sh jenkins/rspec-tests.sh'
-                        sh 'docker logout quay.io'
-                    }
-                }
                 stage('bugzilla-reference') {
                     environment {
                         GITHUB_TOKEN = credentials('github-api-token-as-username-password')

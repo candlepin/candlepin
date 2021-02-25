@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,12 +68,10 @@ public class ArtemisMessageSourceReceiverFactory implements MessageSourceReceive
     }
 
     private MessageReceiver buildEventMessageReceiver(ActiveMQSessionFactory sessionFactory,
-        EventListener listener) throws ActiveMQException {
+        EventListener listener) {
 
         log.debug("Registering event listener for queue: {}", ArtemisMessageSource.getQueueName(listener));
-        return listener.requiresQpid() ?
-            new QpidEventMessageReceiver(listener, sessionFactory, mapper) :
-            new DefaultEventMessageReceiver(listener, sessionFactory, mapper);
+        return new DefaultEventMessageReceiver(listener, sessionFactory, mapper);
     }
 
 }
