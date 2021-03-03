@@ -1133,15 +1133,29 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param stackIds
      * @return Derived pools which exist for the given consumer and stack ids
      */
-    @SuppressWarnings("checkstyle:indentation")
-    public List<Pool> getSubPoolForStackIds(Consumer consumer, Collection stackIds) {
+    public List<Pool> getSubPoolForStackIds(Consumer consumer, Collection<String> stackIds) {
+        List<Pool> result = new ArrayList<>();
+        for (List<String> block: this.partition(stackIds)) {
+            result.addAll(getSubPoolForStackIds(consumer, block));
+        }
+        return result;
+    }
+
+    @SuppressWarnings({"unchecked", "checkstyle:indentation"})
+    private List<Pool> getSubPoolForStackIds(Consumer consumer, List<String> stackIds) {
+        if (stackIds == null || stackIds.isEmpty()) {
+            return Collections.emptyList();
+        }
         Criteria getPools = createSecureCriteria()
             .createAlias("sourceStack", "ss")
-            .add(Restrictions.eq("ss.sourceConsumer", consumer))
             .add(Restrictions.and(
                 Restrictions.isNotNull("ss.sourceStackId"),
                 CPRestrictions.in("ss.sourceStackId", stackIds))
             );
+
+        if (consumer != null) {
+            getPools.add(Restrictions.eq("ss.sourceConsumer", consumer));
+        }
 
         return (List<Pool>) getPools.list();
     }

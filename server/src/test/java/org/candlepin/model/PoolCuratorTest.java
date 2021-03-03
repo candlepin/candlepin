@@ -1289,6 +1289,35 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         poolCurator.create(derivedPool);
 
+        Pool pool = poolCurator.getSubPoolForStackIds(null, Arrays.asList(expectedStackId)).get(0);
+        assertNotNull(pool);
+    }
+
+    @Test
+    public void getSubPoolCountForStackByConsumer() {
+        String expectedStackId = "13245";
+        Product product = TestUtil.createProduct();
+        product.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
+        product.setAttribute(Product.Attributes.STACKING_ID, expectedStackId);
+        product = this.createProduct(product, owner);
+
+        // Create derived pool referencing the entitlement just made:
+        Pool derivedPool = new Pool(
+            owner,
+            product,
+            new HashSet<>(),
+            1L,
+            TestUtil.createDate(2011, 3, 2),
+            TestUtil.createDate(2055, 3, 2),
+            "",
+            "",
+            ""
+        );
+        derivedPool.setSourceStack(new SourceStack(consumer, expectedStackId));
+        derivedPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
+
+        poolCurator.create(derivedPool);
+
         Pool pool = poolCurator.getSubPoolForStackIds(consumer, Arrays.asList(expectedStackId)).get(0);
         assertNotNull(pool);
     }
