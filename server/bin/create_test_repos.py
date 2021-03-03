@@ -36,10 +36,10 @@ ${install_cmds}
 
 %%description
 This is a ${name} package.
- 
+
 %%files
 ${installed_files}
- 
+
 %%changelog
 * Fri Mar 1 2019 John Doe <john doe com> 0
 - ${name}
@@ -167,7 +167,7 @@ def create_repo_definition(product, content):
         'name': product['id'] + '-' + content['name'],
         'product_id': product['id'],
         'type': content['type'],
-        'content_url': os.path.join(content['content_url'], product['id']),
+        'content_url': os.path.join(content['content_url'], str(product['id']) + '-' + str(content['id'])),
         'gpg_url': content.get('gpg_url', ""),
         'packages': content.get('packages', [])
     }
@@ -223,7 +223,7 @@ def get_repo_definitions(test_data):
         owners = test_data['owners']
     except KeyError as err:
         return repo_definitions
-    
+
     for owner in owners:
         try:
             owner_product_definitions = owner['products']
@@ -236,7 +236,7 @@ def get_repo_definitions(test_data):
 
         owners_repo_defs = get_repo_definitions_for_products(owner_product_definitions, owner_content_definitions)
         repo_definitions.extend(owners_repo_defs)
-    
+
     return repo_definitions
 
 
@@ -433,7 +433,7 @@ def get_package_definitions(test_data):
 
     # Convert list to dictionary to be able to find packages faster
     package_definitions = { pkg['name']: pkg for pkg in package_definitions }
-    
+
     return package_definitions
 
 
@@ -443,7 +443,7 @@ def create_dummy_package(package, expect_script_path, keygrip):
     when package was created correctly. Otherwise it returns False.
     """
     global TEST_DATA_JSON_MTIME
-    
+
     name = package['name']
     # Default values
     version = package.get('version', '1')
@@ -539,7 +539,7 @@ def create_dummy_package(package, expect_script_path, keygrip):
         return False
 
     return True
-    
+
 
 def generate_packages(package_definitions, keygrip):
     """
@@ -592,7 +592,7 @@ def create_gpg_batch_gen_script():
     """
     This function tries to create temporary script file for creating gpg key.
     This function returns path to script file and path to temporary directory
-    """ 
+    """
 
     # Create temporary directory first
     temp_dir_path = tempfile.mkdtemp()
@@ -645,7 +645,7 @@ def create_gpg_key():
     # rpm -e gpg-pubkey-12345678-90abcdef
 
     script_path, temp_dir_path = create_gpg_batch_gen_script()
-    
+
     # Generate GPG key for signing RPM packages
     ret,_ = run_command('gpg --batch --gen-key %s' % script_path)
 
@@ -767,7 +767,7 @@ def main():
     generate_repositories(repo_definitions, package_definitions)
 
     return 0
-            
+
 
 if __name__ == '__main__':
     main()

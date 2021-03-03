@@ -46,8 +46,8 @@ def check_candlepin_configuration(candlepin)
     hosted_adapter = false
 
     begin
-         response = candlepin.get('/hostedtest/alive', {}, 'text/plain', true)
-         hosted_adapter = (response.to_s.downcase == 'true')
+        response = candlepin.get('/hostedtest/alive', {}, 'text/plain', true)
+        hosted_adapter = (response.to_s.downcase == 'true')
     rescue RestClient::ResourceNotFound
         # CP running without the Hosted adapter
     end

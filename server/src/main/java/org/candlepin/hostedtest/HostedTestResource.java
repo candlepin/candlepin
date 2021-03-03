@@ -335,7 +335,7 @@ public class HostedTestResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/products/{product_id}/batch_content")
+    @Path("/products/{product_id}/content")
     @Transactional
     public ProductInfo addContentToProduct(
         @PathParam("product_id") String productId,

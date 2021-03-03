@@ -102,9 +102,9 @@ update_keystore() {
 
 upload_products() {
   if [ "$TESTDATA" = "1" ]; then
-      $SELF_DIR/import_test_data.rb $SELF_DIR/test_data.json
+      $SELF_DIR/test_data_importer.py $SELF_DIR/test_data.json
   elif [ "$TESTDATA" = "MIN" ]; then
-      $SELF_DIR/import_test_data.rb $SELF_DIR/min_test_data.json
+      $SELF_DIR/test_data_importer.py $SELF_DIR/min_test_data.json
   fi
 }
 
