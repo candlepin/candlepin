@@ -234,8 +234,7 @@ public class ContentAccessManager {
     }
 
     /**
-     * Generate an entitlement certificate, used to grant access to some
-     * content.
+     * Generate an entitlement certificate, used to grant access to some content.
      * End date specified explicitly to allow for flexible termination policies.
      *
      * @return Client entitlement certificates.
@@ -246,26 +245,46 @@ public class ContentAccessManager {
     public ContentAccessCertificate getCertificate(Consumer consumer)
         throws GeneralSecurityException, IOException {
 
-        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-        // we only know about one mode right now. If add any, we will need to add the
-        // appropriate cert generation
-        if (!owner.isContentAccessEnabled() ||
-            !this.consumerIsCertV3Capable(consumer)) {
+        // TODO: FIXME: Redesign all of this.
 
+        Owner owner = consumer.getOwner();
+
+        // Ensure the org is in SCA mode and the consumer is able to process the cert we'll be
+        // generating for them.
+        if (owner == null || !owner.isUsingSimpleContentAccess() || !this.consumerIsCertV3Capable(consumer)) {
             return null;
         }
 
-        ContentAccessCertificate existing = consumer.getContentAccessCert();
-        ContentAccessCertificate result = new ContentAccessCertificate();
-        String pem = "";
+        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
 
-        if (existing != null && existing.getSerial().getExpiration().getTime() < (new Date()).getTime()) {
-            consumer.setContentAccessCert(null);
-            contentAccessCertificateCurator.delete(existing);
-            existing = null;
+        ContentAccessCertificate existing = consumer.getContentAccessCert();
+        OwnerEnvContentAccess oeca = this.ownerEnvContentAccessCurator
+            .getContentAccess(owner.getId(), env == null ? null : env.getId());
+
+        StringBuilder pem = new StringBuilder();
+        boolean regenerate = false;
+
+        // If the cert was last updated before the org's last content update, or the cert has expired,
+        // or the payload has changed, regenerate the header.
+        // TODO: we should probably just store this all in one thing rather than two things.
+        if (existing != null) {
+            Date now = new Date();
+            Date expiration = existing.getSerial().getExpiration();
+            Date contentUpdate = owner.getLastContentUpdate();
+
+            if (expiration.before(now) || !contentUpdate.before(existing.getUpdated()) ||
+                oeca == null || !contentUpdate.before(oeca.getUpdated())) {
+
+                consumer.setContentAccessCert(null);
+                this.contentAccessCertificateCurator.delete(existing);
+
+                regenerate = true;
+            }
         }
 
-        if (existing == null) {
+        if (existing == null || regenerate) {
+            log.info("Generating new SCA certificate for organization \"{}\"...", owner.getKey());
+
             Calendar cal = Calendar.getInstance();
             cal.add(Calendar.HOUR, -1);
             Date startDate = cal.getTime();
@@ -277,10 +296,10 @@ public class ContentAccessManager {
             // otherwise we could have used cascading create
             serialCurator.create(serial);
 
-            KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
+            KeyPair keyPair = this.keyPairCurator.getConsumerKeyPair(consumer);
             byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
-            X509Certificate x509Cert = createX509Certificate(consumer, owner,
+            X509Certificate x509Cert = this.createX509Certificate(consumer, owner,
                 BigInteger.valueOf(serial.getId()), keyPair, startDate, endDate);
 
             existing = new ContentAccessCertificate();
@@ -288,34 +307,42 @@ public class ContentAccessManager {
             existing.setKeyAsBytes(pemEncodedKeyPair);
             existing.setConsumer(consumer);
 
-            log.info("Setting PEM encoded cert.");
-            pem = new String(this.pki.getPemEncoded(x509Cert));
-            existing.setCert(pem);
+            pem.append(new String(this.pki.getPemEncoded(x509Cert)));
+            existing.setCert(pem.toString());
             consumer.setContentAccessCert(existing);
-            contentAccessCertificateCurator.create(existing);
-            consumer = consumerCurator.merge(consumer);
+
+            existing = this.contentAccessCertificateCurator.create(existing);
+            consumer = this.consumerCurator.merge(consumer);
         }
         else {
-            pem = existing.getCert();
+            pem.append(existing.getCert());
         }
 
-        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
+        // Generate the cert body/payload as necessary
+        if (oeca == null || regenerate) {
+            log.info("Generating new SCA payload for organization \"{}\"...", owner.getKey());
 
-        // we need to see if this is newer than the previous result
-        OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator
-            .getContentAccess(owner.getId(), env == null ? null : env.getId());
-
-        if (oeca == null) {
-            String contentJson = createPayloadAndSignature(owner, env);
+            String contentJson = this.createPayloadAndSignature(owner, env);
             oeca = new OwnerEnvContentAccess(owner, env, contentJson);
-            oeca = ownerEnvContentAccessCurator.saveOrUpdate(oeca);
+            oeca = this.ownerEnvContentAccessCurator.saveOrUpdate(oeca);
         }
 
-        pem += oeca.getContentJson();
+        pem.append(oeca.getContentJson());
 
-        result.setCert(pem);
-        result.setCreated(existing.getCreated());
-        result.setUpdated(existing.getUpdated());
+        // Impl note:
+        // We want our cert to represent the correct dates so the question of "when was this last
+        // updated?" can be answered as accurately as possible. We're also exploiting the fact that
+        // our created dates for a given DB entity will always be before the updated dates (assuming
+        // no one is messing with dates maliciously).
+        Date created = existing.getCreated().before(oeca.getCreated()) ? existing.getCreated() :
+            oeca.getCreated();
+        Date updated = existing.getUpdated().after(oeca.getUpdated()) ? existing.getUpdated() :
+            oeca.getUpdated();
+
+        ContentAccessCertificate result = new ContentAccessCertificate();
+        result.setCert(pem.toString());
+        result.setCreated(created);
+        result.setUpdated(updated);
         result.setId(existing.getId());
         result.setConsumer(existing.getConsumer());
         result.setKey(existing.getKey());
@@ -549,18 +576,79 @@ public class ContentAccessManager {
             emptyConsumer, emptyPool, null);
     }
 
+    /**
+     * Checks if the content view for the given consumer has changed since date provided. This will
+     * be true if the consumer is currently operating in simple content access mode (SCA), and any
+     * of the following are true:
+     *
+     *  - the consumer does not currently have a certificate or certificate body/payload
+     *  - the consumer's certificate or payload was generated after the date provided
+     *  - the consumer's certificate has expired since the date provided
+     *  - the consumer's certificate or payload was generated before the date provided, but the
+     *    organization's content view has changed since the date provided
+     *
+     * If the consumer is not operating in SCA mode, or none of the above conditions are met, this
+     * method returns false.
+     *
+     * @param consumer
+     *  the consumer to check for certificate updates
+     *
+     * @param date
+     *  the date to use for update checks
+     *
+     * @throws IllegalArgumentException
+     *  if consumer or date are null
+     *
+     * @return
+     *  true if the cert or its content has changed since the date provided; false otherwise
+     */
     public boolean hasCertChangedSince(Consumer consumer, Date date) {
-        if (date == null) {
-            return true;
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
         }
 
-        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
-        OwnerEnvContentAccess oeca = ownerEnvContentAccessCurator
-            .getContentAccess(consumer.getOwnerId(), env == null ? null : env.getId());
+        if (date == null) {
+            throw new IllegalArgumentException("date is null");
+        }
 
-        return oeca == null ||
-            consumer.getContentAccessCert() == null ||
-            oeca.getUpdated().getTime() > date.getTime();
+        Owner owner = consumer.getOwner();
+
+        // Impl note:
+        // This method is kinda... sketch, and prone to erroneous results. Since the cert, cert
+        // serial, and payload  have different created/updated timestamps, they can be updated
+        // individually. Depending on which date is used as input, this may or may not trigger an
+        // update when an update is not strictly necessary.
+        // We try to minimize this by providing the "best" creation/update date above, but that still
+        // doesn't prevent this method from being called with a datetime that lies between the
+        // persistence of the cert and the payload, triggering a false positive.
+        // When time permits to refactor all of this logic, we should examine everything surrounding
+        // this design and determine whether or not we need two separate objects, or if this question
+        // has any real value.
+
+        if (owner.isUsingSimpleContentAccess()) {
+            // Check if the owner's content view has changed since the date
+            if (!date.after(owner.getLastContentUpdate())) {
+                return true;
+            }
+
+            // Check cert properties
+            ContentAccessCertificate cert = consumer.getContentAccessCert();
+            if (cert == null || date.before(cert.getUpdated()) ||
+                date.after(cert.getSerial().getExpiration())) {
+                return true;
+            }
+
+            // Check payload
+            Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
+            OwnerEnvContentAccess oeca = this.ownerEnvContentAccessCurator
+                .getContentAccess(consumer.getOwnerId(), env == null ? null : env.getId());
+
+            if (oeca == null || date.before(oeca.getUpdated())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Transactional
@@ -568,7 +656,8 @@ public class ContentAccessManager {
         if (consumer.getContentAccessCert() == null) {
             return;
         }
-        contentAccessCertificateCurator.delete(consumer.getContentAccessCert());
+
+        this.contentAccessCertificateCurator.delete(consumer.getContentAccessCert());
         consumer.setContentAccessCert(null);
     }
 
@@ -680,7 +769,6 @@ public class ContentAccessManager {
         }
 
         return owner;
-
     }
 
     private String resolveContentAccessValue(String value, boolean resolveNull) {
@@ -700,19 +788,72 @@ public class ContentAccessManager {
      *
      * @param owner
      *  The owner for which to refresh content access
+     *
+     * @return
+     *  the owner provided
      */
     @Transactional
-    public void refreshOwnerForContentAccess(Owner owner) {
+    public Owner refreshOwnerForContentAccess(Owner owner) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
         // we need to update the owner's consumers if the content access mode has changed
         this.ownerCurator.lock(owner);
 
-        if (!owner.isContentAccessEnabled()) {
+        if (!owner.isUsingSimpleContentAccess()) {
             this.contentAccessCertCurator.deleteForOwner(owner);
         }
 
         // removed cached versions of content access cert data
         this.ownerEnvContentAccessCurator.removeAllForOwner(owner.getId());
-        ownerCurator.flush();
+        this.ownerCurator.flush();
+
+        return owner;
+    }
+
+    /**
+     * Invalidates the SCA content body for the given environment
+     *
+     * @param environment
+     *  the environment for which to refresh content access certificates
+     *
+     * @throws IllegalArgumentException
+     *  if environment is null
+     *
+     * @return
+     *  the environment provided
+     */
+    @Transactional
+    public Environment refreshEnvironmentContentAccessCerts(Environment environment) {
+        if (environment == null) {
+            throw new IllegalArgumentException("environment is null");
+        }
+
+        this.ownerEnvContentAccessCurator.removeAllForEnvironment(environment.getId());
+        return environment;
+    }
+
+    /**
+     * Synchronizes the last content update time for the given owner and persists the update.
+     *
+     * @param owner
+     *  the owner for which to synchronize the last content update time
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null
+     *
+     * @return
+     *  the synchronized owner
+     */
+    @Transactional
+    public Owner syncOwnerLastContentUpdate(Owner owner) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        owner.syncLastContentUpdate();
+        return this.ownerCurator.merge(owner);
     }
 
 }

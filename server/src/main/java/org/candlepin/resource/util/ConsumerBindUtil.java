@@ -89,7 +89,7 @@ public class ConsumerBindUtil {
 
         for (ActivationKey key : keys) {
             boolean keySuccess = true;
-            boolean scaEnabled = key.getOwner().isContentAccessEnabled();
+            boolean scaEnabled = key.getOwner().isUsingSimpleContentAccess();
             scaEnabledForAny |= scaEnabled;
 
             keySuccess &= handleActivationKeyServiceLevel(consumer, key.getServiceLevel(), key.getOwner());

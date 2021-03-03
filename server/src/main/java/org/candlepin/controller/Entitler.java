@@ -211,21 +211,25 @@ public class Entitler {
     @Transactional
     public List<Entitlement> bindByProducts(AutobindData data, boolean force)
         throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+
         Consumer consumer = data.getConsumer();
         Owner owner = data.getOwner();
         ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
         boolean autobindHypervisorDisabled = owner.isAutobindHypervisorDisabled() &&
-            type != null &&
-            type.isType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
+            type != null && type.isType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
 
-        if (!consumer.isDev() &&
-            (owner.isAutobindDisabled() || owner.isContentAccessEnabled() || autobindHypervisorDisabled)) {
-            String caMessage = owner.isContentAccessEnabled() ?
+        if (!consumer.isDev() && (owner.isAutobindDisabled() || autobindHypervisorDisabled ||
+            owner.isUsingSimpleContentAccess())) {
+
+            String caMessage = owner.isUsingSimpleContentAccess() ?
                 " because of the content access mode setting" : "";
+
             String hypMessage = owner.isAutobindHypervisorDisabled() ?
                 " because of the hypervisor autobind setting" : "";
+
             log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}{}",
                 consumer.getUuid(), owner.getKey(), caMessage, hypMessage);
+
             if (autobindHypervisorDisabled) {
                 throw new AutobindHypervisorDisabledException(i18n.tr(
                     "Auto-attach is disabled for owner \"{0}\"{1}.",
@@ -250,12 +254,14 @@ public class Entitler {
             if (host != null && (force || host.isAutoheal())) {
                 log.info("Attempting to heal host machine with UUID \"{}\" for guest with UUID \"{}\"",
                     host.getUuid(), consumer.getUuid());
+
                 if (!StringUtils.equals(host.getServiceLevel(), consumer.getServiceLevel())) {
                     log.warn("Host with UUID \"{}\" has a service level \"{}\" that does not match" +
                         " that of the guest with UUID \"{}\" and service level \"{}\"",
                         host.getUuid(), host.getServiceLevel(),
                         consumer.getUuid(), consumer.getServiceLevel());
                 }
+
                 try {
                     List<Entitlement> hostEntitlements = poolManager.entitleByProductsForHost(
                         consumer, host, data.getOnDate(), data.getPossiblePools());

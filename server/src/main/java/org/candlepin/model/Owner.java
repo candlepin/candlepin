@@ -19,6 +19,7 @@ import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
 import org.candlepin.service.model.OwnerInfo;
+import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -155,6 +156,10 @@ public class Owner extends AbstractHibernateObject<Owner>
     @Column(name = "content_access_mode_list", nullable = false)
     private String contentAccessModeList = ContentAccessMode.getDefault().toDatabaseValue();
 
+    /** Denotes the last time this org's content view has been changed. */
+    @Column(name = "last_content_update", nullable = true)
+    private Date lastContentUpdate;
+
     /**
      * Default constructor
      */
@@ -164,6 +169,7 @@ public class Owner extends AbstractHibernateObject<Owner>
         this.environments = new HashSet<>();
         this.autobindDisabled = false;
         this.autobindHypervisorDisabled = false;
+        this.lastContentUpdate = new Date();
     }
 
     /**
@@ -401,7 +407,7 @@ public class Owner extends AbstractHibernateObject<Owner>
             .append(this.getUpstreamConsumer() != null ? this.getUpstreamConsumer().getId() : null)
             .append(this.getLogLevel())
             .append(this.isAutobindDisabled())
-            .append(this.isContentAccessEnabled())
+            .append(this.isUsingSimpleContentAccess())
             .append(this.getContentAccessMode())
             .append(this.getContentAccessModeList());
 
@@ -597,20 +603,67 @@ public class Owner extends AbstractHibernateObject<Owner>
         return this;
     }
 
-    @XmlTransient
     public boolean isAllowedContentAccessMode(String mode) {
         String[] list = contentAccessModeList.split(",");
         return ArrayUtils.contains(list, mode);
     }
 
     /**
-     * Returns whether the content access mode is golden
+     * Checks if this org is operating in Simple Content Access (SCA) mode.
      *
-     * @return Boolean
+     * @return
+     *  true if this org is operating in SCA mode; false otherwise
      */
-    @XmlTransient
-    public boolean isContentAccessEnabled() {
-        return ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue().equals(this.getContentAccessMode());
+    public boolean isUsingSimpleContentAccess() {
+        return ContentAccessMode.ORG_ENVIRONMENT.matches(this.getContentAccessMode());
     }
 
+    /**
+     * Fetches the time of the last content update for this organization. A content update could
+     * include a direct content change, or something indirect such as a product or environment
+     * change which affects content visibility.
+     * If this org has not yet had any content changes, this method returns the time the org was
+     * created. If the org has not yet been persisted, it returns the time the Owner instance was
+     * instantiated. All else failing, this method returns the invocation time. This method should
+     * never return null.
+     *
+     * @return
+     *  the time of the last content update for this organization
+     */
+    public Date getLastContentUpdate() {
+        // If we don't have a content update date yet, return this org's creation date. Never
+        // actually return null.
+        return Util.firstOf(this.lastContentUpdate, this.getCreated(), new Date());
+    }
+
+    /**
+     * Sets the date of the last content update for this organization.
+     *
+     * @param date
+     *  The date to use for the last content update for this organization
+     *
+     * @throws IllegalArgumentException
+     *  if date is null
+     *
+     * @return
+     *  a reference to this Owner
+     */
+    public Owner setLastContentUpdate(Date date) {
+        if (date == null) {
+            throw new IllegalArgumentException("date is null");
+        }
+
+        this.lastContentUpdate = date;
+        return this;
+    }
+
+    /**
+     * Sets the date of the last content update for this organization to the current date/time.
+     *
+     * @return
+     *  a reference to this Owner
+     */
+    public Owner syncLastContentUpdate() {
+        return this.setLastContentUpdate(new Date());
+    }
 }

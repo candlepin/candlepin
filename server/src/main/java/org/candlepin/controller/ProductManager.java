@@ -58,20 +58,24 @@ import java.util.stream.Collectors;
 public class ProductManager {
     private static final Logger log = LoggerFactory.getLogger(ProductManager.class);
 
+    private final ContentAccessManager contentAccessManager;
+
     private final EntitlementCertificateGenerator entitlementCertGenerator;
     private final OwnerContentCurator ownerContentCurator;
     private final OwnerProductCurator ownerProductCurator;
     private final ProductCurator productCurator;
 
     @Inject
-    public ProductManager(EntitlementCertificateGenerator entitlementCertGenerator,
-        OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
-        ProductCurator productCurator) {
+    public ProductManager(ContentAccessManager contentAccessManager,
+        EntitlementCertificateGenerator entitlementCertGenerator, OwnerContentCurator ownerContentCurator,
+        OwnerProductCurator ownerProductCurator, ProductCurator productCurator) {
 
-        this.entitlementCertGenerator = entitlementCertGenerator;
-        this.ownerContentCurator = ownerContentCurator;
-        this.ownerProductCurator = ownerProductCurator;
-        this.productCurator = productCurator;
+        this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
+
+        this.entitlementCertGenerator = Objects.requireNonNull(entitlementCertGenerator);
+        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
+        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
     }
 
     /**
@@ -262,6 +266,9 @@ public class ProductManager {
         entity = this.productCurator.create(entity);
         this.ownerProductCurator.mapProductToOwner(entity, owner);
 
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+
         return entity;
     }
 
@@ -373,6 +380,9 @@ public class ProductManager {
                 this.updateChildrenReferences(owner, affected, regenCerts);
             }
         }
+
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return updated;
     }
@@ -541,6 +551,9 @@ public class ProductManager {
         // Validation checks passed, remove the reference to it
         log.debug("Removing product for org: {}, {}", entity, owner);
         this.ownerProductCurator.removeOwnerProductReferences(owner, Collections.singleton(entity.getUuid()));
+
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return entity;
     }
@@ -794,7 +807,6 @@ public class ProductManager {
 
                 boolean enabled = pcinfo.isEnabled() != null ? pcinfo.isEnabled() : false;
                 productContentMap.put(resolved.getId(), new ProductContent(entity, resolved, enabled));
-
             }
 
             entity.setProductContent(productContentMap.values());

@@ -256,6 +256,7 @@ public class OwnerContentResource {
         }
 
         this.contentAccessManager.refreshOwnerForContentAccess(owner);
+
         return result;
     }
 

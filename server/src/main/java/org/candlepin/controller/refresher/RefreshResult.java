@@ -115,7 +115,7 @@ public class RefreshResult {
             return data != null ? data.getEntityState() : null;
         }
 
-        public Map<String, T> getEntities(Collection<EntityState> states) {
+        private Stream<EntityData<T>> getEntityStream(Collection<EntityState> states) {
             Stream<EntityData<T>> stream = this.entities.values()
                 .stream();
 
@@ -123,7 +123,18 @@ public class RefreshResult {
                 stream = stream.filter(edata -> states.contains(edata.getEntityState()));
             }
 
-            return stream.collect(Collectors.toMap(EntityData::getEntityId, EntityData::getEntity));
+            return stream;
+        }
+
+        public Map<String, T> getEntities(Collection<EntityState> states) {
+            return this.getEntityStream(states)
+                .collect(Collectors.toMap(EntityData::getEntityId, EntityData::getEntity));
+        }
+
+        public boolean hasEntity(Collection<EntityState> states) {
+            return this.getEntityStream(states)
+                .findAny()
+                .isPresent();
         }
     }
 
@@ -312,6 +323,81 @@ public class RefreshResult {
 
         EntityStore<T> entityStore = this.getEntityStore(cls, false);
         return entityStore != null ? entityStore.getEntities(states) : new HashMap<>();
+    }
+
+    /**
+     * Checks if this result contains one or more entities of the given class and, if provided,
+     * in any of the specified state(s).
+     *
+     * @param cls
+     *  the class of entities for which to check
+     *
+     * @param states
+     *  an optional list of entity states for which to check. If provided, only entities in
+     *  the states provided will be considered.
+     *
+     * @return
+     *  true if this result contains one or more entities of the given class and state(s); false
+     *  otherwise
+     */
+    public <T extends AbstractHibernateObject> boolean hasEntity(Class<T> cls,
+        EntityState... states) {
+
+        return this.hasEntity(cls, states != null && states.length > 0 ? Arrays.asList(states) : null);
+    }
+
+    /**
+     * Checks if this result contains one or more entities of the given class, if provided, in any
+     * of the specified state(s).
+     *
+     * @param cls
+     *  the class of entities for which to check
+     *
+     * @param states
+     *  an optional collection of entity states for which to check. If provided, only entities in
+     *  the states provided will be considered.
+     *
+     * @return
+     *  true if this result contains one or more entities of the given class and state(s); false
+     *  otherwise
+     */
+    public <T extends AbstractHibernateObject> boolean hasEntity(Class<T> cls,
+        Collection<EntityState> states) {
+
+        EntityStore<T> entityStore = this.getEntityStore(cls, false);
+        return entityStore != null && entityStore.hasEntity(states);
+    }
+
+    /**
+     * Checks if this result contains one or more entities in any of the specified state(s). If no
+     * states are provided, this method checks if the result contains any entities at all.
+     *
+     * @param states
+     *  an optional list of entity states for which to check. If provided, only entities in
+     *  the states provided will be considered.
+     *
+     * @return
+     *  true if this result contains one or more entities in the given state(s); false otherwise
+     */
+    public <T extends AbstractHibernateObject> boolean hasEntity(EntityState... states) {
+        return this.hasEntity(states);
+    }
+
+    /**
+     * Checks if this result contains one or more entities in any of the specified state(s). If no
+     * states are provided, this method checks if the result contains any entities at all.
+     *
+     * @param states
+     *  an optional collection of entity states for which to check. If provided, only entities in
+     *  the states provided will be considered.
+     *
+     * @return
+     *  true if this result contains one or more entities in the given state(s); false otherwise
+     */
+    public <T extends AbstractHibernateObject> boolean hasEntity(Collection<EntityState> states) {
+        return this.entityStoreMap.values()
+            .stream()
+            .anyMatch(entityStore -> entityStore.hasEntity(states));
     }
 
 }

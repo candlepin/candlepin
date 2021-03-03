@@ -162,6 +162,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import javax.inject.Provider;
@@ -540,15 +541,20 @@ public class ConsumerResource {
     public ContentAccessDTO getContentAccessForConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
-        String caMode = Util.firstOf(
+
+        Predicate<String> predicate = (str) -> str != null && !str.isEmpty();
+
+        String caMode = Util.firstOf(predicate,
             consumer.getContentAccessMode(),
             consumer.getOwner().getContentAccessMode(),
             ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
         );
-        String caList = Util.firstOf(
+
+        String caList = Util.firstOf(predicate,
             consumer.getOwner().getContentAccessModeList(),
             ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
         );
+
         return new ContentAccessDTO()
             .contentAccessMode(caMode)
             .contentAccessModeList(Util.toList(caList));
@@ -1486,7 +1492,7 @@ public class ConsumerResource {
             // reset content access cert
             Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
 
-            if (owner.isContentAccessEnabled()) {
+            if (owner.isUsingSimpleContentAccess()) {
                 toUpdate.setContentAccessCert(null);
                 this.contentAccessManager.removeContentAccessCert(toUpdate);
             }
@@ -1879,14 +1885,13 @@ public class ConsumerResource {
 
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-        if (!owner.isContentAccessEnabled()) {
+        if (!owner.isUsingSimpleContentAccess()) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
 
-        if (!this.contentAccessManager.hasCertChangedSince(consumer, since)) {
+        if (!this.contentAccessManager.hasCertChangedSince(consumer, since != null ? since : new Date(0))) {
             return Response.status(Response.Status.NOT_MODIFIED)
                 .entity("Not modified since date supplied.")
                 .build();
@@ -1908,6 +1913,9 @@ public class ConsumerResource {
             pieces.add(json);
             result.setContentListing(cac.getSerial().getId(), pieces);
             result.setLastUpdate(cac.getUpdated());
+
+            return Response.ok(result, MediaType.APPLICATION_JSON)
+                .build();
         }
         catch (IOException ioe) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
@@ -1915,8 +1923,6 @@ public class ConsumerResource {
         catch (GeneralSecurityException gse) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
         }
-
-        return Response.ok(result, MediaType.APPLICATION_JSON).build();
     }
 
     @ApiOperation(notes = "Retrieves a Compressed File of Entitlement Certificates",
@@ -2170,7 +2176,7 @@ public class ConsumerResource {
                 entitlements = entitler.bindByProducts(autobindData);
             }
             catch (AutobindDisabledForOwnerException e) {
-                if (owner.isContentAccessEnabled()) {
+                if (owner.isUsingSimpleContentAccess()) {
                     throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
                         "It is disabled for org \"{0}\" because of the content access mode setting."
                         , owner.getKey()));
@@ -2232,7 +2238,7 @@ public class ConsumerResource {
         if (owner.isAutobindDisabled()) {
             String message = "";
 
-            if (owner.isContentAccessEnabled()) {
+            if (owner.isUsingSimpleContentAccess()) {
                 message = (i18n.tr("Organization \"{0}\" has auto-attach disabled because " +
                     "of the content access mode setting.", owner.getKey()));
 

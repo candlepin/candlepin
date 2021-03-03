@@ -18,10 +18,12 @@ import org.candlepin.auth.Verify;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.exceptions.ResourceMovedException;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -40,8 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -69,16 +73,19 @@ public class SubscriptionResource {
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
     private PoolManager poolManager;
+    private ContentAccessManager contentAccessManager;
 
     private I18n i18n;
 
     @Inject
     public SubscriptionResource(SubscriptionServiceAdapter subService,
-        ConsumerCurator consumerCurator, PoolManager poolManager, I18n i18n) {
+        ConsumerCurator consumerCurator, PoolManager poolManager, ContentAccessManager contentAccessManager,
+        I18n i18n) {
 
         this.subService = subService;
         this.consumerCurator = consumerCurator;
         this.poolManager = poolManager;
+        this.contentAccessManager = contentAccessManager;
 
         this.i18n = i18n;
     }
@@ -169,10 +176,17 @@ public class SubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteSubscription(@PathParam("subscription_id") String subscriptionId) {
 
-        // Lookup pools from subscription ID
+        Set<Owner> owners = new HashSet<>();
         int count = 0;
 
+        // Lookup pools from subscription ID
         for (Pool pool : this.poolManager.getPoolsBySubscriptionId(subscriptionId)) {
+            // Impl note:
+            // This shouldn't ever be more than one, but there's nothing in the code that actually
+            // prevents this, and it's trivial to not run headlong into a bug here, so we'll just
+            // handle it anyhow.
+            owners.add(pool.getOwner());
+
             this.poolManager.deletePool(pool);
             ++count;
         }
@@ -180,6 +194,11 @@ public class SubscriptionResource {
         if (count == 0) {
             throw new NotFoundException(
                 i18n.tr("A subscription with the ID \"{0}\" could not be found.", subscriptionId));
+        }
+
+        for (Owner owner : owners) {
+            log.debug("Synchronizing last content update for org: {}", owner);
+            this.contentAccessManager.syncOwnerLastContentUpdate(owner);
         }
     }
 

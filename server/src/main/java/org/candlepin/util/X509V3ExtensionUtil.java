@@ -321,7 +321,7 @@ public class X509V3ExtensionUtil extends X509Util {
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
         toReturn.setContent(createContent(
             filterProductContent(engProduct, consumer, promotedContent, enableEnvironmentFiltering,
-            entitledProductIds, consumer.getOwner().isContentAccessEnabled()), sku,
+            entitledProductIds, consumer.getOwner().isUsingSimpleContentAccess()), sku,
             contentPrefix, promotedContent, consumer, engProduct));
 
         return toReturn;

@@ -174,6 +174,7 @@ public class UndoImportsJob implements AsyncJob {
         // Clear out upstream ID so owner can import from other distributors:
         UpstreamConsumer uc = owner.getUpstreamConsumer();
         owner.setUpstreamConsumer(null);
+        owner.syncLastContentUpdate();
         owner = this.ownerCurator.merge(owner);
         this.ownerCurator.flush();
 
