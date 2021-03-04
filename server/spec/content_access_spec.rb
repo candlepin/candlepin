@@ -565,9 +565,9 @@ describe 'Content Access' do
         facts= {'system.certificate_version' => '3.3'})
     consumer_cp.update_consumer({:installedProducts => installed})
 
-    lambda do
-      consumer_cp.consume_product()
-    end.should raise_exception(RestClient::BadRequest)
+    consumer_cp.consume_product()
+    entitlements = consumer_cp.list_entitlements()
+    expect(entitlements.length).to eq(0)
 
     # confirm that there is a content access cert
     #  and only a content access cert
