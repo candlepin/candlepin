@@ -323,7 +323,7 @@ public class EntitlementCertificateGenerator {
 
         // we need to clear the content access cert on regenerate
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-        if (owner.isContentAccessEnabled()) {
+        if (owner.isUsingSimpleContentAccess()) {
             this.contentAccessManager.removeContentAccessCert(consumer);
         }
 

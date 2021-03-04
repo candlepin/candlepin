@@ -181,6 +181,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+
+
 /**
  * API Gateway for Consumers
  */
@@ -1452,7 +1454,7 @@ public class ConsumerResource {
             // reset content access cert
             Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
 
-            if (owner.isContentAccessEnabled()) {
+            if (owner.isUsingSimpleContentAccess()) {
                 toUpdate.setContentAccessCert(null);
                 this.contentAccessManager.removeContentAccessCert(toUpdate);
             }
@@ -1848,11 +1850,11 @@ public class ConsumerResource {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-        if (!owner.isContentAccessEnabled()) {
+        if (!owner.isUsingSimpleContentAccess()) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
 
-        if (!this.contentAccessManager.hasCertChangedSince(consumer, since)) {
+        if (!this.contentAccessManager.hasCertChangedSince(consumer, since != null ? since : new Date(0))) {
             return Response.status(Response.Status.NOT_MODIFIED)
                 .entity("Not modified since date supplied.")
                 .build();
@@ -2136,7 +2138,7 @@ public class ConsumerResource {
                 entitlements = entitler.bindByProducts(autobindData);
             }
             catch (AutobindDisabledForOwnerException e) {
-                if (owner.isContentAccessEnabled()) {
+                if (owner.isUsingSimpleContentAccess()) {
                     throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
                             "It is disabled for org \"{0}\" because of the content access mode setting."
                         , owner.getKey()));
@@ -2198,7 +2200,7 @@ public class ConsumerResource {
         if (owner.isAutobindDisabled()) {
             String message = "";
 
-            if (owner.isContentAccessEnabled()) {
+            if (owner.isUsingSimpleContentAccess()) {
                 message = (i18n.tr("Organization \"{0}\" has auto-attach disabled because " +
                                 "of the content access mode setting.", owner.getKey()));
 

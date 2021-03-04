@@ -213,8 +213,10 @@ public class Entitler {
             type != null && type.isType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
 
         if (!consumer.isDev() &&
-            (owner.isAutobindDisabled() || owner.isContentAccessEnabled() || autobindHypervisorDisabled)) {
-            String caMessage = owner.isContentAccessEnabled() ?
+            (owner.isAutobindDisabled() || owner.isUsingSimpleContentAccess() ||
+            autobindHypervisorDisabled)) {
+
+            String caMessage = owner.isUsingSimpleContentAccess() ?
                 " because of the content access mode setting" : "";
 
             String hypMessage = owner.isAutobindHypervisorDisabled() ?
