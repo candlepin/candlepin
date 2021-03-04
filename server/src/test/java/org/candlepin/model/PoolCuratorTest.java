@@ -631,7 +631,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(16L);
         sub.setStartDate(TestUtil.createDate(2006, 10, 21));
-        sub.setEndDate(TestUtil.createDate(2020, 1, 1));
+        sub.setEndDate(TestUtil.createFutureDate(3));
         sub.setModified(new Date());
 
         Pool newPool = poolManager.createAndEnrichPools(sub).get(0);
@@ -871,7 +871,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testLookupOverconsumedIgnoresOtherSourceEntitlementPools() {
 
         Pool pool = createPool(owner, product, 1L,
-            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
+            TestUtil.createDate(2011, 3, 2), TestUtil.createFutureDate(3));
         poolCurator.create(pool);
 
         String subid = pool.getSubscriptionId();
@@ -889,7 +889,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             new HashSet<>(),
             1L,
             TestUtil.createDate(2011, 3, 2),
-            TestUtil.createDate(2055, 3, 2),
+            TestUtil.createFutureDate(3),
             "",
             "",
             ""
@@ -1361,7 +1361,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         sub.setId(Util.generateDbUUID());
         sub.setQuantity(16L);
         sub.setStartDate(TestUtil.createDate(2006, 10, 21));
-        sub.setEndDate(TestUtil.createDate(2020, 1, 1));
+        sub.setEndDate(TestUtil.createFutureDate(3));
         sub.setModified(new Date());
 
         Pool sourcePool = poolManager.createAndEnrichPools(sub).get(0);

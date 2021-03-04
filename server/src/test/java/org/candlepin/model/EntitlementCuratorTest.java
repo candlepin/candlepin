@@ -144,7 +144,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c);
         Product product = TestUtil.createProduct();
         productCurator.create(product);
-        Pool p = createPool(owner, product, 2L, dateSource.currentDate(), createDate(2020, 1, 1));
+        Pool p = createPool(owner, product, 2L, dateSource.currentDate(), createFutureDate(3));
         poolCurator.create(p);
         EntitlementCertificate cert = createEntitlementCertificate("keyx", "certificatex");
         Entitlement entitlement = createEntitlement(owner, c, p, cert);
@@ -552,8 +552,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         product.setAttribute(Product.Attributes.STACKING_ID, stackingId);
         productCurator.create(product);
 
-        Pool futurePool = createPool(owner, product, 1L,
-            createFutureDate(1), createDate(2021, 1, 1));
+        Pool futurePool = createPool(owner, product, 1L, createFutureDate(1), createFutureDate(3));
         poolCurator.create(futurePool);
         bind(consumer, futurePool);
 
