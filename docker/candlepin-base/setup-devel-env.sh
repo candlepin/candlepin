@@ -44,6 +44,7 @@ PACKAGES=(
     rpm-sign
     python-requests
     expect
+    PyYAML
 )
 
 yum install -y ${PACKAGES[@]}

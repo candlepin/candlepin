@@ -64,5 +64,6 @@ org.quartz.dataSource.myDS.maxConnections=5
 #overriding custom.yaml settings to ensure hostedtest resources are available
 candlepin.standalone=false
 module.config.hosted.configuration.module=org.candlepin.hostedtest.AdapterOverrideModule
+candlepin.auth.cloud.enable=<%= candlepin.auth_cloud_enable || false %>
 <% } %>\
 <%= candlepin.additional_properties %>
