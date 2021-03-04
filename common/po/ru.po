@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:53-0500\n"
-"PO-Revision-Date: 2021-02-22 19:40+0000\n"
+"PO-Revision-Date: 2021-03-04 21:00+0000\n"
 "Last-Translator: Igor Gorbounov <igor.gorbounov@gmail.com>\n"
 "Language-Team: Russian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-2-9-hotfix/ru/>\n"
@@ -756,31 +756,31 @@ msgid "Unable to attach pool with ID \"{1}\".: {0}."
 msgstr "Не удалось присоединить буфер с идентификатором «{1}».: {0}."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:192
-#, java-format
+#, fuzzy, java-format
 msgid ""
 "This system already has a subscription for the product \"{1}\" attached."
-msgstr ""
+msgstr "В этой системе уже присоединена подписка на продукт «{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:194
 #, java-format
 msgid ""
 "There are not enough free subscriptions available for the product \"{1}\""
-msgstr ""
+msgstr "Недостаточно бесплатных подписок для продукта «{1}»"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:196
 #, java-format
 msgid "Units of this type are not allowed for the product \"{1}\"."
-msgstr ""
+msgstr "Модули этого типа не допускаются для продукта «{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:198
 #, java-format
 msgid "Only virtual systems can have subscription \"{1}\" attached."
-msgstr ""
+msgstr "Только к виртуальным системам можно присоединять подписку «{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:200
 #, java-format
 msgid "Unable to attach subscription for the product \"{1}\": {0}."
-msgstr ""
+msgstr "Не удается присоединить подписку для продукта «{1}»: {0}."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:208
 #, java-format
