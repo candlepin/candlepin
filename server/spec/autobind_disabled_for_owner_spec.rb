@@ -31,7 +31,7 @@ describe 'Autobind Disabled On Owner' do
     exception_thrown.should be true
   end
 
-  it 'autobind should fail when owner is in SCA mode' do
+  it 'autobind should not attach entitlements when owner is in SCA mode' do
     skip("candlepin running in standalone mode") if not is_hosted?
 
     exception_thrown = false
@@ -48,17 +48,10 @@ describe 'Autobind Disabled On Owner' do
       {'cpu.cpu_socket(s)' => '8'}, nil, owner['key'], [], [])
     consumer_cp = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
 
-    begin
-      consumer_cp.consume_product()
-    rescue RestClient::BadRequest => e
-      exception_thrown = true
-      ex_message = "Ignoring request to auto-attach. " +
-        "It is disabled for org \"#{owner['key']}\" because of the content access mode setting."
-      data = JSON.parse(e.response)
-      expect(data['displayMessage']).to eq(ex_message)
-    end
+    consumer_cp.consume_product()
+    entitlements = consumer_cp.list_entitlements()
+    expect(entitlements.length).to eq(0)
 
-    expect(exception_thrown).to eq(true)
   end
 
   it 'autobind fails when hypervisor autobind disabled on owner' do
