@@ -2177,9 +2177,10 @@ public class ConsumerResource {
             }
             catch (AutobindDisabledForOwnerException e) {
                 if (owner.isUsingSimpleContentAccess()) {
-                    throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+                    log.debug("Ignoring request to auto-attach. " +
                         "It is disabled for org \"{0}\" because of the content access mode setting."
-                        , owner.getKey()));
+                        , owner.getKey());
+                    return Response.status(Response.Status.OK).build();
                 }
                 else {
                     throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
