@@ -58,34 +58,6 @@ public class ArtemisMessageSource implements MessageSource {
         this.messageReceivers.forEach(MessageReceiver::close);
     }
 
-    @Override
-    public void onStatusUpdate(QpidStatus oldStatus, QpidStatus newStatus) {
-        if (newStatus.equals(oldStatus)) {
-            return;
-        }
-
-        log.debug("ArtemisMessageSource was notified of a QpidStatus change: {}", newStatus);
-        for (MessageReceiver receiver : this.messageReceivers) {
-            if (!receiver.requiresQpid()) {
-                continue;
-            }
-
-            switch (newStatus) {
-                case FLOW_STOPPED:
-                case MISSING_BINDING:
-                case MISSING_EXCHANGE:
-                case DOWN:
-                    receiver.pause();
-                    break;
-                case CONNECTED:
-                    receiver.resume();
-                    break;
-                default:
-                    // do nothing
-            }
-        }
-    }
-
     /**
      * Called when the ActiveMQStatusMonitor determines that the connection to the
      * ActiveMQ broker has changed.

@@ -1,3 +1,5 @@
+[Deprecated since Candlepin-4.0.0]
+
 Install qpid:
 
     sudo yum install qpid-cpp-server qpid-tools

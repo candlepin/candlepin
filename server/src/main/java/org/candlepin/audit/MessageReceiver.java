@@ -51,10 +51,6 @@ public abstract class MessageReceiver implements MessageHandler {
         this.queueName = queueName;
     }
 
-    public boolean requiresQpid() {
-        return false;
-    }
-
     /**
      * Pause message consumption for this receiver.
      */

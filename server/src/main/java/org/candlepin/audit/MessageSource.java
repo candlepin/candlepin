@@ -16,7 +16,6 @@
 package org.candlepin.audit;
 
 import org.candlepin.controller.ActiveMQStatusListener;
-import org.candlepin.controller.QpidStatusListener;
 
 /**
  * Represents the source of messages that are to be received from candlepin's message bus.
@@ -24,7 +23,7 @@ import org.candlepin.controller.QpidStatusListener;
  * from the underlying message broker. Message listeners should only be connected/active when
  * the message bus connection has been established.
  */
-public interface MessageSource extends QpidStatusListener, ActiveMQStatusListener {
+public interface MessageSource extends ActiveMQStatusListener {
 
     /**
      * Shuts down this message source. All resources should be cleaned up here.

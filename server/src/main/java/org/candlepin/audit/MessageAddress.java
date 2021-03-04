@@ -31,11 +31,6 @@ public final class MessageAddress {
         String.format("%s.default", EVENT_ADDRESS_PREFIX);
 
     /**
-     * The address that Qpid bound messages are sent to.
-     */
-    public static final String QPID_EVENT_MESSAGE_ADDRESS = String.format("%s.qpid", EVENT_ADDRESS_PREFIX);
-
-    /**
      * The address that job event messages are sent to.
      */
     public static final String JOB_MESSAGE_ADDRESS = "job";

@@ -11,10 +11,6 @@ gem 'httpclient'
 gem 'activesupport', '~> 4.2'
 gem 'rubyzip', '~> 1.3.0'
 
-group 'proton' do
-  gem 'qpid_proton', '~> 0.21.0'
-end
-
 # Remove this once we are fully using the new Ruby bindings
 gem 'rest-client', '~> 1.6.0'
 

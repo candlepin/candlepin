@@ -34,13 +34,6 @@ public abstract class EventMessageReceiver extends MessageReceiver {
         this.listener = listener;
     }
 
-    // FIXME This should not be determined by the listener once the class is created
-    //       since the QpidEventMessageReceiver already knows that Qpid is required.
-    @Override
-    public boolean requiresQpid() {
-        return this.listener.requiresQpid();
-    }
-
     @Override
     protected void initialize() throws Exception {
         session = this.sessionFactory.getIngressSession(false);

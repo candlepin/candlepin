@@ -139,11 +139,6 @@ ext.libraries = [
         "org.apache.activemq:artemis-server",
         "org.apache.activemq:artemis-stomp-protocol",
     ],
-    amqp: [
-        "org.apache.qpid:qpid-common",
-        "org.apache.qpid:qpid-client",
-        "geronimo-spec:geronimo-spec-jms",
-    ],
 ]
 
 allprojects {
@@ -272,10 +267,6 @@ allprojects {
             dependencySet(group: "org.slf4j", version: "1.7.12") {
                 entry "jcl-over-slf4j"
                 entry "log4j-over-slf4j"
-            }
-            dependencySet(group: "org.apache.qpid", version: "0.32") {
-                entry "qpid-common"
-                entry "qpid-client"
             }
             dependencySet(group: "org.jmock", version: "2.5.1") {
                 entry "jmock"

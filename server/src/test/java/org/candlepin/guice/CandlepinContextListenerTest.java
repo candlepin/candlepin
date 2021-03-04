@@ -25,14 +25,10 @@ import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingModules;
-import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ActiveMQContextListener;
-import org.candlepin.audit.QpidQmf;
-import org.candlepin.audit.QpidStatus;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.ConfigurationPrefixes;
@@ -76,13 +72,11 @@ public class CandlepinContextListenerTest {
     private Configuration config;
     private CandlepinContextListener listener;
     private ActiveMQContextListener hqlistener;
-    private AMQPBusPublisher buspublisher;
     private ScheduledExecutorService executorService;
     private ServletContextEvent evt;
     private ServletContext ctx;
     private ResteasyDeployment resteasyDeployment;
     private VerifyConfigRead configRead;
-    private QpidQmf qmf;
 
     @BeforeEach
     public void init() {
@@ -95,10 +89,8 @@ public class CandlepinContextListenerTest {
         when(config.getString(ConfigProperties.CRL_FILE_PATH))
             .thenReturn("/tmp/tmp.crl");
         hqlistener = mock(ActiveMQContextListener.class);
-        buspublisher = mock(AMQPBusPublisher.class);
         executorService = mock(ScheduledExecutorService.class);
         configRead = mock(VerifyConfigRead.class);
-        qmf = mock(QpidQmf.class);
 
         // for testing we override the getModules and readConfiguration methods
         // so we can insert our mock versions of listeners to verify
@@ -213,7 +205,6 @@ public class CandlepinContextListenerTest {
         verify(evt, atMost(5)).getServletContext();
         verifyNoMoreInteractions(evt); // destroy shouldn't use it
         verify(hqlistener).contextDestroyed(any(Injector.class));
-        verifyZeroInteractions(buspublisher);
 
         // re-register drivers
         registerDrivers(drivers);
@@ -225,8 +216,6 @@ public class CandlepinContextListenerTest {
         // backup jdbc drivers before calling contextDestroyed method
         Enumeration<Driver> drivers = DriverManager.getDrivers();
 
-        when(config.getBoolean(
-                eq(ConfigProperties.AMQP_INTEGRATION_ENABLED))).thenReturn(true);
         when(config.getBoolean(eq(ConfigProperties.SUSPEND_MODE_ENABLED))).thenReturn(true);
         prepareForInitialization();
         // we actually have to call contextInitialized before we
@@ -236,7 +225,6 @@ public class CandlepinContextListenerTest {
 
         // test & verify
         listener.contextDestroyed(evt);
-        verify(buspublisher).close();
 
         // re-register drivers
         registerDrivers(drivers);
@@ -298,7 +286,6 @@ public class CandlepinContextListenerTest {
         when(ctx.getAttribute(eq(CandlepinContextListener.CONFIGURATION_NAME))).thenReturn(config);
         when(ctx.getAttribute(eq(ResteasyDeployment.class.getName()))).thenReturn(resteasyDeployment);
         when(resteasyDeployment.getRegistry()).thenReturn(registry);
-        when(qmf.getStatus()).thenReturn(QpidStatus.CONNECTED);
     }
 
     private void registerDrivers(Enumeration<Driver> drivers) {
@@ -318,9 +305,7 @@ public class CandlepinContextListenerTest {
         @Override
         protected void configure() {
             bind(ActiveMQContextListener.class).toInstance(hqlistener);
-            bind(AMQPBusPublisher.class).toInstance(buspublisher);
             bind(ScheduledExecutorService.class).toInstance(executorService);
-            bind(QpidQmf.class).toInstance(qmf);
         }
     }
 

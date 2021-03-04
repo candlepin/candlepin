@@ -132,11 +132,6 @@
                     <queue name="event.org.candlepin.audit.ActivationListener" />
                 </multicast>
             </address>
-            <address name="event.qpid">
-                <multicast>
-                    <queue name="event.org.candlepin.audit.AMQPBusPublisher" />
-                </multicast>
-            </address>
             <address name="job">
                 <multicast>
                     <queue name="jobs" />
@@ -165,23 +160,6 @@
                 <max-delivery-attempts>0</max-delivery-attempts>
             </address-setting>
 
-            <address-setting match="event.qpid">
-                <auto-create-queues>true</auto-create-queues>
-                <max-size-bytes>10485760</max-size-bytes>
-
-                <!-- By default, Artemis will page messages when the queue address is full. -->
-                <page-size-bytes>1048576</page-size-bytes>
-
-                <!--
-                    When qpid is enabled we want the message to be set to be redelivered right away
-                    so that it goes right back to the top of the queue. When there's an issue with
-                    Qpid, the receiver will shut down the Consumer and the messages will remain in
-                    order.
-                -->
-                <redelivery-delay>0</redelivery-delay>
-                <max-delivery-attempts>1</max-delivery-attempts>
-            </address-setting>
-
             <address-setting match="job">
                 <auto-create-queues>true</auto-create-queues>
                 <max-size-bytes>10485760</max-size-bytes>
@@ -202,14 +180,6 @@
                 <max-delivery-attempts>0</max-delivery-attempts>
             </address-setting>
         </address-settings>
-
-        <diverts>
-            <divert name="qpid_divert">
-                <exclusive>false</exclusive>
-                <address>event.default</address>
-                <forwarding-address>event.qpid</forwarding-address>
-            </divert>
-        </diverts>
 
     </core>
 </configuration>

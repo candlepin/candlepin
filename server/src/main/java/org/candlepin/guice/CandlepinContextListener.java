@@ -17,11 +17,7 @@ package org.candlepin.guice;
 import static org.candlepin.config.ConfigProperties.*;
 
 import org.candlepin.async.JobManager;
-import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ActiveMQContextListener;
-import org.candlepin.audit.QpidConnection;
-import org.candlepin.audit.QpidQmf;
-import org.candlepin.audit.QpidStatus;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.EncryptedConfiguration;
@@ -29,15 +25,12 @@ import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.common.logging.LoggingConfigurator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DatabaseConfigFactory;
-import org.candlepin.controller.QpidStatusMonitor;
-import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.util.CrlFileUtil;
-import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -170,30 +163,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         this.cpmContextListener = injector.getInstance(CPMContextListener.class);
         this.cpmContextListener.initialize(injector);
 
-        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            if (!config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
-                QpidQmf qmf = injector.getInstance(QpidQmf.class);
-                QpidStatus status = qmf.getStatus();
-                if (status != QpidStatus.CONNECTED) {
-                    log.error("Qpid is in status {}. Please fix Qpid configuration " +
-                        "and make sure Qpid is up and running. Candlepin will shutdown now.", status);
-                    throw new RuntimeException("Error during Startup: Qpid is in status " + status);
-                }
-            }
-
-            QpidStatusMonitor qpidMonitor = injector.getInstance(QpidStatusMonitor.class);
-            qpidMonitor.addStatusChangeListener(injector.getInstance(QpidConnection.class));
-
-            if (config.getBoolean(ConfigProperties.SUSPEND_MODE_ENABLED)) {
-                qpidMonitor.addStatusChangeListener(injector.getInstance(SuspendModeTransitioner.class));
-            }
-
-            // Run the monitor immediately so that the listeners are notified of the current status.
-            // After which we can schedule the monitor to run on the configured interval.
-            qpidMonitor.run();
-            qpidMonitor.schedule();
-        }
-
         if (config.getBoolean(ACTIVEMQ_ENABLED)) {
             // If Artemis can not be started candlepin will not start.
             activeMQContextListener = injector.getInstance(ActiveMQContextListener.class);
@@ -268,11 +237,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         // Tear down the job system
         this.jobManager.shutdown();
-
-        // if amqp is enabled, close all connections.
-        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            Util.closeSafely(injector.getInstance(AMQPBusPublisher.class), "AMQPBusPublisher");
-        }
 
         injector.getInstance(PersistService.class).stop();
         // deregister jdbc driver to avoid warning in tomcat shutdown log

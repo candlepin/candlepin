@@ -159,8 +159,8 @@ create_var_cache_candlepin() {
 
 autoconf() {
   printf "\nGenerating candlepin.conf\n"
-  echo $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID $EXTERNAL_BROKER -Pdb_host=${DBHOSTNAME:-localhost}
-  $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID $EXTERNAL_BROKER  -Pdb_host=${DBHOSTNAME:-localhost}
+  echo $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $EXTERNAL_BROKER -Pdb_host=${DBHOSTNAME:-localhost}
+  $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $EXTERNAL_BROKER  -Pdb_host=${DBHOSTNAME:-localhost}
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"
@@ -184,7 +184,6 @@ OPTIONS:
   -f          force cert regeneration
   -g          generate database
   -r          generate test repositories
-  -q          Qpid enabled. Also deploys 'allmsg' queue used by spec tests
   -t          import test data
   -T          import minimal test data, some owners, users, and roles
   -H          include test resources for hosted mode
@@ -238,12 +237,11 @@ init
 
 DBUSER="candlepin"
 
-while getopts ":fqgtTrHolmavbd:" opt; do
+while getopts ":fgtTrHolmavbd:" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
         H  ) HOSTEDTEST="hostedtest";;
-        q  ) QPID="qpid";;
         t  ) TESTDATA="1";;
         T  ) TESTDATA="MIN";;
         r  ) TESTREPO="1";;
@@ -336,34 +334,6 @@ else
     HOSTEDTEST=""
 fi
 
-# Delete the allmsg Qpid queue. The error messages produced during
-# deletion are silenced
-# This deletion is attempted regardless of whether Qpid is enabled. We do that
-# to prevent the queue to grow indefinitely
-QPID_KEYS_DIR=$PROJECT_DIR/../server/bin/qpid/keys
-
-if [ "$QPID" == "qpid" ]; then
-    info_msg "Enable Qpid"
-
-    if [ "$FORCECERT" == "1" ]; then
-        # clean qpid certs
-        $PROJECT_DIR/bin/qpid/configure-qpid.sh -c
-    fi
-    $PROJECT_DIR/bin/qpid/configure-qpid.sh
-
-    QPID="-Pqpid=true"
-
-    qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key --force del queue allmsg 2 > /dev/null || true
-    qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key --force del queue flowStopQueue 2 > /dev/null || true
-
-    #Setup testing qpid queue allmsg, this will be needed by Qpid spec tests
-    qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key add queue allmsg --durable
-    qpid-config -b amqps://localhost:5671 --ssl-certificate $QPID_KEYS_DIR/qpid_ca.crt --ssl-key $QPID_KEYS_DIR/qpid_ca.key bind event allmsg "#"
-else
-    QPID=""
-fi
-
-
 if [ "$USE_MYSQL" == "1" ]; then
     DATABASE_SERVER="-Pdatabase_server=mysql"
 else
@@ -373,8 +343,8 @@ else
 fi
 
 printf "\nBuilding Candlepin\n"
-echo $(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
-$(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $QPID
+echo $(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST
+$(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST
 
 if [ "$?" -ne "0" ]; then
   err_msg "ERROR: Compile failed."

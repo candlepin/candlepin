@@ -37,7 +37,6 @@ import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.async.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
-import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.ArtemisMessageSource;
 import org.candlepin.audit.ArtemisMessageSourceReceiverFactory;
 import org.candlepin.audit.EventSink;
@@ -45,8 +44,6 @@ import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.audit.MessageSource;
 import org.candlepin.audit.MessageSourceReceiverFactory;
 import org.candlepin.audit.NoopEventSinkImpl;
-import org.candlepin.audit.QpidConfigBuilder;
-import org.candlepin.audit.QpidConnection;
 import org.candlepin.auth.Principal;
 import org.candlepin.bind.BindChainFactory;
 import org.candlepin.bind.BindContextFactory;
@@ -301,10 +298,6 @@ public class CandlepinModule extends AbstractModule {
         // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
-        // only initialize if we've enabled AMQP integration
-        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            configureAmqp();
-        }
 
         bind(CacheManager.class).toProvider(JCacheManagerProvider.class).in(Singleton.class);
 
@@ -486,14 +479,6 @@ public class CandlepinModule extends AbstractModule {
         beanConfig.setVersion(VersionUtil.getVersionString());
         beanConfig.setTitle("Candlepin");
         beanConfig.setScan(true);
-    }
-
-    private void configureAmqp() {
-        // for lazy loading:
-        bind(AMQPBusPublisher.class).in(Singleton.class);
-        //TODO make sure these two classes are always singletons
-        bind(QpidConnection.class).in(Singleton.class);
-        bind(QpidConfigBuilder.class).in(Singleton.class);
     }
 
     private void configureActiveMQComponents() {
