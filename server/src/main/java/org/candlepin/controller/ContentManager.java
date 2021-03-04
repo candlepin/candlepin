@@ -64,6 +64,7 @@ import java.util.Set;
 public class ContentManager {
     private static Logger log = LoggerFactory.getLogger(ContentManager.class);
 
+    private ContentAccessManager contentAccessManager;
     private ContentCurator contentCurator;
     private EntitlementCertificateGenerator entitlementCertGenerator;
     private OwnerContentCurator ownerContentCurator;
@@ -72,11 +73,12 @@ public class ContentManager {
     private ModelTranslator modelTranslator;
 
     @Inject
-    public ContentManager(
+    public ContentManager(ContentAccessManager contentAccessManager,
         ContentCurator contentCurator, EntitlementCertificateGenerator entitlementCertGenerator,
         OwnerContentCurator ownerContentCurator, ProductCurator productCurator,
         ProductManager productManager, ModelTranslator modelTranslator) {
 
+        this.contentAccessManager = contentAccessManager;
         this.contentCurator = contentCurator;
         this.entitlementCertGenerator = entitlementCertGenerator;
         this.ownerContentCurator = ownerContentCurator;
@@ -143,6 +145,9 @@ public class ContentManager {
 
         entity = this.contentCurator.create(entity);
         this.ownerContentCurator.mapContentToOwner(entity, owner);
+
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return entity;
     }
@@ -330,6 +335,9 @@ public class ContentManager {
                 this.productManager.updateProduct(pdto, owner, regenerateEntitlementCerts);
             }
         }
+
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return updated;
     }
@@ -547,6 +555,9 @@ public class ContentManager {
 
         this.ownerContentCurator.updateOwnerContentReferences(owner, contentUuidMap);
 
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+
         // Return
         return importResult;
     }
@@ -713,6 +724,9 @@ public class ContentManager {
 
             // Remove content references
             this.ownerContentCurator.removeOwnerContentReferences(owner, contentUuids);
+
+            log.debug("Synchronizing last content update for org: {}", owner);
+            this.contentAccessManager.syncOwnerLastContentUpdate(owner);
         }
     }
 

@@ -178,7 +178,7 @@ public class ComplianceRules {
 
 
         // Status can only be 'disabled' when in golden ticket mode
-        if (consumer.getOwner() != null && consumer.getOwner().isContentAccessEnabled()) {
+        if (consumer.getOwner() != null && consumer.getOwner().isUsingSimpleContentAccess()) {
             ComplianceStatus cs = new ComplianceStatus(new Date());
             cs.setDisabled(true);
             applyStatus(consumer, cs, updateConsumer);

@@ -53,6 +53,8 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
+
+
 /**
  * Genuinely random utilities.
  */
@@ -541,7 +543,8 @@ public class Util {
     /**
      * Returns the first non-null non-empty value from the given array
 
-     * @param values values to be searched
+     * @param values
+     *  the values to be examine
      * @return first non-null non-empty value or null
      */
     public static String firstOf(String... values) {
@@ -564,6 +567,29 @@ public class Util {
             return Collections.emptyList();
         }
         return Arrays.asList(list.split(","));
+    }
+
+
+    /**
+     * Returns the first non-null value in the provided values. If all of the provided values are
+     * null, or no values are provided, this method returns null.
+     *
+     * @param values
+     *  the values to examine
+     *
+     * @return
+     *  the first non-null value of the values provided, or null if no such value is provided
+     */
+    public static <T> T firstOf(T... values) {
+        if (values != null) {
+            for (T value : values) {
+                if (value != null) {
+                    return value;
+                }
+            }
+        }
+
+        return null;
     }
 
 }
