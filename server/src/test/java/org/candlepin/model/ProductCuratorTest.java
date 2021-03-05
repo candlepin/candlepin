@@ -103,7 +103,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             providedProducts,
             16L,
             TestUtil.createDate(2006, 10, 21),
-            TestUtil.createDate(2020, 1, 1),
+            TestUtil.createFutureDate(3),
             "1",
             "2",
             "3"

@@ -177,12 +177,12 @@ public class PoolRulesStackDerivedTest {
         pool2 = copyFromSub(sub2);
 
         sub3 = createStackedVirtSub(owner, prod2, TestUtil.createDate(2012, 1, 1),
-            TestUtil.createDate(2020, 1, 1));
+            TestUtil.createFutureDate(3));
         sub3.getProvidedProducts().add(provided3.toDTO());
         pool3 = copyFromSub(sub3);
 
         sub4 = createStackedVirtSub(owner, prod3, TestUtil.createDate(2012, 1, 1),
-            TestUtil.createDate(2020, 1, 1));
+            TestUtil.createFutureDate(3));
         sub4.getProvidedProducts().add(provided4.toDTO());
         pool4 = copyFromSub(sub4);
 
