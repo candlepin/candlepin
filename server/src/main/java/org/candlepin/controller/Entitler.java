@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -209,26 +210,33 @@ public class Entitler {
         Owner owner = data.getOwner();
         ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
         boolean autobindHypervisorDisabled = owner.isAutobindHypervisorDisabled() &&
-            type != null &&
-            type.isType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
+            type != null && type.isType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
 
         if (!consumer.isDev() &&
             (owner.isAutobindDisabled() || owner.isContentAccessEnabled() || autobindHypervisorDisabled)) {
             String caMessage = owner.isContentAccessEnabled() ?
                 " because of the content access mode setting" : "";
+
             String hypMessage = owner.isAutobindHypervisorDisabled() ?
                 " because of the hypervisor autobind setting" : "";
+
             log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}{}",
                 consumer.getUuid(), owner.getKey(), caMessage, hypMessage);
+
             if (autobindHypervisorDisabled) {
                 throw new AutobindHypervisorDisabledException(i18n.tr(
                     "Auto-attach is disabled for owner \"{0}\"{1}.",
                     owner.getKey(), hypMessage));
             }
-            else {
+            else if (owner.isAutobindDisabled()) {
                 throw new AutobindDisabledForOwnerException(i18n.tr(
-                    "Auto-attach is disabled for owner \"{0}\"{1}.",
-                    owner.getKey(), caMessage));
+                    "Auto-attach is disabled for owner \"{0}\".",
+                    owner.getKey()));
+            }
+            else {
+                log.debug("Auto-attach is disabled for owner \"{0}\"{1}.",
+                    owner.getKey(), caMessage);
+                return Collections.EMPTY_LIST;
             }
         }
 
