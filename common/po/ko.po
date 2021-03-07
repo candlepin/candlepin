@@ -1,12 +1,13 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
+# simmon <simmon@nplob.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-02-11 02:01-0500\n"
-"PO-Revision-Date: 2021-02-09 09:40+0000\n"
-"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
+"PO-Revision-Date: 2021-03-06 10:01+0000\n"
+"Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
 "Language: ko\n"
@@ -1347,13 +1348,13 @@ msgstr "제품 \"{0}\"이/가 잠겨있습니다"
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more "
 "subscriptions"
-msgstr ""
+msgstr "하나 또는 그 이상의 구독에서 참조되어 질 때에 Product \"{0}\"는 삭제되어 질 수 없습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:458
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more products"
-msgstr ""
+msgstr "하나 또는 그 이상의 제품에서 참조되어질 때에 물품 \"{0}\"는 삭제 되어 질 수 없습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:293
 msgid "Owner key is null or empty."
@@ -1770,7 +1771,7 @@ msgstr "독립형 candlepin은 서브스크립션 교환을 지원하지 않습�
 #: server/src/main/java/org/candlepin/servlet/filter/CandlepinContentTypeFilter.java:63
 #, java-format
 msgid "Invalid Content-Type {0}"
-msgstr ""
+msgstr "잘못된 내용-유형 {0}"
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:68
 msgid "No ID for upstream subscription management application."
