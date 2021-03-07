@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-04 02:02-0500\n"
+"POT-Creation-Date: 2021-03-07 02:02-0500\n"
 "PO-Revision-Date: 2021-01-10 18:36+0000\n"
 "Last-Translator: Fábio Rodrigues Ribeiro <farribeiro@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.fedoraproject.org/"
@@ -438,14 +438,18 @@ msgstr ""
 "A intitulação não mapeada do convidado expirou sem estabelecer um mapeamento "
 "do host/ convidado."
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:225
-#: server/src/main/java/org/candlepin/controller/Entitler.java:230
+#: server/src/main/java/org/candlepin/controller/Entitler.java:228
 #, fuzzy, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"{1}."
 msgstr "Auto-fixação está desabilitado para proprietário \"{0}\"{1}."
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:286
-#: server/src/main/java/org/candlepin/controller/Entitler.java:453
+#: server/src/main/java/org/candlepin/controller/Entitler.java:233
+#, java-format
+msgid "Auto-attach is disabled for owner \"{0}\"."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/controller/Entitler.java:294
+#: server/src/main/java/org/candlepin/controller/Entitler.java:461
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
@@ -453,13 +457,13 @@ msgstr ""
 "As unidades de desenvolvimento podem somente ser usadas nos servidores com "
 "host e com orgs que possuem subscrições ativas."
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:424
+#: server/src/main/java/org/candlepin/controller/Entitler.java:432
 #, java-format
 msgid "SKU product not available to this development unit: \"{0}\""
 msgstr ""
 "Produto SKU não disponível para essa unidade de desenvolvimento: \"{0}\""
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:430
+#: server/src/main/java/org/candlepin/controller/Entitler.java:438
 #, java-format
 msgid "Installed product not available to this development unit: \"{0}\""
 msgstr ""
@@ -1014,34 +1018,39 @@ msgstr ""
 "Não é possível especificar a quantidade quando realizar a auto-vinculação "
 "(auto-binding)."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2139
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2140
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the content access mode setting."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2144
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2145
+#, java-format
+msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2151
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2195
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2202
 #, java-format
 msgid ""
 "Organization \"{0}\" has auto-attach disabled because of the content access "
 "mode setting."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2200
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2207
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2239
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2349
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2246
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2356
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:201
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:240
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:259
@@ -1051,33 +1060,33 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2372
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2379
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2394
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2401
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2465
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2472
 msgid "Unable to create export archive"
 msgstr "Não foi possível criar o arquivo de exportação"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2679
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2686
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "Erro na tentativa de regenerar o certificado de ID para a unidade {0}"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2723
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2730
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "O sistema com UUID {0} não é um convidado virtual"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2824
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2831
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""

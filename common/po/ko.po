@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-04 02:02-0500\n"
+"POT-Creation-Date: 2021-03-07 02:02-0500\n"
 "PO-Revision-Date: 2021-03-06 10:01+0000\n"
 "Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
@@ -436,14 +436,18 @@ msgstr ""
 "호스트/게스트 매핑 설정없이 매핑되지 않은 게스트 인타이틀먼트가 만료되었습니"
 "다."
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:225
-#: server/src/main/java/org/candlepin/controller/Entitler.java:230
+#: server/src/main/java/org/candlepin/controller/Entitler.java:228
 #, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"{1}."
 msgstr "소유자 \"{0}\"{1}의 자동 연결이 비활성화되어 있습니다."
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:286
-#: server/src/main/java/org/candlepin/controller/Entitler.java:453
+#: server/src/main/java/org/candlepin/controller/Entitler.java:233
+#, java-format
+msgid "Auto-attach is disabled for owner \"{0}\"."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/controller/Entitler.java:294
+#: server/src/main/java/org/candlepin/controller/Entitler.java:461
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
@@ -451,12 +455,12 @@ msgstr ""
 "개발 장치는 활성 서브스크립션이 있는 조직에서 호스팅되는 서버에서만 사용할 "
 "수 있습니다."
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:424
+#: server/src/main/java/org/candlepin/controller/Entitler.java:432
 #, java-format
 msgid "SKU product not available to this development unit: \"{0}\""
 msgstr "SKU 제품은 이 개발 장치에서 사용할 수 없습니다: ''{0}''"
 
-#: server/src/main/java/org/candlepin/controller/Entitler.java:430
+#: server/src/main/java/org/candlepin/controller/Entitler.java:438
 #, java-format
 msgid "Installed product not available to this development unit: \"{0}\""
 msgstr "설치된 제품을 이 개발 장치에서 사용할 수 없습니다: ''{0}''"
@@ -1015,7 +1019,7 @@ msgstr "여러 매개 변수로 바인딩할 수 없음."
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "자동 바인딩 시 수량을 지정할 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2139
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2140
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
@@ -1024,7 +1028,12 @@ msgstr ""
 "자동 첨부 요청을 무시합니다. 콘텐츠 액세스 모드 설정으로 인해 {0}\" 조직에 대"
 "해 비활성화되어 있습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2144
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2145
+#, java-format
+msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2151
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
@@ -1033,7 +1042,7 @@ msgstr ""
 "자동 첨부 요청을 무시합니다. 하이퍼바이저 자동 바인드 설정으로 인해 {0}\" 조"
 "직에 대해 비활성화되어 있습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2195
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2202
 #, java-format
 msgid ""
 "Organization \"{0}\" has auto-attach disabled because of the content access "
@@ -1041,13 +1050,13 @@ msgid ""
 msgstr ""
 "\"{0}\" 조직에서 컨텐츠 액세스 모드 설정으로 인해 자동 연결이 해제되었습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2200
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2207
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "\"{0}\" 조직에 자동 연결이 해제되었습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2239
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2349
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2246
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2356
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:201
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:240
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:259
@@ -1057,33 +1066,33 @@ msgstr "\"{0}\" 조직에 자동 연결이 해제되었습니다."
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "ID ''{0}''인 인타이틀먼트를 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2372
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2379
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr "시리얼 번호 ''{0}''인 인타이틀먼트 인증서를 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2394
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2401
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "풀 ID ''{1}''인 소비자 ''{0}''의 인타이틀먼트가 없습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2465
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2472
 msgid "Unable to create export archive"
 msgstr "내보내기 아카이브를 생성할 수 없음"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2679
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2686
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "장치 {0}의 ID 인증서를 다시 생성하는 도중 문제 발생"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2723
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2730
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0}를 갖는 시스템은 가상 게스트가 아닙니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2824
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2831
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "하이퍼바이저 ''{0}''의 삭제 기록을 찾을 수 없습니다."
@@ -1257,7 +1266,9 @@ msgstr "오류 설정 스케줄러 상태"
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
-msgstr "이 끝점은 한 번에 {0}개 이상의 결과 반환을 지원하지 않습니다. 페이징을 사용하세요."
+msgstr ""
+"이 끝점은 한 번에 {0}개 이상의 결과 반환을 지원하지 않습니다. 페이징을 사용하"
+"세요."
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:272
 #: server/src/main/java/org/candlepin/resource/JobResource.java:300
@@ -1726,7 +1737,9 @@ msgstr "데이터 매개 변수를 구문 분석할 수 없습니다"
 msgid ""
 "Candlepin is in Suspend mode, please check /status resource to get more "
 "details"
-msgstr "Candlepin은 일시 중지 모드입니다. 보다 자세한 내용은 /status 리소스를 확인하십시오"
+msgstr ""
+"Candlepin은 일시 중지 모드입니다. 보다 자세한 내용은 /status 리소스를 확인하"
+"십시오"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1746,8 +1759,9 @@ msgid ""
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
 msgstr ""
-"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 문제를 처리할 수 있습니다. 자세한 내용은 지식 "
-"데이터베이스에서 참조하십시오. (https://access.redhat.com/knowledge/node/129003)."
+"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 "
+"이 문제를 처리할 수 있습니다. 자세한 내용은 지식 데이터베이스에서 참조하십시"
+"오. (https://access.redhat.com/knowledge/node/129003)."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
