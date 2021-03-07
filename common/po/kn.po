@@ -1002,13 +1002,6 @@ msgstr "ಬಹು ನಿಯತಾಂಕದೊಂದಿಗೆ ಬೈಂಡ್ ಮ
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "ಸ್ವಯಂ-ಬೈಂಡಿಂಗ್ ಮಾಡುವಾಗ ಒಂದು ಪ್ರಮಾಣವನ್ನು ಸೂಚಿಸಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2174
-#, java-format
-msgid ""
-"Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
-"the content access mode setting."
-msgstr ""
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2179
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."

@@ -994,13 +994,6 @@ msgstr "無法以多重參數綁定。"
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "自動綁定時，無法指定數量。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2174
-#, java-format
-msgid ""
-"Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
-"the content access mode setting."
-msgstr ""
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2179
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."

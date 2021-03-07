@@ -1018,15 +1018,6 @@ msgstr "여러 매개 변수로 바인딩할 수 없음."
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "자동 바인딩 시 수량을 지정할 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2174
-#, java-format
-msgid ""
-"Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
-"the content access mode setting."
-msgstr ""
-"자동 첨부 요청을 무시합니다. 콘텐츠 액세스 모드 설정으로 인해 {0}\" 조직에 대"
-"해 비활성화되어 있습니다."
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2179
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."

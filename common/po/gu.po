@@ -1002,13 +1002,6 @@ msgstr "ઘણાબધા પરિમાણો દ્દારા બાંધ
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "ગુણવત્તાને સ્પષ્ટ કરી શકાતુ નથી જ્યારે ઓટો-બાઇન્ડીંગ કરે."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2174
-#, java-format
-msgid ""
-"Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
-"the content access mode setting."
-msgstr ""
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2179
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."

@@ -1029,15 +1029,6 @@ msgstr "複数のパラメーターでバインドできません。"
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "自動バインド時に数量を指定できません。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2174
-#, java-format
-msgid ""
-"Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
-"the content access mode setting."
-msgstr ""
-"自動割り当ての要求を無視します。これは、コンテンツアクセスモードの設定によ"
-"り、組織 \"{0}\" に対して無効となっています。"
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2179
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
