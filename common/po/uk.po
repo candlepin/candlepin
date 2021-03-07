@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-07 02:01-0500\n"
-"PO-Revision-Date: 2021-02-12 07:40+0000\n"
+"PO-Revision-Date: 2021-03-07 10:01+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/uk/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.4.2\n"
+"X-Generator: Weblate 4.5.1\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:72
 #: server/src/main/java/org/candlepin/guice/I18nProvider.java:84
@@ -395,7 +395,7 @@ msgstr "Для власника «{0}»{1} вимкнено автоматичн
 #: server/src/main/java/org/candlepin/controller/Entitler.java:241
 #, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"."
-msgstr ""
+msgstr "Автодолучення для власника «{0}» вимкнено."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:304
 #: server/src/main/java/org/candlepin/controller/Entitler.java:509
