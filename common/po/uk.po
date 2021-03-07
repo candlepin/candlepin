@@ -1,13 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Yuri Chornoivan <yurchor@ukr.net>, 2020.
+# Yuri Chornoivan <yurchor@ukr.net>, 2020, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-07 02:02-0500\n"
-"PO-Revision-Date: 2020-12-14 12:53+0000\n"
+"PO-Revision-Date: 2021-03-07 10:01+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-3-1-hotfix/uk/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.3.2\n"
+"X-Generator: Weblate 4.5.1\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:72
 #: server/src/main/java/org/candlepin/guice/I18nProvider.java:84
@@ -392,7 +392,7 @@ msgstr "Для власника «{0}»{1} вимкнено автоматичн
 #: server/src/main/java/org/candlepin/controller/Entitler.java:233
 #, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"."
-msgstr ""
+msgstr "Автодолучення для власника «{0}» вимкнено."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:294
 #: server/src/main/java/org/candlepin/controller/Entitler.java:461
@@ -990,6 +990,8 @@ msgstr ""
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
+"Ігноруємо запит щодо автоматичного долучення. Його вимкнено для організації "
+"«{0}»."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2151
 #, java-format
