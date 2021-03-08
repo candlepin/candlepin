@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2020-12-14 07:53-0500\n"
-"PO-Revision-Date: 2021-03-04 21:00+0000\n"
+"PO-Revision-Date: 2021-03-06 22:01+0000\n"
 "Last-Translator: Igor Gorbounov <igor.gorbounov@gmail.com>\n"
 "Language-Team: Russian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-2-9-hotfix/ru/>\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.4.2\n"
+"X-Generator: Weblate 4.5.1\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -756,10 +756,10 @@ msgid "Unable to attach pool with ID \"{1}\".: {0}."
 msgstr "Не удалось присоединить буфер с идентификатором «{1}».: {0}."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:192
-#, fuzzy, java-format
+#, java-format
 msgid ""
 "This system already has a subscription for the product \"{1}\" attached."
-msgstr "В этой системе уже присоединена подписка на продукт «{1}»."
+msgstr "В этой системе уже подключена подписка на продукт «{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:194
 #, java-format
@@ -786,7 +786,7 @@ msgstr "Не удается присоединить подписку для п�
 #, java-format
 msgid ""
 "Insufficient pool quantity available for adjustment to entitlement \"{1}\"."
-msgstr ""
+msgstr "Недостаточное число буферов для корректировки прав доступа \"{1}\"."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:210
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:212
@@ -794,16 +794,18 @@ msgstr ""
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement \"{1}\"."
 msgstr ""
+"Множественные права не поддерживаются для буфера, связанного с правом «{1}»."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:214
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
 msgstr ""
+"Не удается скорректировать количество для права с идентификатором «{1}»: {0}"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyContentOverrideResource.java:64
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:114
 msgid "activation key ID is null or empty"
-msgstr ""
+msgstr "идентификатор ключа активации - null или пустой"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyContentOverrideResource.java:70
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:120
@@ -819,6 +821,8 @@ msgid ""
 "The activation key name \"{0}\" must be alphanumeric or include the "
 "characters \"-\" or \"_\""
 msgstr ""
+"Имя ключа активации «{0}» должно быть буквенно-цифровым или включать символы "
+"«-» или «_»"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:236
 #, java-format
@@ -844,11 +848,11 @@ msgstr "Продукт ID «{0}» не найден."
 #: server/src/main/java/org/candlepin/resource/CdnResource.java:104
 #, java-format
 msgid "A CDN with the label {0} already exists"
-msgstr ""
+msgstr "Сеть CDN с меткой {0} уже существует"
 
 #: server/src/main/java/org/candlepin/resource/CdnResource.java:191
 msgid "cdn certificate has null key or cert."
-msgstr ""
+msgstr "Сертификат cdn имеет нулевой ключ или сертификат."
 
 #: server/src/main/java/org/candlepin/resource/CdnResource.java:200
 #, java-format
@@ -876,21 +880,21 @@ msgstr "Клиент с ID {0} не найден."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:478
 msgid "No UUIDs provided."
-msgstr ""
+msgstr "UUID не предоставлены."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:587
 #, java-format
 msgid "Environment \"{0}\" could not be found."
-msgstr ""
+msgstr "Не удалось найти среду «{0}»."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:745
 msgid "Unit type must be specified."
-msgstr ""
+msgstr "Тип модуля должен быть указан."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:750
 #, java-format
 msgid "Invalid unit type: {0}"
-msgstr ""
+msgstr "Неправильный тип модуля: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -907,16 +911,17 @@ msgstr "Не удалось создать {0}"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:887
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1373
 msgid "The consumer cannot be assigned a content access mode."
-msgstr ""
+msgstr "Потребителю нельзя назначить режим доступа к контенту."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:891
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1365
 msgid "The consumer cannot use the supplied content access mode."
 msgstr ""
+"Потребитель не может использовать предоставленный режим доступа к контенту."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:899
 msgid "Org required to register with activation keys."
-msgstr ""
+msgstr "Организации необходимо зарегистрироваться с помощью ключей активации."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -926,7 +931,7 @@ msgstr "Имя пользователя не может использовать
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:913
 msgid "A unit type of \"person\" cannot be used with activation keys"
-msgstr ""
+msgstr "Тип модуля «person» не может использоваться с ключами активации"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -937,7 +942,7 @@ msgstr "Имя системы не должно содержать специа�
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:933
 msgid "You may not create a manifest consumer via Subscription Manager."
-msgstr ""
+msgstr "Нельзя создавать потребителя манифеста через Диспетчер подписок."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:953
 msgid "None of the activation keys specified exist for this org."
@@ -952,7 +957,7 @@ msgstr "Имя системы не может начинаться с #."
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1078
 #, java-format
 msgid "Activation key \"{0}\" not found for organization \"{1}\"."
-msgstr ""
+msgstr "Ключ активации «{0}» не найден для организации «{1}»."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1103
 #, java-format
