@@ -201,7 +201,7 @@ allprojects {
             dependency group: 'com.mchange', name: 'c3p0', version: '0.9.5.4'
             dependency group: 'org.keycloak', name: 'keycloak-servlet-filter-adapter', version: '7.0.0'
 
-            dependencySet(group: "org.jboss.resteasy", version: "4.4.2.Final") {
+            dependencySet(group: "org.jboss.resteasy", version: "4.4.3.Final") {
                 entry "resteasy-core"
                 entry "resteasy-multipart-provider"
                 entry "resteasy-jaxb-provider"
