@@ -2240,15 +2240,14 @@ public class ConsumerResource {
             String message = "";
 
             if (owner.isUsingSimpleContentAccess()) {
-                message = (i18n.tr("Organization \"{0}\" has auto-attach disabled because " +
-                    "of the content access mode setting.", owner.getKey()));
-
+                log.debug("Organization \"{0}\" has auto-attach disabled because " +
+                    "of the content access mode setting.", owner.getKey());
+                return Collections.EMPTY_LIST;
             }
             else {
                 message = (i18n.tr("Organization \"{0}\" has auto-attach disabled.", owner.getKey()));
+                throw new BadRequestException(message);
             }
-
-            throw new BadRequestException(message);
         }
 
         List<PoolQuantity> dryRunPools = new ArrayList<>();

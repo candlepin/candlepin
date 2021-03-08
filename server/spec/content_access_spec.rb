@@ -883,4 +883,17 @@ describe 'Content Access' do
     end
   end
 
+  it 'should be disabled for owner in SCA mode' do
+    consumer = @user.register(random_string('testsystem'), :system, nil,
+               {'system.certificate_version' => '3.1'}, nil, nil, [], [], nil)
+
+    # System purpose status
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    expect(status['status']).to eq("disabled")
+
+    # compliance status
+    status = @cp.get_compliance(consumer['uuid'])
+    expect(status['status']).to eq("disabled")
+  end
+
 end
