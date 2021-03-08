@@ -195,12 +195,13 @@ OPTIONS:
   -j <version>      use a specific Java version instead of the auto-detected default
   -v                enable verbose/debug output
   -i                internationalization - validate translation files
+  -k                run cloud registration rspec test suite (only for "hosted" mode)
   -a <arguments>    extra arguments to pass to the Candlepin deploy script (implies -d)
 HELP
 }
 
 ARGV=("$@")
-while getopts ":dtRqrHulsb:c:a:vj:i" opt; do
+while getopts ":dtRqrHulsb:c:a:vj:i:k" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -246,6 +247,7 @@ while getopts ":dtRqrHulsb:c:a:vj:i" opt; do
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
         i  ) TRANSLATE="1";;
+        k  ) CLOUD_AUTH_RSPEC="1";;
         ?  ) usage; exit;;
     esac
 done
@@ -416,6 +418,14 @@ if [ "$DEPLOY" == "1" ]; then
     fi
 
     DEPLOY_FLAGS="${DEPLOY_FLAGS}${EX_ARGS}"
+
+    # To run the cloud auth rspec test suite.
+    # We generate custom.yaml to enable the
+    # cloud auth property.
+    # This is valid only for hosted mode.
+    if [ "$CLOUD_AUTH_RSPEC" == "1" ] && [ "$HOSTED" == "1" ]; then
+      python $PROJECT_DIR/bin/generate_custom_yaml.py $PROJECT_DIR
+    fi
 
     # set up the database from setup-db.sh
     # only runs if function is defined

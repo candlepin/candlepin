@@ -72,7 +72,7 @@ pipeline {
                     agent { label 'docker' }
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
-                        CP_TEST_ARGS = '-H'
+                        CP_TEST_ARGS = '-H -k'
                     }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
@@ -86,7 +86,7 @@ pipeline {
                     agent { label 'docker' }
                     environment {
                         CANDLEPIN_DATABASE = 'mysql'
-                        CP_TEST_ARGS = '-H'
+                        CP_TEST_ARGS = '-H -k'
                     }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
