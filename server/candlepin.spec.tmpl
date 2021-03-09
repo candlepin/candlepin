@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.24
+Version: 3.1.25
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,16 @@ fi
 
 #raw
 %changelog
+* Tue Mar 09 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.25-1
+- 1935300: Added additional checks for regenerating SCA certificates
+  (crog@redhat.com)
+- Update resteasy in pom.xml files (nmoumoul@redhat.com)
+- 1935595: On SCA mode, stop throwing an error during auto-attach
+  (sdhome@redhat.com)
+- Fixed some hard-coded end dates in unit tests (crog@redhat.com)
+- Upgrade jackson to 2.10.5 & 2.10.5.1 (nmoumoul@redhat.com)
+- 1929681: Candlepin will not install in FIPS mode (ojanus@redhat.com)
+
 * Thu Jan 21 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.24-1
 - ENT-3286: Manifest delete takes 24 hours or more in large environment (60k
   consumers in owner)  - Fix too many params issue in manifest import  -
