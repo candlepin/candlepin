@@ -65,16 +65,19 @@ import java.util.Set;
 public class ProductManager {
     private static Logger log = LoggerFactory.getLogger(ProductManager.class);
 
+    private ContentAccessManager contentAccessManager;
     private EntitlementCertificateGenerator entitlementCertGenerator;
     private OwnerContentCurator ownerContentCurator;
     private OwnerProductCurator ownerProductCurator;
     private ProductCurator productCurator;
 
     @Inject
-    public ProductManager(EntitlementCertificateGenerator entitlementCertGenerator,
+    public ProductManager(ContentAccessManager contentAccessManager,
+        EntitlementCertificateGenerator entitlementCertGenerator,
         OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator,
         ProductCurator productCurator) {
 
+        this.contentAccessManager = contentAccessManager;
         this.entitlementCertGenerator = entitlementCertGenerator;
         this.ownerContentCurator = ownerContentCurator;
         this.ownerProductCurator = ownerProductCurator;
@@ -137,6 +140,9 @@ public class ProductManager {
 
         entity = this.productCurator.create(entity);
         this.ownerProductCurator.mapProductToOwner(entity, owner);
+
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return entity;
     }
@@ -257,6 +263,9 @@ public class ProductManager {
             this.entitlementCertGenerator.regenerateCertificatesOf(
                 Arrays.asList(owner), Arrays.asList(updated), true);
         }
+
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return updated;
     }
@@ -443,6 +452,9 @@ public class ProductManager {
 
         this.ownerProductCurator.updateOwnerProductReferences(owner, productUuidMap);
 
+        log.debug("Synchronizing last content update for org: {}", owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+
         // Return
         return importResult;
     }
@@ -560,6 +572,9 @@ public class ProductManager {
             // Remove owner references to all the products. This will leave the products orphaned,
             // to be eventually deleted by the orphan removal job
             this.ownerProductCurator.removeOwnerProductReferences(owner, productUuids);
+
+            log.debug("Synchronizing last content update for org: {}", owner);
+            this.contentAccessManager.syncOwnerLastContentUpdate(owner);
         }
     }
 

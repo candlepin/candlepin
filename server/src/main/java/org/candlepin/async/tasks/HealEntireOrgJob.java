@@ -88,8 +88,8 @@ public class HealEntireOrgJob implements AsyncJob {
                     i18n.tr("Healing attempted against non-existent org key \"{}\"", ownerKey), true);
             }
 
-            if (owner.isAutobindDisabled() || owner.isContentAccessEnabled()) {
-                String caMessage = owner.isContentAccessEnabled() ?
+            if (owner.isAutobindDisabled() || owner.isUsingSimpleContentAccess()) {
+                String caMessage = owner.isUsingSimpleContentAccess() ?
                     " because of the content access mode setting" : "";
                 throw new JobExecutionException(
                     i18n.tr("Auto-attach is disabled for owner {0}{1}.", owner.getKey(), caMessage), true);
