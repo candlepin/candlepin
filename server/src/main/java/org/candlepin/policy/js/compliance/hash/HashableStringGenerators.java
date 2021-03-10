@@ -211,7 +211,9 @@ public class HashableStringGenerators {
             }
 
             String generated = target.getUuid();
-            generated += generateFromCollection(target.getFacts().entrySet(), STRING_ENTRY);
+
+            generated += generateFromCollection(target.getFacts() != null ?
+                target.getFacts().entrySet() : null, STRING_ENTRY);
             generated += generateFromCollection(target.getInstalledProducts(), INSTALLED_PRODUCT);
             generated += generateFromCollection(target.getEntitlements(), ENTITLEMENT);
             return generated;

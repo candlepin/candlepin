@@ -15,10 +15,10 @@
 
 package org.candlepin.policy.js.compliance.hash;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -31,8 +31,8 @@ import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -47,7 +47,7 @@ public class ComplianceStatusHasherTest {
     private String initialHash;
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         owner = new Owner("test-owner", "Test Owner");
         owner.setId("test-owner-id");
@@ -417,4 +417,18 @@ public class ComplianceStatusHasherTest {
         ComplianceStatusHasher hasher = new ComplianceStatusHasher(consumer, status);
         return hasher.hash();
     }
+
+    @Test
+    public void shouldGenerateHashForConsumerWithNullFacts() {
+        Consumer consumer = createConsumer(owner);
+        ComplianceStatus testStatus = createInitialStatus(consumer);
+        String initialHash = generateHash(testStatus, consumer);
+
+        consumer.setFacts(null);
+        // This should not throw NPE
+        String secondHash = generateHash(testStatus, consumer);
+
+        assertNotEquals(secondHash, initialHash);
+    }
+
 }
