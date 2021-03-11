@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-12-14 07:53-0500\n"
+"POT-Creation-Date: 2021-03-11 02:03-0500\n"
 "PO-Revision-Date: 2020-12-14 12:54+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
@@ -363,7 +363,7 @@ msgstr "Не вдалося знайти власника з ключем «{0}�
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "Не вдалося знайти власника з ідентифікатором «{0}»"
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2027
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2030
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
