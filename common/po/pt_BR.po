@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-12-14 07:53-0500\n"
+"POT-Creation-Date: 2021-03-11 02:03-0500\n"
 "PO-Revision-Date: 2021-01-10 18:36+0000\n"
 "Last-Translator: Fábio Rodrigues Ribeiro <farribeiro@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.fedoraproject.org/"
@@ -417,7 +417,7 @@ msgstr "Não é possível localizar um proprietário com a chave \"{0}\""
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr "Não é possível localizar um proprietário com a ID \"{0}\""
 
-#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2027
+#: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2030
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
