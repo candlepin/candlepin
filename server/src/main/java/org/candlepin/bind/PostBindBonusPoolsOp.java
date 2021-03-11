@@ -51,6 +51,7 @@ public class PostBindBonusPoolsOp implements BindOperation {
     @Inject
     public PostBindBonusPoolsOp(PoolManager poolManager, ConsumerTypeCurator consumerTypeCurator,
         PoolCurator poolCurator, Enforcer enforcer) {
+
         this.poolManager = poolManager;
         this.consumerTypeCurator = consumerTypeCurator;
         this.poolCurator = poolCurator;
@@ -84,7 +85,7 @@ public class PostBindBonusPoolsOp implements BindOperation {
         // as these consumer types should not have created a stack derived pool in the first place.
         // Therefore, we do not need to check if any stack derived pools need updating
         if (!stackIds.isEmpty() && !ctype.isManifest()) {
-            subPoolsForStackIds = poolCurator.getSubPoolForStackIds(consumer, stackIds);
+            subPoolsForStackIds = poolCurator.getSubPoolsForStackIds(consumer, stackIds);
             if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
                 poolManager.updatePoolsFromStackWithoutDeletingStack(consumer,
                     subPoolsForStackIds,

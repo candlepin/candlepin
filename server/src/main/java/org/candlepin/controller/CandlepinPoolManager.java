@@ -2044,10 +2044,13 @@ public class CandlepinPoolManager implements PoolManager {
      * @return Entitlements that are stacked
      */
     private void updateStackingEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools) {
-        Map<Consumer, List<Entitlement>> stackingEntsByConsumer = stackingEntitlementsOf(entsToRevoke);
+        Map<Consumer, List<Entitlement>> stackingEntsByConsumer = this.stackingEntitlementsOf(entsToRevoke);
         log.debug("Found stacking entitlements for {} consumers", stackingEntsByConsumer.size());
-        Set<String> allStackingIds = stackIdsOf(stackingEntsByConsumer.values());
-        List<Pool> pools = poolCurator.getSubPoolForStackIds(null, allStackingIds);
+
+        Set<String> allStackingIds = this.stackIdsOf(stackingEntsByConsumer.values());
+        List<Pool> pools = this.poolCurator
+            .getSubPoolsForStackIds(stackingEntsByConsumer.keySet(), allStackingIds);
+
         poolRules.bulkUpdatePoolsFromStack(stackingEntsByConsumer.keySet(), pools, alreadyDeletedPools, true);
     }
 

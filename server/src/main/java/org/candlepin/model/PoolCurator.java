@@ -1123,35 +1123,70 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
+     * Fetches the pools associated with the given consumer with the provided stack IDs. If no
+     * consumer is provided or no stack IDs are provided, this method returns an empty list.
+     *
      * @param consumer
+     *  the consumer for which to find stacked pools
+     *
      * @param stackIds
-     * @return Derived pools which exist for the given consumer and stack ids
+     *  a collection of stack IDs representing the stacks of pools to fetch
+     *
+     * @return
+     *  a list containing all of the stacked pools with the given stack IDs owned by the specified
+     *  consumer
      */
-    public List<Pool> getSubPoolForStackIds(Consumer consumer, Collection<String> stackIds) {
-        List<Pool> result = new ArrayList<>();
-        for (List<String> block: this.partition(stackIds, this.getInBlockSize())) {
-            result.addAll(getSubPoolForStackIds(consumer, block));
-        }
-        return result;
+    public List<Pool> getSubPoolsForStackIds(Consumer consumer, Collection<String> stackIds) {
+        return consumer != null ?
+            this.getSubPoolsForStackIds(Arrays.asList(consumer), stackIds) :
+            new ArrayList<>();
     }
 
-    @SuppressWarnings({"unchecked", "checkstyle:indentation"})
-    private List<Pool> getSubPoolForStackIds(Consumer consumer, List<String> stackIds) {
+    /**
+     * Fetches the pools associated with the given consumers with the provided stack IDs. If no
+     * consumers are provided or no stack IDs are provided, this method returns an empty list.
+     *
+     * @param consumers
+     *  a collection of consumers for which to find stacked pools
+     *
+     * @param stackIds
+     *  a collection of stack IDs representing the stacks of pools to fetch
+     *
+     * @return
+     *  a list containing all of the stacked pools with the given stack IDs owned by any of the
+     *  specified consumer
+     */
+    public List<Pool> getSubPoolsForStackIds(Collection<Consumer> consumers, Collection<String> stackIds) {
+        List<Pool> output = new ArrayList<>();
+
+        if (consumers == null || consumers.isEmpty()) {
+            return output;
+        }
+
         if (stackIds == null || stackIds.isEmpty()) {
-            return Collections.emptyList();
-        }
-        Criteria getPools = createSecureCriteria()
-            .createAlias("sourceStack", "ss")
-            .add(Restrictions.and(
-                Restrictions.isNotNull("ss.sourceStackId"),
-                CPRestrictions.in("ss.sourceStackId", stackIds))
-            );
-
-        if (consumer != null) {
-            getPools.add(Restrictions.eq("ss.sourceConsumer", consumer));
+            return output;
         }
 
-        return (List<Pool>) getPools.list();
+        // Impl note: There is some optimization that could be done here to determine the best way
+        // to chunk the two collections here to minimize the number of queries, but in the general
+        // case, this is likely sufficient. For now.
+        int blockSize = Math.min(this.getQueryParameterLimit() / 2, this.getInBlockSize());
+
+        String jpql = "SELECT pool FROM Pool pool JOIN pool.sourceStack stack " +
+            "WHERE stack.sourceStackId IN (:stackIds) AND stack.sourceConsumer IN (:consumers)";
+
+        TypedQuery<Pool> query = this.getEntityManager()
+            .createQuery(jpql, Pool.class);
+
+        for (List<Consumer> consumerBlock : this.partition(consumers, blockSize)) {
+            for (List<String> stackIdBlock : this.partition(stackIds, blockSize)) {
+                output.addAll(query.setParameter("stackIds", stackIdBlock)
+                    .setParameter("consumers", consumerBlock)
+                    .getResultList());
+            }
+        }
+
+        return output;
     }
 
     @SuppressWarnings("unchecked")
