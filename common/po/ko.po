@@ -471,7 +471,9 @@ msgstr "매니페스트를 다운로드할 수 없습니다: {0}"
 msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "\"{1}\"."
-msgstr "장치 {0}을(를) 내보내기할 수 없습니다. 장치 유형 ''{1}''에 대한 매니페스트를 만들 수 없습니다."
+msgstr ""
+"장치 {0}을(를) 내보내기할 수 없습니다. 장치 유형 ''{1}''에 대한 매니페스트를 "
+"만들 수 없습니다."
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:315
 #, java-format
@@ -483,7 +485,9 @@ msgstr "레이블 {0}인 CDN은 이 시스템에 존재하지 않습니다."
 msgid ""
 "Candlepin is in Suspend mode, please check /status resource to get more "
 "details"
-msgstr "Candlepin은 일시 중지 모드입니다. 보다 자세한 내용은 /status 리소스를 확인하십시오"
+msgstr ""
+"Candlepin은 일시 중지 모드입니다. 보다 자세한 내용은 /status 리소스를 확인하"
+"십시오"
 
 #: server/src/main/java/org/candlepin/model/AbstractHibernateCurator.java:837
 msgid "Request failed due to concurrent modification, please re-try."
@@ -549,7 +553,9 @@ msgstr "\"{0}\" 풀에 대해 다중-권한을 지원하지 않습니다"
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
-msgstr "오류: 다중-권한 제품 구독이 있는 풀만이 하나 보다 큰 활성화 키를 추가 할 수 있습니다."
+msgstr ""
+"오류: 다중-권한 제품 구독이 있는 풀만이 하나 보다 큰 활성화 키를 추가 할 수 "
+"있습니다."
 
 #: server/src/main/java/org/candlepin/policy/js/activationkey/ActivationKeyRules.java:95
 msgid "The quantity must be greater than 0"
@@ -595,8 +601,9 @@ msgid ""
 "guest subscription. For more information, please see https://access.redhat."
 "com/solutions/1592573"
 msgstr ""
-"게스트가 호스트에서 보고되어 있지 않으며 매핑되지 않은 임시 게스트 서브스크립션을 사용하고 있습니다. 보다 자세한 내용은 "
-"https://access.redhat.com/solutions/1592573에서 참조하십시오"
+"게스트가 호스트에서 보고되어 있지 않으며 매핑되지 않은 임시 게스트 서브스크립"
+"션을 사용하고 있습니다. 보다 자세한 내용은 https://access.redhat.com/"
+"solutions/1592573에서 참조하십시오"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
@@ -675,7 +682,9 @@ msgstr "풀은 물리적 시스템으로 제한됩니다: ''{1}''."
 msgid ""
 "Subscription \"{2}\" must be attached using a quantity evenly divisible by "
 "{3}"
-msgstr "서브스크립션 ''{2}''은/는 {3}로/으로 균등하게 나눌 수 있는 수량을 사용하여 연결해야 합니다"
+msgstr ""
+"서브스크립션 ''{2}''은/는 {3}로/으로 균등하게 나눌 수 있는 수량을 사용하여 연"
+"결해야 합니다"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:168
 #, java-format
@@ -765,7 +774,8 @@ msgstr ""
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement \"{1}\"."
-msgstr "인타이틀먼트 ''{1}''에 연결된 풀에서는 여러 인타이틀먼트가 지원되지 않습니다."
+msgstr ""
+"인타이틀먼트 ''{1}''에 연결된 풀에서는 여러 인타이틀먼트가 지원되지 않습니다."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:214
 #, java-format
@@ -790,7 +800,9 @@ msgstr "ID {0}을(를) 갖는 활성화 키를 찾을 수 없습니다."
 msgid ""
 "The activation key name \"{0}\" must be alphanumeric or include the "
 "characters \"-\" or \"_\""
-msgstr "활성키 이름 ''{0}''은 알파벳과 숫자 조합이거나 ''-'' 또는 ''_'' 기호를 포함해야 합니다"
+msgstr ""
+"활성키 이름 ''{0}''은 알파벳과 숫자 조합이거나 ''-'' 또는 ''_'' 기호를 포함해"
+"야 합니다"
 
 #: server/src/main/java/org/candlepin/resource/ActivationKeyResource.java:236
 #, java-format
@@ -965,7 +977,9 @@ msgstr "ID ''{0}''인 환경을 찾을 수 없습니다."
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1454
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
-msgstr "장치 {0}을/를 업데이트하는 도중 문제가 발생했습니다. 하이퍼바이저 ID: {1}은/는 이미 사용되고 있습니다."
+msgstr ""
+"장치 {0}을/를 업데이트하는 도중 문제가 발생했습니다. 하이퍼바이저 ID: {1}은/"
+"는 이미 사용되고 있습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1679
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1690
@@ -1019,7 +1033,8 @@ msgstr "자동-첨부에 요구 무시. org \"{0}\"을 위해 비활성화 되�
 msgid ""
 "Organization \"{0}\" has auto-attach disabled because of the content access "
 "mode setting."
-msgstr "\"{0}\" 조직에서 컨텐츠 액세스 모드 설정으로 인해 자동 연결이 해제되었습니다."
+msgstr ""
+"\"{0}\" 조직에서 컨텐츠 액세스 모드 설정으로 인해 자동 연결이 해제되었습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2108
 #, java-format
@@ -1198,7 +1213,8 @@ msgstr "유효한 게스트 ID를 입력하십시오"
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:256
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
-msgstr "json \"{0}\"에서 게스트 ID는 경로 게스트 ID \"{1}\"과 일치하지 않습니다"
+msgstr ""
+"json \"{0}\"에서 게스트 ID는 경로 게스트 ID \"{1}\"과 일치하지 않습니다"
 
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:296
 #, java-format
@@ -1414,7 +1430,9 @@ msgstr "add_future 플래그와 only_future 플래그를 동시에 사용할 수
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1492
 msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
-msgstr "add_future 플래그 및 only_future 플래그는 다음의 매개 변수와 함께 사용할 수 없습니다."
+msgstr ""
+"add_future 플래그 및 only_future 플래그는 다음의 매개 변수와 함께 사용할 수 "
+"없습니다."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1712
 msgid "Pool product ID not specified"
@@ -1443,12 +1461,14 @@ msgstr "내보내기 아카이브를 읽는 도중 오류 발생"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1992
 msgid "Error storing uploaded archive for asynchronous processing."
-msgstr "비동기 처리를 위해 업로드된 아카이브를 저장하는 도중 오류가 발생했습니다."
+msgstr ""
+"비동기 처리를 위해 업로드된 아카이브를 저장하는 도중 오류가 발생했습니다."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:2128
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
-msgstr "소유자 {0}의 uber 인증서를 찾을 수 없습니다. 해당 인증서를 생성해 주십시오."
+msgstr ""
+"소유자 {0}의 uber 인증서를 찾을 수 없습니다. 해당 인증서를 생성해 주십시오."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:2209
 msgid "Unknown conflict to force"
@@ -1672,8 +1692,9 @@ msgid ""
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
 msgstr ""
-"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 문제를 처리할 수 있습니다. 자세한 내용은 지식 "
-"데이터베이스에서 참조하십시오. (https://access.redhat.com/knowledge/node/129003)."
+"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 "
+"이 문제를 처리할 수 있습니다. 자세한 내용은 지식 데이터베이스에서 참조하십시"
+"오. (https://access.redhat.com/knowledge/node/129003)."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
