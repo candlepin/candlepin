@@ -74,6 +74,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     private Product derivedProvidedProduct;
     private Pool pool;
     private Consumer consumer;
+    private ConsumerType systemConsumerType;
 
     @BeforeEach
     public void setUp() {
@@ -81,7 +82,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         ownerCurator.create(owner);
 
         ConsumerType systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        consumerTypeCurator.create(systemType);
+        this.systemConsumerType = this.consumerTypeCurator.create(systemType);
 
         product = this.createProduct(owner);
         providedProduct = this.createProduct(owner);
@@ -1264,89 +1265,257 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(2, levels.size());
     }
 
-    @Test
-    public void getSubPoolCountForStack() {
-        String expectedStackId = "13245";
-        Product product = TestUtil.createProduct();
-        product.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
-        product.setAttribute(Product.Attributes.STACKING_ID, expectedStackId);
+
+    private Pool setupHostLimitedVirtPoolStack(Owner owner, Consumer consumer, String stackId) {
+        Product product = TestUtil.createProduct()
+            .setAttribute(Product.Attributes.VIRT_LIMIT, "unlimited")
+            .setAttribute(Product.Attributes.STACKING_ID, stackId);
+
         product = this.createProduct(product, owner);
 
-        // Create derived pool referencing the entitlement just made:
         Pool derivedPool = new Pool(
             owner,
             product,
             new HashSet<>(),
             1L,
-            TestUtil.createDate(2011, 3, 2),
-            TestUtil.createDate(2055, 3, 2),
+            TestUtil.createFutureDate(-2),
+            TestUtil.createFutureDate(2),
             "",
             "",
             ""
         );
-        derivedPool.setSourceStack(new SourceStack(consumer, expectedStackId));
+        derivedPool.setSourceStack(new SourceStack(consumer, stackId));
         derivedPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
 
-        poolCurator.create(derivedPool);
-
-        Pool pool = poolCurator.getSubPoolForStackIds(null, Arrays.asList(expectedStackId)).get(0);
-        assertNotNull(pool);
+        return this.poolCurator.create(derivedPool);
     }
 
     @Test
-    public void getSubPoolCountForStackByConsumer() {
-        String expectedStackId = "13245";
-        Product product = TestUtil.createProduct();
-        product.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
-        product.setAttribute(Product.Attributes.STACKING_ID, expectedStackId);
-        product = this.createProduct(product, owner);
+    public void testGetSubPoolsForStackIdsSingleConsumerSingleStack() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer2 = this.createConsumer(owner, this.systemConsumerType);
 
-        // Create derived pool referencing the entitlement just made:
-        Pool derivedPool = new Pool(
-            owner,
-            product,
-            new HashSet<>(),
-            1L,
-            TestUtil.createDate(2011, 3, 2),
-            TestUtil.createDate(2055, 3, 2),
-            "",
-            "",
-            ""
-        );
-        derivedPool.setSourceStack(new SourceStack(consumer, expectedStackId));
-        derivedPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
+        String stackId1 = "test_stack_id-1";
+        String stackId2 = "test_stack_id-2";
+        String stackId3 = "test_stack_id-3";
+        String stackId4 = "test_stack_id-4";
 
-        poolCurator.create(derivedPool);
+        Pool dpool1 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId1);
+        Pool dpool2 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId2);
+        Pool dpool3 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId3);
+        Pool dpool4 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId1);
+        Pool dpool5 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId2);
+        Pool dpool6 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId3);
 
-        Pool pool = poolCurator.getSubPoolForStackIds(consumer, Arrays.asList(expectedStackId)).get(0);
-        assertNotNull(pool);
+        Collection<Pool> pools = this.poolCurator.getSubPoolsForStackIds(consumer1, Arrays.asList(stackId1));
+
+        assertNotNull(pools);
+        assertEquals(1, pools.size());
+        assertThat(pools, hasItems(dpool1));
     }
 
     @Test
-    public void getSubPoolsForStackIds() {
-        Set stackIds = new HashSet<String>();
-        for (Integer i = 0; i < 5; i++) {
-            String stackId = "12345" + i.toString();
-            stackIds.add(stackId);
-            Product product = TestUtil.createProduct();
-            product.setAttribute(Product.Attributes.VIRT_LIMIT, "3");
-            product.setAttribute(Product.Attributes.STACKING_ID, stackId);
-            product = this.createProduct(product, owner);
+    public void testGetSubPoolsForStackIdsSingleConsumerMultiStack() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer2 = this.createConsumer(owner, this.systemConsumerType);
 
-            // Create derived pool referencing the entitlement just made:
-            Pool derivedPool = new Pool(owner, product, new HashSet<>(), 1L,
-                TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2), "", "", "");
-            derivedPool.setSourceStack(new SourceStack(consumer, stackId));
-            derivedPool.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer.getUuid());
+        String stackId1 = "test_stack_id-1";
+        String stackId2 = "test_stack_id-2";
+        String stackId3 = "test_stack_id-3";
+        String stackId4 = "test_stack_id-4";
 
-            poolCurator.create(derivedPool);
-        }
+        Pool dpool1 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId1);
+        Pool dpool2 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId2);
+        Pool dpool3 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId3);
+        Pool dpool4 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId1);
+        Pool dpool5 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId2);
+        Pool dpool6 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId3);
 
-        List<Pool> pools = poolCurator.getSubPoolForStackIds(consumer, stackIds);
-        assertEquals(5, pools.size());
-        for (Pool pool : pools) {
-            assertTrue(pool.getSourceStackId().startsWith("12345"));
-        }
+        Collection<Pool> pools = this.poolCurator
+            .getSubPoolsForStackIds(consumer1, Arrays.asList(stackId1, stackId2, stackId4));
+
+        assertNotNull(pools);
+        assertEquals(2, pools.size());
+        assertThat(pools, hasItems(dpool1, dpool2));
+    }
+
+    @Test
+    public void testGetSubPoolsForStackIdsMultiConsumerSingleStack() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer2 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer3 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer4 = this.createConsumer(owner, this.systemConsumerType);
+
+        String stackId1 = "test_stack_id-1";
+        String stackId2 = "test_stack_id-2";
+        String stackId3 = "test_stack_id-3";
+        String stackId4 = "test_stack_id-4";
+
+        Pool dpool1 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId1);
+        Pool dpool2 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId2);
+        Pool dpool3 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId3);
+        Pool dpool4 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId1);
+        Pool dpool5 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId2);
+        Pool dpool6 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId3);
+        Pool dpool7 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId1);
+        Pool dpool8 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId2);
+        Pool dpool9 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId3);
+
+        Collection<Pool> pools = this.poolCurator
+            .getSubPoolsForStackIds(Arrays.asList(consumer1, consumer2, consumer4), Arrays.asList(stackId1));
+
+        assertNotNull(pools);
+        assertEquals(2, pools.size());
+        assertThat(pools, hasItems(dpool1, dpool4));
+    }
+
+    @Test
+    public void testGetSubPoolsForStackIdsNullConsumer() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer2 = this.createConsumer(owner, this.systemConsumerType);
+
+        String stackId1 = "test_stack_id-1";
+        String stackId2 = "test_stack_id-2";
+        String stackId3 = "test_stack_id-3";
+        String stackId4 = "test_stack_id-4";
+
+        Pool dpool1 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId1);
+        Pool dpool2 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId2);
+        Pool dpool3 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId3);
+        Pool dpool4 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId1);
+        Pool dpool5 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId2);
+        Pool dpool6 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId3);
+
+        Collection<Pool> pools = this.poolCurator
+            .getSubPoolsForStackIds((Consumer) null, Arrays.asList(stackId1, stackId2, stackId4));
+
+        assertNotNull(pools);
+        assertEquals(0, pools.size());
+    }
+
+    @Test
+    public void testGetSubPoolsForStackIdsNullConsumerCollection() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer2 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer3 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer4 = this.createConsumer(owner, this.systemConsumerType);
+
+        String stackId1 = "test_stack_id-1";
+        String stackId2 = "test_stack_id-2";
+        String stackId3 = "test_stack_id-3";
+        String stackId4 = "test_stack_id-4";
+
+        Pool dpool1 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId1);
+        Pool dpool2 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId2);
+        Pool dpool3 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId3);
+        Pool dpool4 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId1);
+        Pool dpool5 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId2);
+        Pool dpool6 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId3);
+        Pool dpool7 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId1);
+        Pool dpool8 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId2);
+        Pool dpool9 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId3);
+
+        Collection<Pool> pools = this.poolCurator.getSubPoolsForStackIds((Collection<Consumer>) null,
+            Arrays.asList(stackId1, stackId2, stackId4));
+
+        assertNotNull(pools);
+        assertEquals(0, pools.size());
+    }
+
+    @Test
+    public void testGetSubPoolsForStackIdsEmptyConsumerCollection() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer2 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer3 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer4 = this.createConsumer(owner, this.systemConsumerType);
+
+        String stackId1 = "test_stack_id-1";
+        String stackId2 = "test_stack_id-2";
+        String stackId3 = "test_stack_id-3";
+        String stackId4 = "test_stack_id-4";
+
+        Pool dpool1 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId1);
+        Pool dpool2 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId2);
+        Pool dpool3 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId3);
+        Pool dpool4 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId1);
+        Pool dpool5 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId2);
+        Pool dpool6 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId3);
+        Pool dpool7 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId1);
+        Pool dpool8 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId2);
+        Pool dpool9 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId3);
+
+        Collection<Pool> pools = this.poolCurator.getSubPoolsForStackIds(Collections.emptyList(),
+            Arrays.asList(stackId1, stackId2, stackId4));
+
+        assertNotNull(pools);
+        assertEquals(0, pools.size());
+    }
+
+    @Test
+    public void testGetSubPoolsForStackIdsIgnoresNullsInCollection() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer2 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer3 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer4 = this.createConsumer(owner, this.systemConsumerType);
+
+        String stackId1 = "test_stack_id-1";
+        String stackId2 = "test_stack_id-2";
+        String stackId3 = "test_stack_id-3";
+        String stackId4 = "test_stack_id-4";
+
+        Pool dpool1 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId1);
+        Pool dpool2 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId2);
+        Pool dpool3 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId3);
+        Pool dpool4 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId1);
+        Pool dpool5 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId2);
+        Pool dpool6 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId3);
+        Pool dpool7 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId1);
+        Pool dpool8 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId2);
+        Pool dpool9 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId3);
+
+        Collection<Pool> pools = this.poolCurator.getSubPoolsForStackIds(Arrays.asList(consumer1, null),
+            Arrays.asList(stackId1, stackId2, stackId4));
+
+        assertNotNull(pools);
+        assertEquals(2, pools.size());
+        assertThat(pools, hasItems(dpool1, dpool2));
+    }
+
+    @Test
+    public void testGetSubPoolsForStackIdsWithConsumerCollectionOfNulls() {
+        Owner owner = this.createOwner();
+        Consumer consumer1 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer2 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer3 = this.createConsumer(owner, this.systemConsumerType);
+        Consumer consumer4 = this.createConsumer(owner, this.systemConsumerType);
+
+        String stackId1 = "test_stack_id-1";
+        String stackId2 = "test_stack_id-2";
+        String stackId3 = "test_stack_id-3";
+        String stackId4 = "test_stack_id-4";
+
+        Pool dpool1 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId1);
+        Pool dpool2 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId2);
+        Pool dpool3 = this.setupHostLimitedVirtPoolStack(owner, consumer1, stackId3);
+        Pool dpool4 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId1);
+        Pool dpool5 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId2);
+        Pool dpool6 = this.setupHostLimitedVirtPoolStack(owner, consumer2, stackId3);
+        Pool dpool7 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId1);
+        Pool dpool8 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId2);
+        Pool dpool9 = this.setupHostLimitedVirtPoolStack(owner, consumer3, stackId3);
+
+        Collection<Pool> pools = this.poolCurator.getSubPoolsForStackIds(Arrays.asList(null, null, null),
+            Arrays.asList(stackId1, stackId2, stackId4));
+
+        assertNotNull(pools);
+        assertEquals(0, pools.size());
     }
 
     @Test
