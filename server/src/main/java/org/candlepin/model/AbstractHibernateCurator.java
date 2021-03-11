@@ -1415,20 +1415,31 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     /**
      * Partitions the given collection using the value returned by the getInBlockSize() method as
-     * the partition size. This method is provided as a utility method to avoid referencing a very
-     * long constant name used in many curators. Callers which need this behavior with a custom
-     * size can simulate the behavior by using the <tt>Iterables.partition</tt> method directly:
-     * <pre>
-     *  {@code Iterable<List<String>> blocks = ', 'entityIds, blockSize); }
-     * </pre>
+     * the partition size.
      *
      * @param collection
      *  The collection to partition
      *
      * @return
-     *  An iterable collection of lists containing the partitioned data in the provided collection
+     *  An iterable collection of lists containing the partitioned data from the provided collection
      */
     protected <T> Iterable<List<T>> partition(Iterable<T> collection) {
-        return Iterables.partition(collection, this.getInBlockSize());
+        return this.partition(collection, this.getInBlockSize());
+    }
+
+    /**
+     * Partitions the given collection using the provided block size.
+     *
+     * @param collection
+     *  The collection to partition
+     *
+     * @param blockSize
+     *  The maximum size of the blocks to build when partitioning the collection
+     *
+     * @return
+     *  An iterable collection of lists containing the partitioned data from the provided collection
+     */
+    protected <T> Iterable<List<T>> partition(Iterable<T> collection, int blockSize) {
+        return Iterables.partition(collection, blockSize);
     }
 }
