@@ -2069,66 +2069,18 @@ public class CandlepinPoolManager implements PoolManager {
      * the entitlements that are part of some stack. Then update them
      * accordingly
      *
-     * @param consumerSortedEntitlements Entitlements to be filtered
-     * @param alreadyDeletedPools pools to skip deletion as they have already been deleted
-     * @return Entitlements that are stacked
-     */
-    private void filterAndUpdateStackingEntitlements(
-        Map<Consumer, List<Entitlement>> consumerSortedEntitlements, Set<String> alreadyDeletedPools) {
-        Map<Consumer, List<Entitlement>> stackingEntitlements = new HashMap<>();
-
-        for (Consumer consumer : consumerSortedEntitlements.keySet()) {
-            List<Entitlement> ents = consumerSortedEntitlements.get(consumer);
-            if (CollectionUtils.isNotEmpty(ents)) {
-                for (Entitlement ent : ents) {
-                    Pool pool = ent.getPool();
-
-                    if (!"true".equals(pool.getAttributeValue(Pool.Attributes.DERIVED_POOL)) &&
-                        pool.getProduct().hasAttribute(Product.Attributes.STACKING_ID)) {
-                        List<Entitlement> entList = stackingEntitlements.get(consumer);
-                        if (entList == null) {
-                            entList = new ArrayList<>();
-                            stackingEntitlements.put(consumer, entList);
-                        }
-                        entList.add(ent);
-                    }
-                }
-            }
-        }
-
-        for (Entry<Consumer, List<Entitlement>> entry : stackingEntitlements.entrySet()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Found {} stacking entitlements to delete for consumer: {}",
-                    entry.getValue().size(), entry.getKey());
-            }
-
-            Set<String> stackIds = new HashSet<>();
-            for (Entitlement ent : entry.getValue()) {
-                stackIds.add(ent.getPool().getStackId());
-            }
-
-            List<Pool> subPools = poolCurator.getSubPoolForStackIds(entry.getKey(), stackIds);
-            if (CollectionUtils.isNotEmpty(subPools)) {
-                poolRules.updatePoolsFromStack(entry.getKey(), subPools, null, alreadyDeletedPools, true);
-            }
-        }
-    }
-
-
-    /**
-     * Filter the given entitlements so that this method returns only
-     * the entitlements that are part of some stack. Then update them
-     * accordingly
-     *
      * @param entsToRevoke
      * @param alreadyDeletedPools pools to skip deletion as they have already been deleted
      * @return Entitlements that are stacked
      */
     private void updateStackingEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools) {
-        Map<Consumer, List<Entitlement>> stackingEntsByConsumer = stackingEntitlementsOf(entsToRevoke);
+        Map<Consumer, List<Entitlement>> stackingEntsByConsumer = this.stackingEntitlementsOf(entsToRevoke);
         log.debug("Found stacking entitlements for {} consumers", stackingEntsByConsumer.size());
-        Set<String> allStackingIds = stackIdsOf(stackingEntsByConsumer.values());
-        List<Pool> pools = poolCurator.getSubPoolForStackIds(null, allStackingIds);
+
+        Set<String> allStackingIds = this.stackIdsOf(stackingEntsByConsumer.values());
+        List<Pool> pools = this.poolCurator
+            .getSubPoolsForStackIds(stackingEntsByConsumer.keySet(), allStackingIds);
+
         poolRules.bulkUpdatePoolsFromStack(stackingEntsByConsumer.keySet(), pools, alreadyDeletedPools, true);
     }
 
