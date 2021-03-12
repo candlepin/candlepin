@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 2.9.31
+Version: 2.9.32
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,10 @@ fi
 
 #raw
 %changelog
+* Fri Mar 12 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.32-1
+- 1937692: Fixed stacked entitlement recovation deleting unrelated pools
+  (crog@redhat.com)
+
 * Wed Mar 03 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 2.9.31-1
 - 1894455: (second part of the fix): Manifest delete takes too long
   (ojanus@redhat.com)
