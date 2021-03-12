@@ -341,6 +341,114 @@ describe 'One Sub Pool Per Stack' do
     @guest_client.list_entitlements.length.should == 0
   end
 
+  it 'ensures host unregistration does not affect other stacked pools' do
+    owner1 = create_owner(random_string('test_owner'))
+    owner2 = create_owner(random_string('test_owner'))
+
+    # Create target product/pool for owner1
+    owner1_content1 = @cp.create_content(owner1['key'], 'Provided Content 1', 'derived_provided_content_1', 'provided_content_label-1', 'yum', 'Red Hat')
+    owner1_content2 = @cp.create_content(owner1['key'], 'Provided Content 2', 'derived_provided_content_2', 'provided_content_label-2', 'yum', 'Red Hat')
+    owner1_derived_eng_product = @cp.create_product(owner1['key'], 'derived_eng_product', 'Red Hat Software Collection')
+    @cp.add_batch_content_to_product(owner1['key'], owner1_derived_eng_product['id'], [owner1_content1['id'], owner1_content2['id']])
+
+    owner1_derived_sku = @cp.create_product(owner1['key'], 'derived_sku', 'Stacking Derived Product', {
+      :multiplier => 1,
+      :attributes => {
+        'host_limited' => 'true'
+      }
+    })
+
+    owner1_sku = @cp.create_product(owner1['key'], 'test_sku', 'Stacking VDC Product', {
+      :multiplier => 1,
+      :attributes => {
+        'host_limited' => 'true',
+        'stacking_id' => 'shared_stacking_id',
+        'virt_limit' => 'unlimited'
+      }
+    })
+
+    owner1_pool = @cp.create_pool(owner1['key'], owner1_sku['id'], {
+      :quantity => 10,
+      :start_date => DateTime.now,
+      :end_date => DateTime.now + 365,
+      :attributes => {},
+      :stackId => 'shared_stacking_id',
+      :stacked => 'true',
+      :providedProducts => [],
+      :derivedProductId => owner1_derived_sku['id'],
+      :derivedProvidedProducts => [owner1_derived_eng_product]
+    })
+
+    # Create target product/pool for owner2
+    owner2_content1 = @cp.create_content(owner2['key'], 'Provided Content 1', 'derived_provided_content_1', 'provided_content_label-1', 'yum', 'Red Hat')
+    owner2_content2 = @cp.create_content(owner2['key'], 'Provided Content 2', 'derived_provided_content_2', 'provided_content_label-2', 'yum', 'Red Hat')
+    owner2_derived_eng_product = @cp.create_product(owner2['key'], 'derived_eng_product', 'Red Hat Software Collection')
+    @cp.add_batch_content_to_product(owner2['key'], owner2_derived_eng_product['id'], [owner2_content1['id'], owner2_content2['id']])
+
+    owner2_derived_sku = @cp.create_product(owner2['key'], 'derived_sku', 'Stacking Derived Product', {
+      :multiplier => 1,
+      :attributes => {
+        'host_limited' => 'true'
+      }
+    })
+
+    owner2_sku = @cp.create_product(owner2['key'], 'test_sku', 'Stacking VDC Product', {
+      :multiplier => 1,
+      :attributes => {
+        'host_limited' => 'true',
+        'stacking_id' => 'shared_stacking_id',
+        'virt_limit' => 'unlimited'
+      }
+    })
+
+    owner2_pool = @cp.create_pool(owner2['key'], owner2_sku['id'], {
+      :quantity => 10,
+      :start_date => DateTime.now,
+      :end_date => DateTime.now + 365,
+      :attributes => {},
+      :stackId => 'shared_stacking_id',
+      :stacked => 'true',
+      :providedProducts => [],
+      :derivedProductId => owner2_derived_sku['id'],
+      :derivedProvidedProducts => [owner2_derived_eng_product]
+    })
+
+
+    # Get initial pool count
+    owner1_pools_stage1 = @cp.list_owner_pools(owner1['key'])
+    owner2_pools_stage1 = @cp.list_owner_pools(owner2['key'])
+
+    # Create some consumers, and have them consume the pool
+    for i in 0..2 do
+      owner1_consumer_name = random_string('test_system')
+      owner1_consumer = @cp.register(owner1_consumer_name, :system, nil, {}, nil, owner1['key'], [], [], nil)
+
+      owner2_consumer_name = random_string('test_system')
+      owner2_consumer = @cp.register(owner2_consumer_name, :system, nil, {}, nil, owner2['key'], [], [], nil)
+
+      @cp.consume_pool(owner1_pool['id'], { :uuid => owner1_consumer['uuid'] })
+      @cp.consume_pool(owner2_pool['id'], { :uuid => owner2_consumer['uuid'] })
+    end
+
+    # Verify our updated pool count (attaching a VDC pool should trigger the creation of a new sub pool
+    # for each consumer)
+    owner1_pools_stage2 = @cp.list_owner_pools(owner1['key'])
+    owner2_pools_stage2 = @cp.list_owner_pools(owner2['key'])
+
+    expect(owner1_pools_stage2.length).to eq(owner1_pools_stage1.length + 3)
+    expect(owner2_pools_stage2.length).to eq(owner2_pools_stage1.length + 3)
+
+    # Unregister one of the hosts and verify that (a) only their pool was removed and (b) the other org's
+    # pools were not at all affected
+    @cp.unregister(owner2_consumer['uuid'])
+
+    owner1_pools_stage3 = @cp.list_owner_pools(owner1['key'])
+    owner2_pools_stage3 = @cp.list_owner_pools(owner2['key'])
+
+    expect(owner1_pools_stage3.length).to eq(owner1_pools_stage2.length)
+    expect(owner2_pools_stage3.length).to eq(owner2_pools_stage2.length - 1)
+  end
+
   it 'should remove guest entitlement when guest is migrated' do
     @host_client.consume_pool(@stacked_virt_pool1['id'], {:quantity => 1})[0]
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
