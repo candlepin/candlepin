@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.13
+Version: 3.2.14
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,10 @@ fi
 
 #raw
 %changelog
+* Fri Mar 12 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.14-1
+- 1937931: Fixed stacked entitlement recovation deleting unrelated pools
+  (crog@redhat.com)
+
 * Thu Jan 28 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.13-1
 - 1920582: Added additional validation for cloud registration data
   (crog@redhat.com)
