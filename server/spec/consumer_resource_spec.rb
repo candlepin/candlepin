@@ -1438,6 +1438,12 @@ describe 'Consumer Resource' do
     expected_exceptions.each { |e| e.should be_an(RestClient::Gone) | be_an(RestClient::ResourceNotFound) }
   end
 
+  it "should not allow to content access certificate body when not SCA mode" do
+    expect {
+      @consumer1.get_content_access_body()
+    }.to raise_exception(RestClient::BadRequest)
+  end
+
 end
 
 describe 'Consumer Resource Consumer Fact Filter Tests' do

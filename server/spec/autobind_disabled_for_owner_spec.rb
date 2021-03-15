@@ -154,4 +154,25 @@ describe 'Autobind Disabled On Owner' do
     job['state'].should == "FAILED"
     job['resultData'].should == "org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner #{owner['key']} because of the content access mode setting."
   end
+
+  it "dry-run-auto-attach returns 200 when on SCA mode" do
+    skip("candlepin running in standalone mode") if not is_hosted?
+
+    owner = create_owner(random_string("test_owner"), nil, {
+        'contentAccessModeList' => 'org_environment,entitlement',
+        'contentAccessMode' => "org_environment"
+    })
+
+    owner = @cp.get_owner(owner['key'])
+    owner['autobindDisabled'] = true
+    @cp.update_owner(owner['key'], owner)
+
+    cp_user = user_client(owner, random_string("testing-user"))
+    consumer = cp_user.register("foofy_test", :system, nil,
+                                {'cpu.cpu_socket(s)' => '8'}, nil, owner['key'], [], [])
+    consumer_cp = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+    pools = consumer_cp.autobind_dryrun(consumer.uuid)
+    expect(pools.length).to eq(0)
+
+  end
 end
