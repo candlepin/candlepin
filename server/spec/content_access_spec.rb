@@ -30,11 +30,11 @@ describe 'Content Access' do
 
     @content = @cp.create_content(
         @owner['key'], "cname", 'test-content', random_string("clabel"), "ctype", "cvendor",
-        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
+        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]], :arches => "x86_64"}, true)
 
     @content_id = @content['id']
 
-    @product = create_product('test-product', 'some product')
+    @product = create_product('test-product', 'some product', :attributes => {:arch => 'x86_64'})
     @cp.add_content_to_product(@owner['key'], @product['id'], @content_id)
     @pool = @cp.create_pool(@owner['key'], @product['id'], {:quantity => 10})
 
@@ -91,6 +91,36 @@ describe 'Content Access' do
     }.to raise_exception(RestClient::BadRequest)
   end
 
+  it "should filter content with incorrect architecture" do
+    content2 = @cp.create_content(
+      @owner['key'], "cname2", 'test-content2', random_string("clabel2"), "ctype", "cvendor",
+      {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]], :arches => "ppc64"}, true)
+    content_id2 = content2['id']
+    product2 = create_product('test-product2', 'some product2', :attributes => {:arch => 'ppc64'})
+    @cp.add_content_to_product(@owner['key'], product2['id'], content_id2)
+    @cp.create_pool(@owner['key'], product2['id'], {:quantity => 10})
+
+    @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts={'system.certificate_version' => '3.3', "uname.machine" => "ppc64"}, owner_key=@owner['key'])
+    certs = @consumer.list_certificates
+    certs.length.should == 1
+
+    json_body = extract_payload(certs[0]['cert'])
+
+    content = json_body['products'][0]['content'][0]
+    expect(content['type']).to eq('ctype')
+    expect(content['name']).to eq(content2.name)
+    expect(content['label']).to eq(content2.label)
+    expect(content['vendor']).to eq(content2.vendor)
+    expect(content['path']).to eq(content2.contentUrl)
+    expect(content['arches'][0]).to eq(content2.arches)
+
+    value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
+    expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+
+    type = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.8")
+    type.should == 'OrgLevel'
+  end
+
   it "does produce a content access certificate for the consumer on registration" do
       @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs = @consumer.list_certificates
@@ -104,6 +134,7 @@ describe 'Content Access' do
       expect(content['label']).to eq(@content.label)
       expect(content['vendor']).to eq(@content.vendor)
       expect(content['path']).to eq(@content.contentUrl)
+      expect(content['arches'][0]).to eq(@content.arches)
 
       value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
       expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)

@@ -14,8 +14,22 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyMap;
+import static org.mockito.Mockito.anySet;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.nullable;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
@@ -81,13 +95,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 
 
-/**
- * Test suite for the ContentAccessManager class
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ContentAccessManagerTest {
@@ -144,16 +154,16 @@ public class ContentAccessManagerTest {
         // FIXME: This mess of mocks is why we should not be using mocks in this way. We should be
         // using a test database framework and our actual curators and objects.
 
-        doAnswer(new PersistSimulator()).when(this.mockOwnerCurator).merge(any(Owner.class));
-        doAnswer(new PersistSimulator()).when(this.mockConsumerCurator).merge(any(Consumer.class));
-        doAnswer(new PersistSimulator()).when(this.mockContentAccessCertCurator)
+        doAnswer(new PersistSimulator<>()).when(this.mockOwnerCurator).merge(any(Owner.class));
+        doAnswer(new PersistSimulator<>()).when(this.mockConsumerCurator).merge(any(Consumer.class));
+        doAnswer(new PersistSimulator<>()).when(this.mockContentAccessCertCurator)
             .create(any(ContentAccessCertificate.class));
-        doAnswer(new PersistSimulator()).when(this.mockOwnerEnvContentAccessCurator)
+        doAnswer(new PersistSimulator<>()).when(this.mockOwnerEnvContentAccessCurator)
             .saveOrUpdate(any(OwnerEnvContentAccess.class));
-        doReturn(this.testingKeyPair).when(this.mockKeyPairCurator).getConsumerKeyPair(any(Consumer.class));
+        doReturn(testingKeyPair).when(this.mockKeyPairCurator).getConsumerKeyPair(any(Consumer.class));
 
         doAnswer(iom -> {
-            CertificateSerial serial = (CertificateSerial) iom.getArgument(0);
+            CertificateSerial serial = iom.getArgument(0);
 
             if (serial != null) {
                 serial.setId(Util.generateUniqueLong());
@@ -314,8 +324,7 @@ public class ContentAccessManagerTest {
 
     @Test
     public void testContentAccessModeResolveNameWithNullName() {
-        ContentAccessMode output = ContentAccessMode.resolveModeName(null);
-        assertNull(output);
+        assertNull(ContentAccessMode.resolveModeName(null));
     }
 
     @Test
@@ -564,7 +573,7 @@ public class ContentAccessManagerTest {
         manager.getCertificate(consumer);
 
         verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPrefix), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
+            eq(expectedPrefix), anyMap(), any(Consumer.class), any(Pool.class), anySet());
     }
 
     @Test
@@ -603,7 +612,7 @@ public class ContentAccessManagerTest {
         manager.getCertificate(consumer);
 
         verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPrefix), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
+            eq(expectedPrefix), anyMap(), any(Consumer.class), any(Pool.class), anySet());
     }
 
     @Test
@@ -623,7 +632,7 @@ public class ContentAccessManagerTest {
         manager.getCertificate(consumer);
 
         verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPath), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
+            eq(expectedPath), anyMap(), any(Consumer.class), any(Pool.class), anySet());
 
         this.verifyContainerContentPath(expectedPath);
     }
@@ -646,7 +655,7 @@ public class ContentAccessManagerTest {
         manager.getCertificate(consumer);
 
         verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPrefix), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
+            eq(expectedPrefix), anyMap(), any(Consumer.class), any(Pool.class), anySet());
 
         this.verifyContainerContentPath(expectedPrefix);
     }
@@ -673,6 +682,6 @@ public class ContentAccessManagerTest {
         manager.getCertificate(consumer);
 
         verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPrefix), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
+            eq(expectedPrefix), anyMap(), any(Consumer.class), any(Pool.class), anySet());
     }
 }

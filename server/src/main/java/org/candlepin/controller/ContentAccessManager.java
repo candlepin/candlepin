@@ -81,13 +81,13 @@ import javax.naming.ldap.Rdn;
  * content access modes.
  */
 public class ContentAccessManager {
-    private static Logger log = LoggerFactory.getLogger(ContentAccessManager.class);
+    private static final Logger log = LoggerFactory.getLogger(ContentAccessManager.class);
 
     /**
      * The ContentAccessMode enum specifies the supported content access modes, as well as some
      * utility methods for resolving, matching, and converting to database-compatible values.
      */
-    public static enum ContentAccessMode {
+    public enum ContentAccessMode {
         ENTITLEMENT,
         ORG_ENVIRONMENT;
 
@@ -182,22 +182,21 @@ public class ContentAccessManager {
         }
     }
 
-    private Configuration config;
-    private PKIUtility pki;
-    private KeyPairCurator keyPairCurator;
-    private CertificateSerialCurator serialCurator;
-    private OwnerCurator ownerCurator;
-    private OwnerContentCurator ownerContentCurator;
-    private ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private X509V3ExtensionUtil v3extensionUtil;
-    private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private EnvironmentCurator environmentCurator;
-    private ContentAccessCertificateCurator contentAccessCertCurator;
-    private EventSink eventSink;
-
-    private boolean standalone;
+    private final Configuration config;
+    private final PKIUtility pki;
+    private final KeyPairCurator keyPairCurator;
+    private final CertificateSerialCurator serialCurator;
+    private final OwnerCurator ownerCurator;
+    private final OwnerContentCurator ownerContentCurator;
+    private final ContentAccessCertificateCurator contentAccessCertificateCurator;
+    private final X509V3ExtensionUtil v3extensionUtil;
+    private final OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
+    private final ConsumerCurator consumerCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final EnvironmentCurator environmentCurator;
+    private final ContentAccessCertificateCurator contentAccessCertCurator;
+    private final EventSink eventSink;
+    private final boolean standalone;
 
     @Inject
     public ContentAccessManager(
@@ -322,7 +321,8 @@ public class ContentAccessManager {
         if (oeca == null || regenerate) {
             log.info("Generating new SCA payload for organization \"{}\"...", owner.getKey());
 
-            String contentJson = this.createPayloadAndSignature(owner, env);
+            byte[] payload = this.createContentAccessDataPayload(owner, env, consumer);
+            String contentJson = this.createPayloadAndSignature(payload);
             oeca = new OwnerEnvContentAccess(owner, env, contentJson);
             oeca = this.ownerEnvContentAccessCurator.saveOrUpdate(oeca);
         }
@@ -351,11 +351,7 @@ public class ContentAccessManager {
         return result;
     }
 
-    private String createPayloadAndSignature(Owner owner, Environment environment)
-        throws IOException {
-
-        byte[] payloadBytes = createContentAccessDataPayload(owner, environment);
-
+    private String createPayloadAndSignature(byte[] payloadBytes) {
         String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
         payload += Util.toBase64(payloadBytes);
         payload += "-----END ENTITLEMENT DATA-----\n";
@@ -532,44 +528,47 @@ public class ContentAccessManager {
         throws IOException {
         List<org.candlepin.model.dto.Product> products = new ArrayList<>();
         products.add(container);
-        Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(null, products, null,  null);
-        return result;
+        return v3extensionUtil.getByteExtensions(null, products, null,  null);
     }
 
-    private byte[] createContentAccessDataPayload(Owner owner, Environment environment) throws IOException {
+    private byte[] createContentAccessDataPayload(Owner owner, Environment environment, Consumer consumer)
+        throws IOException {
         // fake a product dto as a container for the org content
-        Set<Product> containerSet = new HashSet<>();
-        Set<String> entitledProductIds = new HashSet<>();
-        List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
-        Map<String, EnvironmentContent> promotedContent = getPromotedContent(environment);
-        String contentPrefix = this.getContentPrefix(owner, environment);
         Product container = new Product();
-        Entitlement emptyEnt = new Entitlement();
-        Pool emptyPool = new Pool();
-        Product skuProduct = new Product();
-        Consumer emptyConsumer = new Consumer();
-        emptyConsumer.setOwner(owner);
-
-        containerSet.add(container);
         container.setId("content_access");
         container.setName(" Content Access");
 
         this.ownerContentCurator.getActiveContentByOwner(owner.getId())
-            .forEach((content, enabled) -> container.addContent(content, enabled));
+            .forEach(container::addContent);
 
+        Consumer emptyConsumer = new Consumer();
+        emptyConsumer.setOwner(owner);
         emptyConsumer.setEnvironment(environment);
-        emptyEnt.setPool(emptyPool);
-        emptyEnt.setConsumer(emptyConsumer);
+        // TODO Do we need any other data for content filtering?
+        emptyConsumer.setFacts(consumer.getFacts());
+
+        Product skuProduct = new Product();
+        skuProduct.setName("Content Access");
+        skuProduct.setId("content_access");
+
+        Pool emptyPool = new Pool();
         emptyPool.setProduct(skuProduct);
         emptyPool.setStartDate(new Date());
         emptyPool.setEndDate(new Date());
-        skuProduct.setName("Content Access");
-        skuProduct.setId("content_access");
+
+        Entitlement emptyEnt = new Entitlement();
+        emptyEnt.setConsumer(emptyConsumer);
+        emptyEnt.setPool(emptyPool);
+
+        Set<String> entitledProductIds = new HashSet<>();
         entitledProductIds.add("content-access");
 
+        String contentPrefix = this.getContentPrefix(owner, environment);
+        Map<String, EnvironmentContent> promotedContent = getPromotedContent(environment);
         org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(container, skuProduct,
             contentPrefix, promotedContent, emptyConsumer, emptyPool, entitledProductIds);
 
+        List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         productModels.add(productModel);
 
         return v3extensionUtil.createEntitlementDataPayload(productModels,
@@ -643,9 +642,7 @@ public class ContentAccessManager {
             OwnerEnvContentAccess oeca = this.ownerEnvContentAccessCurator
                 .getContentAccess(consumer.getOwnerId(), env == null ? null : env.getId());
 
-            if (oeca == null || date.before(oeca.getUpdated())) {
-                return true;
-            }
+            return oeca == null || date.before(oeca.getUpdated());
         }
 
         return false;

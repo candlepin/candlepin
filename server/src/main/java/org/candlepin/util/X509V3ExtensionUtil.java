@@ -210,8 +210,8 @@ public class X509V3ExtensionUtil extends X509Util {
         String virtOnly = pool.getAttributeValue(Product.Attributes.VIRT_ONLY);
         if (virtOnly != null && !virtOnly.trim().equals("")) {
             // only included if not the default value of false
-            Boolean vo = Boolean.valueOf(virtOnly.equalsIgnoreCase("true") ||
-                virtOnly.equalsIgnoreCase("1"));
+            Boolean vo = virtOnly.equalsIgnoreCase("true") ||
+                virtOnly.equalsIgnoreCase("1");
             if (vo) {
                 toReturn.setVirtOnly(vo);
             }
@@ -311,18 +311,15 @@ public class X509V3ExtensionUtil extends X509Util {
 
         String productArches = engProduct.getAttributeValue(Product.Attributes.ARCHITECTURE);
         Set<String> productArchSet = Arch.parseArches(productArches);
-
-        // FIXME: getParsedArches might make more sense to just return a list
-        List<String> archList = new ArrayList<>();
-        for (String arch : productArchSet) {
-            archList.add(arch);
-        }
+        List<String> archList = new ArrayList<>(productArchSet);
         toReturn.setArchitectures(archList);
+
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
-        toReturn.setContent(createContent(
-            filterProductContent(engProduct, consumer, promotedContent, enableEnvironmentFiltering,
-            entitledProductIds, consumer.getOwner().isUsingSimpleContentAccess()), sku,
-            contentPrefix, promotedContent, consumer, engProduct));
+        Set<ProductContent> filteredContent = filterProductContent(engProduct, consumer, promotedContent,
+            enableEnvironmentFiltering, entitledProductIds, consumer.getOwner().isUsingSimpleContentAccess());
+        List<Content> content = createContent(
+            filteredContent, sku, contentPrefix, promotedContent, consumer, engProduct);
+        toReturn.setContent(content);
 
         return toReturn;
     }
@@ -365,26 +362,25 @@ public class X509V3ExtensionUtil extends X509Util {
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
         // Return only the contents that are arch appropriate
-        Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
+        Set<ProductContent> archAppropriateProductContent = filterContentByContentArch(
             productContent, consumer, product);
 
         List<String> skuDisabled = sku.getSkuDisabledContentIds();
         List<String> skuEnabled = sku.getSkuEnabledContentIds();
 
-        for (ProductContent pc : archApproriateProductContent) {
+        for (ProductContent pc : archAppropriateProductContent) {
             Content content = new Content();
-
-            // Augment the content path with the prefix if it is passed in
-            String contentPath = this.createFullContentPath(contentPrefix, pc);
 
             content.setId(pc.getContent().getId());
             content.setType(pc.getContent().getType());
             content.setName(pc.getContent().getName());
             content.setLabel(pc.getContent().getLabel());
             content.setVendor(pc.getContent().getVendor());
-            content.setPath(contentPath);
             content.setGpgUrl(pc.getContent().getGpgUrl());
 
+            // Augment the content path with the prefix if it is passed in
+            String contentPath = this.createFullContentPath(contentPrefix, pc);
+            content.setPath(contentPath);
 
             // Set content model's arches here, inheriting from the product if
             // they are not set on the content.

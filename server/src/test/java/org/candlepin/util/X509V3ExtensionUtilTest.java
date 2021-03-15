@@ -14,9 +14,10 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.TestingModules;
@@ -42,8 +43,8 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,17 +53,16 @@ import java.util.List;
 import java.util.Set;
 
 
-
-/**
- * X509V3ExtensionUtilTest
- */
 public class X509V3ExtensionUtilTest {
     private Configuration config;
     private EntitlementCurator ec;
     private X509V3ExtensionUtil util;
-    @Inject @Named("X509V3ExtensionUtilObjectMapper") private ObjectMapper mapper;
 
-    @Before
+    @Inject
+    @Named("X509V3ExtensionUtilObjectMapper")
+    private ObjectMapper mapper;
+
+    @BeforeEach
     public void init() {
         config = mock(Configuration.class);
         ec = mock(EntitlementCurator.class);
@@ -84,11 +84,12 @@ public class X509V3ExtensionUtilTest {
         assertEquals(np, np1);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void nullCompareTo() {
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
-        assertEquals(1, np.compareTo(null));
+
+        assertThrows(NullPointerException.class, () -> np.compareTo(null));
     }
 
     @Test
@@ -205,7 +206,32 @@ public class X509V3ExtensionUtilTest {
     }
 
     @Test
-    public void susbcriptionWithSyspurposeAttributes() throws JsonProcessingException {
+    public void shouldOnlyIncludeContentWithCompatibleArchitecture() {
+        Owner owner = new Owner("Test Corporation");
+        owner.setId("test-id");
+        Content content1 = new Content("cont_id1");
+        content1.setArches("x86_64");
+        Content content2 = new Content("cont_id2");
+        content2.setArches("ppc64");
+        Product engProd = new Product("content_access", "Content Access");
+        engProd.addContent(content1, true);
+        engProd.addContent(content2, true);
+        Product sku = new Product("content_access", "Content Access");
+        Pool pool = TestUtil.createPool(sku);
+        Consumer consumer = new Consumer();
+        consumer.setOwner(owner);
+        consumer.setFact("uname.machine", "x86_64");
+
+        org.candlepin.model.dto.Product certProds = util.mapProduct(engProd,
+            sku, "", new HashMap<>(), consumer, pool, new HashSet<>(Arrays.asList("content_access")));
+
+        assertEquals(1, certProds.getContent().size());
+        assertEquals(1, certProds.getContent().get(0).getArches().size());
+        assertEquals("x86_64", certProds.getContent().get(0).getArches().get(0));
+    }
+
+    @Test
+    public void subscriptionWithSysPurposeAttributes() throws JsonProcessingException {
         Owner owner = new Owner("Test Corporation");
         Product mktProd = new Product("mkt", "MKT SKU");
         mktProd.setAttribute(Product.Attributes.USAGE, "my_usage");
@@ -217,13 +243,13 @@ public class X509V3ExtensionUtilTest {
 
         TinySubscription subscription = util.createSubscription(pool);
         String output = this.mapper.writeValueAsString(subscription);
-        assertTrue("The serialized data should contain usage!", output.contains("my_usage"));
-        assertTrue("The serialized data should contain support level!", output.contains("my_support_level"));
-        assertTrue("The serialized data should contain support type!", output.contains("my_support_type"));
-        assertTrue("The serialized data should contain role!", output.contains("my_role1"));
-        assertTrue("The serialized data should contain role!", output.contains("my_role2"));
-        assertTrue("The serialized data should contain addon!", output.contains("my_addon1"));
-        assertTrue("The serialized data should contain addon!", output.contains("my_addon2"));
+        assertTrue(output.contains("my_usage"), "The serialized data should contain usage!");
+        assertTrue(output.contains("my_support_level"), "The serialized data should contain support level!");
+        assertTrue(output.contains("my_support_type"), "The serialized data should contain support type!");
+        assertTrue(output.contains("my_role1"), "The serialized data should contain role!");
+        assertTrue(output.contains("my_role2"), "The serialized data should contain role!");
+        assertTrue(output.contains("my_addon1"), "The serialized data should contain addon!");
+        assertTrue(output.contains("my_addon2"), "The serialized data should contain addon!");
     }
 
 }
