@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.25
+Version: 3.1.26
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,10 @@ fi
 
 #raw
 %changelog
+* Mon Mar 15 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.26-1
+- 1937691: Fixed stacked entitlement recovation deleting unrelated pools
+  (crog@redhat.com)
+
 * Tue Mar 09 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.25-1
 - 1935300: Added additional checks for regenerating SCA certificates
   (crog@redhat.com)
