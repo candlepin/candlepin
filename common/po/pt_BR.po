@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-07 02:02-0500\n"
-"PO-Revision-Date: 2021-01-10 18:36+0000\n"
+"PO-Revision-Date: 2021-03-15 22:01+0000\n"
 "Last-Translator: Fábio Rodrigues Ribeiro <farribeiro@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.fedoraproject.org/"
 "projects/candlepin/candlepin-3-1-hotfix/pt_BR/>\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Weblate 4.4\n"
+"X-Generator: Weblate 4.5.1\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -833,7 +833,7 @@ msgstr "É preciso especificar pelo menos um critério de pesquisa."
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1719
 #, java-format
 msgid "owner with key: {0} was not found."
-msgstr "proprietário com chave: {0} não foi encontrado"
+msgstr "proprietário com chave: {0} não foi encontrado."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:463
 #, java-format
@@ -1084,7 +1084,7 @@ msgstr "Erro na tentativa de regenerar o certificado de ID para a unidade {0}"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2730
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
-msgstr "O sistema com UUID {0} não é um convidado virtual"
+msgstr "O sistema com UUID {0} não é um convidado virtual."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2831
 #, java-format
@@ -1123,12 +1123,12 @@ msgstr ""
 msgid "Organization-agnostic content write operations are not supported."
 msgstr ""
 "As operações de gravação de conteúdo independentes da organização não "
-"possuem suporte. "
+"possuem suporte."
 
 #: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:167
 #, java-format
 msgid "A distributor version with name {0} already exists"
-msgstr "Já existe uma versão do distribuidor com o nome {0}."
+msgstr "Já existe uma versão do distribuidor com o nome {0}"
 
 #: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:199
 #, java-format
@@ -1176,7 +1176,7 @@ msgid ""
 "the total for this entitlement"
 msgstr ""
 "A quantidade especificada deve ser maior do que zero e menor do que ou igual "
-"ao total destes direitos de serviços."
+"ao total destes direitos de serviços"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gcintra
@@ -1191,11 +1191,11 @@ msgstr "Não existe tal ambiente: {0}"
 msgid "No environment specified, or environment lacks owner information"
 msgstr ""
 "Nenhum ambiente especificado ou faltam informações sobre o proprietário do "
-"ambiente "
+"ambiente"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:197
 msgid "No content ID specified"
-msgstr "Nenhuma ID do conteúdo especificada "
+msgstr "Nenhuma ID do conteúdo especificada"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:205
 #, java-format
@@ -1205,7 +1205,7 @@ msgstr "Não é possível localizar o conteúdo com a ID \"{0}\"."
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:249
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
-msgstr "O conteúdo com a id {0} já foi promovido neste ambiente. "
+msgstr "O conteúdo com a id {0} já foi promovido neste ambiente."
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:266
 #, java-format
@@ -1236,13 +1236,13 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:297
 #, java-format
 msgid "Guest with UUID {0} could not be found."
-msgstr "Não foi possível encontrar o convidado com o UUID {0} "
+msgstr "Não foi possível encontrar o convidado com o UUID {0}."
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:165
 msgid "Host to guest mapping was not provided for hypervisor check-in."
 msgstr ""
 "O mapeamento do host para o convidado não foi fornecido para a realização de "
-"check-in do hipervisor. "
+"check-in do hipervisor."
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:226
 #, java-format
@@ -1253,7 +1253,7 @@ msgstr ""
 msgid "Host to guest mapping was not provided for hypervisor update."
 msgstr ""
 "O mapeamento do host para o convidado não foi fornecido para a atualização "
-"do hipervisor. "
+"do hipervisor."
 
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:416
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:422
@@ -1319,13 +1319,13 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:139
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
-msgstr "Não foi possível localizar o proprietário com a chave \"{0}\". "
+msgstr "Não foi possível localizar o proprietário com a chave \"{0}\"."
 
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:154
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:189
 #, java-format
 msgid "Content with ID \"{0}\" could not be found."
-msgstr "Não foi possível encontrar o conteúdo com a ID \"{0}\". "
+msgstr "Não foi possível encontrar o conteúdo com a ID \"{0}\"."
 
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:216
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:278
@@ -1504,8 +1504,7 @@ msgstr ""
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1830
 msgid "Cannot update bonus pools, as they are auto generated"
-msgstr ""
-"Não é possível atualizar pools bonus, pois são gerados automaticamente "
+msgstr "Não é possível atualizar pools bonus, pois são gerados automaticamente"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1674,7 +1673,7 @@ msgstr "localidade do e-mail é requerido para notificação"
 #: server/src/main/java/org/candlepin/resource/SubscriptionResource.java:182
 #, java-format
 msgid "A subscription with the ID \"{0}\" could not be found."
-msgstr "Não foi possível encontrar uma subscrição com a ID \"{0}\". "
+msgstr "Não foi possível encontrar uma subscrição com a ID \"{0}\"."
 
 #: server/src/main/java/org/candlepin/resource/UserResource.java:179
 msgid "user data is null or empty"
@@ -1714,8 +1713,7 @@ msgstr "Não foi possível encontrar o(s) tipo(s) de unidade: {0}"
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:130
 msgid "No product specified, or product lacks identifying information"
 msgstr ""
-"Nenhum produto especificado ou faltam informações de identificação do "
-"produto "
+"Nenhum produto especificado ou faltam informações de identificação do produto"
 
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:109
 #, java-format
@@ -1770,7 +1768,7 @@ msgstr "O candlepin independente não suporta o resgate de subscrição."
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:68
 msgid "No ID for upstream subscription management application."
 msgstr ""
-"Não existe um ID para o aplicativo de Gerenciamento de Subscrição Upstream"
+"Não existe um ID para o aplicativo de Gerenciamento de Subscrição Upstream."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:82
 msgid ""
@@ -1778,7 +1776,7 @@ msgid ""
 "another owner."
 msgstr ""
 "Este aplicativo de gerenciamento de subscrição já foi importado por outro "
-"proprietário"
+"proprietário."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:89
 msgid ""
@@ -1789,7 +1787,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:201
 #, java-format
 msgid "Unable to find product with ID: {0}"
-msgstr "Não é possível localizar o produto com a ID: {0} "
+msgstr "Não é possível localizar o produto com a ID: {0}"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:194
 msgid "Uploaded manifest file does not exist."
@@ -1800,20 +1798,20 @@ msgstr ""
 #: server/src/main/java/org/candlepin/sync/Importer.java:253
 #, java-format
 msgid "{0} file imported successfully."
-msgstr "arquivo {0} importado com sucesso"
+msgstr "arquivo {0} importado com sucesso."
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:255
 #, java-format
 msgid "{0} file imported forcibly."
-msgstr "arquivo {0} importado à força. "
+msgstr "arquivo {0} importado à força."
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:259
 msgid "No active subscriptions found in the file."
-msgstr "Nenhuma subscrição ativa encontrada no arquivo. "
+msgstr "Nenhuma subscrição ativa encontrada no arquivo."
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:263
 msgid "One or more inactive subscriptions found in the file."
-msgstr "Uma ou mais subscrições inativas encontradas no arquivo. "
+msgstr "Uma ou mais subscrições inativas encontradas no arquivo."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1839,7 +1837,7 @@ msgstr "A importação é a mesma que a dos dados existentes"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:387
 msgid "The archive does not contain the required signature file"
-msgstr "O arquivo não contém o arquivo de assinatura requerido."
+msgstr "O arquivo não contém o arquivo de assinatura requerido"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:404
 msgid "Archive failed signature check"
@@ -1847,7 +1845,7 @@ msgstr "O arquivo falhou a verificação da assinatura"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:419
 msgid "The consumer_export archive has no contents"
-msgstr "O arquivo consumer_export está vazio."
+msgstr "O arquivo consumer_export está vazio"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
@@ -1888,7 +1886,7 @@ msgstr "O arquivo não contém o diretório de direitos a serviços como requeri
 #: server/src/main/java/org/candlepin/sync/Importer.java:779
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
-msgstr "O arquivo {0} não é um arquivo comprimido adequadamente ou está vazio."
+msgstr "O arquivo {0} não é um arquivo comprimido adequadamente ou está vazio"
 
 #: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:111
 #, java-format
