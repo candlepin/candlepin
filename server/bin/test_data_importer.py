@@ -5,6 +5,7 @@ from __future__ import print_function, division, absolute_import
 Injects synthetic data from one or more JSON files into Candlepin for testing
 """
 
+import argparse
 import datetime
 import logging
 import json
@@ -15,8 +16,6 @@ import requests
 import string
 import sys
 import time
-
-from optparse import OptionParser
 
 
 
@@ -35,26 +34,28 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 log = logging.getLogger('test_data_importer')
 
 
-# TODO: There's likely a better python way of doing this that I don't know, but all the ways that I've
-# learned make shallow copies of the entire dictionary to do the check which seems rather wasteful to me,
-# so we go old school here.
-def ci_in(dict, search):
+def ci_in(src_dict, search):
+    """Performs a case-insensitive search in a dictionary"""
+
     search = search.lower()
 
-    for key in dict:
+    for key in src_dict:
         if key.lower() == search:
             return True
 
     return False
 
-# Merges two dictionaries, converting the keys in the source dictionary from snake case to camel case
-# where appropriate.
 def safe_merge(source, dest, include=None, exclude=None):
+    """
+    Merges two dictionaries, converting the keys in the source dictionary from snake case to camel case
+    where appropriate.
+    """
+
     def handle_match(match):
-        return "%s%s" % (match.group(1), match.group(2).upper())
+        return '{chr1}{chr2}'.format(chr1=match.group(1), chr2=match.group(2).upper())
 
     for key, value in source.items():
-        key = re.sub('(\w)_(\w)', handle_match, key)
+        key = re.sub('(\\w)_(\\w)', handle_match, key)
 
         if (include is None or key in include) and (exclude is None or key not in exclude):
             dest[key] = value
@@ -62,58 +63,78 @@ def safe_merge(source, dest, include=None, exclude=None):
     return dest
 
 def random_id(prefix, suffix_length=8):
+    """Generates a string with a random suffix, suitable to be used as an ID"""
     suffix = ''.join(random.choice(string.digits) for i in range(suffix_length))
-    return "%s-%s" % (prefix, suffix)
-
+    return "{prefix}-{suffix}".format(prefix=prefix, suffix=suffix)
 
 
 class Candlepin:
-    # Server configuration
-    host = 'localhost'
-    port = 8443
-    username = 'admin'
-    password = 'admin'
-
+    """Class providing methods for performing actions against a specific Candlepin server"""
     status_cache = None
     hosted_test = None
 
+    def __init__(self, host='localhost', port=8443, username='admin', password='admin', prefix='candlepin'):
+        """
+        Creates a new Candlepin object which will connect to the server at the given host/port using the
+        specified credentials
+        """
 
-    def __init__(self, host, port, username, password):
         self.host = host
         self.port = port
         self.username = username
         self.password = password
+        self.prefix = prefix
 
         self.determine_mode()
 
     def build_url(self, endpoint):
+        """Builds a complete URL for the specified endpoint on the target Candlepin instance"""
+
         # Remove leading slash if it exists
         if endpoint and endpoint[0] == '/':
             endpoint = endpoint[1:]
 
-        return "https://%s:%d/candlepin/%s" % (self.host, self.port, endpoint)
+        return 'https://{host}:{port}/{prefix}/{endpoint}'.format(
+            host=self.host, port=self.port, prefix=self.prefix, endpoint=endpoint)
 
-    def get(self, endpoint, params=None, headers=None, content_type='text/plain', accept_type='application/json'):
+    def get(self, endpoint, params=None, headers=None, content_type='text/plain',
+        accept_type='application/json'):
+
         return self.request('GET', endpoint, None, params, headers, content_type, accept_type)
 
-    def post(self, endpoint, data=None, params=None, headers=None, content_type='application/json', accept_type='application/json'):
+    def post(self, endpoint, data=None, params=None, headers=None, content_type='application/json',
+        accept_type='application/json'):
+
         return self.request('POST', endpoint, data, params, headers, content_type, accept_type)
 
-    def put(self, endpoint, data=None, params=None, headers=None, content_type='application/json', accept_type='application/json'):
+    def put(self, endpoint, data=None, params=None, headers=None, content_type='application/json',
+        accept_type='application/json'):
+
         return self.request('PUT', endpoint, data, params, headers, content_type, accept_type)
 
-    def delete(self, endpoint, data=None, params=None, headers=None, content_type='application/json', accept_type='application/json'):
+    def delete(self, endpoint, data=None, params=None, headers=None, content_type='application/json',
+        accept_type='application/json'):
+
         return self.request('DELETE', endpoint, data, params, headers, content_type, accept_type)
 
-    def request(self, req_type, endpoint, data=None, params=None, headers=None, content_type='application/json', accept_type='application/json'):
-        if params is None: params = {}
-        if headers is None: headers = {}
+    def request(self, req_type, endpoint, data=None, params=None, headers=None,
+        content_type='application/json', accept_type='application/json'):
+
+        if params is None:
+            params = {}
+
+        if headers is None:
+            headers = {}
 
         # Add our content-type and accept type if they weren't explicitly provided in the headers already
-        if not ci_in(headers, 'Content-Type'): headers['Content-Type'] = content_type
-        if not ci_in(headers, 'Accept'): headers['Accept'] = accept_type
+        if not ci_in(headers, 'Content-Type'):
+            headers['Content-Type'] = content_type
 
-        log.log(LOGLVL_TRACE, "Sending request: %s %s (params: %s, headers: %s, data: %s)" % (req_type, endpoint, params, headers, data))
+        if not ci_in(headers, 'Accept'):
+            headers['Accept'] = accept_type
+
+        log.log(LOGLVL_TRACE, 'Sending request: {req} {endpoint} (params: {params}, headers: {headers}, data: {data})'
+            .format(req=req_type, endpoint=endpoint, params=params, headers=headers, data=data))
 
         response = requests.request(req_type, self.build_url(endpoint),
             json=data,
@@ -143,7 +164,7 @@ class Candlepin:
 
         return self.hosted_test
 
-    # Candlepin specific functions
+    # Candlepin API functions
     def create_owner(self, owner_data):
         owner = {
             'key': owner_data['name'],
@@ -179,7 +200,7 @@ class Candlepin:
         return self.post('roles', role).json()
 
     def add_role_to_user(self, username, role_name):
-        return self.post("roles/%s/users/%s" % (role_name, username)).json()
+        return self.post('roles/{rolename}/users/{username}'.format(rolename=role_name, username=username)).json()
 
     def create_content(self, owner_key, content_data):
         content = safe_merge(content_data, {})
@@ -187,7 +208,7 @@ class Candlepin:
         if self.hosted_test:
             url = 'hostedtest/content'
         else:
-            url = "owners/%s/content" % (owner_key)
+            url = 'owners/{owner_key}/content'.format(owner_key=owner_key)
 
         return self.post(url, content).json()
 
@@ -218,7 +239,7 @@ class Candlepin:
             branding.append({
                 'productId': provided_products[0]['id'],
                 'type': 'OS',
-                'name': "Branded %s" % (product_data['name'])
+                'name': 'Branded {name}'.format(name=product_data['name'])
             })
 
         product = {
@@ -235,22 +256,23 @@ class Candlepin:
 
         # Determine URL and submit
         if self.hosted_test:
-            url = 'hostedtest/products'
+            endpoint = 'hostedtest/products'
         else:
-            url = "owners/%s/products" % (owner_key)
+            endpoint = 'owners/{owner_key}/products'.format(owner_key=owner_key)
 
-        return self.post(url, product).json()
+        return self.post(endpoint, product).json()
 
     def get_product_cert(self, owner_key, product_id):
-        return self.get("owners/%s/products/%s/certificate" % (owner_key, product_id)).json()
+        endpoint = 'owners/{owner_key}/products/{pid}/certificate'.format(owner_key=owner_key, pid=product_id)
+        return self.get(endpoint).json()
 
     def add_content_to_product(self, owner_key, product_id, content_map):
         if self.hosted_test:
-            url = "hostedtest/products/%s/content" % (product_id)
+            endpoint = 'hostedtest/products/{pid}/content'.format(pid=product_id)
         else:
-            url = "owners/%s/products/%s/batch_content" % (owner_key, product_id)
+            endpoint = 'owners/{owner_key}/products/{pid}/batch_content'.format(owner_key=owner_key, pid=product_id)
 
-        return self.post(url, content_map).json()
+        return self.post(endpoint, content_map).json()
 
     def create_pool(self, owner_key, pool_data):
         start_date = pool_data['start_date'] if 'start_date' in pool_data else datetime.datetime.now()
@@ -276,7 +298,7 @@ class Candlepin:
             # The owner must be set in the subscription data for upstream subscriptions
             pool['owner'] = { 'key': owner_key }
 
-            url = 'hostedtest/subscriptions'
+            endpoint = 'hostedtest/subscriptions'
         else:
             # Copy over the pool (special case because hosted test data is different)
             pool['productId'] = pool_data['product_id']
@@ -295,28 +317,30 @@ class Candlepin:
             if not 'upstreamPoolId' in pool:
                 pool['upstreamPoolId'] = random_id('upstream')
 
-            url = "owners/%s/pools" % (owner_key)
+            endpoint = 'owners/{owner_key}/pools'.format(owner_key=owner_key)
 
-        return self.post(url, pool).json()
+        return self.post(endpoint, pool).json()
 
     def list_pools(self, owner_key):
-        return self.get("owners/%s/pools" % (owner_key)).json()
+        endpoint = 'owners/{owner_key}/pools'.format(owner_key=owner_key)
+        return self.get(endpoint).json()
 
     def create_activation_key(self, owner_key, key_data):
         key = safe_merge(key_data, {})
-        return self.post("owners/%s/activation_keys" % (owner_key), key).json()
+        return self.post('owners/{owner_key}/activation_keys'.format(owner_key=owner_key), key).json()
 
     def add_pool_to_activation_key(self, key_id, pool_id, quantity=None):
-        url = "activation_keys/%s/pools/%s" % (key_id, pool_id)
+        endpoint = 'activation_keys/{key_id}/pools/{pool_id}'.format(key_id=key_id, pool_id=pool_id)
         params = {}
 
         if quantity is not None:
             params['quantity'] = quantity
 
-        return self.post(url, None, params).json()
+        return self.post(endpoint, None, params).json()
 
     def refresh_pools(self, owner_key, wait_for_completion=True):
-        job_status = self.put("owners/%s/subscriptions" % (owner_key), None, params={ 'lazy_regen': True }).json()
+        endpoint = 'owners/{owner_key}/subscriptions'.format(owner_key=owner_key)
+        job_status = self.put(endpoint, None, params={ 'lazy_regen': True }).json()
 
         if job_status and wait_for_completion:
             finished_states = ['ABORTED', 'FINISHED', 'CANCELED', 'FAILED']
@@ -330,10 +354,80 @@ class Candlepin:
 
         return job_status
 
+def create_owners(cp, data):
+    """
+    Creates any owners present in the test data and returns a dictionary consisting of the owner keys
+    mapped to the owner objects returned by Candlepin.
+    """
+
+    owners = {}
+
+    if 'owners' in data:
+        print('')
+        log.info('Creating {count} owner(s)...'.format(count=len(data['owners'])))
+
+        for owner_data in data['owners']:
+            log.info('  Owner: {name}  [display name: {display_name}]'
+                .format(name=owner_data['name'], display_name=owner_data['displayName']))
+
+            owner = cp.create_owner(owner_data)
+            owners[owner['key']] = owner_data
+
+    return owners
 
 
-# Gather and order content in a way that ensures linear creation is safe
+def create_users(cp, data):
+    """
+    Creates any users present in the test data
+    """
+
+    if 'users' in data:
+        print('')
+        log.info('Creating {count} user(s)...'.format(count=len(data['users'])))
+
+        for user_data in data['users']:
+            log.info('  User: {username}  [password: {password}, superuser: {superuser}'.format(
+                username=user_data['username'], password=user_data['password'],
+                superuser=user_data['superadmin'] if 'superadmin' in user_data else False))
+
+            user = cp.create_user(user_data)
+
+def create_roles(cp, data):
+    """Creates any roles present in the test data, mapping them to users as appropriate"""
+
+    if 'roles' in data:
+        print('')
+        log.info('Creating {count} role(s)...'.format(count=len(data['roles'])))
+
+        for role_data in data['roles']:
+            permissions = role_data['permissions']
+            users = role_data['users']
+
+            log.info('  Role: {name}  (permissions: {perm_count}, users: {user_count})'
+                .format(name=role_data['name'], perm_count=len(permissions), user_count=len(users)))
+
+            # Correct & list permissions
+            for perm_data in permissions:
+                # convert owner keys to owner objects:
+                if type(perm_data['owner']) != dict:
+                    perm_data['owner'] = { 'key': perm_data['owner'] }
+
+                log.info('    Permission: [type: {type}, owner: {owner}, access: {access}]'
+                    .format(type=perm_data['type'], owner=perm_data['owner'], access=perm_data['access']))
+
+            role = cp.create_role(role_data['name'], permissions)
+
+            # Add role to users
+            for user_data in users:
+                log.info('    Applying to user: {user}'.format(user=user_data['username']))
+                cp.add_role_to_user(user_data['username'], role_data['name'])
+
 def gather_content(data, hosted_test):
+    """
+    Gathers content from the test data and orders them in a way to ensure that linear creation of the
+    content data is safe
+    """
+
     content = []
 
     if hosted_test:
@@ -361,8 +455,21 @@ def gather_content(data, hosted_test):
 
     return content
 
-# Gather and order products in a way that ensures linear creation is safe
+def create_content(cp, data):
+    """Creates any content present in the test data"""
+
+    print('')
+    content_data = gather_content(data, cp.hosted_test)
+
+    log.info('Creating {count} content...'.format(count=len(content_data)))
+    for owner_key, content in content_data:
+        cp.create_content(owner_key, content)
+
 def gather_products(data, hosted_test):
+    """
+    Gathers products from the test data and orders them in a way to ensure that linear creation of the
+    product data is safe
+    """
     def order_products(owner_key, product_map):
         ordered = []
         processed_pids = []
@@ -373,14 +480,20 @@ def gather_products(data, hosted_test):
 
             if 'derived_product_id' in product:
                 if product['derived_product_id'] not in product_map:
-                    raise ReferenceError("product references a non-existent product: %s (%s) => %s" % (product['name'], product['id'], product['derived_product_id']))
+                    errmsg = 'product references a non-existent product: {name} ({pid}) => {ref_pid}'.format(
+                        name=product['name'], pid=product['id'], ref_pid=product['derived_product_id'])
+
+                    raise ReferenceError(errmsg)
 
                 traverse_product(product_map[product['derived_product_id']])
 
             if 'provided_products' in product:
                 for pid in product['provided_products']:
                     if pid not in product_map:
-                        raise ReferenceError("product references a non-existent product: %s (%s) => %s" % (product['name'], product['id'], pid))
+                        errmsg = 'product references a non-existent product: {name} ({pid}) => {ref_pid}'.format(
+                            name=product['name'], pid=product['id'], ref_pid=pid)
+
+                        raise ReferenceError(ermsg)
 
                     traverse_product(product_map[pid])
 
@@ -428,8 +541,8 @@ def gather_products(data, hosted_test):
 
     return products
 
-# Performs content mapping for a given product
 def map_content_to_product(owner_key, product_data):
+    """Performs content mapping for a given product"""
     content_map = {}
 
     if 'content' in product_data:
@@ -441,90 +554,63 @@ def map_content_to_product(owner_key, product_data):
     if content_map:
         cp.add_content_to_product(owner_key, product_data['id'], content_map)
 
+def create_products(cp, data):
+    """Creates any products present in the test data and maps any content associated with them"""
 
-# Process a given JSON file, creating the test data it defines
-def process_file(cp, options, filename):
-    with open(filename) as file:
-        data = json.load(file)
-
-    now = datetime.datetime.now()
-
-    owners = {}
-    activation_keys = []
-    engineering_products = {}
-
-    log.info("Importing data from file: %s" % (filename))
-
-
-    # Create owners
-    if 'owners' in data:
-        print('')
-        log.info("Creating %d owner(s)..." % (len(data['owners'])))
-        for owner_data in data['owners']:
-            log.info("  Owner: %s  [display name: %s]" % (owner_data['name'], owner_data['displayName']))
-            owner = cp.create_owner(owner_data)
-
-            owners[owner['key']] = owner_data
-            activation_keys.append((owner['key'], "default_key", None))
-            activation_keys.append((owner['key'], "awesome_os_pool", None))
-
-    # Create users
-    if 'users' in data:
-        print('')
-        log.info("Creating %d user(s)..." % (len(data['users'])))
-        for user_data in data['users']:
-            log.info("  User: %s  [password: %s, superuser: %s" % (user_data['username'], user_data['password'], user_data['superadmin'] if 'superadmin' in user_data else False))
-            user = cp.create_user(user_data)
-
-    # Create roles
-    if 'roles' in data:
-        print('')
-        log.info("Creating %d role(s)..." % (len(data['roles'])))
-        for role_data in data['roles']:
-            permissions = role_data['permissions']
-            users = role_data['users']
-
-            log.info("  Role: %s  (permissions: %d, users: %d)" % (role_data['name'], len(permissions), len(users)))
-
-            # Correct & list permissions
-            for perm_data in permissions:
-                # convert owner keys to owner objects:
-                if type(perm_data['owner']) != dict:
-                    perm_data['owner'] = { 'key': perm_data['owner'] }
-
-                log.info("    Permission: [type: %s, owner: %s, access: %s]" % (perm_data['type'], perm_data['owner'], perm_data['access']))
-
-            role = cp.create_role(role_data['name'], permissions)
-
-            # Add role to users
-            for user_data in users:
-                log.info("    Applying to user: %s" % (user_data['username']))
-                cp.add_role_to_user(user_data['username'], role_data['name'])
-
-
-    # Create content
-    print('')
-    content_data = gather_content(data, cp.hosted_test)
-
-    log.info("Creating %d content..." % (len(content_data)))
-    for owner_key, content in content_data:
-        cp.create_content(owner_key, content)
-
-    # Create products
     print('')
     product_data = gather_products(data, cp.hosted_test)
 
-    log.info("Creating %d product(s)..." % (len(product_data)))
+    log.info('Creating {count} product(s)...'.format(count=len(product_data)))
     for owner_key, product in product_data:
-        log.info("  Product: %s [name: %s, owner: %s]" % (product['id'], product['name'], owner_key if owner_key else '-GLOBAL-'))
+        log.info('  Product: {pid} [name: {name}, owner: {owner}]'
+            .format(pid=product['id'], name=product['name'], owner=owner_key if owner_key else '-GLOBAL-'))
+
         cp.create_product(owner_key, product)
 
         # Link products to any content they reference
         map_content_to_product(owner_key, product)
 
-    # Create pools/subscriptions
+def fetch_product_certs(cp, cert_dir, engineering_products):
+    """
+    Fetches product certs for the specified engineering products. Engineering products must be provided as
+    a dictionary mapping a product ID to an owner key of one of the orgs owning the product.
+    """
+
+    if engineering_products:
+        print('')
+        log.info('Fetching certs for {count} engineering products...'.format(count=len(engineering_products)))
+
+        # make sure the cert directory exists
+        if not os.path.exists(cert_dir):
+            os.makedirs(cert_dir)
+
+        for pid, owner_key in engineering_products.items():
+            try:
+                # This could 404 if the product did not get pulled down during refresh (hosted mode)
+                # because it's not linked/used by anything. We'll issue a warning in this case.
+                product_cert = cp.get_product_cert(owner_key, pid)
+                cert_filename = '{dir}/{prod_id}.pem'.format(dir=cert_dir, prod_id=pid)
+
+                with open(cert_filename, 'w+') as file:
+                    log.info('  Writing certificate: {filename}'.format(filename=cert_filename))
+                    file.write(product_cert['cert'])
+            except requests.exceptions.HTTPError as e:
+                if e.response.status_code == 404:
+                    log.warn('  Skipping certificate for unused product: {product}'.format(product=pid))
+                else:
+                    raise e
+
+def create_subscriptions(cp, options, owners, data):
+    """
+    Creates subscriptions from the test data and fetches engineering product certificates,
+    refreshing the affected orgs as necessary.
+    """
+
     print('')
     log.info("Creating subscriptions...")
+
+    now = datetime.datetime.now()
+    engineering_products = {}
 
     for owner_key, owner_data in owners.items():
         account_number = ''.join(random.choice(string.digits) for i in range(10))
@@ -536,12 +622,11 @@ def process_file(cp, options, filename):
         if 'products' in data:
             products.extend(data['products'])
 
-        if 'products' in owner:
+        if 'products' in owner_data:
             products.extend(owner_data['products'])
 
         for product in products:
             if 'type' in product and product['type'] == 'MKT':
-
                 if 'quantity' in product:
                     small_quantity = int(product['quantity'])
                     large_quantity = small_quantity * 10 if small_quantity > 0 else 10
@@ -587,87 +672,120 @@ def process_file(cp, options, filename):
 
             else:
                 # Product is an engineering product. Flag the pid/owner combo so we can fetch the cert later
+
+                # Impl note:
+                # We're abusing some CP knowledge here in that product certs are global -- it doesn't matter
+                # *which* org we use to fetch them, but as the API requires *an* org, we just store the last
+                # org that specifies the product which should still cover the entire collection of products
+                # generated during this execution
                 engineering_products[product['id']] = owner_key
 
-        log.info("  Creating %d subscription(s) for owner %s..." % (len(pools), owner_key))
+        log.info('  Creating {count} subscription(s) for owner {owner}...'
+            .format(count=len(pools), owner=owner_key))
+
         for pool in pools:
             cp.create_pool(owner_key, pool)
 
         # Refresh (if necessary)
         if cp.hosted_test:
-            log.info("  Refreshing owner: %s" % (owner_key))
+            log.info('  Refreshing owner: {owner}'.format(owner=owner_key))
             cp.refresh_pools(owner_key)
 
+    # Fetch engineering product certs (if necessary)
+    fetch_product_certs(cp, options.cert_dir, engineering_products)
 
-    # Create activation keys
+def create_activation_keys(cp, owners):
+    """
+    Creates activation keys for the specified owners. The owners should be provided as a dictionary
+    consisting of owner keys mapped to owner data
+    """
+    activation_keys = []
+
+    # Build a set of activation key data to use to generate our keys
     for owner_key in owners:
-        pools = cp.list_pools(owner_key)
-        activation_keys.extend([(owner_key, "%s-%s-key-%s" % (owner_key, pool['productId'], pool['id']), pool) for pool in pools])
+        activation_keys.append((owner_key, "default_key", None))
+        activation_keys.append((owner_key, "awesome_os_pool", None))
 
+        pools = cp.list_pools(owner_key)
+
+        for pool in pools:
+            key_name = '{owner_key}-{prod_id}-key-{pool_id}'.format(
+                owner_key=owner_key, prod_id=pool['productId'], pool_id=pool['id'])
+
+            activation_keys.append((owner_key, key_name, pool))
+
+    # Actually generate the keys (if necessary)
     if activation_keys:
         print('')
-        log.info("Creating %d activation keys..." % (len(activation_keys)))
+        log.info('Creating {count} activation keys...'.format(count=len(activation_keys)))
+
         for owner_key, key_name, pool in activation_keys:
-            log.info("  Activation key: %s [owner: %s, pool: %s]" % (key_name, owner_key, pool['id'] if pool is not None else 'n/a'))
+            log.info('  Activation key: {key_name} [owner: {owner}, pool: {pool}]'
+                .format(key_name=key_name, owner=owner_key, pool=pool['id'] if pool is not None else 'n/a'))
 
             key = cp.create_activation_key(owner_key, {'name': key_name})
             if pool is not None:
                 cp.add_pool_to_activation_key(key['id'], pool['id'])
 
 
-    # Fetch entitlements/certs for engineering products
-    if engineering_products:
-        print('')
-        log.info("Fetching certs for %d engineering products..." % (len(engineering_products)))
+# Process a given JSON file, creating the test data it defines
+def process_file(cp, options, filename):
+    with open(filename) as file:
+        data = json.load(file)
 
-        # make sure the cert directory exists
-        if not os.path.exists(options.cert_dir):
-            os.makedirs(options.cert_dir)
+    log.info('Importing data from file: {filename}'.format(filename=filename))
 
-        for pid, owner_key in engineering_products.items():
-            try:
-                # This could 404 if the product did not get pulled down during refresh (hosted mode)
-                # because it's not linked/used by anything. We'll issue a warning in this case.
-                product_cert = cp.get_product_cert(owner_key, pid)
-                cert_filename = "%s/%s.pem" % (options.cert_dir, pid)
+    # Create owners
+    owners = create_owners(cp, data)
 
-                with open(cert_filename, 'w+') as file:
-                    log.info("  Writing certificate: %s" % (cert_filename))
-                    file.write(product_cert['cert'])
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code == 404:
-                    log.warn("  Skipping certificate for unused product: %s" % (pid))
-                else:
-                    raise e
+    # Create users
+    create_users(cp, data)
 
-        print('')
-        log.info("Finished importing data from file: %s" % (filename))
+    # Create roles
+    create_roles(cp, data)
 
+    # Create content
+    create_content(cp, data)
 
+    # Create products
+    create_products(cp, data)
+
+    # Create pools/subscriptions
+    create_subscriptions(cp, options, owners, data)
+
+    # Create activation keys
+    create_activation_keys(cp, owners)
+
+    # Done!
+    print('')
+    log.info('Finished importing data from file: {filename}'.format(filename=filename))
 
 # Parse CLI options
 def parse_options():
-    usage = "usage: %prog [options] [JSON_FILES]"
-    parser = OptionParser(usage=usage)
+    parser = argparse.ArgumentParser(description='Imports JSON-formatted test data to a Candlepin server', add_help=True)
 
-    parser.add_option("--debug", action="store_true", default=False,
-        help="Enables debug output")
-    parser.add_option("--trace", action="store_true", default=False,
-        help="Enables trace output; implies --debug")
+    parser.add_argument('--debug', action='store_true', default=False,
+        help='Enables debug output')
+    parser.add_argument('--trace', action='store_true', default=False,
+        help='Enables trace output; implies --debug')
 
-    parser.add_option("--username", action="store", default='admin',
-        help="The username to use when making requests to Candlepin; defaults to 'admin'")
-    parser.add_option("--password", action="store", default='admin',
-        help="The password to use when making requests to Candlepin; defaults to 'admin'")
-    parser.add_option("--host", action="store", default='localhost',
-        help="The hostname/address of the Candlepin server; defaults to 'localhost'")
-    parser.add_option("--port", action="store", default=8443,
-        help="The port to use when connecting to Candlepin; defaults to 8443")
+    parser.add_argument('--username', action='store', default='admin',
+        help='The username to use when making requests to Candlepin; defaults to \'admin\'')
+    parser.add_argument('--password', action='store', default='admin',
+        help='The password to use when making requests to Candlepin; defaults to \'admin\'')
+    parser.add_argument('--host', action='store', default='localhost',
+        help='The hostname/address of the Candlepin server; defaults to \'localhost\'')
+    parser.add_argument('--port', action='store', default=8443, type=int,
+        help='The port to use when connecting to Candlepin; defaults to 8443')
+    parser.add_argument('--prefix', action='store', default='candlepin',
+        help='The endpoint prefix to use on the destination Candlepin server; defaults to \'candlepin\'')
 
-    parser.add_option("--cert_dir", action="store", default="generated_certs",
-        help="The directory in which to store generated product certificates; defaults to 'generated_certs'")
+    parser.add_argument('--cert_dir', action='store', default='generated_certs',
+        help='The directory in which to store generated product certificates; defaults to \'generated_certs\'')
 
-    (options, args) = parser.parse_args()
+    parser.add_argument("json_files", nargs='*', action='store')
+
+    options = parser.parse_args()
 
     # Set logging level as appropriate
     if options.trace:
@@ -675,32 +793,31 @@ def parse_options():
     elif options.debug:
         log.setLevel(logging.DEBUG)
 
-    if len(args) < 1:
+    if len(options.json_files) < 1:
         log.debug("No test data files provided, defaulting to 'test_data.json'")
 
         filename = 'test_data.json'
         if sys.path[0]:
-            filename = "%s/%s" % (sys.path[0], filename)
+            filename = '{script_home}/{filename}'.format(script_home=sys.path[0], filename=filename)
 
-        args = [filename]
+        options.json_files = [filename]
 
-    return (options, args)
+    return options
 
 
-
-# Execute bits
+# Execute script
 try:
-    options, files = parse_options()
+    options = parse_options()
 
-    log.info("Connecting to Candlepin @ %s:%d" % (options.host, options.port))
-    cp = Candlepin(options.host, options.port, options.username, options.password)
+    log.info('Connecting to Candlepin @ {host}:{port}'.format(host=options.host, port=options.port))
+    cp = Candlepin(options.host, options.port, options.username, options.password, options.prefix)
 
-    log.info("Importing test data from %d file(s)..." % (len(files)))
-    for file in files:
+    log.info('Importing test data from {count} file(s)...'.format(count=len(options.json_files)))
+    for file in options.json_files:
         process_file(cp, options, file)
 
-    log.info("Complete. Files imported: %d" % (len(files)))
+    log.info('Complete. Files imported: {count}'.format(count=len(options.json_files)))
 
 except requests.exceptions.ConnectionError as e:
-    log.error("Connection error: %s" % (e))
+    log.error('Connection error: {err}'.format(err=e))
     exit(1)
