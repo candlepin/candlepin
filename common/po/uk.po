@@ -1000,15 +1000,6 @@ msgstr ""
 "Ігноруємо запит щодо автоматичного долучення. Його вимкнено для організації "
 "«{0}» через параметр автоматичної привʼязки гіпервізора."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2243
-#, java-format
-msgid ""
-"Organization \"{0}\" has auto-attach disabled because of the content access "
-"mode setting."
-msgstr ""
-"Для організації «{0}» вимкнено автоматичне долучення через параметр режиму "
-"доступу до даних."
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2248
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."

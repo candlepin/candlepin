@@ -1089,15 +1089,6 @@ msgstr ""
 "Requête auto-attach ignorée. L'organisation \"{0}\" a déjà la fonction auto-"
 "attach désactivée à cause de la configuration autobind de l'hyperviseur."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2243
-#, java-format
-msgid ""
-"Organization \"{0}\" has auto-attach disabled because of the content access "
-"mode setting."
-msgstr ""
-"L''organisation \"{0}\" a déjà la fonction auto-attach désactivée à cause de "
-"la configuration de mode d''accès au contenu."
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2248
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."

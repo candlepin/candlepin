@@ -1037,14 +1037,6 @@ msgstr ""
 "자동 첨부 요청을 무시합니다. 하이퍼바이저 자동 바인드 설정으로 인해 {0}\" 조"
 "직에 대해 비활성화되어 있습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2243
-#, java-format
-msgid ""
-"Organization \"{0}\" has auto-attach disabled because of the content access "
-"mode setting."
-msgstr ""
-"\"{0}\" 조직에서 컨텐츠 액세스 모드 설정으로 인해 자동 연결이 해제되었습니다."
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2248
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."

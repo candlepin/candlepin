@@ -1049,15 +1049,6 @@ msgstr ""
 "自動割り当ての要求を無視します。これは、ハイパーバイザーの自動バインド設定に"
 "より、組織 \"{0}\" に対して無効となっています。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2243
-#, java-format
-msgid ""
-"Organization \"{0}\" has auto-attach disabled because of the content access "
-"mode setting."
-msgstr ""
-"組織 \"{0}\" はコンテンツアクセスモード設定により atuo-attach を無効化しまし"
-"た。"
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2248
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."

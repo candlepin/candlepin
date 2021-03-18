@@ -1017,13 +1017,6 @@ msgstr ""
 "忽略自动附加的请求。 因为 hypervisor 自动绑定的设置 ，组织“ {0}”禁用了这个功"
 "能。"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2243
-#, java-format
-msgid ""
-"Organization \"{0}\" has auto-attach disabled because of the content access "
-"mode setting."
-msgstr "因为内容访问模式的设置，机构 \"{0}\" 已禁用了自动附加功能。"
-
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2248
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
