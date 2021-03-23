@@ -1425,7 +1425,9 @@ msgstr "소유자 생성 시 기본 서비스 수준을 지정할 수 없습니�
 msgid ""
 "The owner content access mode and content access mode list cannot be set "
 "directly in standalone mode."
-msgstr "소유자 내용 접근 방법 및 내용 접근 방법 목록은 독립형 방법에서 직접 설정 할 수 없습니다."
+msgstr ""
+"소유자 내용 접근 방법 및 내용 접근 방법 목록은 독립형 방법에서 직접 설정 할 "
+"수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:942
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:954
@@ -1754,8 +1756,9 @@ msgid ""
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
 msgstr ""
-"너무 많은 내용이 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 문제를 처리할 수 있습니다. 자세한 내용은 지식 "
-"자료저장소(https://access.redhat.com/knowledge/node/129003)를 참조하세요."
+"너무 많은 내용이 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 "
+"문제를 처리할 수 있습니다. 자세한 내용은 지식 자료저장소(https://access."
+"redhat.com/knowledge/node/129003)를 참조하세요."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
