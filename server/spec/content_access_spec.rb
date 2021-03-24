@@ -12,12 +12,21 @@ describe 'Content Access' do
   include Unpack
 
   before(:each) do
-    skip("candlepin running in standalone mode") unless is_hosted?
+    if is_hosted?
+      @owner = create_owner(random_string("test_owner"), nil, {
+        'contentAccessModeList' => 'org_environment,entitlement',
+        'contentAccessMode' => "org_environment"
+      })
+    else
+      # Create a new owner that is SCA-capable, but not SCA-enabled
+      @owner = create_owner(random_string("test_owner"), nil, {
+          'contentAccessModeList' => 'org_environment,entitlement',
+          'contentAccessMode' => "entitlement"
+      })
+      # and then indirectly make the owner SCA-enabled
+      @owner = set_content_access_mode_for_standalone_owner(@owner, 'org_environment')
+    end
 
-    @owner = create_owner(random_string("test_owner"), nil, {
-      'contentAccessModeList' => 'org_environment,entitlement',
-      'contentAccessMode' => "org_environment"
-    })
     @org_admin = user_client(@owner, random_string('guy'))
 
     @username = random_string("user")
@@ -43,12 +52,72 @@ describe 'Content Access' do
     sleep 1
   end
 
-  it "does allow addition of the content access level" do
+  # In standalone mode, we are not allowed to set the content access mode and content access mode list for an Owner.
+  # This method provides a workaround that creates an empty export, sets its upstream consumer the content access mode
+  # we want, and then imports it in a new owner, which is returned, thus indirectly setting the mode on that owner.
+  def set_content_access_mode_for_standalone_owner(owner, access_mode, force_distributor_conflict=nil)
+      @export = Exporter.new
+
+      # Toggle SCA mode on or off for the upstream consumer
+      candlepin_client = @export.candlepin_client
+      candlepin_client.update_consumer({'contentAccessMode' => access_mode})
+
+      # Create the Export
+      @export.create_candlepin_export()
+      @export_file = @export.export_filename
+
+      @candlepin_consumer = @export.candlepin_client.get_consumer()
+      @candlepin_consumer.unregister @candlepin_consumer['uuid']
+
+      # Import the manifest to the new owner, to update the content access mode & mode list on it
+      @import_username = random_string("import-user")
+      @import_owner_client = user_client(owner, @import_username)
+      if force_distributor_conflict
+        @cp.import(owner['key'], @export_file,  {:force => ['DISTRIBUTOR_CONFLICT']})
+      else
+        @cp.import(owner['key'], @export_file)
+      end
+
+      # Fetch the owner again, to make sure it has the mode & mode list we expect
+      owner = @cp.get_owner(owner['key'])
+      expect(owner['contentAccessModeList']).to eq(access_mode)
+      expect(owner['contentAccessMode']).to eq(access_mode)
+
+      return owner
+  end
+
+  after(:each) do
+    if is_standalone?
+      @export.cleanup()
+    end
+  end
+
+  it "does allow changing the content access mode and mode list in hosted mode" do
+    skip("candlepin running in standalone mode") unless is_hosted?
+
     @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
     @owner = @cp.get_owner(@owner['key'])
 
     expect(@owner['contentAccessModeList']).to eq("org_environment,entitlement")
     expect(@owner['contentAccessMode']).to eq("entitlement")
+
+    @cp.update_owner(@owner['key'], {'contentAccessModeList' => "entitlement"})
+    @owner = @cp.get_owner(@owner['key'])
+
+    expect(@owner['contentAccessModeList']).to eq("entitlement")
+    expect(@owner['contentAccessMode']).to eq("entitlement")
+  end
+
+  it "does NOT allow changing the content access mode and mode list in standalone mode" do
+    skip("candlepin running in hosted mode") unless is_standalone?
+
+    expect {
+      @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
+    }.to raise_exception(RestClient::BadRequest)
+
+    expect {
+      @cp.update_owner(@owner['key'], {'contentAccessModeList' => "entitlement"})
+    }.to raise_exception(RestClient::BadRequest)
   end
 
   it "will assign the default mode and list when none is specified" do
@@ -103,10 +172,16 @@ describe 'Content Access' do
       expect(content['name']).to eq(@content.name)
       expect(content['label']).to eq(@content.label)
       expect(content['vendor']).to eq(@content.vendor)
-      expect(content['path']).to eq(@content.contentUrl)
-
       value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
-      expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+
+      # Check that Standalone uses the owner key as prefix for content url, while Hosted does not
+      if is_standalone?
+        expect(content['path']).to eq('/' + @owner['key'] + @content.contentUrl)
+        expect(are_content_urls_present(value, ['/' + @owner['key']])).to eq(true)
+      else
+        expect(content['path']).to eq(@content.contentUrl)
+        expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+      end
 
       type = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.8")
       type.should == 'OrgLevel'
@@ -118,7 +193,7 @@ describe 'Content Access' do
       certs.length.should == 0
   end
 
-  it "does not include environment for the content access cert" do
+  it "includes environment for the content access cert ONLY in standalone mode" do
       @env = @user.create_environment(@owner['key'], random_string('testenv'),
         "My Test Env 1", "For test systems only.")
 
@@ -138,11 +213,20 @@ describe 'Content Access' do
       json_body = extract_payload(certs[0]['cert'])
 
       content = json_body['products'][0]['content'][0]
-      content['path'].should == '/this/is/the/path'
       content['enabled'].should == false
 
       value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
-      expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+
+      # Check that Standalone uses the owner key and environment name as prefix for content url, while Hosted does not
+      if is_standalone?
+        # We URL encode the environment name when generating the prefix, which replaces spaces with +
+        encoded_env_name = @env['name'].gsub(' ', '+')
+        expect(content['path']).to eq('/' + @owner['key'] + '/' + encoded_env_name + @content.contentUrl)
+        expect(are_content_urls_present(value, ['/' + @owner['key'] + '/' + encoded_env_name])).to eq(true)
+      else
+        expect(content['path']).to eq(@content.contentUrl)
+        expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+      end
   end
 
   it "environment content changes show in content access cert" do
@@ -200,7 +284,14 @@ describe 'Content Access' do
     certs = consumer_cp.list_certificates
     certs.length.should == 1
     value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
-    expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+
+    if is_standalone?
+      # We URL encode the environment name when generating the prefix, which replaces spaces with +
+      encoded_env_name = env1['name'].gsub(' ', '+')
+      expect(are_content_urls_present(value, ['/' + @owner['key'] + '/' + encoded_env_name])).to eq(true)
+    else
+      expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+    end
 
     consumer_cp.update_consumer({:environment => env2})
     changed_consumer = consumer_cp.get_consumer();
@@ -209,7 +300,13 @@ describe 'Content Access' do
     certs = consumer_cp.list_certificates
     certs.length.should == 1
     value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
-    expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+    if is_standalone?
+      # We URL encode the environment name when generating the prefix, which replaces spaces with +
+      encoded_env_name = env2['name'].gsub(' ', '+')
+      expect(are_content_urls_present(value, ['/' + @owner['key'] + '/' + encoded_env_name])).to eq(true)
+    else
+      expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+    end
   end
 
   it "refresh command results in new content access cert" do
@@ -234,19 +331,33 @@ describe 'Content Access' do
     certs = @consumer.list_certificates
     certs.length.should == 1
 
-    @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
+    if is_hosted?
+      @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
+    else
+      set_content_access_mode_for_standalone_owner(@owner, 'entitlement', true)
+    end
+
     certs = @consumer.list_certificates
     certs.length.should == 0
   end
 
   it "can create the content access certificate for the consumer when org content access mode added" do
-    @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
+    if is_hosted?
+      @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
+    else
+      set_content_access_mode_for_standalone_owner(@owner, 'entitlement', true)
+    end
+
     @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
 
     certs = @consumer.list_certificates
     certs.length.should == 0
 
-    @cp.update_owner(@owner['key'], {'contentAccessMode' => "org_environment"})
+    if is_hosted?
+      @cp.update_owner(@owner['key'], {'contentAccessMode' => "org_environment"})
+    else
+      set_content_access_mode_for_standalone_owner(@owner, 'org_environment', true)
+    end
 
     certs = @consumer.list_certificates
     certs.length.should == 1
@@ -258,12 +369,20 @@ describe 'Content Access' do
     content_body = @consumer.get_content_access_body()
 
     value = extension_from_cert(content_body.contentListing.values[0][0], "1.3.6.1.4.1.2312.9.7")
-    expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+    if is_standalone?
+      expect(are_content_urls_present(value, ['/' + @owner['key']])).to eq(true)
+    else
+      expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+    end
 
     listing = content_body.contentListing.values[0][1]
     json_body = extract_payload(listing)
     content = json_body['products'][0]['content'][0]
-    expect(content['path']).to eq(@content['contentUrl'])
+    if is_standalone?
+      expect(content['path']).to eq('/' + @owner['key'] + @content.contentUrl)
+    else
+      expect(content['path']).to eq(@content['contentUrl'])
+    end
   end
 
   it "does return a not modified return code when the data has not been updated since date" do
@@ -353,10 +472,13 @@ describe 'Content Access' do
     consumer = @user.register(random_string('consumer'), :candlepin, nil, {}, nil, nil, [], [], nil)
     @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
-    # Both of these modes are present on @owner
-    @consumer.update_consumer({'contentAccessMode' => "entitlement"})
-    consumer_now = @consumer.get_consumer()
-    expect(consumer_now["contentAccessMode"]).to eq("entitlement")
+    # Both 'org_environment' and 'entitlement' modes are present on @owner when in Hosted mode, but
+    # in standalone only one (the value that was imported with the manifest; in this case 'org_environment').
+    if is_hosted?
+      @consumer.update_consumer({'contentAccessMode' => "entitlement"})
+      consumer_now = @consumer.get_consumer()
+      expect(consumer_now["contentAccessMode"]).to eq("entitlement")
+    end
 
     @consumer.update_consumer({'contentAccessMode' => "org_environment"})
     consumer_now = @consumer.get_consumer()
@@ -366,6 +488,11 @@ describe 'Content Access' do
     expect {
       @consumer.update_consumer({'contentAccessMode' => "invalid"})
     }.to raise_exception(RestClient::BadRequest)
+
+    # We should be able to remove the content access mode with an empty string
+    @consumer.update_consumer({'contentAccessMode' => ""})
+    consumer_now = @consumer.get_consumer()
+    expect(consumer_now["contentAccessMode"]).to be_nil
 
     # We should also be able to set the correct content access mode when registering (instead of updating)
     consumer2 = @user.register(random_string('consumer'), :candlepin, nil, {}, nil, nil, [], [], nil, [],
@@ -416,9 +543,7 @@ describe 'Content Access' do
   RSpec.shared_examples "manifest import" do |async|
     it "will import a manifest when only the access mode changes" do
 
-      cp = Candlepin.new('admin', 'admin')
       cp_export = async ? AsyncStandardExporter.new : StandardExporter.new
-      owner = cp_export.owner
 
       export1 = cp_export.create_candlepin_export()
       export1_file = cp_export.export_filename
@@ -458,7 +583,7 @@ describe 'Content Access' do
       # Import the first manifest
       import_owner = create_owner(random_string("import_org"), nil, {
         'contentAccessModeList' => 'org_environment,entitlement',
-        'contentAccessMode' => "org_environment"
+        'contentAccessMode' => "entitlement"
       })
       import_username = random_string("import-user")
       import_owner_client = user_client(import_owner, import_username)
@@ -509,9 +634,6 @@ describe 'Content Access' do
   it "will express on consumers at the distributor" do
     @cp = Candlepin.new('admin', 'admin')
     @cp_export = StandardExporter.new
-
-    owner = @cp_export.owner
-    @cp.update_owner(owner['key'],{'contentAccessMode' => "org_environment"})
 
     candlepin_client = @cp_export.candlepin_client
     candlepin_client.update_consumer({'contentAccessMode' => "org_environment"})
@@ -582,7 +704,11 @@ describe 'Content Access' do
     expect(content['name']).to eq(@content.name)
     expect(content['label']).to eq(@content.label)
     expect(content['vendor']).to eq(@content.vendor)
-    expect(content['path']).to eq(@content.contentUrl)
+    if is_standalone?
+      expect(content['path']).to eq('/' + @owner['key'] + @content.contentUrl)
+    else
+      expect(content['path']).to eq(@content.contentUrl)
+    end
   end
 
   it 'should honour the content defaults for owner in SCA mode' do
@@ -624,7 +750,7 @@ describe 'Content Access' do
   end
 
   it 'filter out content not promoted to environment when owner is in SCA mode' do
-    @env = @org_admin.create_environment(@owner['key'], 'testenv1', "My Test Env 1", "For test systems only.")
+    @env = @org_admin.create_environment(@owner['key'], random_string('testenv1'), "My Test Env 1", "For test systems only.")
     consumer = @org_admin.register(random_string('testsystem'), :system, nil,
         {'system.certificate_version' => '3.1'}, nil, nil, [], [], @env['id'])
 
