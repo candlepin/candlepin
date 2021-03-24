@@ -9,6 +9,7 @@ from optparse import OptionParser
 import os
 import re
 import zipfile
+import getpass
 
 import cp_connectors as cp
 
@@ -338,7 +339,51 @@ class ProductManager(ModelManager):
         if self.exported:
             return True
 
-        self._export_query('cp2_products.json', 'cp2_products', 'SELECT p.* FROM cp2_products p JOIN cp2_owner_products op ON op.product_uuid = p.uuid WHERE op.owner_id = %s', (self.org_id,))
+        # Product exporting is recursive as of CP4.0, due to the derived mapping. We can skip it for the
+        # provided product mapping, since that's a separate table which we can populate last, but derived
+        # products force us to pull product info in the order in which it is referenced.
+        cursor = self.db.execQuery('SELECT p.* FROM cp2_products p JOIN cp2_owner_products op ON op.product_uuid = p.uuid WHERE op.owner_id = %s', (self.org_id,))
+        columns = get_cursor_columns(self.db, cursor)
+        column_types = get_cursor_column_types(self.db, cursor)
+
+        uuid_idx = columns.index('uuid')
+        derived_uuid_idx = columns.index('derived_product_uuid')
+
+        products = { row[uuid_idx]: row for row in cursor }
+        cursor.close()
+
+        ordered = []
+        insertion_order = {}
+
+        def insert_row(row):
+            if row[uuid_idx] in insertion_order:
+                # Row already inserted; skip it
+                return
+
+            if row[derived_uuid_idx] is not None:
+                child_row = products[row[derived_uuid_idx]]
+
+                if child_row is None:
+                    raise Exception("Malformed product definition: product '%s' references non-existent or non-owner product '%s'" % (row[uuid_idx], row[derived_uuid_idx]))
+
+                insert_row(child_row)
+
+            ordered.append(row)
+            insertion_order[row[uuid_idx]] = len(ordered)
+
+        for key, row in products.items():
+            insert_row(row)
+
+        output = {
+            'table':        'cp2_products',
+            'columns':      columns,
+            'column_types': column_types,
+            'rows':         ordered
+        }
+
+        self.archive.writestr('{table}.json'.format(table=output['table']), jsonify(output))
+
+        # Grab ancillary product tables
         self._export_query('cp2_product_attributes.json', 'cp2_product_attributes', 'SELECT pa.* FROM cp2_product_attributes pa JOIN cp2_owner_products op ON op.product_uuid = pa.product_uuid WHERE op.owner_id = %s', (self.org_id,))
         self._export_query('cp2_product_certificates.json', 'cp2_product_certificates', 'SELECT pc.* FROM cp2_product_certificates pc JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid WHERE op.owner_id = %s', (self.org_id,))
         self._export_query('cp2_product_content.json', 'cp2_product_content', 'SELECT pc.* FROM cp2_product_content pc JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid WHERE op.owner_id = %s', (self.org_id,))
@@ -832,7 +877,9 @@ def parse_options():
     parser.add_option("--username", action="store", default='candlepin',
         help="The username to use when connecting to the database; defaults to 'candlepin'")
     parser.add_option("--password", action="store", default='',
-        help="The password to use when connecting to the database")
+        help="The password to use when connecting to the database; defaults to no password")
+    parser.add_option("--ask_pass", action="store_true", default=False,
+        help="Ask for the database password as a prompt. Overwrites any password specified with the --password option")
     parser.add_option("--host", action="store", default='localhost',
         help="The hostname/address of the database server; defaults to 'localhost'")
     parser.add_option("--port", action="store", default=None,
@@ -862,6 +909,9 @@ def parse_options():
 
     if len(args) < 1 and options.act_export:
         parser.error("Must provide an organization to export")
+
+    if options.ask_pass:
+        options.password = getpass.getpass('Database password: ')
 
     return (options, args)
 
