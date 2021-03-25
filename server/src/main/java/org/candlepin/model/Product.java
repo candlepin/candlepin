@@ -37,6 +37,7 @@ import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1205,8 +1206,15 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 .append(this.name, that.name)
                 .append(this.multiplier, that.multiplier)
                 .append(this.attributes, that.attributes)
-                .append(this.derivedProduct, that.derivedProduct)
                 .isEquals();
+
+            // When checking children versioned entities, we're only interested in verifying that the
+            // reference is the same, otherwise we could run into some weird linkage problems (also it's
+            // much faster)
+            Comparator<Product> productUuidComparator = Comparator.comparing(product -> product != null ?
+                product.getUuid() : null, Comparator.nullsLast(Comparator.naturalOrder()));
+
+            equals = equals && productUuidComparator.compare(this.derivedProduct, that.derivedProduct) == 0;
 
             // Check our collections.
             // Impl note: We can't use .equals here on the collections, as Hibernate's special
@@ -1224,7 +1232,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
             // Compare provided product
             equals = equals && Util.collectionsAreEqual(this.providedProducts, that.providedProducts,
-                (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
+                productUuidComparator);
 
         }
 

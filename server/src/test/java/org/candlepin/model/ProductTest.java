@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
 /**
  * ProductTest
  */
@@ -95,12 +94,26 @@ public class ProductTest {
             "arch2", "type2")
         );
 
+        for (Product product : providedP1) {
+            product.setUuid(product.getId() + "_uuid");
+        }
+
         Set<Product> providedP2 = Util.asSet(
             new Product("ak3", "providedProduct3", "varient3", "version3",
             "arch3" , "type3"),
             new Product("ak4", "providedProduct4", "varient4", "version4",
             "arch4" , "type4")
         );
+
+        for (Product product : providedP2) {
+            product.setUuid(product.getId() + "_uuid");
+        }
+
+        Product derivedProd1 = new Product("derivedProdId1", "dp-name-1");
+        derivedProd1.setUuid(derivedProd1.getId() + "_uuid");
+
+        Product derivedProd2 = new Product("derivedProdId2", "dp-name-2");
+        derivedProd2.setUuid(derivedProd2.getId() + "_uuid");
 
         return Stream.of(
             new Object[] { "Id", "test_value", "alt_value" },
@@ -110,6 +123,7 @@ public class ProductTest {
             new Object[] { "ProductContent", productContent1, productContent2 },
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
             new Object[] { "Branding", brandings1, brandings2 },
+            new Object[] { "DerivedProduct", derivedProd1, derivedProd2 },
             new Object[] { "ProvidedProducts", providedP1, providedP2 }
         );
     }
@@ -245,4 +259,27 @@ public class ProductTest {
         assertEquals(base.hashCode(), clone.hashCode());
     }
 
+    @Test
+    public void testProductEqualityWithCycles() {
+        Product product = new Product();
+        Product derivedProduct = new Product();
+
+        product.setUuid("test-UUID-1");
+        derivedProduct.setUuid("test-UUID-2");
+
+        // Creating endless cyclic product hierarchy
+        product.setDerivedProduct(derivedProduct);
+        derivedProduct.setDerivedProduct(product);
+
+        assertNotEquals(product, derivedProduct);
+
+        Product p1 = new Product();
+        p1.setUuid("test-UUID-3");
+
+        // Creating cycle in provided product
+        p1.setProvidedProducts(Arrays.asList(product));
+        product.setProvidedProducts(Arrays.asList(p1));
+
+        assertNotEquals(product, p1);
+    }
 }
