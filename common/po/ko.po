@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-07 02:01-0500\n"
-"PO-Revision-Date: 2021-03-18 06:01+0000\n"
+"POT-Creation-Date: 2021-03-23 16:46-0400\n"
+"PO-Revision-Date: 2021-03-26 06:01+0000\n"
 "Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -411,7 +411,7 @@ msgstr "사용자를 찾을 수 없습니다: {0}"
 #: server/src/main/java/org/candlepin/bind/BindContext.java:117
 #, java-format
 msgid "Subscription pool(s) {0} do not exist."
-msgstr "서브스크립션 풀 {0}이/가 존재하지 않습니다."
+msgstr "구독(subscription) 풀(s)이 존재하지 않습니다."
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:369
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:55
@@ -479,7 +479,7 @@ msgstr "지정한 소비자에 대해 유효한 내보내기를 확인할 수 �
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:312
 #, java-format
 msgid "Unable to download manifest: {0}"
-msgstr "매니페스트를 다운로드할 수 없습니다: {0}"
+msgstr "매니페스트를 내려받기 할 수 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:323
 #, java-format
@@ -1042,8 +1042,8 @@ msgstr ""
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "\"{0}\" 조직에 자동 연결이 해제되었습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2290
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2400
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2289
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2399
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:211
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:250
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:269
@@ -1053,33 +1053,33 @@ msgstr "\"{0}\" 조직에 자동 연결이 해제되었습니다."
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "ID ''{0}''인 인타이틀먼트를 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2423
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2422
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr "시리얼 번호 ''{0}''인 인타이틀먼트 인증서를 찾을 수 없습니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2445
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2444
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr "풀 ID ''{1}''인 소비자 ''{0}''의 인타이틀먼트가 없습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2516
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2515
 msgid "Unable to create export archive"
 msgstr "내보내기 아카이브를 생성할 수 없음"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2730
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2729
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "장치 {0}의 ID 인증서를 다시 생성하는 도중 문제 발생"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2774
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2773
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0}를 갖는 시스템은 가상 게스트가 아닙니다."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2875
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2874
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "하이퍼바이저 ''{0}''의 삭제 기록을 찾을 수 없습니다."
@@ -1282,7 +1282,7 @@ msgstr "작업 키가 null이거나 비어있습니다"
 #: server/src/main/java/org/candlepin/resource/JobResource.java:405
 #, java-format
 msgid "Job \"{0}\" is not configured for manual scheduling"
-msgstr "작업 \"{0}\"이/가 수동 스케줄링 용으로 설정되어 있지 않습니다"
+msgstr "작업 \"{0}\"이 수동 계획(scheduling)용으로 설정되어 있지 않습니다"
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:427
 #, java-format
@@ -1335,7 +1335,7 @@ msgstr "업데이트 요청 ID가 일치하지 않습니다: {0}, {1}"
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:447
 #, java-format
 msgid "product \"{0}\" is locked"
-msgstr "제품 \"{0}\"이/가 잠겨있습니다"
+msgstr "제품 \"{0}\"이 잠겨있습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:452
 #, java-format

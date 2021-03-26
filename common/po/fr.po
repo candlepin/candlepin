@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-07 02:01-0500\n"
+"POT-Creation-Date: 2021-03-23 16:46-0400\n"
 "PO-Revision-Date: 2021-02-10 09:17+0000\n"
 "Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
@@ -1094,8 +1094,8 @@ msgstr ""
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr "Organization \"{0}\" - auto-attach désactivé."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2290
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2400
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2289
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2399
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:211
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:250
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:269
@@ -1105,14 +1105,14 @@ msgstr "Organization \"{0}\" - auto-attach désactivé."
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr "Impossible de trouver le droit d’accès avec l’ID « {0} »."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2423
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2422
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 "Le certificat de droits d’accès avec le numéro de série « {0} » est "
 "introuvable."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2445
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2444
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
@@ -1120,21 +1120,21 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2516
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2515
 msgid "Unable to create export archive"
 msgstr "Impossible de créer une archive d’export"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2730
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2729
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "Problème lors de la régénération du cert ID pour l’unité {0}"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2774
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2773
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "Le système avec l’UUID {0} n’est pas un invité virtuel."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2875
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2874
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr "L’archive de suppression pour l’hyperviseur « {0} » est introuvable."
