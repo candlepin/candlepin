@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-11 02:03-0500\n"
-"PO-Revision-Date: 2021-03-06 10:01+0000\n"
+"PO-Revision-Date: 2021-03-26 06:01+0000\n"
 "Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-2-9-hotfix/ko/>\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.4.2\n"
+"X-Generator: Weblate 4.5.1\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -396,7 +396,7 @@ msgstr "사용자를 찾을 수 없습니다: {0}"
 #: server/src/main/java/org/candlepin/bind/BindContext.java:117
 #, java-format
 msgid "Subscription pool(s) {0} do not exist."
-msgstr "서브스크립션 풀 {0}이/가 존재하지 않습니다."
+msgstr "구독(subscription) 풀 (0)이 존재하지 않습니다."
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:317
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:56
@@ -464,7 +464,7 @@ msgstr "지정한 소비자에 대해 유효한 내보내기를 확인할 수 �
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:298
 #, java-format
 msgid "Unable to download manifest: {0}"
-msgstr "매니페스트를 다운로드할 수 없습니다: {0}"
+msgstr "매니페스트를 내려받기 할 수 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:309
 #, java-format
@@ -1283,7 +1283,7 @@ msgstr "ID ''{0}''의 컨텐츠를 찾을 수 없습니다."
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:298
 #, java-format
 msgid "content \"{0}\" is locked"
-msgstr "컨텐츠 \"{0}\"이/가 잠겨있습니다"
+msgstr "내용(content) \"{0}\"이 잠겨있습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:233
 msgid "Only numeric product IDs are allowed."
@@ -1300,7 +1300,7 @@ msgstr "업데이트 요청 ID가 일치하지 않습니다: {0}, {1}"
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:444
 #, java-format
 msgid "product \"{0}\" is locked"
-msgstr "제품 \"{0}\"이/가 잠겨있습니다"
+msgstr "제품 \"{0}\"이 잠겨있습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:449
 #, java-format
