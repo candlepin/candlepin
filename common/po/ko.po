@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-07 02:02-0500\n"
-"PO-Revision-Date: 2021-03-07 20:01+0000\n"
+"PO-Revision-Date: 2021-03-26 06:01+0000\n"
 "Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-3-1-hotfix/ko/>\n"
@@ -410,7 +410,7 @@ msgstr "사용자를 찾을 수 없습니다: {0}"
 #: server/src/main/java/org/candlepin/bind/BindContext.java:117
 #, java-format
 msgid "Subscription pool(s) {0} do not exist."
-msgstr "서브스크립션 풀 {0}이/가 존재하지 않습니다."
+msgstr "구독(subscription) 풀{0}이 존재하지 않습니다."
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:306
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:56
@@ -483,7 +483,7 @@ msgstr "지정한 소비자에 대해 유효한 내보내기를 확인할 수 �
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:312
 #, java-format
 msgid "Unable to download manifest: {0}"
-msgstr "매니페스트를 다운로드할 수 없습니다: {0}"
+msgstr "매니페스트를 내려받기 할 수 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:323
 #, java-format
@@ -1297,7 +1297,7 @@ msgstr "작업 키가 null이거나 비어있습니다"
 #: server/src/main/java/org/candlepin/resource/JobResource.java:405
 #, java-format
 msgid "Job \"{0}\" is not configured for manual scheduling"
-msgstr "작업 \"{0}\"이/가 수동 스케줄링 용으로 설정되어 있지 않습니다"
+msgstr "작업 \"{0}\"는 수동으로 계획(scheduling)이 설정되어 있지 않습니다"
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:427
 #, java-format
@@ -1333,7 +1333,7 @@ msgstr "ID ''{0}''의 컨텐츠를 찾을 수 없습니다."
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:298
 #, java-format
 msgid "content \"{0}\" is locked"
-msgstr "컨텐츠 \"{0}\"이/가 잠겨있습니다"
+msgstr "내용(content) \"{0}\"이 잠겨있습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:239
 msgid "Only numeric product IDs are allowed."
@@ -1350,7 +1350,7 @@ msgstr "업데이트 요청 ID가 일치하지 않습니다: {0}, {1}"
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:450
 #, java-format
 msgid "product \"{0}\" is locked"
-msgstr "제품 \"{0}\"이/가 잠겨있습니다"
+msgstr "제품 \"{0}\"이 잠겨있습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:455
 #, java-format
