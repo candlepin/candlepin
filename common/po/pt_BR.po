@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-23 16:46-0400\n"
-"PO-Revision-Date: 2021-03-15 18:01+0000\n"
+"POT-Creation-Date: 2021-03-18 03:01-0400\n"
+"PO-Revision-Date: 2021-03-22 22:01+0000\n"
 "Last-Translator: Fábio Rodrigues Ribeiro <farribeiro@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/pt_BR/>\n"
@@ -144,13 +144,14 @@ msgid "must be a valid URL"
 msgstr "deve ser uma URL válida"
 
 #: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
+#, fuzzy
 msgid "Healing attempted against non-existent org key \"{}\""
-msgstr ""
+msgstr "Tentativa de cura contra chave organizacional inexistente \"{}\""
 
 #: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:95
-#, java-format
+#, fuzzy, java-format
 msgid "Auto-attach is disabled for owner {0}{1}."
-msgstr ""
+msgstr "A anexação automática está desativada para o proprietário {0}{1}."
 
 #: server/src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:191
 #, java-format
@@ -367,9 +368,12 @@ msgid "Error contacting user service"
 msgstr "Erro ao contactar o serviço do usuário"
 
 #: server/src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:258
+#, fuzzy
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr ""
+"provedor de nuvem ou detalhes da conta não puderam ser resolvidos para uma "
+"organização"
 
 #: server/src/main/java/org/candlepin/auth/ConsumerAuth.java:70
 #: server/src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:142
@@ -409,9 +413,9 @@ msgid "User not found: {0}"
 msgstr "Usuário não encontrado: {0}"
 
 #: server/src/main/java/org/candlepin/bind/BindContext.java:117
-#, java-format
+#, fuzzy, java-format
 msgid "Subscription pool(s) {0} do not exist."
-msgstr ""
+msgstr "Pool(s) de inscrição {0} não existe."
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:369
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:55
