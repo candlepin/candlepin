@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-07 02:01-0500\n"
+"POT-Creation-Date: 2021-03-23 16:46-0400\n"
 "PO-Revision-Date: 2014-11-18 12:27-0500\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Marathi <sshedmak@redhat.com>\n"
@@ -1020,8 +1020,8 @@ msgstr ""
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2290
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2400
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2289
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2399
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:211
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:250
 #: server/src/main/java/org/candlepin/resource/EntitlementResource.java:269
@@ -1031,33 +1031,33 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2423
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2422
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2445
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2444
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2516
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2515
 msgid "Unable to create export archive"
 msgstr "एक्सपोर्ट साठा निर्माण करणे अशक्य"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2730
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2729
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "युनिट {0} करिता ID सर्ट पुन्हा निर्माण करतेवेळी अडचण"
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2774
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2773
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} सह प्रणाली वर्च्युअल अतिथी नाही."
 
-#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2875
+#: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2874
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
