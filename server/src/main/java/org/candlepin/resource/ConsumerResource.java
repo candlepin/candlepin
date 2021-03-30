@@ -2167,9 +2167,10 @@ public class ConsumerResource {
             }
             catch (AutobindDisabledForOwnerException e) {
                 if (owner.isContentAccessEnabled()) {
-                    throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
+                    log.debug("Ignoring request to auto-attach. " +
                         "It is disabled for org \"{0}\" because of the content access mode setting."
-                        , owner.getKey()));
+                        , owner.getKey());
+                    return Response.status(Response.Status.OK).build();
                 }
                 else {
                     throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
@@ -2229,15 +2230,14 @@ public class ConsumerResource {
             String message = "";
 
             if (owner.isContentAccessEnabled()) {
-                message = (i18n.tr("Organization \"{0}\" has auto-attach disabled because " +
-                    "of the content access mode setting.", owner.getKey()));
-
+                log.debug("Organization \"{0}\" has auto-attach disabled because " +
+                    "of the content access mode setting.", owner.getKey());
+                return Collections.EMPTY_LIST;
             }
             else {
                 message = (i18n.tr("Organization \"{0}\" has auto-attach disabled.", owner.getKey()));
+                throw new BadRequestException(message);
             }
-            throw new BadRequestException(message);
-
         }
 
         List<PoolQuantity> dryRunPools = new ArrayList<>();

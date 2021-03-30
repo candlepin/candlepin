@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -225,10 +226,15 @@ public class Entitler {
                     "Auto-attach is disabled for owner \"{0}\"{1}.",
                     owner.getKey(), hypMessage));
             }
-            else {
+            else if (owner.isAutobindDisabled()) {
                 throw new AutobindDisabledForOwnerException(i18n.tr(
-                    "Auto-attach is disabled for owner \"{0}\"{1}.",
-                    owner.getKey(), caMessage));
+                    "Auto-attach is disabled for owner \"{0}\".",
+                    owner.getKey()));
+            }
+            else {
+                log.debug("Auto-attach is disabled for owner \"{0}\"{1}.",
+                    owner.getKey(), caMessage);
+                return Collections.EMPTY_LIST;
             }
         }
 
