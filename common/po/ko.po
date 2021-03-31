@@ -1,13 +1,14 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
 # simmon <simmon@nplob.com>, 2021.
+# Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-23 16:46-0400\n"
-"PO-Revision-Date: 2021-03-26 06:01+0000\n"
-"Last-Translator: simmon <simmon@nplob.com>\n"
+"PO-Revision-Date: 2021-03-31 12:02+0000\n"
+"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
 "Language: ko\n"
@@ -15,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5.1\n"
+"X-Generator: Weblate 4.5.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -132,7 +133,7 @@ msgstr "{min}와 {max} 사이이어야 합니다"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:85
 msgid "may have unsafe HTML content"
-msgstr "안전하지 않은 HTML 내용이 포함되어 있을 수 있습니다"
+msgstr "안전하지 않은 HTML 컨텐츠가 포함되어 있을 수 있습니다"
 
 #: common/src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:87
 #, java-format
@@ -411,7 +412,7 @@ msgstr "사용자를 찾을 수 없습니다: {0}"
 #: server/src/main/java/org/candlepin/bind/BindContext.java:117
 #, java-format
 msgid "Subscription pool(s) {0} do not exist."
-msgstr "구독(subscription) 풀(s)이 존재하지 않습니다."
+msgstr "서브스크립션 풀 {0}이/가 존재하지 않습니다."
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:369
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:55
@@ -452,9 +453,7 @@ msgstr "소유자 \"{0}\"{1}의 자동 연결이 비활성화되어 있습니다
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
-msgstr ""
-"개발 장치는 활성 서브스크립션이 있는 조직에서 호스팅되는 서버에서만 사용할 "
-"수 있습니다."
+msgstr "개발 장치는 활성 서브스크립션이 있는 조직에서 호스팅되는 서버에서만 사용할 수 있습니다."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:487
 #, java-format
@@ -479,7 +478,7 @@ msgstr "지정한 소비자에 대해 유효한 내보내기를 확인할 수 �
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:312
 #, java-format
 msgid "Unable to download manifest: {0}"
-msgstr "매니페스트를 내려받기 할 수 없습니다: {0}"
+msgstr "매니페스트를 다운로드할 수 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:323
 #, java-format
@@ -574,9 +573,8 @@ msgid ""
 "guest subscription. For more information, please see https://access.redhat."
 "com/solutions/1592573"
 msgstr ""
-"게스트가 호스트에서 보고되어 있지 않으며 매핑되지 않은 임시 게스트 서브스크립"
-"션을 사용하고 있습니다. 보다 자세한 내용은 https://access.redhat.com/"
-"solutions/1592573에서 참조하십시오"
+"게스트가 호스트에서 보고되어 있지 않으며 매핑되지 않은 임시 게스트 서브스크립션을 사용하고 있습니다. 보다 자세한 내용은 "
+"https://access.redhat.com/solutions/1592573에서 참조하십시오"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
@@ -655,9 +653,7 @@ msgstr "풀은 물리적 시스템으로 제한됩니다: ''{1}''."
 msgid ""
 "Subscription \"{2}\" must be attached using a quantity evenly divisible by "
 "{3}"
-msgstr ""
-"서브스크립션 ''{2}''은/는 {3}로/으로 균등하게 나눌 수 있는 수량을 사용하여 연"
-"결해야 합니다"
+msgstr "서브스크립션 ''{2}''은/는 {3}로/으로 균등하게 나눌 수 있는 수량을 사용하여 연결해야 합니다"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
 #, java-format
@@ -817,7 +813,7 @@ msgstr "cdn 인증서의 키 또는 인증서가 null입니다."
 #: server/src/main/java/org/candlepin/resource/CdnResource.java:200
 #, java-format
 msgid "No such content delivery network: {0}"
-msgstr "이러한 내용 전송 네트워크가 없습니다: {0}"
+msgstr "이러한 컨텐츠 전송 네트워크가 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/resource/CloudRegistrationResource.java:67
 msgid "No cloud registration information provided"
@@ -878,11 +874,11 @@ msgstr "장치 {0}을 생성하는 도중 문제 발생"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:942
 msgid "The consumer cannot be assigned a content access mode."
-msgstr "소비자는 내용 접근 방법을 할당 받을 수 없습니다."
+msgstr "소비자는 컨텐츠 액세스 모드를 할당받을 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:946
 msgid "The consumer cannot use the supplied content access mode."
-msgstr "소비자는 지정된 내용 접근 방법을 사용 할 수 없습니다."
+msgstr "소비자는 지정된 컨텐츠 액세스 모드를 사용할 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:954
 msgid "Org required to register with activation keys."
@@ -957,12 +953,12 @@ msgstr "장치 {0}을 업데이트하는 도중 문제 발생"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1406
 msgid "This consumer cannot be assigned a content access mode"
-msgstr "소비자는 내용 접근 방법을 할당받을 수 없습니다"
+msgstr "소비자는 컨텐츠 액세스 모드를 할당받을 수 없습니다"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1412
 #, java-format
 msgid "This consumer cannot use the supplied content access mode: {0}"
-msgstr "소비자는 지정된 내용 접근 방법을 사용 할 수 없습니다: {0}"
+msgstr "소비자는 지정된 컨텐츠 액세스 모드를 사용할 수 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1469
 #, java-format
@@ -1001,11 +997,11 @@ msgstr "다음과 같은 이유로 {0} {1}을 등록 취소할 수 없음: {2}"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2023
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:2026
 msgid "Cannot retrieve content access certificate"
-msgstr "내용 접근 인증서를 가져올 수 없습니다"
+msgstr "컨텐츠 액세스 인증서를 가져올 수 없습니다"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1891
 msgid "Content access mode does not allow this request."
-msgstr "내용 접근 방법이 요청을 허용하지 않습니다."
+msgstr "컨텐츠 액세스 모드에서는 이 요청을 허용하지 않습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1960
 msgid "Unable to create entitlement certificate archive"
@@ -1107,14 +1103,14 @@ msgstr "ID {0}의 장치 유형을 찾을 수 없습니다."
 #: server/src/main/java/org/candlepin/resource/ContentResource.java:101
 #, java-format
 msgid "Content with UUID \"{0}\" could not be found."
-msgstr "UUID가 \"{0}\"인 내용을 찾을 수 없습니다."
+msgstr "UUID가 \"{0}\"인 컨텐츠를 찾을 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/ContentResource.java:113
 #: server/src/main/java/org/candlepin/resource/ContentResource.java:123
 #: server/src/main/java/org/candlepin/resource/ContentResource.java:133
 #: server/src/main/java/org/candlepin/resource/ContentResource.java:142
 msgid "Organization-agnostic content write operations are not supported."
-msgstr "조직에 관계없는 내용 쓰기 동작은 지원하지 않습니다."
+msgstr "조직에 관계없는 컨텐츠 쓰기 동작은 지원하지 않습니다."
 
 #: server/src/main/java/org/candlepin/resource/DistributorVersionResource.java:167
 #, java-format
@@ -1178,32 +1174,32 @@ msgstr "환경이 지정되어 있지 않거나 환경에 소유자 정보가 �
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:209
 msgid "No content ID specified"
-msgstr "내용 ID가 지정되어 있지 않습니다"
+msgstr "컨텐츠 ID가 지정되어 있지 않습니다"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:214
 #, java-format
 msgid "Unable to find content with the ID \"{0}\"."
-msgstr "ID \"{0}\"인 내용을 찾을 수 없습니다."
+msgstr "ID \"{0}\"인 컨텐츠를 찾을 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:255
 #, java-format
 msgid "The content with id {0} has already been promoted in this environment."
-msgstr "ID {0}인 내용은 이미 이 환경에 승격되어 있습니다."
+msgstr "ID {0}인 컨텐츠는 이미 이 환경에 승격되어 있습니다."
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:274
 #, java-format
 msgid "Some of the content is already associated with Environment: {0}"
-msgstr "일부 내용이 다음 환경에 이미 연결되어 있습니다: {0}"
+msgstr "일부 컨텐츠가 다음 환경에 이미 연결되어 있습니다: {0}"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:318
 #, java-format
 msgid "Content does not exist in environment: {0}"
-msgstr "내용이 환경에 존재하지 않습니다: {0}"
+msgstr "컨텐츠가 환경에 존재하지 않습니다: {0}"
 
 #: server/src/main/java/org/candlepin/resource/EnvironmentResource.java:334
 #, java-format
 msgid "One of the content does not exist in the environment anymore: {0}"
-msgstr "내용 중 일부가 환경에 더 이상 존재하지 않습니다: {0}"
+msgstr "컨텐츠 중 일부가 환경에 더 이상 존재하지 않습니다: {0}"
 
 #: server/src/main/java/org/candlepin/resource/GuestIdResource.java:241
 msgid "Please supply a valid guest id"
@@ -1282,7 +1278,7 @@ msgstr "작업 키가 null이거나 비어있습니다"
 #: server/src/main/java/org/candlepin/resource/JobResource.java:405
 #, java-format
 msgid "Job \"{0}\" is not configured for manual scheduling"
-msgstr "작업 \"{0}\"이 수동 계획(scheduling)용으로 설정되어 있지 않습니다"
+msgstr "작업 \"{0}\"이/가 수동 스케줄링 용으로 설정되어 있지 않습니다"
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:427
 #, java-format
@@ -1311,14 +1307,14 @@ msgstr "키 \"{0}\"의 소유자를 찾을 수 없습니다."
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:186
 #, java-format
 msgid "Content with ID \"{0}\" could not be found."
-msgstr "ID ''{0}''의 내용을 찾을 수 없습니다."
+msgstr "ID ''{0}''의 컨텐츠를 찾을 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:213
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:276
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:296
 #, java-format
 msgid "content \"{0}\" is locked"
-msgstr "내용 \"{0}\"가 잠겨있습니다"
+msgstr "컨텐츠 \"{0}\"이/가 잠겨있습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:236
 msgid "Only numeric product IDs are allowed."
@@ -1335,7 +1331,7 @@ msgstr "업데이트 요청 ID가 일치하지 않습니다: {0}, {1}"
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:447
 #, java-format
 msgid "product \"{0}\" is locked"
-msgstr "제품 \"{0}\"이 잠겨있습니다"
+msgstr "제품 \"{0}\"이/가 잠겨있습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:452
 #, java-format
@@ -1425,9 +1421,7 @@ msgstr "소유자 생성 시 기본 서비스 수준을 지정할 수 없습니�
 msgid ""
 "The owner content access mode and content access mode list cannot be set "
 "directly in standalone mode."
-msgstr ""
-"소유자 내용 접근 방법 및 내용 접근 방법 목록은 독립형 방법에서 직접 설정 할 "
-"수 없습니다."
+msgstr "소유자 컨텐츠 액세스 모드 및 컨텐츠 액세스 모드 목록은 독립형 모드에서 직접 설정할 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:942
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:954
@@ -1756,9 +1750,8 @@ msgid ""
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
 msgstr ""
-"너무 많은 내용이 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 "
-"문제를 처리할 수 있습니다. 자세한 내용은 지식 자료저장소(https://access."
-"redhat.com/knowledge/node/129003)를 참조하세요."
+"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 문제를 처리할 수 있습니다. 자세한 내용은 지식 "
+"데이터베이스(https://access.redhat.com/knowledge/node/129003)를 참조하십시오."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1779,15 +1772,12 @@ msgstr "업스트림 서브스크립션 관리 애플리케이션의 ID가 없�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr ""
-"이 서브스크립션 관리 애플리케이션은 다른 소유자에 의해 이미 가져오기 되었습니"
-"다."
+msgstr "이 서브스크립션 관리 애플리케이션은 다른 소유자에 의해 이미 가져오기 되었습니다."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:89
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr ""
-"소유자가 이미 다른 서브스크립션 관리 애플리케이션에서 가져오기되었습니다."
+msgstr "소유자가 이미 다른 서브스크립션 관리 애플리케이션에서 가져오기되었습니다."
 
 #: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:197
 #, java-format
@@ -1850,7 +1840,7 @@ msgstr "아카이브가 서명 확인에 실패했습니다"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:419
 msgid "The consumer_export archive has no contents"
-msgstr "consumer_export 저장소에는 내용이 없습니다"
+msgstr "consumer_export 아카이브에는 컨텐츠가 없습니다"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
@@ -1896,12 +1886,12 @@ msgstr "아카이브 {0}는 제대로 압축된 파일이 아니거나 비어 �
 #: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:111
 #, java-format
 msgid "The following content labels are invalid: {0}"
-msgstr "다음의 내용 이름표가 유효하지 않습니다: {0}"
+msgstr "다음의 컨텐츠 레이블이 유효하지 않습니다: {0}"
 
 #: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:120
 #, java-format
 msgid "The following content properties cannot be overridden: {0}"
-msgstr "다음의 내용 속성을 덮어쓸 수 없습니다: {0}"
+msgstr "다음의 컨텐츠 속성을 덮어쓸 수 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:129
 #, java-format

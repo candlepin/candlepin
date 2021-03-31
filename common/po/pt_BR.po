@@ -1,13 +1,13 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
-# Lucas Costa Paula Pessoa <lcppcoding@gmail.com>, 2020.
+# Lucas Costa Paula Pessoa <lcppcoding@gmail.com>, 2020, 2021.
 # Fábio Rodrigues Ribeiro <farribeiro@gmail.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-18 03:01-0400\n"
-"PO-Revision-Date: 2021-03-22 22:01+0000\n"
-"Last-Translator: Fábio Rodrigues Ribeiro <farribeiro@gmail.com>\n"
+"PO-Revision-Date: 2021-03-30 22:02+0000\n"
+"Last-Translator: Lucas Costa Paula Pessoa <lcppcoding@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/pt_BR/>\n"
 "Language: pt_BR\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Weblate 4.5.1\n"
+"X-Generator: Weblate 4.5.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -556,7 +556,7 @@ msgstr "Suporta arquitetura {1}, mas o sistema é {2}."
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:57
 #, java-format
 msgid "Only supports {1} of {2} sockets."
-msgstr ""
+msgstr "Só suporta {1} de {2} soquetes."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:59
 #, java-format
@@ -576,7 +576,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:65
 #, java-format
 msgid "Only supports {1} of {2} vCPUs."
-msgstr ""
+msgstr "Só suporta {1} de {2} vCPUs."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:68
 msgid ""
@@ -968,7 +968,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1469
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
-msgstr ""
+msgstr "Ambiente com o ID \"{0}\" não pode ser encontrado."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1482
 #, java-format
