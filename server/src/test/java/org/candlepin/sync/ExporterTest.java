@@ -14,14 +14,14 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
@@ -56,13 +56,11 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
@@ -70,8 +68,8 @@ import org.candlepin.test.TestUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -129,13 +127,11 @@ public class ExporterTest {
     private CandlepinCommonTestConfig config;
     private ExportRules exportRules;
     private PrincipalProvider pprov;
-    private ProductCurator pc;
     private SyncUtils su;
-    private ExportExtensionAdapter exportExtensionAdapter;
     private ModelTranslator translator;
     private ContentAccessManager contentAccessManager;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ctc = mock(ConsumerTypeCurator.class);
         mockEnvironmentCurator = mock(EnvironmentCurator.class);
@@ -160,9 +156,7 @@ public class ExporterTest {
         dve = new DistributorVersionExporter(translator);
         cdnc = mock(CdnCurator.class);
         cdne = new CdnExporter(translator);
-        pc = mock(ProductCurator.class);
         su = new SyncUtils(config);
-        exportExtensionAdapter = mock(ExportExtensionAdapter.class);
         contentAccessManager = mock(ContentAccessManager.class);
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
@@ -270,10 +264,10 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator, contentAccessManager);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
 
-        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
+        File export = e.getFullExport(consumer, null, null, null);
 
         // VERIFY
         assertNotNull(export);
@@ -289,7 +283,7 @@ public class ExporterTest {
         assertTrue(new File("/tmp/332211.pem").delete());
     }
 
-    @Test(expected = ExportCreationException.class)
+    @Test
     public void doNotExportDirtyEntitlements() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
         Consumer consumer = mock(Consumer.class);
@@ -323,10 +317,11 @@ public class ExporterTest {
         when(ctc.listAll()).thenReturn(cqmock);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator, contentAccessManager);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
 
-        e.getFullExport(consumer, null, null, null, new HashMap<>());
+        assertThrows(ExportCreationException.class, () ->
+            e.getFullExport(consumer, null, null, null));
     }
 
     @Test
@@ -365,9 +360,9 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator, contentAccessManager);
-        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
+        File export = e.getFullExport(consumer, null, null, null);
 
         // VERIFY
         assertNotNull(export);
@@ -417,9 +412,9 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator, contentAccessManager);
-        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
+        File export = e.getFullExport(consumer, null, null, null);
 
         // VERIFY
         assertNotNull(export);
@@ -475,9 +470,9 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator, contentAccessManager);
-        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
+        File export = e.getFullExport(consumer, null, null, null);
 
         verifyContent(export, "export/consumer.json", new VerifyConsumer("consumer.json"));
     }
@@ -539,51 +534,12 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator, contentAccessManager);
-        File export = e.getFullExport(consumer, null, null, null, new HashMap<>());
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
+        File export = e.getFullExport(consumer, null, null, null);
 
         verifyContent(export, "export/distributor_version/test-dist-ver.json",
             new VerifyDistributorVersion("test-dist-ver.json"));
-    }
-
-    @Test
-    public void verifyExportExtension() throws Exception {
-        CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
-        when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
-        when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
-        when(cdnc.listAll()).thenReturn(emptyIteratorMock);
-        when(ctc.listAll()).thenReturn(emptyIteratorMock);
-
-        Map<String, String> extensionData = new HashMap<>();
-        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator, contentAccessManager);
-
-        Principal principal = mock(Principal.class);
-        when(pprov.get()).thenReturn(principal);
-        when(principal.getUsername()).thenReturn("testUser");
-
-        Consumer consumer = mock(Consumer.class);
-
-        Rules mrules = mock(Rules.class);
-        when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("signature".getBytes());
-        when(rc.getRules()).thenReturn(mrules);
-
-        // specific to this test
-        IdentityCertificate idcert = new IdentityCertificate();
-        idcert.setSerial(new CertificateSerial(10L, new Date()));
-        idcert.setKey("euh0876puhapodifbvj094");
-        idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
-        idcert.setCreated(new Date());
-        idcert.setUpdated(new Date());
-        when(consumer.getIdCert()).thenReturn(idcert);
-
-        e.getFullExport(consumer, "cdn-key", "webapp-prefix", "api-url", extensionData);
-        // Default implementation of the ExportExtensionAdapter does nothing so
-        // we only verify that the extension method was invoked.
-        verify(exportExtensionAdapter).extendManifest(any(File.class), eq(consumer), eq(extensionData));
     }
 
     @Test
@@ -631,8 +587,8 @@ public class ExporterTest {
         when(contentAccessManager.getCertificate(consumer)).thenReturn(cac);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, pc, su,
-            exportExtensionAdapter, translator, contentAccessManager);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
         File export = e.getEntitlementExport(consumer, null);
 
         // Verify

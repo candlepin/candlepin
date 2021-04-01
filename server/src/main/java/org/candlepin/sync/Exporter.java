@@ -37,12 +37,10 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ResultIterator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.ExportExtensionAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.CertificateInfo;
 
@@ -75,8 +73,6 @@ import java.util.zip.ZipOutputStream;
  * Exporter
  */
 public class Exporter {
-    private static final String EXTENSIONS_BASE_DIR = "extensions";
-
     private static Logger log = LoggerFactory.getLogger(Exporter.class);
 
     private ObjectMapper mapper;
@@ -102,8 +98,6 @@ public class Exporter {
     private Configuration config;
     private ExportRules exportRules;
     private PrincipalProvider principalProvider;
-    private ProductCurator productCurator;
-    private ExportExtensionAdapter exportExtensionAdapter;
     private ModelTranslator translator;
     private ContentAccessManager contentAccessManager;
 
@@ -122,8 +116,7 @@ public class Exporter {
         DistributorVersionExporter distVerExporter,
         CdnCurator cdnCurator,
         CdnExporter cdnExporter,
-        ProductCurator productCurator,
-        SyncUtils syncUtils, ExportExtensionAdapter extensionAdapter,
+        SyncUtils syncUtils,
         ModelTranslator translator,
         ContentAccessManager contentAccessManager) {
 
@@ -147,10 +140,8 @@ public class Exporter {
         this.distVerExporter = distVerExporter;
         this.cdnCurator = cdnCurator;
         this.cdnExporter = cdnExporter;
-        this.productCurator = productCurator;
         this.syncUtils = syncUtils;
         mapper = syncUtils.getObjectMapper();
-        this.exportExtensionAdapter = extensionAdapter;
         this.translator = translator;
         this.contentAccessManager = contentAccessManager;
     }
@@ -162,12 +153,11 @@ public class Exporter {
      * @param cdnLabel the CDN label to store in the meta file.
      * @param webUrl the URL pointing to the manifest's originating web application.
      * @param apiUrl the API URL pointing to the manifest's originating candlepin API.
-     * @param extensionData the data to pass to the {@link ExportExtensionAdapter}
      * @return a newly created manifest file for the target consumer.
      * @throws ExportCreationException when an error occurs while creating the manifest file.
      */
     public File getFullExport(Consumer consumer, String cdnLabel, String webUrl,
-        String apiUrl, Map<String, String> extensionData) throws ExportCreationException {
+        String apiUrl) throws ExportCreationException {
         try {
             File tmpDir = syncUtils.makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
@@ -183,7 +173,6 @@ public class Exporter {
             exportRules(baseDir);
             exportDistributorVersions(baseDir);
             exportContentDeliveryNetworks(baseDir);
-            exportExtensionData(baseDir, consumer, extensionData);
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
@@ -669,12 +658,4 @@ public class Exporter {
             iterator.close();
         }
     }
-
-    private void exportExtensionData(File baseDir, Consumer targetConsumer, Map<String, String> extensionData)
-        throws IOException {
-        File extensionDir = new File(baseDir.getCanonicalPath(), EXTENSIONS_BASE_DIR);
-        extensionDir.mkdir();
-        exportExtensionAdapter.extendManifest(extensionDir, targetConsumer, extensionData);
-    }
-
 }

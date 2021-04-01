@@ -182,23 +182,17 @@ public class ExportJobTest {
         String appPrefix = "test_prefix";
         String apiUrl = "test_url";
 
-        Map<String, String> extData = new HashMap<>();
-        extData.put("key-1", "val-1");
-        extData.put("key-2", "val-2");
-        extData.put("key-3", "val-3");
-
         ExportResult result = new ExportResult(distributor.getUuid(), manifestId);
 
         doReturn(result).when(manifestManager).generateAndStoreManifest(
-            eq(distributor.getUuid()), eq(cdnLabel), eq(appPrefix), eq(apiUrl), eq(extData));
+            eq(distributor.getUuid()), eq(cdnLabel), eq(appPrefix), eq(apiUrl));
 
         JobConfig config = ExportJob.createJobConfig()
             .setConsumer(distributor)
             .setOwner(owner)
             .setCdnLabel(cdnLabel)
             .setWebAppPrefix(appPrefix)
-            .setApiUrl(apiUrl)
-            .setExtensionData(extData);
+            .setApiUrl(apiUrl);
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         doReturn(config.getJobArguments()).when(context).getJobArguments();
