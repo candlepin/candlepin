@@ -2496,18 +2496,13 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("cdn_label") String cdnLabel,
         @QueryParam("webapp_prefix") String webAppPrefix,
-        @QueryParam("api_url") String apiUrl,
-        @QueryParam("ext")
-        @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
-        required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
-        List<KeyValueParameter> extensionArgs) {
+        @QueryParam("api_url") String apiUrl) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         try {
-            File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl,
-                getExtensionParamMap(extensionArgs));
+            File archive = manifestManager.generateManifest(consumerUuid, cdnLabel, webAppPrefix, apiUrl);
             response.addHeader("Content-Disposition", "attachment; filename=" + archive.getName());
             return archive;
         }
@@ -2551,11 +2546,7 @@ public class ConsumerResource {
         String webAppPrefix,
         @QueryParam("api_url")
         @ApiParam(value = "the URL pointing to the manifest's originating candlepin API", required = false)
-        String apiUrl,
-        @QueryParam("ext")
-        @ApiParam(value = "Key/Value pairs to be passed to the extension adapter when generating a manifest",
-        required = false, example = "ext=version:1.2.3&ext=extension_key:EXT1")
-        List<KeyValueParameter> extensionArgs) throws JobException {
+        String apiUrl) throws JobException {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
@@ -2563,7 +2554,7 @@ public class ConsumerResource {
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
         JobConfig config = manifestManager.generateManifestAsync(consumerUuid, owner, cdnLabel,
-            webAppPrefix, apiUrl, getExtensionParamMap(extensionArgs));
+            webAppPrefix, apiUrl);
 
         AsyncJobStatus job = this.jobManager.queueJob(config);
         return this.translator.translate(job, AsyncJobStatusDTO.class);

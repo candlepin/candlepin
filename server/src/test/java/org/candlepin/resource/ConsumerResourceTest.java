@@ -92,7 +92,6 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -800,7 +799,6 @@ public class ConsumerResourceTest {
 
     @Test
     public void testAsyncExport() throws Exception {
-        List<KeyValueParameter> extParams = new ArrayList<>();
         Owner owner = this.createOwner();
         owner.setId(TestUtil.randomString());
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
@@ -812,9 +810,9 @@ public class ConsumerResourceTest {
         when(mockCdnCurator.getByLabel(eq(cdn.getLabel()))).thenReturn(cdn);
 
         consumerResource.exportDataAsync(null, consumer.getUuid(), cdn.getLabel(),
-            "prefix", cdn.getUrl(), extParams);
+            "prefix", cdn.getUrl());
         verify(mockManifestManager).generateManifestAsync(eq(consumer.getUuid()), eq(owner),
-            eq(cdn.getLabel()), eq("prefix"), eq(cdn.getUrl()), any(Map.class));
+            eq(cdn.getLabel()), eq("prefix"), eq(cdn.getUrl()));
     }
 
     @Test

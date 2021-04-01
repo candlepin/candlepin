@@ -176,12 +176,11 @@ public class ExportJob implements AsyncJob {
         String cdnLabel = args.getAsString(CDN_LABEL);
         String webAppPrefix = args.getAsString(WEBAPP_PREFIX);
         String apiUrl = args.getAsString(API_URL);
-        Map<String, String> extensionData = (Map<String, String>) args.getAs(EXTENSION_DATA, Map.class);
 
         log.info("Starting async export for {}", consumerUuid);
         try {
             ExportResult result = manifestManager.generateAndStoreManifest(consumerUuid, cdnLabel,
-                webAppPrefix, apiUrl, extensionData);
+                webAppPrefix, apiUrl);
 
             log.info("Async export complete");
 
