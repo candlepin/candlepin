@@ -3,13 +3,14 @@
 import binascii
 import datetime
 from functools import partial
+import getpass
 import json
 import logging
 from optparse import OptionParser
 import os
 import re
+import sys
 import zipfile
-import getpass
 
 import cp_connectors as cp
 
@@ -65,10 +66,18 @@ def list_orgs(db):
 
 def jsonify(data):
     def data_converter(obj):
-        if isinstance(obj, (bytearray, buffer, memoryview)):
-            return binascii.b2a_base64(obj)
         if isinstance(obj, datetime.datetime):
             return str(obj)
+
+        # In python2, our binary blobs will be "buffer" types. In python 3, it will be a bytearray, bytes
+        # or memoryview
+        if sys.version_info >= (3,0,0):
+            if isinstance(obj, (bytearray, bytes, memoryview)):
+                return binascii.b2a_base64(obj).decode()
+        else:
+            if isinstance(obj, buffer):
+                return binascii.b2a_base64(obj)
+
 
         raise TypeError("Unexpected type: %s" % (type(obj)))
 
