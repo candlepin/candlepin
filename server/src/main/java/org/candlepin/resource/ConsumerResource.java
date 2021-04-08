@@ -552,7 +552,7 @@ public class ConsumerResource {
 
         String caList = Util.firstOf(predicate,
             consumer.getOwner().getContentAccessModeList(),
-            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
+            ContentAccessManager.getListDefaultDatabaseValue()
         );
 
         return new ContentAccessDTO()

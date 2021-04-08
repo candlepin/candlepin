@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
@@ -154,7 +155,7 @@ public class Owner extends AbstractHibernateObject<Owner>
      * Determines the allowable modes of the content access.
      */
     @Column(name = "content_access_mode_list", nullable = false)
-    private String contentAccessModeList = ContentAccessMode.getDefault().toDatabaseValue();
+    private String contentAccessModeList;
 
     /** Denotes the last time this org's content view has been changed. */
     @Column(name = "last_content_update", nullable = true)
@@ -170,6 +171,7 @@ public class Owner extends AbstractHibernateObject<Owner>
         this.autobindDisabled = false;
         this.autobindHypervisorDisabled = false;
         this.lastContentUpdate = new Date();
+        this.contentAccessModeList = ContentAccessManager.getListDefaultDatabaseValue();
     }
 
     /**
