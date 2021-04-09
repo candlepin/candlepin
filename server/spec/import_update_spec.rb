@@ -72,6 +72,15 @@ describe 'Import Update', :serial => true do
   end
 
   it 'should remove all imported subscriptions if import has no entitlements' do
+
+    # The manifest metadata can end up
+    #  with a created date that is a fraction of a second ahead of
+    #  the created date in the cp_export_metadata table.
+    #  This results into the manifest metadata conflict with error
+    #  "Import is the same as existing data". Hence to avoid this,
+    #  adding a sleep before creating another export.
+    sleep 2
+
     no_ent_export = @exporter.create_candlepin_export_update_no_ent()
 
     @cp.import(@import_owner['key'], no_ent_export.export_filename)
