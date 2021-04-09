@@ -2157,8 +2157,22 @@
             ]
         },
         {
-            "name": "Development SKU Product, no content",
+            "name": "Development SKU Product",
             "id": "dev-sku-product",
+            "type": "MKT",
+            "skip_pools": "true",
+            "provided_products": [
+                "100000000000011"
+            ],
+            "attributes": {
+                "support_level" : "Premium",
+                "support_type" : "Level 3",
+                "expires_after" : "75"
+            }
+        },
+        {
+            "name": "Development SKU Product, no content, no provided product",
+            "id": "dev-sku-no-provided-product",
             "type": "MKT",
             "skip_pools": "true",
             "attributes": {
