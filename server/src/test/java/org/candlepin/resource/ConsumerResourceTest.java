@@ -871,7 +871,9 @@ public class ConsumerResourceTest {
     @Test
     void usesDefaultWhenNoCAAvailable() {
         String expectedMode = ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue();
-        List<String> expectedModeList = Collections.singletonList(expectedMode);
+        List<String> expectedModeList = Arrays.asList(
+            ContentAccessManager.ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
+            ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
         Consumer consumer = createConsumer(createOwner());
         when(mockConsumerCurator.verifyAndLookupConsumer(anyString()))
             .thenReturn(consumer);

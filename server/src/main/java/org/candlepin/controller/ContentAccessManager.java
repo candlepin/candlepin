@@ -182,6 +182,16 @@ public class ContentAccessManager {
         }
     }
 
+    /**
+     * Fetches the default content access mode list database value
+     *
+     * @return the default content access mode list database value as a string
+     */
+    public static String getListDefaultDatabaseValue() {
+        return String.join(",", ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
+            ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+    }
+
     private Configuration config;
     private PKIUtility pki;
     private KeyPairCurator keyPairCurator;
@@ -695,11 +705,11 @@ public class ContentAccessManager {
         final String defaultMode = ContentAccessMode.getDefault().toDatabaseValue();
 
         // Grab the current list and mode
-        String currentList = this.resolveContentAccessValue(owner.getContentAccessModeList(), true);
+        String currentList = this.resolveContentAccessListValue(owner.getContentAccessModeList(), true);
         String currentMode = this.resolveContentAccessValue(owner.getContentAccessMode(), true);
 
         // Resolve the updated list and mode
-        updatedList = this.resolveContentAccessValue(updatedList, false);
+        updatedList = this.resolveContentAccessListValue(updatedList, false);
         updatedMode = this.resolveContentAccessValue(updatedMode, false);
 
         if (updatedList != null) {
@@ -771,6 +781,12 @@ public class ContentAccessManager {
         return owner;
     }
 
+    /**
+     * Resolve the value of a content access mode string by returning the default if empty.
+     * @param value The value as a string or null.
+     * @param resolveNull if true, the default will be returned if the value is null.
+     * @return the input value or the default content access mode.
+     */
     private String resolveContentAccessValue(String value, boolean resolveNull) {
         if (value == null) {
             return resolveNull ? ContentAccessMode.getDefault().toDatabaseValue() : null;
@@ -778,6 +794,24 @@ public class ContentAccessManager {
 
         if (value.isEmpty()) {
             return ContentAccessMode.getDefault().toDatabaseValue();
+        }
+
+        return value;
+    }
+
+    /**
+     * Resolve the value of a content access mode list string by returning the default if empty.
+     * @param value The value as a string or null.
+     * @param resolveNull if true, the default will be returned if the value is null.
+     * @return the input value or the default content access mode list.
+     */
+    private String resolveContentAccessListValue(String value, boolean resolveNull) {
+        if (value == null) {
+            return resolveNull ? ContentAccessManager.getListDefaultDatabaseValue() : null;
+        }
+
+        if (value.isEmpty()) {
+            return ContentAccessManager.getListDefaultDatabaseValue();
         }
 
         return value;

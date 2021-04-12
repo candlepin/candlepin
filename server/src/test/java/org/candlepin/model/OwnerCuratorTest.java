@@ -353,15 +353,16 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void fetchesOwnerContentAccess() {
-        String expected = "entitlement";
+        String expectedContentAccessMode = "entitlement";
+        String expectedContentAccessModeList = "entitlement,org_environment";
         Owner owner = this.createOwner("test_key");
         this.ownerCurator.flush();
         this.ownerCurator.clear();
 
         OwnerContentAccess actual = this.ownerCurator.getOwnerContentAccess(owner.getKey());
 
-        assertEquals(expected, actual.getContentAccessMode());
-        assertEquals(expected, actual.getContentAccessModeList());
+        assertEquals(expectedContentAccessMode, actual.getContentAccessMode());
+        assertEquals(expectedContentAccessModeList, actual.getContentAccessModeList());
     }
 
     @Test

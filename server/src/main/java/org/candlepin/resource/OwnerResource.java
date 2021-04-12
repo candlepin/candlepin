@@ -837,7 +837,7 @@ public class OwnerResource {
             );
             String caList = Util.firstOf(
                 owner.getContentAccessModeList(),
-                ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
+                ContentAccessManager.getListDefaultDatabaseValue()
             );
             return new ContentAccessDTO()
                 .contentAccessMode(caMode)
@@ -898,6 +898,7 @@ public class OwnerResource {
         boolean configureContentAccess = false;
 
         final String defaultContentAccess = ContentAccessMode.getDefault().toDatabaseValue();
+        final String defaultContentAccessList = ContentAccessManager.getListDefaultDatabaseValue();
         String contentAccessModeList = dto.getContentAccessModeList();
         String contentAccessMode = dto.getContentAccessMode();
 
@@ -915,7 +916,7 @@ public class OwnerResource {
         }
 
         if (!StringUtils.isBlank(contentAccessModeList) &&
-            !contentAccessModeList.equals(defaultContentAccess)) {
+            !contentAccessModeList.equals(defaultContentAccessList)) {
 
             // Impl note: We have to allow this for the time being due to pre-existing, expected
             // behaviors. This shouldn't impact actual functionality since the mode can't be set,
@@ -924,7 +925,7 @@ public class OwnerResource {
             configureContentAccess = true;
         }
         else {
-            contentAccessModeList = defaultContentAccess;
+            contentAccessModeList = defaultContentAccessList;
         }
 
         this.validateContentAccessModeChanges(owner, contentAccessModeList, contentAccessMode);
@@ -1048,7 +1049,7 @@ public class OwnerResource {
     private void validateContentAccessModeChanges(Owner owner, String calist, String camode) {
         if (calist != null) {
             if (calist.isEmpty()) {
-                calist = ContentAccessMode.getDefault().toDatabaseValue();
+                calist = ContentAccessManager.getListDefaultDatabaseValue();
             }
 
             String[] modes = calist.split(",");
@@ -1072,7 +1073,7 @@ public class OwnerResource {
             }
 
             if (calist == null || calist.isEmpty()) {
-                calist = ContentAccessMode.getDefault().toDatabaseValue();
+                calist = ContentAccessManager.getListDefaultDatabaseValue();
             }
 
             String[] modes = calist.split(",");
