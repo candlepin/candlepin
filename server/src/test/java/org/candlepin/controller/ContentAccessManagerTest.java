@@ -315,7 +315,7 @@ public class ContentAccessManagerTest {
         ContentAccessManager manager = this.createManager();
         manager.updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode);
 
-        assertEquals(owner.getContentAccessModeList(), ContentAccessMode.getDefault().toDatabaseValue());
+        assertEquals(owner.getContentAccessModeList(), ContentAccessManager.getListDefaultDatabaseValue());
         assertEquals(owner.getContentAccessMode(), ContentAccessMode.getDefault().toDatabaseValue());
     }
 
@@ -480,8 +480,10 @@ public class ContentAccessManagerTest {
         String contentAccessMode = orgEnvironmentMode;
 
         ContentAccessManager manager = this.createManager();
-        assertThrows(IllegalArgumentException.class, () ->
-            manager.updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode));
+        Owner updatedOwner = manager.updateOwnerContentAccess(owner,
+            contentAccessModeList, contentAccessMode);
+        assertEquals(ContentAccessManager.getListDefaultDatabaseValue(),
+            updatedOwner.getContentAccessModeList());
     }
 
     @Test
