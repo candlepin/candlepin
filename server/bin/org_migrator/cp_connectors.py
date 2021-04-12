@@ -192,7 +192,7 @@ class PSQLConnector(DBConnector):
         return statement
 
     def is_closed(self):
-        if self.db is not None and self.db.closed == 0:
+        if hasattr(self, 'db') and self.db is not None and self.db.closed == 0:
             return False
 
         return True
@@ -270,7 +270,7 @@ class MySQLConnector(DBConnector):
         return statement
 
     def is_closed(self):
-        if self.db is not None and self.db.is_connected():
+        if hasattr(self, 'db') and self.db is not None and self.db.is_connected():
             return False
 
         return True
