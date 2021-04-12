@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.0
+Version: 4.0.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,43 @@ fi
 
 #raw
 %changelog
+* Mon Apr 12 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.1-1
+- update to add default content access mode list (jharriso@redhat.com)
+- 1932662: Fixed candlepin test data for dev-sku (prakgupt@redhat.com)
+- Rewrote test data importer (crog@redhat.com)
+- Addressing sporadic spec test failure in import_update_spec.rb
+  (sdhome@redhat.com)
+- Fixed several Python2/3 compatibility issues in the org_migrator
+  (crog@redhat.com)
+- ENT-3655: Removed the ExportExtensionAdapter (prakgupt@redhat.com)
+- ENT-2580: Updated virt-who report generator testing script
+  (prakgupt@redhat.com)
+- ENT-3677: Fix for stackoverflow issue in Product equality check
+  (prakgupt@redhat.com)
+- Fixed an issue with the org_migrator's export order of derived products
+  (crog@redhat.com)
+- Test SCA in Standalone mode (nmoumoul@redhat.com)
+- 1886556: Fixed NPE originating from consumer create API when facts are null
+  (prakgupt@redhat.com)
+- Removed foreign key constraints from obsolete pool tables (crog@redhat.com)
+- On SCA mode, stop throwing an error during dry-run auto-attach
+  (sdhome@redhat.com)
+- 1936505: Fixed stacked entitlement recovation deleting unrelated pools
+  (crog@redhat.com)
+- ENT-3446: Make Jenkins run cloud auth spec (sdhome@redhat.com)
+- ENT-2360: Remove Qpid from Candlepin (prakgupt@redhat.com)
+- 1928072: On SCA mode, stop throwing an error during auto-attach  - No-op and
+  return HTTP status 200 when auto-attaching on SCA mode (sdhome@redhat.com)
+- 1925546: Added additional checks for regenerating SCA certificates
+  (crog@redhat.com)
+- Upgrade jackson to 2.10.5 & 2.10.5.1 (nmoumoul@redhat.com)
+- 1928249: Fixed product creation order in test data importer (crog@redhat.com)
+- 1913441: Candlepin will not install in FIPS mode (ojanus@redhat.com)
+- ENT-3546:Address sporadic spec test failure in derived_product_import_spec
+  (sdhome@redhat.com)
+- Removed SubscriptionInfo.getDerivedProduct and ImportedEntityCompiler
+  (crog@redhat.com)
+
 * Wed Feb 10 2021 Nikos Moumoulidis <nmoumoul@redhat.com> 4.0.0-1
 - 1919458: invalid Content-Type yields 500 (sdhome@redhat.com)
 - Updated migration for product hierarchy changes (crog@redhat.com)
