@@ -30,38 +30,36 @@ import javax.inject.Singleton;
 import javax.persistence.Query;
 
 
-
-/**
- * ContentAccessCertificateCurator
- */
 @Singleton
 public class ContentAccessCertificateCurator extends AbstractHibernateCurator<ContentAccessCertificate> {
 
-    private static Logger log = LoggerFactory.getLogger(ContentAccessCertificateCurator.class);
+    private static final Logger log = LoggerFactory.getLogger(ContentAccessCertificateCurator.class);
 
     @Inject
     public ContentAccessCertificateCurator() {
         super(ContentAccessCertificate.class);
     }
 
-    @SuppressWarnings("unchecked")
     @Transactional
     public ContentAccessCertificate getForConsumer(Consumer c) {
+        log.debug("Retrieving content access certificate for consumer: {}", c.getId());
         return (ContentAccessCertificate) currentSession().createCriteria(ContentAccessCertificate.class)
             .add(Restrictions.eq("consumer", c))
             .uniqueResult();
     }
 
     /**
-     * Delete unneeded content access certs.
+     * Delete SCA certs of all consumers that belong to the given org.
      *
      * @return the number of rows deleted.
      */
     @Transactional
+    @SuppressWarnings("unchecked")
     public int deleteForOwner(Owner owner) {
+        if (owner == null || owner.getKey() == null || owner.getKey().isEmpty()) {
+            return 0;
+        }
         // So we must get ids for this owner, and then delete them
-        @SuppressWarnings("unchecked")
-
         String hql = " SELECT cac.id, s.id " +
             "          FROM Consumer c, Owner o" +
             "              JOIN c.contentAccessCert cac" +
@@ -71,6 +69,10 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
         Query query = this.getEntityManager().createQuery(hql);
         List<Object[]> rows = query.setParameter("ownerkey", owner.getKey()).getResultList();
 
+        return deleteCerts(rows);
+    }
+
+    private int deleteCerts(List<Object[]> rows) {
         Set<String> certsToDelete = new HashSet<>();
         Set<Long> certSerialsToRevoke = new HashSet<>();
         for (Object[] row : rows) {
@@ -126,4 +128,5 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
         }
         return removed;
     }
+
 }

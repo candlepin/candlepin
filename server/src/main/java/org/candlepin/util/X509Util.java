@@ -38,7 +38,7 @@ public abstract class X509Util {
 
     private static Logger log = LoggerFactory.getLogger(X509Util.class);
 
-    public static final Predicate<Product> PROD_FILTER_PREDICATE = new Predicate<Product>() {
+    public static final Predicate<Product> PROD_FILTER_PREDICATE = new Predicate<>() {
         /**
          * Test if a product should be used for generating an entitlement certificate.
          * This test is currently limited to whether or not the product id is numeric.
@@ -97,7 +97,7 @@ public abstract class X509Util {
             if (filterEnvironment && consumer.getEnvironmentId() != null &&
                 !promotedContent.containsKey(pc.getContent().getId())) {
 
-                log.debug("Skipping content not promoted to environment: {}" + pc.getContent());
+                log.debug("Skipping content not promoted to environment: {}", pc.getContent());
                 continue;
             }
 
@@ -156,12 +156,46 @@ public abstract class X509Util {
         return prefix + contentPath;
     }
 
-    /*
-     * remove content sets that do not match the consumers arch
+    /**
+     * Filter out the content sets that do not match the consumers arch
+     *
+     * @param pcSet
+     *  a product contents to be filtered
+     * @param consumer
+     *  a consumer for whom to filter content
+     * @param product
+     *  a product for which to filter content
+     * @return
+     *  a filtered collection of product contents
      */
     public Set<ProductContent> filterContentByContentArch(
         Set<ProductContent> pcSet, Consumer consumer, Product product) {
         Set<ProductContent> filtered = new HashSet<>();
+        Set<String> consumerArches = archesOf(consumer);
+
+        if (consumerArches.isEmpty()) {
+            log.debug("consumer: {} has no {} / {} attribute",
+                consumer.getId(), ARCH_FACT, SUPPORTED_ARCH_FACT);
+            log.debug("Not filtering by arch");
+            return pcSet;
+        }
+
+        for (ProductContent pc : pcSet) {
+            Set<String> contentArches = archesOf(product, pc);
+            boolean canUse = hasCompatibleArchitecture(consumerArches, contentArches);
+
+            // If we found a workable arch for this content, include it
+            // also include content where no arch was found at all (on
+            // Content or on Product)
+            if (canUse) {
+                filtered.add(pc);
+            }
+
+        }
+        return filtered;
+    }
+
+    private Set<String> archesOf(Consumer consumer) {
         Set<String> consumerArches = new HashSet<>();
 
         String supportedArches = consumer.getFact(SUPPORTED_ARCH_FACT);
@@ -174,60 +208,37 @@ public abstract class X509Util {
         if (archFact != null) {
             consumerArches.add(archFact);
         }
+        return consumerArches;
+    }
 
-        if (consumerArches.isEmpty()) {
-            log.debug("consumer: {} has no {} / {} attribute",
-                consumer.getId(), ARCH_FACT, SUPPORTED_ARCH_FACT);
-            log.debug("Not filtering by arch");
-            return pcSet;
+    private Set<String> archesOf(Product product, ProductContent pc) {
+        Set<String> contentArches = Arch.parseArches(pc.getContent().getArches());
+        // Empty or null Content.arches should result in
+        // inheriting the arches from the product
+        if (contentArches.isEmpty()) {
+            Set<String> productArches = Arch.parseArches(product
+                .getAttributeValue(Product.Attributes.ARCHITECTURE));
+            if (!productArches.isEmpty()) {
+                contentArches.addAll(productArches);
+            }
+            else {
+                // No Product arches either, log it, but do
+                // not filter out this content
+                log.debug("No arch attributes found for content or product");
+            }
         }
+        return contentArches;
+    }
 
-        for (ProductContent pc : pcSet) {
-            boolean canUse = true;
-            Set<String> contentArches = Arch.parseArches(pc.getContent().getArches());
-            Set<String> productArches =
-                Arch.parseArches(product.getAttributeValue(Product.Attributes.ARCHITECTURE));
-
-            // Empty or null Content.arches should result in
-            // inheriting the arches from the product
-            if (contentArches.isEmpty()) {
-                // No content arch, see if there is a Product arch
-                // and if so inherit it.
-                if (!productArches.isEmpty()) {
-                    contentArches.addAll(productArches);
-                }
-                else {
-                    // No Product arches either, log it, but do
-                    // not filter out this content
-                    log.debug("No arch attributes found for content or product");
+    private boolean hasCompatibleArchitecture(Set<String> consumerArches, Set<String> contentArches) {
+        for (String contentArch : contentArches) {
+            for (String consumerArch : consumerArches) {
+                if (Arch.contentForConsumer(contentArch, consumerArch)) {
+                    return true;
                 }
             }
-
-            searchArch: {
-                for (String contentArch : contentArches) {
-
-                    for (String consumerArch : consumerArches) {
-
-                        if (Arch.contentForConsumer(contentArch, consumerArch)) {
-                            canUse = true;
-                            break searchArch;
-                        }
-                        else {
-                            canUse = false;
-                        }
-                    }
-                }
-            }
-
-            // If we found a workable arch for this content, include it
-            // also include content where no arch was found at all (on
-            // Content or on Product)
-            if (canUse) {
-                filtered.add(pc);
-            }
-
         }
-        return filtered;
+        return false;
     }
 
 }

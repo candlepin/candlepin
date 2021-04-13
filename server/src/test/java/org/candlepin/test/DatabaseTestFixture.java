@@ -44,6 +44,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -152,6 +153,7 @@ public class DatabaseTestFixture {
     @Inject protected OwnerProductCurator ownerProductCurator;
     @Inject protected ProductCertificateCurator productCertificateCurator;
     @Inject protected ProductCurator productCurator;
+    @Inject protected ContentAccessCertificateCurator caCertCurator;
     @Inject protected PoolCurator poolCurator;
     @Inject protected RoleCurator roleCurator;
     @Inject protected UserCurator userCurator;
@@ -516,9 +518,14 @@ public class DatabaseTestFixture {
         return entcert;
     }
 
+    protected Environment createEnvironment(Owner owner) {
+        String id = "test-env-" + TestUtil.randomInt();
+        return this.createEnvironment(owner, id, id, null, null, null);
+    }
+
     protected Environment createEnvironment(Owner owner, String id) {
         String name = "test-env-" + TestUtil.randomInt();
-        return this.createEnvironment(owner, name, name, null, null, null);
+        return this.createEnvironment(owner, id, name, null, null, null);
     }
 
     protected Environment createEnvironment(Owner owner, String id, String name) {

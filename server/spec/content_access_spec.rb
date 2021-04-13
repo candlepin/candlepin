@@ -39,11 +39,11 @@ describe 'Content Access' do
 
     @content = @cp.create_content(
         @owner['key'], "cname", 'test-content', random_string("clabel"), "ctype", "cvendor",
-        {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]]}, true)
+        {:content_url=> '/this/is/the/path', :modified_products => [@modified_product["id"]], :arches => "x86_64"}, true)
 
     @content_id = @content['id']
 
-    @product = create_product('test-product', 'some product')
+    @product = create_product('test-product', 'some product', :attributes => {:arch => 'x86_64'})
     @cp.add_content_to_product(@owner['key'], @product['id'], @content_id)
     @pool = @cp.create_pool(@owner['key'], @product['id'], {:quantity => 10})
 
@@ -90,6 +90,45 @@ describe 'Content Access' do
     if is_standalone?
       @export.cleanup()
     end
+  end
+
+  it "should filter content with incorrect architecture" do
+    content2 = @cp.create_content(
+      @owner['key'], "cname2", 'test-content2', random_string("clabel2"), "ctype", "cvendor",
+      {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]], :arches => "ppc64"}, true)
+    if is_standalone?
+      expected_content_url = '/' + @owner['key'] + content2.contentUrl
+      expected_urls = ['/' + @owner['key']]
+    else
+      expected_content_url = content2.contentUrl
+      expected_urls = ['/sca/' + @owner['key']]
+    end
+    content_id2 = content2['id']
+    product2 = create_product('test-product2', 'some product2', :attributes => {:arch => 'ppc64'})
+    @cp.add_content_to_product(@owner['key'], product2['id'], content_id2)
+    @cp.create_pool(@owner['key'], product2['id'], {:quantity => 10})
+
+    @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts={'system.certificate_version' => '3.3', "uname.machine" => "ppc64"}, owner_key=@owner['key'])
+    certs = @consumer.list_certificates
+    certs.length.should == 1
+
+    json_body = extract_payload(certs[0]['cert'])
+    json_body['products'].length.should == 1
+    json_body['products'][0]['content'].length.should == 1
+
+    content = json_body['products'][0]['content'][0]
+    expect(content['type']).to eq('ctype')
+    expect(content['name']).to eq(content2.name)
+    expect(content['label']).to eq(content2.label)
+    expect(content['vendor']).to eq(content2.vendor)
+    expect(content['path']).to eq(expected_content_url)
+    expect(content['arches'][0]).to eq(content2.arches)
+
+    value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
+    expect(are_content_urls_present(value, expected_urls)).to eq(true)
+
+    type = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.8")
+    type.should == 'OrgLevel'
   end
 
   it "does allow changing the content access mode and mode list in hosted mode" do
@@ -187,6 +226,7 @@ describe 'Content Access' do
       expect(content['name']).to eq(@content.name)
       expect(content['label']).to eq(@content.label)
       expect(content['vendor']).to eq(@content.vendor)
+      expect(content['arches'][0]).to eq(@content.arches)
       value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
 
       # Check that Standalone uses the owner key as prefix for content url, while Hosted does not
@@ -212,12 +252,7 @@ describe 'Content Access' do
       @env = @user.create_environment(@owner['key'], random_string('testenv'),
         "My Test Env 1", "For test systems only.")
 
-      job = @user.promote_content(@env['id'],
-          [{
-            :contentId => @content['id'],
-            :enabled => false,
-          }])
-      wait_for_job(job['id'], 15)
+      promote_content_to_environment(@user, @env, @content, false)
 
       consumer = @user.register(random_string('consumer'), :system, nil,
           {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
@@ -260,12 +295,7 @@ describe 'Content Access' do
     json_body = extract_payload(cert)
     expect(json_body['products'][0]['content'].length).to eq(0)
 
-    job = @user.promote_content(@env['id'], [{
-      :contentId => @content['id'],
-      :enabled => false,
-    }])
-
-    wait_for_job(job['id'], 15)
+    promote_content_to_environment(@user, @env, @content, false)
     @env = @user.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
 
@@ -400,6 +430,48 @@ describe 'Content Access' do
     end
   end
 
+  it "change in content only regenerates content part of the content access certificate" do
+    @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+
+    content_body = @consumer.get_content_access_body()
+    old_cert = content_body.contentListing.values[0]
+    old_x509 = old_cert[0]
+    old_content = old_cert[1]
+
+    @cp.update_content(@owner["key"], @content_id, { :name => "new content name" })
+
+    content_body = @consumer.get_content_access_body()
+    cert = content_body.contentListing.values[0]
+    x509 = cert[0]
+    content = cert[1]
+
+    expect(x509).to eq(old_x509)
+    expect(content).to_not eq(old_content)
+  end
+
+  it "change in content only regenerates content part of the content access certificate (with environment)" do
+    environment = @user.create_environment(@owner['key'], random_string('testenv1'), "My Test Env 1", "For test systems only.")
+    promote_content_to_environment(@user, environment, @content, true)
+
+    @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+    @consumer.update_consumer({:environment => environment})
+
+    content_body = @consumer.get_content_access_body()
+    old_cert = content_body.contentListing.values[0]
+    old_x509 = old_cert[0]
+    old_content = old_cert[1]
+
+    @cp.update_content(@owner["key"], @content_id, { :name => "new content name" })
+
+    content_body = @consumer.get_content_access_body()
+    cert = content_body.contentListing.values[0]
+    x509 = cert[0]
+    content = cert[1]
+
+    expect(x509).to eq(old_x509)
+    expect(content).to_not eq(old_content)
+  end
+
   it "does return a not modified return code when the data has not been updated since date" do
     @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
     certs = @consumer.list_certificates
@@ -416,7 +488,7 @@ describe 'Content Access' do
     @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
     certs = @consumer.list_certificates
     certs.length.should == 1
-    serial_id = certs[0]['serial']['serial']
+    cert = certs[0]['cert']
     sleep 1
 
     @cp.update_content(@owner['key'], @content_id, {:name=>'cname-extreme'})
@@ -425,7 +497,7 @@ describe 'Content Access' do
     json_body = extract_payload(certs[0]['cert'])
     content = json_body['products'][0]['content'][0]
 
-    expect(certs[0]['serial']['serial']).to_not eq(serial_id)
+    expect(certs[0]['cert']).to_not eq(cert)
     expect(content['name']).to eq('cname-extreme')
   end
 
@@ -438,8 +510,8 @@ describe 'Content Access' do
     expect(certs1.length).to eq(1)
     expect(certs2.length).to eq(1)
 
-    cert_serial_1 = certs1[0]['serial']['serial']
-    cert_serial_2 = certs2[0]['serial']['serial']
+    cert_1 = certs1[0]['cert']
+    cert_2 = certs2[0]['cert']
 
     sleep 1
 
@@ -456,8 +528,8 @@ describe 'Content Access' do
 
     # The cert should have changed due to the content change, but both consumers should still have the
     # same cert
-    expect(certs1[0]['serial']['serial']).to_not eq(cert_serial_1)
-    expect(certs2[0]['serial']['serial']).to_not eq(cert_serial_2)
+    expect(certs1[0]['cert']).to_not eq(cert_1)
+    expect(certs2[0]['cert']).to_not eq(cert_2)
 
     expect(content['name']).to eq('cname-extreme')
   end
@@ -728,6 +800,33 @@ describe 'Content Access' do
     end
   end
 
+  it 'should regenerate SCA cert when environment content changes' do
+    environment = @user.create_environment(@owner['key'], random_string('testenv1'), "My Test Env 1", "For test systems only.")
+    promote_content_to_environment(@user, environment, @content, false)
+
+    consumer = @user.register(random_string('consumer'), :system, nil, {'system.certificate_version' => '3.3'}, nil, nil, [], [], environment['id'])
+    expect(consumer['environment']).to_not be_nil
+
+    client = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+
+    regenerate_cert_test(client) do
+      @cp.update_content(@owner['key'], @content['id'], { 'content_url' => '/updated/path' })
+      sleep 1
+    end
+  end
+
+  def promote_content_to_environment(user, environment, content, enabled = true)
+    job = user.promote_content(environment['id'], [
+      {
+        :contentId => content['id'],
+        :enabled => enabled
+      }
+    ])
+
+
+    wait_for_job(job['id'], 15)
+  end
+
   it 'should honour the content defaults for owner in SCA mode' do
     product = create_product('test-product-p1', 'some product-p1')
 
@@ -783,9 +882,7 @@ describe 'Content Access' do
     @cp.add_content_to_product(@owner['key'], product['id'], content2['id'], true)
 
     # Promote content with enabled false
-    job = @org_admin.promote_content(@env['id'],
-    [{:contentId => content['id'], :enabled => false , }])
-    wait_for_job(job['id'], 15)
+    promote_content_to_environment(@user, @env, content, false)
 
     pool = @cp.create_pool(@owner['key'], product['id'], {:quantity => 10})
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
@@ -990,39 +1087,49 @@ describe 'Content Access' do
     expect(returned_uuids).to include(content_c4.id)
   end
 
-  def regenerate_cert_test(&updater)
-    consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
-    certs = consumer.list_certificates()
+  def regenerate_cert_test(consumer_client, &updater)
+    certs = consumer_client.list_certificates()
+    expect(certs).to_not be_nil
     expect(certs.length).to eq(1)
     cert_serial = certs[0]['serial']
+    cert = certs[0]['cert']
     expect(cert_serial).to_not be_nil
 
     updater.call()
 
-    updated_certs = consumer.list_certificates()
+    updated_certs = consumer_client.list_certificates()
     expect(updated_certs.length).to eq(1)
     updated_cert_serial = updated_certs[0]['serial']
+    updated_cert = updated_certs[0]['cert']
     expect(updated_cert_serial).to_not be_nil
 
-    expect(updated_cert_serial['serial']).to_not eq(cert_serial['serial'])
+    expect(updated_cert).to_not eq(cert)
   end
 
   it 'should regenerate SCA cert when content changes affect content view' do
-    regenerate_cert_test do
+    client = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+
+    regenerate_cert_test(client) do
       @cp.update_content(@owner['key'], @content['id'], { 'content_url' => '/updated/path' })
+      sleep 1
     end
   end
 
   it 'should regenerate SCA cert when product changes affect content view' do
-    regenerate_cert_test do
+    client = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+
+    regenerate_cert_test(client) do
       @cp.remove_content_from_product(@owner['key'], @product['id'], @content['id'])
     end
   end
 
   it 'should regenerate SCA cert when pool changes affect content view' do
-    regenerate_cert_test do
+    client = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+
+    regenerate_cert_test(client) do
       @pool['start_date'] = (DateTime.now + 1)
       @cp.update_pool(@owner['key'], @pool)
+      sleep 1
     end
   end
 

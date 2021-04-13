@@ -311,16 +311,14 @@ public class X509V3ExtensionUtil extends X509Util {
         Set<String> productArchSet = Arch.parseArches(productArches);
 
         // FIXME: getParsedArches might make more sense to just return a list
-        List<String> archList = new ArrayList<>();
-        for (String arch : productArchSet) {
-            archList.add(arch);
-        }
+        List<String> archList = new ArrayList<>(productArchSet);
         toReturn.setArchitectures(archList);
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
-        toReturn.setContent(createContent(
-            filterProductContent(engProduct, consumer, promotedContent, enableEnvironmentFiltering,
-            entitledProductIds, consumer.getOwner().isUsingSimpleContentAccess()), sku,
-            contentPrefix, promotedContent, consumer, engProduct));
+        Set<ProductContent> filteredContent = filterProductContent(engProduct, consumer, promotedContent,
+            enableEnvironmentFiltering, entitledProductIds, consumer.getOwner().isUsingSimpleContentAccess());
+        List<Content> content = createContent(filteredContent, sku, contentPrefix, promotedContent,
+            consumer, engProduct);
+        toReturn.setContent(content);
 
         return toReturn;
     }
@@ -363,13 +361,13 @@ public class X509V3ExtensionUtil extends X509Util {
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
 
         // Return only the contents that are arch appropriate
-        Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
+        Set<ProductContent> archAppropriateProductContent = filterContentByContentArch(
             productContent, consumer, product);
 
         List<String> skuDisabled = sku.getSkuDisabledContentIds();
         List<String> skuEnabled = sku.getSkuEnabledContentIds();
 
-        for (ProductContent pc : archApproriateProductContent) {
+        for (ProductContent pc : archAppropriateProductContent) {
             Content content = new Content();
 
             // Augment the content path with the prefix if it is passed in
