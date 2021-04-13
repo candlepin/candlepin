@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
@@ -153,7 +154,7 @@ public class Owner extends AbstractHibernateObject<Owner>
      * Determines the allowable modes of the content access.
      */
     @Column(name = "content_access_mode_list", nullable = false)
-    private String contentAccessModeList = ContentAccessMode.getDefault().toDatabaseValue();
+    private String contentAccessModeList;
 
     /**
      * Default constructor
@@ -164,6 +165,7 @@ public class Owner extends AbstractHibernateObject<Owner>
         this.environments = new HashSet<>();
         this.autobindDisabled = false;
         this.autobindHypervisorDisabled = false;
+        this.contentAccessModeList = ContentAccessManager.getListDefaultDatabaseValue();
     }
 
     /**
