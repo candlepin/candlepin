@@ -14,9 +14,11 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.candlepin.util.X509Util.ARCH_FACT;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.TestingModules;
@@ -84,11 +86,12 @@ public class X509V3ExtensionUtilTest {
         assertEquals(np, np1);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void nullCompareTo() {
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
-        assertEquals(1, np.compareTo(null));
+
+        assertThrows(NullPointerException.class, () -> np.compareTo(null));
     }
 
     @Test
@@ -172,6 +175,63 @@ public class X509V3ExtensionUtilTest {
     }
 
     @Test
+    public void shouldFilterContentWithCorrectArches() {
+        String expectedArch = "ppc64";
+        Owner owner = new Owner("Test Corporation");
+        owner.setId("test-id");
+        Product product = new Product("mkt", "MKT SKU");
+        addContent(product, "x86_64");
+        addContent(product, "x86_64");
+        addContent(product, expectedArch);
+        addContent(product, expectedArch);
+        Consumer consumer = new Consumer();
+        consumer.setOwner(owner);
+        consumer.setFact(ARCH_FACT, expectedArch);
+
+        Set<ProductContent> filteredContent = util.filterContentByContentArch(
+            new HashSet<>(product.getProductContent()), consumer, product);
+
+        assertEquals(2, filteredContent.size());
+        boolean archesMatch = filteredContent.stream()
+            .map(ProductContent::getContent)
+            .map(Content::getArches)
+            .allMatch(expectedArch::equals);
+        assertTrue(archesMatch);
+    }
+
+    @Test
+    public void shouldFilterByProductArchWhenContentHasNoArch() {
+        String expectedArch = "ppc64";
+        Owner owner = new Owner("Test Corporation");
+        owner.setId("test-id");
+        Product product = new Product("mkt", "MKT SKU");
+        product.setAttribute(Product.Attributes.ARCHITECTURE, "x86_64");
+        addContent(product);
+        addContent(product);
+        Consumer consumer = new Consumer();
+        consumer.setOwner(owner);
+        consumer.setFact(ARCH_FACT, expectedArch);
+
+        Set<ProductContent> filteredContent = util.filterContentByContentArch(
+            new HashSet<>(product.getProductContent()), consumer, product);
+
+        assertEquals(0, filteredContent.size());
+    }
+
+    private void addContent(Product product) {
+        addContent(product, null);
+    }
+
+    private void addContent(Product product, String arches) {
+        int size = product.getProductContent().size() + 1;
+        Content c = new Content();
+        c.setUuid("content_" + size);
+        c.setId("content_" + size);
+        c.setArches(arches);
+        product.addContent(c, true);
+    }
+
+    @Test
     public void productWithMultipleBrandNames() {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
@@ -205,7 +265,32 @@ public class X509V3ExtensionUtilTest {
     }
 
     @Test
-    public void susbcriptionWithSyspurposeAttributes() throws JsonProcessingException {
+    public void shouldOnlyIncludeContentWithCompatibleArchitecture() {
+        Owner owner = new Owner("Test Corporation");
+        owner.setId("test-id");
+        Content content1 = new Content("cont_id1");
+        content1.setArches("x86_64");
+        Content content2 = new Content("cont_id2");
+        content2.setArches("ppc64");
+        Product engProd = new Product("content_access", "Content Access");
+        engProd.addContent(content1, true);
+        engProd.addContent(content2, true);
+        Product sku = new Product("content_access", "Content Access");
+        Pool pool = TestUtil.createPool(sku);
+        Consumer consumer = new Consumer();
+        consumer.setOwner(owner);
+        consumer.setFact("uname.machine", "x86_64");
+
+        org.candlepin.model.dto.Product certProds = util.mapProduct(engProd,
+            sku, "", new HashMap<>(), consumer, pool, new HashSet<>(Arrays.asList("content_access")));
+
+        assertEquals(1, certProds.getContent().size());
+        assertEquals(1, certProds.getContent().get(0).getArches().size());
+        assertEquals("x86_64", certProds.getContent().get(0).getArches().get(0));
+    }
+
+    @Test
+    public void subscriptionWithSysPurposeAttributes() throws JsonProcessingException {
         Owner owner = new Owner("Test Corporation");
         Product mktProd = new Product("mkt", "MKT SKU");
         mktProd.setAttribute(Product.Attributes.USAGE, "my_usage");
@@ -217,13 +302,13 @@ public class X509V3ExtensionUtilTest {
 
         TinySubscription subscription = util.createSubscription(pool);
         String output = this.mapper.writeValueAsString(subscription);
-        assertTrue("The serialized data should contain usage!", output.contains("my_usage"));
-        assertTrue("The serialized data should contain support level!", output.contains("my_support_level"));
-        assertTrue("The serialized data should contain support type!", output.contains("my_support_type"));
-        assertTrue("The serialized data should contain role!", output.contains("my_role1"));
-        assertTrue("The serialized data should contain role!", output.contains("my_role2"));
-        assertTrue("The serialized data should contain addon!", output.contains("my_addon1"));
-        assertTrue("The serialized data should contain addon!", output.contains("my_addon2"));
+        assertTrue(output.contains("my_usage"), "The serialized data should contain usage!");
+        assertTrue(output.contains("my_support_level"), "The serialized data should contain support level!");
+        assertTrue(output.contains("my_support_type"), "The serialized data should contain support type!");
+        assertTrue(output.contains("my_role1"), "The serialized data should contain role!");
+        assertTrue(output.contains("my_role2"), "The serialized data should contain role!");
+        assertTrue(output.contains("my_addon1"), "The serialized data should contain addon!");
+        assertTrue(output.contains("my_addon2"), "The serialized data should contain addon!");
     }
 
 }

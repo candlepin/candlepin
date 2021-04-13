@@ -48,8 +48,11 @@ public class ContentAccessCertificate extends RevocableCertificate<ContentAccess
     @NotNull
     private String id;
 
-    @OneToOne(mappedBy = "idCert", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "contentAccessCert", fetch = FetchType.LAZY)
     private Consumer consumer;
+
+    @Column
+    private String content;
 
     @Override
     public String getId() {
@@ -67,6 +70,14 @@ public class ContentAccessCertificate extends RevocableCertificate<ContentAccess
 
     public void setConsumer(Consumer consumer) {
         this.consumer = consumer;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 
     @Override
