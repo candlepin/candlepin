@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.15
+Version: 3.2.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,11 @@ fi
 
 #raw
 %changelog
+* Tue Apr 13 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.16-1
+- change default content access mode list (jharriso@redhat.com)
+- Addressing sporadic spec test failure in import_update_spec.rb
+  (sdhome@redhat.com)
+
 * Tue Mar 30 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.15-1
 - 1944558: On SCA mode, stop throwing an error during auto-attach  - No-op and
   return HTTP status 200 when auto-attaching on SCA mode (sdhome@redhat.com)
